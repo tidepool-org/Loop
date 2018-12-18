@@ -209,11 +209,18 @@ extension DeviceDataManager: CGMManagerDelegate {
     func startDateToFilterNewData(for manager: CGMManager) -> Date? {
         return loopManager.glucoseStore.latestGlucose?.startDate
     }
+
+    func dataStore(for manager: CGMManager) -> CGMDataStore {
+        return CGMDataStore(glucoseStore: loopManager.glucoseStore)
+    }
+
+    func cgmManagerDidUpdateState(_ manager: CGMManager) {
+        UserDefaults.appGroup.cgmManager = manager
+    }
 }
 
 
 extension DeviceDataManager: PumpManagerDelegate {
-    
     func pumpManager(_ pumpManager: PumpManager, didAdjustPumpClockBy adjustment: TimeInterval) {
         AnalyticsManager.shared.pumpTimeDidDrift(adjustment)
     }
@@ -342,6 +349,10 @@ extension DeviceDataManager: DoseStoreDelegate {
                 completionHandler([])
             }
         }
+    }
+
+    func dataStore(for manager: PumpManager) -> PumpDataStore {
+        return PumpDataStore(doseStore: loopManager.doseStore)
     }
 }
 

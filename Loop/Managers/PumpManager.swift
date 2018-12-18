@@ -13,7 +13,8 @@ import OmniKit
 
 let allPumpManagers: [PumpManager.Type] = [
     OmnipodPumpManager.self,
-    MinimedPumpManager.self
+    MinimedPumpManager.self,
+    MockPumpManager.self
 ]
 
 private let managersByIdentifier: [String: PumpManager.Type] = allPumpManagers.reduce(into: [:]) { (map, Type) in

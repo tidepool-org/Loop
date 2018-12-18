@@ -16,6 +16,7 @@ let allCGMManagers: [CGMManager.Type] = [
     G5CGMManager.self,
     G4CGMManager.self,
     ShareClientManager.self,
+    MockCGMManager.self,
 ]
 
 
