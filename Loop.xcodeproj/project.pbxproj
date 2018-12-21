@@ -283,6 +283,8 @@
 		7D7076631FE06EE4004AC8EA /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7D7076651FE06EE4004AC8EA /* Localizable.strings */; };
 		7D7076681FE0702F004AC8EA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7D70766A1FE0702F004AC8EA /* InfoPlist.strings */; };
 		894F71E21FFEC4D8007D365C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 894F71E11FFEC4D8007D365C /* Assets.xcassets */; };
+		89D204CE21CC833A001238CC /* MockKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89D204CD21CC833A001238CC /* MockKit.framework */; };
+		89D204D021CC833A001238CC /* MockKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89D204CF21CC833A001238CC /* MockKitUI.framework */; };
 		C10428971D17BAD400DD539A /* NightscoutUploadKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C10428961D17BAD400DD539A /* NightscoutUploadKit.framework */; };
 		C10B28461EA9BA5E006EA1FC /* far_future_high_bg_forecast.json in Resources */ = {isa = PBXBuildFile; fileRef = C10B28451EA9BA5E006EA1FC /* far_future_high_bg_forecast.json */; };
 		C11C87DE1E21EAAD00BB71D3 /* HKUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F526D5E1DF2459000A04910 /* HKUnit.swift */; };
@@ -816,6 +818,8 @@
 		7DD382781F8DBFC60071272B /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/MainInterface.strings; sourceTree = "<group>"; };
 		7DD382791F8DBFC60071272B /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Interface.strings; sourceTree = "<group>"; };
 		894F71E11FFEC4D8007D365C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		89D204CD21CC833A001238CC /* MockKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MockKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		89D204CF21CC833A001238CC /* MockKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MockKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10428961D17BAD400DD539A /* NightscoutUploadKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NightscoutUploadKit.framework; path = Carthage/Build/iOS/NightscoutUploadKit.framework; sourceTree = SOURCE_ROOT; };
 		C10B28451EA9BA5E006EA1FC /* far_future_high_bg_forecast.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = far_future_high_bg_forecast.json; sourceTree = "<group>"; };
 		C12F21A61DFA79CB00748193 /* recommend_temp_basal_very_low_end_in_range.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = recommend_temp_basal_very_low_end_in_range.json; sourceTree = "<group>"; };
@@ -847,6 +851,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				89D204CE21CC833A001238CC /* MockKit.framework in Frameworks */,
+				89D204D021CC833A001238CC /* MockKitUI.framework in Frameworks */,
 				C1CB13A9213EE35800F9EEDA /* OmniKit.framework in Frameworks */,
 				C1CB13AB213EE35800F9EEDA /* OmniKitUI.framework in Frameworks */,
 				4F7528941DFE1E9500C322D6 /* LoopUI.framework in Frameworks */,
@@ -1370,6 +1376,8 @@
 		968DCD53F724DE56FFE51920 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				89D204CD21CC833A001238CC /* MockKit.framework */,
+				89D204CF21CC833A001238CC /* MockKitUI.framework */,
 				C1C108C22152F46D00EA5165 /* CGMBLEKitUI.framework */,
 				434FB6451D68F1CD007B9C70 /* Amplitude.framework */,
 				C1CB13A8213EE35800F9EEDA /* OmniKit.framework */,
