@@ -8,15 +8,9 @@
 
 import Foundation
 import LoopKitUI
-import OmniKit
-import OmniKitUI
-import MinimedKit
-import MinimedKitUI
 
-let allPumpManagerUIs: [PumpManagerUI.Type] = [
-    OmnipodPumpManager.self,
-    MinimedPumpManager.self
-]
+
+let allPumpManagerUIs = Bundle.linkedPumpManagerUIs
 
 private let managersByIdentifier: [String: PumpManagerUI.Type] = allPumpManagerUIs.reduce(into: [:]) { (map, Type) in
     map[Type.managerIdentifier] = Type

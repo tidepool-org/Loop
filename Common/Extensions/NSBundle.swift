@@ -14,6 +14,10 @@ extension Bundle {
         return object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
     }
 
+    var bundleName: String {
+        return object(forInfoDictionaryKey: "CFBundleName") as! String
+    }
+
     var bundleDisplayName: String {
         return object(forInfoDictionaryKey: "CFBundleDisplayName") as! String
     }
