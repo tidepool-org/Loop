@@ -210,12 +210,14 @@ extension DeviceDataManager: CGMManagerDelegate {
         return loopManager.glucoseStore.latestGlucose?.startDate
     }
 
-    func dataStore(for manager: CGMManager) -> CGMDataStore {
-        return CGMDataStore(glucoseStore: loopManager.glucoseStore)
-    }
-
     func cgmManagerDidUpdateState(_ manager: CGMManager) {
         UserDefaults.appGroup.cgmManager = manager
+    }
+}
+
+extension DeviceDataManager: TestingCGMManagerDelegate {
+    func glucoseStore(for manager: CGMManager) -> TestingCGMGlucoseStore {
+        return TestingCGMGlucoseStore(glucoseStore: loopManager.glucoseStore)
     }
 }
 
@@ -324,7 +326,12 @@ extension DeviceDataManager: PumpManagerDelegate {
     func startDateToFilterNewReservoirEvents(for manager: PumpManager) -> Date {
         return loopManager.doseStore.lastReservoirValue?.startDate ?? .distantPast
     }
-    
+}
+
+extension DeviceDataManager: TestingPumpManagerDelegate {
+    func doseStore(for manager: PumpManager) -> TestingPumpDoseStore {
+        return TestingPumpDoseStore(doseStore: loopManager.doseStore)
+    }
 }
 
 
@@ -349,10 +356,6 @@ extension DeviceDataManager: DoseStoreDelegate {
                 completionHandler([])
             }
         }
-    }
-
-    func dataStore(for manager: PumpManager) -> PumpDataStore {
-        return PumpDataStore(doseStore: loopManager.doseStore)
     }
 }
 

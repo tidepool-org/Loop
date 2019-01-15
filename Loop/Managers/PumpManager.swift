@@ -9,7 +9,7 @@ import Foundation
 import LoopKit
 
 
-let allPumpManagers = Bundle.linkedPumpManagers
+let allPumpManagers = Bundle.linkedPumpManagers.sorted(by: { $0.localizedTitle < $1.localizedTitle })
 
 private let managersByIdentifier: [String: PumpManager.Type] = allPumpManagers.reduce(into: [:]) { (map, Type) in
     map[Type.managerIdentifier] = Type

@@ -8,7 +8,7 @@
 import LoopKit
 
 
-let allCGMManagers = Bundle.linkedCGMManagers
+let allCGMManagers = Bundle.linkedCGMManagers.sorted(by: { $0.localizedTitle < $1.localizedTitle })
 
 private let managersByIdentifier: [String: CGMManager.Type] = allCGMManagers.reduce(into: [:]) { (map, Type) in
     map[Type.managerIdentifier] = Type
