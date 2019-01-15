@@ -43,7 +43,7 @@ final class StatusTableViewController: ChartsTableViewController {
         )
         
         if let pumpManager = deviceManager.pumpManager {
-            self.suspendState = pumpManager.status.suspendState
+            self.basalDeliveryState = pumpManager.status.basalDeliveryState
             pumpManager.addStatusObserver(self)
         }
 
@@ -134,6 +134,8 @@ final class StatusTableViewController: ChartsTableViewController {
                 }
             }
         }
+        
+        deviceManager.pumpManagerHUDProvider?.hudDidAppear()
 
         AnalyticsManager.shared.didDisplayStatusScreen()
     }
@@ -177,7 +179,7 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
-    public var suspendState: PumpManagerStatus.SuspendState = .none {
+    public var basalDeliveryState: PumpManagerStatus.BasalDeliveryState = .none {
         didSet {
             refreshContext.update(with: .status)
         }
@@ -426,9 +428,9 @@ final class StatusTableViewController: ChartsTableViewController {
             // Show/hide the table view rows
             let statusRowMode: StatusRowMode?
             
-            if self.suspendState == .suspended {
+            if self.basalDeliveryState == .suspended {
                 statusRowMode = .pumpSuspended(resuming: false)
-            } else if self.suspendState == .resuming {
+            } else if self.basalDeliveryState == .resuming {
                 statusRowMode = .pumpSuspended(resuming: true)
             } else {
                 switch bolusState {
@@ -849,17 +851,14 @@ final class StatusTableViewController: ChartsTableViewController {
                 case .pumpSuspended(let resuming):
                     if !resuming {
                         self.updateHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: true) , newSize: nil, animated: true)
-                        self.deviceManager.pumpManager?.resumeDelivery(completion: { (result) in
+                        self.deviceManager.pumpManager?.resumeDelivery() { (error) in
                             DispatchQueue.main.async {
-                                switch result {
-                                case .failure(let error):
+                                if let error = error {
                                     let alert = UIAlertController(title: NSLocalizedString("Error Resuming", comment: "The alert title for a resume error"), error: error)
                                     self.present(alert, animated: true, completion: nil)
-                                case .success:
-                                    break
                                 }
                             }
-                        })
+                        }
                     }
                 default:
                     break
@@ -1070,6 +1069,7 @@ final class StatusTableViewController: ChartsTableViewController {
                 }
                 pumpManagerHUDProvider.delegate = self
             }
+            NotificationCenter.default.post(name: .HUDViewsChanged, object: self)
         }
     }
     
@@ -1107,6 +1107,8 @@ final class StatusTableViewController: ChartsTableViewController {
             switch action {
             case .showViewController(let vc):
                 self.navigationController?.pushViewController(vc, animated: true)
+            case .presentViewController(let vc):
+                self.present(vc, animated: true, completion: nil)
             case .openAppURL(let url):
                 UIApplication.shared.open(url)
             }
@@ -1115,16 +1117,17 @@ final class StatusTableViewController: ChartsTableViewController {
 }
 
 extension StatusTableViewController: PumpManagerStatusObserver {
-    func pumpManager(_ pumpManager: PumpManager, didUpdateStatus status: PumpManagerStatus) {
+    func pumpManager(_ pumpManager: PumpManager, didUpdate status: PumpManagerStatus) {
         DispatchQueue.main.async {
-            self.suspendState = status.suspendState
+            self.basalDeliveryState = status.basalDeliveryState
             self.reloadData(animated: true)
         }
     }
 }
 
 extension StatusTableViewController: HUDProviderDelegate {
-    func newHUDViewsAvailable(_ views: [BaseHUDView]) {
+    
+    func hudProvider(_ provider: HUDProvider, didAddHudViews views: [BaseHUDView]) {
         DispatchQueue.main.async {
             for view in views {
                 view.isHidden = true
@@ -1137,6 +1140,22 @@ extension StatusTableViewController: HUDProviderDelegate {
                     view.alpha = 1
                 }
             })
+            NotificationCenter.default.post(name: .HUDViewsChanged, object: self)
+        }
+    }
+    
+    func hudProvider(_ provider: HUDProvider, didRemoveHudViews views: [BaseHUDView]) {
+        DispatchQueue.main.async {
+            UIView.animate(withDuration: 1, animations: {
+                for view in views {
+                    view.alpha = 0
+                }
+            }, completion: { (didFinish) in
+                for view in views {
+                    view.removeFromSuperview()
+                }
+            })
+            NotificationCenter.default.post(name: .HUDViewsChanged, object: self)
         }
     }
 }
@@ -1169,3 +1188,6 @@ extension UIAlertController {
     }
 }
 
+extension Notification.Name {
+    static let HUDViewsChanged = Notification.Name(rawValue:  "com.loopKit.notification.HUDViewsChanged")
+}
