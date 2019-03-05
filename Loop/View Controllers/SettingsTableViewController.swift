@@ -10,6 +10,7 @@ import UIKit
 import HealthKit
 import LoopKit
 import LoopKitUI
+import LoopTestingKit
 
 
 final class SettingsTableViewController: UITableViewController {
@@ -46,12 +47,17 @@ final class SettingsTableViewController: UITableViewController {
 
     var dataManager: DeviceDataManager!
 
+    private lazy var isTestingPumpManager = dataManager.pumpManager is TestingPumpManager
+    private lazy var isTestingCGMManager = dataManager.cgmManager is TestingCGMManager
+
     fileprivate enum Section: Int, CaseCountable {
         case loop = 0
         case pump
         case cgm
         case configuration
         case services
+        case testingPumpDataDeletion
+        case testingCGMDataDeletion
     }
 
     fileprivate enum LoopRow: Int, CaseCountable {
@@ -122,7 +128,14 @@ final class SettingsTableViewController: UITableViewController {
     // MARK: - UITableViewDataSource
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return Section.count
+        var count = Section.count
+        if !isTestingPumpManager {
+            count -= 1
+        }
+        if !isTestingCGMManager {
+            count -= 1
+        }
+        return count
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -137,6 +150,8 @@ final class SettingsTableViewController: UITableViewController {
             return ConfigurationRow.count
         case .services:
             return ServiceRow.count
+        case .testingPumpDataDeletion, .testingCGMDataDeletion:
+            return 1
         }
     }
 
@@ -294,6 +309,20 @@ final class SettingsTableViewController: UITableViewController {
 
             configCell.accessoryType = .disclosureIndicator
             return configCell
+        case .testingPumpDataDeletion:
+            let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath) as! TextButtonTableViewCell
+            cell.textLabel?.text = "Delete Pump Data"
+            cell.textLabel?.textAlignment = .center
+            cell.tintColor = .delete
+            cell.isEnabled = true
+            return cell
+        case .testingCGMDataDeletion:
+            let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath) as! TextButtonTableViewCell
+            cell.textLabel?.text = "Delete CGM Data"
+            cell.textLabel?.textAlignment = .center
+            cell.tintColor = .delete
+            cell.isEnabled = true
+            return cell
         }
     }
 
@@ -309,6 +338,8 @@ final class SettingsTableViewController: UITableViewController {
             return NSLocalizedString("Configuration", comment: "The title of the configuration section in settings")
         case .services:
             return NSLocalizedString("Services", comment: "The title of the services section in settings")
+        case .testingPumpDataDeletion, .testingCGMDataDeletion:
+            return nil
         }
     }
 
@@ -551,6 +582,16 @@ final class SettingsTableViewController: UITableViewController {
 
                 show(vc, sender: sender)
             }
+        case .testingPumpDataDeletion:
+            let confirmVC = UIAlertController(pumpDataDeletionHandler: dataManager.deleteTestingPumpData)
+            present(confirmVC, animated: true) {
+                tableView.deselectRow(at: indexPath, animated: true)
+            }
+        case .testingCGMDataDeletion:
+            let confirmVC = UIAlertController(cgmDataDeletionHandler: dataManager.deleteTestingCGMData)
+            present(confirmVC, animated: true) {
+                tableView.deselectRow(at: indexPath, animated: true)
+            }
         }
     }
 
@@ -559,13 +600,29 @@ final class SettingsTableViewController: UITableViewController {
         case .loop:
             break
         case .pump:
+            let wasTestingPumpManager = isTestingPumpManager
+            isTestingPumpManager = dataManager.pumpManager is TestingPumpManager
+            if !wasTestingPumpManager, isTestingPumpManager {
+                tableView.insertSections([Section.testingPumpDataDeletion.rawValue], with: .automatic)
+            } else if wasTestingPumpManager, !isTestingPumpManager {
+                tableView.deleteSections([Section.testingPumpDataDeletion.rawValue], with: .automatic)
+            }
             tableView.reloadSections([Section.pump.rawValue], with: .fade)
             tableView.reloadRows(at: [[Section.cgm.rawValue, CGMRow.cgmSettings.rawValue]], with: .fade)
         case .cgm:
+            let wasTestingCGMManager = isTestingCGMManager
+            isTestingCGMManager = dataManager.cgmManager is TestingCGMManager
+            if !wasTestingCGMManager, isTestingCGMManager {
+                tableView.insertSections([Section.testingCGMDataDeletion.rawValue], with: .automatic)
+            } else if wasTestingCGMManager, !isTestingCGMManager {
+                tableView.deleteSections([Section.testingCGMDataDeletion.rawValue], with: .automatic)
+            }
             tableView.reloadRows(at: [indexPath], with: .fade)
         case .configuration:
             break
         case .services:
+            break
+        case .testingPumpDataDeletion, .testingCGMDataDeletion:
             break
         }
 
@@ -740,5 +797,39 @@ extension SettingsTableViewController: DeliveryLimitSettingsTableViewControllerD
         dataManager.loopManager.settings.maximumBolus = vc.maximumBolus
 
         tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
+    }
+}
+
+private extension UIAlertController {
+    convenience init(pumpDataDeletionHandler handler: @escaping () -> Void) {
+        self.init(
+            title: nil,
+            message: "Are you sure you want to delete testing pump health data?",
+            preferredStyle: .actionSheet
+        )
+
+        addAction(UIAlertAction(
+            title: "Delete Pump Data",
+            style: .destructive,
+            handler: { _ in handler() }
+        ))
+
+        addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+    }
+
+    convenience init(cgmDataDeletionHandler handler: @escaping () -> Void) {
+        self.init(
+            title: nil,
+            message: "Are you sure you want to delete testing CGM health data?",
+            preferredStyle: .actionSheet
+        )
+
+        addAction(UIAlertAction(
+            title: "Delete CGM Data",
+            style: .destructive,
+            handler: { _ in handler() }
+        ))
+
+        addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
     }
 }
