@@ -9,8 +9,6 @@
 import HealthKit
 import LoopKit
 import LoopKitUI
-//import OmniKit
-//import OmniKitUI
 
 final class DeviceDataManager {
 
@@ -24,12 +22,8 @@ final class DeviceDataManager {
             if cgmManager is PumpManagerUI {
                 cgmManager = nil
             }
-            
-            if let pumpManager = pumpManager {
-                pumpManagerHUDProvider = pumpManager.hudProvider()
-            } else {
-                pumpManagerHUDProvider = nil
-            }
+
+            pumpManagerHUDProvider = pumpManager?.hudProvider()
 
             setupPump()
             
@@ -70,10 +64,20 @@ final class DeviceDataManager {
             UserDefaults.appGroup.cgmManager = cgmManager
         }
     }
+
+    private let lockedPumpManagerStatus: Locked<PumpManagerStatus?> = Locked(nil)
+
+    static let batteryReplacementDetectionThreshold = 0.5
     
     var pumpManagerStatus: PumpManagerStatus? {
-        didSet {
-            if let status = pumpManagerStatus {
+        get {
+            return lockedPumpManagerStatus.value
+        }
+        set {
+            let oldValue = lockedPumpManagerStatus.value
+            lockedPumpManagerStatus.value = newValue
+
+            if let status = newValue {
                 
                 loopManager.doseStore.device = status.device
                 
@@ -84,7 +88,7 @@ final class DeviceDataManager {
                         NotificationManager.clearPumpBatteryLowNotification()
                     }
                     
-                    if let oldBatteryValue = oldValue?.pumpBatteryChargeRemaining, newBatteryValue - oldBatteryValue >= 0.5 {
+                    if let oldBatteryValue = oldValue?.pumpBatteryChargeRemaining, newBatteryValue - oldBatteryValue >= DeviceDataManager.batteryReplacementDetectionThreshold {
                         AnalyticsManager.shared.pumpBatteryWasReplaced()
                     }
                 }
@@ -138,11 +142,6 @@ final class DeviceDataManager {
     init() {
         pumpManager = UserDefaults.appGroup.pumpManager as? PumpManagerUI
         
-//        if pumpManager == nil {
-//            pumpManager = OmnipodPumpManager.jumpStartPod(address: 520595206, lot: 43461, tid: 940516)
-//            UserDefaults.appGroup.pumpManager = pumpManager
-//        }
-        
         if let cgmManager = UserDefaults.appGroup.cgmManager {
             self.cgmManager = cgmManager
         } else if UserDefaults.appGroup.isCGMManagerValidPumpManager {
@@ -184,6 +183,8 @@ extension DeviceDataManager: CGMManagerDelegate {
         /// TODO: Isolate to queue
         switch result {
         case .newData(let values):
+            log.default("CGMManager:\(type(of: manager)) did update with new data")
+
             loopManager.addGlucose(values) { result in
                 if manager.shouldSyncToRemoteService {
                     switch result {
@@ -197,8 +198,12 @@ extension DeviceDataManager: CGMManagerDelegate {
                 self.pumpManager?.assertCurrentPumpData()
             }
         case .noData:
+            log.default("CGMManager:\(type(of: manager)) did update with no data")
+
             pumpManager?.assertCurrentPumpData()
         case .error(let error):
+            log.default("CGMManager:\(type(of: manager)) did update with error: \(error)")
+
             self.setLastError(error: error)
             pumpManager?.assertCurrentPumpData()
         }
@@ -209,29 +214,26 @@ extension DeviceDataManager: CGMManagerDelegate {
     func startDateToFilterNewData(for manager: CGMManager) -> Date? {
         return loopManager.glucoseStore.latestGlucose?.startDate
     }
-
-    func cgmManagerDidUpdateState(_ manager: CGMManager) {
-        UserDefaults.appGroup.cgmManager = manager
-    }
-}
-
-extension DeviceDataManager: TestingCGMManagerDelegate {
-    func glucoseStore(for manager: CGMManager) -> TestingCGMGlucoseStore {
-        return TestingCGMGlucoseStore(glucoseStore: loopManager.glucoseStore)
-    }
 }
 
 
 extension DeviceDataManager: PumpManagerDelegate {
+    
     func pumpManager(_ pumpManager: PumpManager, didAdjustPumpClockBy adjustment: TimeInterval) {
+        log.default("PumpManager:\(type(of: pumpManager)) did adjust pump block by \(adjustment)s")
+
         AnalyticsManager.shared.pumpTimeDidDrift(adjustment)
     }
 
     func pumpManagerDidUpdateState(_ pumpManager: PumpManager) {
+        log.default("PumpManager:\(type(of: pumpManager)) did update state")
+
         UserDefaults.appGroup.pumpManager = pumpManager
     }
 
     func pumpManagerBLEHeartbeatDidFire(_ pumpManager: PumpManager) {
+        log.default("PumpManager:\(type(of: pumpManager)) did fire BLE heartbeat")
+
         cgmManager?.fetchNewDataIfNeeded { (result) in
             if case .newData = result {
                 AnalyticsManager.shared.didFetchNewCGMData()
@@ -253,21 +255,28 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
 
     func pumpManagerWillDeactivate(_ pumpManager: PumpManager) {
+        log.default("PumpManager:\(type(of: pumpManager)) will deactivate")
+
         loopManager.doseStore.resetPumpData()
         self.pumpManager = nil
     }
 
     func pumpManager(_ pumpManager: PumpManager, didUpdatePumpRecordsBasalProfileStartEvents pumpRecordsBasalProfileStartEvents: Bool) {
+        log.default("PumpManager:\(type(of: pumpManager)) did update pumpRecordsBasalProfileStartEvents to \(pumpRecordsBasalProfileStartEvents)")
+
         loopManager.doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
     }
 
     func pumpManager(_ pumpManager: PumpManager, didError error: PumpManagerError) {
+        log.error("PumpManager:\(type(of: pumpManager)) did error: \(error)")
+
         setLastError(error: error)
         nightscoutDataManager.uploadLoopStatus(loopError: error)
     }
 
     func pumpManager(_ pumpManager: PumpManager, didReadPumpEvents events: [NewPumpEvent], completion: @escaping (_ error: Error?) -> Void) {
-        
+        log.default("PumpManager:\(type(of: pumpManager)) did read pump events")
+
         loopManager.addPumpEvents(events) { (error) in
             if let error = error {
                 self.log.error("Failed to addPumpEvents to DoseStore: \(error)")
@@ -278,10 +287,12 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
 
     func pumpManager(_ pumpManager: PumpManager, didReadReservoirValue units: Double, at date: Date, completion: @escaping (_ result: PumpManagerResult<(newValue: ReservoirValue, lastValue: ReservoirValue?, areStoredValuesContinuous: Bool)>) -> Void) {
+        log.default("PumpManager:\(type(of: pumpManager)) did read reservoir value")
+
         loopManager.addReservoirValue(units, at: date) { (result) in
             switch result {
             case .failure(let error):
-                self.logger.addError(error, fromSource: "Bolus")
+                self.log.error("Failed to addReservoirValue: \(error)")
                 completion(.failure(error))
             case .success(let (newValue, lastValue, areStoredValuesContinuous)):
                 completion(.success((newValue: newValue, lastValue: lastValue, areStoredValuesContinuous: areStoredValuesContinuous)))
@@ -293,22 +304,19 @@ extension DeviceDataManager: PumpManagerDelegate {
                         return
                     }
 
-                    var didSendLowNotification = false
                     let warningThresholds: [Double] = [10, 20, 30]
 
                     for threshold in warningThresholds {
                         if newValue.unitVolume <= threshold && previousVolume > threshold {
                             NotificationManager.sendPumpReservoirLowNotificationForAmount(newValue.unitVolume, andTimeRemaining: nil)
-                            didSendLowNotification = true
+                            break
                         }
-                    }
-
-                    if !didSendLowNotification {
-                        NotificationManager.clearPumpReservoirNotification()
                     }
 
                     if newValue.unitVolume > previousVolume + 1 {
                         AnalyticsManager.shared.reservoirWasRewound()
+
+                        NotificationManager.clearPumpReservoirNotification()
                     }
                 }
             }
@@ -316,6 +324,7 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
     
     func pumpManagerRecommendsLoop(_ pumpManager: PumpManager) {
+        log.default("PumpManager:\(type(of: pumpManager)) recommends loop")
         loopManager.loop()
     }
 
@@ -326,12 +335,7 @@ extension DeviceDataManager: PumpManagerDelegate {
     func startDateToFilterNewReservoirEvents(for manager: PumpManager) -> Date {
         return loopManager.doseStore.lastReservoirValue?.startDate ?? .distantPast
     }
-}
-
-extension DeviceDataManager: TestingPumpManagerDelegate {
-    func doseStore(for manager: PumpManager) -> TestingPumpDoseStore {
-        return TestingPumpDoseStore(doseStore: loopManager.doseStore)
-    }
+    
 }
 
 
@@ -366,16 +370,15 @@ extension DeviceDataManager {
             return
         }
 
-        var requestedDose: DoseEntry?
         pumpManager.enactBolus(units: units, at: startDate, willRequest: { (dose) in
-            self.loopManager.addRequestedBolus(dose: dose, completion: nil)
-            requestedDose = dose
-        }) { (error) in
-            if let error = error {
+            self.loopManager.addRequestedBolus(dose, completion: nil)
+        }) { (result) in
+            switch result {
+            case .failure(let error):
                 self.log.error(error)
                 NotificationManager.sendBolusFailureNotification(for: error, units: units, at: startDate)
                 completion(error)
-            } else if let dose = requestedDose {
+            case .success(let dose):
                 self.loopManager.addConfirmedBolus(dose) {
                     completion(nil)
                 }
@@ -394,6 +397,8 @@ extension DeviceDataManager: LoopDataManagerDelegate {
             completion(.failure(LoopError.configurationError(.pumpManager)))
             return
         }
+
+        log.default("LoopManager did recommend basal change")
 
         pumpManager.enactTempBasal(
             unitsPerHour: basal.recommendation.unitsPerHour,
@@ -434,3 +439,4 @@ extension DeviceDataManager: CustomDebugStringConvertible {
 extension Notification.Name {
     static let PumpManagerChanged = Notification.Name(rawValue:  "com.loopKit.notification.PumpManagerChanged")
 }
+

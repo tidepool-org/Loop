@@ -28,25 +28,23 @@ public class HUDView: UIView, NibLoadable {
         self.addConstraints([horizontalConstraint, verticalConstraint, widthConstraint, heightConstraint])
     }
     
-    public func removeNonStandardHUDViews() {
+    public func removePumpManagerProvidedViews() {
         let standardViews: [UIView] = [loopCompletionHUD, glucoseHUD, basalRateHUD]
-        let nonStandardHudViews = stackView.subviews.filter { !standardViews.contains($0) }
-        for view in nonStandardHudViews {
+        let pumpManagerViews = stackView.subviews.filter { !standardViews.contains($0) }
+        for view in pumpManagerViews {
             view.removeFromSuperview()
         }
     }
     
     public func addHUDView(_ viewToAdd: BaseHUDView) {
-        var insertIndex = 0
-        for view in stackView.arrangedSubviews {
-            if let hudView = view as? BaseHUDView {
-                if viewToAdd.orderPriority <= hudView.orderPriority {
-                    break
-                }
+        let insertIndex = stackView.arrangedSubviews.firstIndex { (view) -> Bool in
+            guard let hudView = view as? BaseHUDView else {
+                return false
             }
-            insertIndex += 1
+            return viewToAdd.orderPriority <= hudView.orderPriority
         }
-        stackView.insertArrangedSubview(viewToAdd, at: insertIndex)
+
+        stackView.insertArrangedSubview(viewToAdd, at: insertIndex ?? stackView.arrangedSubviews.count)
     }
 
     public override init(frame: CGRect) {

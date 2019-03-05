@@ -90,7 +90,7 @@ final class LoopDataManager {
                 queue: nil
             ) { (note) -> Void in
                 self.dataAccessQueue.async {
-                    self.logger.info("Received notification of carb entries updating")
+                    self.logger.default("Received notification of carb entries updating")
 
                     self.carbEffect = nil
                     self.carbsOnBoard = nil
@@ -103,7 +103,7 @@ final class LoopDataManager {
                 queue: nil
             ) { (note) in
                 self.dataAccessQueue.async {
-                    self.logger.info("Received notification of glucose samples changing")
+                    self.logger.default("Received notification of glucose samples changing")
 
                     self.glucoseMomentumEffect = nil
 
@@ -452,7 +452,7 @@ extension LoopDataManager {
     ///
     /// - Parameters:
     ///   - dose: The DoseEntry representing the requested bolus
-    func addRequestedBolus(dose: DoseEntry, completion: (() -> Void)?) {
+    func addRequestedBolus(_ dose: DoseEntry, completion: (() -> Void)?) {
         dataAccessQueue.async {
             self.lastRequestedBolus = dose
             self.notify(forChange: .bolus)
@@ -490,7 +490,7 @@ extension LoopDataManager {
                     self.insulinEffect = nil
                     // Expire any bolus values now represented in the insulin data
                     // TODO: Ask pumpManager if dose represented in data
-                    if let bolusDate = self.lastRequestedBolus?.startDate, bolusDate.timeIntervalSinceNow < TimeInterval(minutes: -5) {
+                    if let bolusEndDate = self.lastRequestedBolus?.endDate, bolusEndDate < Date() {
                         self.lastRequestedBolus = nil
                     }
                 }
@@ -519,7 +519,7 @@ extension LoopDataManager {
                     self.insulinEffect = nil
                     // Expire any bolus values now represented in the insulin data
                     // TODO: Ask pumpManager if dose represented in data
-                    if areStoredValuesContinuous, let bolusDate = self.lastRequestedBolus?.startDate, bolusDate.timeIntervalSinceNow < TimeInterval(minutes: -5) {
+                    if areStoredValuesContinuous, let bolusEndDate = self.lastRequestedBolus?.endDate, bolusEndDate < Date() {
                         self.lastRequestedBolus = nil
                     }
 
@@ -554,6 +554,7 @@ extension LoopDataManager {
     /// temporary basal rate.
     func loop() {
         self.dataAccessQueue.async {
+            self.logger.default("Loop running")
             NotificationCenter.default.post(name: .LoopRunning, object: self)
 
             self.lastLoopError = nil
@@ -570,6 +571,7 @@ extension LoopDataManager {
                         } else {
                             self.lastLoopCompleted = Date()
                         }
+                        self.logger.default("Loop ended")
                         self.notify(forChange: .tempBasal)
                     }
 
@@ -582,6 +584,7 @@ extension LoopDataManager {
                 self.lastLoopError = error
             }
 
+            self.logger.default("Loop ended")
             self.notify(forChange: .tempBasal)
         }
     }

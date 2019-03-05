@@ -34,7 +34,6 @@ final class SettingsTableViewController: UITableViewController {
                 _ = tableView(tableView, willDeselectRowAt: indexPath)
             }
         }
-        tableView.reloadSections([Section.pump.rawValue], with: .none)
 
         super.viewWillAppear(animated)
     }
@@ -110,9 +109,10 @@ final class SettingsTableViewController: UITableViewController {
         }
     }
     
-    func configuredSetupViewController(for pumpManager: PumpManagerUI.Type) -> (UIViewController & PumpManagerSetupViewController) {
+    func configuredSetupViewController(for pumpManager: PumpManagerUI.Type) -> (UIViewController & PumpManagerSetupViewController & CompletionNotifying) {
         var setupViewController = pumpManager.setupViewController()
         setupViewController.setupDelegate = self
+        setupViewController.completionDelegate = self
         setupViewController.basalSchedule = dataManager.loopManager.basalRateSchedule
         setupViewController.maxBolusUnits = dataManager.loopManager.settings.maximumBolus
         setupViewController.maxBasalRateUnitsPerHour = dataManager.loopManager.settings.maximumBasalRatePerHour
@@ -130,13 +130,9 @@ final class SettingsTableViewController: UITableViewController {
         case .loop:
             return LoopRow.count
         case .pump:
-            if dataManager.pumpManager != nil {
-                return PumpRow.count
-            } else {
-                return 1
-            }
+            return PumpRow.count
         case .cgm:
-            return 1
+            return CGMRow.count
         case .configuration:
             return ConfigurationRow.count
         case .services:
@@ -174,7 +170,6 @@ final class SettingsTableViewController: UITableViewController {
                     cell.imageView?.image = pumpManager.smallImage
                     cell.textLabel?.text = pumpManager.localizedTitle
                     cell.detailTextLabel?.text = nil
-                    cell.accessoryType = .disclosureIndicator
                     return cell
                 } else {
                     let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath)
@@ -193,9 +188,6 @@ final class SettingsTableViewController: UITableViewController {
                 }
                 cell.textLabel?.text = cgmManager.localizedTitle
                 cell.detailTextLabel?.text = nil
-                if cgmManagerUI != nil {
-                    cell.accessoryType = .disclosureIndicator
-                }
                 return cell
             } else {
                 let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath)
@@ -333,8 +325,9 @@ final class SettingsTableViewController: UITableViewController {
         case .pump:
             switch PumpRow(rawValue: indexPath.row)! {
             case .pumpSettings:
-                if let settings = dataManager.pumpManager?.settingsViewController() {
-                    show(settings, sender: sender)
+                if var settings = dataManager.pumpManager?.settingsViewController() {
+                    settings.completionDelegate = self
+                    present(settings, animated: true)
                 } else {
                     // Add new pump
                     let pumpManagers = allPumpManagers.compactMap({ $0 as? PumpManagerUI.Type })
@@ -366,7 +359,9 @@ final class SettingsTableViewController: UITableViewController {
         case .cgm:
             if let cgmManager = dataManager.cgmManager as? CGMManagerUI {
                 if let unit = dataManager.loopManager.glucoseStore.preferredUnit {
-                    show(cgmManager.settingsViewController(for: unit), sender: sender)
+                    var settings = cgmManager.settingsViewController(for: unit)
+                    settings.completionDelegate = self
+                    present(settings, animated: true)
                 }
             } else if dataManager.cgmManager is PumpManagerUI {
                 // The pump manager is providing glucose, but allow reverting the CGM
@@ -564,7 +559,7 @@ final class SettingsTableViewController: UITableViewController {
         case .loop:
             break
         case .pump:
-            tableView.reloadSections([Section.pump.rawValue], with: .none)
+            tableView.reloadSections([Section.pump.rawValue], with: .fade)
             tableView.reloadRows(at: [[Section.cgm.rawValue, CGMRow.cgmSettings.rawValue]], with: .fade)
         case .cgm:
             tableView.reloadRows(at: [indexPath], with: .fade)
@@ -582,11 +577,18 @@ final class SettingsTableViewController: UITableViewController {
     }
 }
 
+extension SettingsTableViewController: CompletionDelegate {
+    func completionNotifyingDidComplete(_ object: CompletionNotifying) {
+        if let vc = object as? UIViewController {
+            vc.dismiss(animated: true, completion: nil)
+        }
+    }
+}
+
 
 extension SettingsTableViewController: PumpManagerSetupViewControllerDelegate {
     func pumpManagerSetupViewController(_ pumpManagerSetupViewController: PumpManagerSetupViewController, didSetUpPumpManager pumpManager: PumpManagerUI) {
         dataManager.pumpManager = pumpManager
-        tableView.reloadSections([Section.pump.rawValue], with: .none)
         tableView.selectRow(at: IndexPath(row: PumpRow.pumpSettings.rawValue, section: Section.pump.rawValue), animated: false, scrollPosition: .none)
 
         if let basalRateSchedule = pumpManagerSetupViewController.basalSchedule {
@@ -603,13 +605,6 @@ extension SettingsTableViewController: PumpManagerSetupViewControllerDelegate {
             dataManager.loopManager.settings.maximumBolus = maxBolusUnits
             tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
         }
-
-        show(pumpManager.settingsViewController(), sender: nil)
-        dismiss(animated: true, completion: nil)
-    }
-
-    func pumpManagerSetupViewControllerDidCancel(_ pumpManagerSetupViewController: PumpManagerSetupViewController) {
-        dismiss(animated: true, completion: nil)
     }
 }
 
@@ -618,6 +613,7 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
     fileprivate func setupCGMManager(_ CGMManagerType: CGMManagerUI.Type, indexPath: IndexPath) {
         if var setupViewController = CGMManagerType.setupViewController() {
             setupViewController.setupDelegate = self
+            setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
         } else {
             completeCGMManagerSetup(CGMManagerType.init(rawState: [:]), indexPath: indexPath)
@@ -633,11 +629,6 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
     func cgmManagerSetupViewController(_ cgmManagerSetupViewController: CGMManagerSetupViewController, didSetUpCGMManager cgmManager: CGMManagerUI) {
         dataManager.cgmManager = cgmManager
         tableView.selectRow(at: IndexPath(row: CGMRow.cgmSettings.rawValue, section: Section.cgm.rawValue), animated: false, scrollPosition: .none)
-        show(cgmManager.settingsViewController(for: dataManager.loopManager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter), sender: nil)
-        dismiss(animated: true, completion: nil)
-    }
-
-    func cgmManagerSetupViewControllerDidCancel(_ cgmManagerSetupViewController: CGMManagerSetupViewController) {
         dismiss(animated: true, completion: nil)
     }
 }

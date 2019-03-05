@@ -154,30 +154,27 @@ extension PredictedGlucoseContext: RawRepresentable {
 
 struct PumpManagerHUDViewsContext: RawRepresentable {
     typealias RawValue = [String: Any]
-    
-    let hudViews: [BaseHUDView]?
-    let pumpManagerHUDProvider: HUDProvider?
-    
-    init(pumpManagerHUDProvider: HUDProvider) {
-        self.pumpManagerHUDProvider = pumpManagerHUDProvider
-        self.hudViews = nil
+
+    let pumpManagerHUDViewsRawValue: PumpManagerHUDViewsRawValue
+
+    var hudViews: [BaseHUDView]? {
+        return PumpManagerHUDViewsFromRawValue(pumpManagerHUDViewsRawValue)
+    }
+
+    init(pumpManagerHUDViewsRawValue: PumpManagerHUDViewsRawValue) {
+        self.pumpManagerHUDViewsRawValue = pumpManagerHUDViewsRawValue
     }
     
-    init?(rawValue: [String : Any]) {
-        pumpManagerHUDProvider = nil
-        if let hudViews = PumpManagerHUDViewsFromRawValue(rawValue) {
-            self.hudViews = hudViews
+    init?(rawValue: RawValue) {
+        if let pumpManagerHUDViewsRawValue = rawValue["pumpManagerHUDViewsRawValue"] as? PumpManagerHUDViewsRawValue {
+            self.pumpManagerHUDViewsRawValue = pumpManagerHUDViewsRawValue
         } else {
             return nil
         }
     }
     
-    var rawValue: [String : Any] {
-        if let pumpManagerHUDProvider = pumpManagerHUDProvider {
-            return pumpManagerHUDProvider.rawHUDProviderViewsValue
-        } else {
-            return [:]
-        }
+    var rawValue: RawValue {
+        return ["pumpManagerHUDViewsRawValue": pumpManagerHUDViewsRawValue]
     }
 }
 
@@ -219,7 +216,6 @@ struct StatusExtensionContext: RawRepresentable {
         if let rawPumpManagerHUDViewsContext = rawValue["pumpManagerHUDViewsContext"] as? PumpManagerHUDViewsContext.RawValue {
             pumpManagerHUDViewsContext = PumpManagerHUDViewsContext(rawValue: rawPumpManagerHUDViewsContext)
         }
-
     }
     
     var rawValue: RawValue {

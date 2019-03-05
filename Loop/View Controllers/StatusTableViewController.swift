@@ -77,7 +77,7 @@ final class StatusTableViewController: ChartsTableViewController {
                     self?.hudView?.loopCompletionHUD.loopInProgress = true
                 }
             },
-            notificationCenter.addObserver(forName: .PumpManagerChanged, object: deviceManager, queue: OperationQueue.main) { [weak self] (notification: Notification) in
+            notificationCenter.addObserver(forName: .PumpManagerChanged, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
                 DispatchQueue.main.async {
                     self?.configurePumpManagerHUDViews()
                 }
@@ -134,14 +134,16 @@ final class StatusTableViewController: ChartsTableViewController {
                 }
             }
         }
-        
-        deviceManager.pumpManagerHUDProvider?.hudDidAppear()
+
+        onscreen = true
 
         AnalyticsManager.shared.didDisplayStatusScreen()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+
+        onscreen = false
 
         if presentedViewController == nil {
             navigationController?.setNavigationBarHidden(false, animated: animated)
@@ -157,12 +159,17 @@ final class StatusTableViewController: ChartsTableViewController {
     // MARK: - State
 
     override var active: Bool {
-        get {
-            return super.active
-        }
-        set {
-            super.active = newValue
+        didSet {
             hudView?.loopCompletionHUD.assertTimer(active)
+            updateHUDActive()
+        }
+    }
+
+    // This is similar to the visible property, but is set later, on viewDidAppear, to be
+    // suitable for animations that should be seen in their entirety.
+    var onscreen: Bool = false {
+        didSet {
+            updateHUDActive()
         }
     }
 
@@ -178,8 +185,12 @@ final class StatusTableViewController: ChartsTableViewController {
             refreshContext.update(with: .status)
         }
     }
+
+    private func updateHUDActive() {
+        deviceManager.pumpManagerHUDProvider?.visible = active && onscreen
+    }
     
-    public var basalDeliveryState: PumpManagerStatus.BasalDeliveryState = .none {
+    public var basalDeliveryState: PumpManagerStatus.BasalDeliveryState = .active {
         didSet {
             refreshContext.update(with: .status)
         }
@@ -829,34 +840,30 @@ final class StatusTableViewController: ChartsTableViewController {
                 tableView.deselectRow(at: indexPath, animated: true)
 
                 switch statusRowMode {
-                case .recommendedTempBasal(tempBasal: let tempBasal, at: let date, enacting: let enacting):
-                    if !enacting {
-                        self.updateHUDandStatusRows(statusRowMode: .recommendedTempBasal(tempBasal: tempBasal, at: date, enacting: true), newSize: nil, animated: true)
-                        
-                        self.deviceManager.loopManager.enactRecommendedTempBasal { (error) in
-                            DispatchQueue.main.async {
-                                self.updateHUDandStatusRows(statusRowMode: .hidden, newSize: nil, animated: true)
-                                
-                                if let error = error {
-                                    self.deviceManager.logger.addError(error, fromSource: "TempBasal")
-                                    self.presentAlertController(with: error)
-                                } else {
-                                    self.refreshContext.update(with: .status)
-                                    self.log.debug("[reloadData] after manually enacting temp basal")
-                                    self.reloadData()
-                                }
+                case .recommendedTempBasal(tempBasal: let tempBasal, at: let date, enacting: let enacting) where !enacting:
+                    self.updateHUDandStatusRows(statusRowMode: .recommendedTempBasal(tempBasal: tempBasal, at: date, enacting: true), newSize: nil, animated: true)
+
+                    self.deviceManager.loopManager.enactRecommendedTempBasal { (error) in
+                        DispatchQueue.main.async {
+                            self.updateHUDandStatusRows(statusRowMode: .hidden, newSize: nil, animated: true)
+
+                            if let error = error {
+                                self.deviceManager.logger.addError(error, fromSource: "TempBasal")
+                                self.present(UIAlertController(with: error), animated: true)
+                            } else {
+                                self.refreshContext.update(with: .status)
+                                self.log.debug("[reloadData] after manually enacting temp basal")
+                                self.reloadData()
                             }
                         }
                     }
-                case .pumpSuspended(let resuming):
-                    if !resuming {
-                        self.updateHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: true) , newSize: nil, animated: true)
-                        self.deviceManager.pumpManager?.resumeDelivery() { (error) in
-                            DispatchQueue.main.async {
-                                if let error = error {
-                                    let alert = UIAlertController(title: NSLocalizedString("Error Resuming", comment: "The alert title for a resume error"), error: error)
-                                    self.present(alert, animated: true, completion: nil)
-                                }
+                case .pumpSuspended(let resuming) where !resuming:
+                    self.updateHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: true) , newSize: nil, animated: true)
+                    self.deviceManager.pumpManager?.resumeDelivery() { (error) in
+                        DispatchQueue.main.async {
+                            if let error = error {
+                                let alert = UIAlertController(with: error, title: NSLocalizedString("Error Resuming", comment: "The alert title for a resume error"))
+                                self.present(alert, animated: true, completion: nil)
                             }
                         }
                     }
@@ -947,7 +954,7 @@ final class StatusTableViewController: ChartsTableViewController {
                 case .failure(let error):
                     // Ignore bolus wizard errors
                     if error is CarbStore.CarbStoreError {
-                        self.presentAlertController(with: error)
+                        self.present(UIAlertController(with: error), animated: true)
                     } else {
                         self.deviceManager.logger.addError(error, fromSource: "Bolus")
                     }
@@ -1060,16 +1067,21 @@ final class StatusTableViewController: ChartsTableViewController {
     
     private func configurePumpManagerHUDViews() {
         if let hudView = hudView {
-            hudView.removeNonStandardHUDViews()
+            hudView.removePumpManagerProvidedViews()
             if var pumpManagerHUDProvider = deviceManager.pumpManagerHUDProvider
             {
                 let views = pumpManagerHUDProvider.createHUDViews()
                 for view in views {
                     addViewToHUD(view)
                 }
-                pumpManagerHUDProvider.delegate = self
+                pumpManagerHUDProvider.visible = active && onscreen
+            } else {
+                let reservoirView = ReservoirVolumeHUDView.instantiate()
+                let batteryView = BatteryLevelHUDView.instantiate()
+                for view in [reservoirView, batteryView] {
+                    addViewToHUD(view)
+                }
             }
-            NotificationCenter.default.post(name: .HUDViewsChanged, object: self)
         }
     }
     
@@ -1087,9 +1099,9 @@ final class StatusTableViewController: ChartsTableViewController {
         if let deviceError = deviceManager.lastError,
             deviceError.date > (hudView?.loopCompletionHUD.lastLoopCompleted ?? .distantPast)
         {
-            self.presentAlertController(with: deviceError.error)
+            self.present(UIAlertController(with: deviceError.error), animated: true)
         } else if let lastLoopError = lastLoopError {
-            self.presentAlertController(with: lastLoopError)
+            self.present(UIAlertController(with: lastLoopError), animated: true)
         }
     }
 
@@ -1102,16 +1114,24 @@ final class StatusTableViewController: ChartsTableViewController {
     @objc private func hudViewTapped(_ sender: UIGestureRecognizer) {
         if let hudSubView = sender.view as? BaseHUDView,
             let pumpManagerHUDProvider = deviceManager.pumpManagerHUDProvider,
-            let action = pumpManagerHUDProvider.didTapOnHudView(hudSubView)
+            let action = pumpManagerHUDProvider.didTapOnHUDView(hudSubView)
         {
             switch action {
-            case .showViewController(let vc):
-                self.navigationController?.pushViewController(vc, animated: true)
             case .presentViewController(let vc):
+                var completionNotifyingVC = vc
+                completionNotifyingVC.completionDelegate = self
                 self.present(vc, animated: true, completion: nil)
             case .openAppURL(let url):
                 UIApplication.shared.open(url)
             }
+        }
+    }
+}
+
+extension StatusTableViewController: CompletionDelegate {
+    func completionNotifyingDidComplete(_ object: CompletionNotifying) {
+        if let vc = object as? UIViewController {
+            vc.dismiss(animated: true, completion: nil)
         }
     }
 }
@@ -1123,71 +1143,4 @@ extension StatusTableViewController: PumpManagerStatusObserver {
             self.reloadData(animated: true)
         }
     }
-}
-
-extension StatusTableViewController: HUDProviderDelegate {
-    
-    func hudProvider(_ provider: HUDProvider, didAddHudViews views: [BaseHUDView]) {
-        DispatchQueue.main.async {
-            for view in views {
-                view.isHidden = true
-                view.alpha = 0
-                self.addViewToHUD(view)
-            }
-            UIView.animate(withDuration: 1, animations: {
-                for view in views {
-                    view.isHidden = false
-                    view.alpha = 1
-                }
-            })
-            NotificationCenter.default.post(name: .HUDViewsChanged, object: self)
-        }
-    }
-    
-    func hudProvider(_ provider: HUDProvider, didRemoveHudViews views: [BaseHUDView]) {
-        DispatchQueue.main.async {
-            UIView.animate(withDuration: 1, animations: {
-                for view in views {
-                    view.alpha = 0
-                }
-            }, completion: { (didFinish) in
-                for view in views {
-                    view.removeFromSuperview()
-                }
-            })
-            NotificationCenter.default.post(name: .HUDViewsChanged, object: self)
-        }
-    }
-}
-
-extension UIAlertController {
-    fileprivate convenience init(title: String, error: Error) {
-        
-        let message: String
-        
-        if let localizedError = error as? LocalizedError {
-            let sentenceFormat = NSLocalizedString("%@.", comment: "Appends a full-stop to a statement")
-            message = [localizedError.failureReason, localizedError.recoverySuggestion].compactMap({ $0 }).map({
-                String(format: sentenceFormat, $0)
-            }).joined(separator: "\n")
-        } else {
-            message = String(describing: error)
-        }
-        
-        self.init(
-            title: title,
-            message: message,
-            preferredStyle: .alert
-        )
-        
-        addAction(UIAlertAction(
-            title: NSLocalizedString("OK", comment: "Button title to acknowledge error"),
-            style: .default,
-            handler: nil
-        ))
-    }
-}
-
-extension Notification.Name {
-    static let HUDViewsChanged = Notification.Name(rawValue:  "com.loopKit.notification.HUDViewsChanged")
 }

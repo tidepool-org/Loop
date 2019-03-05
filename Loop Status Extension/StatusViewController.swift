@@ -188,13 +188,20 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 return
             }
 
+            let hudViews: [BaseHUDView]
+
             if let hudViewsContext = context.pumpManagerHUDViewsContext,
-                let hudViews = hudViewsContext.hudViews {
-                self.hudView.removeNonStandardHUDViews()
-                for view in hudViews {
-                    view.stateColors = .pumpStatus
-                    self.hudView.addHUDView(view)
-                }
+                let contextHUDViews = hudViewsContext.hudViews
+            {
+                hudViews = contextHUDViews
+            } else {
+                hudViews = [ReservoirVolumeHUDView.instantiate(), BatteryLevelHUDView.instantiate()]
+            }
+
+            self.hudView.removePumpManagerProvidedViews()
+            for view in hudViews {
+                view.stateColors = .pumpStatus
+                self.hudView.addHUDView(view)
             }
 
             if let netBasal = context.netBasal {
