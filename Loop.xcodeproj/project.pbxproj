@@ -1811,12 +1811,9 @@
 			inputPaths = (
 				"$(SRCROOT)/Carthage/Build/iOS/LoopKit.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/SwiftCharts.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/RileyLinkBLEKit.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/RileyLinkKit.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/Amplitude.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/NightscoutUploadKit.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/Crypto.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/RileyLinkKitUI.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/LoopKitUI.framework",
 			);
 			name = "Copy Frameworks with Carthage";
