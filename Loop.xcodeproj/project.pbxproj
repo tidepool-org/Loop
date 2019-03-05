@@ -71,7 +71,6 @@
 		4344628020A7A37400C4BE6F /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4344627F20A7A37400C4BE6F /* HealthKit.framework */; };
 		4344628220A7A37F00C4BE6F /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4344628120A7A37E00C4BE6F /* CoreBluetooth.framework */; };
 		4344628520A7A3BE00C4BE6F /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4344628320A7A3BE00C4BE6F /* LoopKit.framework */; };
-		4344628620A7A3BE00C4BE6F /* CGMBLEKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4344628420A7A3BE00C4BE6F /* CGMBLEKit.framework */; };
 		4344628E20A7ADD100C4BE6F /* UserDefaults+CGM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4344628D20A7ADD100C4BE6F /* UserDefaults+CGM.swift */; };
 		4344628F20A7ADD500C4BE6F /* UserDefaults+CGM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4344628D20A7ADD100C4BE6F /* UserDefaults+CGM.swift */; };
 		4344629220A7C19800C4BE6F /* ButtonGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4344629120A7C19800C4BE6F /* ButtonGroup.swift */; };
@@ -901,7 +900,6 @@
 				4344628220A7A37F00C4BE6F /* CoreBluetooth.framework in Frameworks */,
 				4344628020A7A37400C4BE6F /* HealthKit.framework in Frameworks */,
 				4344628520A7A3BE00C4BE6F /* LoopKit.framework in Frameworks */,
-				4344628620A7A3BE00C4BE6F /* CGMBLEKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
