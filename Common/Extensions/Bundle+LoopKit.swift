@@ -13,9 +13,7 @@ import LoopKitUI
 
 extension Bundle {
     static let linkedPumpManagers = linkedFrameworkClasses(fromInfoDictionaryKey: "PumpManager").compactMap { $0 as? PumpManager.Type }
-    static let linkedPumpManagerUIs = linkedFrameworkClasses(fromInfoDictionaryKey: "PumpManagerUI").compactMap { $0 as? PumpManagerUI.Type }
     static let linkedCGMManagers = linkedFrameworkClasses(fromInfoDictionaryKey: "CGMManager").compactMap { $0 as? CGMManager.Type }
-    static let linkedCGMManagerUIs = linkedFrameworkClasses(fromInfoDictionaryKey: "CGMManagerUI").compactMap { $0 as? CGMManagerUI.Type }
 
     private static func linkedFrameworkClasses(fromInfoDictionaryKey plistKey: String) -> [AnyClass] {
         return allFrameworks.flatMap { bundle -> [AnyClass] in

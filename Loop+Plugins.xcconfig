@@ -1,4 +1,4 @@
 #include "/Users/mpangburn/Developer/loop-priv/Loop.xcconfig"
 
-OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -framework MockKit -framework MockKitUI -framework ShareClient -framework ShareClientUI -framework G4ShareSpy -framework CGMBLEKit -framework CGMBLEKitUI -framework OmniKit -framework OmniKitUI -framework MinimedKit -framework MinimedKitUI
-OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -framework MockKit -framework MockKitUI -framework ShareClient -framework ShareClientUI -framework G4ShareSpy -framework CGMBLEKit -framework CGMBLEKitUI -framework OmniKit -framework OmniKitUI -framework MinimedKit -framework MinimedKitUI
+OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -framework ShareClient -framework ShareClientUI -framework G4ShareSpy -framework CGMBLEKit -framework CGMBLEKitUI -framework MinimedKit -framework MinimedKitUI
+OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -framework ShareClient -framework ShareClientUI -framework G4ShareSpy -framework CGMBLEKit -framework CGMBLEKitUI -framework MinimedKit -framework MinimedKitUI
