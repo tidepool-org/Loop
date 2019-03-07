@@ -50,7 +50,7 @@ final class SettingsTableViewController: UITableViewController {
     private lazy var isTestingPumpManager = dataManager.pumpManager is TestingPumpManager
     private lazy var isTestingCGMManager = dataManager.cgmManager is TestingCGMManager
 
-    fileprivate enum Section: Int, CaseCountable {
+    fileprivate enum Section: Int, CaseIterable {
         case loop = 0
         case pump
         case cgm
@@ -127,19 +127,23 @@ final class SettingsTableViewController: UITableViewController {
     
     // MARK: - UITableViewDataSource
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        var count = Section.count
+    private var sections: [Section] {
+        var sections = Section.allCases
         if !isTestingPumpManager {
-            count -= 1
+            sections.remove(.testingPumpDataDeletion)
         }
         if !isTestingCGMManager {
-            count -= 1
+            sections.remove(.testingCGMDataDeletion)
         }
-        return count
+        return sections
+    }
+
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        return sections.count
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch Section(rawValue: section)! {
+        switch sections[section] {
         case .loop:
             return LoopRow.count
         case .pump:
@@ -156,7 +160,7 @@ final class SettingsTableViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        switch Section(rawValue: indexPath.section)! {
+        switch sections[indexPath.section] {
         case .loop:
             switch LoopRow(rawValue: indexPath.row)! {
             case .dosing:
@@ -327,7 +331,7 @@ final class SettingsTableViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        switch Section(rawValue: section)! {
+        switch sections[section] {
         case .loop:
             return Bundle.main.localizedNameAndVersion
         case .pump:
@@ -352,7 +356,7 @@ final class SettingsTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let sender = tableView.cellForRow(at: indexPath)
 
-        switch Section(rawValue: indexPath.section)! {
+        switch sections[indexPath.section] {
         case .pump:
             switch PumpRow(rawValue: indexPath.row)! {
             case .pumpSettings:
@@ -601,26 +605,40 @@ final class SettingsTableViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, willDeselectRowAt indexPath: IndexPath) -> IndexPath? {
-        switch Section(rawValue: indexPath.section)! {
+        switch sections[indexPath.section] {
         case .loop:
             break
         case .pump:
+            let previousTestingPumpDataDeletionSection = sections.index(of: .testingPumpDataDeletion)
             let wasTestingPumpManager = isTestingPumpManager
             isTestingPumpManager = dataManager.pumpManager is TestingPumpManager
             if !wasTestingPumpManager, isTestingPumpManager {
-                tableView.insertSections([Section.testingPumpDataDeletion.rawValue], with: .automatic)
+                guard let testingPumpDataDeletionSection = sections.index(of: .testingPumpDataDeletion) else {
+                    fatalError("Expected to find testing pump data deletion section with testing pump in use")
+                }
+                tableView.insertSections([testingPumpDataDeletionSection], with: .automatic)
             } else if wasTestingPumpManager, !isTestingPumpManager {
-                tableView.deleteSections([Section.testingPumpDataDeletion.rawValue], with: .automatic)
+                guard let previousTestingPumpDataDeletionSection = previousTestingPumpDataDeletionSection else {
+                    fatalError("Expected to have had testing pump data deletion section when testing pump was in use")
+                }
+                tableView.deleteSections([previousTestingPumpDataDeletionSection], with: .automatic)
             }
             tableView.reloadSections([Section.pump.rawValue], with: .fade)
             tableView.reloadRows(at: [[Section.cgm.rawValue, CGMRow.cgmSettings.rawValue]], with: .fade)
         case .cgm:
+            let previousTestingCGMDataDeletionSection = sections.index(of: .testingCGMDataDeletion)
             let wasTestingCGMManager = isTestingCGMManager
             isTestingCGMManager = dataManager.cgmManager is TestingCGMManager
             if !wasTestingCGMManager, isTestingCGMManager {
-                tableView.insertSections([Section.testingCGMDataDeletion.rawValue], with: .automatic)
+                guard let testingCGMDataDeletionSection = sections.index(of: .testingCGMDataDeletion) else {
+                    fatalError("Expected to find testing CGM data deletion section with testing CGM in use")
+                }
+                tableView.insertSections([testingCGMDataDeletionSection], with: .automatic)
             } else if wasTestingCGMManager, !isTestingCGMManager {
-                tableView.deleteSections([Section.testingCGMDataDeletion.rawValue], with: .automatic)
+                guard let previousTestingCGMDataDeletionSection = previousTestingCGMDataDeletionSection else {
+                    fatalError("Expected to have had testing CGM data deletion section when testing CGM was in use")
+                }
+                tableView.deleteSections([previousTestingCGMDataDeletionSection], with: .automatic)
             }
             tableView.reloadRows(at: [indexPath], with: .fade)
         case .configuration:
@@ -702,7 +720,7 @@ extension SettingsTableViewController: DailyValueScheduleTableViewControllerDele
             return
         }
 
-        switch Section(rawValue: indexPath.section)! {
+        switch sections[indexPath.section] {
         case .configuration:
             switch ConfigurationRow(rawValue: indexPath.row)! {
             case .glucoseTargetRange:
@@ -742,7 +760,7 @@ extension SettingsTableViewController: InsulinModelSettingsViewControllerDelegat
             return
         }
 
-        switch Section(rawValue: indexPath.section)! {
+        switch sections[indexPath.section] {
         case .configuration:
             switch ConfigurationRow(rawValue: indexPath.row)! {
             case .insulinModel:
@@ -764,7 +782,7 @@ extension SettingsTableViewController: InsulinModelSettingsViewControllerDelegat
 extension SettingsTableViewController: LoopKitUI.TextFieldTableViewControllerDelegate {
     func textFieldTableViewControllerDidEndEditing(_ controller: LoopKitUI.TextFieldTableViewController) {
         if let indexPath = controller.indexPath {
-            switch Section(rawValue: indexPath.section)! {
+            switch sections[indexPath.section] {
             case .configuration:
                 switch ConfigurationRow(rawValue: indexPath.row)! {
                 case .suspendThreshold:
