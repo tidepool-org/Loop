@@ -354,7 +354,7 @@ extension Collection where Element == GlucoseValue {
         basalRates: BasalRateSchedule,
         maxBasalRate: Double,
         lastTempBasal: DoseEntry?,
-        rateRounder: ((Double) -> Double)?,
+        rateRounder: ((Double) -> Double)? = nil,
         duration: TimeInterval = .minutes(30),
         continuationInterval: TimeInterval = .minutes(11)
     ) -> TempBasalRecommendation? {
@@ -411,7 +411,7 @@ extension Collection where Element == GlucoseValue {
         model: InsulinModel,
         pendingInsulin: Double,
         maxBolus: Double,
-        volumeRounder: ((Double) -> Double)?
+        volumeRounder: ((Double) -> Double)? = nil
     ) -> BolusRecommendation {
         guard let correction = self.insulinCorrection(
             to: correctionRange,

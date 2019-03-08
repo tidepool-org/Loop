@@ -393,7 +393,7 @@ extension DeviceDataManager: LoopDataManagerDelegate {
             return unitsPerHour
         }
         
-        return pumpManager.roundToSupportedTemporaryBasalRate(unitsPerHour: unitsPerHour)
+        return pumpManager.roundToSupportedBasalRate(unitsPerHour: unitsPerHour)
     }
 
     func loopDataManager(_ manager: LoopDataManager, roundBolus units: Double) -> Double {
