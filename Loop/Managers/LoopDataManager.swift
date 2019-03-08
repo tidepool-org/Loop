@@ -48,14 +48,12 @@ final class LoopDataManager {
         carbRatioSchedule: CarbRatioSchedule? = UserDefaults.appGroup.carbRatioSchedule,
         insulinModelSettings: InsulinModelSettings? = UserDefaults.appGroup.insulinModelSettings,
         insulinSensitivitySchedule: InsulinSensitivitySchedule? = UserDefaults.appGroup.insulinSensitivitySchedule,
-        settings: LoopSettings = UserDefaults.appGroup.loopSettings ?? LoopSettings(),
-        supportedTempBasalRates: [Double] = [0]
+        settings: LoopSettings = UserDefaults.appGroup.loopSettings ?? LoopSettings()
     ) {
         self.logger = DiagnosticLogger.shared.forCategory("LoopDataManager")
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
         self.lastTempBasal = lastTempBasal
         self.settings = settings
-        self.lockedSupportedTempBasalRates = Locked<[Double]>(supportedTempBasalRates)
 
         let healthStore = HKHealthStore()
         let cacheStore = PersistenceController.controllerInAppGroupDirectory()
@@ -125,19 +123,6 @@ final class LoopDataManager {
             AnalyticsManager.shared.didChangeLoopSettings(from: oldValue, to: settings)
         }
     }
-
-    // Delivery constraints
-    var supportedTempBasalRates: [Double] {
-        get {
-            return lockedSupportedTempBasalRates.value
-        }
-
-        set {
-            lockedSupportedTempBasalRates.value = newValue
-        }
-    }
-    private var lockedSupportedTempBasalRates: Locked<[Double]>
-
 
     // MARK: - Calculation state
 
@@ -909,6 +894,10 @@ extension LoopDataManager {
             recommendedTempBasal = nil
             return
         }
+
+        let rateRounder = { (_ rate: Double) in
+            return self.delegate?.loopDataManager(self, roundTempBasal: rate) ?? rate
+        }
         
         let tempBasal = predictedGlucose.recommendedTempBasal(
             to: glucoseTargetRange,
@@ -918,7 +907,7 @@ extension LoopDataManager {
             basalRates: basalRates,
             maxBasalRate: maxBasal,
             lastTempBasal: lastTempBasal,
-            supportedBasalRates: supportedTempBasalRates
+            rateRounder: rateRounder
         )
         
         if let temp = tempBasal {
@@ -929,13 +918,18 @@ extension LoopDataManager {
 
         let pendingInsulin = try self.getPendingInsulin()
 
+        let volumeRounder = { (_ units: Double) in
+            return self.delegate?.loopDataManager(self, roundBolus: units) ?? units
+        }
+
         let recommendation = predictedGlucose.recommendedBolus(
             to: glucoseTargetRange,
             suspendThreshold: settings.suspendThreshold?.quantity,
             sensitivity: insulinSensitivity,
             model: model,
             pendingInsulin: pendingInsulin,
-            maxBolus: maxBolus
+            maxBolus: maxBolus,
+            volumeRounder: volumeRounder
         )
         recommendedBolus = (recommendation: recommendation, date: startDate)
     }
@@ -1192,6 +1186,20 @@ protocol LoopDataManagerDelegate: class {
     ///   - completion: A closure called once on completion
     ///   - result: The enacted basal
     func loopDataManager(_ manager: LoopDataManager, didRecommendBasalChange basal: (recommendation: TempBasalRecommendation, date: Date), completion: @escaping (_ result: Result<DoseEntry>) -> Void) -> Void
+
+    /// Asks the delegate to round a recommended basal rate to a supported rate
+    ///
+    /// - Parameters:
+    ///   - rate: The recommended rate in U/hr
+    /// - Returns: a supported rate of delivery in Units/hr. The rate returned should not be larger than the passed in rate.
+    func loopDataManager(_ manager: LoopDataManager, roundTempBasal unitsPerHour: Double) -> Double
+
+    /// Asks the delegate to round a recommended bolus volume to a supported volume
+    ///
+    /// - Parameters:
+    ///   - units: The recommended bolus in U
+    /// - Returns: a supported bolus volume in U. The volume returned should not be larger than the passed in rate.
+    func loopDataManager(_ manager: LoopDataManager, roundBolus units: Double) -> Double
 }
 
 extension DoseStore {

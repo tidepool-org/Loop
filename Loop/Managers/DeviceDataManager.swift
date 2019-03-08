@@ -117,7 +117,6 @@ final class DeviceDataManager {
             self.pumpManagerStatus = pumpManager.status
             self.loopManager.doseStore.device = self.pumpManagerStatus?.device
             self.pumpManagerHUDProvider = pumpManager.hudProvider()
-            self.loopManager.supportedTempBasalRates = pumpManager.supportedBasalRates
         }
 
         // Proliferate PumpModel preferences to DoseStore
@@ -389,6 +388,22 @@ extension DeviceDataManager {
 }
 
 extension DeviceDataManager: LoopDataManagerDelegate {
+    func loopDataManager(_ manager: LoopDataManager, roundTempBasal unitsPerHour: Double) -> Double {
+        guard let pumpManager = pumpManager else {
+            return unitsPerHour
+        }
+        
+        return pumpManager.roundToSupportedTemporaryBasalRate(unitsPerHour: unitsPerHour)
+    }
+
+    func loopDataManager(_ manager: LoopDataManager, roundBolus units: Double) -> Double {
+        guard let pumpManager = pumpManager else {
+            return units
+        }
+
+        return pumpManager.roundToSupportedBolusVolume(units: units)
+    }
+
     func loopDataManager(
         _ manager: LoopDataManager,
         didRecommendBasalChange basal: (recommendation: TempBasalRecommendation, date: Date),
@@ -414,6 +429,8 @@ extension DeviceDataManager: LoopDataManagerDelegate {
             }
         )
     }
+
+
 }
 
 
