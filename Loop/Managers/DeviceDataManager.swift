@@ -388,7 +388,7 @@ extension DeviceDataManager {
 }
 
 extension DeviceDataManager: LoopDataManagerDelegate {
-    func loopDataManager(_ manager: LoopDataManager, roundTempBasal unitsPerHour: Double) -> Double {
+    func loopDataManager(_ manager: LoopDataManager, roundBasalRate unitsPerHour: Double) -> Double {
         guard let pumpManager = pumpManager else {
             return unitsPerHour
         }
@@ -396,7 +396,7 @@ extension DeviceDataManager: LoopDataManagerDelegate {
         return pumpManager.roundToSupportedBasalRate(unitsPerHour: unitsPerHour)
     }
 
-    func loopDataManager(_ manager: LoopDataManager, roundBolus units: Double) -> Double {
+    func loopDataManager(_ manager: LoopDataManager, roundBolusVolume units: Double) -> Double {
         guard let pumpManager = pumpManager else {
             return units
         }
