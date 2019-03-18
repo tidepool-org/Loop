@@ -191,8 +191,6 @@
 		43E2D8F51D20C0DB004DA55F /* recommend_temp_basal_start_low_end_high.json in Resources */ = {isa = PBXBuildFile; fileRef = 43E2D8EA1D20C0DB004DA55F /* recommend_temp_basal_start_low_end_high.json */; };
 		43E2D8F61D20C0DB004DA55F /* recommend_temp_basal_start_low_end_in_range.json in Resources */ = {isa = PBXBuildFile; fileRef = 43E2D8EB1D20C0DB004DA55F /* recommend_temp_basal_start_low_end_in_range.json */; };
 		43E2D9151D20C5A2004DA55F /* KeychainManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E2D8C91D20B9E7004DA55F /* KeychainManagerTests.swift */; };
-		43E2D9171D2226BD004DA55F /* LoopKit.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 43F78D4B1C914197002152D1 /* LoopKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		43E2D9191D222759004DA55F /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43F78D4B1C914197002152D1 /* LoopKit.framework */; };
 		43E3449F1B9D68E900C85C07 /* StatusTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E3449E1B9D68E900C85C07 /* StatusTableViewController.swift */; };
 		43E93FB51E4675E800EAB8DB /* NumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BFF0B31E45C1BE00FF19A9 /* NumberFormatter.swift */; };
 		43E93FB61E469A4000EAB8DB /* NumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BFF0B31E45C1BE00FF19A9 /* NumberFormatter.swift */; };
@@ -380,6 +378,13 @@
 			remoteGlobalIDString = 4F75288A1DFE1DC600C322D6;
 			remoteInfo = LoopUI;
 		};
+		A9D5C525224318AF00341B9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 43776F841B8022E90074EA36 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 43776F8B1B8022E90074EA36;
+			remoteInfo = Loop;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -432,7 +437,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				43E2D9171D2226BD004DA55F /* LoopKit.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -906,7 +910,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				43E2D9191D222759004DA55F /* LoopKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1530,6 +1533,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				A9D5C526224318AF00341B9D /* PBXTargetDependency */,
 			);
 			name = DoseMathTests;
 			productName = DoseMathTests;
@@ -1662,6 +1666,7 @@
 					43E2D8D01D20BF42004DA55F = {
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 0800;
+						TestTargetID = 43776F8B1B8022E90074EA36;
 					};
 					43E2D90A1D20C581004DA55F = {
 						CreatedOnToolsVersion = 7.3.1;
@@ -1819,7 +1824,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -f $PROJECT_DIR/.gitmodules ]; then\n    echo \"Skipping checkout due to presence of .gitmodules file\"\n    if [ $ACTION = \"install\" ]; then\n        echo \"You're installing: Make sure to keep all submodules up-to-date and run carthage build after changes.\"\n    fi\nelse\n    echo \"Bootstrapping carthage dependencies\"\n    unset LLVM_TARGET_TRIPLE_SUFFIX\n    /usr/local/bin/carthage bootstrap --project-directory \"$SRCROOT\" --cache-builds\nfi\n";
+			shellScript = "if [ -d $PROJECT_DIR/../Loop.xcworkspace ]; then \n    echo \"Skipping carthage build because we're in a workspace\"\nelif [ -f $PROJECT_DIR/.gitmodules ]; then\n    echo \"Skipping checkout due to presence of .gitmodules file\"\n    if [ $ACTION = \"install\" ]; then\n        echo \"You're installing: Make sure to keep all submodules up-to-date and run carthage build after changes.\"\n    fi\nelse\n    echo \"Bootstrapping carthage dependencies\"\n    unset LLVM_TARGET_TRIPLE_SUFFIX\n    /usr/local/bin/carthage bootstrap --project-directory \"$SRCROOT\" --cache-builds\nfi\n";
 		};
 		432CF88220D8BCD90066B889 /* Homebrew & Carthage Setup */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1863,7 +1868,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "carthage_frameworks_dir=${SRCROOT}/Carthage/Build/iOS\nif [ -f $PROJECT_DIR/.gitmodules ] && [ $ACTION != \"install\" ]; then\nfor varname in ${!SCRIPT_INPUT_FILE_*}\ndo\necho using $BUILT_PRODUCTS_DIR for ${varname}\nexport ${varname}=${!varname/$carthage_frameworks_dir/$BUILT_PRODUCTS_DIR}\ndone\nfi\n/usr/local/bin/carthage copy-frameworks\n";
+			shellScript = "if [ -d $PROJECT_DIR/../Loop.xcworkspace ]; then \n    echo \"Skipping carthage copy-frameworks because we're in a workspace\"\nelse\n    carthage_frameworks_dir=${SRCROOT}/Carthage/Build/iOS\n    if [ -f $PROJECT_DIR/.gitmodules ] && [ $ACTION != \"install\" ]; then\n        for varname in ${!SCRIPT_INPUT_FILE_*}; do\n            echo using $BUILT_PRODUCTS_DIR for ${varname}\n            export ${varname}=${!varname/$carthage_frameworks_dir/$BUILT_PRODUCTS_DIR}\n        done\n    fi\n    /usr/local/bin/carthage copy-frameworks\nfi\n";
 		};
 		43FF3DF620A8EFE800F8E62C /* Copy Frameworks with Carthage */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1883,7 +1888,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "carthage_frameworks_dir=${SRCROOT}/Carthage/Build/iOS\nif [ -f $PROJECT_DIR/.gitmodules ] && [ $ACTION != \"install\" ]; then\nfor varname in ${!SCRIPT_INPUT_FILE_*}\ndo\nexport ${varname}=${!varname/$carthage_frameworks_dir/$BUILT_PRODUCTS_DIR}\ndone\nfi\n/usr/local/bin/carthage copy-frameworks\n";
+			shellScript = "if [ -d $PROJECT_DIR/../Loop.xcworkspace ]; then \n    echo \"Skipping carthage copy-frameworks because we're in a workspace\"\nelse\n    carthage_frameworks_dir=${SRCROOT}/Carthage/Build/iOS\n    if [ -f $PROJECT_DIR/.gitmodules ] && [ $ACTION != \"install\" ]; then\n        for varname in ${!SCRIPT_INPUT_FILE_*}; do\n            export ${varname}=${!varname/$carthage_frameworks_dir/$BUILT_PRODUCTS_DIR}\n        done\n    fi\n    /usr/local/bin/carthage copy-frameworks\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2193,6 +2198,11 @@
 			isa = PBXTargetDependency;
 			target = 4F75288A1DFE1DC600C322D6 /* LoopUI */;
 			targetProxy = 4F7528981DFE1ED800C322D6 /* PBXContainerItemProxy */;
+		};
+		A9D5C526224318AF00341B9D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 43776F8B1B8022E90074EA36 /* Loop */;
+			targetProxy = A9D5C525224318AF00341B9D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2787,6 +2797,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.loudnate.DoseMathTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Loop.app/Loop";
 			};
 			name = Debug;
 		};
@@ -2800,6 +2811,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.loudnate.DoseMathTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Loop.app/Loop";
 			};
 			name = Release;
 		};
