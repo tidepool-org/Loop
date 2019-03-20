@@ -12,6 +12,8 @@ class TitleSubtitleTableViewCell: UITableViewCell {
 
     @IBOutlet weak var titleLabel: UILabel!
 
+    @IBOutlet weak var progressIndicator: UIProgressView!
+
     @IBOutlet weak var subtitleLabel: UILabel! {
         didSet {
             subtitleLabel.textColor = UIColor.secondaryLabelColor

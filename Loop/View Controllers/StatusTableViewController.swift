@@ -16,23 +16,18 @@ import SwiftCharts
 import os.log
 
 
-/// Describes the state within the bolus setting flow
-///
-/// - recommended: A bolus recommendation was discovered and the bolus view controller is presenting/presented
-/// - enacting: A bolus was requested by the user and is pending with the device manager
-private enum BolusState {
-    case recommended
-    case enacting
-}
-
 private extension RefreshContext {
     static let all: Set<RefreshContext> = [.status, .glucose, .insulin, .carbs, .targets]
 }
 
-
 final class StatusTableViewController: ChartsTableViewController {
 
     private let log = OSLog(category: "StatusTableViewController")
+
+    lazy var quantityFormatter: QuantityFormatter = {
+        let formatter = QuantityFormatter()
+        return formatter
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -101,6 +96,8 @@ final class StatusTableViewController: ChartsTableViewController {
         toolbarItems![4].tintColor = UIColor.doseTintColor
         toolbarItems![8].accessibilityLabel = NSLocalizedString("Settings", comment: "The label of the settings button")
         toolbarItems![8].tintColor = UIColor.secondaryLabelColor
+
+        tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
     }
 
     override func didReceiveMemoryWarning() {
@@ -117,6 +114,8 @@ final class StatusTableViewController: ChartsTableViewController {
         super.viewWillAppear(animated)
 
         navigationController?.setNavigationBarHidden(true, animated: animated)
+
+        updateBolusProgress()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -173,16 +172,25 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
 
-    private var bolusState: BolusState? {
+    private var bolusState = PumpManagerStatus.BolusState.none {
         didSet {
-            switch bolusState {
-            case .enacting?:
-                updateHUDandStatusRows(statusRowMode: .enactingBolus, newSize: nil, animated: true)
-            default:
-                updateHUDandStatusRows(statusRowMode: .hidden, newSize: nil, animated: true)
+            if oldValue != bolusState {
+                refreshContext.update(with: .status)
             }
+        }
+    }
 
-            refreshContext.update(with: .status)
+    private var bolusProgressEstimator: DoseProgressEstimator?
+
+    private var currentBolusDeliveredUnits: Double? {
+        didSet {
+            updateBolusProgress()
+        }
+    }
+
+    private func updateBolusProgress() {
+        if let cell = tableView.cellForRow(at: IndexPath(row: StatusRow.status.rawValue, section: Section.status.rawValue)) as? BolusProgressTableViewCell {
+            cell.deliveredUnits = currentBolusDeliveredUnits
         }
     }
 
@@ -192,7 +200,9 @@ final class StatusTableViewController: ChartsTableViewController {
     
     public var basalDeliveryState: PumpManagerStatus.BasalDeliveryState = .active {
         didSet {
-            refreshContext.update(with: .status)
+            if oldValue != basalDeliveryState {
+                refreshContext.update(with: .status)
+            }
         }
     }
 
@@ -248,6 +258,21 @@ final class StatusTableViewController: ChartsTableViewController {
         updateChartDateRange()
         redrawCharts()
 
+        if !active || !visible {
+            self.bolusProgressEstimator?.stop()
+            self.bolusProgressEstimator = nil
+        } else if
+            visible && active,
+            case .inProgress(let dose) = self.bolusState,
+            dose.endDate.timeIntervalSinceNow > 0,
+            let estimator = self.deviceManager.pumpManager?.progressEstimatorForDose(dose)
+        {
+            estimator.start(on: RunLoop.current)
+            estimator.delegate = self
+            self.currentBolusDeliveredUnits = estimator.estimatedDeliveredUnits
+            self.bolusProgressEstimator = estimator
+        }
+
         guard active && visible && !refreshContext.isEmpty else {
             return
         }
@@ -267,7 +292,6 @@ final class StatusTableViewController: ChartsTableViewController {
         var doseEntries: [DoseEntry]?
         var totalDelivery: Double?
         var cobValues: [CarbValue]?
-        let bolusState = self.bolusState
         let startDate = charts.startDate
 
         // TODO: Don't always assume currentContext.contains(.status)
@@ -437,26 +461,10 @@ final class StatusTableViewController: ChartsTableViewController {
             }
 
             // Show/hide the table view rows
-            let statusRowMode: StatusRowMode?
-            
-            if self.basalDeliveryState == .suspended {
-                statusRowMode = .pumpSuspended(resuming: false)
-            } else if self.basalDeliveryState == .resuming {
-                statusRowMode = .pumpSuspended(resuming: true)
-            } else {
-                switch bolusState {
-                case .recommended?, .enacting?:
-                    statusRowMode = nil
-                case .none:
-                    if let (recommendation: tempBasal, date: date) = newRecommendedTempBasal {
-                        statusRowMode = .recommendedTempBasal(tempBasal: tempBasal, at: date, enacting: false)
-                    } else {
-                        statusRowMode = .hidden
-                    }
-                }
-            }
+            let statusRowMode = self.determineStatusRowMode(recommendedTempBasal: newRecommendedTempBasal)
 
             self.updateHUDandStatusRows(statusRowMode: statusRowMode, newSize: currentContext.newSize, animated: animated)
+
             self.redrawCharts()
 
             self.tableView.endUpdates()
@@ -520,6 +528,8 @@ final class StatusTableViewController: ChartsTableViewController {
         case hidden
         case recommendedTempBasal(tempBasal: TempBasalRecommendation, at: Date, enacting: Bool)
         case enactingBolus
+        case bolusing(dose: DoseEntry)
+        case cancelingBolus
         case pumpSuspended(resuming: Bool)
 
         var hasRow: Bool {
@@ -534,14 +544,37 @@ final class StatusTableViewController: ChartsTableViewController {
 
     private var statusRowMode = StatusRowMode.hidden
 
-    private func updateHUDandStatusRows(statusRowMode: StatusRowMode?, newSize: CGSize?, animated: Bool) {
+    private func determineStatusRowMode(recommendedTempBasal: (recommendation: TempBasalRecommendation, date: Date)? = nil) -> StatusRowMode {
+        let statusRowMode: StatusRowMode
+
+        if case .initiating = bolusState {
+            statusRowMode = .enactingBolus
+        } else if case .canceling = bolusState {
+            statusRowMode = .cancelingBolus
+        } else if self.basalDeliveryState == .suspended {
+            statusRowMode = .pumpSuspended(resuming: false)
+        } else if self.basalDeliveryState == .resuming {
+            statusRowMode = .pumpSuspended(resuming: true)
+        } else {
+            if case .inProgress(let dose) = bolusState, dose.endDate.timeIntervalSinceNow > 0 {
+                statusRowMode = .bolusing(dose: dose)
+            } else if let (recommendation: tempBasal, date: date) = recommendedTempBasal {
+                statusRowMode = .recommendedTempBasal(tempBasal: tempBasal, at: date, enacting: false)
+            } else {
+                statusRowMode = .hidden
+            }
+        }
+
+        return statusRowMode
+    }
+
+    private func updateHUDandStatusRows(statusRowMode: StatusRowMode, newSize: CGSize?, animated: Bool) {
         let hudWasVisible = self.shouldShowHUD
         let statusWasVisible = self.shouldShowStatus
 
         let oldStatusRowMode = self.statusRowMode
-        if let statusRowMode = statusRowMode {
-            self.statusRowMode = statusRowMode
-        }
+
+        self.statusRowMode = statusRowMode
 
         if let newSize = newSize {
             self.landscapeMode = newSize.width > newSize.height
@@ -588,14 +621,14 @@ final class StatusTableViewController: ChartsTableViewController {
                 }
             case (.enactingBolus, .enactingBolus):
                 break
-            case (.pumpSuspended(resuming: let wasResuming), .pumpSuspended(resuming: let isResuming)):
-                if isResuming, !wasResuming, let cell = tableView.cellForRow(at: statusIndexPath) as? TitleSubtitleTableViewCell {
-                    let indicatorView = UIActivityIndicatorView(activityIndicatorStyle: .gray)
-                    indicatorView.startAnimating()
-                    cell.accessoryView = indicatorView
-                    cell.subtitleLabel.text = nil
+            case (.bolusing(let oldDose), .bolusing(let newDose)):
+                if oldDose != newDose {
+                    self.tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
                 }
-                break
+            case (.pumpSuspended(resuming: let wasResuming), .pumpSuspended(resuming: let isResuming)):
+                if isResuming != wasResuming {
+                    self.tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
+                }
             default:
                 self.tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
             }
@@ -713,17 +746,24 @@ final class StatusTableViewController: ChartsTableViewController {
 
             return cell
         case .status:
-            let cell = tableView.dequeueReusableCell(withIdentifier: TitleSubtitleTableViewCell.className, for: indexPath) as! TitleSubtitleTableViewCell
-            cell.selectionStyle = .none
+
+            let getTitleSubtitleCell: () -> TitleSubtitleTableViewCell = {
+                let cell = tableView.dequeueReusableCell(withIdentifier: TitleSubtitleTableViewCell.className, for: indexPath) as! TitleSubtitleTableViewCell
+                cell.selectionStyle = .none
+                return cell
+            }
 
             switch StatusRow(rawValue: indexPath.row)! {
             case .status:
                 switch statusRowMode {
                 case .hidden:
+                    let cell = getTitleSubtitleCell()
                     cell.titleLabel.text = nil
                     cell.subtitleLabel?.text = nil
                     cell.accessoryView = nil
+                    return cell
                 case .recommendedTempBasal(tempBasal: let tempBasal, at: let date, enacting: let enacting):
+                    let cell = getTitleSubtitleCell()
                     let timeFormatter = DateFormatter()
                     timeFormatter.dateStyle = .none
                     timeFormatter.timeStyle = .short
@@ -739,21 +779,49 @@ final class StatusTableViewController: ChartsTableViewController {
                     } else {
                         cell.accessoryView = nil
                     }
+                    return cell
                 case .enactingBolus:
+                    let cell = getTitleSubtitleCell()
                     cell.titleLabel.text = NSLocalizedString("Starting Bolus", comment: "The title of the cell indicating a bolus is being sent")
                     cell.subtitleLabel.text = nil
 
                     let indicatorView = UIActivityIndicatorView(activityIndicatorStyle: .gray)
                     indicatorView.startAnimating()
                     cell.accessoryView = indicatorView
-                case .pumpSuspended:
+                    return cell
+                case .bolusing(let dose):
+                    let progressCell = tableView.dequeueReusableCell(withIdentifier: BolusProgressTableViewCell.className, for: indexPath) as! BolusProgressTableViewCell
+                    progressCell.selectionStyle = .none
+                    progressCell.totalUnits = dose.units
+                    progressCell.tintColor = .doseTintColor
+                    progressCell.unit = HKUnit.internationalUnit()
+                    progressCell.deliveredUnits = bolusProgressEstimator?.estimatedDeliveredUnits
+                    return progressCell
+                case .cancelingBolus:
+                    let cell = getTitleSubtitleCell()
+                    cell.titleLabel.text = NSLocalizedString("Canceling Bolus", comment: "The title of the cell indicating a bolus is being canceled")
+                    cell.subtitleLabel.text = nil
+
+                    let indicatorView = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+                    indicatorView.startAnimating()
+                    cell.accessoryView = indicatorView
+                    return cell
+                case .pumpSuspended(let resuming):
+                    let cell = getTitleSubtitleCell()
                     cell.titleLabel.text = NSLocalizedString("Pump Suspended", comment: "The title of the cell indicating the pump is suspended")
-                    cell.subtitleLabel.text = NSLocalizedString("Tap to Resume", comment: "The subtitle of the cell displaying an action to resume insulin delivery")
+
+                    if resuming {
+                        let indicatorView = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+                        indicatorView.startAnimating()
+                        cell.accessoryView = indicatorView
+                        cell.subtitleLabel.text = ""
+                    } else {
+                        cell.subtitleLabel.text = NSLocalizedString("Tap to Resume", comment: "The subtitle of the cell displaying an action to resume insulin delivery")
+                    }
                     cell.selectionStyle = .default
+                    return cell
                 }
             }
-
-            return cell
         }
     }
 
@@ -864,9 +932,34 @@ final class StatusTableViewController: ChartsTableViewController {
                             if let error = error {
                                 let alert = UIAlertController(with: error, title: NSLocalizedString("Error Resuming", comment: "The alert title for a resume error"))
                                 self.present(alert, animated: true, completion: nil)
+                                if case .suspended = self.basalDeliveryState {
+                                    self.updateHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: false), newSize: nil, animated: true)
+                                }
+                            } else {
+                                self.updateHUDandStatusRows(statusRowMode: .hidden, newSize: nil, animated: true)
                             }
                         }
                     }
+                case .bolusing:
+                    self.updateHUDandStatusRows(statusRowMode: .cancelingBolus, newSize: nil, animated: true)
+                    self.deviceManager.pumpManager?.cancelBolus() { (result) in
+                        DispatchQueue.main.async {
+                            switch result {
+                            case .success:
+                                // show user confirmation and actual delivery amount?
+                                break
+                            case .failure(let error):
+                                let alert = UIAlertController(with: error, title: NSLocalizedString("Error Canceling Bolus", comment: "The alert title for an error while canceling a bolus"))
+                                self.present(alert, animated: true, completion: nil)
+                                if case .inProgress(let dose) = self.bolusState {
+                                    self.updateHUDandStatusRows(statusRowMode: .bolusing(dose: dose), newSize: nil, animated: true)
+                                } else {
+                                    self.updateHUDandStatusRows(statusRowMode: .hidden, newSize: nil, animated: true)
+                                }
+                            }
+                        }
+                    }
+
                 default:
                     break
                 }
@@ -948,7 +1041,6 @@ final class StatusTableViewController: ChartsTableViewController {
                 switch result {
                 case .success(let recommendation):
                     if self.active && self.visible, let bolus = recommendation?.amount, bolus > 0 {
-                        self.bolusState = .recommended
                         self.performSegue(withIdentifier: BolusViewController.className, sender: recommendation)
                     }
                 case .failure(let error):
@@ -966,14 +1058,7 @@ final class StatusTableViewController: ChartsTableViewController {
     @IBAction func unwindFromBolusViewController(_ segue: UIStoryboardSegue) {
         if let bolusViewController = segue.source as? BolusViewController {
             if let bolus = bolusViewController.bolus, bolus > 0 {
-                self.bolusState = .enacting
-                deviceManager.enactBolus(units: bolus) { (_) in
-                    DispatchQueue.main.async {
-                        self.bolusState = nil
-                    }
-                }
-            } else {
-                self.bolusState = nil
+                deviceManager.enactBolus(units: bolus) { (_) in }
             }
         }
     }
@@ -1140,7 +1225,22 @@ extension StatusTableViewController: PumpManagerStatusObserver {
     func pumpManager(_ pumpManager: PumpManager, didUpdate status: PumpManagerStatus) {
         DispatchQueue.main.async {
             self.basalDeliveryState = status.basalDeliveryState
+            self.bolusState = status.bolusState
             self.reloadData(animated: true)
         }
     }
 }
+
+extension StatusTableViewController: DoseProgressEstimatorDelegate {
+    func doseProgressEstimatorHasNewEstimate(_ doseProgressEstimator: DoseProgressEstimator) {
+        currentBolusDeliveredUnits = doseProgressEstimator.estimatedDeliveredUnits
+
+        if doseProgressEstimator.estimatedDeliveredUnits >= doseProgressEstimator.dose.units {
+            doseProgressEstimator.stop()
+            self.bolusProgressEstimator = nil
+            self.bolusState = .none
+            self.reloadData(animated: true)
+        }
+    }
+}
+
