@@ -93,6 +93,11 @@ public class BolusProgressTableViewCell: UITableViewCell {
             }
         }
     }
+
+    override public func prepareForReuse() {
+        super.prepareForReuse()
+        progressIndicator.progress = 0
+    }
 }
 
 extension BolusProgressTableViewCell: NibLoadable { }

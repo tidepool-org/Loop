@@ -180,9 +180,7 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
 
-    private var bolusProgressEstimator: DoseProgressEstimator?
-
-    private var currentBolusDeliveredUnits: Double? {
+    private var currentBolusProgress: DoseProgress? {
         didSet {
             updateBolusProgress()
         }
@@ -190,7 +188,7 @@ final class StatusTableViewController: ChartsTableViewController {
 
     private func updateBolusProgress() {
         if let cell = tableView.cellForRow(at: IndexPath(row: StatusRow.status.rawValue, section: Section.status.rawValue)) as? BolusProgressTableViewCell {
-            cell.deliveredUnits = currentBolusDeliveredUnits
+            cell.deliveredUnits = currentBolusProgress?.deliveredUnits
         }
     }
 
@@ -258,19 +256,10 @@ final class StatusTableViewController: ChartsTableViewController {
         updateChartDateRange()
         redrawCharts()
 
-        if !active || !visible {
-            self.bolusProgressEstimator?.stop()
-            self.bolusProgressEstimator = nil
-        } else if
-            visible && active,
-            case .inProgress(let dose) = self.bolusState,
-            dose.endDate.timeIntervalSinceNow > 0,
-            let estimator = self.deviceManager.pumpManager?.progressEstimatorForDose(dose)
-        {
-            estimator.start(on: RunLoop.current)
-            estimator.delegate = self
-            self.currentBolusDeliveredUnits = estimator.estimatedDeliveredUnits
-            self.bolusProgressEstimator = estimator
+        if visible && active {
+            self.deviceManager.pumpManager?.bolusProgressEstimator?.addObserver(self)
+        } else {
+            self.deviceManager.pumpManager?.bolusProgressEstimator?.removeObserver(self)
         }
 
         guard active && visible && !refreshContext.isEmpty else {
@@ -795,7 +784,7 @@ final class StatusTableViewController: ChartsTableViewController {
                     progressCell.totalUnits = dose.units
                     progressCell.tintColor = .doseTintColor
                     progressCell.unit = HKUnit.internationalUnit()
-                    progressCell.deliveredUnits = bolusProgressEstimator?.estimatedDeliveredUnits
+                    progressCell.deliveredUnits = deviceManager.pumpManager?.bolusProgressEstimator?.progress.deliveredUnits
                     return progressCell
                 case .cancelingBolus:
                     let cell = getTitleSubtitleCell()
@@ -1231,16 +1220,9 @@ extension StatusTableViewController: PumpManagerStatusObserver {
     }
 }
 
-extension StatusTableViewController: DoseProgressEstimatorDelegate {
+extension StatusTableViewController: DoseProgressObserver {
     func doseProgressEstimatorHasNewEstimate(_ doseProgressEstimator: DoseProgressEstimator) {
-        currentBolusDeliveredUnits = doseProgressEstimator.estimatedDeliveredUnits
-
-        if doseProgressEstimator.estimatedDeliveredUnits >= doseProgressEstimator.dose.units {
-            doseProgressEstimator.stop()
-            self.bolusProgressEstimator = nil
-            self.bolusState = .none
-            self.reloadData(animated: true)
-        }
+        self.currentBolusProgress = doseProgressEstimator.progress
     }
 }
 
