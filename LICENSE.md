@@ -24,7 +24,7 @@ SOFTWARE.
 
 -----------
 
-# Embedded frameworks included under the MIT license
+# Embedded frameworks and code included under the MIT license
 
 ## AmplitudeFramework.framework
 
@@ -57,6 +57,11 @@ Copyright (c) 2016 Mark Wilson
 
 Copyright (c) 2015 Nathan Racklyeft
 Copyright (c) 2016 LoopKit Authors
+
+## MKRingProgressView
+
+Copyright (c) 2015 Max Konovalov
+
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
