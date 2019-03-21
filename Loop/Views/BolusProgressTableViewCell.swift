@@ -9,8 +9,7 @@
 import Foundation
 import LoopKit
 import HealthKit
-
-
+import MKRingProgressView
 
 public class BolusProgressTableViewCell: UITableViewCell {
 
