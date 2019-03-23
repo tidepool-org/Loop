@@ -254,9 +254,9 @@ final class StatusTableViewController: ChartsTableViewController {
         redrawCharts()
 
         if visible && active {
-            self.deviceManager.pumpManager?.bolusProgressEstimator?.addObserver(self)
+            self.deviceManager.pumpManager?.bolusProgressReporter?.addObserver(self)
         } else {
-            self.deviceManager.pumpManager?.bolusProgressEstimator?.removeObserver(self)
+            self.deviceManager.pumpManager?.bolusProgressReporter?.removeObserver(self)
         }
 
         guard active && visible && !refreshContext.isEmpty else {
@@ -781,7 +781,7 @@ final class StatusTableViewController: ChartsTableViewController {
                     progressCell.totalUnits = dose.units
                     progressCell.tintColor = .doseTintColor
                     progressCell.unit = HKUnit.internationalUnit()
-                    progressCell.deliveredUnits = deviceManager.pumpManager?.bolusProgressEstimator?.progress.deliveredUnits
+                    progressCell.deliveredUnits = deviceManager.pumpManager?.bolusProgressReporter?.progress.deliveredUnits
                     return progressCell
                 case .cancelingBolus:
                     let cell = getTitleSubtitleCell()
@@ -1226,8 +1226,8 @@ extension StatusTableViewController: PumpManagerStatusObserver {
 }
 
 extension StatusTableViewController: DoseProgressObserver {
-    func doseProgressEstimatorHasNewEstimate(_ doseProgressEstimator: DoseProgressEstimator) {
-        self.currentBolusProgress = doseProgressEstimator.progress
+    func doseProgressReporterProgressUpdated(_ doseProgressReporter: DoseProgressReporter) {
+        self.currentBolusProgress = doseProgressReporter.progress
     }
 }
 
