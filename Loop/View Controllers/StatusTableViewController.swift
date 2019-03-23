@@ -24,10 +24,7 @@ final class StatusTableViewController: ChartsTableViewController {
 
     private let log = OSLog(category: "StatusTableViewController")
 
-    lazy var quantityFormatter: QuantityFormatter = {
-        let formatter = QuantityFormatter()
-        return formatter
-    }()
+    lazy var quantityFormatter: QuantityFormatter = QuantityFormatter()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -736,7 +733,7 @@ final class StatusTableViewController: ChartsTableViewController {
             return cell
         case .status:
 
-            let getTitleSubtitleCell: () -> TitleSubtitleTableViewCell = {
+            func getTitleSubtitleCell() -> TitleSubtitleTableViewCell {
                 let cell = tableView.dequeueReusableCell(withIdentifier: TitleSubtitleTableViewCell.className, for: indexPath) as! TitleSubtitleTableViewCell
                 cell.selectionStyle = .none
                 return cell
@@ -1214,8 +1211,16 @@ extension StatusTableViewController: PumpManagerStatusObserver {
     func pumpManager(_ pumpManager: PumpManager, didUpdate status: PumpManagerStatus) {
         DispatchQueue.main.async {
             self.basalDeliveryState = status.basalDeliveryState
-            self.bolusState = status.bolusState
-            self.reloadData(animated: true)
+
+            var animationFinishDelay: TimeInterval = 0
+            if case .inProgress = self.bolusState, case .none = status.bolusState {
+                // Delay removal of bolusing row, so user can see finished animation
+                animationFinishDelay = 0.5
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + animationFinishDelay, execute: {
+                self.bolusState = status.bolusState
+                self.reloadData(animated: true)
+            })
         }
     }
 }

@@ -11,13 +11,13 @@ import LoopKit
 import HealthKit
 import MKRingProgressView
 
-public class BolusProgressTableViewCell: UITableViewCell {
 
+public class BolusProgressTableViewCell: UITableViewCell {
     @IBOutlet weak var progressLabel: UILabel!
 
     @IBOutlet weak var stopSquare: UIView! {
         didSet {
-            stopSquare.layer.cornerRadius = 3
+            stopSquare.layer.cornerRadius = 2
         }
     }
 
@@ -40,6 +40,8 @@ public class BolusProgressTableViewCell: UITableViewCell {
     private lazy var gradient = CAGradientLayer()
 
     private var doseTotalUnits: Double?
+
+    private var disableUpdates: Bool = false
 
     lazy var quantityFormatter: QuantityFormatter = {
         let formatter = QuantityFormatter()
@@ -74,29 +76,35 @@ public class BolusProgressTableViewCell: UITableViewCell {
     }
 
     private func updateProgress() {
-        if let totalUnits = totalUnits, let unit = unit {
-            let totalUnitsQuantity = HKQuantity(unit: unit, doubleValue: totalUnits)
-            let totalUnitsString = quantityFormatter.string(from: totalUnitsQuantity, for: unit) ?? ""
+        guard !disableUpdates, let totalUnits = totalUnits, let unit = unit else {
+            return
+        }
 
-            if let deliveredUnits = deliveredUnits {
-                let deliveredUnitsQuantity = HKQuantity(unit: unit, doubleValue: deliveredUnits)
-                let deliveredUnitsString = quantityFormatter.string(from: deliveredUnitsQuantity, for: unit) ?? ""
+        let totalUnitsQuantity = HKQuantity(unit: unit, doubleValue: totalUnits)
+        let totalUnitsString = quantityFormatter.string(from: totalUnitsQuantity, for: unit) ?? ""
 
-                progressLabel.text = String(format: NSLocalizedString("Bolused %1$@ of %2$@", comment: "The format string for bolus progress. (1: delivered volume)(2: total volume)"), deliveredUnitsString, totalUnitsString)
+        if let deliveredUnits = deliveredUnits {
+            let deliveredUnitsQuantity = HKQuantity(unit: unit, doubleValue: deliveredUnits)
+            let deliveredUnitsString = quantityFormatter.string(from: deliveredUnitsQuantity, for: unit) ?? ""
 
-                let progress = deliveredUnits / totalUnits
-                UIView.animate(withDuration: 0.3) {
-                    self.progressIndicator.progress = progress
-                }
-            } else {
-                progressLabel.text = String(format: NSLocalizedString("Bolusing %1$@", comment: "The format string for bolus in progress showing total volume. (1: total volume)"), totalUnitsString)
+            progressLabel.text = String(format: NSLocalizedString("Bolused %1$@ of %2$@", comment: "The format string for bolus progress. (1: delivered volume)(2: total volume)"), deliveredUnitsString, totalUnitsString)
+
+            let progress = deliveredUnits / totalUnits
+            UIView.animate(withDuration: 0.3) {
+                self.progressIndicator.progress = progress
             }
+        } else {
+            progressLabel.text = String(format: NSLocalizedString("Bolusing %1$@", comment: "The format string for bolus in progress showing total volume. (1: total volume)"), totalUnitsString)
         }
     }
 
     override public func prepareForReuse() {
         super.prepareForReuse()
+        disableUpdates = true
+        deliveredUnits = 0
         progressIndicator.progress = 0
+        disableUpdates = false
+        progressLabel.text = ""
     }
 }
 
