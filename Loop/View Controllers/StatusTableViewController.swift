@@ -1226,8 +1226,10 @@ extension StatusTableViewController: PumpManagerStatusObserver {
 }
 
 extension StatusTableViewController: DoseProgressObserver {
-    func doseProgressReporterProgressUpdated(_ doseProgressReporter: DoseProgressReporter) {
-        self.currentBolusProgress = doseProgressReporter.progress
+    func doseProgressReporterDidUpdate(_ doseProgressReporter: DoseProgressReporter) {
+        DispatchQueue.main.async {
+            self.currentBolusProgress = doseProgressReporter.progress
+        }
     }
 }
 
