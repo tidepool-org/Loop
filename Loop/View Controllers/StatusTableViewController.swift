@@ -172,20 +172,21 @@ final class StatusTableViewController: ChartsTableViewController {
     private var bolusState = PumpManagerStatus.BolusState.none {
         didSet {
             if oldValue != bolusState {
+                // Bolus starting
+                if case .inProgress = bolusState {
+                    self.bolusProgressReporter = self.deviceManager.pumpManager?.createBolusProgressReporter(reportingOn: DispatchQueue.main)
+                }
                 refreshContext.update(with: .status)
+                self.reloadData(animated: true)
             }
         }
     }
 
-    private var currentBolusProgress: DoseProgress? {
-        didSet {
-            updateBolusProgress()
-        }
-    }
+    private var bolusProgressReporter: DoseProgressReporter?
 
     private func updateBolusProgress() {
         if let cell = tableView.cellForRow(at: IndexPath(row: StatusRow.status.rawValue, section: Section.status.rawValue)) as? BolusProgressTableViewCell {
-            cell.deliveredUnits = currentBolusProgress?.deliveredUnits
+            cell.deliveredUnits = bolusProgressReporter?.progress.deliveredUnits
         }
     }
 
@@ -254,9 +255,9 @@ final class StatusTableViewController: ChartsTableViewController {
         redrawCharts()
 
         if visible && active {
-            self.deviceManager.pumpManager?.bolusProgressReporter?.addObserver(self)
+            bolusProgressReporter?.addObserver(self)
         } else {
-            self.deviceManager.pumpManager?.bolusProgressReporter?.removeObserver(self)
+            bolusProgressReporter?.removeObserver(self)
         }
 
         guard active && visible && !refreshContext.isEmpty else {
@@ -781,7 +782,7 @@ final class StatusTableViewController: ChartsTableViewController {
                     progressCell.totalUnits = dose.units
                     progressCell.tintColor = .doseTintColor
                     progressCell.unit = HKUnit.internationalUnit()
-                    progressCell.deliveredUnits = deviceManager.pumpManager?.bolusProgressReporter?.progress.deliveredUnits
+                    progressCell.deliveredUnits = bolusProgressReporter?.progress.deliveredUnits
                     return progressCell
                 case .cancelingBolus:
                     let cell = getTitleSubtitleCell()
@@ -1211,24 +1212,23 @@ extension StatusTableViewController: PumpManagerStatusObserver {
     func pumpManager(_ pumpManager: PumpManager, didUpdate status: PumpManagerStatus) {
         DispatchQueue.main.async {
             self.basalDeliveryState = status.basalDeliveryState
-
-            var animationFinishDelay: TimeInterval = 0
-            if case .inProgress = self.bolusState, case .none = status.bolusState {
-                // Delay removal of bolusing row, so user can see finished animation
-                animationFinishDelay = 0.5
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + animationFinishDelay, execute: {
-                self.bolusState = status.bolusState
-                self.reloadData(animated: true)
-            })
+            self.bolusState = status.bolusState
         }
     }
 }
 
 extension StatusTableViewController: DoseProgressObserver {
     func doseProgressReporterDidUpdate(_ doseProgressReporter: DoseProgressReporter) {
-        DispatchQueue.main.async {
-            self.currentBolusProgress = doseProgressReporter.progress
+
+        updateBolusProgress()
+
+        if doseProgressReporter.progress.isComplete {
+            // Bolus ended
+            self.bolusProgressReporter = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                self.bolusState = .none
+                self.reloadData(animated: true)
+            })
         }
     }
 }
