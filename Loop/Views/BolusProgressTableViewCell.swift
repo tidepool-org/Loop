@@ -102,8 +102,9 @@ public class BolusProgressTableViewCell: UITableViewCell {
         super.prepareForReuse()
         disableUpdates = true
         deliveredUnits = 0
-        progressIndicator.progress = 0
         disableUpdates = false
+        progressIndicator.progress = 0
+        CATransaction.flush()
         progressLabel.text = ""
     }
 }
