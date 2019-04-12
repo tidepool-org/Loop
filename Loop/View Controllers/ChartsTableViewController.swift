@@ -81,7 +81,7 @@ class ChartsTableViewController: UITableViewController, UIGestureRecognizerDeleg
         super.viewDidLoad()
 
         if let unit = self.deviceManager.loopManager.glucoseStore.preferredUnit {
-            self.charts.glucoseUnit = unit
+            self.charts.setGlucoseUnit(unit)
         }
 
         let notificationCenter = NotificationCenter.default
@@ -145,12 +145,9 @@ class ChartsTableViewController: UITableViewController, UIGestureRecognizerDeleg
     @objc private func unitPreferencesDidChange(_ note: Notification) {
         DispatchQueue.main.async {
             if let unit = self.deviceManager.loopManager.glucoseStore.preferredUnit {
-                let didChange = unit != self.charts.glucoseUnit
-                self.charts.glucoseUnit = unit
+                self.charts.setGlucoseUnit(unit)
 
-                if didChange {
-                    self.glucoseUnitDidChange()
-                }
+                self.glucoseUnitDidChange()
             }
             self.log.debug("[reloadData] for HealthKit unit preference change")
             self.reloadData()
@@ -161,7 +158,11 @@ class ChartsTableViewController: UITableViewController, UIGestureRecognizerDeleg
         // To override.
     }
 
-    let charts = StatusChartsManager(colors: .default, settings: .default)
+    func createChartsManager() -> ChartsManager {
+        fatalError("Subclasses must implement \(#function)")
+    }
+
+    lazy private(set) var charts = createChartsManager()
 
     // References to registered notification center observers
     var notificationObservers: [Any] = []
@@ -224,6 +225,17 @@ class ChartsTableViewController: UITableViewController, UIGestureRecognizerDeleg
                     row.titleLabel?.alpha = alpha
                     row.subtitleLabel?.alpha = alpha
                 })
+            }
+        }
+    }
+}
+
+
+fileprivate extension ChartsManager {
+    func setGlucoseUnit(_ unit: HKUnit) {
+        for chart in charts {
+            if let chart = chart as? GlucoseChart {
+                chart.glucoseUnit = unit
             }
         }
     }
