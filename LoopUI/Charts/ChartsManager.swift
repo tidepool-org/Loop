@@ -105,8 +105,7 @@ open class ChartsManager {
     /// - Parameter date: The new candidate date
     public func updateEndDate(_ date: Date) {
         if date > endDate {
-            var components = DateComponents()
-            components.minute = 0
+            var components = DateComponents(minute: 0)
             endDate = min(
                 maxEndDate,
                 Calendar.current.nextDate(
@@ -221,16 +220,6 @@ public protocol ChartProviding {
 
     /// Creates a chart from the current data
     ///
-    /// - Parameters:
-    ///   - frame:
-    ///   - xAxisModel:
-    ///   - xAxisValues:
-    ///   - axisLabelSettings:
-    ///   - guideLinesLayerSettings:
-    ///   - colors:
-    ///   - chartSettings:
-    ///   - labelsWidthY:
-    ///   - gestureRecognizer:
     /// - Returns: A new chart object
     func generate(withFrame frame: CGRect,
         xAxisModel: ChartAxisModel,

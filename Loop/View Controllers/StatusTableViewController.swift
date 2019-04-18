@@ -30,10 +30,7 @@ final class StatusTableViewController: ChartsTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        statusCharts.glucose.glucoseDisplayRange = (
-            min: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 100),
-            max: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 175)
-        )
+        statusCharts.glucose.glucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 100)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 175)
         
         if let pumpManager = deviceManager.pumpManager {
             self.basalDeliveryState = pumpManager.status.basalDeliveryState
@@ -424,7 +421,7 @@ final class StatusTableViewController: ChartsTableViewController {
             if let iobValues = iobValues {
                 charts.setIOBValues(iobValues)
             }
-            if let index = charts.iob.iobPoints.closestIndexPriorToDate(Date()) {
+            if let index = charts.iob.iobPoints.closestIndex(priorTo: Date()) {
                 self.currentIOBDescription = String(describing: charts.iob.iobPoints[index].y)
             } else {
                 self.currentIOBDescription = nil
@@ -442,7 +439,7 @@ final class StatusTableViewController: ChartsTableViewController {
             if let cobValues = cobValues {
                 charts.setCOBValues(cobValues)
             }
-            if let index = charts.cob.cobPoints.closestIndexPriorToDate(Date()) {
+            if let index = charts.cob.cobPoints.closestIndex(priorTo: 	Date()) {
                 self.currentCOBDescription = String(describing: charts.cob.cobPoints[index].y)
             } else {
                 self.currentCOBDescription = nil

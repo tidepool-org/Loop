@@ -93,9 +93,7 @@ extension InsulinModelChart {
 
         var unselectedLineModels = [ChartLineModel]()
 
-        for points in unselectedInsulinModelChartPoints {
-            guard points.count > 1 else { continue }
-
+        for points in unselectedInsulinModelChartPoints where points.count > 1 {
             unselectedLineModels.append(ChartLineModel.predictionLine(
                 points: points,
                 color: UIColor.secondaryLabelColor,
@@ -106,7 +104,7 @@ extension InsulinModelChart {
         // Unselected lines
         var unselectedLayer: ChartLayer?
 
-        if unselectedLineModels.count > 0 {
+        if !unselectedLineModels.isEmpty {
             unselectedLayer = ChartPointsLineLayer(
                 xAxis: coordsSpace.xAxisLayer.axis,
                 yAxis: coordsSpace.yAxisLayer.axis,
@@ -137,8 +135,6 @@ extension InsulinModelChart {
     }
 
     public func setUnselectedInsulinModelValues(_ values: [[GlucoseValue]]) {
-        self.unselectedInsulinModelChartPoints = values.map {
-            return glucosePointsFromValues($0)
-        }
+        self.unselectedInsulinModelChartPoints = values.map(glucosePointsFromValues)
     }
 }

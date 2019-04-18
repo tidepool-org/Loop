@@ -27,10 +27,7 @@ class PredictionTableViewController: ChartsTableViewController, IdentifiableClas
         tableView.rowHeight = UITableViewAutomaticDimension
         tableView.cellLayoutMarginsFollowReadableWidth = true
 
-        glucoseChart.glucoseDisplayRange = (
-            min: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 60),
-            max: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 200)
-        )
+        glucoseChart.glucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 60)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 200)
 
         let notificationCenter = NotificationCenter.default
 

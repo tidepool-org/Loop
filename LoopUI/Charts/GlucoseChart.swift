@@ -25,12 +25,12 @@ public class GlucoseChart {
         }
     }
 
-    public var glucoseDisplayRange: (min: HKQuantity, max: HKQuantity)? {
+    public var glucoseDisplayRange: ClosedRange<HKQuantity>? {
         didSet {
             if let range = glucoseDisplayRange {
                 glucoseDisplayRangePoints = [
-                    ChartPoint(x: ChartAxisValue(scalar: 0), y: ChartAxisValueDouble(range.min.doubleValue(for: glucoseUnit))),
-                    ChartPoint(x: ChartAxisValue(scalar: 0), y: ChartAxisValueDouble(range.max.doubleValue(for: glucoseUnit)))
+                    ChartPoint(x: ChartAxisValue(scalar: 0), y: ChartAxisValueDouble(range.lowerBound.doubleValue(for: glucoseUnit))),
+                    ChartPoint(x: ChartAxisValue(scalar: 0), y: ChartAxisValueDouble(range.upperBound.doubleValue(for: glucoseUnit)))
                 ]
             } else {
                 glucoseDisplayRangePoints = []

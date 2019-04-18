@@ -68,7 +68,7 @@ extension PredictedGlucoseChart {
 
     public func generate(withFrame frame: CGRect, xAxisModel: ChartAxisModel, xAxisValues: [ChartAxisValue], axisLabelSettings: ChartLabelSettings, guideLinesLayerSettings: ChartGuideLinesLayerSettings, colors: ChartColorPalette, chartSettings: ChartSettings, labelsWidthY: CGFloat, gestureRecognizer: UIGestureRecognizer?) -> Chart
     {
-        if targetGlucosePoints.count == 0, xAxisValues.count > 1, let schedule = targetGlucoseSchedule {
+        if targetGlucosePoints.isEmpty, xAxisValues.count > 1, let schedule = targetGlucoseSchedule {
             targetGlucosePoints = ChartPoint.pointsForGlucoseRangeSchedule(schedule, unit: glucoseUnit, xAxisValues: xAxisValues)
             targetOverridePoints = ChartPoint.pointsForGlucoseRangeScheduleOverride(schedule, unit: glucoseUnit, xAxisValues: xAxisValues, extendEndDateToChart: true)
             targetOverrideDurationPoints = ChartPoint.pointsForGlucoseRangeScheduleOverride(schedule, unit: glucoseUnit, xAxisValues: xAxisValues)

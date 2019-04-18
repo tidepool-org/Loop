@@ -233,10 +233,8 @@ class ChartsTableViewController: UITableViewController, UIGestureRecognizerDeleg
 
 fileprivate extension ChartsManager {
     func setGlucoseUnit(_ unit: HKUnit) {
-        for chart in charts {
-            if let chart = chart as? GlucoseChart {
-                chart.glucoseUnit = unit
-            }
+        for case let chart as GlucoseChart in charts {
+            chart.glucoseUnit = unit
         }
     }
 }

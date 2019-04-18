@@ -167,7 +167,7 @@ class InsulinModelSettingsViewController: ChartsTableViewController, Identifiabl
             let endingGlucoseQuantity = HKQuantity(unit: glucoseUnit, doubleValue: glucoseUnit.glucoseExampleTargetValue)
             let startingGlucoseSample = HKQuantitySample(type: HKQuantityType.quantityType(forIdentifier: .bloodGlucose)!, quantity: startingGlucoseQuantity, start: charts.startDate, end: charts.startDate)
 
-            insulinModelChart.glucoseDisplayRange = (min: endingGlucoseQuantity, max: startingGlucoseQuantity)
+            insulinModelChart.glucoseDisplayRange = endingGlucoseQuantity...startingGlucoseQuantity
 
             var unselectedModelValues = [[GlucoseValue]]()
 

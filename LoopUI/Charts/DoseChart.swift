@@ -40,14 +40,14 @@ public class DoseChart: ChartProviding {
 }
 
 public extension DoseChart {
-    public func didReceiveMemoryWarning() {
+    func didReceiveMemoryWarning() {
         basalDosePoints = []
         bolusDosePoints = []
         allDosePoints = []
         doseChartCache = nil
     }
 
-    public func generate(withFrame frame: CGRect, xAxisModel: ChartAxisModel, xAxisValues: [ChartAxisValue], axisLabelSettings: ChartLabelSettings, guideLinesLayerSettings: ChartGuideLinesLayerSettings, colors: ChartColorPalette, chartSettings: ChartSettings, labelsWidthY: CGFloat, gestureRecognizer: UIGestureRecognizer?) -> Chart
+    func generate(withFrame frame: CGRect, xAxisModel: ChartAxisModel, xAxisValues: [ChartAxisValue], axisLabelSettings: ChartLabelSettings, guideLinesLayerSettings: ChartGuideLinesLayerSettings, colors: ChartColorPalette, chartSettings: ChartSettings, labelsWidthY: CGFloat, gestureRecognizer: UIGestureRecognizer?) -> Chart
     {
         let integerFormatter = NumberFormatter.integer
 
