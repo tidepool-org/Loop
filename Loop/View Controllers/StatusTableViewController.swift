@@ -1203,6 +1203,21 @@ final class StatusTableViewController: ChartsTableViewController {
             }
         }
     }
+
+    // MARK: - Testing scenarios
+
+    override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
+        if debugEnabled {
+            if motion == .motionShake {
+                presentScenarioSelector()
+            }
+        }
+    }
+
+    private func presentScenarioSelector() {
+        let vc = TestingScenariosTableViewController(scenariosManager: deviceManager.testingScenariosManager)
+        present(UINavigationController(rootViewController: vc), animated: true)
+    }
 }
 
 extension StatusTableViewController: CompletionDelegate {
