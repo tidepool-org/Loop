@@ -29,6 +29,8 @@ final class LocalTestingScenariosManager: TestingScenariosManager, DirectoryObse
     }
 
     init(deviceManager: DeviceDataManager) {
+        assertDebugOnly()
+
         self.deviceManager = deviceManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         self.scenariosSource = documentsDirectory.appendingPathComponent("scenarios")
@@ -43,7 +45,7 @@ final class LocalTestingScenariosManager: TestingScenariosManager, DirectoryObse
             }
         }
 
-        directoryObservationToken = observe(scenariosSource, updatingWith: reloadScenarioURLs)
+        directoryObservationToken = observeDirectory(at: scenariosSource, updatingWith: reloadScenarioURLs)
         reloadScenarioURLs()
     }
 

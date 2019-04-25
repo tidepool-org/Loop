@@ -410,7 +410,8 @@ extension DeviceDataManager {
 
         let devicePredicate = HKQuery.predicateForObjects(from: [testingPumpManager.testingDevice])
         let doseStore = loopManager.doseStore
-        let healthStore = doseStore.insulinDeliveryStore.healthStore
+        let insulinDeliveryStore = doseStore.insulinDeliveryStore
+        let healthStore = insulinDeliveryStore.healthStore
         doseStore.resetPumpData { doseStoreError in
             guard doseStoreError == nil else {
                 completion?(doseStoreError!)
@@ -418,6 +419,9 @@ extension DeviceDataManager {
             }
 
             healthStore.deleteObjects(of: doseStore.sampleType!, predicate: devicePredicate) { success, deletedObjectCount, error in
+                if success {
+                    insulinDeliveryStore.test_lastBasalEndDate = nil
+                }
                 completion?(error)
             }
         }

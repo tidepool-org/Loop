@@ -148,12 +148,13 @@ extension TestingScenariosManager {
 
     private func stepForward(_ scenario: TestingScenario, completion: @escaping (TestingScenario) -> Void) {
         deviceManager.loopManager.getLoopState { _, state in
+            var scenario = scenario
             guard let recommendedTemp = state.recommendedTempBasal?.recommendation else {
+                scenario.stepForward(by: .minutes(5))
                 completion(scenario)
                 return
             }
 
-            var scenario = scenario
             scenario.stepForward(unitsPerHour: recommendedTemp.unitsPerHour, duration: recommendedTemp.duration)
             completion(scenario)
         }

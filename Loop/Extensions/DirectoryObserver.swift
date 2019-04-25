@@ -13,7 +13,7 @@ protocol DirectoryObserver {}
 typealias DirectoryObservationToken = AnyObject
 
 extension DirectoryObserver {
-    func observe(_ url: URL, updatingWith notifyOfUpdates: @escaping () -> Void) -> DirectoryObservationToken? {
+    func observeDirectory(at url: URL, updatingWith notifyOfUpdates: @escaping () -> Void) -> DirectoryObservationToken? {
         return DirectoryObservation(url: url, updatingWith: notifyOfUpdates)
     }
 }
