@@ -96,6 +96,8 @@ final class StatusTableViewController: ChartsTableViewController {
         toolbarItems![8].tintColor = UIColor.secondaryLabelColor
 
         tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
+
+        addScenarioStepGestureRecognizers()
     }
 
     override func didReceiveMemoryWarning() {
@@ -1217,6 +1219,27 @@ final class StatusTableViewController: ChartsTableViewController {
     private func presentScenarioSelector() {
         let vc = TestingScenariosTableViewController(scenariosManager: deviceManager.testingScenariosManager)
         present(UINavigationController(rootViewController: vc), animated: true)
+    }
+
+    private func addScenarioStepGestureRecognizers() {
+        if debugEnabled {
+            let leftSwipe = UISwipeGestureRecognizer(target: self, action: #selector(stepActiveScenarioForward))
+            leftSwipe.direction = .left
+            let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(stepActiveScenarioBackward))
+            rightSwipe.direction = .right
+
+            let toolBar = navigationController!.toolbar!
+            toolBar.addGestureRecognizer(leftSwipe)
+            toolBar.addGestureRecognizer(rightSwipe)
+        }
+    }
+
+    @objc private func stepActiveScenarioForward() {
+        deviceManager.testingScenariosManager.stepActiveScenarioForward()
+    }
+
+    @objc private func stepActiveScenarioBackward() {
+        deviceManager.testingScenariosManager.stepActiveScenarioBackward()
     }
 }
 

@@ -59,9 +59,9 @@ extension TestingScenariosManager {
         )
     }
 
-    func stepActiveScenarioBackward(completion: @escaping (Error?) -> Void) {
+    func stepActiveScenarioBackward(completion: ((Error?) -> Void)? = nil) {
         guard let activeScenario = _activeScenario else {
-            completion(nil)
+            completion?(nil)
             return
         }
 
@@ -69,13 +69,13 @@ extension TestingScenariosManager {
             if error == nil {
                 self._log.debug("Active scenario stepped backward")
             }
-            completion(error)
+            completion?(error)
         }
     }
 
-    func stepActiveScenarioForward(completion: @escaping (Error?) -> Void) {
+    func stepActiveScenarioForward(completion: ((Error?) -> Void)? = nil) {
         guard let activeScenario = _activeScenario else {
-            completion(nil)
+            completion?(nil)
             return
         }
 
@@ -83,7 +83,7 @@ extension TestingScenariosManager {
             if error == nil {
                 self._log.debug("Active scenario stepped forward")
             }
-            completion(error)
+            completion?(error)
         }
     }
 }
