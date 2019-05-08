@@ -15,23 +15,27 @@ protocol TestingScenariosManagerDelegate: AnyObject {
 }
 
 protocol TestingScenariosManager: AnyObject {
-    var deviceManager: DeviceDataManager { get }
     var delegate: TestingScenariosManagerDelegate? { get set }
-
-    // Protocol-shared implementation details
-    var _activeScenarioURL: URL? { get set }
-    var _activeScenario: TestingScenario? { get set }
-    var _log: CategoryLogger { get }
-    func _fetchScenario(from url: URL, completion: @escaping (Result<TestingScenario, Error>) -> Void)
+    var activeScenarioURL: URL? { get }
+    func loadScenario(from url: URL, completion: @escaping (Error?) -> Void)
+    func loadScenario(from url: URL, advancedByLoopIterations iterations: Int, completion: @escaping (Error?) -> Void)
+    func loadScenario(from url: URL, rewoundByLoopIterations iterations: Int, completion: @escaping (Error?) -> Void)
+    func stepActiveScenarioBackward(completion: @escaping (Error?) -> Void)
+    func stepActiveScenarioForward(completion: @escaping (Error?) -> Void)
 }
 
-// MARK: - API
+/// Describes the requirements necessary to implement TestingScenariosManager
+protocol TestingScenariosManagerRequirements: TestingScenariosManager {
+    var deviceManager: DeviceDataManager { get }
+    var activeScenarioURL: URL? { get set }
+    var activeScenario: TestingScenario? { get set }
+    var log: CategoryLogger { get }
+    func fetchScenario(from url: URL, completion: @escaping (Result<TestingScenario, Error>) -> Void)
+}
 
-extension TestingScenariosManager {
-    var activeScenarioURL: URL? {
-        return _activeScenarioURL
-    }
+// MARK: - TestingScenarioManager requirement implementations
 
+extension TestingScenariosManagerRequirements {
     func loadScenario(from url: URL, completion: @escaping (Error?) -> Void) {
         loadScenario(
             from: url,
@@ -59,36 +63,36 @@ extension TestingScenariosManager {
         )
     }
 
-    func stepActiveScenarioBackward(completion: ((Error?) -> Void)? = nil) {
-        guard let activeScenario = _activeScenario else {
-            completion?(nil)
+    func stepActiveScenarioBackward(completion: @escaping (Error?) -> Void) {
+        guard let activeScenario = activeScenario else {
+            completion(nil)
             return
         }
 
         loadScenario(activeScenario, rewoundByLoopIterations: 1) { error in
             if error == nil {
-                self._log.debug("Active scenario stepped backward")
+                self.log.debug("Active scenario stepped backward")
             }
-            completion?(error)
+            completion(error)
         }
     }
 
-    func stepActiveScenarioForward(completion: ((Error?) -> Void)? = nil) {
-        guard let activeScenario = _activeScenario else {
-            completion?(nil)
+    func stepActiveScenarioForward(completion: @escaping (Error?) -> Void) {
+        guard let activeScenario = activeScenario else {
+            completion(nil)
             return
         }
 
         loadScenario(activeScenario, advancedByLoopIterations: 1) { error in
             if error == nil {
-                self._log.debug("Active scenario stepped forward")
+                self.log.debug("Active scenario stepped forward")
             }
-            completion?(error)
+            completion(error)
         }
     }
 }
 
-// MARK: - Implementation
+// MARK: - Implementation details
 
 private enum ScenarioLoadingError: LocalizedError {
     case noTestingManagersEnabled
@@ -101,7 +105,7 @@ private enum ScenarioLoadingError: LocalizedError {
     }
 }
 
-extension TestingScenariosManager {
+extension TestingScenariosManagerRequirements {
     private func loadScenario(
         from url: URL,
         loadingVia load: @escaping (
@@ -111,13 +115,13 @@ extension TestingScenariosManager {
         successLogMessage: String,
         completion: @escaping (Error?) -> Void
     ) {
-        _fetchScenario(from: url) { result in
+        fetchScenario(from: url) { result in
             switch result {
             case .success(let scenario):
                 load(scenario) { error in
                     if error == nil {
-                        self._activeScenarioURL = url
-                        self._log.debug(successLogMessage)
+                        self.activeScenarioURL = url
+                        self.log.debug(successLogMessage)
                     }
                     completion(error)
                 }
@@ -173,8 +177,8 @@ extension TestingScenariosManager {
         assertDebugOnly()
 
         func bail(with error: Error) {
-            _activeScenarioURL = nil
-            _log.error(error)
+            activeScenarioURL = nil
+            log.error(error)
             completion(error)
         }
 
@@ -196,12 +200,10 @@ extension TestingScenariosManager {
             self.deviceManager.loopManager.carbStore.addCarbEntries(instance.carbEntries) { result in
                 switch result {
                 case .success(_):
-                    DispatchQueue.main.async {
-                        pumpManager.reservoirFillFraction = 1.0
-                    }
+                    pumpManager.reservoirFillFraction = 1.0
                     pumpManager.injectPumpEvents(instance.pumpEvents)
                     cgmManager.injectGlucoseSamples(instance.glucoseSamples)
-                    self._activeScenario = scenario
+                    self.activeScenario = scenario
                     completion(nil)
                 case .failure(let error):
                     bail(with: error)

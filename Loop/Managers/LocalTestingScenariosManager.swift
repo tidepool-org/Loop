@@ -10,17 +10,17 @@ import Foundation
 import LoopTestingKit
 
 
-final class LocalTestingScenariosManager: TestingScenariosManager, DirectoryObserver {
+final class LocalTestingScenariosManager: TestingScenariosManagerRequirements, DirectoryObserver {
     unowned let deviceManager: DeviceDataManager
-    let _log: CategoryLogger
+    let log: CategoryLogger
 
     private let fileManager = FileManager.default
     private let scenariosSource: URL
     private var directoryObservationToken: DirectoryObservationToken?
 
     private var scenarioURLs: [URL] = []
-    var _activeScenarioURL: URL?
-    var _activeScenario: TestingScenario?
+    var activeScenarioURL: URL?
+    var activeScenario: TestingScenario?
 
     weak var delegate: TestingScenariosManagerDelegate? {
         didSet {
@@ -34,14 +34,14 @@ final class LocalTestingScenariosManager: TestingScenariosManager, DirectoryObse
         self.deviceManager = deviceManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         self.scenariosSource = documentsDirectory.appendingPathComponent("scenarios")
-        self._log = deviceManager.logger.forCategory("TestingScenarioManager")
+        self.log = DiagnosticLogger.shared.forCategory("TestingScenarioManager")
 
-        _log.debug("Place testing scenarios in \(scenariosSource.path)")
+        log.debug("Place testing scenarios in \(scenariosSource.path)")
         if !fileManager.fileExists(atPath: scenariosSource.path) {
             do {
                 try fileManager.createDirectory(at: scenariosSource, withIntermediateDirectories: false)
             } catch {
-                _log.error(error)
+                log.error(error)
             }
         }
 
@@ -49,7 +49,7 @@ final class LocalTestingScenariosManager: TestingScenariosManager, DirectoryObse
         reloadScenarioURLs()
     }
 
-    func _fetchScenario(from url: URL, completion: (Result<TestingScenario, Error>) -> Void) {
+    func fetchScenario(from url: URL, completion: (Result<TestingScenario, Error>) -> Void) {
         let result = Result(catching: { try TestingScenario(source: url) })
         completion(result)
     }
@@ -61,9 +61,9 @@ final class LocalTestingScenariosManager: TestingScenariosManager, DirectoryObse
                 .sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
             self.scenarioURLs = scenarioURLs
             delegate?.testingScenariosManager(self, didUpdateScenarioURLs: scenarioURLs)
-            _log.debug("Reloaded scenario URLs")
+            log.debug("Reloaded scenario URLs")
         } catch {
-            _log.error(error)
+            log.error(error)
         }
     }
 }
