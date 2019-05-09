@@ -26,7 +26,7 @@ For example, a carb entry history might look like this:
 ]
 ```
 
-Carb entries have two date offsets: `dateOffset`, which describes the date at which carbs were consumed, and `enteredAtOffset`, which describes the date at which the carb entry was created. The second carb entry in the example above was entered 18 minutes early.
+Carb entries have two date offsets: `dateOffset`, which describes the date at which carbs were consumed, and `enteredAtOffset`, which describes the date at which the carb entry was created. The second carb entry in the example above was entered 36 minutes early.
 
 ## Generating Scenarios
 
