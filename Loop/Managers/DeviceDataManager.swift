@@ -27,7 +27,7 @@ final class DeviceDataManager {
 
     private var nightscoutDataManager: NightscoutDataManager!
 
-    private(set) lazy var testingScenariosManager: TestingScenariosManager = LocalTestingScenariosManager(deviceManager: self)
+    private(set) var testingScenariosManager: TestingScenariosManager!
 
     /// The last error recorded by a device manager
     /// Should be accessed only on the main queue
@@ -93,6 +93,7 @@ final class DeviceDataManager {
         )
         watchManager = WatchDataManager(deviceManager: self)
         nightscoutDataManager = NightscoutDataManager(deviceDataManager: self)
+        testingScenariosManager = LocalTestingScenariosManager(deviceManager: self)
 
         loopManager.delegate = self
         loopManager.carbStore.syncDelegate = remoteDataManager.nightscoutService.uploader

@@ -18,7 +18,7 @@ final class LocalTestingScenariosManager: TestingScenariosManagerRequirements, D
     private let scenariosSource: URL
     private var directoryObservationToken: DirectoryObservationToken?
 
-    private var scenarioURLs: [URL] = []
+    private(set) var scenarioURLs: [URL] = []
     var activeScenarioURL: URL?
     var activeScenario: TestingScenario?
 
