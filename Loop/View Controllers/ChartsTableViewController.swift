@@ -11,7 +11,7 @@ import HealthKit
 import os.log
 
 
-enum RefreshContext {
+enum RefreshContext: Equatable {
     /// Catch-all for lastLoopCompleted, recommendedTempBasal, lastTempBasal, preferences
     case status
 
@@ -24,7 +24,11 @@ enum RefreshContext {
 }
 
 extension RefreshContext: Hashable {
-    var hashValue: Int {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(rawValue)
+    }
+
+    private var rawValue: Int {
         switch self {
         case .status:
             return 1
@@ -43,7 +47,7 @@ extension RefreshContext: Hashable {
     }
 
     static func ==(lhs: RefreshContext, rhs: RefreshContext) -> Bool {
-        return lhs.hashValue == rhs.hashValue
+        return lhs.rawValue == rhs.rawValue
     }
 }
 
@@ -81,20 +85,18 @@ class ChartsTableViewController: UITableViewController, UIGestureRecognizerDeleg
         super.viewDidLoad()
 
         if let unit = self.deviceManager.loopManager.glucoseStore.preferredUnit {
-            self.charts.glucoseUnit = unit
+            self.charts.setGlucoseUnit(unit)
         }
 
         let notificationCenter = NotificationCenter.default
         notificationObservers += [
-            notificationCenter.addObserver(forName: .UIApplicationWillResignActive, object: UIApplication.shared, queue: .main) { [weak self] _ in
+            notificationCenter.addObserver(forName: .UIApplicationDidEnterBackground, object: UIApplication.shared, queue: .main) { [weak self] _ in
                 self?.active = false
             },
             notificationCenter.addObserver(forName: .UIApplicationDidBecomeActive, object: UIApplication.shared, queue: .main) { [weak self] _ in
                 self?.active = true
             }
         ]
-
-        active = UIApplication.shared.applicationState == .active
 
         let gestureRecognizer = UILongPressGestureRecognizer()
         gestureRecognizer.delegate = self
@@ -147,12 +149,9 @@ class ChartsTableViewController: UITableViewController, UIGestureRecognizerDeleg
     @objc private func unitPreferencesDidChange(_ note: Notification) {
         DispatchQueue.main.async {
             if let unit = self.deviceManager.loopManager.glucoseStore.preferredUnit {
-                let didChange = unit != self.charts.glucoseUnit
-                self.charts.glucoseUnit = unit
+                self.charts.setGlucoseUnit(unit)
 
-                if didChange {
-                    self.glucoseUnitDidChange()
-                }
+                self.glucoseUnitDidChange()
             }
             self.log.debug("[reloadData] for HealthKit unit preference change")
             self.reloadData()
@@ -163,13 +162,20 @@ class ChartsTableViewController: UITableViewController, UIGestureRecognizerDeleg
         // To override.
     }
 
-    let charts = StatusChartsManager(colors: .default, settings: .default)
+    func createChartsManager() -> ChartsManager {
+        fatalError("Subclasses must implement \(#function)")
+    }
+
+    lazy private(set) var charts = createChartsManager()
 
     // References to registered notification center observers
     var notificationObservers: [Any] = []
 
-    var active: Bool = false {
-        didSet {
+    var active: Bool {
+        get {
+            return UIApplication.shared.applicationState == .active
+        }
+        set {
             log.debug("[reloadData] for app change to active: %d", active)
             reloadData()
         }
@@ -224,6 +230,15 @@ class ChartsTableViewController: UITableViewController, UIGestureRecognizerDeleg
                     row.subtitleLabel?.alpha = alpha
                 })
             }
+        }
+    }
+}
+
+
+fileprivate extension ChartsManager {
+    func setGlucoseUnit(_ unit: HKUnit) {
+        for case let chart as GlucoseChart in charts {
+            chart.glucoseUnit = unit
         }
     }
 }

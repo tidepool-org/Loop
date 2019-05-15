@@ -13,8 +13,8 @@ import SwiftCharts
 
 
 extension ChartPoint {
-    static func pointsForGlucoseRangeSchedule(_ glucoseRangeSchedule: GlucoseRangeSchedule, xAxisValues: [ChartAxisValue]) -> [ChartPoint] {
-        let targetRanges = glucoseRangeSchedule.between(
+    static func pointsForGlucoseRangeSchedule(_ glucoseRangeSchedule: GlucoseRangeSchedule, unit: HKUnit, xAxisValues: [ChartAxisValue]) -> [ChartPoint] {
+        let targetRanges = glucoseRangeSchedule.quantityBetween(
             start: ChartAxisValueDate.dateFromScalar(xAxisValues.first!.scalar),
             end: ChartAxisValueDate.dateFromScalar(xAxisValues.last!.scalar)
         )
@@ -38,7 +38,7 @@ extension ChartPoint {
                 endDate = ChartAxisValueDate(date: targetRanges[index + 1].startDate, formatter: dateFormatter)
             }
 
-            let value = range.value.rangeWithMinimumIncremement(glucoseRangeSchedule.unit.chartableIncrement)
+            let value = range.value.doubleRangeWithMinimumIncrement(in: unit)
             let minValue = ChartAxisValueDouble(value.minValue)
             let maxValue = ChartAxisValueDouble(value.maxValue)
 
@@ -60,8 +60,9 @@ extension ChartPoint {
         guard let targetRange = override.settings.targetRange else {
             return []
         }
+        let quantityRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: targetRange.minValue)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: targetRange.maxValue)
         return pointsForGlucoseRangeScheduleOverride(
-            range: targetRange.rangeWithMinimumIncremement(unit.chartableIncrement),
+            range: quantityRange.doubleRangeWithMinimumIncrement(in: unit),
             activeInterval: override.activeInterval,
             unit: unit,
             xAxisValues: xAxisValues,
@@ -103,10 +104,12 @@ extension ChartPoint: TimelineValue {
 }
 
 
-private extension DoubleRange {
-    func rangeWithMinimumIncremement(_ increment: Double) -> DoubleRange {
-        var minValue = self.minValue
-        var maxValue = self.maxValue
+private extension ClosedRange where Bound == HKQuantity {
+    func doubleRangeWithMinimumIncrement(in unit: HKUnit) -> DoubleRange {
+        let increment = unit.chartableIncrement
+
+        var minValue = self.lowerBound.doubleValue(for: unit)
+        var maxValue = self.upperBound.doubleValue(for: unit)
 
         if (maxValue - minValue) < .ulpOfOne {
             minValue -= increment
