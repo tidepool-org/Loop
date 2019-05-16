@@ -8,7 +8,7 @@
 import UIKit
 import LoopUI
 import HealthKit
-import os.log
+import LoopKit
 
 
 enum RefreshContext: Equatable {
@@ -79,7 +79,7 @@ extension Set where Element == RefreshContext {
 /// Abstract class providing boilerplate setup for chart-based table view controllers
 class ChartsTableViewController: UITableViewController, UIGestureRecognizerDelegate {
 
-    private let log = OSLog(category: "ChartsTableViewController")
+    private let log = DiagnosticLog(category: "ChartsTableViewController")
 
     override func viewDidLoad() {
         super.viewDidLoad()

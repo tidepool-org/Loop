@@ -11,7 +11,6 @@ import SpriteKit
 import HealthKit
 import LoopKit
 import WatchKit
-import os.log
 
 private extension TimeInterval {
     static let moveAnimationDuration: TimeInterval = 0.25
@@ -81,7 +80,7 @@ private extension SKSpriteNode {
 }
 
 class GlucoseChartScene: SKScene {
-    let log = OSLog(category: "GlucoseChartScene")
+    let log = DiagnosticLog(category: "GlucoseChartScene")
 
     var textInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5) {
         didSet {

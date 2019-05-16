@@ -11,7 +11,6 @@ import HealthKit
 import LoopKit
 import LoopCore
 import WatchConnectivity
-import os.log
 
 class LoopDataManager {
     let carbStore: CarbStore
@@ -31,7 +30,7 @@ class LoopDataManager {
         }
     }
 
-    private let log = OSLog(category: "LoopDataManager")
+    private let log = DiagnosticLog(category: "LoopDataManager")
 
     // Main queue only
     private(set) var activeContext: WatchContext? {

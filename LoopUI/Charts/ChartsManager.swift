@@ -11,11 +11,10 @@ import HealthKit
 import LoopCore
 import LoopKit
 import SwiftCharts
-import os.log
 
 
 open class ChartsManager {
-    private let log = OSLog(category: "ChartsManager")
+    private let log = DiagnosticLog(category: "ChartsManager")
 
     public init(colors: ChartColorPalette, settings: ChartSettings, charts: [ChartProviding]) {
         self.colors = colors
@@ -105,7 +104,7 @@ open class ChartsManager {
     /// - Parameter date: The new candidate date
     public func updateEndDate(_ date: Date) {
         if date > endDate {
-            var components = DateComponents(minute: 0)
+            let components = DateComponents(minute: 0)
             endDate = min(
                 maxEndDate,
                 Calendar.current.nextDate(

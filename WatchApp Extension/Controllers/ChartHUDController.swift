@@ -12,7 +12,6 @@ import CGMBLEKit
 import LoopKit
 import HealthKit
 import SpriteKit
-import os.log
 
 final class ChartHUDController: HUDInterfaceController, WKCrownDelegate {
     private enum TableRow: Int, CaseIterable {
@@ -57,7 +56,7 @@ final class ChartHUDController: HUDInterfaceController, WKCrownDelegate {
             oldValue?.invalidate()
         }
     }
-    private let log = OSLog(category: "ChartHUDController")
+    private let log = DiagnosticLog(category: "ChartHUDController")
     private var hasInitialActivation = false
 
     private var observers: [Any] = [] {

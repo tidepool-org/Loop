@@ -16,10 +16,11 @@ import LoopCore
 final class WatchDataManager: NSObject {
 
     unowned let deviceManager: DeviceDataManager
+    private let analytics: Analytics
 
-    init(deviceManager: DeviceDataManager) {
+    init(deviceManager: DeviceDataManager, analytics: Analytics) {
         self.deviceManager = deviceManager
-        self.log = DiagnosticLogger.shared.forCategory("WatchDataManager")
+        self.analytics = analytics
 
         super.init()
 
@@ -29,7 +30,7 @@ final class WatchDataManager: NSObject {
         watchSession?.activate()
     }
 
-    private let log: CategoryLogger
+    private let log = DiagnosticLog(category: "WatchDataManager")
 
     private var watchSession: WCSession? = {
         if WCSession.isSupported() {
@@ -137,7 +138,7 @@ final class WatchDataManager: NSObject {
                 log.default("updateApplicationContext")
                 try session.updateApplicationContext(context.rawValue)
             } catch let error {
-                log.error(error)
+                log.error("%{public}@", String(reflecting: error))
             }
         }
     }
@@ -197,10 +198,10 @@ final class WatchDataManager: NSObject {
             deviceManager.loopManager.addCarbEntryAndRecommendBolus(carbEntry) { (result) in
                 switch result {
                 case .success(let recommendation):
-                    AnalyticsManager.shared.didAddCarbsFromWatch()
+                    self.analytics.didAddCarbsFromWatch()
                     completionHandler?(recommendation?.amount)
                 case .failure(let error):
-                    self.log.error(error)
+                    self.log.error("%{public}@", String(reflecting: error))
                     completionHandler?(nil)
                 }
             }
@@ -222,7 +223,7 @@ extension WatchDataManager: WCSessionDelegate {
             if let bolus = SetBolusUserInfo(rawValue: message as SetBolusUserInfo.RawValue) {
                 self.deviceManager.enactBolus(units: bolus.value, at: bolus.startDate) { (error) in
                     if error == nil {
-                        AnalyticsManager.shared.didSetBolusFromWatch(bolus.value)
+                        self.analytics.didSetBolusFromWatch(bolus.value)
                     }
                 }
             }
@@ -261,7 +262,7 @@ extension WatchDataManager: WCSessionDelegate {
         switch activationState {
         case .activated:
             if let error = error {
-                log.error(error)
+                log.error("%{public}@", String(reflecting: error))
             } else {
                 sendSettingsIfNeeded()
                 sendWatchContextIfNeeded()
@@ -273,7 +274,7 @@ extension WatchDataManager: WCSessionDelegate {
 
     func session(_ session: WCSession, didFinish userInfoTransfer: WCSessionUserInfoTransfer, error: Error?) {
         if let error = error {
-            log.error(error)
+            log.error("%{public}@", String(reflecting: error))
 
             // This might be useless, as userInfoTransfer.userInfo seems to be nil when error is non-nil.
             switch userInfoTransfer.userInfo["name"] as? String {

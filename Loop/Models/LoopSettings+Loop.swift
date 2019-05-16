@@ -6,6 +6,7 @@
 //
 
 import LoopCore
+import LoopKit
 
 // MARK: - Static configuration
 extension LoopSettings {

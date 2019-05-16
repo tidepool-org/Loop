@@ -11,7 +11,6 @@ import LoopKit
 import LoopKitUI
 import LoopUI
 import HealthKit
-import os.log
 
 
 final class TimeInRangeLesson: Lesson {
@@ -173,10 +172,10 @@ private class TimeInRangeCalculator {
         self.duration = duration
         self.range = range
 
-        log = OSLog(subsystem: "com.loopkit.Learn", category: String(describing: type(of: self)))
+        log = DiagnosticLog(subsystem: "com.loopkit.Learn", category: String(describing: type(of: self)))
     }
 
-    private let log: OSLog
+    private let log: DiagnosticLog
 
     private let unit = HKUnit.milligramsPerDeciliter
 
@@ -186,7 +185,7 @@ private class TimeInRangeCalculator {
             fatalError("Unable to resolve duration: \(duration)")
         }
 
-        os_log(.default, "Computing Time in range from %{public}@ for %{public}@ between %{public}@", String(describing: start), String(describing: end), String(describing: range))
+        log.default("Computing Time in range from %{public}@ for %{public}@ between %{public}@", String(describing: start), String(describing: end), String(describing: range))
 
         // Paginate into 24-hour blocks
         let lockedResults = Locked([DateInterval: Double]())
@@ -209,13 +208,13 @@ private class TimeInRangeCalculator {
                 return
             }
 
-            os_log(.default, "Fetching samples in %{public}@", String(describing: interval))
+            log.default("Fetching samples in %{public}@", String(describing: interval))
 
             group.enter()
             dataManager.glucoseStore.getGlucoseSamples(start: interval.start, end: interval.end) { (result) in
                 switch result {
                 case .failure(let error):
-                    os_log(.error, log: self.log, "Failed to fetch samples: %{public}@", String(describing: error))
+                    self.log.error("Failed to fetch samples: %{public}@", String(describing: error))
                     anyError = error
                 case .success(let samples):
 

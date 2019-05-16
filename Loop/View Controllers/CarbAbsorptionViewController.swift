@@ -12,7 +12,6 @@ import LoopCore
 import LoopKit
 import LoopKitUI
 import LoopUI
-import os.log
 
 
 private extension RefreshContext {
@@ -22,7 +21,7 @@ private extension RefreshContext {
 
 final class CarbAbsorptionViewController: ChartsTableViewController, IdentifiableClass {
 
-    private let log = OSLog(category: "StatusTableViewController")
+    private let log = DiagnosticLog(category: "CarbAbsorptionViewController")
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -528,7 +527,7 @@ final class CarbAbsorptionViewController: ChartsTableViewController, Identifiabl
             let interaction = INInteraction(intent: NewCarbEntryIntent(), response: nil)
             interaction.donate { (error) in
                 if let error = error {
-                    os_log(.error, "Failed to donate intent: %{public}@", String(describing: error))
+                    self.log.error("Failed to donate intent: %{public}@", String(describing: error))
                 }
             }
         }

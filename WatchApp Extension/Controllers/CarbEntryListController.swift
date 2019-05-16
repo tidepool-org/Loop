@@ -8,7 +8,6 @@
 import HealthKit
 import LoopCore
 import LoopKit
-import os.log
 import WatchKit
 
 class CarbEntryListController: WKInterfaceController, IdentifiableClass {
@@ -20,7 +19,7 @@ class CarbEntryListController: WKInterfaceController, IdentifiableClass {
 
     @IBOutlet var headerGroup: WKInterfaceGroup!
 
-    private let log = OSLog(category: "CarbEntryListController")
+    private let log = DiagnosticLog(category: "CarbEntryListController")
 
     private lazy var loopManager = ExtensionDelegate.shared().loopManager
 

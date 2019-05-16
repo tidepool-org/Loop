@@ -11,14 +11,14 @@ import WatchKit
 import HealthKit
 import Intents
 import os
-import os.log
 import UserNotifications
+import LoopKit
 
 
 final class ExtensionDelegate: NSObject, WKExtensionDelegate {
     private(set) lazy var loopManager = LoopDataManager()
 
-    private let log = OSLog(category: "ExtensionDelegate")
+    private let log = DiagnosticLog(category: "ExtensionDelegate")
 
     private var observers: [NSKeyValueObservation] = []
     private var notifications: [NSObjectProtocol] = []

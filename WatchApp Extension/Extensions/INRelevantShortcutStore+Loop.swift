@@ -6,7 +6,7 @@
 //
 
 import Intents
-import os.log
+import LoopKit
 
 
 @available(watchOSApplicationExtension 5.0, *)
@@ -23,7 +23,7 @@ extension INRelevantShortcutStore {
 
         setRelevantShortcuts(shortcuts) { (error) in
             if let error = error {
-                os_log(.error, "Error specifying shortcuts: %{public}@", String(describing: error))
+                DiagnosticLog(category: "INRelevantShortcutStore").error("Error specifying shortcuts: %{public}@", String(describing: error))
             }
         }
     }

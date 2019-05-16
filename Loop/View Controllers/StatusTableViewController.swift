@@ -14,7 +14,6 @@ import LoopKit
 import LoopKitUI
 import LoopUI
 import SwiftCharts
-import os.log
 
 
 private extension RefreshContext {
@@ -23,7 +22,7 @@ private extension RefreshContext {
 
 final class StatusTableViewController: ChartsTableViewController {
 
-    private let log = OSLog(category: "StatusTableViewController")
+    private let log = DiagnosticLog(category: "StatusTableViewController")
 
     lazy var quantityFormatter: QuantityFormatter = QuantityFormatter()
 
@@ -131,7 +130,7 @@ final class StatusTableViewController: ChartsTableViewController {
 
         onscreen = true
 
-        AnalyticsManager.shared.didDisplayStatusScreen()
+        deviceManager.analytics.didDisplayStatusScreen()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -1009,6 +1008,7 @@ final class StatusTableViewController: ChartsTableViewController {
                 recommendation: sender as? BolusRecommendation,
                 glucoseUnit: self.statusCharts.glucose.glucoseUnit
             )
+            deviceManager.analytics.didDisplayBolusScreen()
         case let vc as PredictionTableViewController:
             vc.deviceManager = deviceManager
         case let vc as SettingsTableViewController:

@@ -11,7 +11,6 @@ import WatchConnectivity
 import HealthKit
 import LoopCore
 import LoopKit
-import os.log
 
 
 final class AddCarbsInterfaceController: WKInterfaceController, IdentifiableClass {

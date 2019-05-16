@@ -7,154 +7,118 @@
 //
 
 import Foundation
-import Amplitude
 import LoopKit
-import LoopCore
 
 
-final class AnalyticsManager: IdentifiableClass {
+final class AnalyticsManager: Analytics {
 
-    var amplitudeService: AmplitudeService {
-        didSet {
-            try! KeychainManager().setAmplitudeAPIKey(amplitudeService.APIKey)
-        }
-    }
+    private let servicesManager: ServicesManager
 
-    init() {
-        if let APIKey = KeychainManager().getAmplitudeAPIKey() {
-            amplitudeService = AmplitudeService(APIKey: APIKey)
-        } else {
-            amplitudeService = AmplitudeService(APIKey: nil)
-        }
+    private var analytics: [Analytics]
 
-        logger = DiagnosticLogger.shared.forCategory(type(of: self).className)
-    }
+    init(servicesManager: ServicesManager) {
+        self.servicesManager = servicesManager
 
-    static let shared = AnalyticsManager()
+        self.analytics = servicesManager.services.compactMap({ $0 as? Analytics })
 
-    // MARK: - Helpers
-
-    private var logger: CategoryLogger?
-
-    private func logEvent(_ name: String, withProperties properties: [AnyHashable: Any]? = nil, outOfSession: Bool = false) {
-        logger?.debug("\(name) \(properties ?? [:])")
-        amplitudeService.client?.logEvent(name, withEventProperties: properties, outOfSession: outOfSession)
+        servicesManager.addObserver(self)
     }
 
     // MARK: - UIApplicationDelegate
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [AnyHashable: Any]?) {
-        logEvent("App Launch")
+    func application(didFinishLaunchingWithOptions launchOptions: [AnyHashable: Any]?) {
+        analytics.forEach { $0.application(didFinishLaunchingWithOptions: launchOptions) }
     }
 
     // MARK: - Screens
 
     func didDisplayBolusScreen() {
-        logEvent("Bolus Screen")
+        analytics.forEach { $0.didDisplayBolusScreen() }
     }
 
     func didDisplaySettingsScreen() {
-        logEvent("Settings Screen")
+        analytics.forEach { $0.didDisplaySettingsScreen() }
     }
 
     func didDisplayStatusScreen() {
-        logEvent("Status Screen")
+        analytics.forEach { $0.didDisplayStatusScreen() }
     }
 
     // MARK: - Config Events
 
     func transmitterTimeDidDrift(_ drift: TimeInterval) {
-        logEvent("Transmitter time change", withProperties: ["value" : drift], outOfSession: true)
+        analytics.forEach { $0.transmitterTimeDidDrift(drift) }
     }
 
     func pumpTimeDidDrift(_ drift: TimeInterval) {
-        logEvent("Pump time change", withProperties: ["value": drift], outOfSession: true)
+        analytics.forEach { $0.pumpTimeDidDrift(drift) }
     }
 
-    func punpTimeZoneDidChange() {
-        logEvent("Pump time zone change", outOfSession: true)
+    func pumpTimeZoneDidChange() {
+        analytics.forEach { $0.pumpTimeZoneDidChange() }
     }
 
     func pumpBatteryWasReplaced() {
-        logEvent("Pump battery replacement", outOfSession: true)
+        analytics.forEach { $0.pumpBatteryWasReplaced() }
     }
 
     func reservoirWasRewound() {
-        logEvent("Pump reservoir rewind", outOfSession: true)
+        analytics.forEach { $0.reservoirWasRewound() }
     }
 
     func didChangeBasalRateSchedule() {
-        logEvent("Basal rate change")
+        analytics.forEach { $0.didChangeBasalRateSchedule() }
     }
 
     func didChangeCarbRatioSchedule() {
-        logEvent("Carb ratio change")
+        analytics.forEach { $0.didChangeCarbRatioSchedule() }
     }
 
     func didChangeInsulinModel() {
-        logEvent("Insulin model change")
+        analytics.forEach { $0.didChangeInsulinModel() }
     }
 
     func didChangeInsulinSensitivitySchedule() {
-        logEvent("Insulin sensitivity change")
+        analytics.forEach { $0.didChangeInsulinSensitivitySchedule() }
     }
 
     func didChangeLoopSettings(from oldValue: LoopSettings, to newValue: LoopSettings) {
-        if newValue.maximumBasalRatePerHour != oldValue.maximumBasalRatePerHour {
-            logEvent("Maximum basal rate change")
-        }
-
-        if newValue.maximumBolus != oldValue.maximumBolus {
-            logEvent("Maximum bolus change")
-        }
-
-        if newValue.suspendThreshold != oldValue.suspendThreshold {
-            logEvent("Minimum BG Guard change")
-        }
-
-        if newValue.dosingEnabled != oldValue.dosingEnabled {
-            logEvent("Closed loop enabled change")
-        }
-
-        if newValue.retrospectiveCorrectionEnabled != oldValue.retrospectiveCorrectionEnabled {
-            logEvent("Retrospective correction enabled change")
-        }
-
-        if newValue.glucoseTargetRangeSchedule != oldValue.glucoseTargetRangeSchedule {
-            if newValue.glucoseTargetRangeSchedule?.timeZone != oldValue.glucoseTargetRangeSchedule?.timeZone {
-                self.punpTimeZoneDidChange()
-            } else if newValue.glucoseTargetRangeSchedule?.override != oldValue.glucoseTargetRangeSchedule?.override {
-                logEvent("Glucose target range override change", outOfSession: true)
-            } else {
-                logEvent("Glucose target range change")
-            }
-        }
+        analytics.forEach { $0.didChangeLoopSettings(from: oldValue, to: newValue) }
     }
-
 
     // MARK: - Loop Events
 
     func didAddCarbsFromWatch() {
-        logEvent("Carb entry created", withProperties: ["source" : "Watch"], outOfSession: true)
+        analytics.forEach { $0.didAddCarbsFromWatch() }
     }
 
     func didRetryBolus() {
-        logEvent("Bolus Retry", outOfSession: true)
+        analytics.forEach { $0.didRetryBolus() }
     }
 
     func didSetBolusFromWatch(_ units: Double) {
-        logEvent("Bolus set", withProperties: ["source" : "Watch"], outOfSession: true)
+        analytics.forEach { $0.didSetBolusFromWatch(units) }
     }
 
     func didFetchNewCGMData() {
-        logEvent("CGM Fetch", outOfSession: true)
+        analytics.forEach { $0.didFetchNewCGMData() }
     }
 
     func loopDidSucceed() {
-        logEvent("Loop success", outOfSession: true)
+        analytics.forEach { $0.loopDidSucceed() }
     }
 
     func loopDidError() {
-        logEvent("Loop error", outOfSession: true)
+        analytics.forEach { $0.loopDidError() }
     }
+
+}
+
+
+extension AnalyticsManager: ServicesManagerObserver {
+
+    func servicesManagerDidUpdate(services: [Service]) {
+        analytics = servicesManager.services.compactMap({ $0 as? Analytics })
+    }
+    
 }

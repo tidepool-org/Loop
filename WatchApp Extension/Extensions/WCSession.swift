@@ -8,7 +8,7 @@
 
 import LoopCore
 import WatchConnectivity
-import os.log
+import LoopKit
 
 
 enum MessageError: Error {
@@ -23,7 +23,7 @@ enum WCSessionMessageResult<T> {
     case failure(MessageError)
 }
 
-private let log = OSLog(category: "WCSession Extension")
+private let log = DiagnosticLog(category: "WCSession Extension")
 
 extension WCSession {
     func sendCarbEntryMessage(_ carbEntry: CarbEntryUserInfo, replyHandler: @escaping (BolusSuggestionUserInfo) -> Void, errorHandler: @escaping (Error) -> Void) throws {
