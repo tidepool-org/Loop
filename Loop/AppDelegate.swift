@@ -8,20 +8,33 @@
 
 import UIKit
 import Intents
+import LoopCore
 import LoopKit
 import UserNotifications
 
 @UIApplicationMain
 final class AppDelegate: UIResponder, UIApplicationDelegate {
 
-    private lazy var log = DiagnosticLogger.shared.forCategory("AppDelegate")
+    private lazy var log = DiagnosticLog(category: "AppDelegate")
+
+    private lazy var servicesManager = ServicesManager()
+
+    private lazy var analyticsManager = AnalyticsManager(servicesManager: servicesManager)
+
+    private lazy var loggingManager = LoggingManager(servicesManager: servicesManager)
 
     var window: UIWindow?
 
-    private(set) lazy var deviceManager = DeviceDataManager()
+    private(set) lazy var deviceManager = DeviceDataManager(servicesManager: servicesManager, analyticsManager: analyticsManager)
 
     private var rootViewController: RootNavigationController! {
         return window?.rootViewController as? RootNavigationController
+    }
+
+    func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        SharedLogging.instance = loggingManager
+
+        return true
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -29,7 +42,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         log.info(#function)
 
-        AnalyticsManager.shared.application(application, didFinishLaunchingWithOptions: launchOptions)
+        analyticsManager.application(application, didFinishLaunchingWithOptions: launchOptions)
 
         rootViewController.rootViewController.deviceManager = deviceManager
 
@@ -58,7 +71,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         if #available(iOS 12.0, *) {
             if userActivity.activityType == NewCarbEntryIntent.className {
-                log.default("Restoring \(userActivity.activityType) intent")
+                log.default("Restoring %{public}@ intent", userActivity.activityType)
                 rootViewController.restoreUserActivityState(.forNewCarbEntry())
                 return true
             }
@@ -67,7 +80,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         switch userActivity.activityType {
         case NSUserActivity.newCarbEntryActivityType,
              NSUserActivity.viewLoopStatusActivityType:
-            log.default("Restoring \(userActivity.activityType) activity")
+            log.default("Restoring %{public}@ activity", userActivity.activityType)
             restorationHandler([rootViewController])
             return true
         default:
@@ -85,7 +98,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                 let startDate = response.notification.request.content.userInfo[NotificationManager.UserInfoKey.bolusStartDate.rawValue] as? Date,
                 startDate.timeIntervalSinceNow >= TimeInterval(minutes: -5)
             {
-                AnalyticsManager.shared.didRetryBolus()
+                analyticsManager.didRetryBolus()
 
                 deviceManager.enactBolus(units: units, at: startDate) { (_) in
                     completionHandler()
