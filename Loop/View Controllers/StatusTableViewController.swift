@@ -398,7 +398,12 @@ final class StatusTableViewController: ChartsTableViewController {
         } else {
             preMealMode = deviceManager.loopManager.settings.preMealTargetEnabled()
         }
-        workoutMode = deviceManager.loopManager.settings.nonPreMealOverrideEnabled()
+        
+        if deviceManager.loopManager.settings.legacyWorkoutTargetRange == nil {
+            workoutMode = nil
+        } else {
+            workoutMode = deviceManager.loopManager.settings.nonPreMealOverrideEnabled()
+        }
 
         reloadGroup.notify(queue: .main) {
             /// Update the chart data
@@ -567,7 +572,8 @@ final class StatusTableViewController: ChartsTableViewController {
         } else if let (recommendation: tempBasal, date: date) = recommendedTempBasal {
             statusRowMode = .recommendedTempBasal(tempBasal: tempBasal, at: date, enacting: false)
         } else if let scheduleOverride = deviceManager.loopManager.settings.scheduleOverride,
-            scheduleOverride.context != .preMeal, !scheduleOverride.hasFinished()
+            scheduleOverride.context != .preMeal && scheduleOverride.context != .legacyWorkout,
+            !scheduleOverride.hasFinished()
         {
             statusRowMode = .scheduleOverrideEnabled(scheduleOverride)
         } else {
@@ -792,8 +798,8 @@ final class StatusTableViewController: ChartsTableViewController {
                 case .scheduleOverrideEnabled(let override):
                     let cell = getTitleSubtitleCell()
                     switch override.context {
-                    case .preMeal:
-                        assertionFailure("Pre-Meal mode should not produce a status row")
+                    case .preMeal, .legacyWorkout:
+                        assertionFailure("Pre-meal and legacy workout modes should not produce status rows")
                     case .preset(let preset):
                         cell.titleLabel.text = String(format: NSLocalizedString("%@ %@", comment: "The format for an active override preset. (1: preset symbol)(2: preset name)"), preset.symbol, preset.name)
                     case .custom:
@@ -1155,7 +1161,16 @@ final class StatusTableViewController: ChartsTableViewController {
         if workoutMode == true {
             deviceManager.loopManager.settings.clearOverride()
         } else {
-            performSegue(withIdentifier: OverrideSelectionViewController.className, sender: toolbarItems![6])
+            if FeatureFlags.sensitivityOverridesEnabled {
+                performSegue(withIdentifier: OverrideSelectionViewController.className, sender: toolbarItems![6])
+            } else {
+                let vc = UIAlertController(workoutDurationSelectionHandler: { duration in
+                    let startDate = Date()
+                    self.deviceManager.loopManager.settings.enableLegacyWorkoutOverride(at: startDate, for: duration)
+                })
+
+                present(vc, animated: true, completion: nil)
+            }
         }
     }
 

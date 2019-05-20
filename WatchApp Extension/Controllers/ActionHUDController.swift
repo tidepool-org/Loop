@@ -53,10 +53,18 @@ final class ActionHUDController: HUDInterfaceController {
             preMealButtonGroup.state = .off
         }
 
-        if loopManager.settings.overridePresets.isEmpty {
+        if !canEnableOverride {
             overrideButtonGroup.state = .disabled
         } else if overrideButtonGroup.state == .disabled {
             overrideButtonGroup.state = .off
+        }
+    }
+
+    private var canEnableOverride: Bool {
+        if FeatureFlags.sensitivityOverridesEnabled {
+            return !loopManager.settings.overridePresets.isEmpty
+        } else {
+            return loopManager.settings.legacyWorkoutTargetRange != nil
         }
     }
 
@@ -68,7 +76,7 @@ final class ActionHUDController: HUDInterfaceController {
         case .preMeal?:
             preMealButtonGroup.state = .on
             overrideButtonGroup.turnOff()
-        case .preset?, .custom?:
+        case .legacyWorkout?, .preset?, .custom?:
             preMealButtonGroup.turnOff()
             overrideButtonGroup.state = .on
         }
@@ -91,7 +99,12 @@ final class ActionHUDController: HUDInterfaceController {
         if overrideButtonGroup.state == .on {
             sendOverride(nil)
         } else {
-            presentController(withName: OverrideSelectionController.className, context: self as OverrideSelectionControllerDelegate)
+            if FeatureFlags.sensitivityOverridesEnabled {
+                presentController(withName: OverrideSelectionController.className, context: self as OverrideSelectionControllerDelegate)
+            } else {
+                let override = loopManager.settings.legacyWorkoutOverride(for: .infinity)
+                sendOverride(override)
+            }
         }
     }
 

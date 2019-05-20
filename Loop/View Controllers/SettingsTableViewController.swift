@@ -153,7 +153,11 @@ final class SettingsTableViewController: UITableViewController {
         case .cgm:
             return CGMRow.count
         case .configuration:
-            return ConfigurationRow.count
+            if FeatureFlags.sensitivityOverridesEnabled {
+                return ConfigurationRow.count
+            } else {
+                return ConfigurationRow.count - 1
+            }
         case .services:
             return ServiceRow.count
         case .testingPumpDataDeletion, .testingCGMDataDeletion:
@@ -489,6 +493,9 @@ final class SettingsTableViewController: UITableViewController {
                 }
             case .glucoseTargetRange:
                 let scheduleVC = GlucoseRangeScheduleTableViewController()
+                if FeatureFlags.sensitivityOverridesEnabled {
+                    scheduleVC.overrideContexts.remove(.legacyWorkout)
+                }
 
                 scheduleVC.delegate = self
                 scheduleVC.title = NSLocalizedString("Correction Range", comment: "The title of the glucose target range schedule screen")
@@ -497,7 +504,8 @@ final class SettingsTableViewController: UITableViewController {
                     scheduleVC.timeZone = schedule.timeZone
                     scheduleVC.scheduleItems = schedule.items
                     scheduleVC.unit = schedule.unit
-                    scheduleVC.preMealRange = dataManager.loopManager.settings.preMealTargetRange
+                    scheduleVC.overrideRanges[.preMeal] = dataManager.loopManager.settings.preMealTargetRange.filter { !$0.isZero }
+                    scheduleVC.overrideRanges[.legacyWorkout] = dataManager.loopManager.settings.legacyWorkoutTargetRange.filter { !$0.isZero }
 
                     show(scheduleVC, sender: sender)
                 } else {
@@ -744,7 +752,8 @@ extension SettingsTableViewController: DailyValueScheduleTableViewControllerDele
             switch ConfigurationRow(rawValue: indexPath.row)! {
             case .glucoseTargetRange:
                 if let controller = controller as? GlucoseRangeScheduleTableViewController {
-                    dataManager.loopManager.settings.preMealTargetRange = controller.preMealRange
+                    dataManager.loopManager.settings.preMealTargetRange = controller.overrideRanges[.preMeal]
+                    dataManager.loopManager.settings.legacyWorkoutTargetRange = controller.overrideRanges[.legacyWorkout]
                     dataManager.loopManager.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: controller.unit, dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
                 }
             case .basalRate:
