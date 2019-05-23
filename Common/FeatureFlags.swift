@@ -7,5 +7,5 @@
 //
 
 enum FeatureFlags {
-    static let sensitivityOverridesEnabled = false
+    static let sensitivityOverridesEnabled = true
 }
