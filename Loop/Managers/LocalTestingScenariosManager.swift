@@ -45,7 +45,9 @@ final class LocalTestingScenariosManager: TestingScenariosManagerRequirements, D
             }
         }
 
-        directoryObservationToken = observeDirectory(at: scenariosSource, updatingWith: reloadScenarioURLs)
+        directoryObservationToken = observeDirectory(at: scenariosSource) { [weak self] in
+            self?.reloadScenarioURLs()
+        }
         reloadScenarioURLs()
     }
 
