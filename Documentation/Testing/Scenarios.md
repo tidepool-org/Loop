@@ -50,7 +50,7 @@ With one or more scenarios placed in the listed directory, the debug menu can be
 
 ![](Images/scenarios_menu.png)
 
-Tap on a scenario to select it, then press 'Save' in the top-right corner to load it into Loop.
+Tap on a scenario to select it, then press 'Load' in the top-right corner to load it into Loop.
 
 With the app running, additional scenarios can be added to the scenarios directory; the changes will be detected, and the scenario list reloaded.
 

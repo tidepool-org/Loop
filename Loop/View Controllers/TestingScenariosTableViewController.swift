@@ -19,7 +19,7 @@ final class TestingScenariosTableViewController: RadioSelectionTableViewControll
             options = scenarioURLs.map { $0.deletingPathExtension().lastPathComponent }
             if isViewLoaded {
                 DispatchQueue.main.async {
-                    self.updateSaveButtonEnabled()
+                    self.updateLoadButtonEnabled()
                     self.tableView.reloadData()
                 }
             }
@@ -28,11 +28,11 @@ final class TestingScenariosTableViewController: RadioSelectionTableViewControll
 
     override var selectedIndex: Int? {
         didSet {
-            updateSaveButtonEnabled()
+            updateLoadButtonEnabled()
         }
     }
 
-    private lazy var saveButtonItem = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(loadSelectedScenario))
+    private lazy var loadButtonItem = UIBarButtonItem(title: "Load", style: .done, target: self, action: #selector(loadSelectedScenario))
 
     init(scenariosManager: TestingScenariosManager) {
         assertDebugOnly()
@@ -51,7 +51,7 @@ final class TestingScenariosTableViewController: RadioSelectionTableViewControll
 
         navigationController?.navigationBar.prefersLargeTitles = true
         title = "🧪 Scenarios"
-        navigationItem.rightBarButtonItem = saveButtonItem
+        navigationItem.rightBarButtonItem = loadButtonItem
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancel))
         contextHelp = "The scenarios directory location is available in the debug output of the Xcode console."
 
@@ -59,7 +59,7 @@ final class TestingScenariosTableViewController: RadioSelectionTableViewControll
             selectedIndex = scenarioURLs.index(of: activeScenarioURL)
         }
 
-        updateSaveButtonEnabled()
+        updateLoadButtonEnabled()
     }
 
     override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
@@ -127,8 +127,8 @@ final class TestingScenariosTableViewController: RadioSelectionTableViewControll
         }
     }
 
-    private func updateSaveButtonEnabled() {
-        saveButtonItem.isEnabled = !scenarioURLs.isEmpty && selectedIndex != nil
+    private func updateLoadButtonEnabled() {
+        loadButtonItem.isEnabled = !scenarioURLs.isEmpty && selectedIndex != nil
     }
 
     @objc private func loadSelectedScenario() {
