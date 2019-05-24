@@ -6,6 +6,25 @@
 //  Copyright © 2019 LoopKit Authors. All rights reserved.
 //
 
-enum FeatureFlags {
-    static let sensitivityOverridesEnabled = true
+import Foundation
+
+
+let FeatureFlags: FeatureFlagConfiguration = {
+    guard
+        let path = Bundle.main.path(forResource: "FeatureFlags", ofType: "plist"),
+        let data = FileManager.default.contents(atPath: path),
+        let configuration = try? PropertyListDecoder().decode(FeatureFlagConfiguration.self, from: data)
+    else {
+        return FeatureFlagConfiguration()
+    }
+
+    return configuration
+}()
+
+struct FeatureFlagConfiguration: Decodable {
+    let sensitivityOverridesEnabled: Bool
+
+    fileprivate init() {
+        self.sensitivityOverridesEnabled = false
+    }
 }

@@ -342,6 +342,8 @@
 		892FB4D12204BF0C005293EC /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 892FB4D02204BF0C005293EC /* LoopKitUI.framework */; };
 		894F71E21FFEC4D8007D365C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 894F71E11FFEC4D8007D365C /* Assets.xcassets */; };
 		895FE0952201234000FCF18A /* OverrideSelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895FE0942201234000FCF18A /* OverrideSelectionViewController.swift */; };
+		89686F872297786B007443C9 /* FeatureFlags.plist in Resources */ = {isa = PBXBuildFile; fileRef = 89686F862297786B007443C9 /* FeatureFlags.plist */; };
+		89686F882297786B007443C9 /* FeatureFlags.plist in Resources */ = {isa = PBXBuildFile; fileRef = 89686F862297786B007443C9 /* FeatureFlags.plist */; };
 		898ECA60218ABD17001E9D35 /* GlucoseChartScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 898ECA5E218ABD17001E9D35 /* GlucoseChartScaler.swift */; };
 		898ECA61218ABD17001E9D35 /* GlucoseChartData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 898ECA5F218ABD17001E9D35 /* GlucoseChartData.swift */; };
 		898ECA63218ABD21001E9D35 /* ComplicationChartManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 898ECA62218ABD21001E9D35 /* ComplicationChartManager.swift */; };
@@ -977,6 +979,7 @@
 		892FB4D02204BF0C005293EC /* LoopKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LoopKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		894F71E11FFEC4D8007D365C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		895FE0942201234000FCF18A /* OverrideSelectionViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OverrideSelectionViewController.swift; sourceTree = "<group>"; };
+		89686F862297786B007443C9 /* FeatureFlags.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = FeatureFlags.plist; sourceTree = "<group>"; };
 		898ECA5E218ABD17001E9D35 /* GlucoseChartScaler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlucoseChartScaler.swift; sourceTree = "<group>"; };
 		898ECA5F218ABD17001E9D35 /* GlucoseChartData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlucoseChartData.swift; sourceTree = "<group>"; };
 		898ECA62218ABD21001E9D35 /* ComplicationChartManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComplicationChartManager.swift; sourceTree = "<group>"; };
@@ -1236,6 +1239,7 @@
 				7D7076511FE06EE1004AC8EA /* InfoPlist.strings */,
 				43EDEE6B1CF2E12A00393BE3 /* Loop.entitlements */,
 				43F5C2D41B92A4A6003EB13D /* Info.plist */,
+				89686F862297786B007443C9 /* FeatureFlags.plist */,
 				43776F8F1B8022E90074EA36 /* AppDelegate.swift */,
 				43776F981B8022E90074EA36 /* Assets.xcassets */,
 				43776F9A1B8022E90074EA36 /* LaunchScreen.storyboard */,
@@ -2133,6 +2137,7 @@
 				43776F991B8022E90074EA36 /* Assets.xcassets in Resources */,
 				7D7076631FE06EE4004AC8EA /* Localizable.strings in Resources */,
 				43776F971B8022E90074EA36 /* Main.storyboard in Resources */,
+				89686F872297786B007443C9 /* FeatureFlags.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2154,6 +2159,7 @@
 				7D70763A1FE06EDF004AC8EA /* InfoPlist.strings in Resources */,
 				7D70763F1FE06EDF004AC8EA /* ckcomplication.strings in Resources */,
 				43A943901B926B7B0051FA24 /* Assets.xcassets in Resources */,
+				89686F882297786B007443C9 /* FeatureFlags.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
