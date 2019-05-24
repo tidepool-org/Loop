@@ -24,6 +24,16 @@ final class ActionHUDController: HUDInterfaceController {
 
     private lazy var overrideButtonGroup = ButtonGroup(button: overrideButton, image: overrideButtonImage, background: overrideButtonBackground, onBackgroundColor: .workoutColor, offBackgroundColor: .darkWorkoutColor)
 
+    @IBOutlet var overrideButtonLabel: WKInterfaceLabel! {
+        didSet {
+            if FeatureFlags.sensitivityOverridesEnabled {
+                overrideButtonLabel.setText(NSLocalizedString("Override", comment: "The text for the Watch button for enabling a temporary override"))
+            } else {
+                overrideButtonLabel.setText(NSLocalizedString("Workout", comment: "The text for the Watch button for enabling workout mode"))
+            }
+        }
+    }
+
     override func willActivate() {
         super.willActivate()
 
