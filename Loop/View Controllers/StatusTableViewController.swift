@@ -398,8 +398,8 @@ final class StatusTableViewController: ChartsTableViewController {
         } else {
             preMealMode = deviceManager.loopManager.settings.preMealTargetEnabled()
         }
-        
-        if deviceManager.loopManager.settings.legacyWorkoutTargetRange == nil {
+
+        if !FeatureFlags.sensitivityOverridesEnabled, deviceManager.loopManager.settings.legacyWorkoutTargetRange == nil {
             workoutMode = nil
         } else {
             workoutMode = deviceManager.loopManager.settings.nonPreMealOverrideEnabled()

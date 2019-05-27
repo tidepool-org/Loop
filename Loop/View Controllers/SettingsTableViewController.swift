@@ -752,8 +752,8 @@ extension SettingsTableViewController: DailyValueScheduleTableViewControllerDele
             switch ConfigurationRow(rawValue: indexPath.row)! {
             case .glucoseTargetRange:
                 if let controller = controller as? GlucoseRangeScheduleTableViewController {
-                    dataManager.loopManager.settings.preMealTargetRange = controller.overrideRanges[.preMeal]
-                    dataManager.loopManager.settings.legacyWorkoutTargetRange = controller.overrideRanges[.legacyWorkout]
+                    dataManager.loopManager.settings.preMealTargetRange = controller.overrideRanges[.preMeal].filter { !$0.isZero }
+                    dataManager.loopManager.settings.legacyWorkoutTargetRange = controller.overrideRanges[.legacyWorkout].filter { !$0.isZero }
                     dataManager.loopManager.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: controller.unit, dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
                 }
             case .basalRate:
