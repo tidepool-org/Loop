@@ -6,22 +6,22 @@ NAME = 'Sine Curve.json'
 
 
 class Scenario:
-    def __init__(self, glucoses, basals, boluses, carb_entries):
-        self.glucoses = glucoses
-        self.basals = basals
-        self.boluses = boluses
+    def __init__(self, glucose_values, basal_doses, bolus_doses, carb_entries):
+        self.glucose_values = glucose_values
+        self.basal_doses = basal_doses
+        self.bolus_doses = bolus_doses
         self.carb_entries = carb_entries
 
     def json(self):
         return {
-            'glucoseValues': [glucose.json() for glucose in self.glucoses],
-            'basalDoses': [basal.json() for basal in self.basals],
-            'bolusDoses': [bolus.json() for bolus in self.boluses],
+            'glucoseValues': [glucose.json() for glucose in self.glucose_values],
+            'basalDoses': [basal.json() for basal in self.basal_doses],
+            'bolusDoses': [bolus.json() for bolus in self.bolus_doses],
             'carbEntries': [entry.json() for entry in self.carb_entries]
         }
 
 
-class Glucose:
+class GlucoseValue:
     def __init__(self, mgdl, date_offset):
         self.mgdl = mgdl
         self.date_offset = date_offset
@@ -33,7 +33,7 @@ class Glucose:
         }
 
 
-class Basal:
+class BasalDose:
     def __init__(self, units_per_hour, date_offset, duration):
         self.units_per_hour = units_per_hour
         self.date_offset = date_offset
@@ -47,7 +47,7 @@ class Basal:
         }
 
 
-class Bolus:
+class BolusDose:
     def __init__(self, units, date_offset, delivery_duration):
         self.units = units
         self.date_offset = date_offset
@@ -92,31 +92,31 @@ def hours(count):
 
 def make_scenario():
     return Scenario(
-        make_glucoses(),
-        make_basals(),
-        make_boluses(),
+        make_glucose_values(),
+        make_basal_doses(),
+        make_bolus_doses(),
         make_carb_entries()
     )
 
 
-def make_glucoses():
+def make_glucose_values():
     amplitude = 40
     base = 110
     period = hours(3)
     offsets = [minutes(t * 5) for t in range(-120, 120)]
     values = [base + amplitude * sin(2 * pi / period * t) for t in offsets]
-    return [Glucose(value, offset) for value, offset in zip(values, offsets)]
+    return [GlucoseValue(value, offset) for value, offset in zip(values, offsets)]
 
 
-def make_basals():
+def make_basal_doses():
     return [
-        Basal(1.0, hours(-0.5), hours(0.5)),
+        BasalDose(1.0, hours(-0.5), hours(0.5)),
     ]
 
 
-def make_boluses():
+def make_bolus_doses():
     return [
-        Bolus(3.0, minutes(-15), minutes(2)),
+        BolusDose(3.0, minutes(-15), minutes(2)),
     ]
 
 
