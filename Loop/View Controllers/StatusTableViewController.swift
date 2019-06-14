@@ -977,7 +977,7 @@ final class StatusTableViewController: ChartsTableViewController {
                                     self.updateHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: false), newSize: nil, animated: true)
                                 }
                             } else {
-                                self.updateHUDandStatusRows(statusRowMode: .hidden, newSize: nil, animated: true)
+                                self.updateHUDandStatusRows(statusRowMode: self.determineStatusRowMode(), newSize: nil, animated: true)
                             }
                         }
                     }
