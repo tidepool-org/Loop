@@ -22,7 +22,7 @@ final class ActionHUDController: HUDInterfaceController {
 
     private lazy var preMealButtonGroup = ButtonGroup(button: preMealButton, image: preMealButtonImage, background: preMealButtonBackground, onBackgroundColor: .carbsColor, offBackgroundColor: .darkCarbsColor)
 
-    private lazy var overrideButtonGroup = ButtonGroup(button: overrideButton, image: overrideButtonImage, background: overrideButtonBackground, onBackgroundColor: .workoutColor, offBackgroundColor: .darkWorkoutColor)
+    private lazy var overrideButtonGroup = ButtonGroup(button: overrideButton, image: overrideButtonImage, background: overrideButtonBackground, onBackgroundColor: .overrideColor, offBackgroundColor: .darkOverrideColor)
 
     @IBOutlet var overrideButtonLabel: WKInterfaceLabel! {
         didSet {

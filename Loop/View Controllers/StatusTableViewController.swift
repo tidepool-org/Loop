@@ -805,7 +805,7 @@ final class StatusTableViewController: ChartsTableViewController {
                     case .preset(let preset):
                         cell.titleLabel.text = String(format: NSLocalizedString("%@ %@", comment: "The format for an active override preset. (1: preset symbol)(2: preset name)"), preset.symbol, preset.name)
                     case .custom:
-                        cell.titleLabel.text = NSLocalizedString("Override Enabled", comment: "The title of the cell indicating a generic temporary override is enabled")
+                        cell.titleLabel.text = NSLocalizedString("Custom Override", comment: "The title of the cell indicating a generic temporary override is enabled")
                     }
 
                     if override.isActive() {
