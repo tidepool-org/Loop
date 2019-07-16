@@ -16,11 +16,11 @@ import LoopCore
 final class WatchDataManager: NSObject {
 
     unowned let deviceManager: DeviceDataManager
-    private let analytics: Analytics
+    private let analyticsManager: AnalyticsManager
 
-    init(deviceManager: DeviceDataManager, analytics: Analytics) {
+    init(deviceManager: DeviceDataManager, analyticsManager: AnalyticsManager) {
         self.deviceManager = deviceManager
-        self.analytics = analytics
+        self.analyticsManager = analyticsManager
 
         super.init()
 
@@ -198,7 +198,7 @@ final class WatchDataManager: NSObject {
             deviceManager.loopManager.addCarbEntryAndRecommendBolus(carbEntry) { (result) in
                 switch result {
                 case .success(let recommendation):
-                    self.analytics.didAddCarbsFromWatch()
+                    self.analyticsManager.didAddCarbsFromWatch()
                     completionHandler?(recommendation?.amount)
                 case .failure(let error):
                     self.log.error("%{public}@", String(reflecting: error))
@@ -223,7 +223,7 @@ extension WatchDataManager: WCSessionDelegate {
             if let bolus = SetBolusUserInfo(rawValue: message as SetBolusUserInfo.RawValue) {
                 self.deviceManager.enactBolus(units: bolus.value, at: bolus.startDate) { (error) in
                     if error == nil {
-                        self.analytics.didSetBolusFromWatch(bolus.value)
+                        self.analyticsManager.didSetBolusFromWatch(bolus.value)
                     }
                 }
             }

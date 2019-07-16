@@ -100,11 +100,6 @@ final class RemoteDataManager: RemoteData, CarbStoreSyncDelegate {
         }
     }
 
-    func upload(pumpStatus: PumpStatus?, deviceName: String?, firmwareVersion: String?) {
-        remoteData.forEach { $0.upload(pumpStatus: pumpStatus, deviceName: deviceName, firmwareVersion: firmwareVersion) }
-    }
-
-
     func upload(glucoseValues values: [GlucoseValue], sensorState: SensorDisplayable?) {
         remoteData.forEach { $0.upload(glucoseValues: values, sensorState: sensorState) }
     }

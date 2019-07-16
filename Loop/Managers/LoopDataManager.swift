@@ -33,7 +33,7 @@ final class LoopDataManager {
 
     private let log = DiagnosticLog(category: "LoopDataManager")
 
-    private let analytics: Analytics
+    private let analyticsManager: AnalyticsManager
 
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
@@ -52,9 +52,9 @@ final class LoopDataManager {
         insulinModelSettings: InsulinModelSettings? = UserDefaults.appGroup?.insulinModelSettings,
         insulinSensitivitySchedule: InsulinSensitivitySchedule? = UserDefaults.appGroup?.insulinSensitivitySchedule,
         settings: LoopSettings = UserDefaults.appGroup?.loopSettings ?? LoopSettings(),
-        analytics: Analytics
+        analyticsManager: AnalyticsManager
     ) {
-        self.analytics = analytics
+        self.analyticsManager = analyticsManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
         self.lastTempBasal = lastTempBasal
         self.settings = settings
@@ -120,7 +120,7 @@ final class LoopDataManager {
         didSet {
             UserDefaults.appGroup?.loopSettings = settings
             notify(forChange: .preferences)
-            analytics.didChangeLoopSettings(from: oldValue, to: settings)
+            analyticsManager.didChangeLoopSettings(from: oldValue, to: settings)
         }
     }
 
@@ -185,7 +185,7 @@ final class LoopDataManager {
 
             NotificationManager.clearLoopNotRunningNotifications()
             NotificationManager.scheduleLoopNotRunningNotifications()
-            analytics.loopDidSucceed()
+            analyticsManager.loopDidSucceed()
         }
     }
     private let lockedLastLoopCompleted: Locked<Date?>
@@ -193,7 +193,7 @@ final class LoopDataManager {
     fileprivate var lastLoopError: Error? {
         didSet {
             if lastLoopError != nil {
-                analytics.loopDidError()
+                analyticsManager.loopDidError()
             }
         }
     }
@@ -250,7 +250,7 @@ extension LoopDataManager {
             notify(forChange: .preferences)
 
             if let newValue = newValue, let oldValue = doseStore.basalProfile, newValue.items != oldValue.items {
-                analytics.didChangeBasalRateSchedule()
+                analyticsManager.didChangeBasalRateSchedule()
             }
         }
     }
@@ -293,7 +293,7 @@ extension LoopDataManager {
                 self.notify(forChange: .preferences)
             }
 
-            analytics.didChangeInsulinModel()
+            analyticsManager.didChangeInsulinModel()
         }
     }
 
@@ -325,17 +325,17 @@ extension LoopDataManager {
     /// - Parameter timeZone: The time zone
     func setScheduleTimeZone(_ timeZone: TimeZone) {
         if timeZone != basalRateSchedule?.timeZone {
-            analytics.pumpTimeZoneDidChange()
+            analyticsManager.pumpTimeZoneDidChange()
             basalRateSchedule?.timeZone = timeZone
         }
 
         if timeZone != carbRatioSchedule?.timeZone {
-            analytics.pumpTimeZoneDidChange()
+            analyticsManager.pumpTimeZoneDidChange()
             carbRatioSchedule?.timeZone = timeZone
         }
 
         if timeZone != insulinSensitivitySchedule?.timeZone {
-            analytics.pumpTimeZoneDidChange()
+            analyticsManager.pumpTimeZoneDidChange()
             insulinSensitivitySchedule?.timeZone = timeZone
         }
 

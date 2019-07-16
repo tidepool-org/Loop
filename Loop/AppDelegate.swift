@@ -22,7 +22,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    private(set) lazy var deviceManager = DeviceDataManager(servicesManager: servicesManager, analytics: analyticsManager)
+    private(set) lazy var deviceManager = DeviceDataManager(servicesManager: servicesManager, analyticsManager: analyticsManager)
 
     private lazy var log = DiagnosticLog(category: "AppDelegate")
 

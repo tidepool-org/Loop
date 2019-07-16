@@ -21,7 +21,7 @@ final class DeviceDataManager {
 
     private let log = DiagnosticLog(category: "DeviceDataManager")
 
-    let analytics: Analytics
+    let analyticsManager: AnalyticsManager
 
     /// Remember the launch date of the app for diagnostic reporting
     private let launchDate = Date()
@@ -76,9 +76,9 @@ final class DeviceDataManager {
 
     private(set) var loopManager: LoopDataManager!
 
-    init(servicesManager: ServicesManager, analytics: Analytics) {
+    init(servicesManager: ServicesManager, analyticsManager: AnalyticsManager) {
         self.servicesManager = servicesManager
-        self.analytics = analytics
+        self.analyticsManager = analyticsManager
 
         pumpManager = UserDefaults.appGroup?.pumpManager as? PumpManagerUI
 
@@ -94,9 +94,9 @@ final class DeviceDataManager {
         loopManager = LoopDataManager(
             lastLoopCompleted: statusExtensionManager.context?.lastLoopCompleted,
             lastTempBasal: statusExtensionManager.context?.netBasal?.tempBasal,
-            analytics: analytics
+            analyticsManager: analyticsManager
         )
-        watchManager = WatchDataManager(deviceManager: self, analytics: analytics)
+        watchManager = WatchDataManager(deviceManager: self, analyticsManager: analyticsManager)
 
         loopManager.delegate = self
         loopManager.carbStore.syncDelegate = remoteDataManager.carbStoreSyncDelegate
@@ -263,7 +263,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         dispatchPrecondition(condition: .onQueue(queue))
         log.default("PumpManager:%{public}@ did adjust pump block by %fs", String(describing: type(of: pumpManager)), adjustment)
 
-        analytics.pumpTimeDidDrift(adjustment)
+        analyticsManager.pumpTimeDidDrift(adjustment)
     }
 
     func pumpManagerDidUpdateState(_ pumpManager: PumpManager) {
@@ -279,7 +279,7 @@ extension DeviceDataManager: PumpManagerDelegate {
 
         cgmManager?.fetchNewDataIfNeeded { (result) in
             if case .newData = result {
-                self.analytics.didFetchNewCGMData()
+                self.analyticsManager.didFetchNewCGMData()
             }
 
             if let manager = self.cgmManager {
@@ -317,7 +317,7 @@ extension DeviceDataManager: PumpManagerDelegate {
             }
 
             if let oldBatteryValue = oldStatus.pumpBatteryChargeRemaining, newBatteryValue - oldBatteryValue >= loopManager.settings.batteryReplacementDetectionThreshold {
-                analytics.pumpBatteryWasReplaced()
+                analyticsManager.pumpBatteryWasReplaced()
             }
         }
 
@@ -393,7 +393,7 @@ extension DeviceDataManager: PumpManagerDelegate {
                     }
 
                     if newValue.unitVolume > previousVolume + 1 {
-                        self.analytics.reservoirWasRewound()
+                        self.analyticsManager.reservoirWasRewound()
 
                         NotificationManager.clearPumpReservoirNotification()
                     }

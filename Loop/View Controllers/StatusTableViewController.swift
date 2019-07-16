@@ -130,7 +130,7 @@ final class StatusTableViewController: ChartsTableViewController {
 
         onscreen = true
 
-        deviceManager.analytics.didDisplayStatusScreen()
+        deviceManager.analyticsManager.didDisplayStatusScreen()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -1008,7 +1008,7 @@ final class StatusTableViewController: ChartsTableViewController {
                 recommendation: sender as? BolusRecommendation,
                 glucoseUnit: self.statusCharts.glucose.glucoseUnit
             )
-            deviceManager.analytics.didDisplayBolusScreen()
+            deviceManager.analyticsManager.didDisplayBolusScreen()
         case let vc as PredictionTableViewController:
             vc.deviceManager = deviceManager
         case let vc as SettingsTableViewController:

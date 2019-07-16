@@ -43,7 +43,7 @@ final class SettingsTableViewController: UITableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        dataManager.analytics.didDisplaySettingsScreen()
+        dataManager.analyticsManager.didDisplaySettingsScreen()
     }
 
     var dataManager: DeviceDataManager!
@@ -741,10 +741,10 @@ extension SettingsTableViewController: DailyValueScheduleTableViewControllerDele
                     switch row {
                     case .carbRatio:
                         dataManager.loopManager.carbRatioSchedule = CarbRatioSchedule(unit: controller.unit, dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-                        dataManager.analytics.didChangeCarbRatioSchedule()
+                        dataManager.analyticsManager.didChangeCarbRatioSchedule()
                     case .insulinSensitivity:
                         dataManager.loopManager.insulinSensitivitySchedule = InsulinSensitivitySchedule(unit: controller.unit, dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-                        dataManager.analytics.didChangeInsulinSensitivitySchedule()
+                        dataManager.analyticsManager.didChangeInsulinSensitivitySchedule()
                     default:
                         break
                     }

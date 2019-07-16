@@ -329,6 +329,8 @@
 		898ECA69218ABDA9001E9D35 /* CLKTextProvider+Compound.m in Sources */ = {isa = PBXBuildFile; fileRef = 898ECA67218ABDA8001E9D35 /* CLKTextProvider+Compound.m */; };
 		A9183E3022BC4ACB002B4E34 /* AmplitudeServiceKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9183E2F22BC4ACB002B4E34 /* AmplitudeServiceKit.framework */; };
 		A9183E3222BC4ACB002B4E34 /* AmplitudeServiceKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9183E3122BC4ACB002B4E34 /* AmplitudeServiceKitUI.framework */; };
+		A9563CCE22DD18B300E458A4 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9563CCD22DD18B300E458A4 /* LoopSettings.swift */; };
+		A9563CCF22DD214A00E458A4 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9563CCD22DD18B300E458A4 /* LoopSettings.swift */; };
 		A96A596822B811DB00229EB4 /* DiagnosticLog+Subsystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96A596722B811DB00229EB4 /* DiagnosticLog+Subsystem.swift */; };
 		A96A596D22B813A200229EB4 /* DiagnosticLog+Subsystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96A596722B811DB00229EB4 /* DiagnosticLog+Subsystem.swift */; };
 		A96A598122B8147400229EB4 /* DiagnosticLog+Subsystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96A596722B811DB00229EB4 /* DiagnosticLog+Subsystem.swift */; };
@@ -961,6 +963,7 @@
 		898ECA68218ABDA9001E9D35 /* CLKTextProvider+Compound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CLKTextProvider+Compound.h"; sourceTree = "<group>"; };
 		A9183E2F22BC4ACB002B4E34 /* AmplitudeServiceKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AmplitudeServiceKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9183E3122BC4ACB002B4E34 /* AmplitudeServiceKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AmplitudeServiceKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A9563CCD22DD18B300E458A4 /* LoopSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopSettings.swift; sourceTree = "<group>"; };
 		A96A596722B811DB00229EB4 /* DiagnosticLog+Subsystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DiagnosticLog+Subsystem.swift"; sourceTree = "<group>"; };
 		A96A598E22B8559500229EB4 /* LoggingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggingManager.swift; sourceTree = "<group>"; };
 		A9A1EE9A22BC603B00DFACDA /* LogglyServiceKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LogglyServiceKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1361,6 +1364,7 @@
 				43DE92581C5479E4001FFDE1 /* CarbEntryUserInfo.swift */,
 				43C05CB721EBEA54006FB252 /* HKUnit.swift */,
 				434FF1E91CF26C29000DB779 /* IdentifiableClass.swift */,
+				A9563CCD22DD18B300E458A4 /* LoopSettings.swift */,
 				430B29892041F54A00BA9F93 /* NSUserDefaults.swift */,
 				431E73471FF95A900069B5F7 /* PersistenceController.swift */,
 				43D848AF1E7DCBE100DADCBC /* Result.swift */,
@@ -2527,6 +2531,7 @@
 				43C05CC721EC2ABC006FB252 /* IdentifiableClass.swift in Sources */,
 				A96A598222B8147500229EB4 /* DiagnosticLog+Subsystem.swift in Sources */,
 				43C05CAE21EB2BBF006FB252 /* NSUserDefaults.swift in Sources */,
+				A9563CCF22DD214A00E458A4 /* LoopSettings.swift in Sources */,
 				4345E40221F67300009E00E5 /* CarbEntryUserInfo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2574,6 +2579,7 @@
 				43C05CC821EC2ABC006FB252 /* IdentifiableClass.swift in Sources */,
 				A96A598322B8147500229EB4 /* DiagnosticLog+Subsystem.swift in Sources */,
 				43C05CAD21EB2BBF006FB252 /* NSUserDefaults.swift in Sources */,
+				A9563CCE22DD18B300E458A4 /* LoopSettings.swift in Sources */,
 				4345E40121F67300009E00E5 /* CarbEntryUserInfo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

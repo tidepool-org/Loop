@@ -7,10 +7,11 @@
 //
 
 import Foundation
+import LoopCore
 import LoopKit
 
 
-final class AnalyticsManager: Analytics {
+final class AnalyticsManager {
 
     private let servicesManager: ServicesManager
 
@@ -26,90 +27,122 @@ final class AnalyticsManager: Analytics {
 
     // MARK: - UIApplicationDelegate
 
-    func application(didFinishLaunchingWithOptions launchOptions: [AnyHashable: Any]?) {
-        analytics.forEach { $0.application(didFinishLaunchingWithOptions: launchOptions) }
+    public func application(didFinishLaunchingWithOptions launchOptions: [AnyHashable: Any]?) {
+        recordAnalyticsEvent("App Launch")
     }
 
     // MARK: - Screens
 
-    func didDisplayBolusScreen() {
-        analytics.forEach { $0.didDisplayBolusScreen() }
+    public func didDisplayBolusScreen() {
+        recordAnalyticsEvent("Bolus Screen")
     }
 
-    func didDisplaySettingsScreen() {
-        analytics.forEach { $0.didDisplaySettingsScreen() }
+    public func didDisplaySettingsScreen() {
+        recordAnalyticsEvent("Settings Screen")
     }
 
-    func didDisplayStatusScreen() {
-        analytics.forEach { $0.didDisplayStatusScreen() }
+    public func didDisplayStatusScreen() {
+        recordAnalyticsEvent("Status Screen")
     }
 
     // MARK: - Config Events
 
-    func transmitterTimeDidDrift(_ drift: TimeInterval) {
-        analytics.forEach { $0.transmitterTimeDidDrift(drift) }
+    public func transmitterTimeDidDrift(_ drift: TimeInterval) {
+        recordAnalyticsEvent("Transmitter time change", withProperties: ["value" : drift], outOfSession: true)
     }
 
-    func pumpTimeDidDrift(_ drift: TimeInterval) {
-        analytics.forEach { $0.pumpTimeDidDrift(drift) }
+    public func pumpTimeDidDrift(_ drift: TimeInterval) {
+        recordAnalyticsEvent("Pump time change", withProperties: ["value": drift], outOfSession: true)
     }
 
-    func pumpTimeZoneDidChange() {
-        analytics.forEach { $0.pumpTimeZoneDidChange() }
+    public func pumpTimeZoneDidChange() {
+        recordAnalyticsEvent("Pump time zone change", outOfSession: true)
     }
 
-    func pumpBatteryWasReplaced() {
-        analytics.forEach { $0.pumpBatteryWasReplaced() }
+    public func pumpBatteryWasReplaced() {
+        recordAnalyticsEvent("Pump battery replacement", outOfSession: true)
     }
 
-    func reservoirWasRewound() {
-        analytics.forEach { $0.reservoirWasRewound() }
+    public func reservoirWasRewound() {
+        recordAnalyticsEvent("Pump reservoir rewind", outOfSession: true)
     }
 
-    func didChangeBasalRateSchedule() {
-        analytics.forEach { $0.didChangeBasalRateSchedule() }
+    public func didChangeBasalRateSchedule() {
+        recordAnalyticsEvent("Basal rate change")
     }
 
-    func didChangeCarbRatioSchedule() {
-        analytics.forEach { $0.didChangeCarbRatioSchedule() }
+    public func didChangeCarbRatioSchedule() {
+        recordAnalyticsEvent("Carb ratio change")
     }
 
-    func didChangeInsulinModel() {
-        analytics.forEach { $0.didChangeInsulinModel() }
+    public func didChangeInsulinModel() {
+        recordAnalyticsEvent("Insulin model change")
     }
 
-    func didChangeInsulinSensitivitySchedule() {
-        analytics.forEach { $0.didChangeInsulinSensitivitySchedule() }
+    public func didChangeInsulinSensitivitySchedule() {
+        recordAnalyticsEvent("Insulin sensitivity change")
     }
 
-    func didChangeLoopSettings(from oldValue: LoopSettings, to newValue: LoopSettings) {
-        analytics.forEach { $0.didChangeLoopSettings(from: oldValue, to: newValue) }
+    public func didChangeLoopSettings(from oldValue: LoopSettings, to newValue: LoopSettings) {
+        if newValue.maximumBasalRatePerHour != oldValue.maximumBasalRatePerHour {
+            recordAnalyticsEvent("Maximum basal rate change")
+        }
+
+        if newValue.maximumBolus != oldValue.maximumBolus {
+            recordAnalyticsEvent("Maximum bolus change")
+        }
+
+        if newValue.suspendThreshold != oldValue.suspendThreshold {
+            recordAnalyticsEvent("Minimum BG Guard change")
+        }
+
+        if newValue.dosingEnabled != oldValue.dosingEnabled {
+            recordAnalyticsEvent("Closed loop enabled change")
+        }
+
+        if newValue.retrospectiveCorrectionEnabled != oldValue.retrospectiveCorrectionEnabled {
+            recordAnalyticsEvent("Retrospective correction enabled change")
+        }
+
+        if newValue.glucoseTargetRangeSchedule != oldValue.glucoseTargetRangeSchedule {
+            if newValue.glucoseTargetRangeSchedule?.timeZone != oldValue.glucoseTargetRangeSchedule?.timeZone {
+                self.pumpTimeZoneDidChange()
+            } else if newValue.glucoseTargetRangeSchedule?.override != oldValue.glucoseTargetRangeSchedule?.override {
+                recordAnalyticsEvent("Glucose target range override change", outOfSession: true)
+            } else {
+                recordAnalyticsEvent("Glucose target range change")
+            }
+        }
     }
 
     // MARK: - Loop Events
 
-    func didAddCarbsFromWatch() {
-        analytics.forEach { $0.didAddCarbsFromWatch() }
+    public func didAddCarbsFromWatch() {
+        recordAnalyticsEvent("Carb entry created", withProperties: ["source" : "Watch"], outOfSession: true)
     }
 
-    func didRetryBolus() {
-        analytics.forEach { $0.didRetryBolus() }
+    public func didRetryBolus() {
+        recordAnalyticsEvent("Bolus Retry", outOfSession: true)
     }
 
-    func didSetBolusFromWatch(_ units: Double) {
-        analytics.forEach { $0.didSetBolusFromWatch(units) }
+    public func didSetBolusFromWatch(_ units: Double) {
+        recordAnalyticsEvent("Bolus set", withProperties: ["source" : "Watch"], outOfSession: true)
     }
 
-    func didFetchNewCGMData() {
-        analytics.forEach { $0.didFetchNewCGMData() }
+    public func didFetchNewCGMData() {
+        recordAnalyticsEvent("CGM Fetch", outOfSession: true)
     }
 
-    func loopDidSucceed() {
-        analytics.forEach { $0.loopDidSucceed() }
+    public func loopDidSucceed() {
+        recordAnalyticsEvent("Loop success", outOfSession: true)
     }
 
-    func loopDidError() {
-        analytics.forEach { $0.loopDidError() }
+    public func loopDidError() {
+        recordAnalyticsEvent("Loop error", outOfSession: true)
+    }
+
+    private func recordAnalyticsEvent(_ name: String, withProperties properties: [AnyHashable: Any]? = nil, outOfSession: Bool = false) {
+        analytics.forEach { $0.recordAnalyticsEvent(name, withProperties: properties, outOfSession: outOfSession) }
     }
 
 }
