@@ -9,11 +9,13 @@ import Foundation
 import LoopKit
 import MinimedKit
 import MockKit
+import DashKit
 
 
 let allPumpManagers: [PumpManager.Type] = [
     MinimedPumpManager.self,
     MockPumpManager.self,
+    DashPumpManager.self,
 ]
 
 private let managersByIdentifier: [String: PumpManager.Type] = allPumpManagers.reduce(into: [:]) { (map, Type) in
