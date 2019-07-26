@@ -359,10 +359,9 @@
 		C11C87DE1E21EAAD00BB71D3 /* HKUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F526D5E1DF2459000A04910 /* HKUnit.swift */; };
 		C12F21A71DFA79CB00748193 /* recommend_temp_basal_very_low_end_in_range.json in Resources */ = {isa = PBXBuildFile; fileRef = C12F21A61DFA79CB00748193 /* recommend_temp_basal_very_low_end_in_range.json */; };
 		C13255D6223E7BE2008AF50C /* BolusProgressTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = C1F8B1DB223862D500DD66CF /* BolusProgressTableViewCell.xib */; };
-		C136545C22E75798007FF031 /* INSSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C136545A22E75797007FF031 /* INSSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C136545D22E75798007FF031 /* PodSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C136545B22E75798007FF031 /* PodSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C13BAD941E8009B000050CB5 /* NumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BFF0B31E45C1BE00FF19A9 /* NumberFormatter.swift */; };
 		C15713821DAC6983005BC4D2 /* MealBolusNightscoutTreatment.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15713811DAC6983005BC4D2 /* MealBolusNightscoutTreatment.swift */; };
+		C16DA84222E8E112008624C2 /* LoopPlugins.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16DA84122E8E112008624C2 /* LoopPlugins.swift */; };
 		C178249A1E1999FA00D9D25C /* CaseCountable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17824991E1999FA00D9D25C /* CaseCountable.swift */; };
 		C17824A01E19CF9800D9D25C /* GlucoseThresholdTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C178249F1E19CF9800D9D25C /* GlucoseThresholdTableViewController.swift */; };
 		C17824A31E19EAB600D9D25C /* recommend_temp_basal_start_very_low_end_high.json in Resources */ = {isa = PBXBuildFile; fileRef = C17824A21E19EAB600D9D25C /* recommend_temp_basal_start_very_low_end_high.json */; };
@@ -375,12 +374,6 @@
 		C189E6C022B829C6005904DA /* AdditionalAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C189E6BA22B81E7A005904DA /* AdditionalAssets.xcassets */; };
 		C189E6C122B82BE4005904DA /* AdditionalAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C189E6BA22B81E7A005904DA /* AdditionalAssets.xcassets */; };
 		C18C8C511D5A351900E043FB /* NightscoutDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18C8C501D5A351900E043FB /* NightscoutDataManager.swift */; };
-		C19BB3C222E761A300EA5C2E /* ObjectMapper.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C19BB3C022E761A200EA5C2E /* ObjectMapper.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C19BB3C322E761A300EA5C2E /* RxSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C19BB3C122E761A300EA5C2E /* RxSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C19BB3C522E7627500EA5C2E /* DashKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C19BB3C422E7627500EA5C2E /* DashKit.framework */; };
-		C19BB3C722E7627500EA5C2E /* DashKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C19BB3C622E7627500EA5C2E /* DashKitUI.framework */; };
-		C19BB3C822E763E800EA5C2E /* DashKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C19BB3C422E7627500EA5C2E /* DashKit.framework */; };
-		C19BB3C922E763E800EA5C2E /* DashKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C19BB3C622E7627500EA5C2E /* DashKitUI.framework */; };
 		C1C0BE2A224C0FA000C03B4D /* SwiftCharts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4346D1EF1C781BEA00ABAFE3 /* SwiftCharts.framework */; };
 		C1C6591C1E1B1FDA0025CC58 /* recommend_temp_basal_dropping_then_rising.json in Resources */ = {isa = PBXBuildFile; fileRef = C1C6591B1E1B1FDA0025CC58 /* recommend_temp_basal_dropping_then_rising.json */; };
 		C1C73F0D1DE3D0270022FC89 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C1C73F0F1DE3D0270022FC89 /* InfoPlist.strings */; };
@@ -516,10 +509,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				C19BB3C222E761A300EA5C2E /* ObjectMapper.framework in Embed Frameworks */,
-				C19BB3C322E761A300EA5C2E /* RxSwift.framework in Embed Frameworks */,
-				C136545C22E75798007FF031 /* INSSDK.framework in Embed Frameworks */,
-				C136545D22E75798007FF031 /* PodSDK.framework in Embed Frameworks */,
 				4F2C159A1E0C9E5600E160D4 /* LoopUI.framework in Embed Frameworks */,
 				43D9FFD721EAE05D00AF44BF /* LoopCore.framework in Embed Frameworks */,
 			);
@@ -1014,6 +1003,7 @@
 		C136545A22E75797007FF031 /* INSSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = INSSDK.framework; path = "../DashKit/dash-sdk-ios/frameworks/INSSDK.framework"; sourceTree = "<group>"; };
 		C136545B22E75798007FF031 /* PodSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PodSDK.framework; path = "../DashKit/dash-sdk-ios/frameworks/PodSDK.framework"; sourceTree = "<group>"; };
 		C15713811DAC6983005BC4D2 /* MealBolusNightscoutTreatment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MealBolusNightscoutTreatment.swift; sourceTree = "<group>"; };
+		C16DA84122E8E112008624C2 /* LoopPlugins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopPlugins.swift; sourceTree = "<group>"; };
 		C17824991E1999FA00D9D25C /* CaseCountable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CaseCountable.swift; sourceTree = "<group>"; };
 		C178249F1E19CF9800D9D25C /* GlucoseThresholdTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlucoseThresholdTableViewController.swift; sourceTree = "<group>"; };
 		C17824A21E19EAB600D9D25C /* recommend_temp_basal_start_very_low_end_high.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = recommend_temp_basal_start_very_low_end_high.json; sourceTree = "<group>"; };
@@ -1022,10 +1012,18 @@
 		C18852E12082AB1A00BECC8C /* RileyLinkKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RileyLinkKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C189E6BA22B81E7A005904DA /* AdditionalAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = AdditionalAssets.xcassets; path = ../../AdditionalAssets.xcassets; sourceTree = "<group>"; };
 		C18C8C501D5A351900E043FB /* NightscoutDataManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NightscoutDataManager.swift; sourceTree = "<group>"; };
+		C198D40322EA54F1004B23F7 /* DashKit */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; path = DashKit; sourceTree = "<group>"; };
+		C198D40522EA54F1004B23F7 /* DashKitUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DashKitUI.framework; sourceTree = "<group>"; };
+		C198D40622EA54F1004B23F7 /* INSSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = INSSDK.framework; sourceTree = "<group>"; };
+		C198D40722EA54F1004B23F7 /* DashKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DashKit.framework; sourceTree = "<group>"; };
+		C198D40822EA54F1004B23F7 /* SwiftGif.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftGif.framework; sourceTree = "<group>"; };
+		C198D40922EA54F1004B23F7 /* PodSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PodSDK.framework; sourceTree = "<group>"; };
+		C198D40A22EA54F1004B23F7 /* ObjectMapper.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ObjectMapper.framework; sourceTree = "<group>"; };
+		C198D40B22EA54F1004B23F7 /* MKRingProgressView.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MKRingProgressView.framework; sourceTree = "<group>"; };
+		C198D40C22EA54F1004B23F7 /* RxSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = RxSwift.framework; sourceTree = "<group>"; };
+		C198D40D22EA54F1004B23F7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Info.plist; sourceTree = "<group>"; };
 		C19BB3C022E761A200EA5C2E /* ObjectMapper.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ObjectMapper.framework; path = ../DashKit/Carthage/Build/iOS/ObjectMapper.framework; sourceTree = "<group>"; };
 		C19BB3C122E761A300EA5C2E /* RxSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RxSwift.framework; path = ../DashKit/Carthage/Build/iOS/RxSwift.framework; sourceTree = "<group>"; };
-		C19BB3C422E7627500EA5C2E /* DashKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DashKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		C19BB3C622E7627500EA5C2E /* DashKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DashKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1C6591B1E1B1FDA0025CC58 /* recommend_temp_basal_dropping_then_rising.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = recommend_temp_basal_dropping_then_rising.json; sourceTree = "<group>"; };
 		C1E2773D224177C000354103 /* ClockKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ClockKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS.sdk/System/Library/Frameworks/ClockKit.framework; sourceTree = DEVELOPER_DIR; };
 		C1E2774722433D7A00354103 /* MKRingProgressView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MKRingProgressView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1047,8 +1045,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C19BB3C822E763E800EA5C2E /* DashKit.framework in Frameworks */,
-				C19BB3C922E763E800EA5C2E /* DashKitUI.framework in Frameworks */,
 				43D9FFD621EAE05D00AF44BF /* LoopCore.framework in Frameworks */,
 				C1E2774822433D7A00354103 /* MKRingProgressView.framework in Frameworks */,
 				892A5D5B222F0D7C008961AB /* LoopTestingKit.framework in Frameworks */,
@@ -1138,8 +1134,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C19BB3C522E7627500EA5C2E /* DashKit.framework in Frameworks */,
-				C19BB3C722E7627500EA5C2E /* DashKitUI.framework in Frameworks */,
 				43D9000B21EB0BE000AF44BF /* LoopCore.framework in Frameworks */,
 				C1C0BE2A224C0FA000C03B4D /* SwiftCharts.framework in Frameworks */,
 				4F7528951DFE1E9B00C322D6 /* LoopUI.framework in Frameworks */,
@@ -1227,6 +1221,7 @@
 		43776F831B8022E90074EA36 = {
 			isa = PBXGroup;
 			children = (
+				C198D40222EA54F1004B23F7 /* DashKit.loopplugin */,
 				C19BB3C022E761A200EA5C2E /* ObjectMapper.framework */,
 				C19BB3C122E761A300EA5C2E /* RxSwift.framework */,
 				C136545A22E75797007FF031 /* INSSDK.framework */,
@@ -1267,6 +1262,7 @@
 		43776F8E1B8022E90074EA36 /* Loop */ = {
 			isa = PBXGroup;
 			children = (
+				C16DA84022E8E104008624C2 /* Plugins */,
 				7D7076651FE06EE4004AC8EA /* Localizable.strings */,
 				7D7076511FE06EE1004AC8EA /* InfoPlist.strings */,
 				43EDEE6B1CF2E12A00393BE3 /* Loop.entitlements */,
@@ -1749,8 +1745,6 @@
 		968DCD53F724DE56FFE51920 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				C19BB3C422E7627500EA5C2E /* DashKit.framework */,
-				C19BB3C622E7627500EA5C2E /* DashKitUI.framework */,
 				434FB6451D68F1CD007B9C70 /* Amplitude.framework */,
 				4344628420A7A3BE00C4BE6F /* CGMBLEKit.framework */,
 				438A95A71D8B9B24009D12E1 /* CGMBLEKit.framework */,
@@ -1780,6 +1774,40 @@
 				4346D1EF1C781BEA00ABAFE3 /* SwiftCharts.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C16DA84022E8E104008624C2 /* Plugins */ = {
+			isa = PBXGroup;
+			children = (
+				C16DA84122E8E112008624C2 /* LoopPlugins.swift */,
+			);
+			path = Plugins;
+			sourceTree = "<group>";
+		};
+		C198D40222EA54F1004B23F7 /* DashKit.loopplugin */ = {
+			isa = PBXGroup;
+			children = (
+				C198D40322EA54F1004B23F7 /* DashKit */,
+				C198D40422EA54F1004B23F7 /* Frameworks */,
+				C198D40D22EA54F1004B23F7 /* Info.plist */,
+			);
+			name = DashKit.loopplugin;
+			path = "../../../Library/Developer/Xcode/DerivedData/Loop-gqwyxtsjfgxofmelczgcwptvkcsn/Build/Products/Debug-iphoneos/DashKit.loopplugin";
+			sourceTree = "<group>";
+		};
+		C198D40422EA54F1004B23F7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C198D40522EA54F1004B23F7 /* DashKitUI.framework */,
+				C198D40622EA54F1004B23F7 /* INSSDK.framework */,
+				C198D40722EA54F1004B23F7 /* DashKit.framework */,
+				C198D40822EA54F1004B23F7 /* SwiftGif.framework */,
+				C198D40922EA54F1004B23F7 /* PodSDK.framework */,
+				C198D40A22EA54F1004B23F7 /* ObjectMapper.framework */,
+				C198D40B22EA54F1004B23F7 /* MKRingProgressView.framework */,
+				C198D40C22EA54F1004B23F7 /* RxSwift.framework */,
+			);
+			path = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1822,6 +1850,7 @@
 				43A9439C1B926B7B0051FA24 /* Embed Watch Content */,
 				43A943AE1B928D400051FA24 /* Embed Frameworks */,
 				43EDDBEF1C361BCE007D89B5 /* Copy Frameworks with Carthage */,
+				C16DA84322E8E5FF008624C2 /* Copy Plugins */,
 				4F70C1EC1DE8DCA8006380B7 /* Embed App Extensions */,
 			);
 			buildRules = (
@@ -2354,9 +2383,6 @@
 				"$(BUILT_PRODUCTS_DIR)/MockKit.framework",
 				"$(BUILT_PRODUCTS_DIR)/MockKitUI.framework",
 				"$(BUILT_PRODUCTS_DIR)/MKRingProgressView.framework",
-				"$(BUILT_PRODUCTS_DIR)/DashKit.framework",
-				"$(BUILT_PRODUCTS_DIR)/DashKitUI.framework",
-				"$(BUILT_PRODUCTS_DIR)/SwiftGif.framework",
 			);
 			name = "Copy Frameworks with Carthage";
 			outputPaths = (
@@ -2404,6 +2430,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "CARTHAGE_BUILD_DIR=\"${SRCROOT}/Carthage/Build\"\nif [ -n \"${IPHONEOS_DEPLOYMENT_TARGET}\" ]; then\n    CARTHAGE_BUILD_DIR=\"${CARTHAGE_BUILD_DIR}/iOS\"\nelif [ -n \"${WATCHOS_DEPLOYMENT_TARGET}\" ]; then\n    CARTHAGE_BUILD_DIR=\"${CARTHAGE_BUILD_DIR}/watchOS\"\nelse\n    echo \"ERROR: Unexpected deployment target type\"\n    exit 1\nfi\n\nfor SCRIPT_INPUT_FILE in ${!SCRIPT_INPUT_FILE_*}; do\n    CARTHAGE_BUILD_FILE=\"${!SCRIPT_INPUT_FILE/${BUILT_PRODUCTS_DIR}/${CARTHAGE_BUILD_DIR}}\"\n    if [ -e \"${CARTHAGE_BUILD_FILE}\" ]; then\n        if [ -e \"${SCRIPT_INPUT_FILE}\" ]; then\n            echo \"ERROR: Duplicate frameworks found at:\"\n            echo \"  ${SCRIPT_INPUT_FILE}\"\n            echo \"  ${CARTHAGE_BUILD_FILE}\"\n            exit 1\n        fi\n        echo \"Substituting \\\"${CARTHAGE_BUILD_FILE}\\\" for \\\"${!SCRIPT_INPUT_FILE}\\\"\"\n        export ${SCRIPT_INPUT_FILE}=\"${CARTHAGE_BUILD_FILE}\"\n    fi\ndone\n\necho \"Copy Frameworks with Carthage\"\ncarthage copy-frameworks\n";
+		};
+		C16DA84322E8E5FF008624C2 /* Copy Plugins */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Plugins";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "${SRCROOT}/Scripts/copy-plugins.sh\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2484,6 +2528,7 @@
 				4344628F20A7ADD500C4BE6F /* UserDefaults+CGM.swift in Sources */,
 				43F41C371D3BF32400C11ED6 /* UIAlertController.swift in Sources */,
 				433EA4C41D9F71C800CD78FB /* CommandResponseViewController.swift in Sources */,
+				C16DA84222E8E112008624C2 /* LoopPlugins.swift in Sources */,
 				43D2E8231F00425400AE5CBF /* BolusViewController+LoopDataManager.swift in Sources */,
 				430B29952041F5CB00BA9F93 /* LoopSettings+Loop.swift in Sources */,
 				43785E932120A01B0057DED1 /* NewCarbEntryIntent+Loop.swift in Sources */,
