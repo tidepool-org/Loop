@@ -5,11 +5,11 @@
 #
 #  Copyright © 2019 LoopKit Authors. All rights reserved.
 
-export EXPANDED_CODE_SIGN_IDENTITY=E7B3EE0414C12AAEF30B0B6F548A4631607843EA
-export DT_TOOLCHAIN_DIR=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain
-export BUILT_PRODUCTS_DIR="/Users/pete/Library/Developer/Xcode/DerivedData/Loop-brxfloqwyetegifggkanxcujdfuf/Build/Intermediates.noindex/ArchiveIntermediates/Loop (Workspace)/BuildProductsPath/Release-iphoneos"
-export EXPANDED_CODE_SIGN_IDENTITY_NAME="iPhone Developer: Pete Schwamb (KX4XY883PR)"
-export PLUGINS_FOLDER_PATH=Loop.app/PlugIns
+#export EXPANDED_CODE_SIGN_IDENTITY=E7B3EE0414C12AAEF30B0B6F548A4631607843EA
+#export DT_TOOLCHAIN_DIR=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain
+#export BUILT_PRODUCTS_DIR="/Users/pete/Library/Developer/Xcode/DerivedData/Loop-brxfloqwyetegifggkanxcujdfuf/Build/Intermediates.noindex/ArchiveIntermediates/Loop (Workspace)/BuildProductsPath/Release-iphoneos"
+#export EXPANDED_CODE_SIGN_IDENTITY_NAME="iPhone Developer: Pete Schwamb (KX4XY883PR)"
+#export PLUGINS_FOLDER_PATH=Loop.app/PlugIns
 
 echo "Looking for plugins in $BUILT_PRODUCTS_DIR"
 
