@@ -27,7 +27,8 @@ for f in "${BUILT_PRODUCTS_DIR}"/*.loopplugin; do
     destination="${BUILT_PRODUCTS_DIR}/${PLUGINS_FOLDER_PATH}/${plugin}"
     echo "Signing ${plugin} with ${EXPANDED_CODE_SIGN_IDENTITY_NAME}"
     /usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} --timestamp=none --preserve-metadata=identifier,entitlements,flags "$destination"
-    for framework_path in "${destination}"/Frameworks/*.framework; do
+    echo "Signing plugin's frameworks in "${f}"/Frameworks/*.framework"
+    for framework_path in "${f}"/Frameworks/*.framework; do
       framework=$(basename "$framework_path")
       echo "Signing $framework for $plugin with $EXPANDED_CODE_SIGN_IDENTITY_NAME"
       /usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} --timestamp=none --preserve-metadata=identifier,entitlements,flags ${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/${framework}
