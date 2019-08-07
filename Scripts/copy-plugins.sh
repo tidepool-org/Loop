@@ -13,16 +13,17 @@ shopt -s nullglob
 for f in ${BUILT_PRODUCTS_DIR}/*.loopplugin; do
   plugin=$(basename $f)
   echo Copying device plugin: $plugin to plugins directory in app
-  cp -a $f ${BUILT_PRODUCTS_DIR}/${PLUGINS_FOLDER_PATH}
+  rsync -va --exclude=Frameworks $f ${BUILT_PRODUCTS_DIR}/${PLUGINS_FOLDER_PATH}
+  cp -a "$f/Frameworks/" ${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}
   if [ "$EXPANDED_CODE_SIGN_IDENTITY" != "-" ]; then
     export CODESIGN_ALLOCATE=${DT_TOOLCHAIN_DIR}/usr/bin/codesign_allocate
     destination=${BUILT_PRODUCTS_DIR}/${PLUGINS_FOLDER_PATH}/${plugin}
     echo "Signing ${plugin} with ${EXPANDED_CODE_SIGN_IDENTITY_NAME}"
     /usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} --timestamp=none --preserve-metadata=identifier,entitlements,flags ${destination}
-    for framework_path in ${destination}/Frameworks/*.framework; do
+    for framework_path in $f/Frameworks/*.framework; do
       framework=$(basename $framework_path)
       echo "Signing $framework for $plugin with $EXPANDED_CODE_SIGN_IDENTITY_NAME"
-      /usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} --timestamp=none --preserve-metadata=identifier,entitlements,flags ${framework_path}
+      /usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} --timestamp=none --preserve-metadata=identifier,entitlements,flags ${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/${framework}
     done
   else
     echo "Skipping signing of ${plugin}"
