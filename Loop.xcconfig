@@ -9,12 +9,11 @@
 // This is automatically disambiguated by development team, but you may choose to change this to
 // support running multiple apps simultaneously.
 MAIN_APP_BUNDLE_IDENTIFIER = com.${DEVELOPMENT_TEAM}.loopkit
-MAIN_APP_DISPLAY_NAME = Loop
+MAIN_APP_DISPLAY_NAME = Loopy
+
+LOOP_MARKETING_VERSION = 1.10.0
 
 APPICON_NAME = AppIcon
-
-// Exclude additional assets by default, and let other configurations that provide them add the file back in
-EXCLUDED_SOURCE_FILE_NAMES = AdditionalAssets.xcassets
 
 // Optional workspace configuration overrides
 #include? "../LoopConfigOverride.xcconfig"

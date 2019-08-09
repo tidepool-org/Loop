@@ -16,11 +16,11 @@ class PluginManager {
     public init() {
         var bundles = [Bundle]()
 
-        if let plugInsURL = Bundle.main.builtInPlugInsURL {
+        if let plugInsURL = Bundle.main.privateFrameworksURL {
             do {
-                for pluginURL in try FileManager.default.contentsOfDirectory(at: plugInsURL, includingPropertiesForKeys: nil).filter{$0.path.contains(".loopplugin")} {
-                    print("Found loop plugin at \(pluginURL)")
-                    if let bundle = Bundle(url: pluginURL) {
+                for pluginURL in try FileManager.default.contentsOfDirectory(at: plugInsURL, includingPropertiesForKeys: nil).filter{$0.path.contains(".framework")} {
+                    if let bundle = Bundle(url: pluginURL), bundle.isLoopPlugin {
+                        print("Found loop plugin at \(pluginURL)")
                         bundles.append(bundle)
                     }
                 }
@@ -66,5 +66,14 @@ class PluginManager {
             return AvailableDevice(identifier: identifier, localizedTitle: title)
 
         })
+    }
+}
+
+
+extension Bundle {
+    var isLoopPlugin: Bool {
+        return
+            object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerIdentifier.rawValue) as? String != nil ||
+            object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) as? String != nil
     }
 }
