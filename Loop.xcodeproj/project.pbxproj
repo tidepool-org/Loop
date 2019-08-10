@@ -355,6 +355,7 @@
 		C10428971D17BAD400DD539A /* NightscoutUploadKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C10428961D17BAD400DD539A /* NightscoutUploadKit.framework */; };
 		C10B28461EA9BA5E006EA1FC /* far_future_high_bg_forecast.json in Resources */ = {isa = PBXBuildFile; fileRef = C10B28451EA9BA5E006EA1FC /* far_future_high_bg_forecast.json */; };
 		C11C87DE1E21EAAD00BB71D3 /* HKUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F526D5E1DF2459000A04910 /* HKUnit.swift */; };
+		C125F31B22FE7CE200FD0545 /* copy-frameworks.sh in Resources */ = {isa = PBXBuildFile; fileRef = C125F31A22FE7CE200FD0545 /* copy-frameworks.sh */; };
 		C12F21A71DFA79CB00748193 /* recommend_temp_basal_very_low_end_in_range.json in Resources */ = {isa = PBXBuildFile; fileRef = C12F21A61DFA79CB00748193 /* recommend_temp_basal_very_low_end_in_range.json */; };
 		C13255D6223E7BE2008AF50C /* BolusProgressTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = C1F8B1DB223862D500DD66CF /* BolusProgressTableViewCell.xib */; };
 		C13BAD941E8009B000050CB5 /* NumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BFF0B31E45C1BE00FF19A9 /* NumberFormatter.swift */; };
@@ -995,6 +996,7 @@
 		89E267FE229267DF00A3F2AF /* Optional.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Optional.swift; sourceTree = "<group>"; };
 		C10428961D17BAD400DD539A /* NightscoutUploadKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = NightscoutUploadKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10B28451EA9BA5E006EA1FC /* far_future_high_bg_forecast.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = far_future_high_bg_forecast.json; sourceTree = "<group>"; };
+		C125F31A22FE7CE200FD0545 /* copy-frameworks.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "copy-frameworks.sh"; sourceTree = "<group>"; };
 		C12F21A61DFA79CB00748193 /* recommend_temp_basal_very_low_end_in_range.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = recommend_temp_basal_very_low_end_in_range.json; sourceTree = "<group>"; };
 		C15713811DAC6983005BC4D2 /* MealBolusNightscoutTreatment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MealBolusNightscoutTreatment.swift; sourceTree = "<group>"; };
 		C16DA84122E8E112008624C2 /* LoopPlugins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopPlugins.swift; sourceTree = "<group>"; };
@@ -1771,6 +1773,7 @@
 		C18A491122FCC20B00FDA733 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				C125F31A22FE7CE200FD0545 /* copy-frameworks.sh */,
 				C18A491222FCC22800FDA733 /* build-derived-assets.sh */,
 				C18A491422FCC22900FDA733 /* build-derived-watch-assets.sh */,
 				C18A491522FCC22900FDA733 /* copy-plugins.sh */,
@@ -2165,6 +2168,7 @@
 				C13255D6223E7BE2008AF50C /* BolusProgressTableViewCell.xib in Resources */,
 				43FCBBC21E51710B00343C1B /* LaunchScreen.storyboard in Resources */,
 				7D70764F1FE06EE1004AC8EA /* InfoPlist.strings in Resources */,
+				C125F31B22FE7CE200FD0545 /* copy-frameworks.sh in Resources */,
 				7D7076631FE06EE4004AC8EA /* Localizable.strings in Resources */,
 				43776F971B8022E90074EA36 /* Main.storyboard in Resources */,
 			);
@@ -2356,7 +2360,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CARTHAGE_BUILD_DIR=\"${SRCROOT}/Carthage/Build\"\nif [ -n \"${IPHONEOS_DEPLOYMENT_TARGET}\" ]; then\n    CARTHAGE_BUILD_DIR=\"${CARTHAGE_BUILD_DIR}/iOS\"\nelif [ -n \"${WATCHOS_DEPLOYMENT_TARGET}\" ]; then\n    CARTHAGE_BUILD_DIR=\"${CARTHAGE_BUILD_DIR}/watchOS\"\nelse\n    echo \"ERROR: Unexpected deployment target type\"\n    exit 1\nfi\n\nfor SCRIPT_INPUT_FILE in ${!SCRIPT_INPUT_FILE_*}; do\n    CARTHAGE_BUILD_FILE=\"${!SCRIPT_INPUT_FILE/${BUILT_PRODUCTS_DIR}/${CARTHAGE_BUILD_DIR}}\"\n    if [ -e \"${CARTHAGE_BUILD_FILE}\" ]; then\n        if [ -e \"${SCRIPT_INPUT_FILE}\" ]; then\n            echo \"ERROR: Duplicate frameworks found at:\"\n            echo \"  ${SCRIPT_INPUT_FILE}\"\n            echo \"  ${CARTHAGE_BUILD_FILE}\"\n            exit 1\n        fi\n        echo \"Substituting \\\"${CARTHAGE_BUILD_FILE}\\\" for \\\"${!SCRIPT_INPUT_FILE}\\\"\"\n        export ${SCRIPT_INPUT_FILE}=\"${CARTHAGE_BUILD_FILE}\"\n    fi\ndone\n\necho \"Copy Frameworks with Carthage\"\ncarthage copy-frameworks\n";
+			shellScript = "${SRCROOT}/Scripts/copy-frameworks.sh\n\n";
 		};
 		43FF3DF620A8EFE800F8E62C /* Copy Frameworks with Carthage */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -3213,7 +3217,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer: loudnate@gmail.com (XZN842LDLT)";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 57;
+				CURRENT_PROJECT_VERSION = 60;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3285,7 +3289,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer: loudnate@gmail.com (XZN842LDLT)";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 57;
+				CURRENT_PROJECT_VERSION = 60;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3456,11 +3460,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 57;
+				CURRENT_PROJECT_VERSION = 60;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 57;
+				DYLIB_CURRENT_VERSION = 60;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Carthage/Build/watchOS";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3492,11 +3496,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 57;
+				CURRENT_PROJECT_VERSION = 60;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 57;
+				DYLIB_CURRENT_VERSION = 60;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Carthage/Build/watchOS";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3582,11 +3586,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 57;
+				CURRENT_PROJECT_VERSION = 60;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 57;
+				DYLIB_CURRENT_VERSION = 60;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = LoopCore/Info.plist;
@@ -3615,11 +3619,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 57;
+				CURRENT_PROJECT_VERSION = 60;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 57;
+				DYLIB_CURRENT_VERSION = 60;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = LoopCore/Info.plist;
@@ -3738,11 +3742,11 @@
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				CURRENT_PROJECT_VERSION = 57;
+				CURRENT_PROJECT_VERSION = 60;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 57;
+				DYLIB_CURRENT_VERSION = 60;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = LoopUI/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -3765,11 +3769,11 @@
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				CURRENT_PROJECT_VERSION = 57;
+				CURRENT_PROJECT_VERSION = 60;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 57;
+				DYLIB_CURRENT_VERSION = 60;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = LoopUI/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
