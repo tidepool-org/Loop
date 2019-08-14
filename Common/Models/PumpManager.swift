@@ -8,6 +8,7 @@
 import Foundation
 import LoopKit
 import MinimedKit
+import OmniKit
 import MockKit
 
 
@@ -18,6 +19,7 @@ public struct AvailableDevice {
 
 
 let staticPumpManagers: [PumpManager.Type] = [
+    OmnipodPumpManager.self,
     MinimedPumpManager.self,
     MockPumpManager.self,
 ]
