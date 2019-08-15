@@ -110,7 +110,9 @@ final class DeviceDataManager {
         watchManager = WatchDataManager(deviceManager: self)
         nightscoutDataManager = NightscoutDataManager(deviceDataManager: self)
 
+        self.log.default("Debug enabled = \(debugEnabled)")
         if debugEnabled {
+            self.log.default("Creating LocalTestingScenariosManager()")
             testingScenariosManager = LocalTestingScenariosManager(deviceManager: self)
         }
 

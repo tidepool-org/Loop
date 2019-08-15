@@ -16,13 +16,14 @@ import OmniKitUI
 
 typealias PumpManagerHUDViewsRawValue = [String: Any]
 
-func PumpManagerHUDViewsFromRawValue(_ rawValue: PumpManagerHUDViewsRawValue) -> [BaseHUDView]? {
-    guard let rawState = rawValue["hudProviderViews"] as? HUDProvider.HUDViewsRawState,
-        let manager = PumpManagerTypeFromRawValue(rawValue) as? PumpManagerUI.Type
-    else {
+func PumpManagerHUDViewsFromRawValue(_ rawValue: PumpManagerHUDViewsRawValue, pluginManager: PluginManager) -> [BaseHUDView]? {
+    guard
+        let identifier = rawValue["managerIdentifier"] as? String,
+        let rawState = rawValue["hudProviderViews"] as? HUDProvider.HUDViewsRawState,
+        let manager = pluginManager.getPumpManagerTypeByIdentifier(identifier) ?? staticPumpManagersByIdentifier[identifier] as? PumpManagerUI.Type else
+    {
         return nil
     }
-    
     return manager.createHUDViews(rawValue: rawState)
 }
 

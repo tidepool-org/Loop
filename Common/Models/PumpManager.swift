@@ -17,12 +17,18 @@ public struct AvailableDevice {
     let localizedTitle: String
 }
 
-
+#if DEBUG
 let staticPumpManagers: [PumpManager.Type] = [
     OmnipodPumpManager.self,
     MinimedPumpManager.self,
     MockPumpManager.self,
 ]
+#else
+let staticPumpManagers: [PumpManager.Type] = [
+    OmnipodPumpManager.self,
+    MinimedPumpManager.self,
+]
+#endif
 
 let staticPumpManagersByIdentifier: [String: PumpManager.Type] = staticPumpManagers.reduce(into: [:]) { (map, Type) in
     map[Type.managerIdentifier] = Type
