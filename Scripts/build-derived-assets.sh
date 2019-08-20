@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/sh -eu
 
-#  copy-asset-overrides.sh
+#  build-derived-assets.sh
 #  Loop
 #
 #  Copyright © 2019 LoopKit Authors. All rights reserved.

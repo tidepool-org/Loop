@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/sh -eu
 
-#  copy-asset-overrides.sh
+#  build-derived-watch-assets.sh
 #  Loop
 #
 #  Copyright © 2019 LoopKit Authors. All rights reserved.
