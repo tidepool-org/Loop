@@ -16,9 +16,9 @@ class PluginManager {
     public init() {
         var bundles = [Bundle]()
 
-        if let plugInsURL = Bundle.main.privateFrameworksURL {
+        if let pluginsURL = Bundle.main.privateFrameworksURL {
             do {
-                for pluginURL in try FileManager.default.contentsOfDirectory(at: plugInsURL, includingPropertiesForKeys: nil).filter{$0.path.contains(".framework")} {
+                for pluginURL in try FileManager.default.contentsOfDirectory(at: pluginsURL, includingPropertiesForKeys: nil).filter{$0.path.contains(".framework")} {
                     if let bundle = Bundle(url: pluginURL), bundle.isLoopPlugin {
                         print("Found loop plugin at \(pluginURL)")
                         bundles.append(bundle)
