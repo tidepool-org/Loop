@@ -92,7 +92,7 @@ final class DeviceDataManager {
 
         if let cgmManager = UserDefaults.appGroup?.cgmManager {
             self.cgmManager = cgmManager
-        } else if isCGMManagerValidPumpManager == true {
+        } else if isCGMManagerValidPumpManager {
             self.cgmManager = pumpManager as? CGMManager
         }
         
