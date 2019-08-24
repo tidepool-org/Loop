@@ -80,6 +80,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
         basalProfile: defaults?.basalRateSchedule,
         insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule
     )
+    
+    private var pluginManager = PluginManager()
 
     private var pluginManager = PluginManager()
 

@@ -11,7 +11,6 @@ import MinimedKit
 import OmniKit
 import MockKit
 
-
 public struct AvailableDevice {
     let identifier: String
     let localizedTitle: String
@@ -19,9 +18,9 @@ public struct AvailableDevice {
 
 #if DEBUG
 let staticPumpManagers: [PumpManager.Type] = [
-    OmnipodPumpManager.self,
     MinimedPumpManager.self,
     MockPumpManager.self,
+    OmnipodPumpManager.self,
 ]
 #else
 let staticPumpManagers: [PumpManager.Type] = [
