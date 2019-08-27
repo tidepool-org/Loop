@@ -20,21 +20,27 @@ final class RemoteDataManager: RemoteData, CarbStoreSyncDelegate {
 
     weak var delegate: RemoteDataManagerDelegate?
 
-    private let servicesManager: ServicesManager
-
     private unowned let deviceDataManager: DeviceDataManager
 
-    private var remoteData: [RemoteData]
+    private var remoteData: [RemoteData]!
 
     init(servicesManager: ServicesManager, deviceDataManager: DeviceDataManager) {
-        self.servicesManager = servicesManager
         self.deviceDataManager = deviceDataManager
-
-        self.remoteData = servicesManager.services.compactMap({ $0 as? RemoteData })
+        self.remoteData = filter(services: servicesManager.services)
 
         servicesManager.addObserver(self)
 
         NotificationCenter.default.addObserver(self, selector: #selector(loopDataUpdated(_:)), name: .LoopDataUpdated, object: deviceDataManager.loopManager)
+    }
+
+    private func filter(services: [Service]) -> [RemoteData] {
+        return services.compactMap({ (service) in
+            guard var remoteData = service as? RemoteData else {
+                return nil
+            }
+            remoteData.remoteDataDelegate = self
+            return remoteData
+        })
     }
 
     @objc func loopDataUpdated(_ note: Notification) {
@@ -142,10 +148,11 @@ final class RemoteDataManager: RemoteData, CarbStoreSyncDelegate {
 
 }
 
+
 extension RemoteDataManager: ServicesManagerObserver {
 
     func servicesManagerDidUpdate(services: [Service]) {
-        remoteData = servicesManager.services.compactMap({ $0 as? RemoteData })
+        remoteData = filter(services: services)
         delegate?.remoteDataManagerDidUpdateServices(self)
     }
 

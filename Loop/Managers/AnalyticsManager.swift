@@ -13,16 +13,16 @@ import LoopKit
 
 final class AnalyticsManager {
 
-    private let servicesManager: ServicesManager
-
-    private var analytics: [Analytics]
+    private var analytics: [Analytics]!
 
     init(servicesManager: ServicesManager) {
-        self.servicesManager = servicesManager
-
-        self.analytics = servicesManager.services.compactMap({ $0 as? Analytics })
-
+        self.analytics = filter(services: servicesManager.services)
+        
         servicesManager.addObserver(self)
+    }
+
+    private func filter(services: [Service]) -> [Analytics] {
+        return services.compactMap({ $0 as? Analytics })
     }
 
     // MARK: - UIApplicationDelegate
@@ -151,7 +151,7 @@ final class AnalyticsManager {
 extension AnalyticsManager: ServicesManagerObserver {
 
     func servicesManagerDidUpdate(services: [Service]) {
-        analytics = servicesManager.services.compactMap({ $0 as? Analytics })
+        analytics = filter(services: services)
     }
     
 }

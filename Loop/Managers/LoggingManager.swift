@@ -13,16 +13,16 @@ import LoopKit
 
 final class LoggingManager: Logging {
 
-    private let servicesManager: ServicesManager
-
-    private var logging: [Logging]
+    private var logging: [Logging]!
 
     init(servicesManager: ServicesManager) {
-        self.servicesManager = servicesManager
-
-        self.logging = servicesManager.services.compactMap({ $0 as? Logging })
-
+        self.logging = filter(services: servicesManager.services)
+        
         servicesManager.addObserver(self)
+    }
+
+    private func filter(services: [Service]) -> [Logging] {
+        return services.compactMap({ $0 as? Logging })
     }
 
     func log (_ message: StaticString, subsystem: String, category: String, type: OSLogType, _ args: [CVarArg]) {
@@ -34,7 +34,7 @@ final class LoggingManager: Logging {
 extension LoggingManager: ServicesManagerObserver {
 
     func servicesManagerDidUpdate(services: [Service]) {
-        logging = servicesManager.services.compactMap({ $0 as? Logging })
+        logging = filter(services: services)
     }
 
 }

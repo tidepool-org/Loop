@@ -66,7 +66,7 @@ class ServicesManager {
 
     private func notifyObservers() {
         for observer in lock.withLock({ observers }) {
-            observer.servicesManagerDidUpdate(services:services)
+            observer.servicesManagerDidUpdate(services: services)
         }
     }
 
