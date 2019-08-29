@@ -89,7 +89,6 @@ final class DeviceDataManager {
         }
 
         remoteDataManager = RemoteDataManager(servicesManager: servicesManager, deviceDataManager: self)
-        remoteDataManager.delegate = self
         statusExtensionManager = StatusExtensionDataManager(deviceDataManager: self)
         loopManager = LoopDataManager(
             lastLoopCompleted: statusExtensionManager.context?.lastLoopCompleted,
@@ -99,7 +98,7 @@ final class DeviceDataManager {
         watchManager = WatchDataManager(deviceManager: self, analyticsManager: analyticsManager)
 
         loopManager.delegate = self
-        loopManager.carbStore.syncDelegate = remoteDataManager.carbStoreSyncDelegate
+        loopManager.carbStore.syncDelegate = remoteDataManager
         loopManager.doseStore.delegate = self
 
         setupPump()
@@ -177,13 +176,6 @@ extension DeviceDataManager {
     }
 }
 
-// MARK: - RemoteDataManagerDelegate
-extension DeviceDataManager: RemoteDataManagerDelegate {
-    func remoteDataManagerDidUpdateServices(_ remoteDataManager: RemoteDataManager) {
-        loopManager.carbStore.syncDelegate = remoteDataManager.carbStoreSyncDelegate
-    }
-}
-
 // MARK: - DeviceManagerDelegate
 extension DeviceDataManager: DeviceManagerDelegate {
     func scheduleNotification(for manager: DeviceManager,
@@ -222,8 +214,8 @@ extension DeviceDataManager: CGMManagerDelegate {
             loopManager.addGlucose(values) { result in
                 if manager.shouldSyncToRemoteService {
                     switch result {
-                    case .success(let values):
-                        self.remoteDataManager.upload(glucoseValues: values, sensorState: manager.sensorState)
+                    case .success:
+                        self.remoteDataManager.synchronizeRemoteData()
                     case .failure:
                         break
                     }

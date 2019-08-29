@@ -329,6 +329,8 @@
 		898ECA69218ABDA9001E9D35 /* CLKTextProvider+Compound.m in Sources */ = {isa = PBXBuildFile; fileRef = 898ECA67218ABDA8001E9D35 /* CLKTextProvider+Compound.m */; };
 		A9183E3022BC4ACB002B4E34 /* AmplitudeServiceKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9183E2F22BC4ACB002B4E34 /* AmplitudeServiceKit.framework */; };
 		A9183E3222BC4ACB002B4E34 /* AmplitudeServiceKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9183E3122BC4ACB002B4E34 /* AmplitudeServiceKitUI.framework */; };
+		A92E76FB22E8C93800591027 /* TidepoolServiceKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A92E76FA22E8C93800591027 /* TidepoolServiceKit.framework */; };
+		A92E76FD22E8C93800591027 /* TidepoolServiceKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A92E76FC22E8C93800591027 /* TidepoolServiceKitUI.framework */; };
 		A9563CCE22DD18B300E458A4 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9563CCD22DD18B300E458A4 /* LoopSettings.swift */; };
 		A9563CCF22DD214A00E458A4 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9563CCD22DD18B300E458A4 /* LoopSettings.swift */; };
 		A96A596822B811DB00229EB4 /* DiagnosticLog+Subsystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96A596722B811DB00229EB4 /* DiagnosticLog+Subsystem.swift */; };
@@ -963,6 +965,8 @@
 		898ECA68218ABDA9001E9D35 /* CLKTextProvider+Compound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CLKTextProvider+Compound.h"; sourceTree = "<group>"; };
 		A9183E2F22BC4ACB002B4E34 /* AmplitudeServiceKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AmplitudeServiceKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9183E3122BC4ACB002B4E34 /* AmplitudeServiceKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AmplitudeServiceKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A92E76FA22E8C93800591027 /* TidepoolServiceKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TidepoolServiceKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A92E76FC22E8C93800591027 /* TidepoolServiceKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TidepoolServiceKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9563CCD22DD18B300E458A4 /* LoopSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopSettings.swift; sourceTree = "<group>"; };
 		A96A596722B811DB00229EB4 /* DiagnosticLog+Subsystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DiagnosticLog+Subsystem.swift"; sourceTree = "<group>"; };
 		A96A598E22B8559500229EB4 /* LoggingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggingManager.swift; sourceTree = "<group>"; };
@@ -1014,6 +1018,8 @@
 				A9A1EE9D22BC603B00DFACDA /* LogglyServiceKitUI.framework in Frameworks */,
 				A9B0077C22BD4C4C000131DE /* NightscoutServiceKit.framework in Frameworks */,
 				A9B0077E22BD4C4C000131DE /* NightscoutServiceKitUI.framework in Frameworks */,
+				A92E76FB22E8C93800591027 /* TidepoolServiceKit.framework in Frameworks */,
+				A92E76FD22E8C93800591027 /* TidepoolServiceKitUI.framework in Frameworks */,
 				43D9FFD621EAE05D00AF44BF /* LoopCore.framework in Frameworks */,
 				892A5D5B222F0D7C008961AB /* LoopTestingKit.framework in Frameworks */,
 				892A5D2A222EF60A008961AB /* MockKit.framework in Frameworks */,
@@ -1679,6 +1685,8 @@
 		968DCD53F724DE56FFE51920 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A92E76FA22E8C93800591027 /* TidepoolServiceKit.framework */,
+				A92E76FC22E8C93800591027 /* TidepoolServiceKitUI.framework */,
 				A9B0077B22BD4C4C000131DE /* NightscoutServiceKit.framework */,
 				A9B0077D22BD4C4C000131DE /* NightscoutServiceKitUI.framework */,
 				A9A1EE9A22BC603B00DFACDA /* LogglyServiceKit.framework */,
@@ -2290,6 +2298,10 @@
 				"$(BUILT_PRODUCTS_DIR)/LogglyServiceKitUI.framework",
 				"$(BUILT_PRODUCTS_DIR)/NightscoutServiceKit.framework",
 				"$(BUILT_PRODUCTS_DIR)/NightscoutServiceKitUI.framework",
+				"$(BUILT_PRODUCTS_DIR)/TidepoolKit.framework",
+				"$(BUILT_PRODUCTS_DIR)/TidepoolKitUI.framework",
+				"$(BUILT_PRODUCTS_DIR)/TidepoolServiceKit.framework",
+				"$(BUILT_PRODUCTS_DIR)/TidepoolServiceKitUI.framework",
 			);
 			name = "Copy Frameworks with Carthage";
 			outputPaths = (
@@ -2319,6 +2331,10 @@
 				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/LogglyServiceKitUI.framework",
 				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/NightscoutServiceKit.framework",
 				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/NightscoutServiceKitUI.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/TidepoolKit.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/TidepoolKitUI.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/TidepoolServiceKit.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/TidepoolServiceKitUI.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -3143,6 +3159,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = NO;
 				WARNING_CFLAGS = "-Wall";
 				WATCHOS_DEPLOYMENT_TARGET = 4.1;
 			};
@@ -3208,6 +3225,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = NO;
 				VALIDATE_PRODUCT = YES;
 				WARNING_CFLAGS = "-Wall";
 				WATCHOS_DEPLOYMENT_TARGET = 4.1;

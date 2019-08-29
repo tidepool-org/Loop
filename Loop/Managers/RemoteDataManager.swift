@@ -10,19 +10,13 @@ import Foundation
 import LoopKit
 
 
-protocol RemoteDataManagerDelegate: class {
-
-    func remoteDataManagerDidUpdateServices(_ dataManager: RemoteDataManager)
-
-}
-
-final class RemoteDataManager: RemoteData, CarbStoreSyncDelegate {
-
-    weak var delegate: RemoteDataManagerDelegate?
+final class RemoteDataManager: CarbStoreSyncDelegate {
 
     private unowned let deviceDataManager: DeviceDataManager
 
     private var remoteData: [RemoteData]!
+
+    private let log = DiagnosticLog(category: "RemoteDataManager")
 
     init(servicesManager: ServicesManager, deviceDataManager: DeviceDataManager) {
         self.deviceDataManager = deviceDataManager
@@ -106,10 +100,6 @@ final class RemoteDataManager: RemoteData, CarbStoreSyncDelegate {
         }
     }
 
-    func upload(glucoseValues values: [GlucoseValue], sensorState: SensorDisplayable?) {
-        remoteData.forEach { $0.upload(glucoseValues: values, sensorState: sensorState) }
-    }
-
     func upload(pumpEvents events: [PersistedPumpEvent], fromSource source: String, completion: @escaping (Result<[URL], Error>) -> Void) {
         // TODO: How to handle completion correctly
         if remoteData.count > 0 {
@@ -117,33 +107,19 @@ final class RemoteDataManager: RemoteData, CarbStoreSyncDelegate {
         }
     }
 
-    func upload(carbEntries entries: [StoredCarbEntry], completion: @escaping (_ entries: [StoredCarbEntry]) -> Void) {
-        // TODO: How to handle completion correctly
-        if remoteData.count > 0 {
-            remoteData[0].upload(carbEntries: entries, completion: completion)
+    func synchronizeRemoteData() {
+        remoteData.forEach { self.synchronize(remoteData: $0) }
+    }
+
+    private func synchronize(remoteData: RemoteData) {
+        remoteData.synchronizeRemoteData { result in
+            switch result {
+            case .failure(let error):
+                self.log.error("Failure: %{public}@", String(reflecting: error))
+            case .success(let uploaded):
+                self.log.debug("Success: %d", uploaded)
+            }
         }
-    }
-
-    func delete(carbEntries entries: [DeletedCarbEntry], completion: @escaping (_ entries: [DeletedCarbEntry]) -> Void) {
-        // TODO: How to handle completion correctly
-        if remoteData.count > 0 {
-            remoteData[0].delete(carbEntries: entries, completion: completion)
-        }
-    }
-
-    var carbStoreSyncDelegate: CarbStoreSyncDelegate? {
-        guard !remoteData.isEmpty else {
-            return nil
-        }
-        return self
-    }
-
-    func carbStore(_ carbStore: CarbStore, hasEntriesNeedingUpload entries: [StoredCarbEntry], completion: @escaping (_ entries: [StoredCarbEntry]) -> Void) {
-        upload(carbEntries: entries, completion: completion)
-    }
-
-    func carbStore(_ carbStore: CarbStore, hasDeletedEntries entries: [DeletedCarbEntry], completion: @escaping (_ entries: [DeletedCarbEntry]) -> Void) {
-        delete(carbEntries: entries, completion: completion)
     }
 
 }
@@ -153,7 +129,19 @@ extension RemoteDataManager: ServicesManagerObserver {
 
     func servicesManagerDidUpdate(services: [Service]) {
         remoteData = filter(services: services)
-        delegate?.remoteDataManagerDidUpdateServices(self)
+    }
+
+}
+
+
+extension RemoteDataManager: RemoteDataDelegate {
+
+    public var carbRemoteDataQueryDelegate: CarbRemoteDataQueryDelegate? {
+        return deviceDataManager.loopManager?.carbStore
+    }
+
+    public var glucoseRemoteDataQueryDelegate: GlucoseRemoteDataQueryDelegate? {
+        return deviceDataManager.loopManager?.glucoseStore
     }
 
 }

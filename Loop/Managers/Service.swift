@@ -11,10 +11,12 @@ import MockKit
 import AmplitudeServiceKit
 import LogglyServiceKit
 import NightscoutServiceKit
+import TidepoolServiceKit
 
 
 /// The order here specifies the order in the service selection popup
 let serviceTypes: [Service.Type] = [
+    TidepoolService.self,
     NightscoutService.self,
     LogglyService.self,
     AmplitudeService.self,
