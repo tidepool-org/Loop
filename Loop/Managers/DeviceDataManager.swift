@@ -29,9 +29,16 @@ final class DeviceDataManager {
 
     private(set) var testingScenariosManager: TestingScenariosManager?
 
-    /// The last error recorded by a device manager
-    /// Should be accessed only on the main queue
-    private(set) var lastError: (date: Date, error: Error)?
+    private(set) var lastError: (date: Date, error: Error)? {
+        get {
+            return lockedLastError.value
+        }
+        set {
+            lockedLastError.value = newValue
+        }
+    }
+    private let lockedLastError: Locked<(date: Date, error: Error)?>
+
 
     /// The last time a BLE heartbeat was received by the pump manager
     private var lastBLEDrivenUpdate = Date.distantPast
@@ -86,6 +93,7 @@ final class DeviceDataManager {
 
     init() {
         pluginManager = PluginManager()
+        lockedLastError = Locked(nil)
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
             pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
@@ -187,9 +195,7 @@ private extension DeviceDataManager {
     }
 
     func setLastError(error: Error) {
-        DispatchQueue.main.async {
-            self.lastError = (date: Date(), error: error)
-        }
+        self.lastError = (date: Date(), error: error)
     }
 }
 
@@ -500,6 +506,12 @@ extension DeviceDataManager: PumpManagerDelegate {
     func startDateToFilterNewPumpEvents(for manager: PumpManager) -> Date {
         dispatchPrecondition(condition: .onQueue(queue))
         return loopManager.doseStore.pumpEventQueryAfterDate
+    }
+    
+    func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
+        self.queue.async {
+            completion(String(describing: self))
+        }
     }
 }
 

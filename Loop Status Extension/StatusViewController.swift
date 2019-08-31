@@ -83,8 +83,6 @@ class StatusViewController: UIViewController, NCWidgetProviding {
     
     private var pluginManager = PluginManager()
 
-    private var pluginManager = PluginManager()
-
     override func viewDidLoad() {
         super.viewDidLoad()
 

@@ -16,17 +16,34 @@ extension CommandResponseViewController {
     static func generateDiagnosticReport(deviceManager: DeviceDataManager) -> T {
         let date = Date()
         let vc = T(command: { (completionHandler) in
-            deviceManager.loopManager.generateDiagnosticReport { (report) in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let group = DispatchGroup()
+                
+                var loopManagerReport: String?
+                group.enter()
+                deviceManager.loopManager.generateDiagnosticReport { (report) in
+                    loopManagerReport = report
+                    group.leave()
+                }
+
+                var deviceManagerReport: String?
+                group.enter()
+                deviceManager.generateDiagnosticReport { (report) in
+                    deviceManagerReport = report
+                    group.leave()
+                }
+                group.wait()
+
                 DispatchQueue.main.async {
                     completionHandler([
                         "Use the Share button above save this diagnostic report to aid investigating your problem. Issues can be filed at https://github.com/LoopKit/Loop/issues.",
                         "Generated: \(date)",
                         "",
-                        String(reflecting: deviceManager),
+                        deviceManagerReport!,
                         "",
-                        report,
+                        loopManagerReport!,
                         "",
-                    ].joined(separator: "\n\n"))
+                        ].joined(separator: "\n\n"))
                 }
             }
 
