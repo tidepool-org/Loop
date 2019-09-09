@@ -101,7 +101,6 @@ class PluginManager {
             }
             
             return AvailableDevice(identifier: identifier, localizedTitle: title)
-            
         })
     }
 }
