@@ -12,6 +12,7 @@ import LoopKit
 extension UserDefaults {
     private enum Key: String {
         case pumpManagerState = "com.loopkit.Loop.PumpManagerState"
+        case cgmManagerState = "com.loopkit.Loop.CGMManagerState"
     }
 
     var pumpManagerRawValue: [String: Any]? {
@@ -20,6 +21,15 @@ extension UserDefaults {
         }
         set {
             set(newValue, forKey: Key.pumpManagerState.rawValue)
+        }
+    }
+    
+    var cgmManagerRawValue: [String: Any]? {
+        get {
+            return dictionary(forKey: Key.cgmManagerState.rawValue)
+        }
+        set {
+            set(newValue, forKey: Key.cgmManagerState.rawValue)
         }
     }
 

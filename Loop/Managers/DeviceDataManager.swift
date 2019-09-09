@@ -50,6 +50,7 @@ final class DeviceDataManager {
             dispatchPrecondition(condition: .onQueue(.main))
             setupCGM()
             UserDefaults.appGroup?.cgmManager = cgmManager
+            UserDefaults.appGroup?.cgmManagerRawValue = cgmManager?.rawValue
         }
     }
 
@@ -101,7 +102,9 @@ final class DeviceDataManager {
             pumpManager = nil
         }
 
-        if let cgmManager = UserDefaults.appGroup?.cgmManager {
+        if let cgmManagerRawValue = UserDefaults.appGroup?.cgmManagerRawValue {
+            cgmManager = cgmManagerFromRawValue(cgmManagerRawValue)
+        } else if let cgmManager = UserDefaults.appGroup?.cgmManager {
             self.cgmManager = cgmManager
         } else if isCGMManagerValidPumpManager {
             self.cgmManager = pumpManager as? CGMManager
@@ -164,6 +167,32 @@ final class DeviceDataManager {
         }
 
         return Manager.init(rawState: rawState) as? PumpManagerUI
+    }
+    
+    var availableCGMManagers: [AvailableDevice] {
+        return pluginManager.availableCGMManagers + availableStaticCGMManagers
+    }
+    
+    public func cgmManagerTypeByIdentifier(_ identifier: String) -> CGMManagerUI.Type? {
+        return pluginManager.getCGMManagerTypeByIdentifier(identifier) ?? staticCGMManagersByIdentifier[identifier] as? CGMManagerUI.Type
+    }
+    
+    private func cgmManagerTypeFromRawValue(_ rawValue: [String: Any]) -> CGMManager.Type? {
+        guard let managerIdentifier = rawValue["managerIdentifier"] as? String else {
+            return nil
+        }
+        
+        return cgmManagerTypeByIdentifier(managerIdentifier)
+    }
+    
+    func cgmManagerFromRawValue(_ rawValue: [String: Any]) -> CGMManagerUI? {
+        guard let rawState = rawValue["state"] as? CGMManager.RawStateValue,
+            let Manager = cgmManagerTypeFromRawValue(rawValue)
+            else {
+                return nil
+        }
+        
+        return Manager.init(rawState: rawState) as? CGMManagerUI
     }
 
 }
