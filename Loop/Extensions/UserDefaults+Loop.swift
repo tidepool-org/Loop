@@ -32,17 +32,4 @@ extension UserDefaults {
             set(newValue, forKey: Key.cgmManagerState.rawValue)
         }
     }
-
-    var cgmManager: CGMManager? {
-        get {
-            guard let rawValue = cgmManagerState else {
-                return nil
-            }
-
-            return CGMManagerFromRawValue(rawValue)
-        }
-        set {
-            cgmManagerState = newValue?.rawValue
-        }
-    }
 }
