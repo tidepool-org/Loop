@@ -7,13 +7,14 @@
 //
 
 import LoopKit
+import LoopKitUI
 
 protocol ServicesManagerObserver {
 
-    /// The service manager update the list of available services.
+    /// The service manager updated the list of active services.
     ///
-    /// - Parameter services: The list of available services
-    func servicesManagerDidUpdate(services: [Service])
+    /// - Parameter activeServices: The list of active services.
+    func servicesManagerDidUpdate(activeServices: [Service])
 
 }
 
@@ -21,39 +22,99 @@ class ServicesManager {
 
     private let queue = DispatchQueue(label: "com.loopkit.ServicesManagerQueue", qos: .utility)
 
-    private let lock = UnfairLock()
+    private let pluginManager: PluginManager
+
+    private var services = [Service]()
+
+    private let servicesLock = UnfairLock()
 
     private var observers = WeakSet<ServicesManagerObserver>()
 
-    var services: [Service] {
-        didSet {
-            dispatchPrecondition(condition: .onQueue(.main))
-            UserDefaults.appGroup?.services = services
-            notifyObservers()
-        }
+    private let observersLock = UnfairLock()
+
+    init(pluginManager: PluginManager) {
+        self.pluginManager = pluginManager
+
+        restoreState()
     }
 
-    init() {
-        self.services = UserDefaults.appGroup?.services ?? []
+    public var availableServices: [AvailableDevice] {
+        return pluginManager.availableServices + availableStaticServices
+    }
+
+    func serviceUITypeByIdentifier(_ identifier: String) -> ServiceUI.Type? {
+        return pluginManager.getServiceTypeByIdentifier(identifier) ?? staticServicesByIdentifier[identifier] as? ServiceUI.Type
+    }
+
+    private func serviceTypeFromRawValue(_ rawValue: Service.RawStateValue) -> Service.Type? {
+        guard let identifier = rawValue["managerIdentifier"] as? String else {
+            return nil
+        }
+
+        return serviceUITypeByIdentifier(identifier)
+    }
+
+    private func serviceFromRawValue(_ rawValue: Service.RawStateValue) -> Service? {
+        guard let serviceType = serviceTypeFromRawValue(rawValue),
+            let rawState = rawValue["state"] as? Service.RawStateValue else {
+            return nil
+        }
+
+        return serviceType.init(rawState: rawState)
+    }
+
+    public var activeServices: [Service] {
+        return servicesLock.withLock({ services })
+    }
+
+    public func addActiveService(_ service: Service) {
+        servicesLock.withLock {
+            services.append(service)
+            saveState()
+        }
+        notifyObservers()
+    }
+
+    public func updateActiveService(_ service: Service) {
+        servicesLock.withLock {
+            saveState()
+        }
+        notifyObservers()
+    }
+
+    public func removeActiveService(_ service: Service) {
+        servicesLock.withLock {
+            services.removeAll { $0.serviceIdentifier == service.serviceIdentifier }
+            saveState()
+        }
+        notifyObservers()
+    }
+
+    private func saveState() {
+        UserDefaults.appGroup?.servicesState = services.compactMap { $0.rawValue }
+    }
+
+    private func restoreState() {
+        services = UserDefaults.appGroup?.servicesState.compactMap { serviceFromRawValue($0) } ?? []
     }
 
     public func addObserver(_ observer: ServicesManagerObserver) {
-        lock.withLock {
+        observersLock.withLock {
             observers.insert(observer)
             return
         }
     }
 
     public func removeObserver(_ observer: ServicesManagerObserver) {
-        lock.withLock {
+        observersLock.withLock {
             observers.remove(observer)
             return
         }
     }
 
     private func notifyObservers() {
-        for observer in lock.withLock({ observers }) {
-            observer.servicesManagerDidUpdate(services: services)
+        for observer in observersLock.withLock({ observers }) {
+            observer.servicesManagerDidUpdate(activeServices: activeServices)
         }
     }
 

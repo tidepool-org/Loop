@@ -17,13 +17,15 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private lazy var log = DiagnosticLog(category: "AppDelegate")
 
-    private lazy var servicesManager = ServicesManager()
+    private lazy var pluginManager = PluginManager()
+
+    private lazy var servicesManager = ServicesManager(pluginManager: pluginManager)
 
     private lazy var analyticsServicesManager = AnalyticsServicesManager(servicesManager: servicesManager)
 
     private lazy var loggingServicesManager = LoggingServicesManager(servicesManager: servicesManager)
 
-    private lazy var deviceManager = DeviceDataManager(servicesManager: servicesManager, analyticsServicesManager: analyticsServicesManager)
+    private lazy var deviceManager = DeviceDataManager(pluginManager: pluginManager, servicesManager: servicesManager, analyticsServicesManager: analyticsServicesManager)
 
     var window: UIWindow?
 
@@ -104,7 +106,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         default:
             break
         }
-        
+
         completionHandler()
     }
 

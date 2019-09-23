@@ -15,7 +15,7 @@ final class LoggingServicesManager: LoggingService {
     private var loggingServices: [LoggingService]!
 
     init(servicesManager: ServicesManager) {
-        self.loggingServices = filter(services: servicesManager.services)
+        self.loggingServices = filter(services: servicesManager.activeServices)
         
         servicesManager.addObserver(self)
     }
@@ -31,8 +31,8 @@ final class LoggingServicesManager: LoggingService {
 
 extension LoggingServicesManager: ServicesManagerObserver {
 
-    func servicesManagerDidUpdate(services: [Service]) {
-        loggingServices = filter(services: services)
+    func servicesManagerDidUpdate(activeServices: [Service]) {
+        loggingServices = filter(services: activeServices)
     }
 
 }

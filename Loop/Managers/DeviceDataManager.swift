@@ -19,6 +19,8 @@ final class DeviceDataManager {
 
     private let log = DiagnosticLog(category: "DeviceDataManager")
 
+    let pluginManager: PluginManager
+
     let servicesManager: ServicesManager
 
     let analyticsServicesManager: AnalyticsServicesManager
@@ -76,20 +78,15 @@ final class DeviceDataManager {
 
     private var statusExtensionManager: StatusExtensionDataManager!
 
-    // MARK: - Plugins
-
-    private var pluginManager: PluginManager
-
     // MARK: - Initialization
 
 
     private(set) var loopManager: LoopDataManager!
 
-    init(servicesManager: ServicesManager, analyticsServicesManager: AnalyticsServicesManager) {
+    init(pluginManager: PluginManager, servicesManager: ServicesManager, analyticsServicesManager: AnalyticsServicesManager) {
+        self.pluginManager = pluginManager
         self.servicesManager = servicesManager
         self.analyticsServicesManager = analyticsServicesManager
-
-        pluginManager = PluginManager()
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
             pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
@@ -159,30 +156,30 @@ final class DeviceDataManager {
 
         return Manager.init(rawState: rawState) as? PumpManagerUI
     }
-    
+
     var availableCGMManagers: [AvailableDevice] {
         return pluginManager.availableCGMManagers + availableStaticCGMManagers
     }
-    
+
     public func cgmManagerTypeByIdentifier(_ identifier: String) -> CGMManagerUI.Type? {
         return pluginManager.getCGMManagerTypeByIdentifier(identifier) ?? staticCGMManagersByIdentifier[identifier] as? CGMManagerUI.Type
     }
-    
+
     private func cgmManagerTypeFromRawValue(_ rawValue: [String: Any]) -> CGMManager.Type? {
         guard let managerIdentifier = rawValue["managerIdentifier"] as? String else {
             return nil
         }
-        
+
         return cgmManagerTypeByIdentifier(managerIdentifier)
     }
-    
+
     func cgmManagerFromRawValue(_ rawValue: [String: Any]) -> CGMManagerUI? {
         guard let rawState = rawValue["state"] as? CGMManager.RawStateValue,
             let Manager = cgmManagerTypeFromRawValue(rawValue)
             else {
                 return nil
         }
-        
+
         return Manager.init(rawState: rawState) as? CGMManagerUI
     }
 
@@ -333,7 +330,7 @@ extension DeviceDataManager: CGMManagerDelegate {
         dispatchPrecondition(condition: .onQueue(queue))
         UserDefaults.appGroup?.cgmManagerRawValue = manager.rawValue
     }
-    
+
     func credentialStoragePrefix(for manager: CGMManager) -> String {
         // return string unique to this instance of the CGMManager
         return UUID().uuidString
@@ -517,7 +514,7 @@ extension DeviceDataManager: PumpManagerDelegate {
             }
         }
     }
-    
+
     func pumpManagerRecommendsLoop(_ pumpManager: PumpManager) {
         dispatchPrecondition(condition: .onQueue(queue))
         log.default("PumpManager:%{public}@ recommends loop", String(describing: type(of: pumpManager)))
@@ -598,7 +595,7 @@ extension DeviceDataManager: LoopDataManagerDelegate {
         guard let pumpManager = pumpManager else {
             return unitsPerHour
         }
-        
+
         return pumpManager.roundToSupportedBasalRate(unitsPerHour: unitsPerHour)
     }
 
@@ -669,4 +666,3 @@ extension Notification.Name {
     static let PumpManagerChanged = Notification.Name(rawValue:  "com.loopKit.notification.PumpManagerChanged")
     static let PumpEventsAdded = Notification.Name(rawValue:  "com.loopKit.notification.PumpEventsAdded")
 }
-

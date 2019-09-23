@@ -17,7 +17,7 @@ final class AnalyticsServicesManager {
     private var analyticsServices: [AnalyticsService]!
 
     init(servicesManager: ServicesManager) {
-        self.analyticsServices = filter(services: servicesManager.services)
+        self.analyticsServices = filter(services: servicesManager.activeServices)
         
         servicesManager.addObserver(self)
     }
@@ -151,8 +151,8 @@ final class AnalyticsServicesManager {
 
 extension AnalyticsServicesManager: ServicesManagerObserver {
 
-    func servicesManagerDidUpdate(services: [Service]) {
-        analyticsServices = filter(services: services)
+    func servicesManagerDidUpdate(activeServices: [Service]) {
+        analyticsServices = filter(services: activeServices)
     }
     
 }

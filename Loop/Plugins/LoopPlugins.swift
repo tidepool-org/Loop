@@ -39,10 +39,10 @@ class PluginManager {
 
                     if let principalClass = bundle.principalClass as? NSObject.Type {
 
-                        if let plugin = principalClass.init() as? LoopUIPlugin {
+                        if let plugin = principalClass.init() as? PumpManagerUIPlugin {
                             return plugin.pumpManagerType
                         } else {
-                            fatalError("PrincipalClass does not conform to LoopUIPlugin")
+                            fatalError("PrincipalClass does not conform to PumpManagerUIPlugin")
                         }
 
                     } else {
@@ -75,10 +75,10 @@ class PluginManager {
                     
                     if let principalClass = bundle.principalClass as? NSObject.Type {
                         
-                        if let plugin = principalClass.init() as? LoopUIPlugin {
+                        if let plugin = principalClass.init() as? CGMManagerUIPlugin {
                             return plugin.cgmManagerType
                         } else {
-                            fatalError("PrincipalClass does not conform to LoopUIPlugin")
+                            fatalError("PrincipalClass does not conform to CGMManagerUIPlugin")
                         }
                         
                     } else {
@@ -102,6 +102,43 @@ class PluginManager {
             return AvailableDevice(identifier: identifier, localizedTitle: title)
         })
     }
+
+    func getServiceTypeByIdentifier(_ identifier: String) -> ServiceUI.Type? {
+        for bundle in pluginBundles {
+            if let name = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String, name == identifier {
+                do {
+                    try bundle.loadAndReturnError()
+
+                    if let principalClass = bundle.principalClass as? NSObject.Type {
+
+                        if let plugin = principalClass.init() as? ServiceUIPlugin {
+                            return plugin.serviceType
+                        } else {
+                            fatalError("PrincipalClass does not conform to ServiceUIPlugin")
+                        }
+
+                    } else {
+                        fatalError("PrincipalClass not found")
+                    }
+                } catch let error {
+                    print(error)
+                }
+            }
+        }
+        return nil
+    }
+
+    var availableServices: [AvailableDevice] {
+        return pluginBundles.compactMap({ (bundle) -> AvailableDevice? in
+            guard let title = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.serviceDisplayName.rawValue) as? String,
+                let identifier = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String else {
+                    return nil
+            }
+
+            return AvailableDevice(identifier: identifier, localizedTitle: title)
+        })
+    }
+
 }
 
 
@@ -109,6 +146,7 @@ extension Bundle {
     var isLoopPlugin: Bool {
         return
             object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerIdentifier.rawValue) as? String != nil ||
-            object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) as? String != nil
+            object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) as? String != nil ||
+            object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String != nil
     }
 }

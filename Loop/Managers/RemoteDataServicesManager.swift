@@ -21,7 +21,7 @@ final class RemoteDataServicesManager: CarbStoreSyncDelegate {
 
     init(servicesManager: ServicesManager, deviceDataManager: DeviceDataManager) {
         self.deviceDataManager = deviceDataManager
-        self.remoteDataServices = filter(services: servicesManager.services)
+        self.remoteDataServices = filter(services: servicesManager.activeServices)
 
         servicesManager.addObserver(self)
 
@@ -49,7 +49,7 @@ final class RemoteDataServicesManager: CarbStoreSyncDelegate {
         }
 
         lastSettingsUpdate = Date()
-        
+
         uploadSettings()
     }
 
@@ -175,8 +175,8 @@ final class RemoteDataServicesManager: CarbStoreSyncDelegate {
 
 extension RemoteDataServicesManager: ServicesManagerObserver {
 
-    func servicesManagerDidUpdate(services: [Service]) {
-        remoteDataServices = filter(services: services)
+    func servicesManagerDidUpdate(activeServices: [Service]) {
+        remoteDataServices = filter(services: activeServices)
     }
 
 }
