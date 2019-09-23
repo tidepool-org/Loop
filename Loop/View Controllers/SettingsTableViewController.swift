@@ -143,7 +143,7 @@ final class SettingsTableViewController: UITableViewController {
                 return ConfigurationRow.count - 1
             }
         case .services:
-            return min(servicesSorted.count + 1, serviceTypes.count)
+            return min(activeServices.count + 1, availableServices.count)
         case .testingPumpDataDeletion, .testingCGMDataDeletion:
             return 1
         }
@@ -293,8 +293,8 @@ final class SettingsTableViewController: UITableViewController {
             configCell.accessoryType = .disclosureIndicator
             return configCell
         case .services:
-            if indexPath.row < servicesSorted.count {
-                let service = servicesSorted[indexPath.row]
+            if indexPath.row < activeServices.count {
+                let service = activeServicesSorted[indexPath.row]
                 let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.className, for: indexPath)
                 cell.textLabel?.text = service.localizedTitle
                 cell.detailTextLabel?.text = nil
@@ -557,25 +557,23 @@ final class SettingsTableViewController: UITableViewController {
                 break
             }
         case .services:
-            if indexPath.row < servicesSorted.count {
-                if let serviceUI = servicesSorted[indexPath.row] as? ServiceUI {
+            if indexPath.row < activeServices.count {
+                if let serviceUI = activeServicesSorted[indexPath.row] as? ServiceUI {
                     var settings = serviceUI.settingsViewController()
                     settings.completionDelegate = self
                     present(settings, animated: true)
                 }
+                tableView.deselectRow(at: indexPath, animated: true)
             } else {
-                let serviceUITypes = serviceTypesAvailable.compactMap({ $0 as? ServiceUI.Type })
-                if serviceUITypes.count > 0 {
-                    let alert = UIAlertController(serviceUITypes: serviceUITypes) { [weak self] (serviceUIType) in
-                        self?.setupService(serviceUIType, indexPath: indexPath)
-                    }
-
-                    alert.addCancelAction { (_) in
-                        tableView.deselectRow(at: indexPath, animated: true)
-                    }
-
-                    present(alert, animated: true, completion: nil)
+                let alert = UIAlertController(services: inactiveServices) { [weak self] (identifier) in
+                    self?.setupService(withIdentifier: identifier)
                 }
+
+                alert.addCancelAction { (_) in
+                    tableView.deselectRow(at: indexPath, animated: true)
+                }
+
+                present(alert, animated: true, completion: nil)
             }
         case .testingPumpDataDeletion:
             let confirmVC = UIAlertController(pumpDataDeletionHandler: { self.dataManager.deleteTestingPumpData() })
@@ -602,13 +600,22 @@ extension SettingsTableViewController: CompletionDelegate {
         if let vc = object as? UIViewController, presentedViewController === vc {
             dismiss(animated: true, completion: nil)
 
-            updateSelectedDeviceManagerRows()
+            updateSelectedDeviceManagerAndServicesRows()
         }
     }
 
+    private func updateSelectedDeviceManagerAndServicesRows() {
+        tableView.beginUpdates()
+        updateSelectedDeviceManagerRows()
+        updateSelectedServicesRows()
+        tableView.endUpdates()
+    }
+
     private func updateSelectedDeviceManagerRows() {
+        tableView.beginUpdates()
         updatePumpManagerRows()
         updateCGMManagerRows()
+        tableView.endUpdates()
     }
 
     private func updatePumpManagerRows() {
@@ -654,6 +661,12 @@ extension SettingsTableViewController: CompletionDelegate {
         }
 
         tableView.reloadSections([Section.cgm.rawValue], with: .fade)
+        tableView.endUpdates()
+    }
+
+    private func updateSelectedServicesRows() {
+        tableView.beginUpdates()
+        tableView.reloadSections([Section.services.rawValue], with: .fade)
         tableView.endUpdates()
     }
 }
@@ -705,34 +718,45 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
 
 
 extension SettingsTableViewController: ServiceSetupDelegate {
-    fileprivate var serviceTypesAvailable: [Service.Type] {
-        return serviceTypes.filter { serviceType in !dataManager.servicesManager.services.contains { type(of: $0) == serviceType } }
+    fileprivate var availableServices: [AvailableDevice] {
+        return dataManager.servicesManager.availableServices
     }
 
-    fileprivate var servicesSorted: [Service] {
-        return serviceTypes.compactMap { serviceType in dataManager.servicesManager.services.first { type(of: $0) == serviceType } }
+    fileprivate var activeServices: [Service] {
+        return dataManager.servicesManager.services
     }
 
-    fileprivate func setupService(_ serviceUIType: ServiceUI.Type, indexPath: IndexPath) {
+    fileprivate var activeServicesSorted: [Service] {
+        return activeServices.sorted { $0.localizedTitle < $1.localizedTitle }
+    }
+
+    fileprivate var inactiveServices: [AvailableDevice] {
+        return availableServices.filter { availableService in !activeServices.contains { type(of: $0).managerIdentifier == availableService.identifier } }
+    }
+
+    fileprivate func setupService(withIdentifier identifier: String) {
+        guard let serviceUIType = dataManager.servicesManager.serviceUITypeByIdentifier(identifier) else {
+            return
+        }
+
         if var setupViewController = serviceUIType.setupViewController() {
             setupViewController.serviceSetupDelegate = self
             setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
         } else {
-            completeServiceSetup(serviceUIType.init(rawState: [:]), indexPath: indexPath)
+            completeServiceSetup(serviceUIType.init(rawState: [:]))
         }
     }
 
-    fileprivate func completeServiceSetup(_ service: Service?, indexPath: IndexPath) {
+    fileprivate func completeServiceSetup(_ service: Service?) {
         if let service = service {
             dataManager.servicesManager.services.append(service)
         }
-        _ = self.tableView(tableView, willDeselectRowAt: indexPath)
+        updateSelectedServicesRows()
     }
 
     func serviceSetupNotifyingDidSetupService(_ serviceSetupNotifying: ServiceSetupNotifying, service: Service) {
         dataManager.servicesManager.services.append(service)
-        dismiss(animated: true, completion: nil)
     }
 }
 

@@ -17,7 +17,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private lazy var log = DiagnosticLog(category: "AppDelegate")
 
-    private lazy var servicesManager = ServicesManager()
+    private lazy var pluginManager = PluginManager()
+
+    private lazy var servicesManager = ServicesManager(pluginManager: pluginManager)
 
     private lazy var analyticsManager = AnalyticsManager(servicesManager: servicesManager)
 
@@ -25,7 +27,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    private(set) lazy var deviceManager = DeviceDataManager(servicesManager: servicesManager, analyticsManager: analyticsManager)
+    private(set) lazy var deviceManager = DeviceDataManager(pluginManager: pluginManager, servicesManager: servicesManager, analyticsManager: analyticsManager)
 
     private var rootViewController: RootNavigationController! {
         return window?.rootViewController as? RootNavigationController

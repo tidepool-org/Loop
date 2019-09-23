@@ -19,6 +19,8 @@ final class DeviceDataManager {
 
     private let log = DiagnosticLog(category: "DeviceDataManager")
 
+    let pluginManager: PluginManager
+
     let servicesManager: ServicesManager
 
     let analyticsManager: AnalyticsManager
@@ -77,20 +79,15 @@ final class DeviceDataManager {
 
     private var statusExtensionManager: StatusExtensionDataManager!
 
-    // MARK: - Plugins
-
-    private var pluginManager: PluginManager
-
     // MARK: - Initialization
 
 
     private(set) var loopManager: LoopDataManager!
 
-    init(servicesManager: ServicesManager, analyticsManager: AnalyticsManager) {
+    init(pluginManager: PluginManager, servicesManager: ServicesManager, analyticsManager: AnalyticsManager) {
+        self.pluginManager = pluginManager
         self.servicesManager = servicesManager
         self.analyticsManager = analyticsManager
-
-        pluginManager = PluginManager()
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
             pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)

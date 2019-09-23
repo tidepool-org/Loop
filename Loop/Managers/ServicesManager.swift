@@ -7,6 +7,7 @@
 //
 
 import LoopKit
+import LoopKitUI
 
 
 protocol ServicesManagerObserver {
@@ -23,22 +24,50 @@ class ServicesManager {
 
     private let queue = DispatchQueue(label: "com.loopkit.ServicesManagerQueue", qos: .utility)
 
+    private let pluginManager: PluginManager
+
     private let lock = UnfairLock()
 
     private var observers = WeakSet<ServicesManagerObserver>()
 
-    var services: [Service] {
+    var services: [Service]! {
         didSet {
             dispatchPrecondition(condition: .onQueue(.main))
             setupServices()
-            UserDefaults.appGroup?.services = services
+            UserDefaults.appGroup?.servicesState = services.compactMap { $0.rawValue }
             notifyObservers()
         }
     }
 
-    init() {
-        self.services = UserDefaults.appGroup?.services ?? []
+    init(pluginManager: PluginManager) {
+        self.pluginManager = pluginManager
+        self.services = UserDefaults.appGroup?.servicesState.compactMap { serviceFromRawValue($0) } ?? []
         setupServices()
+    }
+
+    var availableServices: [AvailableDevice] {
+        return pluginManager.availableServices + availableStaticServices
+    }
+
+    func serviceUITypeByIdentifier(_ identifier: String) -> ServiceUI.Type? {
+        return pluginManager.getServiceTypeByIdentifier(identifier) ?? staticServicesByIdentifier[identifier] as? ServiceUI.Type
+    }
+
+    private func serviceTypeFromRawValue(_ rawValue: Service.RawStateValue) -> Service.Type? {
+        guard let identifier = rawValue["managerIdentifier"] as? String else {
+            return nil
+        }
+
+        return serviceUITypeByIdentifier(identifier)
+    }
+
+    private func serviceFromRawValue(_ rawValue: Service.RawStateValue) -> Service? {
+        guard let serviceType = serviceTypeFromRawValue(rawValue),
+            let rawState = rawValue["state"] as? Service.RawStateValue else {
+            return nil
+        }
+
+        return serviceType.init(rawState: rawState)
     }
 
     private func setupServices() {
