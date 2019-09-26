@@ -563,6 +563,7 @@ final class SettingsTableViewController: UITableViewController {
                     settings.completionDelegate = self
                     present(settings, animated: true)
                 }
+                tableView.deselectRow(at: indexPath, animated: true)
             } else {
                 let serviceUITypes = serviceTypesAvailable.compactMap({ $0 as? ServiceUI.Type })
                 if serviceUITypes.count > 0 {
@@ -602,13 +603,22 @@ extension SettingsTableViewController: CompletionDelegate {
         if let vc = object as? UIViewController, presentedViewController === vc {
             dismiss(animated: true, completion: nil)
 
-            updateSelectedDeviceManagerRows()
+            updateSelectedDeviceManagerAndServicesRows()
         }
     }
 
+    private func updateSelectedDeviceManagerAndServicesRows() {
+        tableView.beginUpdates()
+        updateSelectedDeviceManagerRows()
+        updateSelectedServicesRows()
+        tableView.endUpdates()
+    }
+
     private func updateSelectedDeviceManagerRows() {
+        tableView.beginUpdates()
         updatePumpManagerRows()
         updateCGMManagerRows()
+        tableView.endUpdates()
     }
 
     private func updatePumpManagerRows() {
@@ -654,6 +664,12 @@ extension SettingsTableViewController: CompletionDelegate {
         }
 
         tableView.reloadSections([Section.cgm.rawValue], with: .fade)
+        tableView.endUpdates()
+    }
+
+    private func updateSelectedServicesRows() {
+        tableView.beginUpdates()
+        tableView.reloadSections([Section.services.rawValue], with: .fade)
         tableView.endUpdates()
     }
 }
@@ -727,12 +743,11 @@ extension SettingsTableViewController: ServiceSetupDelegate {
         if let service = service {
             dataManager.servicesManager.services.append(service)
         }
-        _ = self.tableView(tableView, willDeselectRowAt: indexPath)
+        updateSelectedServicesRows()
     }
 
     func serviceSetupNotifyingDidSetupService(_ serviceSetupNotifying: ServiceSetupNotifying, service: Service) {
         dataManager.servicesManager.services.append(service)
-        dismiss(animated: true, completion: nil)
     }
 }
 

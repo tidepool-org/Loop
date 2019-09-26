@@ -345,6 +345,12 @@
 		89E267FD2292456700A3F2AF /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E267FB2292456700A3F2AF /* FeatureFlags.swift */; };
 		89E267FF229267DF00A3F2AF /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E267FE229267DF00A3F2AF /* Optional.swift */; };
 		89E26800229267DF00A3F2AF /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E267FE229267DF00A3F2AF /* Optional.swift */; };
+		A92E7329233C38FE00447952 /* AmplitudeServiceKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A92E7328233C38FE00447952 /* AmplitudeServiceKit.framework */; };
+		A92E732B233C38FE00447952 /* AmplitudeServiceKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A92E732A233C38FE00447952 /* AmplitudeServiceKitUI.framework */; };
+		A92E732D233C38FE00447952 /* LogglyServiceKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A92E732C233C38FE00447952 /* LogglyServiceKit.framework */; };
+		A92E732F233C38FE00447952 /* LogglyServiceKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A92E732E233C38FE00447952 /* LogglyServiceKitUI.framework */; };
+		A92E7331233C38FE00447952 /* NightscoutServiceKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A92E7330233C38FE00447952 /* NightscoutServiceKit.framework */; };
+		A92E7333233C38FE00447952 /* NightscoutServiceKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A92E7332233C38FE00447952 /* NightscoutServiceKitUI.framework */; };
 		A9C62D8223316FF600535612 /* UserDefaults+Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C62D8123316FF500535612 /* UserDefaults+Services.swift */; };
 		A9C62D842331700E00535612 /* DiagnosticLog+Subsystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C62D832331700D00535612 /* DiagnosticLog+Subsystem.swift */; };
 		A9C62D882331703100535612 /* Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C62D852331703000535612 /* Service.swift */; };
@@ -984,6 +990,12 @@
 		89CA2B3C226E6B13004D9350 /* LocalTestingScenariosManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalTestingScenariosManager.swift; sourceTree = "<group>"; };
 		89E267FB2292456700A3F2AF /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
 		89E267FE229267DF00A3F2AF /* Optional.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Optional.swift; sourceTree = "<group>"; };
+		A92E7328233C38FE00447952 /* AmplitudeServiceKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AmplitudeServiceKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A92E732A233C38FE00447952 /* AmplitudeServiceKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AmplitudeServiceKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A92E732C233C38FE00447952 /* LogglyServiceKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LogglyServiceKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A92E732E233C38FE00447952 /* LogglyServiceKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LogglyServiceKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A92E7330233C38FE00447952 /* NightscoutServiceKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = NightscoutServiceKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A92E7332233C38FE00447952 /* NightscoutServiceKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = NightscoutServiceKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9C62D8123316FF500535612 /* UserDefaults+Services.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UserDefaults+Services.swift"; sourceTree = "<group>"; };
 		A9C62D832331700D00535612 /* DiagnosticLog+Subsystem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "DiagnosticLog+Subsystem.swift"; sourceTree = "<group>"; };
 		A9C62D852331703000535612 /* Service.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Service.swift; sourceTree = "<group>"; };
@@ -1054,6 +1066,12 @@
 				43B371881CE597D10013C5A6 /* ShareClient.framework in Frameworks */,
 				4F08DE9B1E7BC4ED006741EA /* SwiftCharts.framework in Frameworks */,
 				4379CFF021112CF700AADC79 /* ShareClientUI.framework in Frameworks */,
+				A92E7329233C38FE00447952 /* AmplitudeServiceKit.framework in Frameworks */,
+				A92E732B233C38FE00447952 /* AmplitudeServiceKitUI.framework in Frameworks */,
+				A92E732D233C38FE00447952 /* LogglyServiceKit.framework in Frameworks */,
+				A92E732F233C38FE00447952 /* LogglyServiceKitUI.framework in Frameworks */,
+				A92E7331233C38FE00447952 /* NightscoutServiceKit.framework in Frameworks */,
+				A92E7333233C38FE00447952 /* NightscoutServiceKitUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1751,6 +1769,12 @@
 		968DCD53F724DE56FFE51920 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A92E7328233C38FE00447952 /* AmplitudeServiceKit.framework */,
+				A92E732A233C38FE00447952 /* AmplitudeServiceKitUI.framework */,
+				A92E732C233C38FE00447952 /* LogglyServiceKit.framework */,
+				A92E732E233C38FE00447952 /* LogglyServiceKitUI.framework */,
+				A92E7330233C38FE00447952 /* NightscoutServiceKit.framework */,
+				A92E7332233C38FE00447952 /* NightscoutServiceKitUI.framework */,
 				434FB6451D68F1CD007B9C70 /* Amplitude.framework */,
 				4344628420A7A3BE00C4BE6F /* CGMBLEKit.framework */,
 				43A8EC6E210E622600A81379 /* CGMBLEKitUI.framework */,
@@ -2372,6 +2396,12 @@
 				"$(BUILT_PRODUCTS_DIR)/MockKit.framework/MockKit",
 				"$(BUILT_PRODUCTS_DIR)/MockKitUI.framework/MockKitUI",
 				"$(BUILT_PRODUCTS_DIR)/MKRingProgressView.framework/MKRingProgressView",
+				"$(BUILT_PRODUCTS_DIR)/AmplitudeServiceKit.framework/AmplitudeServiceKit",
+				"$(BUILT_PRODUCTS_DIR)/AmplitudeServiceKitUI.framework/AmplitudeServiceKitUI",
+				"$(BUILT_PRODUCTS_DIR)/LogglyServiceKit.framework/LogglyServiceKit",
+				"$(BUILT_PRODUCTS_DIR)/LogglyServiceKitUI.framework/LogglyServiceKitUI",
+				"$(BUILT_PRODUCTS_DIR)/NightscoutServiceKit.framework/NightscoutServiceKit",
+				"$(BUILT_PRODUCTS_DIR)/NightscoutServiceKitUI.framework/NightscoutServiceKitUI",
 			);
 			name = "Copy Frameworks with Carthage";
 			outputPaths = (
@@ -2390,6 +2420,12 @@
 				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/MockKit.framework",
 				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/MockKitUI.framework",
 				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/MKRingProgressView.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/AmplitudeServiceKit.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/AmplitudeServiceKitUI.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/LogglyServiceKit.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/LogglyServiceKitUI.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/NightscoutServiceKit.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/NightscoutServiceKitUI.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -3393,7 +3429,7 @@
 				INFOPLIST_FILE = Loop/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				"OTHER_SWIFT_FLAGS[arch=*]" = "-DDEBUG";
-				"OTHER_SWIFT_FLAGS[sdk=iphonesimulator*]" = "-D IOS_SIMULATOR";
+				"OTHER_SWIFT_FLAGS[sdk=iphonesimulator*]" = "-D IOS_SIMULATOR -D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(MAIN_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";

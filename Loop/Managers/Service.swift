@@ -14,12 +14,20 @@ import NightscoutServiceKit
 
 
 /// The order here specifies the order in the service selection popup
+#if DEBUG
 let serviceTypes: [Service.Type] = [
     NightscoutService.self,
     LogglyService.self,
     AmplitudeService.self,
     MockService.self,
 ]
+#else
+let serviceTypes: [Service.Type] = [
+    NightscoutService.self,
+    LogglyService.self,
+    AmplitudeService.self,
+]
+#endif
 
 
 private let serviceTypesByIdentifier: [String: Service.Type] = serviceTypes.reduce(into: [:]) { (map, Type) in

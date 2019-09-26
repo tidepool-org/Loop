@@ -23,21 +23,17 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private lazy var loggingManager = LoggingManager(servicesManager: servicesManager)
 
-    var window: UIWindow?
+    private lazy var deviceManager = DeviceDataManager(servicesManager: servicesManager, analyticsManager: analyticsManager)
 
-    private(set) lazy var deviceManager = DeviceDataManager(servicesManager: servicesManager, analyticsManager: analyticsManager)
+    var window: UIWindow?
 
     private var rootViewController: RootNavigationController! {
         return window?.rootViewController as? RootNavigationController
     }
 
-    func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         SharedLogging.instance = loggingManager
 
-        return true
-    }
-
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         NotificationManager.authorize(delegate: self)
 
         log.info(#function)
