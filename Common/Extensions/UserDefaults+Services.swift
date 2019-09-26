@@ -8,7 +8,6 @@
 
 import LoopKit
 
-
 extension UserDefaults {
 
     private enum Key: String {

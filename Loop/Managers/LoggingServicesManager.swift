@@ -10,7 +10,6 @@
 import os.log
 import LoopKit
 
-
 final class LoggingServicesManager: LoggingService {
 
     private var loggingServices: [LoggingService]!
@@ -29,7 +28,6 @@ final class LoggingServicesManager: LoggingService {
         loggingServices.forEach { $0.log(message, subsystem: subsystem, category: category, type: type, args) }
     }
 }
-
 
 extension LoggingServicesManager: ServicesManagerObserver {
 

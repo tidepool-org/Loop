@@ -10,7 +10,6 @@ import Foundation
 import LoopKit
 import LoopCore
 
-
 final class AnalyticsServicesManager {
 
     private lazy var log = DiagnosticLog(category: "AnalyticsServicesManager")
@@ -149,7 +148,6 @@ final class AnalyticsServicesManager {
     }
 
 }
-
 
 extension AnalyticsServicesManager: ServicesManagerObserver {
 

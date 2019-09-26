@@ -12,7 +12,6 @@ import AmplitudeServiceKit
 import LogglyServiceKit
 import NightscoutServiceKit
 
-
 /// The order here specifies the order in the service selection popup
 #if DEBUG
 let serviceTypes: [Service.Type] = [
@@ -29,11 +28,9 @@ let serviceTypes: [Service.Type] = [
 ]
 #endif
 
-
 private let serviceTypesByIdentifier: [String: Service.Type] = serviceTypes.reduce(into: [:]) { (map, Type) in
     map[Type.managerIdentifier] = Type
 }
-
 
 func ServiceFromRawValue(_ rawValue: [String: Any]) -> Service? {
     guard let managerIdentifier = rawValue["managerIdentifier"] as? String,
@@ -45,7 +42,6 @@ func ServiceFromRawValue(_ rawValue: [String: Any]) -> Service? {
 
     return serviceType.init(rawState: rawState)
 }
-
 
 extension Service {
 

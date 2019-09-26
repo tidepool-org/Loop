@@ -8,7 +8,6 @@
 
 import LoopKit
 
-
 protocol ServicesManagerObserver {
 
     /// The service manager update the list of available services.
@@ -17,7 +16,6 @@ protocol ServicesManagerObserver {
     func servicesManagerDidUpdate(services: [Service])
 
 }
-
 
 class ServicesManager {
 
@@ -84,8 +82,8 @@ extension ServicesManager: ServiceDelegate {
     func notifyServiceUpdated(_ service: Service) {
         dispatchPrecondition(condition: .onQueue(.main))
 
-       UserDefaults.appGroup?.services = services
-        }
+        UserDefaults.appGroup?.services = services
+    }
 
     func notifyServiceDeleted(_ service: Service) {
         dispatchPrecondition(condition: .onQueue(.main))

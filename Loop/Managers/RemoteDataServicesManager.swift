@@ -9,7 +9,6 @@
 import Foundation
 import LoopKit
 
-
 final class RemoteDataServicesManager: CarbStoreSyncDelegate {
 
     private unowned let deviceDataManager: DeviceDataManager
@@ -173,7 +172,6 @@ final class RemoteDataServicesManager: CarbStoreSyncDelegate {
     }
 
 }
-
 
 extension RemoteDataServicesManager: ServicesManagerObserver {
 
