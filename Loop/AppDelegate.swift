@@ -19,11 +19,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private lazy var servicesManager = ServicesManager()
 
-    private lazy var analyticsManager = AnalyticsManager(servicesManager: servicesManager)
+    private lazy var analyticsServicesManager = AnalyticsServicesManager(servicesManager: servicesManager)
 
-    private lazy var loggingManager = LoggingManager(servicesManager: servicesManager)
+    private lazy var loggingServicesManager = LoggingServicesManager(servicesManager: servicesManager)
 
-    private lazy var deviceManager = DeviceDataManager(servicesManager: servicesManager, analyticsManager: analyticsManager)
+    private lazy var deviceManager = DeviceDataManager(servicesManager: servicesManager, analyticsServicesManager: analyticsServicesManager)
 
     var window: UIWindow?
 
@@ -32,13 +32,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        SharedLogging.instance = loggingManager
+        SharedLoggingService.instance = loggingServicesManager
 
         NotificationManager.authorize(delegate: self)
 
         log.info(#function)
 
-        analyticsManager.application(application, didFinishLaunchingWithOptions: launchOptions)
+        analyticsServicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
 
         rootViewController.rootViewController.deviceManager = deviceManager
 
@@ -94,7 +94,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                 let startDate = response.notification.request.content.userInfo[NotificationManager.UserInfoKey.bolusStartDate.rawValue] as? Date,
                 startDate.timeIntervalSinceNow >= TimeInterval(minutes: -5)
             {
-                analyticsManager.didRetryBolus()
+                analyticsServicesManager.didRetryBolus()
 
                 deviceManager.enactBolus(units: units, at: startDate) { (_) in
                     completionHandler()
