@@ -45,7 +45,6 @@ class ServicesManager {
         dispatchPrecondition(condition: .onQueue(.main))
 
         services.forEach { service in
-            service.serviceDelegate = self
             service.delegateQueue = queue
         }
     }
@@ -76,18 +75,22 @@ class ServicesManager {
 
 extension ServicesManager: ServiceDelegate {
 
-    func serviceUpdated(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(queue))
-        DispatchQueue.main.async {
-            self.services = self.services
-        }
+    func notifyServiceCreated(_ service: Service) {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        services.append(service)
     }
 
-    func serviceDeleted(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(queue))
-        DispatchQueue.main.async {
-            self.services.removeAll { type(of: $0) == type(of: service) }
+    func notifyServiceUpdated(_ service: Service) {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+       UserDefaults.appGroup?.services = services
         }
+
+    func notifyServiceDeleted(_ service: Service) {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+       services.removeAll { type(of: $0) == type(of: service) }
     }
 
 }

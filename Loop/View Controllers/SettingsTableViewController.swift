@@ -560,6 +560,7 @@ final class SettingsTableViewController: UITableViewController {
             if indexPath.row < servicesSorted.count {
                 if let serviceUI = servicesSorted[indexPath.row] as? ServiceUI {
                     var settings = serviceUI.settingsViewController()
+                    settings.serviceDelegate = dataManager.servicesManager
                     settings.completionDelegate = self
                     present(settings, animated: true)
                 }
@@ -720,7 +721,7 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
 }
 
 
-extension SettingsTableViewController: ServiceSetupDelegate {
+extension SettingsTableViewController {
     fileprivate var serviceTypesAvailable: [Service.Type] {
         return serviceTypes.filter { serviceType in !dataManager.servicesManager.services.contains { type(of: $0) == serviceType } }
     }
@@ -731,23 +732,14 @@ extension SettingsTableViewController: ServiceSetupDelegate {
 
     fileprivate func setupService(_ serviceUIType: ServiceUI.Type, indexPath: IndexPath) {
         if var setupViewController = serviceUIType.setupViewController() {
-            setupViewController.serviceSetupDelegate = self
+            setupViewController.serviceDelegate = dataManager.servicesManager
             setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
-        } else {
-            completeServiceSetup(serviceUIType.init(rawState: [:]), indexPath: indexPath)
+        } else if let service = serviceUIType.init(rawState: [:]) {
+            service.completeCreate()
+            dataManager.servicesManager.notifyServiceCreated(service)
+            updateSelectedServicesRows()
         }
-    }
-
-    fileprivate func completeServiceSetup(_ service: Service?, indexPath: IndexPath) {
-        if let service = service {
-            dataManager.servicesManager.services.append(service)
-        }
-        updateSelectedServicesRows()
-    }
-
-    func serviceSetupNotifyingDidSetupService(_ serviceSetupNotifying: ServiceSetupNotifying, service: Service) {
-        dataManager.servicesManager.services.append(service)
     }
 }
 
