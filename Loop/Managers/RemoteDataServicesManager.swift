@@ -1,5 +1,5 @@
 //
-//  RemoteDataManager.swift
+//  RemoteDataServicesManager.swift
 //  Loop
 //
 //  Created by Nate Racklyeft on 6/29/16.
@@ -9,20 +9,19 @@
 import Foundation
 import LoopKit
 
-
-final class RemoteDataManager: CarbStoreSyncDelegate {
+final class RemoteDataServicesManager: CarbStoreSyncDelegate {
 
     private unowned let deviceDataManager: DeviceDataManager
 
-    private var remoteData: [RemoteData]!
+    private var remoteDataServices: [RemoteDataService]!
 
     private var lastSettingsUpdate: Date = .distantPast
 
-    private let log = DiagnosticLog(category: "RemoteDataManager")
+    private let log = DiagnosticLog(category: "RemoteDataServicesManager")
 
     init(servicesManager: ServicesManager, deviceDataManager: DeviceDataManager) {
         self.deviceDataManager = deviceDataManager
-        self.remoteData = filter(services: servicesManager.services)
+        self.remoteDataServices = filter(services: servicesManager.services)
 
         servicesManager.addObserver(self)
 
@@ -30,18 +29,18 @@ final class RemoteDataManager: CarbStoreSyncDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(loopDataUpdated(_:)), name: .LoopDataUpdated, object: deviceDataManager.loopManager)
     }
 
-    private func filter(services: [Service]) -> [RemoteData] {
+    private func filter(services: [Service]) -> [RemoteDataService] {
         return services.compactMap({ (service) in
-            guard let remoteData = service as? RemoteData else {
+            guard let remoteDataService = service as? RemoteDataService else {
                 return nil
             }
-            return remoteData
+            return remoteDataService
         })
     }
 
     @objc func loopDataUpdated(_ note: Notification) {
         guard
-            !remoteData.isEmpty,
+            !remoteDataServices.isEmpty,
             let rawContext = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as? LoopDataManager.LoopUpdateContext.RawValue,
             let context = LoopDataManager.LoopUpdateContext(rawValue: rawContext),
             case .preferences = context
@@ -55,7 +54,7 @@ final class RemoteDataManager: CarbStoreSyncDelegate {
     }
 
     private func uploadSettings() {
-        guard !remoteData.isEmpty else {
+        guard !remoteDataServices.isEmpty else {
             return
         }
 
@@ -64,11 +63,11 @@ final class RemoteDataManager: CarbStoreSyncDelegate {
             return
         }
 
-        remoteData.forEach { $0.uploadSettings(settings, lastUpdated: lastSettingsUpdate) }
+        remoteDataServices.forEach { $0.uploadSettings(settings, lastUpdated: lastSettingsUpdate) }
     }
 
     @objc func loopCompleted(_ note: Notification) {
-        guard !remoteData.isEmpty else {
+        guard !remoteDataServices.isEmpty else {
             return
         }
 
@@ -123,7 +122,7 @@ final class RemoteDataManager: CarbStoreSyncDelegate {
         glucoseTargetRangeScheduleApplyingOverrideIfActive: GlucoseRangeSchedule? = nil,
         loopError: Error? = nil)
     {
-        remoteData.forEach {
+        remoteDataServices.forEach {
             $0.uploadLoopStatus(
                 insulinOnBoard: insulinOnBoard,
                 carbsOnBoard: carbsOnBoard,
@@ -140,27 +139,27 @@ final class RemoteDataManager: CarbStoreSyncDelegate {
     }
 
     func upload(glucoseValues values: [GlucoseValue], sensorState: SensorDisplayable?) {
-        remoteData.forEach { $0.upload(glucoseValues: values, sensorState: sensorState) }
+        remoteDataServices.forEach { $0.upload(glucoseValues: values, sensorState: sensorState) }
     }
 
     func upload(pumpEvents events: [PersistedPumpEvent], fromSource source: String, completion: @escaping (Result<[URL], Error>) -> Void) {
         // TODO: How to handle completion correctly
-        if remoteData.count > 0 {
-            remoteData[0].upload(pumpEvents: events, fromSource: source, completion: completion)
+        if !remoteDataServices.isEmpty {
+            remoteDataServices[0].upload(pumpEvents: events, fromSource: source, completion: completion)
         }
     }
 
     func upload(carbEntries entries: [StoredCarbEntry], completion: @escaping (_ entries: [StoredCarbEntry]) -> Void) {
         // TODO: How to handle completion correctly
-        if remoteData.count > 0 {
-            remoteData[0].upload(carbEntries: entries, completion: completion)
+        if !remoteDataServices.isEmpty {
+            remoteDataServices[0].upload(carbEntries: entries, completion: completion)
         }
     }
 
     func delete(carbEntries entries: [DeletedCarbEntry], completion: @escaping (_ entries: [DeletedCarbEntry]) -> Void) {
         // TODO: How to handle completion correctly
-        if remoteData.count > 0 {
-            remoteData[0].delete(carbEntries: entries, completion: completion)
+        if !remoteDataServices.isEmpty {
+            remoteDataServices[0].delete(carbEntries: entries, completion: completion)
         }
     }
 
@@ -174,11 +173,10 @@ final class RemoteDataManager: CarbStoreSyncDelegate {
 
 }
 
-
-extension RemoteDataManager: ServicesManagerObserver {
+extension RemoteDataServicesManager: ServicesManagerObserver {
 
     func servicesManagerDidUpdate(services: [Service]) {
-        remoteData = filter(services: services)
+        remoteDataServices = filter(services: services)
     }
 
 }

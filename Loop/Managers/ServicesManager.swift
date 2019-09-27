@@ -9,7 +9,6 @@
 import LoopKit
 import LoopKitUI
 
-
 protocol ServicesManagerObserver {
 
     /// The service manager update the list of available services.
@@ -18,7 +17,6 @@ protocol ServicesManagerObserver {
     func servicesManagerDidUpdate(services: [Service])
 
 }
-
 
 class ServicesManager {
 
@@ -74,7 +72,6 @@ class ServicesManager {
         dispatchPrecondition(condition: .onQueue(.main))
 
         services.forEach { service in
-            service.serviceDelegate = self
             service.delegateQueue = queue
         }
     }
@@ -105,18 +102,22 @@ class ServicesManager {
 
 extension ServicesManager: ServiceDelegate {
 
-    func serviceUpdated(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(queue))
-        DispatchQueue.main.async {
-            self.services = self.services
-        }
+    func notifyServiceCreated(_ service: Service) {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        services.append(service)
     }
 
-    func serviceDeleted(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(queue))
-        DispatchQueue.main.async {
-            self.services.removeAll { type(of: $0) == type(of: service) }
-        }
+    func notifyServiceUpdated(_ service: Service) {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        UserDefaults.appGroup?.servicesState = services.compactMap { $0.rawValue }
+    }
+
+    func notifyServiceDeleted(_ service: Service) {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+       services.removeAll { type(of: $0) == type(of: service) }
     }
 
 }

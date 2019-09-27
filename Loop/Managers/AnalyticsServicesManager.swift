@@ -1,6 +1,6 @@
 //
-//  AnalyticsManager.swift
-//  Naterade
+//  AnalyticsServicesManager.swift
+//  Loop
 //
 //  Created by Nathan Racklyeft on 4/28/16.
 //  Copyright © 2016 Nathan Racklyeft. All rights reserved.
@@ -10,26 +10,25 @@ import Foundation
 import LoopKit
 import LoopCore
 
+final class AnalyticsServicesManager {
 
-final class AnalyticsManager {
+    private lazy var log = DiagnosticLog(category: "AnalyticsServicesManager")
 
-    private lazy var log = DiagnosticLog(category: "AnalyticsManager")
-
-    private var analytics: [Analytics]!
+    private var analyticsServices: [AnalyticsService]!
 
     init(servicesManager: ServicesManager) {
-        self.analytics = filter(services: servicesManager.services)
+        self.analyticsServices = filter(services: servicesManager.services)
         
         servicesManager.addObserver(self)
     }
 
-    private func filter(services: [Service]) -> [Analytics] {
-        return services.compactMap({ $0 as? Analytics })
+    private func filter(services: [Service]) -> [AnalyticsService] {
+        return services.compactMap({ $0 as? AnalyticsService })
     }
 
     private func logEvent(_ name: String, withProperties properties: [AnyHashable: Any]? = nil, outOfSession: Bool = false) {
         log.debug("%{public}@ %{public}@", name, String(describing: properties))
-        analytics.forEach { $0.recordAnalyticsEvent(name, withProperties: properties, outOfSession: outOfSession) }
+        analyticsServices.forEach { $0.recordAnalyticsEvent(name, withProperties: properties, outOfSession: outOfSession) }
     }
 
     // MARK: - UIApplicationDelegate
@@ -150,11 +149,10 @@ final class AnalyticsManager {
 
 }
 
-
-extension AnalyticsManager: ServicesManagerObserver {
+extension AnalyticsServicesManager: ServicesManagerObserver {
 
     func servicesManagerDidUpdate(services: [Service]) {
-        analytics = filter(services: services)
+        analyticsServices = filter(services: services)
     }
     
 }

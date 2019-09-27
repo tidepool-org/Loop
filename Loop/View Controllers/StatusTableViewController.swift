@@ -141,7 +141,7 @@ final class StatusTableViewController: ChartsTableViewController {
 
         onscreen = true
 
-        deviceManager.analyticsManager.didDisplayStatusScreen()
+        deviceManager.analyticsServicesManager.didDisplayStatusScreen()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -1082,7 +1082,7 @@ final class StatusTableViewController: ChartsTableViewController {
                 recommendation: sender as? BolusRecommendation,
                 glucoseUnit: self.statusCharts.glucose.glucoseUnit
             )
-            deviceManager.analyticsManager.didDisplayBolusScreen()
+            deviceManager.analyticsServicesManager.didDisplayBolusScreen()
         case let vc as OverrideSelectionViewController:
             if deviceManager.loopManager.settings.futureOverrideEnabled() {
                 vc.scheduledOverride = deviceManager.loopManager.settings.scheduleOverride

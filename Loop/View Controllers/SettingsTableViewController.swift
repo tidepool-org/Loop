@@ -33,7 +33,7 @@ final class SettingsTableViewController: UITableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        dataManager.analyticsManager.didDisplaySettingsScreen()
+        dataManager.analyticsServicesManager.didDisplaySettingsScreen()
     }
 
     var dataManager: DeviceDataManager!
@@ -100,7 +100,7 @@ final class SettingsTableViewController: UITableViewController {
             break
         }
     }
-    
+
     func configuredSetupViewController(for pumpManager: PumpManagerUI.Type) -> (UIViewController & PumpManagerSetupViewController & CompletionNotifying) {
         var setupViewController = pumpManager.setupViewController()
         setupViewController.setupDelegate = self
@@ -110,7 +110,7 @@ final class SettingsTableViewController: UITableViewController {
         setupViewController.maxBasalRateUnitsPerHour = dataManager.loopManager.settings.maximumBasalRatePerHour
         return setupViewController
     }
-    
+
     // MARK: - UITableViewDataSource
 
     private var sections: [Section] {
@@ -249,7 +249,7 @@ final class SettingsTableViewController: UITableViewController {
                 }
             case .suspendThreshold:
                 configCell.textLabel?.text = NSLocalizedString("Suspend Threshold", comment: "The title text in settings")
-                
+
                 if let suspendThreshold = dataManager.loopManager.settings.suspendThreshold {
                     let value = valueNumberFormatter.string(from: suspendThreshold.value, unit: suspendThreshold.unit) ?? SettingsTableViewCell.TapToSetString
                     configCell.detailTextLabel?.text = value
@@ -560,6 +560,7 @@ final class SettingsTableViewController: UITableViewController {
             if indexPath.row < activeServices.count {
                 if let serviceUI = activeServicesSorted[indexPath.row] as? ServiceUI {
                     var settings = serviceUI.settingsViewController()
+                    settings.serviceDelegate = dataManager.servicesManager
                     settings.completionDelegate = self
                     present(settings, animated: true)
                 }
@@ -717,7 +718,7 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
 }
 
 
-extension SettingsTableViewController: ServiceSetupDelegate {
+extension SettingsTableViewController {
     fileprivate var availableServices: [AvailableDevice] {
         return dataManager.servicesManager.availableServices
     }
@@ -740,23 +741,14 @@ extension SettingsTableViewController: ServiceSetupDelegate {
         }
 
         if var setupViewController = serviceUIType.setupViewController() {
-            setupViewController.serviceSetupDelegate = self
+            setupViewController.serviceDelegate = dataManager.servicesManager
             setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
-        } else {
-            completeServiceSetup(serviceUIType.init(rawState: [:]))
+        } else if let service = serviceUIType.init(rawState: [:]) {
+            service.completeCreate()
+            dataManager.servicesManager.notifyServiceCreated(service)
+            updateSelectedServicesRows()
         }
-    }
-
-    fileprivate func completeServiceSetup(_ service: Service?) {
-        if let service = service {
-            dataManager.servicesManager.services.append(service)
-        }
-        updateSelectedServicesRows()
-    }
-
-    func serviceSetupNotifyingDidSetupService(_ serviceSetupNotifying: ServiceSetupNotifying, service: Service) {
-        dataManager.servicesManager.services.append(service)
     }
 }
 
@@ -779,7 +771,7 @@ extension SettingsTableViewController: DailyValueScheduleTableViewControllerDele
                     switch row {
                     case .carbRatio:
                         dataManager.loopManager.carbRatioSchedule = CarbRatioSchedule(unit: controller.unit, dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-                        dataManager.analyticsManager.didChangeCarbRatioSchedule()
+                        dataManager.analyticsServicesManager.didChangeCarbRatioSchedule()
                     default:
                         break
                     }
@@ -806,7 +798,7 @@ extension SettingsTableViewController: GlucoseRangeScheduleStorageDelegate {
 extension SettingsTableViewController: InsulinSensitivityScheduleStorageDelegate {
     func saveSchedule(_ schedule: InsulinSensitivitySchedule, for viewController: InsulinSensitivityScheduleViewController, completion: @escaping (SaveInsulinSensitivityScheduleResult) -> Void) {
         dataManager.loopManager.insulinSensitivitySchedule = schedule
-        dataManager.analyticsManager.didChangeInsulinSensitivitySchedule()
+        dataManager.analyticsServicesManager.didChangeInsulinSensitivitySchedule()
         completion(.success)
         tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.insulinSensitivity.rawValue, section: Section.configuration.rawValue)], with: .none)
     }

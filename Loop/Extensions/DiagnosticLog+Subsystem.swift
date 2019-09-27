@@ -8,7 +8,6 @@
 
 import LoopKit
 
-
 extension DiagnosticLog {
 
     convenience init(category: String) {
