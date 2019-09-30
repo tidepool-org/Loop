@@ -735,7 +735,6 @@ extension SettingsTableViewController: ServiceSetupDelegate {
             setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
         } else if let service = serviceUIType.init(rawState: [:]) {
-            service.completeCreate()
             dataManager.servicesManager.services.append(service)
             updateSelectedServicesRows()
         }
