@@ -31,7 +31,6 @@ class ServicesManager {
     var services: [Service]! {
         didSet {
             dispatchPrecondition(condition: .onQueue(.main))
-            setupServices()
             UserDefaults.appGroup?.servicesState = services.compactMap { $0.rawValue }
             notifyObservers()
         }
@@ -40,7 +39,6 @@ class ServicesManager {
     init(pluginManager: PluginManager) {
         self.pluginManager = pluginManager
         self.services = UserDefaults.appGroup?.servicesState.compactMap { serviceFromRawValue($0) } ?? []
-        setupServices()
     }
 
     var availableServices: [AvailableDevice] {
@@ -52,7 +50,7 @@ class ServicesManager {
     }
 
     private func serviceTypeFromRawValue(_ rawValue: Service.RawStateValue) -> Service.Type? {
-        guard let identifier = rawValue["managerIdentifier"] as? String else {
+        guard let identifier = rawValue["serviceIdentifier"] as? String else {
             return nil
         }
 
@@ -66,14 +64,6 @@ class ServicesManager {
         }
 
         return serviceType.init(rawState: rawState)
-    }
-
-    private func setupServices() {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        services.forEach { service in
-            service.delegateQueue = queue
-        }
     }
 
     public func addObserver(_ observer: ServicesManagerObserver) {
@@ -94,30 +84,6 @@ class ServicesManager {
         for observer in lock.withLock({ observers }) {
             observer.servicesManagerDidUpdate(services: services)
         }
-    }
-
-}
-
-// MARK: - ServiceDelegate
-
-extension ServicesManager: ServiceDelegate {
-
-    func notifyServiceCreated(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        services.append(service)
-    }
-
-    func notifyServiceUpdated(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        UserDefaults.appGroup?.servicesState = services.compactMap { $0.rawValue }
-    }
-
-    func notifyServiceDeleted(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-       services.removeAll { type(of: $0) == type(of: service) }
     }
 
 }

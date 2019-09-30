@@ -16,30 +16,30 @@ let staticServices: [Service.Type] = []
 #endif
 
 let staticServicesByIdentifier: [String: Service.Type] = staticServices.reduce(into: [:]) { (map, Type) in
-    map[Type.managerIdentifier] = Type
+    map[Type.serviceIdentifier] = Type
 }
 
 let availableStaticServices = staticServices.map { (Type) -> AvailableDevice in
-    return AvailableDevice(identifier: Type.managerIdentifier, localizedTitle: Type.localizedTitle)
+    return AvailableDevice(identifier: Type.serviceIdentifier, localizedTitle: Type.localizedTitle)
 }
 
 func ServiceFromRawValue(_ rawValue: [String: Any]) -> Service? {
-    guard let managerIdentifier = rawValue["managerIdentifier"] as? String,
+    guard let serviceIdentifier = rawValue["serviceIdentifier"] as? String,
         let rawState = rawValue["state"] as? Service.RawStateValue,
-        let Manager = staticServicesByIdentifier[managerIdentifier]
+        let ServiceType = staticServicesByIdentifier[serviceIdentifier]
     else {
         return nil
     }
 
-    return Manager.init(rawState: rawState)
+    return ServiceType.init(rawState: rawState)
 }
 
 extension Service {
 
     var rawValue: RawStateValue {
         return [
-            "managerIdentifier": type(of: self).managerIdentifier,
-            "state": self.rawState
+            "serviceIdentifier": serviceIdentifier,
+            "state": rawState
         ]
     }
 

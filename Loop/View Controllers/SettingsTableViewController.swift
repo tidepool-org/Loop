@@ -560,7 +560,7 @@ final class SettingsTableViewController: UITableViewController {
             if indexPath.row < activeServices.count {
                 if let serviceUI = activeServicesSorted[indexPath.row] as? ServiceUI {
                     var settings = serviceUI.settingsViewController()
-                    settings.serviceDelegate = dataManager.servicesManager
+                    settings.serviceSetupDelegate = self
                     settings.completionDelegate = self
                     present(settings, animated: true)
                 }
@@ -717,8 +717,7 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
     }
 }
 
-
-extension SettingsTableViewController {
+extension SettingsTableViewController: ServiceSetupDelegate {
     fileprivate var availableServices: [AvailableDevice] {
         return dataManager.servicesManager.availableServices
     }
@@ -732,7 +731,7 @@ extension SettingsTableViewController {
     }
 
     fileprivate var inactiveServices: [AvailableDevice] {
-        return availableServices.filter { availableService in !activeServices.contains { type(of: $0).managerIdentifier == availableService.identifier } }
+        return availableServices.filter { availableService in !activeServices.contains { type(of: $0).serviceIdentifier == availableService.identifier } }
     }
 
     fileprivate func setupService(withIdentifier identifier: String) {
@@ -741,17 +740,28 @@ extension SettingsTableViewController {
         }
 
         if var setupViewController = serviceUIType.setupViewController() {
-            setupViewController.serviceDelegate = dataManager.servicesManager
+            setupViewController.serviceSetupDelegate = self
             setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
         } else if let service = serviceUIType.init(rawState: [:]) {
             service.completeCreate()
-            dataManager.servicesManager.notifyServiceCreated(service)
+            dataManager.servicesManager.services.append(service)
             updateSelectedServicesRows()
         }
     }
-}
 
+    func serviceSetupNotifying(_ object: ServiceSetupNotifying, didCreateService service: Service) {
+        dataManager.servicesManager.services.append(service)
+    }
+
+    func serviceSetupNotifying(_ object: ServiceSetupNotifying, didUpdateService service: Service) {
+        dataManager.servicesManager.services = dataManager.servicesManager.services
+    }
+
+    func serviceSetupNotifying(_ object: ServiceSetupNotifying, didDeleteService service: Service) {
+        dataManager.servicesManager.services.removeAll { type(of: $0) == type(of: service) }
+    }
+}
 
 extension SettingsTableViewController: DailyValueScheduleTableViewControllerDelegate {
     func dailyValueScheduleTableViewControllerWillFinishUpdating(_ controller: DailyValueScheduleTableViewController) {
