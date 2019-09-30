@@ -560,7 +560,7 @@ final class SettingsTableViewController: UITableViewController {
             if indexPath.row < servicesSorted.count {
                 if let serviceUI = servicesSorted[indexPath.row] as? ServiceUI {
                     var settings = serviceUI.settingsViewController()
-                    settings.serviceDelegate = dataManager.servicesManager
+                    settings.serviceSetupDelegate = self
                     settings.completionDelegate = self
                     present(settings, animated: true)
                 }
@@ -720,8 +720,7 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
     }
 }
 
-
-extension SettingsTableViewController {
+extension SettingsTableViewController: ServiceSetupDelegate {
     fileprivate var serviceTypesAvailable: [Service.Type] {
         return serviceTypes.filter { serviceType in !dataManager.servicesManager.services.contains { type(of: $0) == serviceType } }
     }
@@ -732,17 +731,28 @@ extension SettingsTableViewController {
 
     fileprivate func setupService(_ serviceUIType: ServiceUI.Type, indexPath: IndexPath) {
         if var setupViewController = serviceUIType.setupViewController() {
-            setupViewController.serviceDelegate = dataManager.servicesManager
+            setupViewController.serviceSetupDelegate = self
             setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
         } else if let service = serviceUIType.init(rawState: [:]) {
             service.completeCreate()
-            dataManager.servicesManager.notifyServiceCreated(service)
+            dataManager.servicesManager.services.append(service)
             updateSelectedServicesRows()
         }
     }
-}
 
+    func serviceSetupNotifying(_ object: ServiceSetupNotifying, didCreateService service: Service) {
+        dataManager.servicesManager.services.append(service)
+    }
+
+    func serviceSetupNotifying(_ object: ServiceSetupNotifying, didUpdateService service: Service) {
+        dataManager.servicesManager.services = dataManager.servicesManager.services
+    }
+
+    func serviceSetupNotifying(_ object: ServiceSetupNotifying, didDeleteService service: Service) {
+        dataManager.servicesManager.services.removeAll { type(of: $0) == type(of: service) }
+    }
+}
 
 extension SettingsTableViewController: DailyValueScheduleTableViewControllerDelegate {
     func dailyValueScheduleTableViewControllerWillFinishUpdating(_ controller: DailyValueScheduleTableViewController) {

@@ -29,13 +29,13 @@ let serviceTypes: [Service.Type] = [
 #endif
 
 private let serviceTypesByIdentifier: [String: Service.Type] = serviceTypes.reduce(into: [:]) { (map, Type) in
-    map[Type.managerIdentifier] = Type
+    map[Type.serviceIdentifier] = Type
 }
 
 func ServiceFromRawValue(_ rawValue: [String: Any]) -> Service? {
-    guard let managerIdentifier = rawValue["managerIdentifier"] as? String,
+    guard let serviceIdentifier = rawValue["serviceIdentifier"] as? String,
         let rawState = rawValue["state"] as? Service.RawStateValue,
-        let serviceType = serviceTypesByIdentifier[managerIdentifier]
+        let serviceType = serviceTypesByIdentifier[serviceIdentifier]
     else {
         return nil
     }
@@ -47,8 +47,8 @@ extension Service {
 
     var rawValue: RawStateValue {
         return [
-            "managerIdentifier": type(of: self).managerIdentifier,
-            "state": self.rawState
+            "serviceIdentifier": serviceIdentifier,
+            "state": rawState
         ]
     }
 

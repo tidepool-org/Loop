@@ -28,7 +28,6 @@ class ServicesManager {
     var services: [Service] {
         didSet {
             dispatchPrecondition(condition: .onQueue(.main))
-            setupServices()
             UserDefaults.appGroup?.services = services
             notifyObservers()
         }
@@ -36,15 +35,6 @@ class ServicesManager {
 
     init() {
         self.services = UserDefaults.appGroup?.services ?? []
-        setupServices()
-    }
-
-    private func setupServices() {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        services.forEach { service in
-            service.delegateQueue = queue
-        }
     }
 
     public func addObserver(_ observer: ServicesManagerObserver) {
@@ -65,30 +55,6 @@ class ServicesManager {
         for observer in lock.withLock({ observers }) {
             observer.servicesManagerDidUpdate(services: services)
         }
-    }
-
-}
-
-// MARK: - ServiceDelegate
-
-extension ServicesManager: ServiceDelegate {
-
-    func notifyServiceCreated(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        services.append(service)
-    }
-
-    func notifyServiceUpdated(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        UserDefaults.appGroup?.services = services
-    }
-
-    func notifyServiceDeleted(_ service: Service) {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-       services.removeAll { type(of: $0) == type(of: service) }
     }
 
 }
