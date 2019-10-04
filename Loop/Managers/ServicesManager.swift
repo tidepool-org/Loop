@@ -11,10 +11,10 @@ import LoopKitUI
 
 protocol ServicesManagerObserver {
 
-    /// The service manager update the list of available services.
+    /// The service manager updated the list of active services.
     ///
-    /// - Parameter services: The list of available services
-    func servicesManagerDidUpdate(services: [Service])
+    /// - Parameter activeServices: The list of active services.
+    func servicesManagerDidUpdate(activeServices: [Service])
 
 }
 
@@ -24,24 +24,21 @@ class ServicesManager {
 
     private let pluginManager: PluginManager
 
-    private let lock = UnfairLock()
+    private var services = [Service]()
+
+    private let servicesLock = UnfairLock()
 
     private var observers = WeakSet<ServicesManagerObserver>()
 
-    var services: [Service]! {
-        didSet {
-            dispatchPrecondition(condition: .onQueue(.main))
-            UserDefaults.appGroup?.servicesState = services.compactMap { $0.rawValue }
-            notifyObservers()
-        }
-    }
+    private let observersLock = UnfairLock()
 
     init(pluginManager: PluginManager) {
         self.pluginManager = pluginManager
-        self.services = UserDefaults.appGroup?.servicesState.compactMap { serviceFromRawValue($0) } ?? []
+
+        restoreState()
     }
 
-    var availableServices: [AvailableDevice] {
+    public var availableServices: [AvailableDevice] {
         return pluginManager.availableServices + availableStaticServices
     }
 
@@ -66,23 +63,58 @@ class ServicesManager {
         return serviceType.init(rawState: rawState)
     }
 
+    public var activeServices: [Service] {
+        return servicesLock.withLock({ services })
+    }
+
+    public func addActiveService(_ service: Service) {
+        servicesLock.withLock {
+            services.append(service)
+            saveState()
+        }
+        notifyObservers()
+    }
+
+    public func updateActiveService(_ service: Service) {
+        servicesLock.withLock {
+            saveState()
+        }
+        notifyObservers()
+    }
+
+    public func removeActiveService(_ service: Service) {
+        servicesLock.withLock {
+            services.removeAll { $0.serviceIdentifier == service.serviceIdentifier }
+            saveState()
+        }
+        notifyObservers()
+    }
+
+    private func saveState() {
+        UserDefaults.appGroup?.servicesState = services.compactMap { $0.rawValue }
+    }
+
+    private func restoreState() {
+        services = UserDefaults.appGroup?.servicesState.compactMap { serviceFromRawValue($0) } ?? []
+    }
+
     public func addObserver(_ observer: ServicesManagerObserver) {
-        lock.withLock {
+        observersLock.withLock {
             observers.insert(observer)
             return
         }
     }
 
     public func removeObserver(_ observer: ServicesManagerObserver) {
-        lock.withLock {
+        observersLock.withLock {
             observers.remove(observer)
             return
         }
     }
 
     private func notifyObservers() {
-        for observer in lock.withLock({ observers }) {
-            observer.servicesManagerDidUpdate(services: services)
+        for observer in observersLock.withLock({ observers }) {
+            observer.servicesManagerDidUpdate(activeServices: activeServices)
         }
     }
 

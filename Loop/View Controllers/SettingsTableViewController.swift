@@ -723,7 +723,7 @@ extension SettingsTableViewController: ServiceSetupDelegate {
     }
 
     fileprivate var activeServices: [Service] {
-        return dataManager.servicesManager.services
+        return dataManager.servicesManager.activeServices
     }
 
     fileprivate var activeServicesSorted: [Service] {
@@ -744,21 +744,21 @@ extension SettingsTableViewController: ServiceSetupDelegate {
             setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
         } else if let service = serviceUIType.init(rawState: [:]) {
-            dataManager.servicesManager.services.append(service)
+            dataManager.servicesManager.addActiveService(service)
             updateSelectedServicesRows()
         }
     }
 
     func serviceSetupNotifying(_ object: ServiceSetupNotifying, didCreateService service: Service) {
-        dataManager.servicesManager.services.append(service)
+        dataManager.servicesManager.addActiveService(service)
     }
 
     func serviceSetupNotifying(_ object: ServiceSetupNotifying, didUpdateService service: Service) {
-        dataManager.servicesManager.services = dataManager.servicesManager.services
+        dataManager.servicesManager.updateActiveService(service)
     }
 
     func serviceSetupNotifying(_ object: ServiceSetupNotifying, didDeleteService service: Service) {
-        dataManager.servicesManager.services.removeAll { type(of: $0) == type(of: service) }
+        dataManager.servicesManager.removeActiveService(service)
     }
 }
 
