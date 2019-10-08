@@ -10,6 +10,8 @@ import Foundation
 import LoopKit
 import LoopKitUI
 
+typealias AvailableService = AvailableDevice
+
 class PluginManager {
     private let pluginBundles: [Bundle]
 
@@ -128,14 +130,14 @@ class PluginManager {
         return nil
     }
 
-    var availableServices: [AvailableDevice] {
-        return pluginBundles.compactMap({ (bundle) -> AvailableDevice? in
+    var availableServices: [AvailableService] {
+        return pluginBundles.compactMap({ (bundle) -> AvailableService? in
             guard let title = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.serviceDisplayName.rawValue) as? String,
                 let identifier = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String else {
                     return nil
             }
 
-            return AvailableDevice(identifier: identifier, localizedTitle: title)
+            return AvailableService(identifier: identifier, localizedTitle: title)
         })
     }
 

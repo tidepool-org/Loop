@@ -128,10 +128,10 @@ extension UIAlertController {
     /// Initializes an action sheet-styled controller for selecting a service.
     ///
     /// - Parameters:
-    ///   - services: An array of services.
+    ///   - services: An array of available services.
     ///   - selectionHandler: A closure to execute when a service is selected.
     ///   - identifier: The identifier of the selected service.
-    internal convenience init(services: [AvailableDevice], selectionHandler: @escaping (_ identifier: String) -> Void) {
+    internal convenience init(services: [AvailableService], selectionHandler: @escaping (_ identifier: String) -> Void) {
         self.init(
             title: NSLocalizedString("Add Service", comment: "Action sheet title selecting service"),
             message: nil,

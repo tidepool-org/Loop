@@ -19,8 +19,8 @@ let staticServicesByIdentifier: [String: Service.Type] = staticServices.reduce(i
     map[Type.serviceIdentifier] = Type
 }
 
-let availableStaticServices = staticServices.map { (Type) -> AvailableDevice in
-    return AvailableDevice(identifier: Type.serviceIdentifier, localizedTitle: Type.localizedTitle)
+let availableStaticServices = staticServices.map { (Type) -> AvailableService in
+    return AvailableService(identifier: Type.serviceIdentifier, localizedTitle: Type.localizedTitle)
 }
 
 func ServiceFromRawValue(_ rawValue: [String: Any]) -> Service? {

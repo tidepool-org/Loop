@@ -38,7 +38,7 @@ class ServicesManager {
         restoreState()
     }
 
-    public var availableServices: [AvailableDevice] {
+    public var availableServices: [AvailableService] {
         return pluginManager.availableServices + availableStaticServices
     }
 

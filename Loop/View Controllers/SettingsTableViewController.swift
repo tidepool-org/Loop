@@ -294,7 +294,7 @@ final class SettingsTableViewController: UITableViewController {
             return configCell
         case .services:
             if indexPath.row < activeServices.count {
-                let service = activeServicesSorted[indexPath.row]
+                let service = activeServices[indexPath.row]
                 let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.className, for: indexPath)
                 cell.textLabel?.text = service.localizedTitle
                 cell.detailTextLabel?.text = nil
@@ -558,7 +558,7 @@ final class SettingsTableViewController: UITableViewController {
             }
         case .services:
             if indexPath.row < activeServices.count {
-                if let serviceUI = activeServicesSorted[indexPath.row] as? ServiceUI {
+                if let serviceUI = activeServices[indexPath.row] as? ServiceUI {
                     var settings = serviceUI.settingsViewController()
                     settings.serviceSetupDelegate = self
                     settings.completionDelegate = self
@@ -718,20 +718,16 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
 }
 
 extension SettingsTableViewController: ServiceSetupDelegate {
-    fileprivate var availableServices: [AvailableDevice] {
+    fileprivate var availableServices: [AvailableService] {
         return dataManager.servicesManager.availableServices
     }
 
     fileprivate var activeServices: [Service] {
-        return dataManager.servicesManager.activeServices
+        return dataManager.servicesManager.activeServices.sorted { $0.localizedTitle < $1.localizedTitle }
     }
 
-    fileprivate var activeServicesSorted: [Service] {
-        return activeServices.sorted { $0.localizedTitle < $1.localizedTitle }
-    }
-
-    fileprivate var inactiveServices: [AvailableDevice] {
-        return availableServices.filter { availableService in !activeServices.contains { type(of: $0).serviceIdentifier == availableService.identifier } }
+    fileprivate var inactiveServices: [AvailableService] {
+        return availableServices.filter { availableService in !dataManager.servicesManager.activeServices.contains { type(of: $0).serviceIdentifier == availableService.identifier } }
     }
 
     fileprivate func setupService(withIdentifier identifier: String) {
