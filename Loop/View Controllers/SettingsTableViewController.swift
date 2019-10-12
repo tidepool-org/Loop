@@ -560,7 +560,7 @@ final class SettingsTableViewController: UITableViewController {
             if indexPath.row < activeServices.count {
                 if let serviceUI = activeServices[indexPath.row] as? ServiceUI {
                     var settings = serviceUI.settingsViewController()
-                    settings.serviceSetupDelegate = self
+                    settings.serviceSettingsDelegate = self
                     settings.completionDelegate = self
                     present(settings, animated: true)
                 }
@@ -717,7 +717,7 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
     }
 }
 
-extension SettingsTableViewController: ServiceSetupDelegate {
+extension SettingsTableViewController {
     fileprivate var availableServices: [AvailableService] {
         return dataManager.servicesManager.availableServices
     }
@@ -744,16 +744,16 @@ extension SettingsTableViewController: ServiceSetupDelegate {
             updateSelectedServicesRows()
         }
     }
+}
 
+extension SettingsTableViewController: ServiceSetupDelegate {
     func serviceSetupNotifying(_ object: ServiceSetupNotifying, didCreateService service: Service) {
         dataManager.servicesManager.addActiveService(service)
     }
+}
 
-    func serviceSetupNotifying(_ object: ServiceSetupNotifying, didUpdateService service: Service) {
-        dataManager.servicesManager.updateActiveService(service)
-    }
-
-    func serviceSetupNotifying(_ object: ServiceSetupNotifying, didDeleteService service: Service) {
+extension SettingsTableViewController: ServiceSettingsDelegate {
+    func serviceSettingsNotifying(_ object: ServiceSettingsNotifying, didDeleteService service: Service) {
         dataManager.servicesManager.removeActiveService(service)
     }
 }

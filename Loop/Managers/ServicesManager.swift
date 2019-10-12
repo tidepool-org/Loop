@@ -47,7 +47,7 @@ class ServicesManager {
     }
 
     private func serviceTypeFromRawValue(_ rawValue: Service.RawStateValue) -> Service.Type? {
-        guard let identifier = rawValue["managerIdentifier"] as? String else {
+        guard let identifier = rawValue["serviceIdentifier"] as? String else {
             return nil
         }
 
@@ -69,6 +69,7 @@ class ServicesManager {
 
     public func addActiveService(_ service: Service) {
         servicesLock.withLock {
+            service.serviceDelegate = self
             services.append(service)
             saveState()
         }
@@ -85,6 +86,7 @@ class ServicesManager {
     public func removeActiveService(_ service: Service) {
         servicesLock.withLock {
             services.removeAll { $0.serviceIdentifier == service.serviceIdentifier }
+            service.serviceDelegate = nil
             saveState()
         }
         notifyObservers()
@@ -95,7 +97,11 @@ class ServicesManager {
     }
 
     private func restoreState() {
-        services = UserDefaults.appGroup?.servicesState.compactMap { serviceFromRawValue($0) } ?? []
+        services = UserDefaults.appGroup?.servicesState.compactMap { rawValue in
+            let service = serviceFromRawValue(rawValue)
+            service?.serviceDelegate = self
+            return service
+        } ?? []
     }
 
     public func addObserver(_ observer: ServicesManagerObserver) {
@@ -116,6 +122,14 @@ class ServicesManager {
         for observer in observersLock.withLock({ observers }) {
             observer.servicesManagerDidUpdate(activeServices: activeServices)
         }
+    }
+
+}
+
+extension ServicesManager: ServiceDelegate {
+
+    func serviceDidUpdate(_ service: Service) {
+        saveState()
     }
 
 }
