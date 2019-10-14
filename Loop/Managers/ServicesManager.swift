@@ -128,7 +128,7 @@ class ServicesManager {
 
 extension ServicesManager: ServiceDelegate {
 
-    func serviceDidUpdate(_ service: Service) {
+    func serviceDidUpdateState(_ service: Service) {
         saveState()
     }
 
