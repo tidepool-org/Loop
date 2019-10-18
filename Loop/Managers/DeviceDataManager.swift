@@ -21,14 +21,8 @@ final class DeviceDataManager {
 
     let pluginManager: PluginManager
 
-    let servicesManager: ServicesManager
-
-    let analyticsServicesManager: AnalyticsServicesManager
-
     /// Remember the launch date of the app for diagnostic reporting
     private let launchDate = Date()
-
-    var remoteDataServicesManager: RemoteDataServicesManager!
 
     private(set) var testingScenariosManager: TestingScenariosManager?
 
@@ -68,6 +62,8 @@ final class DeviceDataManager {
         }
     }
 
+    private(set) var servicesManager: ServicesManager!
+
     private(set) var pumpManagerHUDProvider: HUDProvider?
 
     // MARK: - WatchKit
@@ -83,10 +79,8 @@ final class DeviceDataManager {
 
     private(set) var loopManager: LoopDataManager!
 
-    init(pluginManager: PluginManager, servicesManager: ServicesManager, analyticsServicesManager: AnalyticsServicesManager) {
+    init(pluginManager: PluginManager) {
         self.pluginManager = pluginManager
-        self.servicesManager = servicesManager
-        self.analyticsServicesManager = analyticsServicesManager
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
             pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
@@ -100,23 +94,24 @@ final class DeviceDataManager {
             self.cgmManager = pumpManager as? CGMManager
         }
 
-        remoteDataServicesManager = RemoteDataServicesManager(servicesManager: servicesManager, deviceDataManager: self)
+        servicesManager = ServicesManager(pluginManager: pluginManager, deviceDataManager: self)
+
         statusExtensionManager = StatusExtensionDataManager(deviceDataManager: self)
 
         loopManager = LoopDataManager(
             lastLoopCompleted: statusExtensionManager.context?.lastLoopCompleted,
             basalDeliveryState: pumpManager?.status.basalDeliveryState,
             lastPumpEventsReconciliation: pumpManager?.lastReconciliation,
-            analyticsServicesManager: analyticsServicesManager
+            servicesManager: servicesManager
         )
-        watchManager = WatchDataManager(deviceManager: self, analyticsServicesManager: analyticsServicesManager)
+        watchManager = WatchDataManager(deviceManager: self)
 
         if debugEnabled {
             testingScenariosManager = LocalTestingScenariosManager(deviceManager: self)
         }
 
         loopManager.delegate = self
-        loopManager.carbStore.syncDelegate = remoteDataServicesManager
+        loopManager.carbStore.syncDelegate = servicesManager
         loopManager.doseStore.delegate = self
 
         setupPump()
@@ -297,7 +292,7 @@ extension DeviceDataManager: CGMManagerDelegate {
                 if manager.shouldSyncToRemoteService {
                     switch result {
                     case .success(let values):
-                        self.remoteDataServicesManager.upload(glucoseValues: values, sensorState: manager.sensorState)
+                        self.servicesManager.upload(glucoseValues: values, sensorState: manager.sensorState)
                     case .failure:
                         break
                     }
@@ -345,7 +340,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         dispatchPrecondition(condition: .onQueue(queue))
         log.default("PumpManager:%{public}@ did adjust pump block by %fs", String(describing: type(of: pumpManager)), adjustment)
 
-        analyticsServicesManager.pumpTimeDidDrift(adjustment)
+        servicesManager.pumpTimeDidDrift(adjustment)
     }
 
     func pumpManagerDidUpdateState(_ pumpManager: PumpManager) {
@@ -384,7 +379,7 @@ extension DeviceDataManager: PumpManagerDelegate {
 
         cgmManager?.fetchNewDataIfNeeded { (result) in
             if case .newData = result {
-                self.analyticsServicesManager.didFetchNewCGMData()
+                self.servicesManager.didFetchNewCGMData()
             }
 
             if let manager = self.cgmManager {
@@ -422,7 +417,7 @@ extension DeviceDataManager: PumpManagerDelegate {
             }
 
             if let oldBatteryValue = oldStatus.pumpBatteryChargeRemaining, newBatteryValue - oldBatteryValue >= loopManager.settings.batteryReplacementDetectionThreshold {
-                analyticsServicesManager.pumpBatteryWasReplaced()
+                servicesManager.pumpBatteryWasReplaced()
             }
         }
 
@@ -457,7 +452,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         log.error("PumpManager:%{public}@ did error: %{public}@", String(describing: type(of: pumpManager)), String(describing: error))
 
         setLastError(error: error)
-        remoteDataServicesManager.uploadLoopStatus(loopError: error)
+        servicesManager.uploadLoopStatus(loopError: error)
     }
 
     func pumpManager(_ pumpManager: PumpManager, hasNewPumpEvents events: [NewPumpEvent], lastReconciliation: Date?, completion: @escaping (_ error: Error?) -> Void) {
@@ -506,7 +501,7 @@ extension DeviceDataManager: PumpManagerDelegate {
                     }
 
                     if newValue.unitVolume > previousVolume + 1 {
-                        self.analyticsServicesManager.reservoirWasRewound()
+                        self.servicesManager.reservoirWasRewound()
 
                         NotificationManager.clearPumpReservoirNotification()
                     }
@@ -533,7 +528,7 @@ extension DeviceDataManager: DoseStoreDelegate {
         hasEventsNeedingUpload pumpEvents: [PersistedPumpEvent],
         completion completionHandler: @escaping (_ uploadedObjectIDURLs: [URL]) -> Void
     ) {
-        remoteDataServicesManager.upload(pumpEvents: pumpEvents, fromSource: "loop://\(UIDevice.current.name)") { (result) in
+        servicesManager.upload(pumpEvents: pumpEvents, fromSource: "loop://\(UIDevice.current.name)") { (result) in
             switch result {
             case .success(let objects):
                 completionHandler(objects)

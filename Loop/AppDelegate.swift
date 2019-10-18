@@ -19,13 +19,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private lazy var pluginManager = PluginManager()
 
-    private lazy var servicesManager = ServicesManager(pluginManager: pluginManager)
-
-    private lazy var analyticsServicesManager = AnalyticsServicesManager(servicesManager: servicesManager)
-
-    private lazy var loggingServicesManager = LoggingServicesManager(servicesManager: servicesManager)
-
-    private lazy var deviceManager = DeviceDataManager(pluginManager: pluginManager, servicesManager: servicesManager, analyticsServicesManager: analyticsServicesManager)
+    private lazy var deviceManager = DeviceDataManager(pluginManager: pluginManager)
 
     var window: UIWindow?
 
@@ -34,13 +28,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        SharedLoggingService.instance = loggingServicesManager
+        SharedLoggingService.instance = deviceManager.servicesManager
 
         NotificationManager.authorize(delegate: self)
 
         log.info(#function)
 
-        analyticsServicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
+        deviceManager.servicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
 
         rootViewController.rootViewController.deviceManager = deviceManager
 
@@ -96,7 +90,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                 let startDate = response.notification.request.content.userInfo[NotificationManager.UserInfoKey.bolusStartDate.rawValue] as? Date,
                 startDate.timeIntervalSinceNow >= TimeInterval(minutes: -5)
             {
-                analyticsServicesManager.didRetryBolus()
+                deviceManager.servicesManager.didRetryBolus()
 
                 deviceManager.enactBolus(units: units, at: startDate) { (_) in
                     completionHandler()

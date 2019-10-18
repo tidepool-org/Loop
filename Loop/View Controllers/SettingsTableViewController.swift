@@ -33,7 +33,7 @@ final class SettingsTableViewController: UITableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        dataManager.analyticsServicesManager.didDisplaySettingsScreen()
+        dataManager.servicesManager.didDisplaySettingsScreen()
     }
 
     var dataManager: DeviceDataManager!
@@ -776,7 +776,7 @@ extension SettingsTableViewController: DailyValueScheduleTableViewControllerDele
                     switch row {
                     case .carbRatio:
                         dataManager.loopManager.carbRatioSchedule = CarbRatioSchedule(unit: controller.unit, dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-                        dataManager.analyticsServicesManager.didChangeCarbRatioSchedule()
+                        dataManager.servicesManager.didChangeCarbRatioSchedule()
                     default:
                         break
                     }
@@ -803,7 +803,7 @@ extension SettingsTableViewController: GlucoseRangeScheduleStorageDelegate {
 extension SettingsTableViewController: InsulinSensitivityScheduleStorageDelegate {
     func saveSchedule(_ schedule: InsulinSensitivitySchedule, for viewController: InsulinSensitivityScheduleViewController, completion: @escaping (SaveInsulinSensitivityScheduleResult) -> Void) {
         dataManager.loopManager.insulinSensitivitySchedule = schedule
-        dataManager.analyticsServicesManager.didChangeInsulinSensitivitySchedule()
+        dataManager.servicesManager.didChangeInsulinSensitivitySchedule()
         completion(.success)
         tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.insulinSensitivity.rawValue, section: Section.configuration.rawValue)], with: .none)
     }
