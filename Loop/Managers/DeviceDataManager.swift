@@ -295,15 +295,7 @@ extension DeviceDataManager: CGMManagerDelegate {
             log.default("CGMManager:%{public}@ did update with %d values", String(describing: type(of: manager)), values.count)
 
             loopManager.addGlucose(values) { result in
-                if manager.shouldSyncToRemoteService {
-                    switch result {
-                    case .success(let values):
-                        self.remoteDataServicesManager.upload(glucoseValues: values, sensorState: manager.sensorState)
-                    case .failure:
-                        break
-                    }
-                }
-
+                self.initiateRemoteDataSynchronization()
                 self.log.default("Asserting current pump data")
                 self.pumpManager?.assertCurrentPumpData()
             }
@@ -458,7 +450,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         log.error("PumpManager:%{public}@ did error: %{public}@", String(describing: type(of: pumpManager)), String(describing: error))
 
         setLastError(error: error)
-        remoteDataServicesManager.uploadLoopStatus(loopError: error)
+        loopManager.addStatus(withError: error)
     }
 
     func pumpManager(_ pumpManager: PumpManager, hasNewPumpEvents events: [NewPumpEvent], lastReconciliation: Date?, completion: @escaping (_ error: Error?) -> Void) {
@@ -528,22 +520,13 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
 }
 
-// MARK: - DoseStoreDelegate
-extension DeviceDataManager: DoseStoreDelegate {
-    func doseStore(_ doseStore: DoseStore,
-        hasEventsNeedingUpload pumpEvents: [PersistedPumpEvent],
-        completion completionHandler: @escaping (_ uploadedObjectIDURLs: [URL]) -> Void
-    ) {
-        remoteDataServicesManager.upload(pumpEvents: pumpEvents, fromSource: "loop://\(UIDevice.current.name)") { (result) in
-            switch result {
-            case .success(let objects):
-                completionHandler(objects)
-            case .failure(let error):
-                self.log.error("%{public}@", String(describing: error))
-                completionHandler([])
-            }
-        }
+// MARK: - CarbStoreSyncDelegate, DoseStoreDelegate
+extension DeviceDataManager: CarbStoreSyncDelegate, DoseStoreDelegate {
+
+    func initiateRemoteDataSynchronization() {
+        remoteDataServicesManager.initiateRemoteDataSynchronization()
     }
+
 }
 
 // MARK: - TestingPumpManager

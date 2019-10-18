@@ -63,8 +63,13 @@ class ServicesManager {
     }
 
     public func addActiveService(_ service: Service) {
+        let remoteDataService = service as? RemoteDataService
+
         servicesLock.withLock {
             service.serviceDelegate = self
+            if let remoteDataService = remoteDataService {
+                remoteDataService.remoteDataServiceDelegate = remoteDataServicesManager
+            }
             services.append(service)
 
             if let analyticsService = service as? AnalyticsService {
@@ -73,8 +78,11 @@ class ServicesManager {
             if let loggingService = service as? LoggingService {
                 loggingServicesManager.addService(loggingService)
             }
-            if let remoteDataService = service as? RemoteDataService {
+            if let remoteDataService = remoteDataService {
                 remoteDataServicesManager.addService(remoteDataService)
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
+                    self.remoteDataServicesManager.synchronizeRemoteDataService(remoteDataService)
+                }
             }
 
             saveState()
@@ -108,6 +116,9 @@ class ServicesManager {
         services = UserDefaults.appGroup?.servicesState.compactMap { rawValue in
             let service = serviceFromRawValue(rawValue)
             service?.serviceDelegate = self
+            if let remoteDataService = service as? RemoteDataService {
+                remoteDataService.remoteDataServiceDelegate = remoteDataServicesManager
+            }
             return service
         } ?? []
     }
