@@ -29,6 +29,10 @@ final class LoopDataManager {
 
     let glucoseStore: GlucoseStore
 
+    let settingsStore: SettingsStore
+
+    let statusStore: StatusStore
+
     weak var delegate: LoopDataManagerDelegate?
 
     private let logger = DiagnosticLog(category: "LoopDataManager")
@@ -85,6 +89,10 @@ final class LoopDataManager {
         )
 
         glucoseStore = GlucoseStore(healthStore: healthStore, cacheStore: cacheStore, cacheLength: .hours(24))
+
+        settingsStore = SettingsStore(userDefaults: UserDefaults.appGroup)
+
+        statusStore = StatusStore(userDefaults: UserDefaults.appGroup)
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
@@ -231,6 +239,7 @@ final class LoopDataManager {
             NotificationManager.clearLoopNotRunningNotifications()
             NotificationManager.scheduleLoopNotRunningNotifications()
             servicesManager.loopDidSucceed()
+            addStatus()
             NotificationCenter.default.post(name: .LoopCompleted, object: self)
         }
     }
@@ -620,6 +629,62 @@ extension LoopDataManager {
         }
     }
 
+    func addSettings() {
+        if let loopSettings = UserDefaults.appGroup?.loopSettings {
+            var settings = StoredSettings()
+
+            settings.dosingEnabled = loopSettings.dosingEnabled
+            settings.glucoseTargetRangeSchedule = loopSettings.glucoseTargetRangeSchedule
+            settings.preMealTargetRange = loopSettings.preMealTargetRange
+            settings.overridePresets = loopSettings.overridePresets
+            settings.scheduleOverride = loopSettings.scheduleOverride
+            settings.maximumBasalRatePerHour = loopSettings.maximumBasalRatePerHour
+            settings.maximumBolus = loopSettings.maximumBolus
+            settings.suspendThreshold = loopSettings.suspendThreshold
+            settings.glucoseUnit = loopSettings.glucoseUnit
+
+            settings.insulinModel = UserDefaults.appGroup?.insulinModelSettings?.model
+            settings.basalRateSchedule = UserDefaults.appGroup?.basalRateSchedule
+            settings.insulinSensitivitySchedule = UserDefaults.appGroup?.insulinSensitivitySchedule
+            settings.carbRatioSchedule = UserDefaults.appGroup?.carbRatioSchedule
+
+            self.settingsStore.addSettings(settings)
+
+            self.delegate?.initiateRemoteDataSynchronization()
+        }
+    }
+
+    func addStatus(withError error: Error? = nil) {
+        getLoopState { manager, state in
+            var status = StoredStatus()
+
+            status.carbsOnBoard = state.carbsOnBoard
+            status.predictedGlucose = state.predictedGlucose
+            if let (recommendation: recommendation, date: date) = state.recommendedTempBasal {
+                status.tempBasalRecommendationDate = TempBasalRecommendationDate(recommendation: recommendation, date: date)
+            }
+            status.recommendedBolus = state.recommendedBolus?.recommendation.amount
+            if let lastReservoirValue = manager.doseStore.lastReservoirValue {
+                status.lastReservoirValue = LastReservoirValue(startDate: lastReservoirValue.startDate, unitVolume: lastReservoirValue.unitVolume)
+            }
+            status.pumpManagerStatus = self.delegate?.pumpManagerStatus
+            status.error = error ?? state.error
+
+            manager.doseStore.insulinOnBoard(at: Date()) { result in
+                switch result {
+                case .success(let insulinOnBoard):
+                    status.insulinOnBoard = insulinOnBoard
+                case .failure(let doseStoreError):
+                    status.error = status.error ?? doseStoreError
+                }
+
+                self.statusStore.addStatus(status)
+
+                self.delegate?.initiateRemoteDataSynchronization()
+            }
+        }
+    }
+
     // Actions
 
     func enactRecommendedTempBasal(_ completion: @escaping (_ error: Error?) -> Void) {
@@ -789,6 +854,10 @@ extension LoopDataManager {
     }
 
     private func notify(forChange context: LoopUpdateContext) {
+        if case .preferences = context {
+            addSettings()
+        }
+
         NotificationCenter.default.post(name: .LoopDataUpdated,
             object: self,
             userInfo: [
@@ -1298,6 +1367,15 @@ protocol LoopDataManagerDelegate: class {
     ///   - units: The recommended bolus in U
     /// - Returns: a supported bolus volume in U. The volume returned should not be larger than the passed in rate.
     func loopDataManager(_ manager: LoopDataManager, roundBolusVolume units: Double) -> Double
+
+    /// The pump manager status, if one exists.
+    var pumpManagerStatus: PumpManagerStatus? { get }
+
+    /// Ask the delegate to initiate remote data synchronization. Remote data synchronization is an asynchronous
+    /// process that pulls data from multiple local sources and synchronizes with any remote data services. The process
+    /// can take considerable time and no completion handler is provided.
+    func initiateRemoteDataSynchronization()
+
 }
 
 private extension TemporaryScheduleOverride {
