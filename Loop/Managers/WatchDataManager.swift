@@ -194,7 +194,7 @@ final class WatchDataManager: NSObject {
             deviceManager.loopManager.addCarbEntryAndRecommendBolus(carbEntry) { (result) in
                 switch result {
                 case .success:
-                    self.deviceManager.servicesManager.didAddCarbsFromWatch()
+                    self.deviceManager.analyticsServicesManager.didAddCarbsFromWatch()
                     completionHandler?(nil)
                 case .failure(let error):
                     self.log.error("%{public}@", String(describing: error))
@@ -224,7 +224,7 @@ extension WatchDataManager: WCSessionDelegate {
             if let bolus = SetBolusUserInfo(rawValue: message as SetBolusUserInfo.RawValue) {
                 self.deviceManager.enactBolus(units: bolus.value, at: bolus.startDate) { (error) in
                     if error == nil {
-                        self.deviceManager.servicesManager.didSetBolusFromWatch(bolus.value)
+                        self.deviceManager.analyticsServicesManager.didSetBolusFromWatch(bolus.value)
                     }
 
                     // When we've successfully started the bolus, send a new context with our new prediction

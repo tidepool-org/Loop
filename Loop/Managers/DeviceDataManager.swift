@@ -64,6 +64,12 @@ final class DeviceDataManager {
 
     private(set) var servicesManager: ServicesManager!
 
+    var analyticsServicesManager: AnalyticsServicesManager { return servicesManager.analyticsServicesManager }
+
+    var loggingServicesManager: LoggingServicesManager { return servicesManager.loggingServicesManager }
+
+    var remoteDataServicesManager: RemoteDataServicesManager { return servicesManager.remoteDataServicesManager }
+
     private(set) var pumpManagerHUDProvider: HUDProvider?
 
     // MARK: - WatchKit
@@ -102,7 +108,7 @@ final class DeviceDataManager {
             lastLoopCompleted: statusExtensionManager.context?.lastLoopCompleted,
             basalDeliveryState: pumpManager?.status.basalDeliveryState,
             lastPumpEventsReconciliation: pumpManager?.lastReconciliation,
-            servicesManager: servicesManager
+            analyticsServicesManager: analyticsServicesManager
         )
         watchManager = WatchDataManager(deviceManager: self)
 
@@ -111,7 +117,7 @@ final class DeviceDataManager {
         }
 
         loopManager.delegate = self
-        loopManager.carbStore.syncDelegate = servicesManager
+        loopManager.carbStore.syncDelegate = remoteDataServicesManager
         loopManager.doseStore.delegate = self
 
         setupPump()
@@ -292,7 +298,7 @@ extension DeviceDataManager: CGMManagerDelegate {
                 if manager.shouldSyncToRemoteService {
                     switch result {
                     case .success(let values):
-                        self.servicesManager.upload(glucoseValues: values, sensorState: manager.sensorState)
+                        self.remoteDataServicesManager.upload(glucoseValues: values, sensorState: manager.sensorState)
                     case .failure:
                         break
                     }
@@ -340,7 +346,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         dispatchPrecondition(condition: .onQueue(queue))
         log.default("PumpManager:%{public}@ did adjust pump block by %fs", String(describing: type(of: pumpManager)), adjustment)
 
-        servicesManager.pumpTimeDidDrift(adjustment)
+        analyticsServicesManager.pumpTimeDidDrift(adjustment)
     }
 
     func pumpManagerDidUpdateState(_ pumpManager: PumpManager) {
@@ -379,7 +385,7 @@ extension DeviceDataManager: PumpManagerDelegate {
 
         cgmManager?.fetchNewDataIfNeeded { (result) in
             if case .newData = result {
-                self.servicesManager.didFetchNewCGMData()
+                self.analyticsServicesManager.didFetchNewCGMData()
             }
 
             if let manager = self.cgmManager {
@@ -417,7 +423,7 @@ extension DeviceDataManager: PumpManagerDelegate {
             }
 
             if let oldBatteryValue = oldStatus.pumpBatteryChargeRemaining, newBatteryValue - oldBatteryValue >= loopManager.settings.batteryReplacementDetectionThreshold {
-                servicesManager.pumpBatteryWasReplaced()
+                analyticsServicesManager.pumpBatteryWasReplaced()
             }
         }
 
@@ -452,7 +458,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         log.error("PumpManager:%{public}@ did error: %{public}@", String(describing: type(of: pumpManager)), String(describing: error))
 
         setLastError(error: error)
-        servicesManager.uploadLoopStatus(loopError: error)
+        remoteDataServicesManager.uploadLoopStatus(loopError: error)
     }
 
     func pumpManager(_ pumpManager: PumpManager, hasNewPumpEvents events: [NewPumpEvent], lastReconciliation: Date?, completion: @escaping (_ error: Error?) -> Void) {
@@ -501,7 +507,7 @@ extension DeviceDataManager: PumpManagerDelegate {
                     }
 
                     if newValue.unitVolume > previousVolume + 1 {
-                        self.servicesManager.reservoirWasRewound()
+                        self.analyticsServicesManager.reservoirWasRewound()
 
                         NotificationManager.clearPumpReservoirNotification()
                     }
@@ -528,7 +534,7 @@ extension DeviceDataManager: DoseStoreDelegate {
         hasEventsNeedingUpload pumpEvents: [PersistedPumpEvent],
         completion completionHandler: @escaping (_ uploadedObjectIDURLs: [URL]) -> Void
     ) {
-        servicesManager.upload(pumpEvents: pumpEvents, fromSource: "loop://\(UIDevice.current.name)") { (result) in
+        remoteDataServicesManager.upload(pumpEvents: pumpEvents, fromSource: "loop://\(UIDevice.current.name)") { (result) in
             switch result {
             case .success(let objects):
                 completionHandler(objects)
