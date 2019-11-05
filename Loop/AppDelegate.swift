@@ -28,7 +28,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        SharedLoggingService.instance = deviceManager.loggingServicesManager
+        SharedLogging.instance = deviceManager.loggingServicesManager
 
         NotificationManager.authorize(delegate: self)
 

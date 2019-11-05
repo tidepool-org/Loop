@@ -9,9 +9,7 @@
 import os.log
 import LoopKit
 
-final class LoggingServicesManager: LoggingService {
-
-    public let serviceIdentifier = "LoggingServicesManager"
+final class LoggingServicesManager: Logging {
 
     private var loggingServices = [LoggingService]()
 
