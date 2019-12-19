@@ -239,7 +239,7 @@ final class LoopDataManager {
             NotificationManager.clearLoopNotRunningNotifications()
             NotificationManager.scheduleLoopNotRunningNotifications()
             analyticsServicesManager.loopDidSucceed()
-            addStatus()
+            storeStatus()
             NotificationCenter.default.post(name: .LoopCompleted, object: self)
         }
     }
@@ -629,7 +629,7 @@ extension LoopDataManager {
         }
     }
 
-    func addSettings() {
+    func storeSettings() {
         if let loopSettings = UserDefaults.appGroup?.loopSettings {
             var settings = StoredSettings()
 
@@ -648,13 +648,11 @@ extension LoopDataManager {
             settings.insulinSensitivitySchedule = UserDefaults.appGroup?.insulinSensitivitySchedule
             settings.carbRatioSchedule = UserDefaults.appGroup?.carbRatioSchedule
 
-            self.settingsStore.addSettings(settings)
-
-            self.delegate?.initiateRemoteDataSynchronization()
+            self.settingsStore.storeSettings(settings) {}
         }
     }
 
-    func addStatus(withError error: Error? = nil) {
+    func storeStatus(withError error: Error? = nil) {
         getLoopState { manager, state in
             var status = StoredStatus()
 
@@ -678,9 +676,7 @@ extension LoopDataManager {
                     status.error = status.error ?? doseStoreError
                 }
 
-                self.statusStore.addStatus(status)
-
-                self.delegate?.initiateRemoteDataSynchronization()
+                self.statusStore.storeStatus(status) {}
             }
         }
     }
@@ -855,7 +851,7 @@ extension LoopDataManager {
 
     private func notify(forChange context: LoopUpdateContext) {
         if case .preferences = context {
-            addSettings()
+            storeSettings()
         }
 
         NotificationCenter.default.post(name: .LoopDataUpdated,
@@ -1370,11 +1366,6 @@ protocol LoopDataManagerDelegate: class {
 
     /// The pump manager status, if one exists.
     var pumpManagerStatus: PumpManagerStatus? { get }
-
-    /// Ask the delegate to initiate remote data synchronization. Remote data synchronization is an asynchronous
-    /// process that pulls data from multiple local sources and synchronizes with any remote data services. The process
-    /// can take considerable time and no completion handler is provided.
-    func initiateRemoteDataSynchronization()
 
 }
 

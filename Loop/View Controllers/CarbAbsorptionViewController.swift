@@ -379,8 +379,6 @@ final class CarbAbsorptionViewController: ChartsTableViewController, Identifiabl
                 }
             }
 
-            cell.isUploading = !status.entry.isUploaded && (deviceManager.loopManager.carbStore.syncDelegate != nil)
-            // TODO: Fix this - UI UPLOAD STATUS
             return cell
         }
     }

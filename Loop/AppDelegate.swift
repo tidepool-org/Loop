@@ -52,9 +52,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         deviceManager.updatePumpManagerBLEHeartbeatPreference()
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
-            self.deviceManager.remoteDataServicesManager.initiateRemoteDataSynchronization()
-        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

@@ -117,8 +117,12 @@ final class DeviceDataManager {
         }
 
         loopManager.delegate = self
-        loopManager.carbStore.syncDelegate = remoteDataServicesManager
+
+        loopManager.carbStore.delegate = self
         loopManager.doseStore.delegate = self
+        loopManager.glucoseStore.delegate = self
+        loopManager.settingsStore.delegate = self
+        loopManager.statusStore.delegate = self
 
         setupPump()
         setupCGM()
@@ -295,7 +299,6 @@ extension DeviceDataManager: CGMManagerDelegate {
             log.default("CGMManager:%{public}@ did update with %d values", String(describing: type(of: manager)), values.count)
 
             loopManager.addGlucose(values) { result in
-                self.initiateRemoteDataSynchronization()
                 self.log.default("Asserting current pump data")
                 self.pumpManager?.assertCurrentPumpData()
             }
@@ -450,7 +453,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         log.error("PumpManager:%{public}@ did error: %{public}@", String(describing: type(of: pumpManager)), String(describing: error))
 
         setLastError(error: error)
-        loopManager.addStatus(withError: error)
+        loopManager.storeStatus(withError: error)
     }
 
     func pumpManager(_ pumpManager: PumpManager, hasNewPumpEvents events: [NewPumpEvent], lastReconciliation: Date?, completion: @escaping (_ error: Error?) -> Void) {
@@ -520,13 +523,80 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
 }
 
-// MARK: - CarbStoreSyncDelegate, DoseStoreDelegate
-extension DeviceDataManager: CarbStoreSyncDelegate, DoseStoreDelegate {
-
-    func initiateRemoteDataSynchronization() {
-        remoteDataServicesManager.initiateRemoteDataSynchronization()
+// MARK: - CarbStoreDelegate
+extension DeviceDataManager: CarbStoreDelegate {
+    
+    func carbStoreHasUpdatedCarbData(_ carbStore: CarbStore) {
+        remoteDataServicesManager.carbStoreHasUpdatedCarbData(carbStore)
     }
+    
+    func carbStore(_ carbStore: CarbStore, didError error: CarbStore.CarbStoreError) {}
+    
+}
 
+// MARK: - DoseStoreDelegate
+extension DeviceDataManager: DoseStoreDelegate {
+    
+    func doseStoreHasUpdatedDoseData(_ doseStore: DoseStore) {
+        remoteDataServicesManager.doseStoreHasUpdatedDoseData(doseStore)
+    }
+    
+    func doseStoreHasUpdatedPumpEventData(_ doseStore: DoseStore) {
+        remoteDataServicesManager.doseStoreHasUpdatedPumpEventData(doseStore)
+    }
+    
+}
+
+// MARK: - GlucoseStoreDelegate
+extension DeviceDataManager: GlucoseStoreDelegate {
+    
+    func glucoseStoreHasUpdatedGlucoseData(_ glucoseStore: GlucoseStore) {
+        remoteDataServicesManager.glucoseStoreHasUpdatedGlucoseData(glucoseStore)
+    }
+    
+}
+
+// MARK: - SettingsStoreDelegate
+extension DeviceDataManager: SettingsStoreDelegate {
+    
+    func settingsStoreHasUpdatedSettingsData(_ settingsStore: SettingsStore) {
+        remoteDataServicesManager.settingsStoreHasUpdatedSettingsData(settingsStore)
+    }
+    
+}
+
+// MARK: - StatusStoreDelegate
+extension DeviceDataManager: StatusStoreDelegate {
+    
+    func statusStoreHasUpdatedStatusData(_ statusStore: StatusStore) {
+        remoteDataServicesManager.statusStoreHasUpdatedStatusData(statusStore)
+    }
+    
+}
+
+// MARK: - RemoteDataServicesManagerDelegate
+extension DeviceDataManager: RemoteDataServicesManagerDelegate {
+    
+    var carbStore: CarbStore? {
+        return loopManager.carbStore
+    }
+    
+    var doseStore: DoseStore? {
+        return loopManager.doseStore
+    }
+    
+    var glucoseStore: GlucoseStore? {
+        return loopManager.glucoseStore
+    }
+    
+    var settingsStore: SettingsStore? {
+        return loopManager.settingsStore
+    }
+    
+    var statusStore: StatusStore? {
+        return loopManager.statusStore
+    }
+    
 }
 
 // MARK: - TestingPumpManager
