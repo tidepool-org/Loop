@@ -1078,6 +1078,7 @@ final class StatusTableViewController: ChartsTableViewController {
             vc.doseStore = deviceManager.loopManager.doseStore
             vc.hidesBottomBarWhenPushed = true
         case let vc as BolusViewController:
+            vc.deviceManager = deviceManager
             vc.configureWithLoopManager(self.deviceManager.loopManager,
                 recommendation: sender as? BolusRecommendation,
                 glucoseUnit: self.statusCharts.glucose.glucoseUnit

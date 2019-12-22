@@ -9,24 +9,56 @@
 import UIKit
 import LocalAuthentication
 import LoopKit
+import LoopKitUI
 import HealthKit
 import LoopCore
+import LoopUI
 
 
-final class BolusViewController: UITableViewController, IdentifiableClass, UITextFieldDelegate {
+private extension RefreshContext {
+    static let all: Set<RefreshContext> = [.glucose, .targets]
+}
 
-    fileprivate enum Rows: Int, CaseCountable {
-        case notice = 0
+final class BolusViewController: ChartsTableViewController, IdentifiableClass, UITextFieldDelegate {
+    private enum Section: Int {
+        case bolusInfo
+        case deliver
+    }
+
+    private enum BolusInfoRow: Int {
+        case chart = 0
+        case notice
         case active
         case recommended
         case entry
-        case deliver
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // This gets rid of the empty space at the top.
         tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: tableView.bounds.size.width, height: 0.01))
+
+        glucoseChart.glucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 60)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 200)
+
+        let notificationCenter = NotificationCenter.default
+
+        notificationObservers += [
+            notificationCenter.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] note in
+                let context = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopDataManager.LoopUpdateContext.RawValue
+                DispatchQueue.main.async {
+                    switch LoopDataManager.LoopUpdateContext(rawValue: context) {
+                    case .preferences?:
+                        self?.refreshContext.formUnion([.status, .targets])
+                    case .glucose?:
+                        self?.refreshContext.update(with: .glucose)
+                    default:
+                        break
+                    }
+
+                    self?.reloadData(animated: true)
+                }
+            }
+        ]
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -39,6 +71,20 @@ final class BolusViewController: UITableViewController, IdentifiableClass, UITex
         bolusAmountTextField.accessibilityHint = String(format: NSLocalizedString("Recommended Bolus: %@ Units", comment: "Accessibility hint describing recommended bolus units"), spellOutFormatter.string(from: amount) ?? "0")
 
         bolusAmountTextField.becomeFirstResponder()
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+
+        if !visible {
+            refreshContext = RefreshContext.all
+        }
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        refreshContext.update(with: .size(size))
+
+        super.viewWillTransition(to: size, with: coordinator)
     }
 
     func generateActiveInsulinDescription(activeInsulin: Double?, pendingInsulin: Double?) -> String
@@ -118,6 +164,95 @@ final class BolusViewController: UITableViewController, IdentifiableClass, UITex
 
     private(set) var bolus: Double?
 
+    private var refreshContext = RefreshContext.all
+
+    private let glucoseChart = PredictedGlucoseChart()
+
+    private var chartStartDate: Date {
+        get { charts.startDate }
+        set {
+            if newValue != chartStartDate {
+                refreshContext = RefreshContext.all
+            }
+
+            charts.startDate = newValue
+        }
+    }
+
+    private var eventualGlucoseDescription: String?
+
+    override func createChartsManager() -> ChartsManager {
+        ChartsManager(colors: .default, settings: .default, charts: [glucoseChart], traitCollection: traitCollection)
+    }
+
+    override func glucoseUnitDidChange() {
+        refreshContext = RefreshContext.all
+    }
+
+    override func reloadData(animated: Bool = false) {
+        guard active && visible && !refreshContext.isEmpty else { return }
+
+        refreshContext.remove(.size(.zero))
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.minute = 0
+        let date = Date(timeIntervalSinceNow: -TimeInterval(hours: 1))
+        chartStartDate = calendar.nextDate(after: date, matching: components, matchingPolicy: .strict, direction: .backward) ?? date
+
+        let reloadGroup = DispatchGroup()
+        if self.refreshContext.remove(.glucose) != nil {
+            reloadGroup.enter()
+            self.deviceManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: self.chartStartDate) { (values) -> Void in
+                self.glucoseChart.setGlucoseValues(values)
+                reloadGroup.leave()
+            }
+        }
+
+        // For now, do this every time
+        _ = self.refreshContext.remove(.status)
+        reloadGroup.enter()
+        self.deviceManager.loopManager.getLoopState { (manager, state) in
+            do {
+                let glucose = try state.predictGlucose(using: .all, potentialBolus: self.enteredBolus)
+                self.glucoseChart.setPredictedGlucoseValues(glucose)
+            } catch {
+                self.refreshContext.update(with: .status)
+                self.glucoseChart.setPredictedGlucoseValues([])
+            }
+
+            if let lastPoint = self.glucoseChart.predictedGlucosePoints.last?.y {
+                self.eventualGlucoseDescription = String(describing: lastPoint)
+            } else {
+                self.eventualGlucoseDescription = nil
+            }
+
+            if self.refreshContext.remove(.targets) != nil {
+                self.glucoseChart.targetGlucoseSchedule = manager.settings.glucoseTargetRangeSchedule
+                self.glucoseChart.scheduleOverride = manager.settings.scheduleOverride
+            }
+
+            reloadGroup.leave()
+        }
+
+        reloadGroup.notify(queue: .main) {
+            self.reloadChart()
+        }
+    }
+
+    private func reloadChart() {
+        charts.invalidateChart(atIndex: 0)
+        charts.prerender()
+
+        tableView.beginUpdates()
+        for case let cell as ChartTableViewCell in tableView.visibleCells {
+            cell.reloadChart()
+
+            if let indexPath = tableView.indexPath(for: cell) {
+                self.tableView(tableView, updateSubtitleFor: cell, at: indexPath)
+            }
+        }
+        tableView.endUpdates()
+    }
 
     // MARK: - IBOutlets
 
@@ -149,26 +284,106 @@ final class BolusViewController: UITableViewController, IdentifiableClass, UITex
     // MARK: - TableView Delegate
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if case .recommended? = Rows(rawValue: indexPath.row) {
+        if case .recommended? = BolusInfoRow(rawValue: indexPath.row) {
             acceptRecommendedBolus()
         }
     }
     
     override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        if case .recommended? = Rows(rawValue: indexPath.row) {
+        guard Section(rawValue: indexPath.section) == .bolusInfo else {
+            return
+        }
+
+        let row = BolusInfoRow(rawValue: indexPath.row)
+        switch row {
+        case .chart:
+            let cell = cell as! ChartTableViewCell
+            cell.contentView.layoutMargins.left = tableView.separatorInset.left
+            cell.chartContentView.chartGenerator = { [weak self] (frame) in
+                return self?.charts.chart(atIndex: 0, frame: frame)?.view
+            }
+
+            cell.titleLabel?.text = NSLocalizedString("Carb & Bolus Forecast", comment: "Title text for glucose prediction chart on bolus screen")
+            cell.subtitleLabel?.textColor = UIColor.secondaryLabelColor
+            self.tableView(tableView, updateSubtitleFor: cell, at: indexPath)
+            cell.selectionStyle = .none
+
+            cell.addGestureRecognizer(charts.gestureRecognizer!)
+        case .recommended:
             cell.accessibilityCustomActions = [
                 UIAccessibilityCustomAction(name: NSLocalizedString("AcceptRecommendedBolus", comment: "Action to copy the recommended Bolus value to the actual Bolus Field"), target: self, selector: #selector(BolusViewController.acceptRecommendedBolus))
             ]
+        default:
+            break
         }
     }
 
-    @objc
-    func acceptRecommendedBolus() {
+    private func tableView(_ tableView: UITableView, updateSubtitleFor cell: ChartTableViewCell, at indexPath: IndexPath) {
+        assert(Section(rawValue: indexPath.row) == .bolusInfo && BolusInfoRow(rawValue: indexPath.row) == .chart)
+
+        if let eventualGlucose = eventualGlucoseDescription {
+            cell.subtitleLabel?.text = String(format: NSLocalizedString("Eventually %@", comment: "The subtitle format describing eventual glucose. (1: localized glucose value description)"), eventualGlucose)
+        } else {
+            cell.subtitleLabel?.text = SettingsTableViewCell.NoValueString
+        }
+    }
+
+    @objc func acceptRecommendedBolus() {
         bolusAmountTextField?.text = recommendedBolusAmountLabel?.text
+        bolusAmountChanged()
     }
     
-    
-    @IBOutlet weak var bolusAmountTextField: UITextField!
+    @IBOutlet weak var bolusAmountTextField: UITextField! {
+        didSet {
+            bolusAmountTextField.addTarget(self, action: #selector(bolusAmountChanged), for: .editingChanged)
+        }
+    }
+
+    private var enteredBolusAmount: Double? {
+        return DispatchQueue.main.sync {
+            guard let text = bolusAmountTextField?.text, let amount = bolusUnitsFormatter.number(from: text)?.doubleValue else {
+                return nil
+            }
+
+            return amount >= 0 ? amount : nil
+        }
+    }
+
+    private var enteredBolus: DoseEntry? {
+        guard let amount = enteredBolusAmount else {
+            return nil
+        }
+
+        return DoseEntry(type: .bolus, startDate: Date(), value: amount, unit: .units)
+    }
+
+    private var predictionRecomputation: DispatchWorkItem?
+
+    @objc private func bolusAmountChanged() {
+        predictionRecomputation?.cancel()
+        let predictionRecomputation = DispatchWorkItem(block: recomputePrediction)
+        self.predictionRecomputation = predictionRecomputation
+        let recomputeDelayMS = 300
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(recomputeDelayMS), execute: predictionRecomputation)
+    }
+
+    private func recomputePrediction() {
+        deviceManager.loopManager.getLoopState { manager, state in
+            if let prediction = try? state.predictGlucose(using: .all, potentialBolus: self.enteredBolus) {
+                self.glucoseChart.setPredictedGlucoseValues(prediction)
+
+                if let lastPoint = self.glucoseChart.predictedGlucosePoints.last?.y {
+                    self.eventualGlucoseDescription = String(describing: lastPoint)
+                } else {
+                    self.eventualGlucoseDescription = nil
+                }
+
+                DispatchQueue.main.async {
+                    self.reloadChart()
+                }
+            }
+        }
+    }
 
     // MARK: - Actions
    

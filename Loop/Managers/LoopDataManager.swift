@@ -836,7 +836,7 @@ extension LoopDataManager {
     }
 
     /// - Throws: LoopError.missingDataError
-    fileprivate func predictGlucose(using inputs: PredictionInputEffect) throws -> [PredictedGlucoseValue] {
+    fileprivate func predictGlucose(using inputs: PredictionInputEffect, potentialBolus: DoseEntry? = nil) throws -> [PredictedGlucoseValue] {
         dispatchPrecondition(condition: .onQueue(dataAccessQueue))
 
         guard let model = insulinModelSettings?.model else {
@@ -856,6 +856,16 @@ extension LoopDataManager {
 
         if inputs.contains(.insulin), let insulinEffect = self.insulinEffect {
             effects.append(insulinEffect)
+
+            if let potentialBolus = potentialBolus {
+                guard let sensitivity = insulinSensitivityScheduleApplyingOverrideHistory else {
+                    throw LoopError.configurationError(.generalSettings)
+                }
+                let bolusEffect = [potentialBolus]
+                    .glucoseEffects(insulinModel: model, insulinSensitivity: sensitivity)
+                    .filterDateRange(insulinEffect.first?.startDate, insulinEffect.last?.endDate)
+                effects.append(bolusEffect)
+            }
         }
 
         if inputs.contains(.momentum), let momentumEffect = self.glucoseMomentumEffect {
@@ -1091,9 +1101,23 @@ protocol LoopState {
     /// This method is intended for visualization purposes only, not dosing calculation. No validation of input data is done.
     ///
     /// - Parameter inputs: The effect inputs to include
+    /// - Parameter potentialBolus: A bolus under consideration for which to include effects in the prediction
     /// - Returns: An timeline of predicted glucose values
     /// - Throws: LoopError.missingDataError if prediction cannot be computed
-    func predictGlucose(using inputs: PredictionInputEffect) throws -> [GlucoseValue]
+    func predictGlucose(using inputs: PredictionInputEffect, potentialBolus: DoseEntry?) throws -> [GlucoseValue]
+}
+
+extension LoopState {
+    /// Calculates a new prediction from the current data using the specified effect inputs
+    ///
+    /// This method is intended for visualization purposes only, not dosing calculation. No validation of input data is done.
+    ///
+    /// - Parameter inputs: The effect inputs to include
+    /// - Returns: An timeline of predicted glucose values
+    /// - Throws: LoopError.missingDataError if prediction cannot be computed
+    func predictGlucose(using inputs: PredictionInputEffect) throws -> [GlucoseValue] {
+        try predictGlucose(using: inputs, potentialBolus: nil)
+    }
 }
 
 
@@ -1153,8 +1177,8 @@ extension LoopDataManager {
             return loopDataManager.retrospectiveCorrection.totalGlucoseCorrectionEffect
         }
 
-        func predictGlucose(using inputs: PredictionInputEffect) throws -> [GlucoseValue] {
-            return try loopDataManager.predictGlucose(using: inputs)
+        func predictGlucose(using inputs: PredictionInputEffect, potentialBolus: DoseEntry?) throws -> [GlucoseValue] {
+            return try loopDataManager.predictGlucose(using: inputs, potentialBolus: potentialBolus)
         }
     }
 
