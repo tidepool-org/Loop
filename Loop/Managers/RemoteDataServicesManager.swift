@@ -89,21 +89,21 @@ extension RemoteDataServicesManager {
     private var carbDataType: String { return "Carb" }
 
     public func carbStoreHasUpdatedCarbData(_ carbStore: CarbStore) {
-        remoteDataServices.forEach { self.synchronizeCarbData(from: carbStore, to: $0) }
+        remoteDataServices.forEach { self.uploadCarbData(from: carbStore, to: $0) }
     }
 
-    private func synchronizeCarbData(from carbStore: CarbStore, to remoteDataService: RemoteDataService) {
+    private func uploadCarbData(from carbStore: CarbStore, to remoteDataService: RemoteDataService) {
         dispatchQueue(for: remoteDataService, withDataType: carbDataType).async {
             let semaphore = DispatchSemaphore(value: 0)
             let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withDataType: self.carbDataType) ?? CarbStore.QueryAnchor()
 
-            carbStore.executeCarbQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.carbDataLimit) { result in
+            carbStore.executeCarbQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.carbDataLimit ?? Int.max) { result in
                 switch result {
                 case .failure(let error):
                     self.log.error("Error querying carb data: %{public}@", String(describing: error))
                     semaphore.signal()
                 case .success(let queryAnchor, let deleted, let stored):
-                    remoteDataService.synchronizeCarbData(deleted: deleted, stored: stored) { result in
+                    remoteDataService.uploadCarbData(deleted: deleted, stored: stored) { result in
                         switch result {
                         case .failure(let error):
                             self.log.error("Error synchronizing carb data: %{public}@", String(describing: error))
@@ -132,21 +132,21 @@ extension RemoteDataServicesManager {
     private var doseDataType: String { return "Dose" }
 
     public func doseStoreHasUpdatedDoseData(_ doseStore: DoseStore) {
-        remoteDataServices.forEach { self.synchronizeDoseData(from: doseStore, to: $0) }
+        remoteDataServices.forEach { self.uploadDoseData(from: doseStore, to: $0) }
     }
 
-    private func synchronizeDoseData(from doseStore: DoseStore, to remoteDataService: RemoteDataService) {
+    private func uploadDoseData(from doseStore: DoseStore, to remoteDataService: RemoteDataService) {
         dispatchQueue(for: remoteDataService, withDataType: doseDataType).async {
             let semaphore = DispatchSemaphore(value: 0)
             let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withDataType: self.doseDataType) ?? DoseStore.QueryAnchor()
 
-            doseStore.executeDoseQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.doseDataLimit) { result in
+            doseStore.executeDoseQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.doseDataLimit ?? Int.max) { result in
                 switch result {
                 case .failure(let error):
                     self.log.error("Error querying dose data: %{public}@", String(describing: error))
                     semaphore.signal()
                 case .success(let queryAnchor, let data):
-                    remoteDataService.synchronizeDoseData(data) { result in
+                    remoteDataService.uploadDoseData(data) { result in
                         switch result {
                         case .failure(let error):
                             self.log.error("Error synchronizing dose data: %{public}@", String(describing: error))
@@ -175,21 +175,21 @@ extension RemoteDataServicesManager {
     private var glucoseDataType: String { return "Glucose" }
 
     public func glucoseStoreHasUpdatedGlucoseData(_ glucoseStore: GlucoseStore) {
-        remoteDataServices.forEach { self.synchronizeGlucoseData(from: glucoseStore, to: $0) }
+        remoteDataServices.forEach { self.uploadGlucoseData(from: glucoseStore, to: $0) }
     }
 
-    private func synchronizeGlucoseData(from glucoseStore: GlucoseStore, to remoteDataService: RemoteDataService) {
+    private func uploadGlucoseData(from glucoseStore: GlucoseStore, to remoteDataService: RemoteDataService) {
         dispatchQueue(for: remoteDataService, withDataType: glucoseDataType).async {
             let semaphore = DispatchSemaphore(value: 0)
             let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withDataType: self.glucoseDataType) ?? GlucoseStore.QueryAnchor()
 
-            glucoseStore.executeGlucoseQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.glucoseDataLimit) { result in
+            glucoseStore.executeGlucoseQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.glucoseDataLimit ?? Int.max) { result in
                 switch result {
                 case .failure(let error):
                     self.log.error("Error querying glucose data: %{public}@", String(describing: error))
                     semaphore.signal()
                 case .success(let queryAnchor, let data):
-                    remoteDataService.synchronizeGlucoseData(data) { result in
+                    remoteDataService.uploadGlucoseData(data) { result in
                         switch result {
                         case .failure(let error):
                             self.log.error("Error synchronizing glucose data: %{public}@", String(describing: error))
@@ -218,21 +218,21 @@ extension RemoteDataServicesManager {
     private var pumpEventDataType: String { return "PumpEvent" }
 
     public func doseStoreHasUpdatedPumpEventData(_ doseStore: DoseStore) {
-        remoteDataServices.forEach { self.synchronizePumpEventData(from: doseStore, to: $0) }
+        remoteDataServices.forEach { self.uploadPumpEventData(from: doseStore, to: $0) }
     }
 
-    private func synchronizePumpEventData(from doseStore: DoseStore, to remoteDataService: RemoteDataService) {
+    private func uploadPumpEventData(from doseStore: DoseStore, to remoteDataService: RemoteDataService) {
         dispatchQueue(for: remoteDataService, withDataType: pumpEventDataType).async {
             let semaphore = DispatchSemaphore(value: 0)
             let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withDataType: self.pumpEventDataType) ?? DoseStore.QueryAnchor()
 
-            doseStore.executePumpEventQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.pumpEventDataLimit) { result in
+            doseStore.executePumpEventQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.pumpEventDataLimit ?? Int.max) { result in
                 switch result {
                 case .failure(let error):
                     self.log.error("Error querying pump event data: %{public}@", String(describing: error))
                     semaphore.signal()
                 case .success(let queryAnchor, let data):
-                    remoteDataService.synchronizePumpEventData(data) { result in
+                    remoteDataService.uploadPumpEventData(data) { result in
                         switch result {
                         case .failure(let error):
                             self.log.error("Error synchronizing pump event data: %{public}@", String(describing: error))
@@ -261,21 +261,21 @@ extension RemoteDataServicesManager {
     private var settingsDataType: String { return "Settings" }
 
     public func settingsStoreHasUpdatedSettingsData(_ settingsStore: SettingsStore) {
-        remoteDataServices.forEach { self.synchronizeSettingsData(from: settingsStore, to: $0) }
+        remoteDataServices.forEach { self.uploadSettingsData(from: settingsStore, to: $0) }
     }
 
-    private func synchronizeSettingsData(from settingsStore: SettingsStore, to remoteDataService: RemoteDataService) {
+    private func uploadSettingsData(from settingsStore: SettingsStore, to remoteDataService: RemoteDataService) {
         dispatchQueue(for: remoteDataService, withDataType: settingsDataType).async {
             let semaphore = DispatchSemaphore(value: 0)
             let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withDataType: self.settingsDataType) ?? SettingsStore.QueryAnchor()
 
-            settingsStore.executeSettingsQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.settingsDataLimit) { result in
+            settingsStore.executeSettingsQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.settingsDataLimit ?? Int.max) { result in
                 switch result {
                 case .failure(let error):
                     self.log.error("Error querying settings data: %{public}@", String(describing: error))
                     semaphore.signal()
                 case .success(let queryAnchor, let data):
-                    remoteDataService.synchronizeSettingsData(data) { result in
+                    remoteDataService.uploadSettingsData(data) { result in
                         switch result {
                         case .failure(let error):
                             self.log.error("Error synchronizing settings data: %{public}@", String(describing: error))
@@ -304,21 +304,21 @@ extension RemoteDataServicesManager {
     private var statusDataType: String { return "Status" }
 
     public func statusStoreHasUpdatedStatusData(_ statusStore: StatusStore) {
-        remoteDataServices.forEach { self.synchronizeStatusData(from: statusStore, to: $0) }
+        remoteDataServices.forEach { self.uploadStatusData(from: statusStore, to: $0) }
     }
 
-    private func synchronizeStatusData(from statusStore: StatusStore, to remoteDataService: RemoteDataService) {
+    private func uploadStatusData(from statusStore: StatusStore, to remoteDataService: RemoteDataService) {
         dispatchQueue(for: remoteDataService, withDataType: statusDataType).async {
             let semaphore = DispatchSemaphore(value: 0)
             let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withDataType: self.statusDataType) ?? StatusStore.QueryAnchor()
 
-            statusStore.executeStatusQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.statusDataLimit) { result in
+            statusStore.executeStatusQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.statusDataLimit ?? Int.max) { result in
                 switch result {
                 case .failure(let error):
                     self.log.error("Error querying status data: %{public}@", String(describing: error))
                     semaphore.signal()
                 case .success(let queryAnchor, let data):
-                    remoteDataService.synchronizeStatusData(data) { result in
+                    remoteDataService.uploadStatusData(data) { result in
                         switch result {
                         case .failure(let error):
                             self.log.error("Error synchronizing status data: %{public}@", String(describing: error))
