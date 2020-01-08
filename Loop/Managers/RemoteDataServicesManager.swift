@@ -44,6 +44,13 @@ final class RemoteDataServicesManager {
         lock.withLock {
             unlockedRemoteDataServices.append(remoteDataService)
         }
+        uploadExistingData(to: remoteDataService)
+    }
+
+    func restoreService(_ remoteDataService: RemoteDataService) {
+        lock.withLock {
+            unlockedRemoteDataServices.append(remoteDataService)
+        }
     }
 
     func removeService(_ remoteDataService: RemoteDataService) {
@@ -51,6 +58,36 @@ final class RemoteDataServicesManager {
             unlockedRemoteDataServices.removeAll { $0.serviceIdentifier == remoteDataService.serviceIdentifier }
         }
         clearQueryAnchors(for: remoteDataService)
+    }
+
+    private func uploadExistingData(to remoteDataService: RemoteDataService) {
+        if let carbStore = delegate?.carbStore {
+            uploadCarbData(from: carbStore, to: remoteDataService)
+        }
+        if let doseStore = delegate?.doseStore {
+            uploadDoseData(from: doseStore, to: remoteDataService)
+        }
+        if let glucoseStore = delegate?.glucoseStore {
+            uploadGlucoseData(from: glucoseStore, to: remoteDataService)
+        }
+        if let doseStore = delegate?.doseStore {
+            uploadPumpEventData(from: doseStore, to: remoteDataService)
+        }
+        if let settingsStore = delegate?.settingsStore {
+            uploadSettingsData(from: settingsStore, to: remoteDataService)
+        }
+        if let statusStore = delegate?.statusStore {
+            uploadStatusData(from: statusStore, to: remoteDataService)
+        }
+    }
+
+    private func clearQueryAnchors(for remoteDataService: RemoteDataService) {
+        clearCarbQueryAnchor(for: remoteDataService)
+        clearDoseQueryAnchor(for: remoteDataService)
+        clearGlucoseQueryAnchor(for: remoteDataService)
+        clearPumpEventQueryAnchor(for: remoteDataService)
+        clearSettingsQueryAnchor(for: remoteDataService)
+        clearStatusQueryAnchor(for: remoteDataService)
     }
 
     private var remoteDataServices: [RemoteDataService] { return lock.withLock { unlockedRemoteDataServices } }
@@ -71,15 +108,6 @@ final class RemoteDataServicesManager {
 
     private func dispatchQueueName(for remoteDataService: RemoteDataService, withDataType dataType: String) -> String {
         return "com.loopkit.Loop.RemoteDataServicesManager.\(remoteDataService.serviceIdentifier).\(dataType)DispatchQueue"
-    }
-
-    private func clearQueryAnchors(for remoteDataService: RemoteDataService) {
-        clearCarbQueryAnchor(for: remoteDataService)
-        clearDoseQueryAnchor(for: remoteDataService)
-        clearGlucoseQueryAnchor(for: remoteDataService)
-        clearPumpEventQueryAnchor(for: remoteDataService)
-        clearSettingsQueryAnchor(for: remoteDataService)
-        clearStatusQueryAnchor(for: remoteDataService)
     }
 
 }

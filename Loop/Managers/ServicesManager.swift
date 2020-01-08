@@ -66,48 +66,42 @@ class ServicesManager {
 
     public func addActiveService(_ service: Service) {
         servicesLock.withLock {
-            addService(service)
+            service.serviceDelegate = self
+
+            services.append(service)
+
+            if let analyticsService = service as? AnalyticsService {
+                analyticsServicesManager.addService(analyticsService)
+            }
+            if let loggingService = service as? LoggingService {
+                loggingServicesManager.addService(loggingService)
+            }
+            if let remoteDataService = service as? RemoteDataService {
+                remoteDataServicesManager.addService(remoteDataService)
+            }
+
             saveState()
         }
     }
 
     public func removeActiveService(_ service: Service) {
         servicesLock.withLock {
-            removeService(service)
+            if let remoteDataService = service as? RemoteDataService {
+                remoteDataServicesManager.removeService(remoteDataService)
+            }
+            if let loggingService = service as? LoggingService {
+                loggingServicesManager.removeService(loggingService)
+            }
+            if let analyticsService = service as? AnalyticsService {
+                analyticsServicesManager.removeService(analyticsService)
+            }
+
+            services.removeAll { $0.serviceIdentifier == service.serviceIdentifier }
+
+            service.serviceDelegate = nil
+
             saveState()
         }
-    }
-
-    private func addService(_ service: Service) {
-        service.serviceDelegate = self
-
-        services.append(service)
-
-        if let analyticsService = service as? AnalyticsService {
-            analyticsServicesManager.addService(analyticsService)
-        }
-        if let loggingService = service as? LoggingService {
-            loggingServicesManager.addService(loggingService)
-        }
-        if let remoteDataService = service as? RemoteDataService {
-            remoteDataServicesManager.addService(remoteDataService)
-        }
-    }
-
-    private func removeService(_ service: Service) {
-        if let remoteDataService = service as? RemoteDataService {
-            remoteDataServicesManager.removeService(remoteDataService)
-        }
-        if let loggingService = service as? LoggingService {
-            loggingServicesManager.removeService(loggingService)
-        }
-        if let analyticsService = service as? AnalyticsService {
-            analyticsServicesManager.removeService(analyticsService)
-        }
-
-        services.removeAll { $0.serviceIdentifier == service.serviceIdentifier }
-
-        service.serviceDelegate = nil
     }
 
     private func saveState() {
@@ -117,7 +111,19 @@ class ServicesManager {
     private func restoreState() {
         UserDefaults.appGroup?.servicesState.forEach { rawValue in
             if let service = serviceFromRawValue(rawValue) {
-                addService(service)
+                service.serviceDelegate = self
+
+                services.append(service)
+
+                if let analyticsService = service as? AnalyticsService {
+                    analyticsServicesManager.restoreService(analyticsService)
+                }
+                if let loggingService = service as? LoggingService {
+                    loggingServicesManager.restoreService(loggingService)
+                }
+                if let remoteDataService = service as? RemoteDataService {
+                    remoteDataServicesManager.restoreService(remoteDataService)
+                }
             }
         }
     }
