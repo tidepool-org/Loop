@@ -90,9 +90,9 @@ final class LoopDataManager {
 
         glucoseStore = GlucoseStore(healthStore: healthStore, cacheStore: cacheStore, cacheLength: .hours(24))
 
-        settingsStore = SettingsStore(userDefaults: UserDefaults.appGroup)
+        settingsStore = SettingsStore(storeCache: UserDefaults.appGroup!)
 
-        statusStore = StatusStore(userDefaults: UserDefaults.appGroup)
+        statusStore = StatusStore(storeCache: UserDefaults.appGroup!)
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
