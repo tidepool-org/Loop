@@ -120,9 +120,9 @@ final class DeviceDataManager {
 
         loopManager.carbStore.delegate = self
         loopManager.doseStore.delegate = self
+        loopManager.dosingDecisionStore.delegate = self
         loopManager.glucoseStore.delegate = self
         loopManager.settingsStore.delegate = self
-        loopManager.statusStore.delegate = self
 
         setupPump()
         setupCGM()
@@ -453,7 +453,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         log.error("PumpManager:%{public}@ did error: %{public}@", String(describing: type(of: pumpManager)), String(describing: error))
 
         setLastError(error: error)
-        loopManager.storeStatus(withError: error)
+        loopManager.storeDosingDecision(withError: error)
     }
 
     func pumpManager(_ pumpManager: PumpManager, hasNewPumpEvents events: [NewPumpEvent], lastReconciliation: Date?, completion: @escaping (_ error: Error?) -> Void) {
@@ -547,6 +547,15 @@ extension DeviceDataManager: DoseStoreDelegate {
     
 }
 
+// MARK: - DosingDecisionStoreDelegate
+extension DeviceDataManager: DosingDecisionStoreDelegate {
+
+    func dosingDecisionStoreHasUpdatedDosingDecisionData(_ dosingDecisionStore: DosingDecisionStore) {
+        remoteDataServicesManager.dosingDecisionStoreHasUpdatedDosingDecisionData(dosingDecisionStore)
+    }
+
+}
+
 // MARK: - GlucoseStoreDelegate
 extension DeviceDataManager: GlucoseStoreDelegate {
     
@@ -565,15 +574,6 @@ extension DeviceDataManager: SettingsStoreDelegate {
     
 }
 
-// MARK: - StatusStoreDelegate
-extension DeviceDataManager: StatusStoreDelegate {
-    
-    func statusStoreHasUpdatedStatusData(_ statusStore: StatusStore) {
-        remoteDataServicesManager.statusStoreHasUpdatedStatusData(statusStore)
-    }
-    
-}
-
 // MARK: - RemoteDataServicesManagerDelegate
 extension DeviceDataManager: RemoteDataServicesManagerDelegate {
     
@@ -584,7 +584,11 @@ extension DeviceDataManager: RemoteDataServicesManagerDelegate {
     var doseStore: DoseStore? {
         return loopManager.doseStore
     }
-    
+
+    var dosingDecisionStore: DosingDecisionStore? {
+        return loopManager.dosingDecisionStore
+    }
+
     var glucoseStore: GlucoseStore? {
         return loopManager.glucoseStore
     }
@@ -592,11 +596,7 @@ extension DeviceDataManager: RemoteDataServicesManagerDelegate {
     var settingsStore: SettingsStore? {
         return loopManager.settingsStore
     }
-    
-    var statusStore: StatusStore? {
-        return loopManager.statusStore
-    }
-    
+
 }
 
 // MARK: - TestingPumpManager

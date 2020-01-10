@@ -27,11 +27,11 @@ final class LoopDataManager {
 
     let doseStore: DoseStore
 
+    let dosingDecisionStore: DosingDecisionStore
+
     let glucoseStore: GlucoseStore
 
     let settingsStore: SettingsStore
-
-    let statusStore: StatusStore
 
     weak var delegate: LoopDataManagerDelegate?
 
@@ -88,11 +88,11 @@ final class LoopDataManager {
             lastPumpEventsReconciliation: lastPumpEventsReconciliation
         )
 
+        dosingDecisionStore = DosingDecisionStore(storeCache: UserDefaults.appGroup!)
+
         glucoseStore = GlucoseStore(healthStore: healthStore, cacheStore: cacheStore, cacheLength: .hours(24))
 
         settingsStore = SettingsStore(storeCache: UserDefaults.appGroup!)
-
-        statusStore = StatusStore(storeCache: UserDefaults.appGroup!)
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
@@ -239,7 +239,7 @@ final class LoopDataManager {
             NotificationManager.clearLoopNotRunningNotifications()
             NotificationManager.scheduleLoopNotRunningNotifications()
             analyticsServicesManager.loopDidSucceed()
-            storeStatus()
+            storeDosingDecision()
             NotificationCenter.default.post(name: .LoopCompleted, object: self)
         }
     }
@@ -629,6 +629,35 @@ extension LoopDataManager {
         }
     }
 
+    func storeDosingDecision(withError error: Error? = nil) {
+        getLoopState { manager, state in
+            var dosingDecision = StoredDosingDecision()
+
+            dosingDecision.carbsOnBoard = state.carbsOnBoard
+            dosingDecision.predictedGlucose = state.predictedGlucose
+            if let (recommendation: recommendation, date: date) = state.recommendedTempBasal {
+                dosingDecision.tempBasalRecommendationDate = TempBasalRecommendationDate(recommendation: recommendation, date: date)
+            }
+            dosingDecision.recommendedBolus = state.recommendedBolus?.recommendation.amount
+            if let lastReservoirValue = manager.doseStore.lastReservoirValue {
+                dosingDecision.lastReservoirValue = LastReservoirValue(startDate: lastReservoirValue.startDate, unitVolume: lastReservoirValue.unitVolume)
+            }
+            dosingDecision.pumpManagerStatus = self.delegate?.pumpManagerStatus
+            dosingDecision.error = error ?? state.error
+
+            manager.doseStore.insulinOnBoard(at: Date()) { result in
+                switch result {
+                case .success(let insulinOnBoard):
+                    dosingDecision.insulinOnBoard = insulinOnBoard
+                case .failure(let doseStoreError):
+                    dosingDecision.error = dosingDecision.error ?? doseStoreError
+                }
+
+                self.dosingDecisionStore.storeDosingDecision(dosingDecision) {}
+            }
+        }
+    }
+
     func storeSettings() {
         if let loopSettings = UserDefaults.appGroup?.loopSettings {
             var settings = StoredSettings()
@@ -649,35 +678,6 @@ extension LoopDataManager {
             settings.carbRatioSchedule = UserDefaults.appGroup?.carbRatioSchedule
 
             self.settingsStore.storeSettings(settings) {}
-        }
-    }
-
-    func storeStatus(withError error: Error? = nil) {
-        getLoopState { manager, state in
-            var status = StoredStatus()
-
-            status.carbsOnBoard = state.carbsOnBoard
-            status.predictedGlucose = state.predictedGlucose
-            if let (recommendation: recommendation, date: date) = state.recommendedTempBasal {
-                status.tempBasalRecommendationDate = TempBasalRecommendationDate(recommendation: recommendation, date: date)
-            }
-            status.recommendedBolus = state.recommendedBolus?.recommendation.amount
-            if let lastReservoirValue = manager.doseStore.lastReservoirValue {
-                status.lastReservoirValue = LastReservoirValue(startDate: lastReservoirValue.startDate, unitVolume: lastReservoirValue.unitVolume)
-            }
-            status.pumpManagerStatus = self.delegate?.pumpManagerStatus
-            status.error = error ?? state.error
-
-            manager.doseStore.insulinOnBoard(at: Date()) { result in
-                switch result {
-                case .success(let insulinOnBoard):
-                    status.insulinOnBoard = insulinOnBoard
-                case .failure(let doseStoreError):
-                    status.error = status.error ?? doseStoreError
-                }
-
-                self.statusStore.storeStatus(status) {}
-            }
         }
     }
 

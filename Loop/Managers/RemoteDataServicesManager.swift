@@ -16,11 +16,11 @@ protocol RemoteDataServicesManagerDelegate: AnyObject {
 
     var doseStore: DoseStore? { get }
 
+    var dosingDecisionStore: DosingDecisionStore? { get }
+
     var glucoseStore: GlucoseStore? { get }
 
     var settingsStore: SettingsStore? { get }
-
-    var statusStore: StatusStore? { get }
 
 }
 
@@ -67,6 +67,9 @@ final class RemoteDataServicesManager {
         if let doseStore = delegate?.doseStore {
             uploadDoseData(from: doseStore, to: remoteDataService)
         }
+        if let dosingDecisionStore = delegate?.dosingDecisionStore {
+            uploadDosingDecisionData(from: dosingDecisionStore, to: remoteDataService)
+        }
         if let glucoseStore = delegate?.glucoseStore {
             uploadGlucoseData(from: glucoseStore, to: remoteDataService)
         }
@@ -76,18 +79,15 @@ final class RemoteDataServicesManager {
         if let settingsStore = delegate?.settingsStore {
             uploadSettingsData(from: settingsStore, to: remoteDataService)
         }
-        if let statusStore = delegate?.statusStore {
-            uploadStatusData(from: statusStore, to: remoteDataService)
-        }
     }
 
     private func clearQueryAnchors(for remoteDataService: RemoteDataService) {
         clearCarbQueryAnchor(for: remoteDataService)
         clearDoseQueryAnchor(for: remoteDataService)
+        clearDosingDecisionQueryAnchor(for: remoteDataService)
         clearGlucoseQueryAnchor(for: remoteDataService)
         clearPumpEventQueryAnchor(for: remoteDataService)
         clearSettingsQueryAnchor(for: remoteDataService)
-        clearStatusQueryAnchor(for: remoteDataService)
     }
 
     private var remoteDataServices: [RemoteDataService] { return lock.withLock { unlockedRemoteDataServices } }
@@ -193,6 +193,49 @@ extension RemoteDataServicesManager {
     private func clearDoseQueryAnchor(for remoteDataService: RemoteDataService) {
         dispatchQueue(for: remoteDataService, withDataType: doseDataType).async {
             UserDefaults.appGroup?.deleteQueryAnchor(for: remoteDataService, withDataType: self.doseDataType)
+        }
+    }
+
+}
+
+extension RemoteDataServicesManager {
+
+    private var dosingDecisionDataType: String { return "DosingDecision" }
+
+    public func dosingDecisionStoreHasUpdatedDosingDecisionData(_ dosingDecisionStore: DosingDecisionStore) {
+        remoteDataServices.forEach { self.uploadDosingDecisionData(from: dosingDecisionStore, to: $0) }
+    }
+
+    private func uploadDosingDecisionData(from dosingDecisionStore: DosingDecisionStore, to remoteDataService: RemoteDataService) {
+        dispatchQueue(for: remoteDataService, withDataType: dosingDecisionDataType).async {
+            let semaphore = DispatchSemaphore(value: 0)
+            let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withDataType: self.dosingDecisionDataType) ?? DosingDecisionStore.QueryAnchor()
+
+            dosingDecisionStore.executeDosingDecisionQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.dosingDecisionDataLimit ?? Int.max) { result in
+                switch result {
+                case .failure(let error):
+                    self.log.error("Error querying dosing decision data: %{public}@", String(describing: error))
+                    semaphore.signal()
+                case .success(let queryAnchor, let data):
+                    remoteDataService.uploadDosingDecisionData(data) { result in
+                        switch result {
+                        case .failure(let error):
+                            self.log.error("Error synchronizing dosing decision data: %{public}@", String(describing: error))
+                        case .success:
+                            UserDefaults.appGroup?.setQueryAnchor(for: remoteDataService, withDataType: self.dosingDecisionDataType, queryAnchor)
+                        }
+                        semaphore.signal()
+                    }
+                }
+            }
+
+            semaphore.wait()
+        }
+    }
+
+    private func clearDosingDecisionQueryAnchor(for remoteDataService: RemoteDataService) {
+        dispatchQueue(for: remoteDataService, withDataType: dosingDecisionDataType).async {
+            UserDefaults.appGroup?.deleteQueryAnchor(for: remoteDataService, withDataType: self.dosingDecisionDataType)
         }
     }
 
@@ -322,49 +365,6 @@ extension RemoteDataServicesManager {
     private func clearSettingsQueryAnchor(for remoteDataService: RemoteDataService) {
         dispatchQueue(for: remoteDataService, withDataType: settingsDataType).async {
             UserDefaults.appGroup?.deleteQueryAnchor(for: remoteDataService, withDataType: self.settingsDataType)
-        }
-    }
-
-}
-
-extension RemoteDataServicesManager {
-
-    private var statusDataType: String { return "Status" }
-
-    public func statusStoreHasUpdatedStatusData(_ statusStore: StatusStore) {
-        remoteDataServices.forEach { self.uploadStatusData(from: statusStore, to: $0) }
-    }
-
-    private func uploadStatusData(from statusStore: StatusStore, to remoteDataService: RemoteDataService) {
-        dispatchQueue(for: remoteDataService, withDataType: statusDataType).async {
-            let semaphore = DispatchSemaphore(value: 0)
-            let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withDataType: self.statusDataType) ?? StatusStore.QueryAnchor()
-
-            statusStore.executeStatusQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.statusDataLimit ?? Int.max) { result in
-                switch result {
-                case .failure(let error):
-                    self.log.error("Error querying status data: %{public}@", String(describing: error))
-                    semaphore.signal()
-                case .success(let queryAnchor, let data):
-                    remoteDataService.uploadStatusData(data) { result in
-                        switch result {
-                        case .failure(let error):
-                            self.log.error("Error synchronizing status data: %{public}@", String(describing: error))
-                        case .success:
-                            UserDefaults.appGroup?.setQueryAnchor(for: remoteDataService, withDataType: self.statusDataType, queryAnchor)
-                        }
-                        semaphore.signal()
-                    }
-                }
-            }
-
-            semaphore.wait()
-        }
-    }
-
-    private func clearStatusQueryAnchor(for remoteDataService: RemoteDataService) {
-        dispatchQueue(for: remoteDataService, withDataType: statusDataType).async {
-            UserDefaults.appGroup?.deleteQueryAnchor(for: remoteDataService, withDataType: self.statusDataType)
         }
     }
 
