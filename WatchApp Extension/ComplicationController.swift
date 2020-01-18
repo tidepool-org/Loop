@@ -8,10 +8,13 @@
 
 import ClockKit
 import WatchKit
-
+import LoopCore
+import os.log
 
 final class ComplicationController: NSObject, CLKComplicationDataSource {
     
+    private let log = OSLog(category: "ComplicationController")
+
     // MARK: - Timeline Configuration
     
     func getSupportedTimeTravelDirections(for complication: CLKComplication, withHandler handler: @escaping (CLKComplicationTimeTravelDirections) -> Void) {
@@ -80,6 +83,8 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
             let settings = ExtensionDelegate.shared().loopManager.settings
             let timelineDate = Date()
             
+            self.log.default("Updating current complication timeline entry")
+            
             if let context = ExtensionDelegate.shared().loopManager.activeContext,
                 let template = CLKComplicationTemplate.templateForFamily(complication.family,
                                                                          from: context,
@@ -115,22 +120,35 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
                 return
             }
             
-            // Stale date is just a second after glucose expires
-            let staleDate = glucoseDate + settings.recencyInterval + 1
-
-            if  staleDate > date,
-                let template = CLKComplicationTemplate.templateForFamily(complication.family,
-                                                                         from: context,
-                                                                         at: staleDate,
-                                                                         recencyInterval: settings.recencyInterval,
-                                                                         chartGenerator: self.makeChart)
-            {
-                template.tintColor = UIColor.tintColor
-                entries = [CLKComplicationTimelineEntry(date: staleDate, complicationTemplate: template)]
-            } else {
-                entries = nil
+            var futureChangeDates: [Date] = [
+                // Stale glucose date: just a second after glucose expires
+                glucoseDate + settings.recencyInterval + 1,
+            ]
+            
+            if let loopLastRunDate = context.loopLastRunDate {
+                let freshnessCategories = [
+                    LoopCompletionFreshness.fresh,
+                    LoopCompletionFreshness.aging,
+                    LoopCompletionFreshness.stale
+                    ].compactMap( { $0.maxAge })
+                futureChangeDates.append(contentsOf: freshnessCategories.map { loopLastRunDate + $0 + 1})
             }
-
+            
+            entries = futureChangeDates.filter { $0 > date }.compactMap({ (futureChangeDate) -> CLKComplicationTimelineEntry? in
+                if let template = CLKComplicationTemplate.templateForFamily(complication.family,
+                                                                            from: context,
+                                                                            at: futureChangeDate,
+                                                                            recencyInterval: settings.recencyInterval,
+                                                                            chartGenerator: self.makeChart)
+                {
+                    template.tintColor = UIColor.tintColor
+                    self.log.default("Adding complication timeline entry for date %{public}@", String(describing: futureChangeDate))
+                    return CLKComplicationTimelineEntry(date: futureChangeDate, complicationTemplate: template)
+                } else {
+                    return nil
+                }
+            })
+            
             handler(entries)
         }
     }
