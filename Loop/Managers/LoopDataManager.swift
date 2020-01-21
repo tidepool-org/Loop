@@ -1031,8 +1031,6 @@ extension LoopDataManager {
             return nil
         }
 
-        let pendingInsulin = try self.getPendingInsulin()
-
         let volumeRounder = { (_ units: Double) in
             return self.delegate?.loopDataManager(self, roundBolusVolume: units) ?? units
         }
@@ -1042,7 +1040,7 @@ extension LoopDataManager {
             suspendThreshold: settings.suspendThreshold?.quantity,
             sensitivity: insulinSensitivity,
             model: model,
-            pendingInsulin: pendingInsulin,
+            pendingInsulin: 0, // Pending insulin is already reflected in the prediction
             maxBolus: maxBolus,
             volumeRounder: volumeRounder
         )
@@ -1163,7 +1161,8 @@ extension LoopDataManager {
 
         let predictedGlucose = try predictGlucose(using: settings.enabledEffects)
         self.predictedGlucose = predictedGlucose
-        self.predictedGlucoseIncludingPendingInsulin = try predictGlucose(using: settings.enabledEffects, includingPendingInsulin: true)
+        let predictedGlucoseIncludingPendingInsulin = try predictGlucose(using: settings.enabledEffects, includingPendingInsulin: true)
+        self.predictedGlucoseIncludingPendingInsulin = predictedGlucoseIncludingPendingInsulin
 
         guard
             let maxBasal = settings.maximumBasalRatePerHour,
@@ -1217,18 +1216,16 @@ extension LoopDataManager {
             recommendedTempBasal = nil
         }
 
-        let pendingInsulin = try self.getPendingInsulin()
-
         let volumeRounder = { (_ units: Double) in
             return self.delegate?.loopDataManager(self, roundBolusVolume: units) ?? units
         }
 
-        let recommendation = predictedGlucose.recommendedBolus(
+        let recommendation = predictedGlucoseIncludingPendingInsulin.recommendedBolus(
             to: glucoseTargetRange,
             suspendThreshold: settings.suspendThreshold?.quantity,
             sensitivity: insulinSensitivity,
             model: model,
-            pendingInsulin: pendingInsulin,
+            pendingInsulin: 0, // Pending insulin is already reflected in the prediction
             maxBolus: maxBolus,
             volumeRounder: volumeRounder
         )
