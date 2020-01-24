@@ -487,7 +487,7 @@ final class StatusTableViewController: ChartsTableViewController {
                     hudView.glucoseHUD.setGlucoseQuantity(glucose.quantity.doubleValue(for: unit),
                         at: glucose.startDate,
                         unit: unit,
-                        staleGlucoseAge: self.deviceManager.loopManager.settings.recencyInterval,
+                        staleGlucoseAge: self.deviceManager.loopManager.settings.inputDataRecencyInterval,
                         sensor: self.deviceManager.sensorState
                     )
                 }

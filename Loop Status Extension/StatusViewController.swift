@@ -256,7 +256,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 return
             }
 
-            if let lastGlucose = glucose.last, let recencyInterval = defaults.loopSettings?.recencyInterval {
+            if let lastGlucose = glucose.last, let recencyInterval = defaults.loopSettings?.inputDataRecencyInterval {
                 self.hudView.glucoseHUD.setGlucoseQuantity(
                     lastGlucose.quantity.doubleValue(for: unit),
                     at: lastGlucose.startDate,
