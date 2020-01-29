@@ -965,11 +965,11 @@ extension LoopDataManager {
         let lastGlucoseDate = glucose.startDate
         let now = Date()
 
-        guard now.timeIntervalSince(lastGlucoseDate) <= settings.recencyInterval else {
+        guard now.timeIntervalSince(lastGlucoseDate) <= settings.inputDataRecencyInterval else {
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
 
-        guard now.timeIntervalSince(pumpStatusDate) <= settings.recencyInterval else {
+        guard now.timeIntervalSince(pumpStatusDate) <= settings.inputDataRecencyInterval else {
             throw LoopError.pumpDataTooOld(date: pumpStatusDate)
         }
 
@@ -1063,11 +1063,11 @@ extension LoopDataManager {
         let lastGlucoseDate = glucose.startDate
         let now = Date()
 
-        guard now.timeIntervalSince(lastGlucoseDate) <= settings.recencyInterval else {
+        guard now.timeIntervalSince(lastGlucoseDate) <= settings.inputDataRecencyInterval else {
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
 
-        guard now.timeIntervalSince(pumpStatusDate) <= settings.recencyInterval else {
+        guard now.timeIntervalSince(pumpStatusDate) <= settings.inputDataRecencyInterval else {
             throw LoopError.pumpDataTooOld(date: pumpStatusDate)
         }
 
@@ -1174,7 +1174,7 @@ extension LoopDataManager {
         return retrospectiveCorrection.computeEffect(
             startingAt: glucose,
             retrospectiveGlucoseDiscrepanciesSummed: retrospectiveGlucoseDiscrepanciesSummed,
-            recencyInterval: settings.recencyInterval,
+            recencyInterval: settings.inputDataRecencyInterval,
             insulinSensitivitySchedule: insulinSensitivitySchedule,
             basalRateSchedule: basalRateSchedule,
             glucoseCorrectionRangeSchedule: settings.glucoseTargetRangeSchedule,
