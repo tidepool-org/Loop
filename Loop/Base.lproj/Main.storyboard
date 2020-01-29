@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="74s-IX-WF0">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15400" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="74s-IX-WF0">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15404"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -448,19 +448,19 @@
                                             <rect key="frame" x="16" y="11" width="343" height="45"/>
                                             <subviews>
                                                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="u18-by-vQw">
-                                                    <rect key="frame" x="0.0" y="0.0" width="303" height="45"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="343" height="45"/>
                                                     <subviews>
                                                         <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BbA-hn-OkN">
-                                                            <rect key="frame" x="0.0" y="0.0" width="303" height="20.5"/>
+                                                            <rect key="frame" x="0.0" y="0.0" width="343" height="20.5"/>
                                                             <subviews>
                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ufi-Kj-33k">
-                                                                    <rect key="frame" x="0.0" y="0.0" width="259" height="20.5"/>
+                                                                    <rect key="frame" x="0.0" y="0.0" width="299" height="20.5"/>
                                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                                                     <nil key="textColor"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
                                                                 <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" horizontalHuggingPriority="251" horizontalCompressionResistancePriority="751" text="Detail" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aCb-Qs-bpu">
-                                                                    <rect key="frame" x="259" y="0.0" width="44" height="20.5"/>
+                                                                    <rect key="frame" x="299" y="0.0" width="44" height="20.5"/>
                                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                                                     <color key="textColor" systemColor="secondaryLabelColor" red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
                                                                     <nil key="highlightedColor"/>
@@ -468,16 +468,16 @@
                                                             </subviews>
                                                         </stackView>
                                                         <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xqU-HU-BMs">
-                                                            <rect key="frame" x="0.0" y="24.5" width="303" height="20.5"/>
+                                                            <rect key="frame" x="0.0" y="24.5" width="343" height="20.5"/>
                                                             <subviews>
                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Krd-Aa-ret">
-                                                                    <rect key="frame" x="0.0" y="0.0" width="259" height="20.5"/>
+                                                                    <rect key="frame" x="0.0" y="0.0" width="299" height="20.5"/>
                                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                                                     <color key="textColor" name="carbs"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
                                                                 <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" horizontalHuggingPriority="251" text="Detail" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="J7x-W5-gwo">
-                                                                    <rect key="frame" x="259" y="0.0" width="44" height="20.5"/>
+                                                                    <rect key="frame" x="299" y="0.0" width="44" height="20.5"/>
                                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                                                     <color key="textColor" name="carbs"/>
                                                                     <nil key="highlightedColor"/>
@@ -486,9 +486,6 @@
                                                         </stackView>
                                                     </subviews>
                                                 </stackView>
-                                                <imageView userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Uploading" translatesAutoresizingMaskIntoConstraints="NO" id="PHg-Vp-8VS">
-                                                    <rect key="frame" x="311" y="0.0" width="32" height="45"/>
-                                                </imageView>
                                             </subviews>
                                         </stackView>
                                     </subviews>
@@ -512,7 +509,6 @@
                                     <outlet property="observedDateLabel" destination="J7x-W5-gwo" id="WQf-bR-yv7"/>
                                     <outlet property="observedProgressView" destination="Mxi-br-Hti" id="s2h-xc-g1R"/>
                                     <outlet property="observedValueLabel" destination="Krd-Aa-ret" id="EPT-7Q-6O8"/>
-                                    <outlet property="uploadingIndicator" destination="PHg-Vp-8VS" id="efF-gs-6LV"/>
                                     <outlet property="valueLabel" destination="ufi-Kj-33k" id="6kh-tP-B8R"/>
                                     <segue destination="uaV-yr-cIp" kind="show" id="urz-4S-c6I"/>
                                 </connections>
@@ -1319,7 +1315,6 @@
     <resources>
         <image name="Oval Selection" width="21" height="21"/>
         <image name="Pre-Meal" width="29" height="29"/>
-        <image name="Uploading" width="32" height="20"/>
         <image name="bolus" width="22" height="24"/>
         <image name="carbs" width="29" height="29"/>
         <image name="settings" width="25" height="40"/>
