@@ -32,6 +32,8 @@ final class DeviceDataManager {
 
     /// The last time a BLE heartbeat was received and acted upon.
     private var lastBLEDrivenUpdate = Date.distantPast
+    
+    private var deviceLog: PersistentDeviceLog
 
     // MARK: - CGM
 
@@ -86,6 +88,11 @@ final class DeviceDataManager {
     private(set) var loopManager: LoopDataManager!
 
     init(pluginManager: PluginManager) {
+        
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        deviceLog = PersistentDeviceLog(storageFile: documentsDirectory.appendingPathComponent("DeviceLog.sqlite"))
+        
         self.pluginManager = pluginManager
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
@@ -117,8 +124,12 @@ final class DeviceDataManager {
         }
 
         loopManager.delegate = self
-        loopManager.carbStore.syncDelegate = remoteDataServicesManager
+
+        loopManager.carbStore.delegate = self
         loopManager.doseStore.delegate = self
+        loopManager.dosingDecisionStore.delegate = self
+        loopManager.glucoseStore.delegate = self
+        loopManager.settingsStore.delegate = self
 
         setupPump()
         setupCGM()
@@ -164,15 +175,6 @@ final class DeviceDataManager {
             log.default("CGMManager:%{public}@ did update with %d values", String(describing: type(of: manager)), values.count)
 
             loopManager.addGlucose(values) { result in
-                if manager.shouldSyncToRemoteService {
-                    switch result {
-                    case .success(let values):
-                        self.remoteDataServicesManager.upload(glucoseValues: values, sensorState: manager.sensorState)
-                    case .failure:
-                        break
-                    }
-                }
-
                 self.log.default("Asserting current pump data")
                 self.pumpManager?.assertCurrentPumpData()
             }
@@ -217,7 +219,52 @@ final class DeviceDataManager {
 
         return Manager.init(rawState: rawState) as? CGMManagerUI
     }
-
+    
+    func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
+        self.loopManager.generateDiagnosticReport { (loopReport) in
+            self.deviceLog.getLogEntries(startDate: Date() - .hours(48)) { (result) in
+                let deviceLogReport: String
+                switch result {
+                case .failure(let error):
+                    deviceLogReport = "Error fetching entries: \(error)"
+                case .success(let entries):
+                    deviceLogReport = entries.map { "* \($0.timestamp) \($0.managerIdentifier) \($0.deviceIdentifier ?? "") \($0.type) \($0.message)" }.joined(separator: "\n")
+                }
+                
+                let report = [
+                    Bundle.main.localizedNameAndVersion,
+                    "* gitRevision: \(Bundle.main.gitRevision ?? "N/A")",
+                    "* gitBranch: \(Bundle.main.gitBranch ?? "N/A")",
+                    "* sourceRoot: \(Bundle.main.sourceRoot ?? "N/A")",
+                    "* buildDateString: \(Bundle.main.buildDateString ?? "N/A")",
+                    "* xcodeVersion: \(Bundle.main.xcodeVersion ?? "N/A")",
+                    "",
+                    "## FeatureFlags",
+                    "\(FeatureFlags)",
+                    "",
+                    "## DeviceDataManager",
+                    "* launchDate: \(self.launchDate)",
+                    "* lastError: \(String(describing: self.lastError))",
+                    "* lastBLEDrivenUpdate: \(self.lastBLEDrivenUpdate)",
+                    "",
+                    self.cgmManager != nil ? String(reflecting: self.cgmManager!) : "cgmManager: nil",
+                    "",
+                    self.pumpManager != nil ? String(reflecting: self.pumpManager!) : "pumpManager: nil",
+                    "",
+                    "## Device Communication Log",
+                    deviceLogReport,
+                    "",
+                    String(reflecting: self.watchManager!),
+                    "",
+                    String(reflecting: self.statusExtensionManager!),
+                    "",
+                    loopReport,
+                ].joined(separator: "\n")
+                
+                completion(report)
+            }
+        }
+    }
 }
 
 private extension DeviceDataManager {
@@ -226,6 +273,7 @@ private extension DeviceDataManager {
 
         cgmManager?.cgmManagerDelegate = self
         cgmManager?.delegateQueue = queue
+        
         loopManager.glucoseStore.managedDataInterval = cgmManager?.managedDataInterval
 
         updatePumpManagerBLEHeartbeatPreference()
@@ -318,6 +366,10 @@ extension DeviceDataManager: DeviceManagerDelegate {
     
     func removeNotificationRequests(for manager: DeviceManager, identifiers: [String]) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
+    }
+    
+    func deviceManager(_ manager: DeviceManager, logEventForDeviceIdentifier deviceIdentifier: String?, type: DeviceLogEntryType, message: String, completion: ((Error?) -> Void)?) {
+        deviceLog.log(managerIdentifier: Swift.type(of: manager).managerIdentifier, deviceIdentifier: deviceIdentifier, type: type, message: message, completion: completion)
     }
 }
 
@@ -472,7 +524,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         log.error("PumpManager:%{public}@ did error: %{public}@", String(describing: type(of: pumpManager)), String(describing: error))
 
         setLastError(error: error)
-        remoteDataServicesManager.uploadLoopStatus(loopError: error)
+        loopManager.storeDosingDecision(withError: error)
     }
 
     func pumpManager(_ pumpManager: PumpManager, hasNewPumpEvents events: [NewPumpEvent], lastReconciliation: Date?, completion: @escaping (_ error: Error?) -> Void) {
@@ -542,22 +594,80 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
 }
 
+// MARK: - CarbStoreDelegate
+extension DeviceDataManager: CarbStoreDelegate {
+    
+    func carbStoreHasUpdatedCarbData(_ carbStore: CarbStore) {
+        remoteDataServicesManager.carbStoreHasUpdatedCarbData(carbStore)
+    }
+    
+    func carbStore(_ carbStore: CarbStore, didError error: CarbStore.CarbStoreError) {}
+    
+}
+
 // MARK: - DoseStoreDelegate
 extension DeviceDataManager: DoseStoreDelegate {
-    func doseStore(_ doseStore: DoseStore,
-        hasEventsNeedingUpload pumpEvents: [PersistedPumpEvent],
-        completion completionHandler: @escaping (_ uploadedObjectIDURLs: [URL]) -> Void
-    ) {
-        remoteDataServicesManager.upload(pumpEvents: pumpEvents, fromSource: "loop://\(UIDevice.current.name)") { (result) in
-            switch result {
-            case .success(let objects):
-                completionHandler(objects)
-            case .failure(let error):
-                self.log.error("%{public}@", String(describing: error))
-                completionHandler([])
-            }
-        }
+    
+    func doseStoreHasUpdatedDoseData(_ doseStore: DoseStore) {
+        remoteDataServicesManager.doseStoreHasUpdatedDoseData(doseStore)
     }
+    
+    func doseStoreHasUpdatedPumpEventData(_ doseStore: DoseStore) {
+        remoteDataServicesManager.doseStoreHasUpdatedPumpEventData(doseStore)
+    }
+    
+}
+
+// MARK: - DosingDecisionStoreDelegate
+extension DeviceDataManager: DosingDecisionStoreDelegate {
+
+    func dosingDecisionStoreHasUpdatedDosingDecisionData(_ dosingDecisionStore: DosingDecisionStore) {
+        remoteDataServicesManager.dosingDecisionStoreHasUpdatedDosingDecisionData(dosingDecisionStore)
+    }
+
+}
+
+// MARK: - GlucoseStoreDelegate
+extension DeviceDataManager: GlucoseStoreDelegate {
+    
+    func glucoseStoreHasUpdatedGlucoseData(_ glucoseStore: GlucoseStore) {
+        remoteDataServicesManager.glucoseStoreHasUpdatedGlucoseData(glucoseStore)
+    }
+    
+}
+
+// MARK: - SettingsStoreDelegate
+extension DeviceDataManager: SettingsStoreDelegate {
+    
+    func settingsStoreHasUpdatedSettingsData(_ settingsStore: SettingsStore) {
+        remoteDataServicesManager.settingsStoreHasUpdatedSettingsData(settingsStore)
+    }
+    
+}
+
+// MARK: - RemoteDataServicesManagerDelegate
+extension DeviceDataManager: RemoteDataServicesManagerDelegate {
+    
+    var carbStore: CarbStore? {
+        return loopManager.carbStore
+    }
+    
+    var doseStore: DoseStore? {
+        return loopManager.doseStore
+    }
+
+    var dosingDecisionStore: DosingDecisionStore? {
+        return loopManager.dosingDecisionStore
+    }
+
+    var glucoseStore: GlucoseStore? {
+        return loopManager.glucoseStore
+    }
+    
+    var settingsStore: SettingsStore? {
+        return loopManager.settingsStore
+    }
+
 }
 
 // MARK: - TestingPumpManager
@@ -646,37 +756,6 @@ extension DeviceDataManager: LoopDataManagerDelegate {
                 }
             }
         )
-    }
-}
-
-
-// MARK: - CustomDebugStringConvertible
-extension DeviceDataManager: CustomDebugStringConvertible {
-    var debugDescription: String {
-        return [
-            Bundle.main.localizedNameAndVersion,
-            "* gitRevision: \(Bundle.main.gitRevision ?? "N/A")",
-            "* gitBranch: \(Bundle.main.gitBranch ?? "N/A")",
-            "* sourceRoot: \(Bundle.main.sourceRoot ?? "N/A")",
-            "* buildDateString: \(Bundle.main.buildDateString ?? "N/A")",
-            "* xcodeVersion: \(Bundle.main.xcodeVersion ?? "N/A")",
-            "",
-            "## FeatureFlags",
-            "\(FeatureFlags)",
-            "",
-            "## DeviceDataManager",
-            "* launchDate: \(launchDate)",
-            "* lastError: \(String(describing: lastError))",
-            "* lastBLEDrivenUpdate: \(lastBLEDrivenUpdate)",
-            "",
-            cgmManager != nil ? String(reflecting: cgmManager!) : "cgmManager: nil",
-            "",
-            pumpManager != nil ? String(reflecting: pumpManager!) : "pumpManager: nil",
-            "",
-            String(reflecting: watchManager!),
-            "",
-            String(reflecting: statusExtensionManager!),
-        ].joined(separator: "\n")
     }
 }
 
