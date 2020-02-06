@@ -68,7 +68,7 @@ final class DeviceDataManager {
 
     var analyticsServicesManager: AnalyticsServicesManager
 
-    var loggingServicesManager: LoggingServicesManager { return servicesManager.loggingServicesManager }
+    var loggingServicesManager: LoggingServicesManager
 
     var remoteDataServicesManager: RemoteDataServicesManager { return servicesManager.remoteDataServicesManager }
 
@@ -93,6 +93,7 @@ final class DeviceDataManager {
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         deviceLog = PersistentDeviceLog(storageFile: documentsDirectory.appendingPathComponent("DeviceLog.sqlite"))
 
+        loggingServicesManager = LoggingServicesManager()
         analyticsServicesManager = AnalyticsServicesManager()
 
         self.pluginManager = pluginManager
@@ -129,9 +130,9 @@ final class DeviceDataManager {
         
         servicesManager = ServicesManager(
             pluginManager: pluginManager,
-            deviceDataManager: self,
-            remoteDataServicesManager: remoteDataServicesManager,
-            analyticsServicesManager: analyticsServicesManager
+            analyticsServicesManager: analyticsServicesManager,
+            loggingServicesManager: loggingServicesManager,
+            remoteDataServicesManager: remoteDataServicesManager
         )
 
 

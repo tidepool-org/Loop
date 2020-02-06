@@ -25,14 +25,14 @@ class ServicesManager {
 
     init(
         pluginManager: PluginManager,
-        deviceDataManager: DeviceDataManager,
-        remoteDataServicesManager: RemoteDataServicesManager,
-        analyticsServicesManager: AnalyticsServicesManager
+        analyticsServicesManager: AnalyticsServicesManager,
+        loggingServicesManager: LoggingServicesManager,
+        remoteDataServicesManager: RemoteDataServicesManager
     ) {
         self.pluginManager = pluginManager
         self.analyticsServicesManager = analyticsServicesManager
+        self.loggingServicesManager = loggingServicesManager
         self.remoteDataServicesManager = remoteDataServicesManager
-        self.loggingServicesManager = LoggingServicesManager()
 
         restoreState()
     }
