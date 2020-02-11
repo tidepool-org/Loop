@@ -153,7 +153,7 @@ extension LoopSettings {
         preMealOverride = makePreMealOverride(beginningAt: date, for: duration)
     }
 
-    public func makePreMealOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
+    private func makePreMealOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
         guard let preMealTargetRange = preMealTargetRange, let unit = glucoseUnit else {
             return nil
         }

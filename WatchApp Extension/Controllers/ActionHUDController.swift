@@ -55,7 +55,8 @@ final class ActionHUDController: HUDInterfaceController {
             activeOverrideContext = nil
         }
 
-        updateForOverrideContexts(activeOverrideContext, isPreMealEnabled: isPreMealEnabled)
+        updateForPreMeal(enabled: loopManager.settings.preMealOverride?.isActive() == true)
+        updateForOverrideContext(activeOverrideContext)
 
         if loopManager.settings.preMealTargetRange == nil {
             preMealButtonGroup.state = .disabled
@@ -78,21 +79,15 @@ final class ActionHUDController: HUDInterfaceController {
         }
     }
 
-    private var isPreMealEnabled: Bool {
-        loopManager.settings.preMealOverride?.isActive() == true
+    private func updateForPreMeal(enabled: Bool) {
+        if enabled {
+            preMealButtonGroup.state = .on
+        } else {
+            preMealButtonGroup.turnOff()
+        }
     }
 
-    private func updateForOverrideContexts(_ context: TemporaryScheduleOverride.Context?, isPreMealEnabled: Bool?) {
-        if let preMealEnabled = isPreMealEnabled {
-            if preMealEnabled {
-                preMealButtonGroup.state = .on
-            } else {
-                preMealButtonGroup.turnOff()
-            }
-        } else {
-            // In the `nil` case, maintain existing pre-meal enable state
-        }
-
+    private func updateForOverrideContext(_ context: TemporaryScheduleOverride.Context?) {
         switch context {
         case nil:
             overrideButtonGroup.turnOff()
@@ -108,46 +103,77 @@ final class ActionHUDController: HUDInterfaceController {
 
     // MARK: - Menu Items
 
+    private var pendingMessageResponses = 0
+
     @IBAction func togglePreMealMode() {
-        let override: TemporaryScheduleOverride?
-        if preMealButtonGroup.state == .on {
-            override = nil
+        let isPreMealEnabled = preMealButtonGroup.state == .off
+        updateForPreMeal(enabled: isPreMealEnabled)
+        pendingMessageResponses += 1
+
+        var settings = loopManager.settings
+        if isPreMealEnabled {
+            settings.enablePreMealOverride(for: .hours(1))
         } else {
-            override = loopManager.settings.makePreMealOverride(for: .hours(1))
+            settings.clearOverride(matching: .preMeal)
         }
 
-        sendOverride(override, isPreMealOverride: true)
+        let userInfo = LoopSettingsUserInfo(settings: settings)
+        do {
+            try WCSession.default.sendSettingsUpdateMessage(userInfo, completionHandler: { (result) in
+                DispatchQueue.main.async {
+                    self.pendingMessageResponses -= 1
+
+                    switch result {
+                    case .success(let context):
+                        if self.pendingMessageResponses == 0 {
+                            self.loopManager.settings.preMealOverride = settings.preMealOverride
+                        }
+
+                        ExtensionDelegate.shared().loopManager.updateContext(context)
+                    case .failure(let error):
+                        if self.pendingMessageResponses == 0 {
+                            ExtensionDelegate.shared().present(error)
+                            self.updateForPreMeal(enabled: isPreMealEnabled)
+                        }
+                    }
+                }
+            })
+        } catch {
+            pendingMessageResponses -= 1
+            if pendingMessageResponses == 0 {
+                updateForPreMeal(enabled: isPreMealEnabled)
+            }
+            presentAlert(
+                withTitle: NSLocalizedString("Send Failed", comment: "The title of the alert controller displayed after a glucose range override send attempt fails"),
+                message: NSLocalizedString("Make sure your iPhone is nearby and try again", comment: "The recovery message displayed after a glucose range override send attempt fails"),
+                preferredStyle: .alert,
+                actions: [.dismissAction()]
+            )
+        }
     }
 
     @IBAction func toggleOverride() {
         if overrideButtonGroup.state == .on {
-            sendOverride(nil, isPreMealOverride: false)
+            sendOverride(nil)
         } else {
             if FeatureFlags.sensitivityOverridesEnabled {
                 presentController(withName: OverrideSelectionController.className, context: self as OverrideSelectionControllerDelegate)
             } else {
                 let override = loopManager.settings.legacyWorkoutOverride(for: .infinity)
-                sendOverride(override, isPreMealOverride: false)
+                sendOverride(override)
             }
         }
     }
 
-    private var pendingMessageResponses = 0
-
-    private func sendOverride(_ override: TemporaryScheduleOverride?, isPreMealOverride: Bool) {
-        let newPreMealEnableState = isPreMealOverride ? override != nil : nil
-        updateForOverrideContexts(override?.context, isPreMealEnabled: newPreMealEnableState)
+    private func sendOverride(_ override: TemporaryScheduleOverride?) {
+        updateForOverrideContext(override?.context)
         pendingMessageResponses += 1
 
         var settings = loopManager.settings
-        if isPreMealOverride {
-            settings.preMealOverride = override
-        } else {
-            if override?.context == .legacyWorkout {
-                settings.preMealOverride = nil
-            }
-            settings.scheduleOverride = override
+        if override?.context == .legacyWorkout {
+            settings.preMealOverride = nil
         }
+        settings.scheduleOverride = override
 
         let userInfo = LoopSettingsUserInfo(settings: settings)
         do {
@@ -165,7 +191,7 @@ final class ActionHUDController: HUDInterfaceController {
                     case .failure(let error):
                         if self.pendingMessageResponses == 0 {
                             ExtensionDelegate.shared().present(error)
-                            self.updateForOverrideContexts(self.loopManager.settings.scheduleOverride?.context, isPreMealEnabled: self.isPreMealEnabled)
+                            self.updateForOverrideContext(override?.context)
                         }
                     }
                 }
@@ -173,7 +199,7 @@ final class ActionHUDController: HUDInterfaceController {
         } catch {
             pendingMessageResponses -= 1
             if pendingMessageResponses == 0 {
-                updateForOverrideContexts(loopManager.settings.scheduleOverride?.context, isPreMealEnabled: isPreMealEnabled)
+                updateForOverrideContext(override?.context)
             }
             presentAlert(
                 withTitle: NSLocalizedString("Send Failed", comment: "The title of the alert controller displayed after a glucose range override send attempt fails"),
@@ -188,6 +214,6 @@ final class ActionHUDController: HUDInterfaceController {
 extension ActionHUDController: OverrideSelectionControllerDelegate {
     func overrideSelectionController(_ controller: OverrideSelectionController, didSelectPreset preset: TemporaryScheduleOverridePreset) {
         let override = preset.createOverride(enactTrigger: .local)
-        sendOverride(override, isPreMealOverride: false)
+        sendOverride(override)
     }
 }
