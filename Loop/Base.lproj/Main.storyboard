@@ -895,18 +895,13 @@
                             <outlet property="delegate" destination="WhH-Np-jCn" id="qFt-hY-ODb"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Bolus" id="aiu-ZA-zVa">
-                        <barButtonItem key="leftBarButtonItem" systemItem="cancel" id="S3T-x6-xdq">
-                            <connections>
-                                <segue destination="xgn-H5-ghO" kind="unwind" identifier="close" unwindAction="unwindFromBolusViewController:" id="Nq4-5L-c85"/>
-                            </connections>
-                        </barButtonItem>
-                    </navigationItem>
+                    <navigationItem key="navigationItem" title="Bolus" id="aiu-ZA-zVa"/>
                     <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
                     <connections>
                         <outlet property="bolusAmountTextField" destination="7LT-50-ZzK" id="qb4-wc-9ib"/>
                         <outlet property="noticeLabel" destination="k0g-P7-OVN" id="Geb-fw-665"/>
                         <outlet property="recommendedBolusAmountLabel" destination="5QS-Yf-Pua" id="0J3-We-D2X"/>
+                        <segue destination="xgn-H5-ghO" kind="unwind" identifier="close" unwindAction="unwindFromBolusViewController:" id="xRB-qt-LlE"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="KEH-mi-7Jf" userLabel="First Responder" sceneMemberID="firstResponder"/>
