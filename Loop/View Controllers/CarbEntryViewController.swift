@@ -57,6 +57,8 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
         }
     }
 
+    var glucoseChartCellHeight: CGFloat?
+
     fileprivate var quantity: HKQuantity? {
         didSet {
             updateContinueButtonEnabled()
@@ -345,6 +347,7 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
             bolusVC.configuration = .newCarbEntry(updatedEntry)
         }
         bolusVC.selectedDefaultAbsorptionTimeEmoji = selectedDefaultAbsorptionTimeEmoji
+        bolusVC.glucoseChartCellHeight = glucoseChartCellHeight
 
         show(bolusVC, sender: footerView.primaryButton)
     }

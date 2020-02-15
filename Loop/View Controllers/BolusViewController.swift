@@ -28,6 +28,8 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
         case entry
     }
 
+    var glucoseChartCellHeight: CGFloat?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // This gets rid of the empty space at the top.
@@ -352,6 +354,8 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
 
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         switch Row(rawValue: indexPath.row)! {
+        case .chart:
+            return glucoseChartCellHeight ?? super.tableView(tableView, heightForRowAt: indexPath)
         case .carbEntry where potentialCarbEntry == nil:
             return 0
         case .notice where bolusRecommendation?.notice == nil:

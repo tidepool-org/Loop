@@ -718,26 +718,17 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qaB-0q-V2d" customClass="ChartContainerView" customModule="LoopUI">
-                                                    <rect key="frame" x="0.0" y="29" width="375" height="213"/>
+                                                    <rect key="frame" x="0.0" y="29" width="375" height="217"/>
                                                 </view>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalCompressionResistancePriority="749" text="" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Efb-G2-aDe">
-                                                    <rect key="frame" x="16" y="246" width="343" height="0.0"/>
-                                                    <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
-                                                    <color key="textColor" systemColor="secondaryLabelColor" red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
-                                                    <nil key="highlightedColor"/>
-                                                </label>
                                             </subviews>
                                             <constraints>
-                                                <constraint firstItem="Efb-G2-aDe" firstAttribute="top" secondItem="qaB-0q-V2d" secondAttribute="bottom" constant="4" id="25M-Zh-xUF"/>
                                                 <constraint firstItem="qaB-0q-V2d" firstAttribute="leading" secondItem="maw-a6-d8p" secondAttribute="leading" id="Asp-Fn-JoT"/>
                                                 <constraint firstItem="G51-pt-pmi" firstAttribute="top" secondItem="maw-a6-d8p" secondAttribute="topMargin" id="N2c-58-hwC"/>
+                                                <constraint firstAttribute="bottom" secondItem="qaB-0q-V2d" secondAttribute="bottom" constant="4" id="WG1-gu-MVB"/>
                                                 <constraint firstItem="qaB-0q-V2d" firstAttribute="top" secondItem="G51-pt-pmi" secondAttribute="bottom" id="aUf-M5-jGK"/>
                                                 <constraint firstItem="G51-pt-pmi" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="maw-a6-d8p" secondAttribute="leading" constant="20" symbolic="YES" id="baf-1j-FTC"/>
-                                                <constraint firstItem="Efb-G2-aDe" firstAttribute="trailing" secondItem="maw-a6-d8p" secondAttribute="trailingMargin" id="fNQ-ju-mbv"/>
                                                 <constraint firstAttribute="trailingMargin" secondItem="G51-pt-pmi" secondAttribute="trailing" id="fxi-fc-a7y"/>
-                                                <constraint firstAttribute="bottom" secondItem="Efb-G2-aDe" secondAttribute="bottom" priority="750" constant="4" id="j68-fZ-nNB"/>
                                                 <constraint firstAttribute="trailing" secondItem="qaB-0q-V2d" secondAttribute="trailing" id="jSC-QV-dQD"/>
-                                                <constraint firstItem="Efb-G2-aDe" firstAttribute="leading" secondItem="maw-a6-d8p" secondAttribute="leadingMargin" id="sVE-qp-MC3"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
@@ -1325,7 +1316,7 @@
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="urz-4S-c6I"/>
-        <segue reference="UnO-ql-F0K"/>
-        <segue reference="Isc-NM-GBt"/>
+        <segue reference="viB-eQ-p7y"/>
+        <segue reference="PC7-vP-CUY"/>
     </inferredMetricsTieBreakers>
 </document>
