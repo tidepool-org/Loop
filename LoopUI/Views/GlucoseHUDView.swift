@@ -28,11 +28,13 @@ public final class GlucoseHUDView: BaseHUDView {
     
     public var isVisible: Bool = true {
         didSet {
-            if !isVisible {
-                stalenessTimer?.invalidate()
-                stalenessTimer = nil
-            } else {
-                startStalenessTimerIfNeeded()
+            if oldValue != isVisible {
+                if !isVisible {
+                    stalenessTimer?.invalidate()
+                    stalenessTimer = nil
+                } else {
+                    startStalenessTimerIfNeeded()
+                }
             }
         }
     }
