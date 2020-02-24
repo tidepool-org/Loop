@@ -68,25 +68,8 @@ final class ActionHUDController: HUDInterfaceController {
         } else if overrideButtonGroup.state == .disabled {
             overrideButtonGroup.state = .off
         }
-        
-        requestContextUpdate()
     }
     
-    private func requestContextUpdate() {
-        try? WCSession.default.sendContextRequestMessage(WatchContextRequestUserInfo(), completionHandler: { (result) in
-            DispatchQueue.main.async {
-                self.pendingMessageResponses -= 1
-
-                switch result {
-                case .success(let context):
-                    ExtensionDelegate.shared().loopManager.updateContext(context)
-                case .failure:
-                    break;
-                }
-            }
-        })
-    }
-
     private var canEnableOverride: Bool {
         if FeatureFlags.sensitivityOverridesEnabled {
             return !loopManager.settings.overridePresets.isEmpty
