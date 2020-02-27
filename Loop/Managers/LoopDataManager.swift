@@ -666,6 +666,7 @@ extension LoopDataManager {
 
             dosingDecision.carbsOnBoard = state.carbsOnBoard
             dosingDecision.predictedGlucose = state.predictedGlucose
+            dosingDecision.predictedGlucoseIncludingPendingInsulin = state.predictedGlucoseIncludingPendingInsulin
             if let (recommendation: recommendation, date: date) = state.recommendedTempBasal {
                 dosingDecision.tempBasalRecommendationDate = TempBasalRecommendationDate(recommendation: recommendation, date: date)
             }
@@ -997,7 +998,7 @@ extension LoopDataManager {
                     let potentialCarbEffect = try carbStore.glucoseEffects(
                         of: [potentialCarbEntry],
                         startingAt: retrospectiveStart,
-                        effectVelocities: nil // ICE is irrelevant for future entries
+                        effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil
                     )
 
                     effects.append(potentialCarbEffect)
