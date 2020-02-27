@@ -120,28 +120,37 @@ public struct LoopSettings: Equatable {
 
 extension LoopSettings {
     public var glucoseTargetRangeScheduleApplyingOverrideIfActive: GlucoseRangeSchedule? {
-        if let preMealOverride = preMealOverride, preMealOverride.isActive() {
-            return glucoseTargetRangeSchedule?.applyingOverride(preMealOverride)
-        } else if let override = scheduleOverride, override.isActive() {
-            return glucoseTargetRangeSchedule?.applyingOverride(override)
+        let currentEffectiveOverride: TemporaryScheduleOverride?
+        switch (preMealOverride, scheduleOverride) {
+        case (let preMealOverride?, nil):
+            currentEffectiveOverride = preMealOverride
+        case (nil, let scheduleOverride?):
+            currentEffectiveOverride = scheduleOverride
+        case (let preMealOverride?, let scheduleOverride?):
+            currentEffectiveOverride = preMealOverride.endDate > Date()
+                ? preMealOverride
+                : scheduleOverride
+        case (nil, nil):
+            currentEffectiveOverride = nil
+        }
+
+        if let effectiveOverride = currentEffectiveOverride {
+            return glucoseTargetRangeSchedule?.applyingOverride(effectiveOverride)
         } else {
             return glucoseTargetRangeSchedule
         }
     }
 
     public func scheduleOverrideEnabled(at date: Date = Date()) -> Bool {
-        guard let override = scheduleOverride else { return false }
-        return override.isActive(at: date)
+        return scheduleOverride?.isActive(at: date) == true
     }
 
     public func nonPreMealOverrideEnabled(at date: Date = Date()) -> Bool {
-        guard let override = scheduleOverride else { return false }
-        return override.isActive(at: date)
+        return scheduleOverride?.isActive(at: date) == true
     }
 
     public func preMealTargetEnabled(at date: Date = Date()) -> Bool {
-        guard let preMealOverride = preMealOverride else { return false }
-        return preMealOverride.isActive(at: date)
+        return preMealOverride?.isActive(at: date) == true
     }
 
     public func futureOverrideEnabled(relativeTo date: Date = Date()) -> Bool {

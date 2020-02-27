@@ -142,13 +142,13 @@ final class ActionHUDController: HUDInterfaceController {
             pendingMessageResponses -= 1
             if pendingMessageResponses == 0 {
                 updateForPreMeal(enabled: isPreMealEnabled)
+                presentAlert(
+                    withTitle: NSLocalizedString("Send Failed", comment: "The title of the alert controller displayed after a glucose range override send attempt fails"),
+                    message: NSLocalizedString("Make sure your iPhone is nearby and try again", comment: "The recovery message displayed after a glucose range override send attempt fails"),
+                    preferredStyle: .alert,
+                    actions: [.dismissAction()]
+                )
             }
-            presentAlert(
-                withTitle: NSLocalizedString("Send Failed", comment: "The title of the alert controller displayed after a glucose range override send attempt fails"),
-                message: NSLocalizedString("Make sure your iPhone is nearby and try again", comment: "The recovery message displayed after a glucose range override send attempt fails"),
-                preferredStyle: .alert,
-                actions: [.dismissAction()]
-            )
         }
     }
 
@@ -200,13 +200,13 @@ final class ActionHUDController: HUDInterfaceController {
             pendingMessageResponses -= 1
             if pendingMessageResponses == 0 {
                 updateForOverrideContext(override?.context)
+                presentAlert(
+                    withTitle: NSLocalizedString("Send Failed", comment: "The title of the alert controller displayed after a glucose range override send attempt fails"),
+                    message: NSLocalizedString("Make sure your iPhone is nearby and try again", comment: "The recovery message displayed after a glucose range override send attempt fails"),
+                    preferredStyle: .alert,
+                    actions: [.dismissAction()]
+                )
             }
-            presentAlert(
-                withTitle: NSLocalizedString("Send Failed", comment: "The title of the alert controller displayed after a glucose range override send attempt fails"),
-                message: NSLocalizedString("Make sure your iPhone is nearby and try again", comment: "The recovery message displayed after a glucose range override send attempt fails"),
-                preferredStyle: .alert,
-                actions: [.dismissAction()]
-            )
         }
     }
 }
