@@ -2131,7 +2131,7 @@
 					4F70C1DB1DE8DCA7006380B7 = {
 						CreatedOnToolsVersion = 8.1;
 						LastSwiftMigration = 1020;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
