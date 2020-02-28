@@ -264,9 +264,7 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
             }
 
             let maximumBolus = manager.settings.maximumBolus
-
-            let predictedGlucoseIncludingPotentialCarbEntry = try? state.predictGlucose(using: .all, potentialBolus: nil, potentialCarbEntry: self.potentialCarbEntry, replacingCarbEntry: self.originalCarbEntry, includingPendingInsulin: true)
-            let bolusRecommendation = try? state.recommendBolus(forPrediction: predictedGlucoseIncludingPotentialCarbEntry ?? [])
+            let bolusRecommendation = try? state.recommendBolus(consideringPotentialCarbEntry: self.potentialCarbEntry, replacingCarbEntry: self.originalCarbEntry)
 
             DispatchQueue.main.async {
                 if let maxBolus = maximumBolus {
