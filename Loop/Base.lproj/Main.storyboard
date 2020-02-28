@@ -796,21 +796,21 @@
                                         </tableViewCellContentView>
                                         <color key="backgroundColor" cocoaTouchSystemColor="tableCellGroupedBackgroundColor"/>
                                     </tableViewCell>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" rowHeight="139" id="w0w-Ou-mxd">
-                                        <rect key="frame" x="0.0" y="357" width="375" height="139"/>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" rowHeight="140" id="w0w-Ou-mxd">
+                                        <rect key="frame" x="0.0" y="357" width="375" height="140"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="w0w-Ou-mxd" id="1LZ-mo-4hj">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="139"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="140"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bolus" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Yzb-RE-bfd">
-                                                    <rect key="frame" x="16" y="11" width="45" height="18"/>
+                                                    <rect key="frame" x="16" y="11" width="45" height="19"/>
                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="3tX-86-zhq" customClass="SegmentedGaugeBarView" customModule="LoopKitUI">
-                                                    <rect key="frame" x="71" y="33" width="233.5" height="36"/>
+                                                    <rect key="frame" x="71" y="34" width="233.5" height="36"/>
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="36" id="lSZ-5d-6t1"/>
                                                     </constraints>
@@ -836,7 +836,7 @@
                                                     </userDefinedRuntimeAttributes>
                                                 </view>
                                                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillProportionally" alignment="center" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="aqv-P5-pei">
-                                                    <rect key="frame" x="249.5" y="73" width="109.5" height="55"/>
+                                                    <rect key="frame" x="249.5" y="74" width="109.5" height="55"/>
                                                     <subviews>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Recommended" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zEc-8q-uPq">
                                                             <rect key="frame" x="0.0" y="0.0" width="109.5" height="19.5"/>
@@ -869,7 +869,7 @@
                                                     </connections>
                                                 </stackView>
                                                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillProportionally" alignment="center" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="Q1e-9V-y8j">
-                                                    <rect key="frame" x="16" y="73" width="109.5" height="55.5"/>
+                                                    <rect key="frame" x="16" y="74" width="109.5" height="55.5"/>
                                                     <subviews>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Entered" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sv6-Dl-14D">
                                                             <rect key="frame" x="26.5" y="0.0" width="56.5" height="19.5"/>
@@ -903,7 +903,7 @@
                                                     </subviews>
                                                 </stackView>
                                                 <view contentMode="scaleToFill" placeholderIntrinsicWidth="28" placeholderIntrinsicHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="N2V-15-2Uj" customClass="OverrideBadgeView" customModule="Loop" customModuleProvider="target">
-                                                    <rect key="frame" x="232" y="97.5" width="28" height="28"/>
+                                                    <rect key="frame" x="232" y="98.5" width="28" height="28"/>
                                                     <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                                 </view>
                                             </subviews>

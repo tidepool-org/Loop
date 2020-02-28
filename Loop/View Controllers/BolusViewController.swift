@@ -501,7 +501,7 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
 
     // Enforce a minimum bolus delta for prediction recomputation.
     private lazy var minimumBolusDeltaForRecomputation: Double = {
-        let minimumBolusIncrement = deviceManager.pumpManager?.supportedBolusVolumes.filter({ $0 > 0 }).min() ?? 0.05
+        let minimumBolusIncrement = deviceManager.pumpManager?.minimumBolusIncrement ?? 0.05
         // Use a slightly smaller value to account for floating point precision.
         return minimumBolusIncrement * 0.999
     }()
@@ -775,27 +775,12 @@ extension UIColor {
     }
 }
 
-extension UIFont {
-    convenience init(
-        style: UIFont.TextStyle,
-        design: UIFontDescriptor.SystemDesign,
-        traits: UIFontDescriptor.SymbolicTraits = []
-    ) {
-        var descriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: style)
-
-        if #available(iOS 13.0, *),
-            let prettierDescriptor = descriptor.withDesign(design)?.withSymbolicTraits(traits)
-        {
-            descriptor = prettierDescriptor
-        } else if let prettierDescriptor = descriptor.withSymbolicTraits(traits) {
-            descriptor = prettierDescriptor
-        }
-
-        self.init(descriptor: descriptor, size: 0)
+fileprivate extension PumpManager {
+    var minimumBolusIncrement: Double {
+        supportedBolusVolumes.filter({ $0 > 0 }).min()!
     }
-}
 
-extension PumpManager {
+    // `roundToSupportedBolusVolume(units:)` truncates to a supported dose volume; this function rounds to the nearest.
     func roundToNearestBolusVolume(units: Double) -> Double {
         guard let ceiledIndex = supportedBolusVolumes.firstIndex(where: { volume in volume >= units }) else {
             return supportedBolusVolumes.last!
