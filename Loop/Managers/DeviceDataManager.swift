@@ -86,8 +86,10 @@ final class DeviceDataManager {
 
 
     private(set) var loopManager: LoopDataManager!
+    
+    private let alertSink: AlertSink
 
-    init(pluginManager: PluginManager) {
+    init(pluginManager: PluginManager, alertSink: AlertSink) {
         
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -95,8 +97,9 @@ final class DeviceDataManager {
 
         loggingServicesManager = LoggingServicesManager()
         analyticsServicesManager = AnalyticsServicesManager()
-
+        
         self.pluginManager = pluginManager
+        self.alertSink = alertSink
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
             pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
@@ -364,6 +367,10 @@ extension DeviceDataManager {
 
 // MARK: - DeviceManagerDelegate
 extension DeviceDataManager: DeviceManagerDelegate {
+    func showAlert(_ manager: DeviceManager, title: String, message: String) {
+        
+    }
+    
     func scheduleNotification(for manager: DeviceManager,
                               identifier: String,
                               content: UNNotificationContent,

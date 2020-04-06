@@ -10,6 +10,7 @@ import UIKit
 import Intents
 import LoopCore
 import LoopKit
+import LoopKitUI
 import UserNotifications
 
 @UIApplicationMain
@@ -19,7 +20,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private lazy var pluginManager = PluginManager()
 
-    private lazy var deviceManager = DeviceDataManager(pluginManager: pluginManager)
+    private lazy var deviceManager = DeviceDataManager(pluginManager: pluginManager, alertSink: GlobalAlertUI.instance)
 
     var window: UIWindow?
 
@@ -43,7 +44,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         if let notification = notificationOption as? [String: AnyObject] {
             deviceManager.handleRemoteNotification(notification)
         }
-
+        
+        GlobalAlertUI.instance.initialize(with: rootViewController)
+        
         return true
     }
 
