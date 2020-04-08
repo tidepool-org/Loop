@@ -93,6 +93,7 @@ extension CarbAndBolusFlow {
                     maxBolus: viewModel.maxBolus,
                     isEditable: flowState == .bolusEntry
                 )
+                .onDisappear { self.bolusAmount = 0 }
             }
 
             if configuration != .manualBolus && flowState != .bolusConfirmation {
