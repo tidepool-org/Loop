@@ -359,17 +359,17 @@ extension DeviceDataManager {
         pumpManager?.setMustProvideBLEHeartbeat(pumpManagerMustProvideBLEHeartbeat)
     }
     
-    func acknowledgeDeviceAlert(managerIdentifier: String, alertID: Int) {
+    func acknowledgeDeviceAlert(managerIdentifier: String, alertTypeIdentifier: UserAlert.TypeIdentifier) {
         if let cgmManager = cgmManager, Swift.type(of: cgmManager).managerIdentifier == managerIdentifier {
             deviceLog.log(managerIdentifier: Swift.type(of: cgmManager).managerIdentifier,
                           deviceIdentifier: nil, type: .delegateResponse,
-                          message: "acknowledging CGM alert id \(alertID)", completion: nil)
-            cgmManager.acknowledgeAlert(alertID: alertID)
+                          message: "acknowledging CGM alert id \(alertTypeIdentifier)", completion: nil)
+            cgmManager.acknowledgeAlert(typeIdentifier: alertTypeIdentifier)
         } else if let pumpManager = pumpManager, Swift.type(of: pumpManager).managerIdentifier == managerIdentifier {
             deviceLog.log(managerIdentifier: Swift.type(of: pumpManager).managerIdentifier,
                           deviceIdentifier: nil, type: .delegateResponse,
-                          message: "acknowledging Pump alert id \(alertID)", completion: nil)
-            pumpManager.acknowledgeAlert(alertID: alertID)
+                          message: "acknowledging Pump alert id \(alertTypeIdentifier)", completion: nil)
+            pumpManager.acknowledgeAlert(typeIdentifier: alertTypeIdentifier)
         }
     }
 }
@@ -393,7 +393,7 @@ extension DeviceDataManager: DeviceManagerDelegate {
 //    func clearNotification(for manager: DeviceManager, identifier: String) {
 //        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [identifier])
 //    }
-//    
+//
 //    func removeNotificationRequests(for manager: DeviceManager, identifiers: [String]) {
 //        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
 //    }

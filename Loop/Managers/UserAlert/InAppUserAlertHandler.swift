@@ -22,27 +22,28 @@ public class InAppUserAlertHandler: UserAlertHandler {
     
     public func scheduleAlert(_ alert: UserAlert) {
         if let trigger = alert.trigger {
-            
-            let timer = Timer(timeInterval: trigger.timeInterval, repeats: trigger.repeats) { [weak self] timer in
-                self?.show(alert: alert)
-                if !trigger.repeats {
-                    self?.alertsPending.removeAll { $0.0 == timer && $0.1.identifier == alert.identifier }
+            DispatchQueue.main.async {
+                let timer = Timer.scheduledTimer(withTimeInterval: trigger.timeInterval, repeats: trigger.repeats) { [weak self] timer in
+                    self?.show(alert: alert)
+                    if !trigger.repeats {
+                        self?.alertsPending.removeAll { $0.0 == timer && $0.1.identifier == alert.identifier }
+                    }
                 }
+                self.alertsPending.append((timer, alert))
             }
-            alertsPending.append((timer, alert))
         } else {
             show(alert: alert)
         }
     }
     
     public func unscheduleAlert(identifier: String) {
-        // Cancel if already up
-        cancelAlert(identifier: identifier)
         alertsPending.filter {
             $0.1.identifier == identifier
         }
         .forEach { timer, alert in
-            timer.invalidate()
+            DispatchQueue.main.async {
+                timer.invalidate()
+            }
         }
     }
     
@@ -51,8 +52,12 @@ public class InAppUserAlertHandler: UserAlertHandler {
             $0.1.identifier == identifier
         }
         .forEach { alertController, alert in
-            alertController.dismiss(animated: true)
+            DispatchQueue.main.async {
+                alertController.dismiss(animated: true)
+            }
         }
+        // The contract is that this should also cancel (unschedule) any pending alerts
+        unscheduleAlert(identifier: identifier)
     }
 }
 
@@ -60,10 +65,12 @@ public class InAppUserAlertHandler: UserAlertHandler {
 extension InAppUserAlertHandler {
     
     private func show(alert: UserAlert) {
+        guard let content = alert.foregroundContent else {
+            return
+        }
         DispatchQueue.main.async {
-            let content = alert.foregroundContent
-            let alertController = self.presentAlert(title: content.title,message: content.body, action: content.dismissAction) {
-                alert.acknowledgeCompletion?(alert)
+            let alertController = self.presentAlert(title: content.title,message: content.body, action: content.acknowledgeAction) {
+                alert.acknowledgeCompletion?(alert.typeIdentifier)
             }
             self.alertsShowing.append((alertController, alert))
         }

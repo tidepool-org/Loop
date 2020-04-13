@@ -23,8 +23,10 @@ class UserNotificationAlertHandler: UserAlertHandler {
     func scheduleAlert(_ alert: UserAlert) {
         DispatchQueue.main.async {
             if self.alertInBackgroundOnly && self.isAppInBackgroundFunc() || !self.alertInBackgroundOnly {
-                self.userNotificationCenter.add(alert.asUserNotificationRequest())
-                // For now, UserNotifications do not not acknowledge...not yet at least
+                if let request = alert.asUserNotificationRequest() {
+                    self.userNotificationCenter.add(request)
+                    // For now, UserNotifications do not not acknowledge...not yet at least
+                }
             }
         }
     }
@@ -40,23 +42,29 @@ class UserNotificationAlertHandler: UserAlertHandler {
 
 public extension UserAlert {
     
-    fileprivate func asUserNotificationRequest() -> UNNotificationRequest {
+    fileprivate func asUserNotificationRequest() -> UNNotificationRequest? {
+        guard let uncontent = getUserNotificationContent() else {
+            return nil
+        }
         return UNNotificationRequest(identifier: identifier,
-                                     content: getUserNotificationContent(),
+                                     content: uncontent,
                                      trigger: trigger?.asUserNotificationTrigger())
     }
     
-    private func getUserNotificationContent() -> UNNotificationContent {
-        let content = backgroundContent ?? foregroundContent
+    private func getUserNotificationContent() -> UNNotificationContent? {
+        guard let content = backgroundContent else {
+            return nil
+        }
         let userNotificationContent = UNMutableNotificationContent()
         userNotificationContent.title = content.title
         userNotificationContent.body = content.body
         userNotificationContent.sound = content.isCritical ? .defaultCritical : .default
-        userNotificationContent.categoryIdentifier = LoopNotificationCategory.alert.rawValue
+        // TODO: Once we have a final design and approval for custom UserNotification buttons, we'll need to set categoryIdentifier
+//        userNotificationContent.categoryIdentifier = LoopNotificationCategory.alert.rawValue
         userNotificationContent.threadIdentifier = identifier // Used to match categoryIdentifier, but I /think/ we want multiple threads for multiple alert types, no?
         userNotificationContent.userInfo = [
             LoopNotificationUserInfoKey.managerIDForAlert.rawValue: managerIdentifier,
-            LoopNotificationUserInfoKey.alertID.rawValue: alertTypeId
+            LoopNotificationUserInfoKey.alertID.rawValue: typeIdentifier
         ]
         return userNotificationContent
     }
