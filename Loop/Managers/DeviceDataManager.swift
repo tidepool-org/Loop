@@ -410,12 +410,12 @@ extension DeviceDataManager: UserAlertHandler {
         alertHandler?.scheduleAlert(alert)
     }
     
-    func unscheduleAlert(identifier: String) {
-        alertHandler?.unscheduleAlert(identifier: identifier)
+    func unscheduleAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+        alertHandler?.unscheduleAlert(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
     }
     
-    func cancelAlert(identifier: String) {
-        alertHandler?.cancelAlert(identifier: identifier)
+    func cancelAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+        alertHandler?.cancelAlert(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
     }
 }
 

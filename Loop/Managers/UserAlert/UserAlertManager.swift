@@ -8,7 +8,10 @@
 
 import LoopKit
 
-/// manages posting alerts, persisting alerts, etc.
+/// Main (singleton-ish) class that is responsible for:
+/// - managing the different targets (handlers) that will post alerts
+/// - serializing alerts to storage
+/// - etc.
 public final class UserAlertManager {
 
     let handlers: [UserAlertHandler]
@@ -24,10 +27,10 @@ extension UserAlertManager: UserAlertHandler {
     public func scheduleAlert(_ alert: UserAlert) {
         handlers.forEach { $0.scheduleAlert(alert) }
     }
-    public func unscheduleAlert(identifier: String) {
-        handlers.forEach { $0.unscheduleAlert(identifier: identifier) }
+    public func unscheduleAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+        handlers.forEach { $0.unscheduleAlert(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier) }
     }
-    public func cancelAlert(identifier: String) {
-        handlers.forEach { $0.cancelAlert(identifier: identifier) }
+    public func cancelAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+        handlers.forEach { $0.cancelAlert(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier) }
     }
 }

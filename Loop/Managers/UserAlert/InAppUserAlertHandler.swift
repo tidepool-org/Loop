@@ -19,57 +19,68 @@ public class InAppUserAlertHandler: UserAlertHandler {
     public init(rootViewController: UIViewController) {
         self.rootViewController = rootViewController
     }
-    
+        
     public func scheduleAlert(_ alert: UserAlert) {
-        if let trigger = alert.trigger {
-            DispatchQueue.main.async {
-                let timer = Timer.scheduledTimer(withTimeInterval: trigger.timeInterval, repeats: trigger.repeats) { [weak self] timer in
-                    self?.show(alert: alert)
-                    if !trigger.repeats {
-                        self?.alertsPending.removeAll { $0.0 == timer && $0.1.identifier == alert.identifier }
-                    }
-                }
-                self.alertsPending.append((timer, alert))
-            }
-        } else {
+        switch alert.trigger {
+        case .immediate:
             show(alert: alert)
+        case .delayed(let interval):
+            schedule(alert: alert, interval: interval, repeats: false)
+        case .repeating(let interval):
+            schedule(alert: alert, interval: interval, repeats: true)
         }
     }
     
-    public func unscheduleAlert(identifier: String) {
-        alertsPending.filter {
-            $0.1.identifier == identifier
-        }
-        .forEach { timer, alert in
-            DispatchQueue.main.async {
+    public func unscheduleAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+        DispatchQueue.main.async {
+            self.alertsPending.filter {
+                $0.1.identifier == UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
+            }
+            .forEach { timer, alert in
                 timer.invalidate()
             }
         }
     }
     
-    public func cancelAlert(identifier: String) {
-        alertsShowing.filter {
-            $0.1.identifier == identifier
-        }
-        .forEach { alertController, alert in
-            DispatchQueue.main.async {
+    public func cancelAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+        DispatchQueue.main.async {
+            self.alertsShowing.filter {
+                $0.1.identifier == UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
+            }
+            .forEach { alertController, alert in
                 alertController.dismiss(animated: true)
             }
         }
-        // The contract is that this should also cancel (unschedule) any pending alerts
-        unscheduleAlert(identifier: identifier)
     }
 }
 
 /// Private functions
 extension InAppUserAlertHandler {
     
+    private func schedule(alert: UserAlert, interval: TimeInterval, repeats: Bool) {
+        guard alert.foregroundContent != nil else {
+            return
+        }
+        DispatchQueue.main.async {
+            let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: repeats) { [weak self] timer in
+                self?.show(alert: alert)
+                if !repeats {
+                    self?.alertsPending.removeAll { $0.0 == timer && $0.1.identifier == alert.identifier }
+                }
+            }
+            self.alertsPending.append((timer, alert))
+        }
+    }
+    
     private func show(alert: UserAlert) {
         guard let content = alert.foregroundContent else {
             return
         }
         DispatchQueue.main.async {
-            let alertController = self.presentAlert(title: content.title,message: content.body, action: content.acknowledgeAction) {
+            guard self.alertsShowing.contains(where: { $1.identifier == alert.identifier }) == false else {
+                return
+            }
+            let alertController = self.presentAlert(title: content.title, message: content.body, action: content.acknowledgeAction) {
                 alert.acknowledgeCompletion?(alert.typeIdentifier)
             }
             self.alertsShowing.append((alertController, alert))

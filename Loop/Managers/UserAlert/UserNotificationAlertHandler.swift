@@ -31,12 +31,14 @@ class UserNotificationAlertHandler: UserAlertHandler {
         }
     }
     
-    func unscheduleAlert(identifier: String) {
-        userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+    func unscheduleAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+        userNotificationCenter.removePendingNotificationRequests(withIdentifiers:
+            [UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)])
     }
     
-    func cancelAlert(identifier: String) {
-        userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier])
+    func cancelAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+        userNotificationCenter.removeDeliveredNotifications(withIdentifiers:
+            [UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)])
     }
 }
 
@@ -48,7 +50,7 @@ public extension UserAlert {
         }
         return UNNotificationRequest(identifier: identifier,
                                      content: uncontent,
-                                     trigger: trigger?.asUserNotificationTrigger())
+                                     trigger: trigger.asUserNotificationTrigger())
     }
     
     private func getUserNotificationContent() -> UNNotificationContent? {
@@ -71,8 +73,15 @@ public extension UserAlert {
 }
 
 public extension UserAlert.Trigger {
-    func asUserNotificationTrigger() -> UNNotificationTrigger {
-        return UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: repeats)
+    func asUserNotificationTrigger() -> UNNotificationTrigger? {
+        switch self {
+        case .immediate:
+            return nil
+        case .delayed(let timeInterval):
+            return UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
+        case .repeating(let repeatInterval):
+            return UNTimeIntervalNotificationTrigger(timeInterval: repeatInterval, repeats: true)
+        }
     }
 }
 
