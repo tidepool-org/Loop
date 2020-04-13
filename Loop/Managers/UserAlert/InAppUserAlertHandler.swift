@@ -81,6 +81,7 @@ extension InAppUserAlertHandler {
                 return
             }
             let alertController = self.presentAlert(title: content.title, message: content.body, action: content.acknowledgeAction) {
+                self.alertsShowing.removeAll { $1.identifier == alert.identifier }
                 alert.acknowledgeCompletion?(alert.typeIdentifier)
             }
             self.alertsShowing.append((alertController, alert))
