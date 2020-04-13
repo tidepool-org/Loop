@@ -10,7 +10,6 @@ import UIKit
 import Intents
 import LoopCore
 import LoopKit
-import LoopKitUI
 import UserNotifications
 
 @UIApplicationMain
