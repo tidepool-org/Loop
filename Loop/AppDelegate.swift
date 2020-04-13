@@ -20,8 +20,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private lazy var pluginManager = PluginManager()
 
-    private lazy var deviceManager = DeviceDataManager(pluginManager: pluginManager, alertSink: GlobalAlertUI.instance)
-
+    private var deviceDataManager: DeviceDataManager!
+    private var userAlertManager: UserAlertManager!
+    
     var window: UIWindow?
 
     private var rootViewController: RootNavigationController! {
@@ -29,24 +30,25 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        SharedLogging.instance = deviceManager.loggingServicesManager
+        userAlertManager = UserAlertManager(rootViewController: rootViewController, isAppInBackgroundFunc: isInBackground)
+        deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertHandler: userAlertManager)
+
+        SharedLogging.instance = deviceDataManager.loggingServicesManager
 
         NotificationManager.authorize(delegate: self)
         
         log.info(#function)
 
-        deviceManager.analyticsServicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
+        deviceDataManager.analyticsServicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
 
-        rootViewController.rootViewController.deviceManager = deviceManager
+        rootViewController.rootViewController.deviceManager = deviceDataManager
         
         let notificationOption = launchOptions?[.remoteNotification]
         
         if let notification = notificationOption as? [String: AnyObject] {
-            deviceManager.handleRemoteNotification(notification)
+            deviceDataManager.handleRemoteNotification(notification)
         }
-        
-        GlobalAlertUI.instance.initialize(with: rootViewController)
-        
+                
         return true
     }
 
@@ -60,7 +62,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        deviceManager.updatePumpManagerBLEHeartbeatPreference()
+        deviceDataManager.updatePumpManagerBLEHeartbeatPreference()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
@@ -94,7 +96,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
         let token = tokenParts.joined()
         log.default("RemoteNotifications device token: %{public}@", token)
-        deviceManager.loopManager.settings.deviceToken = deviceToken
+        deviceDataManager.loopManager.settings.deviceToken = deviceToken
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
@@ -110,31 +112,37 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             return
         }
       
-        deviceManager.handleRemoteNotification(notification)
+        deviceDataManager.handleRemoteNotification(notification)
         completionHandler(.noData)
     }
 
+    private func isInBackground() -> Bool {
+        return UIApplication.shared.applicationState == .background
+    }
 }
 
 
 extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+   
+        
         switch response.actionIdentifier {
         case NotificationManager.Action.retryBolus.rawValue:
             if  let units = response.notification.request.content.userInfo[LoopNotificationUserInfoKey.bolusAmount.rawValue] as? Double,
                 let startDate = response.notification.request.content.userInfo[LoopNotificationUserInfoKey.bolusStartDate.rawValue] as? Date,
                 startDate.timeIntervalSinceNow >= TimeInterval(minutes: -5)
             {
-                deviceManager.analyticsServicesManager.didRetryBolus()
+                deviceDataManager.analyticsServicesManager.didRetryBolus()
 
-                deviceManager.enactBolus(units: units, at: startDate) { (_) in
+                deviceDataManager.enactBolus(units: units, at: startDate) { (_) in
                     completionHandler()
                 }
                 return
             }
-        case NotificationManager.Action.acknowledgeCGMAlert.rawValue:
-            if let alertID = response.notification.request.content.userInfo[LoopNotificationUserInfoKey.cgmAlertID.rawValue] as? Int {
-                deviceManager.acknowledgeCGMAlert(alertID: alertID)
+        case NotificationManager.Action.acknowledgeAlert.rawValue:
+            if let alertID = response.notification.request.content.userInfo[LoopNotificationUserInfoKey.alertID.rawValue] as? Int,
+                let managerIdentifier = response.notification.request.content.userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String {
+                deviceDataManager.acknowledgeDeviceAlert(managerIdentifier: managerIdentifier, alertID: alertID)
             }
         default:
             break

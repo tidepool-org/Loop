@@ -20,6 +20,7 @@ final class DeviceDataManager {
     private let log = DiagnosticLog(category: "DeviceDataManager")
 
     let pluginManager: PluginManager
+    weak var alertHandler: UserAlertHandler?
 
     /// Remember the launch date of the app for diagnostic reporting
     private let launchDate = Date()
@@ -87,9 +88,7 @@ final class DeviceDataManager {
 
     private(set) var loopManager: LoopDataManager!
     
-    private let alertSink: AlertSink
-
-    init(pluginManager: PluginManager, alertSink: AlertSink) {
+    init(pluginManager: PluginManager, alertHandler: UserAlertHandler) {
         
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -99,7 +98,7 @@ final class DeviceDataManager {
         analyticsServicesManager = AnalyticsServicesManager()
         
         self.pluginManager = pluginManager
-        self.alertSink = alertSink
+        self.alertHandler = alertHandler
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
             pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
@@ -360,40 +359,63 @@ extension DeviceDataManager {
         pumpManager?.setMustProvideBLEHeartbeat(pumpManagerMustProvideBLEHeartbeat)
     }
     
-    func acknowledgeCGMAlert(alertID: Int) {
-        cgmManager?.acknowledgeAlert(alertID: alertID)
+    func acknowledgeDeviceAlert(managerIdentifier: String, alertID: Int) {
+        if let cgmManager = cgmManager, Swift.type(of: cgmManager).managerIdentifier == managerIdentifier {
+            deviceLog.log(managerIdentifier: Swift.type(of: cgmManager).managerIdentifier,
+                          deviceIdentifier: nil, type: .delegateResponse,
+                          message: "acknowledging CGM alert id \(alertID)", completion: nil)
+            cgmManager.acknowledgeAlert(alertID: alertID)
+        } else if let pumpManager = pumpManager, Swift.type(of: pumpManager).managerIdentifier == managerIdentifier {
+            deviceLog.log(managerIdentifier: Swift.type(of: pumpManager).managerIdentifier,
+                          deviceIdentifier: nil, type: .delegateResponse,
+                          message: "acknowledging Pump alert id \(alertID)", completion: nil)
+            pumpManager.acknowledgeAlert(alertID: alertID)
+        }
     }
 }
 
 // MARK: - DeviceManagerDelegate
 extension DeviceDataManager: DeviceManagerDelegate {
-    func showAlert(_ manager: DeviceManager, title: String, message: String) {
-        
-    }
     
-    func scheduleNotification(for manager: DeviceManager,
-                              identifier: String,
-                              content: UNNotificationContent,
-                              trigger: UNNotificationTrigger?) {
-        let request = UNNotificationRequest(
-            identifier: identifier,
-            content: content,
-            trigger: trigger
-        )
-
-        UNUserNotificationCenter.current().add(request)
-    }
-
-    func clearNotification(for manager: DeviceManager, identifier: String) {
-        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [identifier])
-    }
-    
-    func removeNotificationRequests(for manager: DeviceManager, identifiers: [String]) {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
-    }
+//    func scheduleNotification(for manager: DeviceManager,
+//                              identifier: String,
+//                              content: UNNotificationContent,
+//                              trigger: UNNotificationTrigger?) {
+//        let request = UNNotificationRequest(
+//            identifier: identifier,
+//            content: content,
+//            trigger: trigger
+//        )
+//
+//        UNUserNotificationCenter.current().add(request)
+//    }
+//
+//    func clearNotification(for manager: DeviceManager, identifier: String) {
+//        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [identifier])
+//    }
+//    
+//    func removeNotificationRequests(for manager: DeviceManager, identifiers: [String]) {
+//        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
+//    }
     
     func deviceManager(_ manager: DeviceManager, logEventForDeviceIdentifier deviceIdentifier: String?, type: DeviceLogEntryType, message: String, completion: ((Error?) -> Void)?) {
         deviceLog.log(managerIdentifier: Swift.type(of: manager).managerIdentifier, deviceIdentifier: deviceIdentifier, type: type, message: message, completion: completion)
+    }
+}
+
+// MARK: - UserAlertHandler
+extension DeviceDataManager: UserAlertHandler {
+
+    func scheduleAlert(_ alert: UserAlert) {
+        alertHandler?.scheduleAlert(alert)
+    }
+    
+    func unscheduleAlert(identifier: String) {
+        alertHandler?.unscheduleAlert(identifier: identifier)
+    }
+    
+    func cancelAlert(identifier: String) {
+        alertHandler?.cancelAlert(identifier: identifier)
     }
 }
 
