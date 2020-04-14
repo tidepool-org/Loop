@@ -9,7 +9,7 @@
 import Foundation
 import LoopKit
 
-public class InAppUserAlertHandler: DeviceAlertHandler {
+public class InAppModalDeviceAlertHandler: DeviceAlertHandler {
     
     private weak var rootViewController: UIViewController?
     
@@ -57,7 +57,7 @@ public class InAppUserAlertHandler: DeviceAlertHandler {
 }
 
 /// Private functions
-extension InAppUserAlertHandler {
+extension InAppModalDeviceAlertHandler {
     
     private func schedule(alert: DeviceAlert, interval: TimeInterval, repeats: Bool) {
         guard alert.foregroundContent != nil else {

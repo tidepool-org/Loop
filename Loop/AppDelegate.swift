@@ -20,7 +20,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     private lazy var pluginManager = PluginManager()
 
     private var deviceDataManager: DeviceDataManager!
-    private var userAlertManager: UserAlertManager!
+    private var deviceAlertManager: DeviceAlertManager!
     
     var window: UIWindow?
 
@@ -29,8 +29,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        userAlertManager = UserAlertManager(rootViewController: rootViewController, isAppInBackgroundFunc: isInBackground)
-        deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertHandler: userAlertManager)
+        deviceAlertManager = DeviceAlertManager(rootViewController: rootViewController,
+                                                isAppInBackgroundFunc: isInBackground)
+        deviceDataManager = DeviceDataManager(pluginManager: pluginManager, deviceAlertManager: deviceAlertManager)
 
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 
@@ -140,7 +141,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             let userInfo = response.notification.request.content.userInfo
             if let alertTypeIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeId.rawValue] as? DeviceAlert.TypeIdentifier,
                 let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String {
-                deviceDataManager.acknowledgeDeviceAlert(managerIdentifier: managerIdentifier, alertTypeIdentifier: alertTypeIdentifier)
+                deviceAlertManager.acknowledgeDeviceAlert(managerIdentifier: managerIdentifier, alertTypeIdentifier: alertTypeIdentifier)
             }
         default:
             break
