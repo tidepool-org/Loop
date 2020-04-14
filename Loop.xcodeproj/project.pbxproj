@@ -332,7 +332,6 @@
 		895788AD242E69A2002CB114 /* AbsorptionTimeSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895788A5242E69A1002CB114 /* AbsorptionTimeSelection.swift */; };
 		895788AE242E69A2002CB114 /* CarbAndBolusFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895788A6242E69A1002CB114 /* CarbAndBolusFlow.swift */; };
 		895788AF242E69A2002CB114 /* BolusInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895788A7242E69A1002CB114 /* BolusInput.swift */; };
-		895788B0242E69A2002CB114 /* ForEachWatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895788A8242E69A1002CB114 /* ForEachWatchModel.swift */; };
 		895788B1242E69A2002CB114 /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895788A9242E69A1002CB114 /* Color.swift */; };
 		895788B2242E69A2002CB114 /* CircularAccessoryButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895788AA242E69A1002CB114 /* CircularAccessoryButtonStyle.swift */; };
 		895788B3242E69A2002CB114 /* ActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895788AB242E69A2002CB114 /* ActionButton.swift */; };
@@ -1009,7 +1008,6 @@
 		895788A5242E69A1002CB114 /* AbsorptionTimeSelection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AbsorptionTimeSelection.swift; sourceTree = "<group>"; };
 		895788A6242E69A1002CB114 /* CarbAndBolusFlow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarbAndBolusFlow.swift; sourceTree = "<group>"; };
 		895788A7242E69A1002CB114 /* BolusInput.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BolusInput.swift; sourceTree = "<group>"; };
-		895788A8242E69A1002CB114 /* ForEachWatchModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForEachWatchModel.swift; sourceTree = "<group>"; };
 		895788A9242E69A1002CB114 /* Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		895788AA242E69A1002CB114 /* CircularAccessoryButtonStyle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircularAccessoryButtonStyle.swift; sourceTree = "<group>"; };
 		895788AB242E69A2002CB114 /* ActionButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActionButton.swift; sourceTree = "<group>"; };
@@ -1756,6 +1754,7 @@
 		4FF4D0FB1E1834C400846527 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				89F9119324358E4500ECCAF3 /* CarbAbsorptionTime.swift */,
 				4F11D3BF20DCBEEC006E072C /* GlucoseBackfillRequestUserInfo.swift */,
 				4372E48F213CFCE70068E043 /* LoopSettingsUserInfo.swift */,
 				435400331C9F878D00D5819C /* SetBolusUserInfo.swift */,
@@ -1831,7 +1830,6 @@
 				895788A9242E69A1002CB114 /* Color.swift */,
 				89F9118E24352F1600ECCAF3 /* DigitalCrownRotation.swift */,
 				894F6DD2243BCBDB00CCE676 /* Environment+SizeClass.swift */,
-				895788A8242E69A1002CB114 /* ForEachWatchModel.swift */,
 				89A605E62432860C009C1096 /* PeriodicPublisher.swift */,
 				89E08FC9242E7714000D719B /* UIFont.swift */,
 				894F6DD6243C047300CCE676 /* View+Position.swift */,
@@ -1882,7 +1880,6 @@
 			isa = PBXGroup;
 			children = (
 				89F9119524358E6900ECCAF3 /* BolusPickerValues.swift */,
-				89F9119324358E4500ECCAF3 /* CarbAbsorptionTime.swift */,
 				89F9119124358E2B00ECCAF3 /* CarbEntryInputMode.swift */,
 			);
 			path = Models;
@@ -2774,7 +2771,6 @@
 				898ECA61218ABD17001E9D35 /* GlucoseChartData.swift in Sources */,
 				4344629820A8B2D700C4BE6F /* OSLog.swift in Sources */,
 				4328E02A1CFBE2C500E199AA /* UIColor.swift in Sources */,
-				895788B0242E69A2002CB114 /* ForEachWatchModel.swift in Sources */,
 				4372E484213A63FB0068E043 /* ChartHUDController.swift in Sources */,
 				895788AF242E69A2002CB114 /* BolusInput.swift in Sources */,
 				894F6DDB243C07CF00CCE676 /* GramLabel.swift in Sources */,

@@ -11,7 +11,7 @@ import SwiftUI
 
 struct DoseVolumeInput: View {
     var volume: Double
-    var unit: LocalizedStringKey = "U"
+    var unit = Text("U")
     var isEditable: Bool
     var increment: () -> Void
     var decrement: () -> Void
@@ -47,7 +47,7 @@ struct DoseVolumeInput: View {
     }
 
     private var unitLabel: some View {
-        Text(unit)
+        unit
             .font(.system(.callout, design: .rounded))
             .bold()
             .foregroundColor(.insulin)
@@ -59,7 +59,7 @@ struct DoseVolumeInput: View {
             self.decrement()
             WKInterfaceDevice.current().play(.directionDown)
         }, label: {
-            Text("−")
+            Text(verbatim: "−")
                 .font(.system(.body, design: .rounded))
                 .bold()
         })
@@ -72,7 +72,7 @@ struct DoseVolumeInput: View {
             self.increment()
             WKInterfaceDevice.current().play(.directionUp)
         }, label: {
-            Text("+")
+            Text(verbatim: "+")
                 .font(.system(.body, design: .rounded))
                 .bold()
         })

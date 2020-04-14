@@ -1,9 +1,9 @@
 //
 //  AbsorptionTimeSelection.swift
-//  WatchPlayground WatchKit Extension
+//  WatchApp Extension
 //
 //  Created by Michael Pangburn on 3/24/20.
-//  Copyright © 2020 Michael Pangburn. All rights reserved.
+//  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
 import SwiftUI
@@ -53,7 +53,7 @@ struct AbsorptionTimeSelection: View {
                 quantityLabel
             }
 
-            Text(emoji(for: absorptionTime))
+            Text(absorptionTime.emoji)
                 .font(.system(size: 25))
         }
     }
@@ -62,17 +62,6 @@ struct AbsorptionTimeSelection: View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             CarbAmountLabel(amount: amount, scale: .small)
             GramLabel(scale: .small)
-        }
-    }
-
-    private func emoji(for absorptionTime: CarbAbsorptionTime) -> String {
-        switch absorptionTime {
-        case .fast:
-            return "🍭"
-        case .medium:
-            return "🌮"
-        case .slow:
-            return "🍕"
         }
     }
 

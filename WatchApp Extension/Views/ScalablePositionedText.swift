@@ -17,7 +17,7 @@ enum PositionedTextScale {
 /// Applies a scale effect between text styles to enable smoothly animated text resizing,
 /// while managing positioning and propagation of position up the view hierarchy.
 struct ScalablePositionedText<Key: PreferenceKey>: View where Key.Value == Anchor<CGPoint>? {
-    var text: LocalizedStringKey
+    var text: Text
     var scale: PositionedTextScale
     var origin: Anchor<CGPoint>?
     var smallTextStyle: UIFont.TextStyle
@@ -26,7 +26,7 @@ struct ScalablePositionedText<Key: PreferenceKey>: View where Key.Value == Ancho
     var weight: Font.Weight?
 
     var body: some View {
-        Text(text)
+        text
             .font(.system(textStyle.swiftUIVariant, design: design))
             .fontWeight(weight)
             .scaleEffect(scaleRatio, anchor: .topLeading)

@@ -16,7 +16,7 @@ struct CarbAmountLabel: View {
 
     var body: some View {
         ScalablePositionedText<CarbAmountPositionKey>(
-            text: "\(amount)",
+            text: Text(verbatim: "\(amount)"),
             scale: scale,
             origin: origin,
             smallTextStyle: .body,

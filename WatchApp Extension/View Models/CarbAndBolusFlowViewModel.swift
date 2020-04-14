@@ -6,6 +6,7 @@
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
+import Foundation
 import Combine
 import HealthKit
 import WatchKit
@@ -15,10 +16,16 @@ import LoopCore
 
 
 final class CarbAndBolusFlowViewModel: ObservableObject {
+    enum Error: Swift.Error {
+        case potentialCarbEntryMessageSendFailure
+        case bolusMessageSendFailure
+    }
+
     // MARK: - Published state
     @Published var isComputingRecommendedBolus = false
     @Published var recommendedBolusAmount: Double?
     @Published var maxBolus: Double
+    @Published var error: Error?
 
     // MARK: - Other state
     let interactionStartDate = Date()
@@ -31,12 +38,10 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
 
     // MARK: - Initialization
     let configuration: CarbAndBolusFlow.Configuration
-    private let _presentAlert: (_ title: String, _ message: String) -> Void
-    private let _dismiss: () -> Void
+    private let dismiss: () -> Void
 
     init(
         configuration: CarbAndBolusFlow.Configuration,
-        presentAlert: @escaping (_ title: String, _ message: String) -> Void,
         dismiss: @escaping () -> Void
     ) {
         let loopManager = ExtensionDelegate.shared().loopManager
@@ -49,8 +54,7 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
 
         self._maxBolus = Published(initialValue: loopManager.settings.maximumBolus ?? Self.defaultMaxBolus)
         self.configuration = configuration
-        self._presentAlert = presentAlert
-        self._dismiss = dismiss
+        self.dismiss = dismiss
 
         contextUpdateObservation = NotificationCenter.default.addObserver(
             forName: LoopDataManager.didUpdateContextNotification,
@@ -144,10 +148,7 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
             )
         } catch {
             isComputingRecommendedBolus = false
-            presentAlert(
-                withTitle: NSLocalizedString("Send Failed", comment: "The title of the alert controller displayed after a potential carb entry send attempt fails"),
-                message: NSLocalizedString("Make sure your iPhone is nearby and try again", comment: "The recovery message displayed after a potential carb entry send attempt fails")
-            )
+            self.error = .potentialCarbEntryMessageSendFailure
         }
     }
 
@@ -171,6 +172,7 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
         }
 
         sendSetBolusUserInfo(carbEntry: carbEntry, bolus: 0)
+        dismiss()
     }
 
     func addCarbsAndDeliverBolus(_ bolusAmount: Double) {
@@ -198,19 +200,36 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
                     }
                 }
             }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+                self.dismiss()
+            }
         } catch {
-            presentAlert(
-                withTitle: NSLocalizedString("Bolus Failed", comment: "The title of the alert controller displayed after a bolus attempt fails"),
-                message: NSLocalizedString("Make sure your iPhone is nearby and try again", comment: "The recovery message displayed after a bolus attempt fails")
-            )
+            self.error = .bolusMessageSendFailure
+        }
+    }
+}
+
+extension CarbAndBolusFlowViewModel.Error: LocalizedError {
+    var failureReason: String? {
+        switch self {
+        case .potentialCarbEntryMessageSendFailure:
+            return NSLocalizedString("Unable to Reach iPhone", comment: "The title of the alert controller displayed after a potential carb entry send attempt fails")
+        case .bolusMessageSendFailure:
+            return NSLocalizedString("Bolus Failed", comment: "The title of the alert controller displayed after a bolus attempt fails")
         }
     }
 
-    func dismiss() {
-        _dismiss()
+    var recoverySuggestion: String? {
+        switch self {
+        case .potentialCarbEntryMessageSendFailure:
+            return NSLocalizedString("Make sure your iPhone is nearby and try again.", comment: "The recovery message displayed after a potential carb entry send attempt fails")
+        case .bolusMessageSendFailure:
+            return NSLocalizedString("Make sure your iPhone is nearby and try again.", comment: "The recovery message displayed after a bolus attempt fails")
+        }
     }
+}
 
-    private func presentAlert(withTitle title: String, message: String) {
-        _presentAlert(title, message)
-    }
+extension CarbAndBolusFlowViewModel.Error: Identifiable {
+    var id: Self { self }
 }

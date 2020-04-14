@@ -1,9 +1,9 @@
 //
 //  CircularAccessoryButtonStyle.swift
-//  WatchPlayground WatchKit Extension
+//  WatchApp Extension
 //
 //  Created by Michael Pangburn on 3/24/20.
-//  Copyright © 2020 Michael Pangburn. All rights reserved.
+//  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
 import SwiftUI

@@ -1,9 +1,9 @@
 //
 //  BolusInput.swift
-//  WatchPlayground WatchKit Extension
+//  WatchApp Extension
 //
 //  Created by Michael Pangburn on 3/24/20.
-//  Copyright © 2020 Michael Pangburn. All rights reserved.
+//  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
 import Foundation
@@ -53,19 +53,19 @@ struct BolusInput: View {
     }
 
     private var recommendedAmountLabel: some View {
-        Text(recommendedAmountLabelText)
+        recommendedAmountLabelText
             .font(Font.footnote)
             .foregroundColor(.insulin)
             .transition(.opacity)
     }
 
-    private var recommendedAmountLabelText: LocalizedStringKey {
+    private var recommendedAmountLabelText: Text {
         if isComputingRecommendedAmount {
-            return "REC: Calculating..."
+            return Text("REC: Calculating...", comment: "Indicator that recommended bolus computation is in progress on Apple Watch")
         } else {
             let value = recommendedAmount ?? 0
             let valueString = Self.formatter.string(from: value as NSNumber) ?? String(value)
-            return "REC: \(valueString) U"
+            return Text("REC: \(valueString) U", comment: "Recommended bolus amount label on Apple Watch")
         }
     }
 }

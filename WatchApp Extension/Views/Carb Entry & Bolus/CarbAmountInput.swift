@@ -29,7 +29,7 @@ struct CarbAmountInput: View {
 
     private var decrementButton: some View {
         Button(action: decrement, label: {
-            Text("−")
+            Text(verbatim: "−")
                 .font(.system(.body, design: .rounded))
                 .bold()
         })
@@ -38,7 +38,7 @@ struct CarbAmountInput: View {
 
     private var incrementButton: some View {
         Button(action: increment, label: {
-            Text("+")
+            Text(verbatim: "+")
                 .font(.system(.body, design: .rounded))
                 .bold()
         })

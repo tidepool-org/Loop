@@ -15,7 +15,7 @@ struct GramLabel: View {
 
     var body: some View {
         ScalablePositionedText<GramLabelPositionKey>(
-            text: "g",
+            text: Text("g", comment: "Short unit label for gram measurement"),
             scale: scale,
             origin: origin,
             smallTextStyle: .footnote,

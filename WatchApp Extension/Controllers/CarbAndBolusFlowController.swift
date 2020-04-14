@@ -14,18 +14,15 @@ import LoopKit
 
 
 final class CarbAndBolusFlowController: WKHostingController<CarbAndBolusFlow>, IdentifiableClass {
-    private var viewModel: CarbAndBolusFlowViewModel {
+    private lazy var viewModel = {
         CarbAndBolusFlowViewModel(
             configuration: configuration,
-            presentAlert: { [unowned self] title, message in
-                self.presentAlert(withTitle: title, message: message, preferredStyle: .alert, actions: [.dismissAction()])
-            },
             dismiss: { [unowned self] in
                 self.willDeactivateObserver = nil
                 self.dismiss()
             }
         )
-    }
+    }()
 
     private var configuration: CarbAndBolusFlow.Configuration = .carbEntry
 
@@ -69,19 +66,7 @@ final class CarbAndBolusFlowController: WKHostingController<CarbAndBolusFlow>, I
 }
 
 extension CarbAndBolusFlowController: NSUserActivityDelegate {
-    private var defaultCarbEntry: NewCarbEntry {
-        let absorptionTime = LoopSettings.defaultCarbAbsorptionTimes.medium
-        return NewCarbEntry(quantity: HKQuantity(unit: .gram(), doubleValue: 15), startDate: Date(), foodType: nil, absorptionTime: absorptionTime, syncIdentifier: UUID().uuidString)
-    }
-
     func updateNewCarbEntryUserActivity() {
-        if #available(watchOSApplicationExtension 5.0, *) {
-            let userActivity = NSUserActivity.forDidAddCarbEntryOnWatch()
-            update(userActivity)
-        } else {
-            let userActivity = NSUserActivity.forNewCarbEntry()
-            userActivity.update(from: defaultCarbEntry)
-            updateUserActivity(userActivity.activityType, userInfo: userActivity.userInfo, webpageURL: nil)
-        }
+        update(.forDidAddCarbEntryOnWatch())
     }
 }

@@ -9,11 +9,11 @@
 private func pickerValueFromBolusValue(_ bolusValue: Double) -> Int {
     switch bolusValue {
     case let bolus where bolus > 10:
-        return Int((bolus - 10.0) * 10) + pickerValueFromBolusValue(10)
+        return Int(((bolus - 10.0) * 10).rounded()) + pickerValueFromBolusValue(10)
     case let bolus where bolus > 1:
-        return Int((bolus - 1.0) * 20) + pickerValueFromBolusValue(1)
+        return Int(((bolus - 1.0) * 20).rounded()) + pickerValueFromBolusValue(1)
     default:
-        return Int(bolusValue * 40)
+        return Int((bolusValue * 40).rounded())
     }
 }
 

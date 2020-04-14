@@ -1,22 +1,22 @@
 //
 //  ActionButton.swift
-//  WatchPlayground WatchKit Extension
+//  WatchApp Extension
 //
 //  Created by Michael Pangburn on 3/24/20.
-//  Copyright © 2020 Michael Pangburn. All rights reserved.
+//  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
 import SwiftUI
 
 
 struct ActionButton: View {
-    var title: LocalizedStringKey
+    var title: Text
     var color: Color
     var action: () -> Void
 
     var body: some View {
         Button(action: action, label: {
-            Text(title)
+            title
                 .fontWeight(.semibold)
                 .animation(nil)
         })

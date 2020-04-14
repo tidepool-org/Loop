@@ -1,9 +1,9 @@
 //
 //  CarbAndBolusFlow.swift
-//  WatchPlayground WatchKit Extension
+//  WatchApp Extension
 //
 //  Created by Michael Pangburn on 3/23/20.
-//  Copyright © 2020 Michael Pangburn. All rights reserved.
+//  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
 import SwiftUI
@@ -39,6 +39,9 @@ struct CarbAndBolusFlow: View {
     @State private var receivedInitialBolusRecommendation = false
     @State private var showingRecommendationChangedAlert = false
 
+    // MARK: - State: Bolus Confirmation
+    @State private var bolusConfirmationProgress: Double = 0
+
     // MARK: - Initialization
 
     private var configuration: Configuration { viewModel.configuration }
@@ -69,6 +72,9 @@ struct CarbAndBolusFlow: View {
         // Handle incoming bolus recommendations.
         .onReceive(viewModel.$recommendedBolusAmount, perform: handleNewBolusRecommendation)
         .alert(isPresented: $showingRecommendationChangedAlert, content: recommendedBolusUpdatedAlert)
+
+        // Handle error states.
+        .alert(item: $viewModel.error, content: communicationErrorAlert(for:))
     }
 }
 
@@ -93,7 +99,6 @@ extension CarbAndBolusFlow {
                     maxBolus: viewModel.maxBolus,
                     isEditable: flowState == .bolusEntry
                 )
-                .onDisappear { self.bolusAmount = 0 }
             }
 
             if configuration != .manualBolus && flowState != .bolusConfirmation {
@@ -120,6 +125,10 @@ extension CarbAndBolusFlow {
         }
         receivedInitialBolusRecommendation = false
         viewModel.discardCarbEntryUnderConsideration()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(300)) {
+            self.bolusAmount = 0
+        }
     }
 
     private func transitionToBolusEntry() {
@@ -169,7 +178,10 @@ extension CarbAndBolusFlow {
     }
 
     private var continueToBolusEntryButton: some View {
-        ActionButton(title: "Continue", color: .carbs) {
+        ActionButton(
+            title: Text("Continue", comment: "Button text to continue from carb entry to bolus entry on Apple Watch"),
+            color: .carbs
+        ) {
             self.transitionToBolusEntry()
         }
         .offset(y: actionButtonOffsetY)
@@ -187,19 +199,20 @@ extension CarbAndBolusFlow {
                 }
             } else if self.configuration == .carbEntry {
                 self.viewModel.addCarbsWithoutBolusing()
-                self.viewModel.dismiss()
             }
         }
         .offset(y: actionButtonOffsetY)
         .transition(.fadeIn(after: 0.35, removal: .identity))
     }
 
-    private var saveButtonText: LocalizedStringKey {
+    private var saveButtonText: Text {
         switch configuration {
         case .carbEntry:
-            return bolusAmount > 0 ? "Save & Bolus" : "Save"
+            return bolusAmount > 0
+                ? Text("Save & Bolus", comment: "Button text to confirm carb entry and bolus on Apple Watch")
+                : Text("Save", comment: "Button text to confirm carb entry without bolusing on Apple Watch")
         case .manualBolus:
-            return "Bolus"
+            return Text("Bolus", comment: "Button text to confirm manual bolus on Apple Watch")
         }
     }
 
@@ -215,11 +228,8 @@ extension CarbAndBolusFlow {
     }
 
     private var bolusConfirmationView: some View {
-        BolusConfirmationView(onConfirmation: {
+        BolusConfirmationView(progress: $bolusConfirmationProgress, onConfirmation: {
             self.viewModel.addCarbsAndDeliverBolus(self.bolusAmount)
-            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
-                self.viewModel.dismiss()
-            }
         })
         .padding(.bottom, bolusConfirmationPadding)
         .transition(.fadeIn(after: 0.35))
@@ -304,9 +314,25 @@ extension CarbAndBolusFlow {
 
     private func recommendedBolusUpdatedAlert() -> Alert {
         Alert(
-            title: Text("Bolus Recommendation Updated"),
-            message: Text("The bolus recommendation has updated. Please reconfirm the bolus amount."),
+            title: Text("Bolus Recommendation Updated", comment: "Alert title for updated bolus recommendation on Apple Watch"),
+            message: Text("The bolus recommendation has updated. Please reconfirm the bolus amount.", comment: "Alert message for updated bolus recommendation on Apple Watch"),
             dismissButton: .default(Text("OK"))
+        )
+    }
+
+    private func communicationErrorAlert(for error: CarbAndBolusFlowViewModel.Error) -> Alert {
+        let dismissAction: () -> Void
+        switch error {
+        case .potentialCarbEntryMessageSendFailure:
+            dismissAction = {}
+        case .bolusMessageSendFailure:
+            dismissAction = { self.bolusConfirmationProgress = 0 }
+        }
+
+        return Alert(
+            title: Text(error.failureReason!),
+            message: Text(error.recoverySuggestion!),
+            dismissButton: .default(Text("OK"), action: dismissAction)
         )
     }
 }
