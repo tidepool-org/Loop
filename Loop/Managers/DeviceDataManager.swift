@@ -20,7 +20,7 @@ final class DeviceDataManager {
     private let log = DiagnosticLog(category: "DeviceDataManager")
 
     let pluginManager: PluginManager
-    weak var alertHandler: UserAlertHandler?
+    weak var alertHandler: DeviceAlertHandler?
 
     /// Remember the launch date of the app for diagnostic reporting
     private let launchDate = Date()
@@ -88,7 +88,7 @@ final class DeviceDataManager {
 
     private(set) var loopManager: LoopDataManager!
     
-    init(pluginManager: PluginManager, alertHandler: UserAlertHandler) {
+    init(pluginManager: PluginManager, alertHandler: DeviceAlertHandler) {
         
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -359,7 +359,7 @@ extension DeviceDataManager {
         pumpManager?.setMustProvideBLEHeartbeat(pumpManagerMustProvideBLEHeartbeat)
     }
     
-    func acknowledgeDeviceAlert(managerIdentifier: String, alertTypeIdentifier: UserAlert.TypeIdentifier) {
+    func acknowledgeDeviceAlert(managerIdentifier: String, alertTypeIdentifier: DeviceAlert.TypeIdentifier) {
         if let cgmManager = cgmManager, Swift.type(of: cgmManager).managerIdentifier == managerIdentifier {
             deviceLog.log(managerIdentifier: Swift.type(of: cgmManager).managerIdentifier,
                           deviceIdentifier: nil, type: .delegateResponse,
@@ -405,18 +405,18 @@ extension DeviceDataManager: DeviceManagerDelegate {
 }
 
 // MARK: - UserAlertHandler
-extension DeviceDataManager: UserAlertHandler {
+extension DeviceDataManager: DeviceAlertHandler {
 
-    func scheduleAlert(_ alert: UserAlert) {
-        alertHandler?.scheduleAlert(alert)
+    func issueAlert(_ alert: DeviceAlert) {
+        alertHandler?.issueAlert(alert)
     }
     
-    func unscheduleAlert(identifier: UserAlert.Identifier) {
-        alertHandler?.unscheduleAlert(identifier: identifier)
+    func removePendingAlerts(identifier: DeviceAlert.Identifier) {
+        alertHandler?.removePendingAlerts(identifier: identifier)
     }
     
-    func cancelAlert(identifier: UserAlert.Identifier) {
-        alertHandler?.cancelAlert(identifier: identifier)
+    func removeDeliveredAlerts(identifier: DeviceAlert.Identifier) {
+        alertHandler?.removeDeliveredAlerts(identifier: identifier)
     }
 }
 

@@ -9,7 +9,7 @@
 import LoopKit
 import UserNotifications
 
-class UserNotificationAlertHandler: UserAlertHandler {
+class UserNotificationAlertHandler: DeviceAlertHandler {
     
     let alertInBackgroundOnly: Bool
     let isAppInBackgroundFunc: () -> Bool
@@ -20,7 +20,7 @@ class UserNotificationAlertHandler: UserAlertHandler {
         self.isAppInBackgroundFunc = isAppInBackgroundFunc
     }
         
-    func scheduleAlert(_ alert: UserAlert) {
+    func issueAlert(_ alert: DeviceAlert) {
         DispatchQueue.main.async {
             if self.alertInBackgroundOnly && self.isAppInBackgroundFunc() || !self.alertInBackgroundOnly {
                 if let request = alert.asUserNotificationRequest() {
@@ -31,16 +31,16 @@ class UserNotificationAlertHandler: UserAlertHandler {
         }
     }
     
-    func unscheduleAlert(identifier: UserAlert.Identifier) {
+    func removePendingAlerts(identifier: DeviceAlert.Identifier) {
         userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier.value])
     }
     
-    func cancelAlert(identifier: UserAlert.Identifier) {
+    func removeDeliveredAlerts(identifier: DeviceAlert.Identifier) {
         userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
     }
 }
 
-public extension UserAlert {
+public extension DeviceAlert {
     
     fileprivate func asUserNotificationRequest() -> UNNotificationRequest? {
         guard let uncontent = getUserNotificationContent() else {
@@ -70,7 +70,7 @@ public extension UserAlert {
     }
 }
 
-public extension UserAlert.Trigger {
+public extension DeviceAlert.Trigger {
     func asUserNotificationTrigger() -> UNNotificationTrigger? {
         switch self {
         case .immediate:

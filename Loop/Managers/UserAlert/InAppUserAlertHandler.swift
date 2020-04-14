@@ -9,18 +9,18 @@
 import Foundation
 import LoopKit
 
-public class InAppUserAlertHandler: UserAlertHandler {
+public class InAppUserAlertHandler: DeviceAlertHandler {
     
     private weak var rootViewController: UIViewController?
     
-    private var alertsShowing: [(UIAlertController, UserAlert)] = []
-    private var alertsPending: [(Timer, UserAlert)] = []
+    private var alertsShowing: [(UIAlertController, DeviceAlert)] = []
+    private var alertsPending: [(Timer, DeviceAlert)] = []
     
     public init(rootViewController: UIViewController) {
         self.rootViewController = rootViewController
     }
         
-    public func scheduleAlert(_ alert: UserAlert) {
+    public func issueAlert(_ alert: DeviceAlert) {
         switch alert.trigger {
         case .immediate:
             show(alert: alert)
@@ -31,7 +31,7 @@ public class InAppUserAlertHandler: UserAlertHandler {
         }
     }
     
-    public func unscheduleAlert(identifier: UserAlert.Identifier) {
+    public func removePendingAlerts(identifier: DeviceAlert.Identifier) {
         DispatchQueue.main.async {
             self.alertsPending.filter {
                 $0.1.identifier == identifier
@@ -43,7 +43,7 @@ public class InAppUserAlertHandler: UserAlertHandler {
         }
     }
     
-    public func cancelAlert(identifier: UserAlert.Identifier) {
+    public func removeDeliveredAlerts(identifier: DeviceAlert.Identifier) {
         DispatchQueue.main.async {
             self.alertsShowing.filter {
                 $0.1.identifier == identifier
@@ -59,7 +59,7 @@ public class InAppUserAlertHandler: UserAlertHandler {
 /// Private functions
 extension InAppUserAlertHandler {
     
-    private func schedule(alert: UserAlert, interval: TimeInterval, repeats: Bool) {
+    private func schedule(alert: DeviceAlert, interval: TimeInterval, repeats: Bool) {
         guard alert.foregroundContent != nil else {
             return
         }
@@ -74,7 +74,7 @@ extension InAppUserAlertHandler {
         }
     }
     
-    private func show(alert: UserAlert) {
+    private func show(alert: DeviceAlert) {
         guard let content = alert.foregroundContent else {
             return
         }

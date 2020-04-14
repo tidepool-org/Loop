@@ -14,7 +14,7 @@ import LoopKit
 /// - etc.
 public final class UserAlertManager {
 
-    let handlers: [UserAlertHandler]
+    let handlers: [DeviceAlertHandler]
     
     public init(rootViewController: UIViewController, isAppInBackgroundFunc: @escaping () -> Bool) {
         handlers = [UserNotificationAlertHandler(isAppInBackgroundFunc: isAppInBackgroundFunc),
@@ -22,15 +22,15 @@ public final class UserAlertManager {
     }
 }
 
-extension UserAlertManager: UserAlertHandler {
+extension UserAlertManager: DeviceAlertHandler {
 
-    public func scheduleAlert(_ alert: UserAlert) {
-        handlers.forEach { $0.scheduleAlert(alert) }
+    public func issueAlert(_ alert: DeviceAlert) {
+        handlers.forEach { $0.issueAlert(alert) }
     }
-    public func unscheduleAlert(identifier: UserAlert.Identifier) {
-        handlers.forEach { $0.unscheduleAlert(identifier: identifier) }
+    public func removePendingAlerts(identifier: DeviceAlert.Identifier) {
+        handlers.forEach { $0.removePendingAlerts(identifier: identifier) }
     }
-    public func cancelAlert(identifier: UserAlert.Identifier) {
-        handlers.forEach { $0.cancelAlert(identifier: identifier) }
+    public func removeDeliveredAlerts(identifier: DeviceAlert.Identifier) {
+        handlers.forEach { $0.removeDeliveredAlerts(identifier: identifier) }
     }
 }
