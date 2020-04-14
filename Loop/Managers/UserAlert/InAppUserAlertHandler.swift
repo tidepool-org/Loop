@@ -84,7 +84,7 @@ extension InAppUserAlertHandler {
             guard self.alertsShowing.contains(where: { $1.identifier == alert.identifier }) == false else {
                 return
             }
-            let alertController = self.presentAlert(title: content.title, message: content.body, action: content.acknowledgeAction) {
+            let alertController = self.presentAlert(title: content.title, message: content.body, action: content.acknowledgeActionButtonLabel) {
                 self.alertsShowing.removeAll { $1.identifier == alert.identifier }
                 alert.acknowledgeCompletion?(alert.typeIdentifier)
             }
