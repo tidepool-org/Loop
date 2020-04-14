@@ -33,23 +33,27 @@ public class InAppUserAlertHandler: UserAlertHandler {
     
     public func unscheduleAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
         DispatchQueue.main.async {
+            let identifier = UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
             self.alertsPending.filter {
-                $0.1.identifier == UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
+                $0.1.identifier == identifier
             }
             .forEach { timer, alert in
                 timer.invalidate()
             }
+            self.alertsPending.removeAll { $0.1.identifier == identifier }
         }
     }
     
     public func cancelAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
         DispatchQueue.main.async {
+            let identifier = UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
             self.alertsShowing.filter {
-                $0.1.identifier == UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
+                $0.1.identifier == identifier
             }
             .forEach { alertController, alert in
                 alertController.dismiss(animated: true)
             }
+            self.alertsShowing.removeAll { $0.1.identifier == identifier }
         }
     }
 }

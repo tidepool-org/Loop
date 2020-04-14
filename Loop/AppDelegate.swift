@@ -138,7 +138,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             }
         case NotificationManager.Action.acknowledgeAlert.rawValue:
             let userInfo = response.notification.request.content.userInfo
-            if let alertTypeIdentifier = userInfo[LoopNotificationUserInfoKey.alertID.rawValue] as? UserAlert.TypeIdentifier,
+            if let alertTypeIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeId.rawValue] as? UserAlert.TypeIdentifier,
                 let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String {
                 deviceDataManager.acknowledgeDeviceAlert(managerIdentifier: managerIdentifier, alertTypeIdentifier: alertTypeIdentifier)
             }
