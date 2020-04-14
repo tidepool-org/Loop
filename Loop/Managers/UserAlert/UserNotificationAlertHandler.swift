@@ -31,14 +31,12 @@ class UserNotificationAlertHandler: UserAlertHandler {
         }
     }
     
-    func unscheduleAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
-        userNotificationCenter.removePendingNotificationRequests(withIdentifiers:
-            [UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)])
+    func unscheduleAlert(identifier: UserAlert.Identifier) {
+        userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier.value])
     }
     
-    func cancelAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
-        userNotificationCenter.removeDeliveredNotifications(withIdentifiers:
-            [UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)])
+    func cancelAlert(identifier: UserAlert.Identifier) {
+        userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
     }
 }
 
@@ -48,7 +46,7 @@ public extension UserAlert {
         guard let uncontent = getUserNotificationContent() else {
             return nil
         }
-        return UNNotificationRequest(identifier: identifier,
+        return UNNotificationRequest(identifier: identifier.value,
                                      content: uncontent,
                                      trigger: trigger.asUserNotificationTrigger())
     }
@@ -63,10 +61,10 @@ public extension UserAlert {
         userNotificationContent.sound = content.isCritical ? .defaultCritical : .default
         // TODO: Once we have a final design and approval for custom UserNotification buttons, we'll need to set categoryIdentifier
 //        userNotificationContent.categoryIdentifier = LoopNotificationCategory.alert.rawValue
-        userNotificationContent.threadIdentifier = identifier // Used to match categoryIdentifier, but I /think/ we want multiple threads for multiple alert types, no?
+        userNotificationContent.threadIdentifier = identifier.value // Used to match categoryIdentifier, but I /think/ we want multiple threads for multiple alert types, no?
         userNotificationContent.userInfo = [
-            LoopNotificationUserInfoKey.managerIDForAlert.rawValue: managerIdentifier,
-            LoopNotificationUserInfoKey.alertTypeId.rawValue: typeIdentifier
+            LoopNotificationUserInfoKey.managerIDForAlert.rawValue: identifier.deviceManagerInstanceIdentifier,
+            LoopNotificationUserInfoKey.alertTypeId.rawValue: identifier.typeIdentifier
         ]
         return userNotificationContent
     }

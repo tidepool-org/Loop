@@ -31,9 +31,8 @@ public class InAppUserAlertHandler: UserAlertHandler {
         }
     }
     
-    public func unscheduleAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+    public func unscheduleAlert(identifier: UserAlert.Identifier) {
         DispatchQueue.main.async {
-            let identifier = UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
             self.alertsPending.filter {
                 $0.1.identifier == identifier
             }
@@ -44,9 +43,8 @@ public class InAppUserAlertHandler: UserAlertHandler {
         }
     }
     
-    public func cancelAlert(managerIdentifier: String, typeIdentifier: UserAlert.TypeIdentifier) {
+    public func cancelAlert(identifier: UserAlert.Identifier) {
         DispatchQueue.main.async {
-            let identifier = UserAlert.getIdentifier(managerIdentifier: managerIdentifier, typeIdentifier: typeIdentifier)
             self.alertsShowing.filter {
                 $0.1.identifier == identifier
             }
@@ -86,7 +84,7 @@ extension InAppUserAlertHandler {
             }
             let alertController = self.presentAlert(title: content.title, message: content.body, action: content.acknowledgeActionButtonLabel) {
                 self.alertsShowing.removeAll { $1.identifier == alert.identifier }
-                alert.acknowledgeCompletion?(alert.typeIdentifier)
+                alert.acknowledgeCompletion?(alert.identifier.typeIdentifier)
             }
             self.alertsShowing.append((alertController, alert))
         }
