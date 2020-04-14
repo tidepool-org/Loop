@@ -27,6 +27,10 @@ public final class DeviceAlertManager {
         responders[key] = Weak(alertResponder)
     }
     
+    public func removeAlertResponder(key: String) {
+        responders.removeValue(forKey: key)
+    }
+    
     public func acknowledgeDeviceAlert(managerIdentifier: String, alertTypeIdentifier: DeviceAlert.TypeIdentifier) {
         if let responder = responders[managerIdentifier]?.value {
             responder.acknowledgeAlert(typeIdentifier: alertTypeIdentifier)

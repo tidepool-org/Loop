@@ -43,10 +43,13 @@ final class DeviceDataManager {
             dispatchPrecondition(condition: .onQueue(.main))
             setupCGM()
             UserDefaults.appGroup?.cgmManagerRawValue = cgmManager?.rawValue
-           
+            
+            if let oldValue = oldValue {
+                deviceAlertManager?.removeAlertResponder(key: oldValue.deviceManagerInstanceIdentifier)
+            }
             if let cgmManager = cgmManager {
                 deviceAlertManager?.addAlertResponder(key: cgmManager.deviceManagerInstanceIdentifier,
-                                                   alertResponder: cgmManager)
+                                                      alertResponder: cgmManager)
             }
         }
     }
@@ -68,9 +71,12 @@ final class DeviceDataManager {
             
             UserDefaults.appGroup?.pumpManagerRawValue = pumpManager?.rawValue
             
+            if let oldValue = oldValue {
+                deviceAlertManager?.removeAlertResponder(key: oldValue.deviceManagerInstanceIdentifier)
+            }
             if let pumpManager = pumpManager {
                 deviceAlertManager?.addAlertResponder(key: pumpManager.deviceManagerInstanceIdentifier,
-                                                   alertResponder: pumpManager)
+                                                      alertResponder: pumpManager)
             }
         }
     }
