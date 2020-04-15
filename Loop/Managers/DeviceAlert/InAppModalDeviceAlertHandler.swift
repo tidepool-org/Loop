@@ -33,7 +33,7 @@ public class InAppModalDeviceAlertHandler: DeviceAlertHandler {
         }
     }
     
-    public func removePendingAlerts(identifier: DeviceAlert.Identifier) {
+    public func removePendingAlert(identifier: DeviceAlert.Identifier) {
         DispatchQueue.main.async {
             self.alertsPending.filter {
                 $0.1.identifier == identifier
@@ -45,7 +45,7 @@ public class InAppModalDeviceAlertHandler: DeviceAlertHandler {
         }
     }
     
-    public func removeDeliveredAlerts(identifier: DeviceAlert.Identifier) {
+    public func removeDeliveredAlert(identifier: DeviceAlert.Identifier) {
         DispatchQueue.main.async {
             self.alertsShowing.filter {
                 $0.1.identifier == identifier
@@ -86,7 +86,7 @@ extension InAppModalDeviceAlertHandler {
             }
             let alertController = self.presentAlert(title: content.title, message: content.body, action: content.acknowledgeActionButtonLabel) {
                 self.alertsShowing.removeAll { $1.identifier == alert.identifier }
-                self.deviceAlertManagerResponder?.acknowledgeDeviceAlert(deviceManagerInstanceIdentifier: alert.identifier.deviceManagerInstanceIdentifier,
+                self.deviceAlertManagerResponder?.acknowledgeDeviceAlert(deviceManagerIdentifier: alert.identifier.deviceManagerIdentifier,
                                                                          alertTypeIdentifier: alert.identifier.typeIdentifier)
             }
             self.alertsShowing.append((alertController, alert))

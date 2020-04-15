@@ -31,11 +31,11 @@ class UserNotificationDeviceAlertHandler: DeviceAlertHandler {
         }
     }
     
-    func removePendingAlerts(identifier: DeviceAlert.Identifier) {
+    func removePendingAlert(identifier: DeviceAlert.Identifier) {
         userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier.value])
     }
     
-    func removeDeliveredAlerts(identifier: DeviceAlert.Identifier) {
+    func removeDeliveredAlert(identifier: DeviceAlert.Identifier) {
         userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
     }
 }
@@ -63,7 +63,7 @@ public extension DeviceAlert {
 //        userNotificationContent.categoryIdentifier = LoopNotificationCategory.alert.rawValue
         userNotificationContent.threadIdentifier = identifier.value // Used to match categoryIdentifier, but I /think/ we want multiple threads for multiple alert types, no?
         userNotificationContent.userInfo = [
-            LoopNotificationUserInfoKey.managerIDForAlert.rawValue: identifier.deviceManagerInstanceIdentifier,
+            LoopNotificationUserInfoKey.managerIDForAlert.rawValue: identifier.deviceManagerIdentifier,
             LoopNotificationUserInfoKey.alertTypeId.rawValue: identifier.typeIdentifier
         ]
         return userNotificationContent

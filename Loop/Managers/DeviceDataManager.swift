@@ -296,7 +296,7 @@ private extension DeviceDataManager {
 
         updatePumpManagerBLEHeartbeatPreference()
         if let cgmManager = cgmManager {
-            deviceAlertManager?.addAlertResponder(key: cgmManager.deviceManagerInstanceIdentifier,
+            deviceAlertManager?.addAlertResponder(key: cgmManager.deviceManagerIdentifier,
                                                   alertResponder: cgmManager)
         }
     }
@@ -315,7 +315,7 @@ private extension DeviceDataManager {
             loopManager?.doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
         }
         if let pumpManager = pumpManager {
-            deviceAlertManager?.addAlertResponder(key: pumpManager.deviceManagerInstanceIdentifier,
+            deviceAlertManager?.addAlertResponder(key: pumpManager.deviceManagerIdentifier,
                                                   alertResponder: pumpManager)
         }
     }
@@ -404,12 +404,12 @@ extension DeviceDataManager: DeviceAlertHandler {
         deviceAlertManager?.issueAlert(alert)
     }
     
-    func removePendingAlerts(identifier: DeviceAlert.Identifier) {
-        deviceAlertManager?.removePendingAlerts(identifier: identifier)
+    func removePendingAlert(identifier: DeviceAlert.Identifier) {
+        deviceAlertManager?.removePendingAlert(identifier: identifier)
     }
     
-    func removeDeliveredAlerts(identifier: DeviceAlert.Identifier) {
-        deviceAlertManager?.removeDeliveredAlerts(identifier: identifier)
+    func removeDeliveredAlert(identifier: DeviceAlert.Identifier) {
+        deviceAlertManager?.removeDeliveredAlert(identifier: identifier)
     }
 }
 
