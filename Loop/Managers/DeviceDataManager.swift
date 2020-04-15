@@ -398,7 +398,7 @@ extension DeviceDataManager: DeviceManagerDelegate {
 }
 
 // MARK: - UserAlertHandler
-extension DeviceDataManager: DeviceAlertHandler {
+extension DeviceDataManager: DeviceAlertPresenter {
 
     func issueAlert(_ alert: DeviceAlert) {
         deviceAlertManager?.issueAlert(alert)

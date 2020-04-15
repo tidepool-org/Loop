@@ -12,7 +12,7 @@ import XCTest
 
 class DeviceAlertManagerTests: XCTestCase {
     
-    class MockHandler: DeviceAlertHandler {
+    class MockHandler: DeviceAlertPresenter {
         var issuedAlert: DeviceAlert?
         func issueAlert(_ alert: DeviceAlert) {
             issuedAlert = alert
@@ -44,7 +44,8 @@ class DeviceAlertManagerTests: XCTestCase {
     
     override func setUp() {
         mockHandler = MockHandler()
-        deviceAlertManager = DeviceAlertManager(rootViewController: UIViewController(),                                              isAppInBackgroundFunc: { return self.isInBackground },
+        deviceAlertManager = DeviceAlertManager(rootViewController: UIViewController(),
+                                                isAppInBackgroundFunc: { return self.isInBackground },
                                                 handlers: [mockHandler])
     }
     

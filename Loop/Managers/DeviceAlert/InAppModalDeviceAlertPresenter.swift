@@ -1,5 +1,5 @@
 //
-//  InAppUserAlertHandler.swift
+//  InAppModalDeviceAlertPresenter.swift
 //  LoopKit
 //
 //  Created by Rick Pasetto on 4/9/20.
@@ -9,7 +9,7 @@
 import Foundation
 import LoopKit
 
-public class InAppModalDeviceAlertHandler: DeviceAlertHandler {
+public class InAppModalDeviceAlertPresenter: DeviceAlertPresenter {
     
     private weak var rootViewController: UIViewController?
     private weak var deviceAlertManagerResponder: DeviceAlertManagerResponder?
@@ -49,7 +49,7 @@ public class InAppModalDeviceAlertHandler: DeviceAlertHandler {
 }
 
 /// Private functions
-extension InAppModalDeviceAlertHandler {
+extension InAppModalDeviceAlertPresenter {
         
     private func schedule(alert: DeviceAlert, interval: TimeInterval, repeats: Bool) {
         guard alert.foregroundContent != nil else {

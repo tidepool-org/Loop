@@ -9,7 +9,7 @@
 import LoopKit
 import UserNotifications
 
-class UserNotificationDeviceAlertHandler: DeviceAlertHandler {
+class UserNotificationDeviceAlertPresenter: DeviceAlertPresenter {
     
     let alertInBackgroundOnly: Bool
     let isAppInBackgroundFunc: () -> Bool
