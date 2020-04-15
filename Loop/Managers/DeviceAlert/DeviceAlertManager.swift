@@ -9,8 +9,8 @@
 import LoopKit
 
 protocol DeviceAlertManagerResponder: class {
-    /// Method for our Handlers to call to kick off alert response.  Differs from DeviceAlertResponder because here we need the `deviceManagerIdentifier`.
-    func acknowledgeDeviceAlert(deviceManagerIdentifier: String, alertTypeIdentifier: DeviceAlert.TypeIdentifier)
+    /// Method for our Handlers to call to kick off alert response.  Differs from DeviceAlertResponder because here we need the whole `Identifier`.
+    func acknowledgeDeviceAlert(identifier: DeviceAlert.Identifier)
 }
 
 /// Main (singleton-ish) class that is responsible for:
@@ -39,9 +39,9 @@ public final class DeviceAlertManager {
 }
 
 extension DeviceAlertManager: DeviceAlertManagerResponder {
-    func acknowledgeDeviceAlert(deviceManagerIdentifier: String, alertTypeIdentifier: DeviceAlert.TypeIdentifier) {
-        if let responder = responders[deviceManagerIdentifier]?.value {
-            responder.acknowledgeAlert(typeIdentifier: alertTypeIdentifier)
+    func acknowledgeDeviceAlert(identifier: DeviceAlert.Identifier) {
+        if let responder = responders[identifier.deviceManagerIdentifier]?.value {
+            responder.acknowledgeAlert(typeIdentifier: identifier.typeIdentifier)
         }
     }
 }
