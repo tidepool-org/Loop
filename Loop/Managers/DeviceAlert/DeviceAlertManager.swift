@@ -15,6 +15,7 @@ protocol DeviceAlertManagerResponder: class {
 
 /// Main (singleton-ish) class that is responsible for:
 /// - managing the different targets (handlers) that will post alerts
+/// - managing the different responders that might acknowledge the alert
 /// - serializing alerts to storage
 /// - etc.
 public final class DeviceAlertManager {
