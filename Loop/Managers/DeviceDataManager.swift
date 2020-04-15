@@ -43,14 +43,6 @@ final class DeviceDataManager {
             dispatchPrecondition(condition: .onQueue(.main))
             setupCGM()
             UserDefaults.appGroup?.cgmManagerRawValue = cgmManager?.rawValue
-            
-            if let oldValue = oldValue {
-                deviceAlertManager?.removeAlertResponder(key: oldValue.deviceManagerInstanceIdentifier)
-            }
-            if let cgmManager = cgmManager {
-                deviceAlertManager?.addAlertResponder(key: cgmManager.deviceManagerInstanceIdentifier,
-                                                      alertResponder: cgmManager)
-            }
         }
     }
     
@@ -70,14 +62,6 @@ final class DeviceDataManager {
             NotificationCenter.default.post(name: .PumpManagerChanged, object: self, userInfo: nil)
             
             UserDefaults.appGroup?.pumpManagerRawValue = pumpManager?.rawValue
-            
-            if let oldValue = oldValue {
-                deviceAlertManager?.removeAlertResponder(key: oldValue.deviceManagerInstanceIdentifier)
-            }
-            if let pumpManager = pumpManager {
-                deviceAlertManager?.addAlertResponder(key: pumpManager.deviceManagerInstanceIdentifier,
-                                                      alertResponder: pumpManager)
-            }
         }
     }
 
@@ -311,6 +295,10 @@ private extension DeviceDataManager {
         loopManager.glucoseStore.managedDataInterval = cgmManager?.managedDataInterval
 
         updatePumpManagerBLEHeartbeatPreference()
+        if let cgmManager = cgmManager {
+            deviceAlertManager?.addAlertResponder(key: cgmManager.deviceManagerInstanceIdentifier,
+                                                  alertResponder: cgmManager)
+        }
     }
 
     func setupPump() {
@@ -325,6 +313,10 @@ private extension DeviceDataManager {
         // Proliferate PumpModel preferences to DoseStore
         if let pumpRecordsBasalProfileStartEvents = pumpManager?.pumpRecordsBasalProfileStartEvents {
             loopManager?.doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
+        }
+        if let pumpManager = pumpManager {
+            deviceAlertManager?.addAlertResponder(key: pumpManager.deviceManagerInstanceIdentifier,
+                                                  alertResponder: pumpManager)
         }
     }
 

@@ -12,12 +12,14 @@ import LoopKit
 public class InAppModalDeviceAlertHandler: DeviceAlertHandler {
     
     private weak var rootViewController: UIViewController?
+    private weak var deviceAlertManagerResponder: DeviceAlertManagerResponder?
     
     private var alertsShowing: [(UIAlertController, DeviceAlert)] = []
     private var alertsPending: [(Timer, DeviceAlert)] = []
     
-    public init(rootViewController: UIViewController) {
+    init(rootViewController: UIViewController, deviceAlertManagerResponder: DeviceAlertManagerResponder) {
         self.rootViewController = rootViewController
+        self.deviceAlertManagerResponder = deviceAlertManagerResponder
     }
         
     public func issueAlert(_ alert: DeviceAlert) {
@@ -84,7 +86,8 @@ extension InAppModalDeviceAlertHandler {
             }
             let alertController = self.presentAlert(title: content.title, message: content.body, action: content.acknowledgeActionButtonLabel) {
                 self.alertsShowing.removeAll { $1.identifier == alert.identifier }
-                alert.acknowledgeCompletion?(alert.identifier.typeIdentifier)
+                self.deviceAlertManagerResponder?.acknowledgeDeviceAlert(deviceManagerInstanceIdentifier: alert.identifier.deviceManagerInstanceIdentifier,
+                                                                         alertTypeIdentifier: alert.identifier.typeIdentifier)
             }
             self.alertsShowing.append((alertController, alert))
         }
