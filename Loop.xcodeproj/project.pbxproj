@@ -24,6 +24,7 @@
 /* Begin PBXBuildFile section */
 		1DA649A7244126CD00F61E75 /* UserNotificationDeviceAlertHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA649A6244126CD00F61E75 /* UserNotificationDeviceAlertHandler.swift */; };
 		1DA649A9244126DA00F61E75 /* InAppModalDeviceAlertHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA649A8244126DA00F61E75 /* InAppModalDeviceAlertHandler.swift */; };
+		1DA7A84224476EAD008257F0 /* DeviceAlertManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA7A84124476EAD008257F0 /* DeviceAlertManagerTests.swift */; };
 		1DB1065124467E18005542BD /* DeviceAlertManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1065024467E18005542BD /* DeviceAlertManager.swift */; };
 		43027F0F1DFE0EC900C51989 /* HKUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F526D5E1DF2459000A04910 /* HKUnit.swift */; };
 		4302F4E11D4E9C8900F0FCAF /* TextFieldTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4302F4E01D4E9C8900F0FCAF /* TextFieldTableViewController.swift */; };
@@ -566,6 +567,7 @@
 /* Begin PBXFileReference section */
 		1DA649A6244126CD00F61E75 /* UserNotificationDeviceAlertHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserNotificationDeviceAlertHandler.swift; sourceTree = "<group>"; };
 		1DA649A8244126DA00F61E75 /* InAppModalDeviceAlertHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InAppModalDeviceAlertHandler.swift; sourceTree = "<group>"; };
+		1DA7A84124476EAD008257F0 /* DeviceAlertManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAlertManagerTests.swift; sourceTree = "<group>"; };
 		1DB1065024467E18005542BD /* DeviceAlertManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceAlertManager.swift; sourceTree = "<group>"; };
 		4302F4E01D4E9C8900F0FCAF /* TextFieldTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFieldTableViewController.swift; sourceTree = "<group>"; };
 		4302F4E21D4EA54200F0FCAF /* InsulinDeliveryTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InsulinDeliveryTableViewController.swift; sourceTree = "<group>"; };
@@ -1161,6 +1163,22 @@
 			path = DeviceAlert;
 			sourceTree = "<group>";
 		};
+		1DA7A83F24476E8C008257F0 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				1DA7A84024476E98008257F0 /* DeviceAlert */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		1DA7A84024476E98008257F0 /* DeviceAlert */ = {
+			isa = PBXGroup;
+			children = (
+				1DA7A84124476EAD008257F0 /* DeviceAlertManagerTests.swift */,
+			);
+			path = DeviceAlert;
+			sourceTree = "<group>";
+		};
 		4328E0121CFBE1B700E199AA /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
@@ -1580,6 +1598,7 @@
 		43F78D2C1C8FC58F002152D1 /* LoopTests */ = {
 			isa = PBXGroup;
 			children = (
+				1DA7A83F24476E8C008257F0 /* Managers */,
 				43E2D90F1D20C581004DA55F /* Info.plist */,
 				7D2366E421250E0A0028B67D /* InfoPlist.strings */,
 				A9DAE7CF2332D77F006AE942 /* LoopTests.swift */,
@@ -2777,6 +2796,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8968B114240C55F10074BB48 /* LoopSettingsTests.swift in Sources */,
+				1DA7A84224476EAD008257F0 /* DeviceAlertManagerTests.swift in Sources */,
 				A9DAE7D02332D77F006AE942 /* LoopTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

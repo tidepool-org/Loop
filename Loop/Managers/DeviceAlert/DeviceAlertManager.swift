@@ -24,9 +24,11 @@ public final class DeviceAlertManager {
     var responders: [String: Weak<DeviceAlertResponder>] = [:]
     
     public init(rootViewController: UIViewController,
-                isAppInBackgroundFunc: @escaping () -> Bool) {
-        handlers = [UserNotificationDeviceAlertHandler(isAppInBackgroundFunc: isAppInBackgroundFunc),
-                    InAppModalDeviceAlertHandler(rootViewController: rootViewController, deviceAlertManagerResponder: self)]
+                isAppInBackgroundFunc: @escaping () -> Bool,
+                handlers: [DeviceAlertHandler]? = nil) {
+        self.handlers = handlers ??
+            [UserNotificationDeviceAlertHandler(isAppInBackgroundFunc: isAppInBackgroundFunc),
+             InAppModalDeviceAlertHandler(rootViewController: rootViewController, deviceAlertManagerResponder: self)]
     }
     
     public func addAlertResponder(key: String, alertResponder: DeviceAlertResponder) {
