@@ -40,7 +40,7 @@ public final class DeviceAlertManager {
 
 extension DeviceAlertManager: DeviceAlertManagerResponder {
     func acknowledgeDeviceAlert(identifier: DeviceAlert.Identifier) {
-        if let responder = responders[identifier.deviceManagerIdentifier]?.value {
+        if let responder = responders[identifier.managerIdentifier]?.value {
             responder.acknowledgeAlert(typeIdentifier: identifier.typeIdentifier)
         }
     }

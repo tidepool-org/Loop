@@ -140,9 +140,9 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         case NotificationManager.Action.acknowledgeAlert.rawValue:
             let userInfo = response.notification.request.content.userInfo
             if let alertTypeIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeId.rawValue] as? DeviceAlert.TypeIdentifier,
-                let deviceManagerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String {
+                let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String {
                 deviceAlertManager.acknowledgeDeviceAlert(identifier:
-                    DeviceAlert.Identifier(deviceManagerIdentifier: deviceManagerIdentifier, typeIdentifier: alertTypeIdentifier))
+                    DeviceAlert.Identifier(managerIdentifier: managerIdentifier, typeIdentifier: alertTypeIdentifier))
             }
         default:
             break
