@@ -1,5 +1,5 @@
 //
-//  UserNotificationAlertHandler.swift
+//  UserNotificationDeviceAlertPresenter.swift
 //  LoopKit
 //
 //  Created by Rick Pasetto on 4/9/20.
