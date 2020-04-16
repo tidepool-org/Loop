@@ -184,13 +184,4 @@ class UserNotificationDeviceAlertPresenterTests: XCTestCase {
         
         XCTAssertTrue(mockUserNotificationCenter.pendingRequests.isEmpty)
     }
-    
-    func waitOnMain() {
-        let exp = expectation(description: "waitOnMain")
-        DispatchQueue.main.async {
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: 1.0)
-    }
-
 }

@@ -221,12 +221,4 @@ class InAppModalDeviceAlertPresenterTests: XCTestCase {
         XCTAssertNotNil(alertController)
         XCTAssertEqual("FOREGROUND", alertController?.title)
     }
-    
-    func waitOnMain() {
-        let exp = expectation(description: "waitOnMain")
-        DispatchQueue.main.async {
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: 1.0)
-    }
 }
