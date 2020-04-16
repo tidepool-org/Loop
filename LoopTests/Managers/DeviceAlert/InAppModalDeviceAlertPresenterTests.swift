@@ -57,7 +57,7 @@ class InAppModalDeviceAlertPresenterTests: XCTestCase {
         }
     }
     
-    let alertIdentifier = DeviceAlert.Identifier(managerIdentifier: "foo", typeIdentifier: "bar")
+    let alertIdentifier = DeviceAlert.Identifier(managerIdentifier: "foo", alertIdentifier: "bar")
     let foregroundContent = DeviceAlert.Content(title: "FOREGROUND", body: "foreground", acknowledgeActionButtonLabel: "")
     let backgroundContent = DeviceAlert.Content(title: "BACKGROUND", body: "background", acknowledgeActionButtonLabel: "")
     

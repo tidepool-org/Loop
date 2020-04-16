@@ -81,7 +81,7 @@ public extension DeviceAlert {
         userNotificationContent.threadIdentifier = identifier.value // Used to match categoryIdentifier, but I /think/ we want multiple threads for multiple alert types, no?
         userNotificationContent.userInfo = [
             LoopNotificationUserInfoKey.managerIDForAlert.rawValue: identifier.managerIdentifier,
-            LoopNotificationUserInfoKey.alertTypeID.rawValue: identifier.typeIdentifier
+            LoopNotificationUserInfoKey.alertTypeID.rawValue: identifier.alertIdentifier
         ]
         return userNotificationContent
     }
