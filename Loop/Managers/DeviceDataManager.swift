@@ -369,7 +369,7 @@ extension DeviceDataManager {
 
 // MARK: - DeviceManagerDelegate
 extension DeviceDataManager: DeviceManagerDelegate {
-//    #if !USE_NEW_ALERT_FACILITY
+//    #if TO BE REMOVED
     func scheduleNotification(for manager: DeviceManager,
                               identifier: String,
                               content: UNNotificationContent,
