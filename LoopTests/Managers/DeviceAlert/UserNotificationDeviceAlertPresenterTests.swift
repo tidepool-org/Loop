@@ -71,7 +71,7 @@ class UserNotificationDeviceAlertPresenterTests: XCTestCase {
             XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
             XCTAssertEqual([
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
-                LoopNotificationUserInfoKey.alertTypeId.rawValue: alertIdentifier.typeIdentifier
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.typeIdentifier
             ], request.content.userInfo as? [String: String])
             XCTAssertNil(request.trigger)
         }
@@ -92,7 +92,7 @@ class UserNotificationDeviceAlertPresenterTests: XCTestCase {
             XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
             XCTAssertEqual([
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
-                LoopNotificationUserInfoKey.alertTypeId.rawValue: alertIdentifier.typeIdentifier
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.typeIdentifier
             ], request.content.userInfo as? [String: String])
             XCTAssertNil(request.trigger)
         }
@@ -112,7 +112,7 @@ class UserNotificationDeviceAlertPresenterTests: XCTestCase {
             XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
             XCTAssertEqual([
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
-                LoopNotificationUserInfoKey.alertTypeId.rawValue: alertIdentifier.typeIdentifier
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.typeIdentifier
             ], request.content.userInfo as? [String: String])
             XCTAssertEqual(0.1, (request.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval)
             XCTAssertEqual(false, (request.trigger as? UNTimeIntervalNotificationTrigger)?.repeats)
@@ -133,7 +133,7 @@ class UserNotificationDeviceAlertPresenterTests: XCTestCase {
             XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
             XCTAssertEqual([
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
-                LoopNotificationUserInfoKey.alertTypeId.rawValue: alertIdentifier.typeIdentifier
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.typeIdentifier
             ], request.content.userInfo as? [String: String])
             XCTAssertEqual(100, (request.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval)
             XCTAssertEqual(true, (request.trigger as? UNTimeIntervalNotificationTrigger)?.repeats)
