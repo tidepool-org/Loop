@@ -134,6 +134,8 @@ extension WCSession {
             throw MessageError.reachability
         }
 
+        log.default("Sending WatchContextRequestUserInfo")
+
         sendMessage(userInfo.rawValue, replyHandler: { (reply) in
             if let context = WatchContext(rawValue: reply) {
                 completionHandler(.success(context))

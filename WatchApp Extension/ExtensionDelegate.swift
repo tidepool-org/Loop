@@ -80,6 +80,8 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
         }
 
         NotificationCenter.default.post(name: type(of: self).didBecomeActiveNotification, object: self)
+
+        loopManager.requestGlucoseBackfillIfNecessary()
     }
 
     func applicationWillResignActive() {

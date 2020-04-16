@@ -127,6 +127,16 @@ extension LoopDataManager {
             return false
         }
 
+        guard WCSession.default.activationState == .activated else {
+            self.log.default("Skipping glucose backfill request because WCSession is not activated")
+            return false
+        }
+
+        guard WCSession.default.isReachable else {
+            self.log.default("Skipping glucose backfill request because WCSession is not reachable")
+            return false
+        }
+
         lastGlucoseBackfill = Date()
         let userInfo = GlucoseBackfillRequestUserInfo(startDate: latestDate)
         WCSession.default.sendGlucoseBackfillRequestMessage(userInfo) { (result) in
@@ -147,12 +157,14 @@ extension LoopDataManager {
     }
     
     func requestContextUpdate() {
+        log.default("Requesting context update")
         try? WCSession.default.sendContextRequestMessage(WatchContextRequestUserInfo(), completionHandler: { (result) in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let context):
                     self.updateContext(context)
-                case .failure:
+                case .failure(let error):
+                    self.log.error("Failed to fetch context: %{public}@", String(describing: error))
                     break
                 }
             }
