@@ -12,7 +12,7 @@ import XCTest
 
 class DeviceAlertManagerTests: XCTestCase {
     
-    class MockHandler: DeviceAlertPresenter {
+    class MockPresenter: DeviceAlertPresenter {
         var issuedAlert: DeviceAlert?
         func issueAlert(_ alert: DeviceAlert) {
             issuedAlert = alert
@@ -38,36 +38,36 @@ class DeviceAlertManagerTests: XCTestCase {
     static let mockTypeIdentifier = "mockTypeIdentifier"
     let mockDeviceAlert = DeviceAlert(identifier: DeviceAlert.Identifier(managerIdentifier: mockManagerIdentifier, alertIdentifier: mockTypeIdentifier), foregroundContent: nil, backgroundContent: nil, trigger: .immediate)
     
-    var mockHandler: MockHandler!
+    var mockPresenter: MockPresenter!
     var deviceAlertManager: DeviceAlertManager!
     var isInBackground = true
     
     override func setUp() {
-        mockHandler = MockHandler()
+        mockPresenter = MockPresenter()
         deviceAlertManager = DeviceAlertManager(rootViewController: UIViewController(),
                                                 isAppInBackgroundFunc: { return self.isInBackground },
-                                                handlers: [mockHandler])
+                                                handlers: [mockPresenter])
     }
     
     func testIssueAlertOnHandlerCalled() {
         deviceAlertManager.issueAlert(mockDeviceAlert)
-        XCTAssertEqual(mockDeviceAlert.identifier, mockHandler.issuedAlert?.identifier)
-        XCTAssertNil(mockHandler.removeDeliveredAlertIdentifier)
-        XCTAssertNil(mockHandler.removedPendingAlertIdentifier)
+        XCTAssertEqual(mockDeviceAlert.identifier, mockPresenter.issuedAlert?.identifier)
+        XCTAssertNil(mockPresenter.removeDeliveredAlertIdentifier)
+        XCTAssertNil(mockPresenter.removedPendingAlertIdentifier)
     }
     
     func testRemovePendingAlertOnHandlerCalled() {
         deviceAlertManager.removePendingAlert(identifier: mockDeviceAlert.identifier)
-        XCTAssertNil(mockHandler.issuedAlert)
-        XCTAssertEqual(mockDeviceAlert.identifier, mockHandler.removedPendingAlertIdentifier)
-        XCTAssertNil(mockHandler.removeDeliveredAlertIdentifier)
+        XCTAssertNil(mockPresenter.issuedAlert)
+        XCTAssertEqual(mockDeviceAlert.identifier, mockPresenter.removedPendingAlertIdentifier)
+        XCTAssertNil(mockPresenter.removeDeliveredAlertIdentifier)
     }
     
     func testRemoveDeliveredAlertOnHandlerCalled() {
         deviceAlertManager.removeDeliveredAlert(identifier: mockDeviceAlert.identifier)
-        XCTAssertNil(mockHandler.issuedAlert)
-        XCTAssertNil(mockHandler.removedPendingAlertIdentifier)
-        XCTAssertEqual(mockDeviceAlert.identifier, mockHandler.removeDeliveredAlertIdentifier)
+        XCTAssertNil(mockPresenter.issuedAlert)
+        XCTAssertNil(mockPresenter.removedPendingAlertIdentifier)
+        XCTAssertEqual(mockDeviceAlert.identifier, mockPresenter.removeDeliveredAlertIdentifier)
     }
 
     func testAlertResponderAcknowledged() {

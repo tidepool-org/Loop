@@ -36,14 +36,14 @@ struct NotificationManager {
         let acknowledgeDeviceAlertAction = UNNotificationAction(
             identifier: Action.acknowledgeDeviceAlert.rawValue,
             title: NSLocalizedString("OK", comment: "The title of the notification action to acknowledge a device alert"),
-            options: [.foreground]
+            options: .foreground
         )
         
         categories.append(UNNotificationCategory(
             identifier: LoopNotificationCategory.alert.rawValue,
             actions: [acknowledgeDeviceAlertAction],
             intentIdentifiers: [],
-            options: [.customDismissAction]
+            options: .customDismissAction
         ))
 
         return Set(categories)
