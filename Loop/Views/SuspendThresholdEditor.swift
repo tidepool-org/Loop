@@ -105,7 +105,7 @@ struct SuspendThresholdEditor: View {
 }
 
 struct SuspendThresholdDescription: View {
-    let text = Text("When your glucose is predicted to go below this value, the app will recommend a basal rate of 0 U and will not recommend a bolus.", comment: "Suspend threshold description")
+    let text = Text("When your glucose is below or predicted to go below this value, the app will recommend a basal rate of 0 U/h and will not recommend a bolus.", comment: "Suspend threshold description")
 
     var body: some View {
         SettingDescription(text: text)
