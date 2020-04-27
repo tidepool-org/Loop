@@ -20,6 +20,7 @@ extension UNUserNotificationCenter: UserNotificationCenter {}
 class UserNotificationDeviceAlertPresenter: DeviceAlertPresenter {
     
     let userNotificationCenter: UserNotificationCenter
+    let log = DiagnosticLog(category: "UserNotificationDeviceAlertPresenter")
     
     init(userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()) {
         self.userNotificationCenter = userNotificationCenter
@@ -30,7 +31,7 @@ class UserNotificationDeviceAlertPresenter: DeviceAlertPresenter {
             if let request = alert.asUserNotificationRequest() {
                 self.userNotificationCenter.add(request) { error in
                     if let error = error {
-                        print("Something went wrong posting the user notification: \(error)")
+                        self.log.error("Something went wrong posting the user notification: %@", error.localizedDescription)
                     }
                 }
                 // For now, UserNotifications do not not acknowledge...not yet at least
