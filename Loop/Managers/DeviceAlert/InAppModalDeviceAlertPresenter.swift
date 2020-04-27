@@ -10,7 +10,6 @@ import Foundation
 import LoopKit
 import AudioToolbox
 import AVFoundation
-import os.log
 
 
 public protocol AlertSoundPlayer {
@@ -189,11 +188,7 @@ extension InAppModalDeviceAlertPresenter {
 
 private class AVSoundPlayer: AlertSoundPlayer {
     private var soundEffect: AVAudioPlayer?
-    private let log = OSLog(category: "AVSoundPlayer")
-    
-    enum Error: Swift.Error {
-        case playFailed
-    }
+    private let log = DiagnosticLog(category: "AVSoundPlayer")
     
     func vibrate() {
         AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
