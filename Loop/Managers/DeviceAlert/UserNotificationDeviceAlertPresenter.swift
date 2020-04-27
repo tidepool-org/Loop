@@ -19,27 +19,21 @@ extension UNUserNotificationCenter: UserNotificationCenter {}
 
 class UserNotificationDeviceAlertPresenter: DeviceAlertPresenter {
     
-    let alertInBackgroundOnly = true
-    let isAppInBackgroundFunc: () -> Bool
     let userNotificationCenter: UserNotificationCenter
     
-    init(isAppInBackgroundFunc: @escaping () -> Bool,
-         userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()) {
-        self.isAppInBackgroundFunc = isAppInBackgroundFunc
+    init(userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()) {
         self.userNotificationCenter = userNotificationCenter
     }
         
     func issueAlert(_ alert: DeviceAlert) {
         DispatchQueue.main.async {
-            if self.alertInBackgroundOnly && self.isAppInBackgroundFunc() || !self.alertInBackgroundOnly {
-                if let request = alert.asUserNotificationRequest() {
-                    self.userNotificationCenter.add(request) { error in
-                        if let error = error {
-                            print("Something went wrong posting the user notification: \(error)")
-                        }
+            if let request = alert.asUserNotificationRequest() {
+                self.userNotificationCenter.add(request) { error in
+                    if let error = error {
+                        print("Something went wrong posting the user notification: \(error)")
                     }
-                    // For now, UserNotifications do not not acknowledge...not yet at least
                 }
+                // For now, UserNotifications do not not acknowledge...not yet at least
             }
         }
     }

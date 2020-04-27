@@ -27,7 +27,7 @@ public final class DeviceAlertManager {
                 isAppInBackgroundFunc: @escaping () -> Bool,
                 handlers: [DeviceAlertPresenter]? = nil) {
         self.handlers = handlers ??
-            [UserNotificationDeviceAlertPresenter(isAppInBackgroundFunc: isAppInBackgroundFunc),
+            [UserNotificationDeviceAlertPresenter(),
              InAppModalDeviceAlertPresenter(rootViewController: rootViewController, deviceAlertManagerResponder: self)]
     }
     
