@@ -87,7 +87,7 @@ extension DeviceAlertManager {
         guard soundName != .vibrate && soundName != .silence else { return nil }
         
         // Seems all the sound files need to be in the sounds directory, so we namespace the filenames
-        return URL(fileURLWithPath: soundsDirectory).appendingPathComponent("\(managerIdentifier)-\(soundName)")
+        return URL(fileURLWithPath: soundsDirectory).appendingPathComponent("\(managerIdentifier)-\(soundName.rawValue)")
     }
     
     private func initializeSoundVendor(_ managerIdentifier: String, _ soundVendor: DeviceAlertSoundVendor) {
@@ -100,7 +100,7 @@ extension DeviceAlertManager {
             try fileManager.createDirectory(atPath: DeviceAlertManager.soundsDirectory, withIntermediateDirectories: true, attributes: nil)
             for soundName in soundFileNames where soundName != .vibrate && soundName != .silence {
                 if let toURL = DeviceAlertManager.soundURL(managerIdentifier: managerIdentifier, soundName: soundName) {
-                    try fileManager.copyIfNewer(from: baseURL.appendingPathComponent(soundName), to: toURL)
+                    try fileManager.copyIfNewer(from: baseURL.appendingPathComponent(soundName.rawValue), to: toURL)
                 }
             }
         } catch {

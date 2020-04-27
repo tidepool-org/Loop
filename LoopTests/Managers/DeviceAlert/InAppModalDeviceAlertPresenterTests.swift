@@ -114,18 +114,19 @@ class InAppModalDeviceAlertPresenterTests: XCTestCase {
     }
     
     func testIssueImmediateAlertWithSound() {
+        let soundName = "soundName"
         let alert = DeviceAlert(identifier: alertIdentifier,
                                 foregroundContent: foregroundContent,
                                 backgroundContent: backgroundContent,
                                 trigger: .immediate,
-                                soundName: "soundName")
+                                soundName: DeviceAlert.SoundName(rawValue: soundName))
         inAppModalDeviceAlertPresenter.issueAlert(alert)
 
         waitOnMain()
         let alertController = mockViewController.viewControllerPresented as? UIAlertController
         XCTAssertNotNil(alertController)
         XCTAssertEqual("FOREGROUND", alertController?.title)
-        XCTAssertEqual("\(InAppModalDeviceAlertPresenterTests.managerIdentifier)-soundName", mockSoundPlayer.urlPlayed?.lastPathComponent)
+        XCTAssertEqual("\(InAppModalDeviceAlertPresenterTests.managerIdentifier)-\(soundName)", mockSoundPlayer.urlPlayed?.lastPathComponent)
         XCTAssertTrue(mockSoundPlayer.vibrateCalled)
     }
     
