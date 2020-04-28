@@ -163,8 +163,8 @@ extension InAppModalDeviceAlertPresenter {
     }
     
     private func playSound(for alert: DeviceAlert) {
-        guard let soundName = alert.soundName else { return }
-        switch soundName {
+        guard let sound = alert.sound else { return }
+        switch sound {
         case .vibrate:
             soundPlayer.vibrate()
         case .silence:

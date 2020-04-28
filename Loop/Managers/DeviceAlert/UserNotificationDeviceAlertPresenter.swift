@@ -19,28 +19,22 @@ extension UNUserNotificationCenter: UserNotificationCenter {}
 
 class UserNotificationDeviceAlertPresenter: DeviceAlertPresenter {
     
-    let alertInBackgroundOnly = true
-    let isAppInBackgroundFunc: () -> Bool
     let userNotificationCenter: UserNotificationCenter
+    let log = DiagnosticLog(category: "UserNotificationDeviceAlertPresenter")
     
-    init(isAppInBackgroundFunc: @escaping () -> Bool,
-         userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()) {
-        self.isAppInBackgroundFunc = isAppInBackgroundFunc
+    init(userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()) {
         self.userNotificationCenter = userNotificationCenter
     }
         
     func issueAlert(_ alert: DeviceAlert) {
         DispatchQueue.main.async {
-            let shouldAlert = self.alertInBackgroundOnly && self.isAppInBackgroundFunc() || !self.alertInBackgroundOnly
-            if shouldAlert || alert.trigger != .immediate {
-                if let request = alert.asUserNotificationRequest() {
-                    self.userNotificationCenter.add(request) { error in
-                        if let error = error {
-                            print("Something went wrong posting the user notification: \(error)")
-                        }
+            if let request = alert.asUserNotificationRequest() {
+                self.userNotificationCenter.add(request) { error in
+                    if let error = error {
+                        self.log.error("Something went wrong posting the user notification: %@", error.localizedDescription)
                     }
-                    // For now, UserNotifications do not not acknowledge...not yet at least
                 }
+                // For now, UserNotifications do not not acknowledge...not yet at least
             }
         }
     }
@@ -91,8 +85,8 @@ public extension DeviceAlert {
         guard let content = backgroundContent else {
             return nil
         }
-        if let soundName = soundName {
-            switch soundName {
+        if let sound = sound {
+            switch sound {
             case .vibrate:
                 // TODO: Not sure how to "force" UNNotificationSound to "vibrate only"...so for now we just do the default
                 break
