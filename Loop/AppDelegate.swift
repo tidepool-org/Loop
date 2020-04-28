@@ -29,8 +29,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        deviceAlertManager = DeviceAlertManager(rootViewController: rootViewController,
-                                                isAppInBackgroundFunc: isInBackground)
+        deviceAlertManager = DeviceAlertManager(rootViewController: rootViewController)
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager, deviceAlertManager: deviceAlertManager)
 
         SharedLogging.instance = deviceDataManager.loggingServicesManager
@@ -105,8 +104,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication,
                      didReceiveRemoteNotification userInfo: [AnyHashable : Any],
-                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
-    ) {
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         guard let notification = userInfo as? [String: AnyObject] else {
             completionHandler(.failed)
             return
@@ -114,10 +112,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
       
         deviceDataManager.handleRemoteNotification(notification)
         completionHandler(.noData)
-    }
-
-    private func isInBackground() -> Bool {
-        return UIApplication.shared.applicationState == .background
     }
 }
 

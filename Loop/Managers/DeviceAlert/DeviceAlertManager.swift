@@ -24,7 +24,6 @@ public final class DeviceAlertManager {
     var responders: [String: Weak<DeviceAlertResponder>] = [:]
     
     public init(rootViewController: UIViewController,
-                isAppInBackgroundFunc: @escaping () -> Bool,
                 handlers: [DeviceAlertPresenter]? = nil) {
         self.handlers = handlers ??
             [UserNotificationDeviceAlertPresenter(),
