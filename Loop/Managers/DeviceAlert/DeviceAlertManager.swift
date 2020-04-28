@@ -76,11 +76,12 @@ extension DeviceAlertManager: DeviceAlertPresenter {
 extension DeviceAlertManager {
     
     public static func soundURL(for alert: DeviceAlert) -> URL? {
-        return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: alert.sound)
+        guard let sound = alert.sound else { return nil }
+        return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: sound)
     }
     
-    private static func soundURL(managerIdentifier: String, sound: DeviceAlert.Sound?) -> URL? {
-        guard let soundFileName = sound?.filename else { return nil }
+    private static func soundURL(managerIdentifier: String, sound: DeviceAlert.Sound) -> URL? {
+        guard let soundFileName = sound.filename else { return nil }
         
         // Seems all the sound files need to be in the sounds directory, so we namespace the filenames
         return soundsDirectoryURL.appendingPathComponent("\(managerIdentifier)-\(soundFileName)")
