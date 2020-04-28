@@ -85,8 +85,8 @@ public extension DeviceAlert {
         guard let content = backgroundContent else {
             return nil
         }
-        if let soundName = soundName {
-            switch soundName {
+        if let sound = sound {
+            switch sound {
             case .vibrate:
                 // TODO: Not sure how to "force" UNNotificationSound to "vibrate only"...so for now we just do the default
                 break

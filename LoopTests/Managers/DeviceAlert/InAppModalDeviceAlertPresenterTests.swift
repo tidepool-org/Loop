@@ -119,7 +119,7 @@ class InAppModalDeviceAlertPresenterTests: XCTestCase {
                                 foregroundContent: foregroundContent,
                                 backgroundContent: backgroundContent,
                                 trigger: .immediate,
-                                soundName: DeviceAlert.SoundName(rawValue: soundName))
+                                sound: .sound(name: soundName))
         inAppModalDeviceAlertPresenter.issueAlert(alert)
 
         waitOnMain()
@@ -135,7 +135,7 @@ class InAppModalDeviceAlertPresenterTests: XCTestCase {
                                 foregroundContent: foregroundContent,
                                 backgroundContent: backgroundContent,
                                 trigger: .immediate,
-                                soundName: .vibrate)
+                                sound: .vibrate)
         inAppModalDeviceAlertPresenter.issueAlert(alert)
 
         waitOnMain()
@@ -151,7 +151,7 @@ class InAppModalDeviceAlertPresenterTests: XCTestCase {
                                 foregroundContent: foregroundContent,
                                 backgroundContent: backgroundContent,
                                 trigger: .immediate,
-                                soundName: .silence)
+                                sound: .silence)
         inAppModalDeviceAlertPresenter.issueAlert(alert)
 
         waitOnMain()

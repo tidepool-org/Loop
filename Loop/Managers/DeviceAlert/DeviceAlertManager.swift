@@ -76,28 +76,28 @@ extension DeviceAlertManager: DeviceAlertPresenter {
 extension DeviceAlertManager {
     
     public static func soundURL(for alert: DeviceAlert) -> URL? {
-        guard let soundName = alert.soundName else { return nil }
-        return soundURL(managerIdentifier: alert.identifier.managerIdentifier, soundName: soundName)
+        return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: alert.sound)
     }
     
-    private static func soundURL(managerIdentifier: String, soundName: DeviceAlert.SoundName) -> URL? {
-        guard soundName != .vibrate && soundName != .silence else { return nil }
+    private static func soundURL(managerIdentifier: String, sound: DeviceAlert.Sound?) -> URL? {
+        guard let soundFileName = sound?.filename else { return nil }
         
         // Seems all the sound files need to be in the sounds directory, so we namespace the filenames
-        return soundsDirectoryURL.appendingPathComponent("\(managerIdentifier)-\(soundName.rawValue)")
+        return soundsDirectoryURL.appendingPathComponent("\(managerIdentifier)-\(soundFileName)")
     }
     
     private func initializeSoundVendor(_ managerIdentifier: String, _ soundVendor: DeviceAlertSoundVendor) {
-        let soundFileNames = soundVendor.getSoundNames()
-        guard let baseURL = soundVendor.getSoundBaseURL(), !soundFileNames.isEmpty else {
+        let sounds = soundVendor.getSounds()
+        guard let baseURL = soundVendor.getSoundBaseURL(), !sounds.isEmpty else {
             return
         }
         do {
             let fileManager = FileManager.default
             try fileManager.createDirectory(atPath: DeviceAlertManager.soundsDirectoryURL.path, withIntermediateDirectories: true, attributes: nil)
-            for soundName in soundFileNames where soundName != .vibrate && soundName != .silence {
-                if let toURL = DeviceAlertManager.soundURL(managerIdentifier: managerIdentifier, soundName: soundName) {
-                    try fileManager.copyIfNewer(from: baseURL.appendingPathComponent(soundName.rawValue), to: toURL)
+            for sound in sounds {
+                if let fromFilename = sound.filename,
+                    let toURL = DeviceAlertManager.soundURL(managerIdentifier: managerIdentifier, sound: sound) {
+                    try fileManager.copyIfNewer(from: baseURL.appendingPathComponent(fromFilename), to: toURL)
                 }
             }
         } catch {

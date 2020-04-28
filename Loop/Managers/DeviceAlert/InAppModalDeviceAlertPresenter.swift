@@ -170,8 +170,8 @@ extension InAppModalDeviceAlertPresenter {
     }
     
     private func playSound(for alert: DeviceAlert) {
-        guard let soundName = alert.soundName else { return }
-        switch soundName {
+        guard let sound = alert.sound else { return }
+        switch sound {
         case .vibrate:
             soundPlayer.vibrate()
         case .silence:
@@ -202,7 +202,7 @@ private class AVSoundPlayer: AlertSoundPlayer {
                 let soundEffect = try AVAudioPlayer(contentsOf: url)
                 self.soundEffect = soundEffect
                 if !soundEffect.play() {
-                    self.log.error("couldn't play sound %@", url.absoluteString)
+                    self.log.default("couldn't play sound (app may be in the background): %@", url.absoluteString)
                 }
             } catch {
                 self.log.error("couldn't play sound %@: %@", url.absoluteString, String(describing: error))
