@@ -28,14 +28,12 @@ public final class DeviceAlertManager {
     var soundVendors: [String: Weak<DeviceAlertSoundVendor>] = [:]
 
     public init(rootViewController: UIViewController,
-                isAppInBackgroundFunc: @escaping () -> Bool,
                 handlers: [DeviceAlertPresenter]? = nil) {
         self.handlers = handlers ??
-            [UserNotificationDeviceAlertPresenter(isAppInBackgroundFunc: isAppInBackgroundFunc),
-             InAppModalDeviceAlertPresenter(rootViewController: rootViewController,
-                                            deviceAlertManagerResponder: self)]
+            [UserNotificationDeviceAlertPresenter(),
+            InAppModalDeviceAlertPresenter(rootViewController: rootViewController, deviceAlertManagerResponder: self)]
     }
-    
+
     public func addAlertResponder(managerIdentifier: String, alertResponder: DeviceAlertResponder) {
         responders[managerIdentifier] = Weak(alertResponder)
     }
