@@ -13,6 +13,10 @@ protocol DeviceAlertManagerResponder: class {
     func acknowledgeDeviceAlert(identifier: DeviceAlert.Identifier)
 }
 
+public enum DeviceAlertUserNotificationUserInfoKey: String {
+    case deviceAlert
+}
+
 /// Main (singleton-ish) class that is responsible for:
 /// - managing the different targets (handlers) that will post alerts
 /// - managing the different responders that might acknowledge the alert
@@ -32,6 +36,8 @@ public final class DeviceAlertManager {
         self.handlers = handlers ??
             [UserNotificationDeviceAlertPresenter(),
             InAppModalDeviceAlertPresenter(rootViewController: rootViewController, deviceAlertManagerResponder: self)]
+
+        playBack()
     }
 
     public func addAlertResponder(managerIdentifier: String, alertResponder: DeviceAlertResponder) {
@@ -128,5 +134,28 @@ extension URL {
     
     func fileCreationDate() throws -> Date {
         return try FileManager.default.attributesOfItem(atPath: self.path)[.creationDate] as! Date
+    }
+}
+
+
+extension DeviceAlertManager {
+    private func playBack() {
+    
+        let center = UNUserNotificationCenter.current()
+        center.getDeliveredNotifications {
+            $0.forEach { notification in
+                if let data = notification.request.content.userInfo[DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue] as? Data,
+                    let savedAlert = try? DeviceAlert.decode(from: data) {
+                    print("Replaying Alert: \(savedAlert)")
+                    self.issueAlert(savedAlert)
+                }
+            }
+        }
+        
+        center.getPendingNotificationRequests {
+            $0.forEach {
+                print("PENDING: \($0)")
+            }
+        }
     }
 }
