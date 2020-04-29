@@ -8,7 +8,6 @@
 
 import Foundation
 import LoopKit
-import os.log
 
 public class InAppModalDeviceAlertPresenter: DeviceAlertPresenter {
 
