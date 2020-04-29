@@ -296,8 +296,10 @@ private extension DeviceDataManager {
 
         updatePumpManagerBLEHeartbeatPreference()
         if let cgmManager = cgmManager {
-            deviceAlertManager?.addAlertResponder(key: cgmManager.managerIdentifier,
+            deviceAlertManager?.addAlertResponder(managerIdentifier: cgmManager.managerIdentifier,
                                                   alertResponder: cgmManager)
+            deviceAlertManager?.addAlertSoundVendor(managerIdentifier: cgmManager.managerIdentifier,
+                                                    soundVendor: cgmManager)
         }
     }
 
@@ -315,8 +317,10 @@ private extension DeviceDataManager {
             loopManager?.doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
         }
         if let pumpManager = pumpManager {
-            deviceAlertManager?.addAlertResponder(key: pumpManager.managerIdentifier,
+            deviceAlertManager?.addAlertResponder(managerIdentifier: pumpManager.managerIdentifier,
                                                   alertResponder: pumpManager)
+            deviceAlertManager?.addAlertSoundVendor(managerIdentifier: pumpManager.managerIdentifier,
+                                                    soundVendor: pumpManager)
         }
     }
 
@@ -369,7 +373,6 @@ extension DeviceDataManager {
 
 // MARK: - DeviceManagerDelegate
 extension DeviceDataManager: DeviceManagerDelegate {
-//    #if TO BE REMOVED
     func scheduleNotification(for manager: DeviceManager,
                               identifier: String,
                               content: UNNotificationContent,
@@ -379,10 +382,10 @@ extension DeviceDataManager: DeviceManagerDelegate {
             content: content,
             trigger: trigger
         )
-        
+
         UNUserNotificationCenter.current().add(request)
     }
-    
+
     func clearNotification(for manager: DeviceManager, identifier: String) {
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [identifier])
     }
@@ -390,7 +393,6 @@ extension DeviceDataManager: DeviceManagerDelegate {
     func removeNotificationRequests(for manager: DeviceManager, identifiers: [String]) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
     }
-//    #endif
     
     func deviceManager(_ manager: DeviceManager, logEventForDeviceIdentifier deviceIdentifier: String?, type: DeviceLogEntryType, message: String, completion: ((Error?) -> Void)?) {
         deviceLog.log(managerIdentifier: Swift.type(of: manager).managerIdentifier, deviceIdentifier: deviceIdentifier, type: type, message: message, completion: completion)
