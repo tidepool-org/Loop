@@ -67,7 +67,8 @@ class UserNotificationDeviceAlertPresenterTests: XCTestCase {
             XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
             XCTAssertEqual([
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
-                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier,
+                DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue: "{\"trigger\":\"immediate\",\"identifier\":{\"managerIdentifier\":\"foo\",\"alertIdentifier\":\"bar\"},\"foregroundContent\":{\"body\":\"foreground\",\"isCritical\":false,\"title\":\"FOREGROUND\",\"acknowledgeActionButtonLabel\":\"\"},\"backgroundContent\":{\"body\":\"background\",\"isCritical\":false,\"title\":\"BACKGROUND\",\"acknowledgeActionButtonLabel\":\"\"}}"
             ], request.content.userInfo as? [String: String])
             XCTAssertNil(request.trigger)
         }
@@ -88,7 +89,8 @@ class UserNotificationDeviceAlertPresenterTests: XCTestCase {
             XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
             XCTAssertEqual([
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
-                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier,
+                DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue: "{\"trigger\":\"immediate\",\"identifier\":{\"managerIdentifier\":\"foo\",\"alertIdentifier\":\"bar\"},\"foregroundContent\":{\"body\":\"foreground\",\"isCritical\":false,\"title\":\"FOREGROUND\",\"acknowledgeActionButtonLabel\":\"\"},\"backgroundContent\":{\"body\":\"background\",\"isCritical\":true,\"title\":\"BACKGROUND\",\"acknowledgeActionButtonLabel\":\"\"}}"
             ], request.content.userInfo as? [String: String])
             XCTAssertNil(request.trigger)
         }
@@ -108,7 +110,8 @@ class UserNotificationDeviceAlertPresenterTests: XCTestCase {
             XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
             XCTAssertEqual([
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
-                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier,
+                DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue: "{\"trigger\":{\"delayed\":{\"delayInterval\":0.10000000000000001}},\"identifier\":{\"managerIdentifier\":\"foo\",\"alertIdentifier\":\"bar\"},\"foregroundContent\":{\"body\":\"foreground\",\"isCritical\":false,\"title\":\"FOREGROUND\",\"acknowledgeActionButtonLabel\":\"\"},\"backgroundContent\":{\"body\":\"background\",\"isCritical\":false,\"title\":\"BACKGROUND\",\"acknowledgeActionButtonLabel\":\"\"}}"
             ], request.content.userInfo as? [String: String])
             XCTAssertEqual(0.1, (request.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval)
             XCTAssertEqual(false, (request.trigger as? UNTimeIntervalNotificationTrigger)?.repeats)
@@ -129,7 +132,8 @@ class UserNotificationDeviceAlertPresenterTests: XCTestCase {
             XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
             XCTAssertEqual([
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
-                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier,
+                DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue: "{\"trigger\":{\"repeating\":{\"repeatInterval\":100}},\"identifier\":{\"managerIdentifier\":\"foo\",\"alertIdentifier\":\"bar\"},\"foregroundContent\":{\"body\":\"foreground\",\"isCritical\":false,\"title\":\"FOREGROUND\",\"acknowledgeActionButtonLabel\":\"\"},\"backgroundContent\":{\"body\":\"background\",\"isCritical\":false,\"title\":\"BACKGROUND\",\"acknowledgeActionButtonLabel\":\"\"}}"
             ], request.content.userInfo as? [String: String])
             XCTAssertEqual(100, (request.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval)
             XCTAssertEqual(true, (request.trigger as? UNTimeIntervalNotificationTrigger)?.repeats)
