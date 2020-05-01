@@ -13,8 +13,17 @@ protocol DeviceAlertManagerResponder: class {
     func acknowledgeDeviceAlert(identifier: DeviceAlert.Identifier)
 }
 
+public protocol UserNotificationCenter {
+    func add(_ request: UNNotificationRequest, withCompletionHandler: ((Error?) -> Void)?)
+    func removePendingNotificationRequests(withIdentifiers: [String])
+    func removeDeliveredNotifications(withIdentifiers: [String])
+    func getDeliveredNotifications(completionHandler: @escaping ([UNNotification]) -> Void)
+    func getPendingNotificationRequests(completionHandler: @escaping ([UNNotificationRequest]) -> Void)
+}
+extension UNUserNotificationCenter: UserNotificationCenter {}
+
 public enum DeviceAlertUserNotificationUserInfoKey: String {
-    case deviceAlert
+    case deviceAlert, deviceAlertTimestamp
 }
 
 /// Main (singleton-ish) class that is responsible for:
@@ -25,18 +34,27 @@ public enum DeviceAlertUserNotificationUserInfoKey: String {
 public final class DeviceAlertManager {
     static let soundsDirectoryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).last!.appendingPathComponent("Sounds")
     
+    static let timestampFormatter = ISO8601DateFormatter()
+    
     private let log = DiagnosticLog(category: "DeviceAlertManager")
 
     var handlers: [DeviceAlertPresenter] = []
     var responders: [String: Weak<DeviceAlertResponder>] = [:]
     var soundVendors: [String: Weak<DeviceAlertSoundVendor>] = [:]
+    
+    let userNotificationCenter: UserNotificationCenter
+    let fileManager: FileManager
 
     public init(rootViewController: UIViewController,
-                handlers: [DeviceAlertPresenter]? = nil) {
+                handlers: [DeviceAlertPresenter]? = nil,
+                userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
+                fileManager: FileManager = FileManager.default) {
+        self.userNotificationCenter = userNotificationCenter
+        self.fileManager = fileManager
         self.handlers = handlers ??
-            [UserNotificationDeviceAlertPresenter(),
+            [UserNotificationDeviceAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalDeviceAlertPresenter(rootViewController: rootViewController, deviceAlertManagerResponder: self)]
-
+            
         playbackPersistedAlerts()
     }
 
@@ -65,9 +83,8 @@ extension DeviceAlertManager: DeviceAlertManagerResponder {
         }
         // Also clear the alert from the NotificationCenter
         log.debug("Removing notification %@ from delivered & pending notifications", identifier.value)
-        let center = UNUserNotificationCenter.current()
-        center.removeDeliveredNotifications(withIdentifiers: [identifier.value])
-        center.removePendingNotificationRequests(withIdentifiers: [identifier.value])
+        userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
+        userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier.value])
     }
 }
 
@@ -104,8 +121,7 @@ extension DeviceAlertManager {
             return
         }
         do {
-            let fileManager = FileManager.default
-            try fileManager.createDirectory(atPath: DeviceAlertManager.soundsDirectoryURL.path, withIntermediateDirectories: true, attributes: nil)
+            try fileManager.createDirectory(at: DeviceAlertManager.soundsDirectoryURL, withIntermediateDirectories: true, attributes: nil)
             for sound in sounds {
                 if let fromFilename = sound.filename,
                     let toURL = DeviceAlertManager.soundURL(managerIdentifier: managerIdentifier, sound: sound) {
@@ -123,8 +139,8 @@ extension FileManager {
     func copyIfNewer(from fromURL: URL, to toURL: URL) throws {
         if fileExists(atPath: toURL.path) {
             // If the source file is newer, remove the old one, otherwise skip it.
-            let toCreationDate = try toURL.fileCreationDate()
-            let fromCreationDate = try fromURL.fileCreationDate()
+            let toCreationDate = try toURL.fileCreationDate(self)
+            let fromCreationDate = try fromURL.fileCreationDate(self)
             if fromCreationDate > toCreationDate {
                 try removeItem(at: toURL)
             } else {
@@ -137,8 +153,8 @@ extension FileManager {
 
 extension URL {
     
-    func fileCreationDate() throws -> Date {
-        return try FileManager.default.attributesOfItem(atPath: self.path)[.creationDate] as! Date
+    func fileCreationDate(_ fileManager: FileManager) throws -> Date {
+        return try fileManager.attributesOfItem(atPath: self.path)[.creationDate] as! Date
     }
 }
 
@@ -147,15 +163,14 @@ extension DeviceAlertManager {
     
     private func playbackPersistedAlerts() {
     
-        let center = UNUserNotificationCenter.current()
-        center.getDeliveredNotifications {
+        userNotificationCenter.getDeliveredNotifications {
             $0.forEach { notification in
                 self.log.debug("Delivered alert: %@", "\(notification)")
                 self.playbackDeliveredNotification(notification)
             }
         }
         
-        center.getPendingNotificationRequests {
+        userNotificationCenter.getPendingNotificationRequests {
             $0.forEach { request in
                 self.log.debug("Pending alert: %@", "\(request)")
                 self.playbackPendingNotificationRequest(request)
@@ -164,77 +179,60 @@ extension DeviceAlertManager {
     }
 
     private func playbackDeliveredNotification(_ notification: UNNotification) {
-        guard let savedAlertString = notification.request.content.userInfo[DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue] as? String else {
-            self.log.error("Could not find persistent alert in notification")
-            return
-        }
-         
-        do {
-            let savedAlert = try DeviceAlert.decode(from: savedAlertString)
-            // Assume if it was delivered, the trigger should be .immediate.
-            let newAlert = DeviceAlert(identifier: savedAlert.identifier,
-                                       foregroundContent: savedAlert.foregroundContent,
-                                       backgroundContent: savedAlert.backgroundContent,
-                                       trigger: .immediate,
-                                       sound: savedAlert.sound)
-            self.log.debug("Replaying Alert: %@", savedAlertString)
-            self.issueAlert(newAlert)
-        } catch {
-            self.log.error("Could not decode alert: error %@, from %@", error.localizedDescription, savedAlertString)
-        }
+        // Assume if it was delivered, the trigger should be .immediate.
+        playbackAnyNotificationRequest(notification.request, usingTrigger: .immediate)
     }
 
     private func playbackPendingNotificationRequest(_ request: UNNotificationRequest) {
-        guard let savedAlertString = request.content.userInfo[DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue] as? String else  {
+        playbackAnyNotificationRequest(request)
+    }
+    
+    private func playbackAnyNotificationRequest(_ request: UNNotificationRequest, usingTrigger trigger: DeviceAlert.Trigger? = nil) {
+        guard let savedAlertString = request.content.userInfo[DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue] as? String,
+            let savedAlertTimestampString = request.content.userInfo[DeviceAlertUserNotificationUserInfoKey.deviceAlertTimestamp.rawValue] as? String,
+            let savedAlertTimestamp = DeviceAlertManager.timestampFormatter.date(from: savedAlertTimestampString) else  {
             self.log.error("Could not find persistent alert in notification")
             return
         }
         do {
             let savedAlert = try DeviceAlert.decode(from: savedAlertString)
-            let newTrigger = determineNewPendingTrigger(from: request) ?? savedAlert.trigger
+            let newTrigger = trigger ?? determineNewTrigger(from: savedAlert, timestamp: savedAlertTimestamp)
             let newAlert = DeviceAlert(identifier: savedAlert.identifier,
                                        foregroundContent: savedAlert.foregroundContent,
                                        backgroundContent: savedAlert.backgroundContent,
                                        trigger: newTrigger,
                                        sound: savedAlert.sound)
-            self.log.debug("Replaying Pending Alert: %@ with new trigger %@", savedAlertString, "\(newTrigger)")
+            self.log.debug("Replaying %@Alert: %@ with %@trigger %@",
+                           trigger != nil ? "" : "Pending ",
+                           trigger != nil ? "" : "new ",
+                           savedAlertString, "\(newTrigger)")
             self.issueAlert(newAlert)
         } catch {
             self.log.error("Could not decode alert: error %@, from %@", error.localizedDescription, savedAlertString)
         }
     }
     
-    private func determineNewPendingTrigger(from request: UNNotificationRequest) -> DeviceAlert.Trigger? {
-        guard let requestTrigger = request.trigger else {
-            //Is immediate a good fallback?
-            return DeviceAlert.Trigger.immediate
-        }
-        // Strange case here: if it is a repeating trigger, we can't really play back exactly
-        // at the right "remaining time" and then repeat at the original period.  So, I think
-        // the best we can do is just use the original trigger
-        if requestTrigger.repeats {
-            return nil  // use saved trigger
-        } else if let delay = requestTrigger.getNextTriggerDate()?.timeIntervalSinceNow {
-            return .delayed(interval: delay)
-        } else {
-            //Is immediate a good fallback?
-            return .immediate
+    private func determineNewTrigger(from alert: DeviceAlert, timestamp: Date) -> DeviceAlert.Trigger {
+        switch alert.trigger {
+        case .immediate:
+            return alert.trigger
+        case .delayed(let interval):
+            let triggerTime = timestamp.addingTimeInterval(interval)
+            let timeIntervalSinceNow = triggerTime.timeIntervalSinceNow
+            if timeIntervalSinceNow < 0 {
+                // Trigger time has passed...trigger immediately
+                return .immediate
+            } else {
+                return .delayed(interval: timeIntervalSinceNow)
+            }
+        case .repeating:
+            // Strange case here: if it is a repeating trigger, we can't really play back exactly
+            // at the right "remaining time" and then repeat at the original period.  So, I think
+            // the best we can do is just use the original trigger
+            return alert.trigger
         }
     }
 
-}
-
-fileprivate extension UNNotificationTrigger {
-    func getNextTriggerDate() -> Date? {
-        //// <XXX!! -- Hm. this isn't doing what I thought it would.  I thought it would give me the "time remaining" on the notification.  It doesn't seem to be doing that.
-        if let timeIntervalTrigger = self as? UNTimeIntervalNotificationTrigger {
-            return timeIntervalTrigger.nextTriggerDate()
-        }
-        if let calendarTrigger = self as? UNCalendarNotificationTrigger {
-            return calendarTrigger.nextTriggerDate()
-        }
-        return nil
-    }
 }
 
 public extension DeviceAlert {
@@ -242,15 +240,8 @@ public extension DeviceAlert {
     enum Error: String, Swift.Error {
         case noBackgroundContent
     }
-    
-    func asUserNotificationRequest() throws -> UNNotificationRequest {
-        let uncontent = try getUserNotificationContent()
-        return UNNotificationRequest(identifier: identifier.value,
-                                     content: uncontent,
-                                     trigger: trigger.asUserNotificationTrigger())
-    }
-    
-    private func getUserNotificationContent() throws -> UNNotificationContent {
+        
+    fileprivate func getUserNotificationContent(timestamp: Date) throws -> UNNotificationContent {
         guard let content = backgroundContent else {
             throw Error.noBackgroundContent
         }
@@ -267,6 +258,8 @@ public extension DeviceAlert {
         ]
         let encodedAlert = try encodeToString()
         userNotificationContent.userInfo[DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue] = encodedAlert
+        userNotificationContent.userInfo[DeviceAlertUserNotificationUserInfoKey.deviceAlertTimestamp.rawValue] =
+            DeviceAlertManager.timestampFormatter.string(from: timestamp)
         print("Alert: \(encodedAlert)")
         return userNotificationContent
     }
@@ -295,15 +288,24 @@ public extension DeviceAlert {
     }
 }
 
-fileprivate extension DeviceAlert.Trigger {
-    func asUserNotificationTrigger() -> UNNotificationTrigger? {
-        switch self {
+public extension UNNotificationRequest {
+    convenience init(from deviceAlert: DeviceAlert, timestamp: Date) throws {
+        let uncontent = try deviceAlert.getUserNotificationContent(timestamp: timestamp)
+        self.init(identifier: deviceAlert.identifier.value,
+                  content: uncontent,
+                  trigger: UNTimeIntervalNotificationTrigger(from: deviceAlert.trigger))
+    }
+}
+
+fileprivate extension UNTimeIntervalNotificationTrigger {
+    convenience init?(from deviceAlertTrigger: DeviceAlert.Trigger) {
+        switch deviceAlertTrigger {
         case .immediate:
             return nil
         case .delayed(let timeInterval):
-            return UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
+            self.init(timeInterval: timeInterval, repeats: false)
         case .repeating(let repeatInterval):
-            return UNTimeIntervalNotificationTrigger(timeInterval: repeatInterval, repeats: true)
+            self.init(timeInterval: repeatInterval, repeats: true)
         }
     }
 }

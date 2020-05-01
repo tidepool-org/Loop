@@ -7,29 +7,24 @@
 //
 
 import LoopKit
-import UserNotifications
-
-protocol UserNotificationCenter {
-    func add(_ request: UNNotificationRequest, withCompletionHandler: ((Error?) -> Void)?)
-    func removePendingNotificationRequests(withIdentifiers: [String])
-    func removeDeliveredNotifications(withIdentifiers: [String])
-}
-
-extension UNUserNotificationCenter: UserNotificationCenter {}
 
 class UserNotificationDeviceAlertPresenter: DeviceAlertPresenter {
     
     let userNotificationCenter: UserNotificationCenter
     let log = DiagnosticLog(category: "UserNotificationDeviceAlertPresenter")
     
-    init(userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current()) {
+    init(userNotificationCenter: UserNotificationCenter) {
         self.userNotificationCenter = userNotificationCenter
     }
-        
+    
     func issueAlert(_ alert: DeviceAlert) {
+        issueAlert(alert, timestamp: Date())
+    }
+
+    func issueAlert(_ alert: DeviceAlert, timestamp: Date) {
         DispatchQueue.main.async {
             do {
-                let request = try alert.asUserNotificationRequest()
+                let request = try UNNotificationRequest(from: alert, timestamp: timestamp)
                 self.userNotificationCenter.add(request) { error in
                     if let error = error {
                         self.log.error("Something went wrong posting the user notification: %@", error.localizedDescription)
