@@ -684,26 +684,28 @@ extension LoopDataManager {
     }
 
     func storeSettings() {
-        if let appGroup = UserDefaults.appGroup, let loopSettings = appGroup.loopSettings {
-            let settings = StoredSettings(date: Date(),
-                                          dosingEnabled: loopSettings.dosingEnabled,
-                                          glucoseTargetRangeSchedule: loopSettings.glucoseTargetRangeSchedule,
-                                          preMealTargetRange: loopSettings.preMealTargetRange,
-                                          workoutTargetRange: loopSettings.legacyWorkoutTargetRange,
-                                          overridePresets: loopSettings.overridePresets,
-                                          scheduleOverride: loopSettings.scheduleOverride,
-                                          preMealOverride: loopSettings.preMealOverride,
-                                          maximumBasalRatePerHour: loopSettings.maximumBasalRatePerHour,
-                                          maximumBolus: loopSettings.maximumBolus,
-                                          suspendThreshold: loopSettings.suspendThreshold,
-                                          deviceToken: loopSettings.deviceToken?.hexadecimalString,
-                                          insulinModel: StoredSettings.InsulinModel(appGroup.insulinModelSettings),
-                                          basalRateSchedule: appGroup.basalRateSchedule,
-                                          insulinSensitivitySchedule: appGroup.insulinSensitivitySchedule,
-                                          carbRatioSchedule: appGroup.carbRatioSchedule,
-                                          bloodGlucoseUnit: loopSettings.glucoseUnit)
-            self.settingsStore.storeSettings(settings) {}
+        guard let appGroup = UserDefaults.appGroup, let loopSettings = appGroup.loopSettings else {
+            return
         }
+
+        let settings = StoredSettings(date: Date(),
+                                      dosingEnabled: loopSettings.dosingEnabled,
+                                      glucoseTargetRangeSchedule: loopSettings.glucoseTargetRangeSchedule,
+                                      preMealTargetRange: loopSettings.preMealTargetRange,
+                                      workoutTargetRange: loopSettings.legacyWorkoutTargetRange,
+                                      overridePresets: loopSettings.overridePresets,
+                                      scheduleOverride: loopSettings.scheduleOverride,
+                                      preMealOverride: loopSettings.preMealOverride,
+                                      maximumBasalRatePerHour: loopSettings.maximumBasalRatePerHour,
+                                      maximumBolus: loopSettings.maximumBolus,
+                                      suspendThreshold: loopSettings.suspendThreshold,
+                                      deviceToken: loopSettings.deviceToken?.hexadecimalString,
+                                      insulinModel: StoredSettings.InsulinModel(appGroup.insulinModelSettings),
+                                      basalRateSchedule: appGroup.basalRateSchedule,
+                                      insulinSensitivitySchedule: appGroup.insulinSensitivitySchedule,
+                                      carbRatioSchedule: appGroup.carbRatioSchedule,
+                                      bloodGlucoseUnit: loopSettings.glucoseUnit)
+        self.settingsStore.storeSettings(settings) {}
     }
 
     // Actions
