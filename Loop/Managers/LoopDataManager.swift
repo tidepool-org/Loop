@@ -93,7 +93,7 @@ final class LoopDataManager {
 
         glucoseStore = GlucoseStore(healthStore: healthStore, cacheStore: cacheStore, cacheLength: .hours(24))
 
-        settingsStore = SettingsStore(storeCache: UserDefaults.appGroup!)
+        settingsStore = SettingsStore(cacheStore: cacheStore, cacheLength: .hours(24))
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
@@ -707,7 +707,7 @@ extension LoopDataManager {
                                       basalRateSchedule: appGroup.basalRateSchedule,
                                       insulinSensitivitySchedule: appGroup.insulinSensitivitySchedule,
                                       carbRatioSchedule: appGroup.carbRatioSchedule,
-                                      bloodGlucoseUnit: loopSettings.glucoseUnit)
+                                      bloodGlucoseUnit: loopSettings.glucoseUnit?.unitString)
         self.settingsStore.storeSettings(settings) {}
     }
 
