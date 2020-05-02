@@ -75,8 +75,11 @@ Loop.xcworkspace
 LoopOverride.xcconfig
 VersionOverride.xcconfig
 
-**/DerivedAssets.xcassets/*
-!Contents.json
+Loop/DerivedAssets.xcassets/*
+WatchApp/DerivedAssets.xcassets/*
+# ...except, keep Contents.json
+!Loop/DerivedAssets.xcassets/Contents.json
+!WatchApp/DerivedAssets.xcassets/Contents.json
 
 Loop/DerivedAssetsOverride.xcassets
 WatchApp/DerivedAssetsOverride.xcassets
