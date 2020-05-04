@@ -23,12 +23,16 @@ public class InAppModalDeviceAlertPresenter: DeviceAlertPresenter {
     typealias TimerFactoryFunction = (TimeInterval, Bool, (() -> Void)?) -> Timer
     private let newTimerFunc: TimerFactoryFunction
 
+    private let soundPlayer: DeviceAlertSoundPlayer
+
     init(rootViewController: UIViewController,
          deviceAlertManagerResponder: DeviceAlertManagerResponder,
+         soundPlayer: DeviceAlertSoundPlayer = DeviceAVSoundPlayer(),
          newActionFunc: @escaping ActionFactoryFunction = UIAlertAction.init,
          newTimerFunc: TimerFactoryFunction? = nil) {
         self.rootViewController = rootViewController
         self.deviceAlertManagerResponder = deviceAlertManagerResponder
+        self.soundPlayer = soundPlayer
         self.newActionFunc = newActionFunc
         self.newTimerFunc = newTimerFunc ?? { timeInterval, repeats, block in
             return Timer.scheduledTimer(withTimeInterval: timeInterval, repeats: repeats) { _ in block?() }
@@ -95,6 +99,7 @@ extension InAppModalDeviceAlertPresenter {
             if self.isAlertShowing(identifier: alert.identifier) {
                 return
             }
+            self.playSound(for: alert)
             let alertController = self.presentAlert(title: content.title, message: content.body, action: content.acknowledgeActionButtonLabel) { [weak self] in
                 self?.clearDeliveredAlert(identifier: alert.identifier)
                 self?.deviceAlertManagerResponder?.acknowledgeDeviceAlert(identifier: alert.identifier)
@@ -156,4 +161,19 @@ extension InAppModalDeviceAlertPresenter {
         return controller
     }
     
+    private func playSound(for alert: DeviceAlert) {
+        guard let sound = alert.sound else { return }
+        switch sound {
+        case .vibrate:
+            soundPlayer.vibrate()
+        case .silence:
+            break
+        default:
+            // Assuming in-app alerts should also vibrate.  That way, if the user has "silent mode" on, they still get
+            // some kind of haptic feedback
+            soundPlayer.vibrate()
+            guard let url = DeviceAlertManager.soundURL(for: alert) else { return }
+            soundPlayer.play(url: url)
+        }
+    }
 }
