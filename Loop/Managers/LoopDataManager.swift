@@ -93,7 +93,7 @@ final class LoopDataManager {
 
         glucoseStore = GlucoseStore(healthStore: healthStore, cacheStore: cacheStore, cacheLength: .hours(24))
 
-        settingsStore = SettingsStore(cacheStore: cacheStore, cacheLength: .hours(24))
+        settingsStore = SettingsStore(store: cacheStore, expireAfter: .hours(24))
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
