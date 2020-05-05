@@ -707,7 +707,7 @@ extension LoopDataManager {
                                       basalRateSchedule: appGroup.basalRateSchedule,
                                       insulinSensitivitySchedule: appGroup.insulinSensitivitySchedule,
                                       carbRatioSchedule: appGroup.carbRatioSchedule,
-                                      bloodGlucoseUnit: loopSettings.glucoseUnit?.unitString)
+                                      bloodGlucoseUnit: loopSettings.glucoseUnit)
         self.settingsStore.storeSettings(settings) {}
     }
 
