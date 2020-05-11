@@ -44,6 +44,8 @@ public final class DeviceAlertManager {
     
     let userNotificationCenter: UserNotificationCenter
     let fileManager: FileManager
+    
+    let persistentDeviceAlertLog: PersistentDeviceAlertLog
 
     public init(rootViewController: UIViewController,
                 handlers: [DeviceAlertPresenter]? = nil,
@@ -51,11 +53,13 @@ public final class DeviceAlertManager {
                 fileManager: FileManager = FileManager.default) {
         self.userNotificationCenter = userNotificationCenter
         self.fileManager = fileManager
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        persistentDeviceAlertLog = PersistentDeviceAlertLog(storageFile: documentsDirectory.appendingPathComponent("DeviceAlertLog.sqlite"))
         self.handlers = handlers ??
             [UserNotificationDeviceAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalDeviceAlertPresenter(rootViewController: rootViewController, deviceAlertManagerResponder: self)]
             
-        playbackPersistedAlerts()
+        playbackAlertsFromUserNotificationCenter()
     }
 
     public func addAlertResponder(managerIdentifier: String, alertResponder: DeviceAlertResponder) {
@@ -85,6 +89,7 @@ extension DeviceAlertManager: DeviceAlertManagerResponder {
         log.debug("Removing notification %@ from delivered & pending notifications", identifier.value)
         userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
         userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier.value])
+        persistentDeviceAlertLog.recordAcknowledgement(of: identifier)
     }
 }
 
@@ -92,12 +97,16 @@ extension DeviceAlertManager: DeviceAlertPresenter {
 
     public func issueAlert(_ alert: DeviceAlert) {
         handlers.forEach { $0.issueAlert(alert) }
+        persistentDeviceAlertLog.record(alert: alert)
     }
-    public func removePendingAlert(identifier: DeviceAlert.Identifier) {
-        handlers.forEach { $0.removePendingAlert(identifier: identifier) }
+    
+    public func retractAlert(identifier: DeviceAlert.Identifier) {
+        handlers.forEach { $0.retractAlert(identifier: identifier) }
+        persistentDeviceAlertLog.recordRetraction(of: identifier)
     }
-    public func removeDeliveredAlert(identifier: DeviceAlert.Identifier) {
-        handlers.forEach { $0.removeDeliveredAlert(identifier: identifier) }
+    
+    private func replayAlert(_ alert: DeviceAlert) {
+        handlers.forEach { $0.issueAlert(alert) }
     }
 }
 
@@ -161,7 +170,7 @@ extension URL {
 
 extension DeviceAlertManager {
     
-    private func playbackPersistedAlerts() {
+    private func playbackAlertsFromUserNotificationCenter() {
     
         userNotificationCenter.getDeliveredNotifications {
             $0.forEach { notification in
@@ -206,7 +215,7 @@ extension DeviceAlertManager {
                            trigger != nil ? "" : "Pending ",
                            trigger != nil ? "" : "new ",
                            savedAlertString, "\(newTrigger)")
-            self.issueAlert(newAlert)
+            self.replayAlert(newAlert)
         } catch {
             self.log.error("Could not decode alert: error %@, from %@", error.localizedDescription, savedAlertString)
         }
@@ -260,7 +269,6 @@ public extension DeviceAlert {
         userNotificationContent.userInfo[DeviceAlertUserNotificationUserInfoKey.deviceAlert.rawValue] = encodedAlert
         userNotificationContent.userInfo[DeviceAlertUserNotificationUserInfoKey.deviceAlertTimestamp.rawValue] =
             DeviceAlertManager.timestampFormatter.string(from: timestamp)
-        print("Alert: \(encodedAlert)")
         return userNotificationContent
     }
     

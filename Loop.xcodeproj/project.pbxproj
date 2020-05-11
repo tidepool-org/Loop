@@ -22,6 +22,9 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1D0521992469E684000EBBDE /* DeviceAlertLog.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1D0521972469E684000EBBDE /* DeviceAlertLog.xcdatamodeld */; };
+		1D05219B2469E9DF000EBBDE /* DeviceAlertLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D05219A2469E9DF000EBBDE /* DeviceAlertLogEntry.swift */; };
+		1D05219D2469F1F5000EBBDE /* PersistentDeviceAlertLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D05219C2469F1F5000EBBDE /* PersistentDeviceAlertLog.swift */; };
 		1DA649A7244126CD00F61E75 /* UserNotificationDeviceAlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA649A6244126CD00F61E75 /* UserNotificationDeviceAlertPresenter.swift */; };
 		1DA649A9244126DA00F61E75 /* InAppModalDeviceAlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA649A8244126DA00F61E75 /* InAppModalDeviceAlertPresenter.swift */; };
 		1DA7A84224476EAD008257F0 /* DeviceAlertManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA7A84124476EAD008257F0 /* DeviceAlertManagerTests.swift */; };
@@ -613,6 +616,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D0521982469E684000EBBDE /* DeviceAlertLog.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = DeviceAlertLog.xcdatamodel; sourceTree = "<group>"; };
+		1D05219A2469E9DF000EBBDE /* DeviceAlertLogEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAlertLogEntry.swift; sourceTree = "<group>"; };
+		1D05219C2469F1F5000EBBDE /* PersistentDeviceAlertLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentDeviceAlertLog.swift; sourceTree = "<group>"; };
 		1DA649A6244126CD00F61E75 /* UserNotificationDeviceAlertPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserNotificationDeviceAlertPresenter.swift; sourceTree = "<group>"; };
 		1DA649A8244126DA00F61E75 /* InAppModalDeviceAlertPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InAppModalDeviceAlertPresenter.swift; sourceTree = "<group>"; };
 		1DA7A84124476EAD008257F0 /* DeviceAlertManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAlertManagerTests.swift; sourceTree = "<group>"; };
@@ -1251,8 +1257,11 @@
 		1DA6499D2441266400F61E75 /* DeviceAlert */ = {
 			isa = PBXGroup;
 			children = (
+				1D0521972469E684000EBBDE /* DeviceAlertLog.xcdatamodeld */,
+				1D05219A2469E9DF000EBBDE /* DeviceAlertLogEntry.swift */,
 				1DB1065024467E18005542BD /* DeviceAlertManager.swift */,
 				1DA649A8244126DA00F61E75 /* InAppModalDeviceAlertPresenter.swift */,
+				1D05219C2469F1F5000EBBDE /* PersistentDeviceAlertLog.swift */,
 				1DA649A6244126CD00F61E75 /* UserNotificationDeviceAlertPresenter.swift */,
 			);
 			path = DeviceAlert;
@@ -2743,6 +2752,7 @@
 				C17824A51E1AD4D100D9D25C /* BolusRecommendation.swift in Sources */,
 				4F70C2131DE90339006380B7 /* StatusExtensionContext.swift in Sources */,
 				43C05CC521EC29E3006FB252 /* TextFieldTableViewCell.swift in Sources */,
+				1D0521992469E684000EBBDE /* DeviceAlertLog.xcdatamodeld in Sources */,
 				4FF4D1001E18374700846527 /* WatchContext.swift in Sources */,
 				C1D289B522F90A52003FFBD9 /* BasalDeliveryState.swift in Sources */,
 				4F2C15821E074FC600E160D4 /* NSTimeInterval.swift in Sources */,
@@ -2839,6 +2849,7 @@
 				89CA2B3D226E6B13004D9350 /* LocalTestingScenariosManager.swift in Sources */,
 				43F78D261C8FC000002152D1 /* DoseMath.swift in Sources */,
 				43511CE221FD80E400566C63 /* RetrospectiveCorrection.swift in Sources */,
+				1D05219B2469E9DF000EBBDE /* DeviceAlertLogEntry.swift in Sources */,
 				89AC9DB4244A423D004A6B8A /* SuspendThresholdPicker.swift in Sources */,
 				438D42F91D7C88BC003244B0 /* PredictionInputEffect.swift in Sources */,
 				A9C62D8223316FF600535612 /* UserDefaults+Services.swift in Sources */,
@@ -2847,6 +2858,7 @@
 				43DFB62320D4CAE7008A7BAE /* PumpManager.swift in Sources */,
 				892A5D59222F0A27008961AB /* Debug.swift in Sources */,
 				431A8C401EC6E8AB00823B9C /* CircleMaskView.swift in Sources */,
+				1D05219D2469F1F5000EBBDE /* PersistentDeviceAlertLog.swift in Sources */,
 				439897371CD2F80600223065 /* AnalyticsServicesManager.swift in Sources */,
 				A9C62D842331700E00535612 /* DiagnosticLog+Subsystem.swift in Sources */,
 				895FE0952201234000FCF18A /* OverrideSelectionViewController.swift in Sources */,
@@ -4205,6 +4217,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		1D0521972469E684000EBBDE /* DeviceAlertLog.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				1D0521982469E684000EBBDE /* DeviceAlertLog.xcdatamodel */,
+			);
+			currentVersion = 1D0521982469E684000EBBDE /* DeviceAlertLog.xcdatamodel */;
+			path = DeviceAlertLog.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 43776F841B8022E90074EA36 /* Project object */;
 }

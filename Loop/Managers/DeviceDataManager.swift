@@ -418,12 +418,8 @@ extension DeviceDataManager: DeviceAlertPresenter {
         deviceAlertManager?.issueAlert(alert)
     }
     
-    func removePendingAlert(identifier: DeviceAlert.Identifier) {
-        deviceAlertManager?.removePendingAlert(identifier: identifier)
-    }
-    
-    func removeDeliveredAlert(identifier: DeviceAlert.Identifier) {
-        deviceAlertManager?.removeDeliveredAlert(identifier: identifier)
+    func retractAlert(identifier: DeviceAlert.Identifier) {
+        deviceAlertManager?.retractAlert(identifier: identifier)
     }
 }
 
