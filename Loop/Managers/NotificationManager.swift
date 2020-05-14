@@ -127,11 +127,6 @@ struct NotificationManager {
         UNUserNotificationCenter.current().add(request)
     }
 
-    // Cancel any previous scheduled notifications in the Loop Not Running category
-    static func clearPendingNotificationRequests() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-    }
-
     static func scheduleLoopNotRunningNotifications() {
         // Give a little extra time for a loop-in-progress to complete
         let gracePeriod = TimeInterval(minutes: 0.5)
@@ -168,15 +163,25 @@ struct NotificationManager {
     }
 
     static func clearLoopNotRunningNotifications() {
+        let notificationCenter = UNUserNotificationCenter.current()
+        // Cancel any previous scheduled notifications in the Loop Not Running category
+        notificationCenter.getPendingNotificationRequests { notificationRequests in
+            let loopNotRunningIdentifiers = notificationRequests.filter({
+                $0.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
+            }).map({
+                $0.identifier
+            })
+            notificationCenter.removePendingNotificationRequests(withIdentifiers: loopNotRunningIdentifiers)
+        }
         // Clear out any existing not-running notifications
-        UNUserNotificationCenter.current().getDeliveredNotifications { (notifications) in
+        notificationCenter.getDeliveredNotifications { notifications in
             let loopNotRunningIdentifiers = notifications.filter({
                 $0.request.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
             }).map({
                 $0.request.identifier
             })
 
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: loopNotRunningIdentifiers)
+            notificationCenter.removeDeliveredNotifications(withIdentifiers: loopNotRunningIdentifiers)
         }
     }
 
