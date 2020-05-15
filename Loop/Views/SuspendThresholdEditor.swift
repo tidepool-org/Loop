@@ -17,15 +17,13 @@ extension Guardrail where Value == HKQuantity {
 }
 
 struct SuspendThresholdEditor: View {
-    @State private var value: HKQuantity
-    @State private var isEditing = false
-    @State private var showingConfirmationAlert = false
+    var initialValue: HKQuantity?
+    var unit: HKUnit
+    var maxValue: HKQuantity?
+    var save: (_ suspendThreshold: HKQuantity) -> Void
 
-    private let originalValue: HKQuantity?
-    private let unit: HKUnit
-    private let maxValue: HKQuantity?
-    private let save: (_ suspendThreshold: HKQuantity) -> Void
-
+    @State var value: HKQuantity
+    @State var showingConfirmationAlert = false
     @Environment(\.dismiss) var dismiss
 
     let guardrail = Guardrail.suspendThreshold
@@ -37,7 +35,7 @@ struct SuspendThresholdEditor: View {
         onSave save: @escaping (_ suspendThreshold: HKQuantity) -> Void
     ) {
         self._value = State(initialValue: value ?? Self.defaultValue(for: unit))
-        self.originalValue = value
+        self.initialValue = value
         self.unit = unit
         self.maxValue = maxValue
         self.save = save
@@ -55,24 +53,32 @@ struct SuspendThresholdEditor: View {
     }
 
     var body: some View {
-        ConfigurationPage(
-            title: Text("Suspend Threshold"),
-            isSaveButtonEnabled: isSaveButtonEnabled,
-            cards: {
-                // TODO: Remove conditional when Swift 5.3 ships
-                // https://bugs.swift.org/browse/SR-11628
-                if true {
-                    Card {
-                        SuspendThresholdDescription()
-                        SuspendThresholdPicker(value: $value, unit: unit, maxValue: maxValue, isEditing: $isEditing)
-                    }
-                }
+        SingleValueSettingEditor(
+            title: Text("Suspend Threshold", comment: "Title for suspend threshold configuration page"),
+            description: description,
+            value: value,
+            initialValue: initialValue,
+            valueContent: { isEditing in
+                GuardrailConstrainedQuantityView(
+                    value: self.value,
+                    unit: self.unit,
+                    guardrail: self.guardrail,
+                    isEditing: isEditing,
+                    // Workaround for strange animation behavior on appearance
+                    forceDisableAnimations: true
+                )
+            },
+            valuePicker: {
+                GlucoseValuePicker(
+                    value: $value.animation(),
+                    unit: unit,
+                    guardrail: guardrail,
+                    bounds: guardrail.absoluteBounds.lowerBound...(maxValue ?? guardrail.absoluteBounds.upperBound)
+                )
             },
             actionAreaContent: {
                 if warningThreshold != nil {
                     SuspendThresholdGuardrailWarning(safetyClassificationThreshold: warningThreshold!)
-                        .padding(.horizontal)
-                        .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
                 }
             },
             onSave: {
@@ -86,8 +92,8 @@ struct SuspendThresholdEditor: View {
         .alert(isPresented: $showingConfirmationAlert, content: confirmationAlert)
     }
 
-    private var isSaveButtonEnabled: Bool {
-        originalValue == nil || value != originalValue!
+    var description: Text {
+        Text("When your glucose is predicted to go below this value, the app will recommend a basal rate of 0 U/h and will not recommend a bolus.", comment: "Suspend threshold description")
     }
 
     private var warningThreshold: SafetyClassification.Threshold? {
@@ -114,14 +120,6 @@ struct SuspendThresholdEditor: View {
     private func saveAndDismiss() {
         save(value)
         dismiss()
-    }
-}
-
-struct SuspendThresholdDescription: View {
-    let text = Text("When your glucose is predicted to go below this value, the app will recommend a basal rate of 0 U/h and will not recommend a bolus.", comment: "Suspend threshold description")
-
-    var body: some View {
-        SettingDescription(text: text)
     }
 }
 
