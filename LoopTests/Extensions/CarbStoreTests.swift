@@ -9,28 +9,70 @@
 import XCTest
 import LoopKit
 
-class CarbStoreErrorCodableTests: XCTestCase {
+class CarbStoreCarbStoreErrorCodableTests: XCTestCase {
     func testCodableConfigurationError() throws {
-        try assertCarbStoreErrorCodable(.notConfigured)
+        try assertCarbStoreErrorCodable(.notConfigured, encodesJSON: """
+{
+  "carbStoreError" : "notConfigured"
+}
+"""
+        )
     }
 
     func testCodableInitializationError() throws {
-        try assertCarbStoreErrorCodable(.healthStoreError(TestLocalizedError()))
+        let localizedError = TestLocalizedError(errorDescription: "CarbStoreError.healthStoreError.error.errorDescription",
+                                                failureReason: "CarbStoreError.healthStoreError.error.failureReason",
+                                                helpAnchor: "CarbStoreError.healthStoreError.error.helpAnchor",
+                                                recoverySuggestion: "CarbStoreError.healthStoreError.error.recoverySuggestion")
+        try assertCarbStoreErrorCodable(.healthStoreError(localizedError), encodesJSON: """
+{
+  "carbStoreError" : {
+    "healthStoreError" : {
+      "error" : {
+        "errorDescription" : "CarbStoreError.healthStoreError.error.errorDescription",
+        "failureReason" : "CarbStoreError.healthStoreError.error.failureReason",
+        "helpAnchor" : "CarbStoreError.healthStoreError.error.helpAnchor",
+        "recoverySuggestion" : "CarbStoreError.healthStoreError.error.recoverySuggestion"
+      }
+    }
+  }
+}
+"""
+        )
     }
 
     func testCodablePersistenceError() throws {
-        try assertCarbStoreErrorCodable(.unauthorized)
+        try assertCarbStoreErrorCodable(.unauthorized, encodesJSON: """
+{
+  "carbStoreError" : "unauthorized"
+}
+"""
+        )
     }
 
     func testCodableFetchError() throws {
-        try assertCarbStoreErrorCodable(.noData)
+        try assertCarbStoreErrorCodable(.noData, encodesJSON: """
+{
+  "carbStoreError" : "noData"
+}
+"""
+        )
     }
 
-    func assertCarbStoreErrorCodable(_ original: CarbStore.CarbStoreError) throws {
-        let data = try PropertyListEncoder().encode(TestContainer(carbStoreError: original))
-        let decoded = try PropertyListDecoder().decode(TestContainer.self, from: data)
+    private func assertCarbStoreErrorCodable(_ original: CarbStore.CarbStoreError, encodesJSON string: String) throws {
+        let data = try encoder.encode(TestContainer(carbStoreError: original))
+        XCTAssertEqual(String(data: data, encoding: .utf8), string)
+        let decoded = try decoder.decode(TestContainer.self, from: data)
         XCTAssertEqual(decoded.carbStoreError, original)
     }
+
+    private let encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        return encoder
+    }()
+
+    private let decoder = JSONDecoder()
 
     private struct TestContainer: Codable, Equatable {
         let carbStoreError: CarbStore.CarbStoreError

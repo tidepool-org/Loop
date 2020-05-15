@@ -11,39 +11,121 @@ import LoopKit
 
 class DoseStoreDoseStoreErrorCodableTests: XCTestCase {
     func testCodableConfigurationError() throws {
-        try assertDoseStoreDoseStoreErrorCodable(.configurationError)
+        try assertDoseStoreDoseStoreErrorCodable(.configurationError, encodesJSON: """
+{
+  "doseStoreError" : "configurationError"
+}
+""")
     }
     
     func testCodableInitializationErrorWithRecoverySuggestion() throws {
-        try assertDoseStoreDoseStoreErrorCodable(.initializationError(description: UUID().uuidString, recoverySuggestion: UUID().uuidString))
+        try assertDoseStoreDoseStoreErrorCodable(.initializationError(description: "DoseStoreError.initializationError.description",
+                                                                      recoverySuggestion: "DoseStoreError.initializationError.recoverySuggestion"),
+                                                 encodesJSON: """
+{
+  "doseStoreError" : {
+    "initializationError" : {
+      "description" : "DoseStoreError.initializationError.description",
+      "recoverySuggestion" : "DoseStoreError.initializationError.recoverySuggestion"
     }
-    
+  }
+}
+"""
+        )
+    }
+
     func testCodableInitializationErrorWithoutRecoverySuggestion() throws {
-        try assertDoseStoreDoseStoreErrorCodable(.initializationError(description: UUID().uuidString, recoverySuggestion: nil))
+        try assertDoseStoreDoseStoreErrorCodable(.initializationError(description: "DoseStoreError.initializationError.description",
+                                                                      recoverySuggestion: nil),
+                                                 encodesJSON: """
+{
+  "doseStoreError" : {
+    "initializationError" : {
+      "description" : "DoseStoreError.initializationError.description"
     }
-    
+  }
+}
+"""
+        )
+    }
+
     func testCodablePersistenceErrorWithRecoverySuggestion() throws {
-        try assertDoseStoreDoseStoreErrorCodable(.persistenceError(description: UUID().uuidString, recoverySuggestion: UUID().uuidString))
+        try assertDoseStoreDoseStoreErrorCodable(.persistenceError(description: "DoseStoreError.persistenceError.description",
+                                                                   recoverySuggestion: "DoseStoreError.persistenceError.recoverySuggestion"),
+                                                 encodesJSON: """
+{
+  "doseStoreError" : {
+    "persistenceError" : {
+      "description" : "DoseStoreError.persistenceError.description",
+      "recoverySuggestion" : "DoseStoreError.persistenceError.recoverySuggestion"
     }
-    
+  }
+}
+"""
+        )
+    }
+
     func testCodablePersistenceErrorWithoutRecoverySuggestion() throws {
-        try assertDoseStoreDoseStoreErrorCodable(.persistenceError(description: UUID().uuidString, recoverySuggestion: nil))
+        try assertDoseStoreDoseStoreErrorCodable(.persistenceError(description: "DoseStoreError.persistenceError.description",
+                                                                   recoverySuggestion: nil),
+                                                 encodesJSON: """
+{
+  "doseStoreError" : {
+    "persistenceError" : {
+      "description" : "DoseStoreError.persistenceError.description"
     }
-    
+  }
+}
+"""
+        )
+    }
+
     func testCodableFetchErrorWithRecoverySuggestion() throws {
-        try assertDoseStoreDoseStoreErrorCodable(.fetchError(description: UUID().uuidString, recoverySuggestion: UUID().uuidString))
+        try assertDoseStoreDoseStoreErrorCodable(.fetchError(description: "DoseStoreError.fetchError.description",
+                                                             recoverySuggestion: "DoseStoreError.fetchError.recoverySuggestion"),
+                                                 encodesJSON: """
+{
+  "doseStoreError" : {
+    "fetchError" : {
+      "description" : "DoseStoreError.fetchError.description",
+      "recoverySuggestion" : "DoseStoreError.fetchError.recoverySuggestion"
     }
-    
+  }
+}
+"""
+        )
+    }
+
     func testCodableFetchErrorWithoutRecoverySuggestion() throws {
-        try assertDoseStoreDoseStoreErrorCodable(.fetchError(description: UUID().uuidString, recoverySuggestion: nil))
+        try assertDoseStoreDoseStoreErrorCodable(.fetchError(description: "DoseStoreError.fetchError.description",
+                                                             recoverySuggestion: nil),
+                                                 encodesJSON: """
+{
+  "doseStoreError" : {
+    "fetchError" : {
+      "description" : "DoseStoreError.fetchError.description"
+    }
+  }
+}
+"""
+        )
     }
     
-    func assertDoseStoreDoseStoreErrorCodable(_ original: DoseStore.DoseStoreError) throws {
-        let data = try PropertyListEncoder().encode(TestContainer(doseStoreError: original))
-        let decoded = try PropertyListDecoder().decode(TestContainer.self, from: data)
+    private func assertDoseStoreDoseStoreErrorCodable(_ original: DoseStore.DoseStoreError, encodesJSON string: String) throws {
+        let data = try encoder.encode(TestContainer(doseStoreError: original))
+        XCTAssertEqual(String(data: data, encoding: .utf8), string)
+        let decoded = try decoder.decode(TestContainer.self, from: data)
         XCTAssertEqual(decoded.doseStoreError, original)
     }
-    
+
+    private let encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        return encoder
+    }()
+
+    private let decoder = JSONDecoder()
+
     private struct TestContainer: Codable, Equatable {
         let doseStoreError: DoseStore.DoseStoreError
     }

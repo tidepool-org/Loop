@@ -31,7 +31,7 @@ extension DosingDecisionStore {
         }
     }
 
-    private static var decoder: PropertyListDecoder = PropertyListDecoder()
+    private static var decoder = PropertyListDecoder()
 
     private func decodeDosingDecision(fromData data: Data) -> StoredDosingDecision? {
         do {
@@ -231,4 +231,3 @@ public struct CodableLocalizedError: LocalizedError, Codable {
         self.init(localizedError)
     }
 }
-
