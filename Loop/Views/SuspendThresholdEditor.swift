@@ -53,28 +53,37 @@ struct SuspendThresholdEditor: View {
     }
 
     var body: some View {
-        SingleValueSettingEditor(
+        ConfigurationPage(
             title: Text("Suspend Threshold", comment: "Title for suspend threshold configuration page"),
-            description: description,
-            value: value,
-            initialValue: initialValue,
-            valueContent: { isEditing in
-                GuardrailConstrainedQuantityView(
-                    value: self.value,
-                    unit: self.unit,
-                    guardrail: self.guardrail,
-                    isEditing: isEditing,
-                    // Workaround for strange animation behavior on appearance
-                    forceDisableAnimations: true
-                )
-            },
-            valuePicker: {
-                GlucoseValuePicker(
-                    value: $value.animation(),
-                    unit: unit,
-                    guardrail: guardrail,
-                    bounds: guardrail.absoluteBounds.lowerBound...(maxValue ?? guardrail.absoluteBounds.upperBound)
-                )
+            isSaveButtonEnabled: isSaveButtonEnabled,
+            cards: {
+                // TODO: Remove conditional when Swift 5.3 ships
+                // https://bugs.swift.org/browse/SR-11628
+                if true {
+                    Card {
+                        SettingDescription(text: description)
+                        SingleValueSetting(
+                            valueContent: { isEditing in
+                                GuardrailConstrainedQuantityView(
+                                    value: self.value,
+                                    unit: self.unit,
+                                    guardrail: self.guardrail,
+                                    isEditing: isEditing,
+                                    // Workaround for strange animation behavior on appearance
+                                    forceDisableAnimations: true
+                                )
+                            },
+                            valuePicker: {
+                                GlucoseValuePicker(
+                                    value: $value.animation(),
+                                    unit: unit,
+                                    guardrail: guardrail,
+                                    bounds: guardrail.absoluteBounds.lowerBound...(maxValue ?? guardrail.absoluteBounds.upperBound)
+                                )
+                            }
+                        )
+                    }
+                }
             },
             actionAreaContent: {
                 if warningThreshold != nil {
@@ -94,6 +103,10 @@ struct SuspendThresholdEditor: View {
 
     var description: Text {
         Text("When your glucose is predicted to go below this value, the app will recommend a basal rate of 0 U/h and will not recommend a bolus.", comment: "Suspend threshold description")
+    }
+
+    private var isSaveButtonEnabled: Bool {
+        initialValue == nil || value != initialValue!
     }
 
     private var warningThreshold: SafetyClassification.Threshold? {
