@@ -12,6 +12,10 @@ import LoopKit
 import LoopKitUI
 
 
+extension Guardrail where Value == HKQuantity {
+    static let suspendThreshold = Guardrail(absoluteBounds: 54...180, recommendedBounds: 71...120, unit: .milligramsPerDeciliter)
+}
+
 struct SuspendThresholdEditor: View {
     @State private var value: HKQuantity
     @State private var isEditing = false
@@ -19,14 +23,23 @@ struct SuspendThresholdEditor: View {
 
     private let originalValue: HKQuantity?
     private let unit: HKUnit
+    private let maxValue: HKQuantity?
     private let save: (_ suspendThreshold: HKQuantity) -> Void
 
     @Environment(\.dismiss) var dismiss
 
-    init(value: HKQuantity?, unit: HKUnit, onSave save: @escaping (_ suspendThreshold: HKQuantity) -> Void) {
+    let guardrail = Guardrail.suspendThreshold
+
+    init(
+        value: HKQuantity?,
+        unit: HKUnit,
+        maxValue: HKQuantity?,
+        onSave save: @escaping (_ suspendThreshold: HKQuantity) -> Void
+    ) {
         self._value = State(initialValue: value ?? Self.defaultValue(for: unit))
         self.originalValue = value
         self.unit = unit
+        self.maxValue = maxValue
         self.save = save
     }
 
@@ -51,7 +64,7 @@ struct SuspendThresholdEditor: View {
                 if true {
                     Card {
                         SuspendThresholdDescription()
-                        SuspendThresholdPicker(value: $value, unit: unit, isEditing: $isEditing)
+                        SuspendThresholdPicker(value: $value, unit: unit, maxValue: maxValue, isEditing: $isEditing)
                     }
                 }
             },
@@ -78,7 +91,7 @@ struct SuspendThresholdEditor: View {
     }
 
     private var warningThreshold: SafetyClassification.Threshold? {
-        switch Guardrail.suspendThreshold.classification(for: value) {
+        switch guardrail.classification(for: value) {
         case .withinRecommendedRange:
             return nil
         case .outsideRecommendedRange(let threshold):
@@ -131,6 +144,6 @@ struct SuspendThresholdGuardrailWarning: View {
 
 struct SuspendThresholdView_Previews: PreviewProvider {
     static var previews: some View {
-        SuspendThresholdEditor(value: nil, unit: .milligramsPerDeciliter, onSave: { _ in })
+        SuspendThresholdEditor(value: nil, unit: .milligramsPerDeciliter, maxValue: nil, onSave: { _ in })
     }
 }

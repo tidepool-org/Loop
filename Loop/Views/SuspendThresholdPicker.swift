@@ -15,7 +15,10 @@ import LoopKitUI
 struct SuspendThresholdPicker: View {
     @Binding var value: HKQuantity
     var unit: HKUnit
+    var maxValue: HKQuantity?
     @Binding var isEditing: Bool
+
+    let guardrail = Guardrail.suspendThreshold
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,7 +27,7 @@ struct SuspendThresholdPicker: View {
                 GuardrailConstrainedQuantityView(
                     value: value,
                     unit: unit,
-                    guardrail: .suspendThreshold,
+                    guardrail: guardrail,
                     isEditing: isEditing,
                     // Workaround for strange animation behavior on appearance
                     forceDisableAnimations: true
@@ -38,9 +41,14 @@ struct SuspendThresholdPicker: View {
             }
 
             if isEditing {
-                GlucoseValuePicker(value: $value.animation(), unit: unit, guardrail: .suspendThreshold)
-                    .padding(.horizontal, -8)
-                    .transition(.expandFromTop)
+                GlucoseValuePicker(
+                    value: $value.animation(),
+                    unit: unit,
+                    guardrail: guardrail,
+                    bounds: guardrail.absoluteBounds.lowerBound...(maxValue ?? guardrail.absoluteBounds.upperBound)
+                )
+                .padding(.horizontal, -8)
+                .transition(.expandFromTop)
             }
         }
     }

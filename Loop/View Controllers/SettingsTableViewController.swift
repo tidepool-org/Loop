@@ -468,6 +468,7 @@ final class SettingsTableViewController: UITableViewController {
                 let editor = CorrectionRangeScheduleEditor(
                     schedule: dataManager.loopManager.settings.glucoseTargetRangeSchedule,
                     unit: unit,
+                    minValue: dataManager.loopManager.settings.suspendThreshold?.quantity,
                     onSave: { [dataManager] newSchedule in
                         dataManager?.loopManager.settings.glucoseTargetRangeSchedule = newSchedule
                         tableView.reloadRows(at: [indexPath], with: .automatic)
@@ -484,6 +485,7 @@ final class SettingsTableViewController: UITableViewController {
                     let editor = SuspendThresholdEditor(
                         value: initialValue,
                         unit: unit,
+                        maxValue: dataManager.loopManager.settings.glucoseTargetRangeSchedule?.minLowerBound(),
                         onSave: { [dataManager, tableView] newValue in
                             dataManager!.loopManager.settings.suspendThreshold = GlucoseThreshold(unit: unit, value: newValue.doubleValue(for: unit))
 

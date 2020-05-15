@@ -360,7 +360,6 @@
 		89A605ED24328972009C1096 /* BolusArrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A605EC24328972009C1096 /* BolusArrow.swift */; };
 		89A605EF2432925D009C1096 /* CompletionCheckmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A605EE2432925D009C1096 /* CompletionCheckmark.swift */; };
 		89A605F12432BD18009C1096 /* BolusConfirmationVisual.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A605F02432BD18009C1096 /* BolusConfirmationVisual.swift */; };
-		89AC9DB2244A41BB004A6B8A /* Guardrail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89AC9DB1244A41BB004A6B8A /* Guardrail.swift */; };
 		89AC9DB4244A423D004A6B8A /* SuspendThresholdPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89AC9DB3244A423D004A6B8A /* SuspendThresholdPicker.swift */; };
 		89ADE13B226BFA0F0067222B /* TestingScenariosManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89ADE13A226BFA0F0067222B /* TestingScenariosManager.swift */; };
 		89BE75C92464B50600B145D9 /* DismissibleHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89BE75C82464B50600B145D9 /* DismissibleHostingController.swift */; };
@@ -1049,7 +1048,6 @@
 		89A605EC24328972009C1096 /* BolusArrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusArrow.swift; sourceTree = "<group>"; };
 		89A605EE2432925D009C1096 /* CompletionCheckmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionCheckmark.swift; sourceTree = "<group>"; };
 		89A605F02432BD18009C1096 /* BolusConfirmationVisual.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusConfirmationVisual.swift; sourceTree = "<group>"; };
-		89AC9DB1244A41BB004A6B8A /* Guardrail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guardrail.swift; sourceTree = "<group>"; };
 		89AC9DB3244A423D004A6B8A /* SuspendThresholdPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspendThresholdPicker.swift; sourceTree = "<group>"; };
 		89ADE13A226BFA0F0067222B /* TestingScenariosManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestingScenariosManager.swift; sourceTree = "<group>"; };
 		89BE75C82464B50600B145D9 /* DismissibleHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissibleHostingController.swift; sourceTree = "<group>"; };
@@ -1588,7 +1586,6 @@
 				892A5D58222F0A27008961AB /* Debug.swift */,
 				A9C62D832331700D00535612 /* DiagnosticLog+Subsystem.swift */,
 				89CA2B2F226C0161004D9350 /* DirectoryObserver.swift */,
-				89AC9DB1244A41BB004A6B8A /* Guardrail.swift */,
 				43D9003221EB258C00AF44BF /* InsulinModelSettings+Loop.swift */,
 				438172D81F4E9E37003C3328 /* NewPumpEvent.swift */,
 				89E267FE229267DF00A3F2AF /* Optional.swift */,
@@ -2734,7 +2731,6 @@
 				43DBF0591C93F73800B3C386 /* CarbEntryTableViewController.swift in Sources */,
 				89CA2B32226C18B8004D9350 /* TestingScenariosTableViewController.swift in Sources */,
 				43E93FB71E469A5100EAB8DB /* HKUnit.swift in Sources */,
-				89AC9DB2244A41BB004A6B8A /* Guardrail.swift in Sources */,
 				43C05CAF21EB2C24006FB252 /* NSBundle.swift in Sources */,
 				1DB1065124467E18005542BD /* DeviceAlertManager.swift in Sources */,
 				43BFF0BC1E45C80600FF19A9 /* UIColor+Loop.swift in Sources */,
