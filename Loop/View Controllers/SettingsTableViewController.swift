@@ -66,6 +66,7 @@ final class SettingsTableViewController: UITableViewController {
 
     fileprivate enum ConfigurationRow: Int, CaseCountable {
         case glucoseTargetRange = 0
+        case correctionRangeOverrides
         case suspendThreshold
         case basalRate
         case deliveryLimits
@@ -242,6 +243,8 @@ final class SettingsTableViewController: UITableViewController {
                 } else {
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 }
+            case .correctionRangeOverrides:
+                configCell.textLabel?.text = NSLocalizedString("Correction Range Overrides", comment: "The title text for the correction range overrides")
             case .suspendThreshold:
                 configCell.textLabel?.text = NSLocalizedString("Suspend Threshold", comment: "The title text in settings")
 
@@ -480,6 +483,27 @@ final class SettingsTableViewController: UITableViewController {
                 })
 
                 present(hostingController, animated: true)
+            case .correctionRangeOverrides:
+                let unit = dataManager.loopManager.settings.glucoseTargetRangeSchedule?.unit ?? dataManager.loopManager.glucoseStore.preferredUnit ?? HKUnit.milligramsPerDeciliter
+
+                let editor = CorrectionRangeOverridesEditor(
+                    value: CorrectionRangeOverrides(
+                        preMeal: dataManager.loopManager.settings.preMealTargetRange,
+                        workout: dataManager.loopManager.settings.legacyWorkoutTargetRange,
+                        unit: unit
+                    ),
+                    unit: unit,
+                    minValue: dataManager.loopManager.settings.suspendThreshold?.quantity,
+                    onSave: { overrides in
+                        // TODO:
+                    }
+                )
+
+                let hostingController = ExplicitlyDismissibleModal(rootView: editor, onDisappear: {
+                    tableView.deselectRow(at: indexPath, animated: true)
+                })
+
+                self.present(hostingController, animated: true)
             case .suspendThreshold:
                 func presentSuspendThresholdEditor(initialValue: HKQuantity?, unit: HKUnit) {
                     let editor = SuspendThresholdEditor(

@@ -23,6 +23,7 @@ struct SuspendThresholdEditor: View {
     var save: (_ suspendThreshold: HKQuantity) -> Void
 
     @State var value: HKQuantity
+    @State var isEditing = false
     @State var showingConfirmationAlert = false
     @Environment(\.dismiss) var dismiss
 
@@ -63,11 +64,12 @@ struct SuspendThresholdEditor: View {
                     Card {
                         SettingDescription(text: description)
                         SingleValueSetting(
-                            valueContent: { isEditing in
+                            isEditing: $isEditing,
+                            valueContent: {
                                 GuardrailConstrainedQuantityView(
-                                    value: self.value,
-                                    unit: self.unit,
-                                    guardrail: self.guardrail,
+                                    value: value,
+                                    unit: unit,
+                                    guardrail: guardrail,
                                     isEditing: isEditing,
                                     // Workaround for strange animation behavior on appearance
                                     forceDisableAnimations: true
