@@ -33,7 +33,7 @@ struct CorrectionRangeOverridesEditor: View {
     @State var rangeBeingEdited: WritableKeyPath<CorrectionRangeOverrides, ClosedRange<HKQuantity>?>? {
         didSet {
             if let rangeBeingEdited = rangeBeingEdited, value[keyPath: rangeBeingEdited] == nil {
-                value[keyPath: rangeBeingEdited] = guardrail.recommendedBounds
+                value[keyPath: rangeBeingEdited] = guardrail.recommendedBounds // TODO: assign based on rangeBeingEdited
             }
         }
     }
@@ -59,9 +59,10 @@ struct CorrectionRangeOverridesEditor: View {
     var body: some View {
         ConfigurationPage(
             title: Text("Correction Range Overrides", comment: "Title for correction range overrides page"),
-            isSaveButtonEnabled: isSaveButtonEnabled,
+            isSaveButtonEnabled: value != initialValue,
             sections: [
                 CardListSection(
+                    icon: Image("Pre-Meal").renderingMode(.template).foregroundColor(Color(.COBTintColor)),
                     title: Text("Pre-Meal", comment: "Title for pre-meal mode configuration section"),
                     cards: {
                         // TODO: Remove conditional when Swift 5.3 ships
@@ -70,6 +71,7 @@ struct CorrectionRangeOverridesEditor: View {
                     }
                 ),
                 CardListSection(
+                    icon: Image("workout").foregroundColor(Color(.glucoseTintColor)),
                     title: Text("Workout", comment: "Title for workout mode configuration section"),
                     cards: {
                         // TODO: Remove conditional when Swift 5.3 ships
@@ -92,17 +94,10 @@ struct CorrectionRangeOverridesEditor: View {
         .alert(isPresented: $showingConfirmationAlert, content: confirmationAlert)
     }
 
-    var description: Text {
-        Text("When your glucose is predicted to go below this value, the app will recommend a basal rate of 0 U/h and will not recommend a bolus.", comment: "Suspend threshold description")
-    }
-
-    private var isSaveButtonEnabled: Bool {
-        value != initialValue
-    }
-
     private func card(
         for rangeKeyPath: WritableKeyPath<CorrectionRangeOverrides, ClosedRange<HKQuantity>?>,
-        defaultValue: ClosedRange<HKQuantity>
+        defaultValue: ClosedRange<HKQuantity>,
+        description: Text
     ) -> Card {
         Card {
             SettingDescription(text: description)
@@ -144,11 +139,19 @@ struct CorrectionRangeOverridesEditor: View {
     }
 
     private var preMealModeCard: Card {
-        card(for: \.preMeal, defaultValue: guardrail.recommendedBounds)
+        card(
+            for: \.preMeal,
+            defaultValue: guardrail.recommendedBounds, // TODO: what's appropriate here?
+            description: Text("When Pre-Meal Mode is active, the app adjusts insulin delivery in an effort to bring your glucose into your pre-meal correction range.", comment: "Description of pre-meal mode")
+        )
     }
 
     private var workoutModeCard: Card {
-        card(for: \.workout, defaultValue: guardrail.recommendedBounds)
+        card(
+            for: \.workout,
+            defaultValue: guardrail.recommendedBounds, // TODO: what's appropriate here?
+            description: Text("When Workout Mode is active, the app adjusts insulin delivery in an effort to bring your glucose into your workout correction range.", comment: "Description of workout mode")
+        )
     }
 
     private var guardrailWarningIfNecessary: some View {
