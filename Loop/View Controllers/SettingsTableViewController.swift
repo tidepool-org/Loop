@@ -244,7 +244,13 @@ final class SettingsTableViewController: UITableViewController {
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 }
             case .correctionRangeOverrides:
+                // TODO: Copy not final.
                 configCell.textLabel?.text = NSLocalizedString("Correction Range Overrides", comment: "The title text for the correction range overrides")
+                if dataManager.loopManager.settings.preMealTargetRange == nil {
+                    configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
+                } else {
+                    // TODO: Show some text in the detail label.
+                }
             case .suspendThreshold:
                 configCell.textLabel?.text = NSLocalizedString("Suspend Threshold", comment: "The title text in settings")
 
@@ -494,8 +500,9 @@ final class SettingsTableViewController: UITableViewController {
                     ),
                     unit: unit,
                     minValue: dataManager.loopManager.settings.suspendThreshold?.quantity,
-                    onSave: { overrides in
-                        // TODO:
+                    onSave: { [dataManager] overrides in
+                        dataManager?.loopManager.settings.preMealTargetRange = overrides.preMeal?.doubleRange(for: unit)
+                        dataManager?.loopManager.settings.legacyWorkoutTargetRange = overrides.workout?.doubleRange(for: unit)
                     }
                 )
 

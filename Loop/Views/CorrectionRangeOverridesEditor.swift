@@ -13,13 +13,21 @@ import LoopKitUI
 
 
 struct CorrectionRangeOverrides: Equatable {
-    var preMeal: ClosedRange<HKQuantity>?
-    var workout: ClosedRange<HKQuantity>?
+    enum Preset: Hashable {
+        case preMeal
+        case workout
+    }
+
+    var ranges: [Preset: ClosedRange<HKQuantity>]
 
     init(preMeal: DoubleRange?, workout: DoubleRange?, unit: HKUnit) {
-        self.preMeal = preMeal?.quantityRange(for: unit)
-        self.workout = workout?.quantityRange(for: unit)
+        ranges = [:]
+        ranges[.preMeal] = preMeal?.quantityRange(for: unit)
+        ranges[.workout] = workout?.quantityRange(for: unit)
     }
+
+    var preMeal: ClosedRange<HKQuantity>? { ranges[.preMeal] }
+    var workout: ClosedRange<HKQuantity>? { ranges[.workout] }
 }
 
 struct CorrectionRangeOverridesEditor: View {
@@ -30,18 +38,16 @@ struct CorrectionRangeOverridesEditor: View {
 
     @State var value: CorrectionRangeOverrides
 
-    @State var rangeBeingEdited: WritableKeyPath<CorrectionRangeOverrides, ClosedRange<HKQuantity>?>? {
+    @State var presetBeingEdited: CorrectionRangeOverrides.Preset? {
         didSet {
-            if let rangeBeingEdited = rangeBeingEdited, value[keyPath: rangeBeingEdited] == nil {
-                value[keyPath: rangeBeingEdited] = guardrail.recommendedBounds // TODO: assign based on rangeBeingEdited
+            if let presetBeingEdited = presetBeingEdited, value.ranges[presetBeingEdited] == nil {
+                value.ranges[presetBeingEdited] = guardrail(for: presetBeingEdited).recommendedBounds
             }
         }
     }
 
     @State var showingConfirmationAlert = false
     @Environment(\.dismiss) var dismiss
-
-    let guardrail = Guardrail.correctionRange
 
     init(
         value: CorrectionRangeOverrides,
@@ -58,26 +64,15 @@ struct CorrectionRangeOverridesEditor: View {
 
     var body: some View {
         ConfigurationPage(
+            // TODO: Copy not final.
             title: Text("Correction Range Overrides", comment: "Title for correction range overrides page"),
             isSaveButtonEnabled: value != initialValue,
-            sections: [
-                CardListSection(
-                    title: Text("Pre-Meal", comment: "Title for pre-meal mode configuration section"),
-                    cards: {
-                        // TODO: Remove conditional when Swift 5.3 ships
-                        // https://bugs.swift.org/browse/SR-11628
-                        if true { preMealModeCard }
-                    }
-                ),
-                CardListSection(
-                    title: Text("Workout", comment: "Title for workout mode configuration section"),
-                    cards: {
-                        // TODO: Remove conditional when Swift 5.3 ships
-                        // https://bugs.swift.org/browse/SR-11628
-                        if true { workoutModeCard }
-                    }
-                )
-            ],
+            cards: {
+                card(for: .preMeal)
+                if !FeatureFlags.sensitivityOverridesEnabled {
+                    card(for: .workout)
+                }
+            },
             actionAreaContent: {
                 guardrailWarningIfNecessary
             },
@@ -92,74 +87,94 @@ struct CorrectionRangeOverridesEditor: View {
         .alert(isPresented: $showingConfirmationAlert, content: confirmationAlert)
     }
 
-    private func icon(named name: String, tinted color: Color) -> some View {
-        Image(name)
-            .renderingMode(.template)
-            .foregroundColor(color)
-    }
-
-    private func card<LeadingContent: View>(
-        for rangeKeyPath: WritableKeyPath<CorrectionRangeOverrides, ClosedRange<HKQuantity>?>,
-        defaultValue: ClosedRange<HKQuantity>,
-        icon: () -> LeadingContent,
-        description: Text
-    ) -> Card {
+    private func card(for preset: CorrectionRangeOverrides.Preset) -> Card {
         Card {
-            SettingDescription(text: description)
+            SettingDescription(text: description(of: preset))
             ExpandableSetting(
                 isEditing: Binding(
-                    get: { self.rangeBeingEdited == rangeKeyPath },
+                    get: { self.presetBeingEdited == preset },
                     set: { isEditing in
                         withAnimation {
-                            self.rangeBeingEdited = isEditing ? rangeKeyPath : nil
+                            self.presetBeingEdited = isEditing ? preset : nil
                         }
                     }
                 ),
-                leadingValueContent: icon,
+                leadingValueContent: {
+                    HStack {
+                        icon(for: preset)
+                        name(of: preset)
+                    }
+                },
                 trailingValueContent: {
                     GuardrailConstrainedQuantityRangeView(
-                        range: value[keyPath: rangeKeyPath],
+                        range: value.ranges[preset],
                         unit: unit,
-                        guardrail: guardrail,
-                        isEditing: rangeBeingEdited == rangeKeyPath,
+                        guardrail: self.guardrail(for: preset),
+                        isEditing: presetBeingEdited == preset,
                         forceDisableAnimations: true
                     )
                 },
                 valuePicker: {
                     GlucoseRangePicker(
                         range: Binding(
-                            get: { self.value[keyPath: rangeKeyPath] ?? defaultValue },
+                            get: { self.value.ranges[preset] ?? self.guardrail(for: preset).recommendedBounds },
                             set: { newValue in
                                 withAnimation {
-                                    self.value[keyPath: rangeKeyPath] = newValue
+                                    self.value.ranges[preset] = newValue
                                 }
                             }
                         ),
                         unit: unit,
                         minValue: minValue,
-                        guardrail: guardrail
+                        guardrail: self.guardrail(for: preset)
                     )
                 }
             )
         }
     }
 
-    private var preMealModeCard: Card {
-        card(
-            for: \.preMeal,
-            defaultValue: guardrail.recommendedBounds, // TODO: what's appropriate here?
-            icon: { icon(named: "Pre-Meal", tinted: Color(.COBTintColor)) },
-            description: Text("When Pre-Meal Mode is active, the app adjusts insulin delivery in an effort to bring your glucose into your pre-meal correction range.", comment: "Description of pre-meal mode")
-        )
+    private func description(of preset: CorrectionRangeOverrides.Preset) -> Text {
+        // TODO: Copy not final.
+        switch preset {
+        case .preMeal:
+            return Text("When Pre-Meal Mode is active, the app adjusts insulin delivery in an effort to bring your glucose into your pre-meal correction range.", comment: "Description of pre-meal mode")
+        case .workout:
+            return Text("When Workout Mode is active, the app adjusts insulin delivery in an effort to bring your glucose into your workout correction range.", comment: "Description of workout mode")
+        }
     }
 
-    private var workoutModeCard: Card {
-        card(
-            for: \.workout,
-            defaultValue: guardrail.recommendedBounds, // TODO: what's appropriate here?
-            icon: { icon(named: "workout", tinted: Color(.glucoseTintColor)) },
-            description: Text("When Workout Mode is active, the app adjusts insulin delivery in an effort to bring your glucose into your workout correction range.", comment: "Description of workout mode")
-        )
+    private func name(of preset: CorrectionRangeOverrides.Preset) -> Text {
+        switch preset {
+        case .preMeal:
+            return Text("Pre-Meal", comment: "Title for pre-meal mode configuration section")
+        case .workout:
+            return Text("Workout", comment: "Title for workout mode configuration section")
+        }
+    }
+
+    private func icon(for preset: CorrectionRangeOverrides.Preset) -> some View {
+        switch preset {
+        case .preMeal:
+            return icon(named: "Pre-Meal", tinted: Color(.COBTintColor))
+        case .workout:
+            return icon(named: "workout", tinted: Color(.glucoseTintColor))
+        }
+    }
+
+    private func icon(named name: String, tinted color: Color) -> some View {
+        Image(name)
+            .renderingMode(.template)
+            .foregroundColor(color)
+    }
+
+    private func guardrail(for preset: CorrectionRangeOverrides.Preset) -> Guardrail<HKQuantity> {
+        // TODO: Guardrail bounds not yet finalized.
+        switch preset {
+        case .preMeal:
+            return Guardrail(absoluteBounds: 60...180, recommendedBounds: 80...120, unit: .milligramsPerDeciliter)
+        case .workout:
+            return Guardrail(absoluteBounds: 60...180, recommendedBounds: 100...160, unit: .milligramsPerDeciliter)
+        }
     }
 
     private var guardrailWarningIfNecessary: some View {
@@ -172,15 +187,16 @@ struct CorrectionRangeOverridesEditor: View {
     }
 
     private var crossedThresholds: [SafetyClassification.Threshold] {
-        return [value.preMeal, value.workout]
-            .compactMap { $0 }
-            .flatMap { [$0.lowerBound, $0.upperBound] }
-            .compactMap { bound in
-                switch guardrail.classification(for: bound) {
-                case .withinRecommendedRange:
-                    return nil
-                case .outsideRecommendedRange(let threshold):
-                    return threshold
+        return value.ranges
+            .flatMap { (preset, range) -> [SafetyClassification.Threshold] in
+                let guardrail = self.guardrail(for: preset)
+                return [range.lowerBound, range.upperBound].compactMap { bound in
+                    switch guardrail.classification(for: bound) {
+                    case .withinRecommendedRange:
+                        return nil
+                    case .outsideRecommendedRange(let threshold):
+                        return threshold
+                    }
                 }
             }
     }
