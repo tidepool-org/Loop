@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19E287" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="StoredAlert" representedClassName="StoredAlert" syncable="YES" codeGenerationType="class">
-        <attribute name="alertIdentifier" optional="YES" attributeType="String"/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="15702" systemVersion="19E287" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="StoredAlertObject" representedClassName=".StoredAlertObject" syncable="YES">
+        <attribute name="acknowledgeTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="backgroundContent" optional="YES" attributeType="String"/>
         <attribute name="foregroundContent" optional="YES" attributeType="String"/>
-        <attribute name="isCritical" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
-        <attribute name="managerIdentifier" optional="YES" attributeType="String"/>
-        <attribute name="recordType" optional="YES" attributeType="String"/>
+        <attribute name="identifier" attributeType="String"/>
+        <attribute name="isCritical" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="issuedTimestamp" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="modificationCounter" attributeType="Integer 64" usesScalarValueType="YES"/>
+        <attribute name="retractedTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="sound" optional="YES" attributeType="String"/>
-        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="trigger" optional="YES" attributeType="String"/>
     </entity>
     <elements>
-        <element name="StoredAlert" positionX="-63" positionY="-18" width="128" height="178"/>
+        <element name="StoredAlertObject" positionX="-63" positionY="-18" width="128" height="193"/>
     </elements>
 </model>

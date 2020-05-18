@@ -97,7 +97,7 @@ extension DeviceAlertManager: DeviceAlertPresenter {
 
     public func issueAlert(_ alert: DeviceAlert) {
         handlers.forEach { $0.issueAlert(alert) }
-        alertStore.record(alert: alert)
+        alertStore.recordIssued(alert: alert)
     }
     
     public func retractAlert(identifier: DeviceAlert.Identifier) {
