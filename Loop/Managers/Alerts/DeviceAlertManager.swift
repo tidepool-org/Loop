@@ -45,7 +45,7 @@ public final class DeviceAlertManager {
     let userNotificationCenter: UserNotificationCenter
     let fileManager: FileManager
     
-    let persistentDeviceAlertLog: PersistentDeviceAlertLog
+    let alertStore: AlertStore
 
     public init(rootViewController: UIViewController,
                 handlers: [DeviceAlertPresenter]? = nil,
@@ -54,7 +54,7 @@ public final class DeviceAlertManager {
         self.userNotificationCenter = userNotificationCenter
         self.fileManager = fileManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        persistentDeviceAlertLog = PersistentDeviceAlertLog(storageFile: documentsDirectory.appendingPathComponent("DeviceAlertLog.sqlite"))
+        alertStore = AlertStore(storageFile: documentsDirectory.appendingPathComponent("DeviceAlertLog.sqlite"))
         self.handlers = handlers ??
             [UserNotificationDeviceAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalDeviceAlertPresenter(rootViewController: rootViewController, deviceAlertManagerResponder: self)]
@@ -89,7 +89,7 @@ extension DeviceAlertManager: DeviceAlertManagerResponder {
         log.debug("Removing notification %@ from delivered & pending notifications", identifier.value)
         userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
         userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier.value])
-        persistentDeviceAlertLog.recordAcknowledgement(of: identifier)
+        alertStore.recordAcknowledgement(of: identifier)
     }
 }
 
@@ -97,12 +97,12 @@ extension DeviceAlertManager: DeviceAlertPresenter {
 
     public func issueAlert(_ alert: DeviceAlert) {
         handlers.forEach { $0.issueAlert(alert) }
-        persistentDeviceAlertLog.record(alert: alert)
+        alertStore.record(alert: alert)
     }
     
     public func retractAlert(identifier: DeviceAlert.Identifier) {
         handlers.forEach { $0.retractAlert(identifier: identifier) }
-        persistentDeviceAlertLog.recordRetraction(of: identifier)
+        alertStore.recordRetraction(of: identifier)
     }
     
     private func replayAlert(_ alert: DeviceAlert) {

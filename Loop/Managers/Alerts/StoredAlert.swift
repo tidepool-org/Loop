@@ -1,5 +1,5 @@
 //
-//  DeviceAlertLogEntry.swift
+//  StoredAlert.swift
 //  Loop
 //
 //  Created by Rick Pasetto on 5/11/20.
@@ -9,7 +9,7 @@
 import CoreData
 import LoopKit
 
-enum DeviceAlertLogEntryRecordType: String {
+enum StoredAlertRecordType: String {
     /// Recorded when the alert was _issued_ (note, a delayed alert is _issued_ when the delay starts, a repeating alert also is _issued_ when the alert starts repeating)
     case issued
     /// Recorded when an alert is _acknowledged_
@@ -18,7 +18,7 @@ enum DeviceAlertLogEntryRecordType: String {
     case retracted
 }
 
-extension DeviceAlertLogEntry {
+extension StoredAlert {
     
     convenience init(from deviceAlert: DeviceAlert, context: NSManagedObjectContext, timestamp: Date = Date()) {
         do {
@@ -32,14 +32,14 @@ extension DeviceAlertLogEntry {
             sound = try encoder.encodeToStringIfPresent(deviceAlert.sound)
             foregroundContent = try encoder.encodeToStringIfPresent(deviceAlert.foregroundContent)
             backgroundContent = try encoder.encodeToStringIfPresent(deviceAlert.backgroundContent)
-            recordType = DeviceAlertLogEntryRecordType.issued.rawValue
+            recordType = StoredAlertRecordType.issued.rawValue
             isCritical = deviceAlert.foregroundContent?.isCritical ?? false || deviceAlert.backgroundContent?.isCritical ?? false
         } catch {
             fatalError("Failed to encode: \(error)")
         }
     }
     
-    convenience init(from identifier: DeviceAlert.Identifier, recordType: DeviceAlertLogEntryRecordType,
+    convenience init(from identifier: DeviceAlert.Identifier, recordType: StoredAlertRecordType,
                      context: NSManagedObjectContext, timestamp: Date = Date()) {
         self.init(context: context)
         self.timestamp = timestamp

@@ -9,7 +9,7 @@
 import CoreData
 import LoopKit
 
-public class PersistentDeviceAlertLog {
+public class AlertStore {
     
     private let storageFile: URL
     
@@ -23,18 +23,18 @@ public class PersistentDeviceAlertLog {
         return Date(timeIntervalSinceNow: -maxEntryAge)
     }
     
-    private let log = DiagnosticLog(category: "PersistentDeviceAlertLog")
+    private let log = DiagnosticLog(category: "PersistentAlertStore")
     
     public init(storageFile: URL, maxEntryAge: TimeInterval = TimeInterval(7 * 24 * 60 * 60)) {
         self.storageFile = storageFile
         self.maxEntryAge = maxEntryAge
-        print("storageFile: \(storageFile)")
+        print("PersistentAlertStore: \(storageFile)")
         managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         managedObjectContext.automaticallyMergesChangesFromParent = true
 
         let storeDescription = NSPersistentStoreDescription(url: storageFile)
-        persistentContainer = NSPersistentContainer(name: "DeviceAlertLog")
+        persistentContainer = NSPersistentContainer(name: "AlertStore")
         persistentContainer.persistentStoreDescriptions = [storeDescription]
         persistentContainer.loadPersistentStores { description, error in
             if let error = error {
@@ -46,7 +46,7 @@ public class PersistentDeviceAlertLog {
     
     public func record(alert: DeviceAlert, completion: ((Error?) -> Void)? = nil) {
         managedObjectContext.perform {
-            _ = DeviceAlertLogEntry(from: alert, context: self.managedObjectContext, timestamp: Date())
+            _ = StoredAlert(from: alert, context: self.managedObjectContext, timestamp: Date())
             do {
                 try self.managedObjectContext.save()
                 self.log.default("Recorded alert: %{public}@ ", alert.identifier.value)
@@ -60,7 +60,7 @@ public class PersistentDeviceAlertLog {
     
     public func recordAcknowledgement(of identifier: DeviceAlert.Identifier, completion: ((Error?) -> Void)? = nil) {
         managedObjectContext.perform {
-            _ = DeviceAlertLogEntry(from: identifier, recordType: .acknowledged, context: self.managedObjectContext, timestamp: Date())
+            _ = StoredAlert(from: identifier, recordType: .acknowledged, context: self.managedObjectContext, timestamp: Date())
             do {
                 try self.managedObjectContext.save()
                 self.log.default("Recorded alert acknowledgement: %{public}@ ", identifier.value)
@@ -74,7 +74,7 @@ public class PersistentDeviceAlertLog {
     
     public func recordRetraction(of identifier: DeviceAlert.Identifier, completion: ((Error?) -> Void)? = nil) {
         managedObjectContext.perform {
-            _ = DeviceAlertLogEntry(from: identifier, recordType: .retracted, context: self.managedObjectContext, timestamp: Date())
+            _ = StoredAlert(from: identifier, recordType: .retracted, context: self.managedObjectContext, timestamp: Date())
             do {
                 try self.managedObjectContext.save()
                 self.log.default("Recorded alert retraction: %{public}@ ", identifier.value)
@@ -91,7 +91,7 @@ public class PersistentDeviceAlertLog {
         let predicate = NSPredicate(format: "timestamp < %@", earliestLogEntryDate as NSDate)
 
         do {
-            let fetchRequest: NSFetchRequest<DeviceAlertLogEntry> = DeviceAlertLogEntry.fetchRequest()
+            let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
             fetchRequest.predicate = predicate
             let count = try managedObjectContext.deleteObjects(matching: fetchRequest)
             log.info("Deleted %d DeviceAlertLogEntries", count)
