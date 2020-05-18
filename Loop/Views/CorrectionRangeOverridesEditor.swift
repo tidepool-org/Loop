@@ -62,7 +62,6 @@ struct CorrectionRangeOverridesEditor: View {
             isSaveButtonEnabled: value != initialValue,
             sections: [
                 CardListSection(
-                    icon: Image("Pre-Meal").renderingMode(.template).foregroundColor(Color(.COBTintColor)),
                     title: Text("Pre-Meal", comment: "Title for pre-meal mode configuration section"),
                     cards: {
                         // TODO: Remove conditional when Swift 5.3 ships
@@ -71,7 +70,6 @@ struct CorrectionRangeOverridesEditor: View {
                     }
                 ),
                 CardListSection(
-                    icon: Image("workout").foregroundColor(Color(.glucoseTintColor)),
                     title: Text("Workout", comment: "Title for workout mode configuration section"),
                     cards: {
                         // TODO: Remove conditional when Swift 5.3 ships
@@ -94,14 +92,21 @@ struct CorrectionRangeOverridesEditor: View {
         .alert(isPresented: $showingConfirmationAlert, content: confirmationAlert)
     }
 
-    private func card(
+    private func icon(named name: String, tinted color: Color) -> some View {
+        Image(name)
+            .renderingMode(.template)
+            .foregroundColor(color)
+    }
+
+    private func card<LeadingContent: View>(
         for rangeKeyPath: WritableKeyPath<CorrectionRangeOverrides, ClosedRange<HKQuantity>?>,
         defaultValue: ClosedRange<HKQuantity>,
+        icon: () -> LeadingContent,
         description: Text
     ) -> Card {
         Card {
             SettingDescription(text: description)
-            SingleValueSetting(
+            ExpandableSetting(
                 isEditing: Binding(
                     get: { self.rangeBeingEdited == rangeKeyPath },
                     set: { isEditing in
@@ -110,7 +115,8 @@ struct CorrectionRangeOverridesEditor: View {
                         }
                     }
                 ),
-                valueContent: {
+                leadingValueContent: icon,
+                trailingValueContent: {
                     GuardrailConstrainedQuantityRangeView(
                         range: value[keyPath: rangeKeyPath],
                         unit: unit,
@@ -142,6 +148,7 @@ struct CorrectionRangeOverridesEditor: View {
         card(
             for: \.preMeal,
             defaultValue: guardrail.recommendedBounds, // TODO: what's appropriate here?
+            icon: { icon(named: "Pre-Meal", tinted: Color(.COBTintColor)) },
             description: Text("When Pre-Meal Mode is active, the app adjusts insulin delivery in an effort to bring your glucose into your pre-meal correction range.", comment: "Description of pre-meal mode")
         )
     }
@@ -150,6 +157,7 @@ struct CorrectionRangeOverridesEditor: View {
         card(
             for: \.workout,
             defaultValue: guardrail.recommendedBounds, // TODO: what's appropriate here?
+            icon: { icon(named: "workout", tinted: Color(.glucoseTintColor)) },
             description: Text("When Workout Mode is active, the app adjusts insulin delivery in an effort to bring your glucose into your workout correction range.", comment: "Description of workout mode")
         )
     }

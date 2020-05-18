@@ -63,7 +63,7 @@ struct SuspendThresholdEditor: View {
                 if true {
                     Card {
                         SettingDescription(text: description)
-                        SingleValueSetting(
+                        ExpandableSetting(
                             isEditing: $isEditing,
                             valueContent: {
                                 GuardrailConstrainedQuantityView(
