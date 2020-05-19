@@ -1,5 +1,5 @@
 //
-//  StoredAlertObject+CoreDataClass.swift
+//  StoredAlert.swift
 //  Loop
 //
 //  Created by Rick Pasetto on 5/11/20.
@@ -9,28 +9,29 @@
 import CoreData
 import LoopKit
 
-class StoredAlertObject: NSManagedObject {
+extension StoredAlert {
 
     static var encoder = JSONEncoder()
-       
+          
     convenience init(from deviceAlert: DeviceAlert, context: NSManagedObjectContext, issuedTimestamp: Date = Date()) {
         do {
             self.init(context: context)
             self.issuedTimestamp = issuedTimestamp
             identifier = deviceAlert.identifier.value
             // Encode as JSON strings
-            let encoder = StoredAlertObject.encoder
+            let encoder = StoredAlert.encoder
             trigger = try encoder.encodeToStringIfPresent(deviceAlert.trigger)
             sound = try encoder.encodeToStringIfPresent(deviceAlert.sound)
             foregroundContent = try encoder.encodeToStringIfPresent(deviceAlert.foregroundContent)
             backgroundContent = try encoder.encodeToStringIfPresent(deviceAlert.backgroundContent)
             isCritical = deviceAlert.foregroundContent?.isCritical ?? false || deviceAlert.backgroundContent?.isCritical ?? false
+            modificationCounter = 0
         } catch {
             fatalError("Failed to encode: \(error)")
         }
     }
 
-    override func willSave() {
+    public override func willSave() {
         if isInserted || isUpdated {
             setPrimitiveValue(managedObjectContext!.modificationCounter ?? 0, forKey: "modificationCounter")
         }

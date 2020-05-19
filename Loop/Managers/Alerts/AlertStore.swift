@@ -33,33 +33,47 @@ public class AlertStore {
 
     public struct QueryAnchor: RawRepresentable {
         public typealias RawValue = [String: Any]
-        
         internal var modificationCounter: Int64
-        
         public init() {
             self.modificationCounter = 0
         }
-        
         public init?(rawValue: RawValue) {
             guard let modificationCounter = rawValue["modificationCounter"] as? Int64 else {
                 return nil
             }
             self.modificationCounter = modificationCounter
         }
-        
         public var rawValue: RawValue {
             var rawValue: RawValue = [:]
             rawValue["modificationCounter"] = modificationCounter
             return rawValue
         }
     }
+    typealias QueryResult = Result<(QueryAnchor, [StoredAlert]), Error>
     
-    typealias QueryResult = Result<(QueryAnchor, [StoredAlertObject]), Error>
-    
+    public init(storageFile: URL, maxEntryAge: TimeInterval = TimeInterval(7 * 24 * 60 * 60)) {
+        self.storageFile = storageFile
+        self.maxEntryAge = maxEntryAge
+        print("AlertStore: \(storageFile)")
+        managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        managedObjectContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        managedObjectContext.automaticallyMergesChangesFromParent = true
+
+        let storeDescription = NSPersistentStoreDescription(url: storageFile)
+        persistentContainer = NSPersistentContainer(name: "AlertStore")
+        persistentContainer.persistentStoreDescriptions = [storeDescription]
+        persistentContainer.loadPersistentStores { description, error in
+            if let error = error {
+                fatalError("Unable to load persistent stores: \(error)")
+            }
+        }
+        managedObjectContext.persistentStoreCoordinator = persistentContainer.persistentStoreCoordinator
+    }
+
     func executeAlertQuery(fromQueryAnchor queryAnchor: QueryAnchor?, limit: Int, completion: @escaping (QueryResult) -> Void) {
         dataAccessQueue.async {
             var queryAnchor = queryAnchor ?? QueryAnchor()
-            var queryResult = [StoredAlertObject]()
+            var queryResult = [StoredAlert]()
             var queryError: Error?
 
             guard limit > 0 else {
@@ -68,7 +82,7 @@ public class AlertStore {
             }
 
             self.managedObjectContext.performAndWait {
-                let storedRequest: NSFetchRequest<StoredAlertObject> = StoredAlertObject.fetchRequest()
+                let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
 
                 storedRequest.predicate = NSPredicate(format: "modificationCounter > %d", queryAnchor.modificationCounter)
                 storedRequest.sortDescriptors = [NSSortDescriptor(key: "modificationCounter", ascending: true)]
@@ -94,33 +108,14 @@ public class AlertStore {
             completion(.success((queryAnchor, queryResult)))
         }
     }
-
-    public init(storageFile: URL, maxEntryAge: TimeInterval = TimeInterval(7 * 24 * 60 * 60)) {
-        self.storageFile = storageFile
-        self.maxEntryAge = maxEntryAge
-        print("AlertStore: \(storageFile)")
-        managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        managedObjectContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        managedObjectContext.automaticallyMergesChangesFromParent = true
-
-        let storeDescription = NSPersistentStoreDescription(url: storageFile)
-        persistentContainer = NSPersistentContainer(name: "AlertStore")
-        persistentContainer.persistentStoreDescriptions = [storeDescription]
-        persistentContainer.loadPersistentStores { description, error in
-            if let error = error {
-                fatalError("Unable to load persistent stores: \(error)")
-            }
-        }
-        managedObjectContext.persistentStoreCoordinator = persistentContainer.persistentStoreCoordinator
-    }
     
     public func recordIssued(alert: DeviceAlert, at timestamp: Date = Date(), completion: ((Swift.Error?) -> Void)? = nil) {
         dataAccessQueue.async {
             self.managedObjectContext.perform {
-                _ = StoredAlertObject(from: alert, context: self.managedObjectContext, issuedTimestamp: timestamp)
+                _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedTimestamp: timestamp)
                 do {
                     try self.managedObjectContext.save()
-                    self.log.default("Recorded alert: %{public}@ ", alert.identifier.value)
+                    self.log.default("Recorded alert: %{public}@", alert.identifier.value)
                     completion?(nil)
                 } catch {
                     self.log.error("Could not store alert: %{public}@", String(describing: error))
@@ -130,33 +125,34 @@ public class AlertStore {
         }
     }
     
-    private func lookup(identifier: DeviceAlert.Identifier, completion: @escaping (Result<StoredAlertObject?, Swift.Error>) -> Void) {
+    private func lookupLatest(identifier: DeviceAlert.Identifier, completion: @escaping (Result<StoredAlert?, Swift.Error>) -> Void) {
         managedObjectContext.perform {
             let predicate = NSPredicate(format: "identifier = %@", identifier.value)
             do {
-                let fetchRequest: NSFetchRequest<StoredAlertObject> = StoredAlertObject.fetchRequest()
+                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
                 fetchRequest.predicate = predicate
+                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
                 let result = try self.managedObjectContext.fetch(fetchRequest)
-                completion(.success(result.first))
+                completion(.success(result.last))
             } catch {
                 completion(.failure(error))
             }
         }
     }
     
-    private func recordUpdate(of identifier: DeviceAlert.Identifier, at timestamp: Date = Date(),
-                              with block: @escaping (StoredAlertObject) -> Void,
-                              completion: ((Swift.Error?) -> Void)? = nil) {
+    private func recordUpdateOfLatest(of identifier: DeviceAlert.Identifier, at timestamp: Date = Date(),
+                                      with block: @escaping (StoredAlert) -> Void,
+                                      completion: ((Swift.Error?) -> Void)? = nil) {
         dataAccessQueue.async {
             self.managedObjectContext.perform {
-                self.lookup(identifier: identifier) {
+                self.lookupLatest(identifier: identifier) {
                     switch $0 {
                     case .success(let object):
                         if let object = object {
                             block(object)
                             do {
                                 try self.managedObjectContext.save()
-                                self.log.default("Recorded alert: %{public}@ ", identifier.value)
+                                self.log.default("Recorded alert: %{public}@", identifier.value)
                                 completion?(nil)
                             } catch {
                                 self.log.error("Could not store alert: %{public}@", String(describing: error))
@@ -175,12 +171,12 @@ public class AlertStore {
     
     public func recordAcknowledgement(of identifier: DeviceAlert.Identifier, at timestamp: Date = Date(),
                                       completion: ((Swift.Error?) -> Void)? = nil) {
-        recordUpdate(of: identifier, at: timestamp, with: { $0.acknowledgedTimestamp = timestamp }, completion: completion)
+        recordUpdateOfLatest(of: identifier, at: timestamp, with: { $0.acknowledgedTimestamp = timestamp }, completion: completion)
     }
     
     public func recordRetraction(of identifier: DeviceAlert.Identifier, at timestamp: Date = Date(),
                                  completion: ((Error?) -> Void)? = nil) {
-        recordUpdate(of: identifier, at: timestamp, with: { $0.retractedTimestamp = timestamp }, completion: completion)
+        recordUpdateOfLatest(of: identifier, at: timestamp, with: { $0.retractedTimestamp = timestamp }, completion: completion)
     }
 
     // Should only be called from managed object context queue
@@ -188,7 +184,7 @@ public class AlertStore {
         let predicate = NSPredicate(format: "timestamp < %@", earliestLogEntryDate as NSDate)
 
         do {
-            let fetchRequest: NSFetchRequest<StoredAlertObject> = StoredAlertObject.fetchRequest()
+            let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
             fetchRequest.predicate = predicate
             let count = try managedObjectContext.deleteObjects(matching: fetchRequest)
             log.info("Deleted %d DeviceAlertLogEntries", count)
