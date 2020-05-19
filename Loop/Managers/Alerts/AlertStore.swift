@@ -20,13 +20,7 @@ public class AlertStore {
     private let managedObjectContext: NSManagedObjectContext
 
     private let persistentContainer: NSPersistentContainer
-    
-    private let maxEntryAge: TimeInterval
-    
-    private var earliestLogEntryDate: Date {
-        return Date(timeIntervalSinceNow: -maxEntryAge)
-    }
-    
+        
     private let log = DiagnosticLog(category: "AlertStore")
 
     private let dataAccessQueue = DispatchQueue(label: "com.loop.AlertStore.dataAccessQueue", qos: .utility)
@@ -51,9 +45,8 @@ public class AlertStore {
     }
     typealias QueryResult = Result<(QueryAnchor, [StoredAlert]), Error>
     
-    public init(storageFile: URL, maxEntryAge: TimeInterval = TimeInterval(7 * 24 * 60 * 60)) {
+    public init(storageFile: URL) {
         self.storageFile = storageFile
-        self.maxEntryAge = maxEntryAge
         print("AlertStore: \(storageFile)")
         managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
@@ -177,36 +170,5 @@ public class AlertStore {
     public func recordRetraction(of identifier: DeviceAlert.Identifier, at timestamp: Date = Date(),
                                  completion: ((Error?) -> Void)? = nil) {
         recordUpdateOfLatest(of: identifier, at: timestamp, with: { $0.retractedTimestamp = timestamp }, completion: completion)
-    }
-
-    // Should only be called from managed object context queue
-    private func purgeExpiredEntries() {
-        let predicate = NSPredicate(format: "timestamp < %@", earliestLogEntryDate as NSDate)
-
-        do {
-            let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-            fetchRequest.predicate = predicate
-            let count = try managedObjectContext.deleteObjects(matching: fetchRequest)
-            log.info("Deleted %d DeviceAlertLogEntries", count)
-        } catch let error {
-            log.error("Could not purge expired alert log entry %{public}@", String(describing: error))
-        }
-    }
-}
-
-extension NSManagedObjectContext {
-
-    fileprivate func deleteObjects<T>(matching fetchRequest: NSFetchRequest<T>) throws -> Int where T: NSManagedObject {
-        let objects = try fetch(fetchRequest)
-
-        for object in objects {
-            delete(object)
-        }
-
-        if hasChanges {
-            try save()
-        }
-
-        return objects.count
     }
 }
