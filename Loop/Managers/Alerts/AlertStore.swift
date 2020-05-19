@@ -95,13 +95,13 @@ extension AlertStore {
                                 completion?(.success(Void()))
                             } catch {
                                 self.log.error("Could not store alert: %{public}@", String(describing: error))
-                                completion?(error)
+                                completion?(.failure(error))
                             }
                         } else {
-                            completion?(AlertStoreError.notFound)
+                            completion?(.failure(AlertStoreError.notFound))
                         }
                     case .failure(let error):
-                        completion?(error)
+                        completion?(.failure(error))
                     }
                 }
             }
