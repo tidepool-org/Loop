@@ -128,6 +128,66 @@ extension AlertStore {
 
 extension AlertStore {
 
+    public struct QueryAnchor: RawRepresentable, Equatable {
+        public typealias RawValue = [String: Any]
+        internal var modificationCounter: Int64
+        public init() {
+            self.modificationCounter = 0
+        }
+        public init?(rawValue: RawValue) {
+            guard let modificationCounter = rawValue["modificationCounter"] as? Int64 else {
+                return nil
+            }
+            self.modificationCounter = modificationCounter
+        }
+        public var rawValue: RawValue {
+            var rawValue: RawValue = [:]
+            rawValue["modificationCounter"] = modificationCounter
+            return rawValue
+        }
+    }
+    typealias QueryResult = Result<(QueryAnchor, [StoredAlert]), Error>
+
+    func executeAlertQuery(fromQueryAnchor queryAnchor: QueryAnchor? = nil, limit: Int = 100, completion: @escaping (QueryResult) -> Void) {
+        dataAccessQueue.async {
+            var queryAnchor = queryAnchor ?? QueryAnchor()
+            var queryResult = [StoredAlert]()
+            var queryError: Error?
+
+            guard limit > 0 else {
+                completion(.success((queryAnchor, queryResult)))
+                return
+            }
+
+            self.managedObjectContext.performAndWait {
+                let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+
+                storedRequest.predicate = NSPredicate(format: "modificationCounter > %d", queryAnchor.modificationCounter)
+                storedRequest.sortDescriptors = [NSSortDescriptor(key: "modificationCounter", ascending: true)]
+                storedRequest.fetchLimit = limit
+
+                do {
+                    let stored = try self.managedObjectContext.fetch(storedRequest)
+                    if let modificationCounter = stored.max(by: { $0.modificationCounter < $1.modificationCounter })?.modificationCounter {
+                        queryAnchor.modificationCounter = modificationCounter
+                    }
+                    queryResult.append(contentsOf: stored)
+                } catch let error {
+                    queryError = error
+                    return
+                }
+            }
+
+            if let queryError = queryError {
+                completion(.failure(queryError))
+                return
+            }
+
+            completion(.success((queryAnchor, queryResult)))
+        }
+    }
+
+    
     // At the moment, this is only used for unit testing
     internal func fetch(identifier: DeviceAlert.Identifier, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
         dataAccessQueue.async {

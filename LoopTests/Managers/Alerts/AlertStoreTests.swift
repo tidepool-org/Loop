@@ -127,4 +127,78 @@ class AlertStoreTests: XCTestCase {
         }
         wait(for: [expect], timeout: 1)
     }
+    
+    func testSimpleQuery() {
+        let expect = self.expectation(description: #function)
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
+            switch $0 {
+            case .failure(let error): XCTFail("Unexpected \(error)")
+            case .success:
+                self.alertStore.executeAlertQuery {
+                    switch $0 {
+                    case .failure(let error): XCTFail("Unexpected \(error)")
+                    case .success(let (anchor, storedAlerts)):
+                        var expectedAnchor = AlertStore.QueryAnchor()
+                        expectedAnchor.modificationCounter = 1
+                        XCTAssertEqual(expectedAnchor, anchor)
+                        XCTAssertEqual(1, storedAlerts.count)
+                        XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                        XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
+                        XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                        XCTAssertNil(storedAlerts[0].retractedDate)
+                        expect.fulfill()
+                    }
+                }
+            }
+        }
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func testSimpleQueryThenRetraction() {
+        let expect = self.expectation(description: #function)
+        let issuedDate = Date.distantPast
+        let retractedDate = issuedDate.addingTimeInterval(2)
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
+            switch $0 {
+            case .failure(let error): XCTFail("Unexpected \(error)")
+            case .success:
+                self.alertStore.executeAlertQuery {
+                    switch $0 {
+                    case .failure(let error): XCTFail("Unexpected \(error)")
+                    case .success(let (anchor, storedAlerts)):
+                        var expectedAnchor = AlertStore.QueryAnchor()
+                        expectedAnchor.modificationCounter = 1
+                        XCTAssertEqual(expectedAnchor, anchor)
+                        XCTAssertEqual(1, storedAlerts.count)
+                        XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                        XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
+                        XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                        XCTAssertNil(storedAlerts[0].retractedDate)
+                        self.alertStore.recordRetraction(of: Self.identifier1, at: retractedDate) {
+                            switch $0 {
+                            case .failure(let error): XCTFail("Unexpected \(error)")
+                            case .success:
+                                self.alertStore.executeAlertQuery(fromQueryAnchor: anchor) {
+                                    switch $0 {
+                                    case .failure(let error): XCTFail("Unexpected \(error)")
+                                    case .success(let (anchor, storedAlerts)):
+                                        var expectedAnchor = AlertStore.QueryAnchor()
+                                        expectedAnchor.modificationCounter = 2
+                                        XCTAssertEqual(expectedAnchor, anchor)
+                                        XCTAssertEqual(1, storedAlerts.count)
+                                        XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                                        XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
+                                        XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
+                                        XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                                    }
+                                    expect.fulfill()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        wait(for: [expect], timeout: 1)
+    }
 }
