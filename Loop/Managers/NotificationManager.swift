@@ -163,25 +163,15 @@ struct NotificationManager {
     }
 
     static func clearLoopNotRunningNotifications() {
-        let notificationCenter = UNUserNotificationCenter.current()
-        // Cancel any previous scheduled notifications in the Loop Not Running category
-        notificationCenter.getPendingNotificationRequests { notificationRequests in
-            let loopNotRunningIdentifiers = notificationRequests.filter({
-                $0.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
-            }).map({
-                $0.identifier
-            })
-            notificationCenter.removePendingNotificationRequests(withIdentifiers: loopNotRunningIdentifiers)
-        }
         // Clear out any existing not-running notifications
-        notificationCenter.getDeliveredNotifications { notifications in
+        UNUserNotificationCenter.current().getDeliveredNotifications { (notifications) in
             let loopNotRunningIdentifiers = notifications.filter({
                 $0.request.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
             }).map({
                 $0.request.identifier
             })
 
-            notificationCenter.removeDeliveredNotifications(withIdentifiers: loopNotRunningIdentifiers)
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: loopNotRunningIdentifiers)
         }
     }
 
