@@ -509,7 +509,7 @@ final class SettingsTableViewController: UITableViewController {
                     tableView.deselectRow(at: indexPath, animated: true)
                 })
 
-                self.present(hostingController, animated: true)
+                present(hostingController, animated: true)
             case .suspendThreshold:
                 func presentSuspendThresholdEditor(initialValue: HKQuantity?, unit: HKUnit) {
                     let editor = SuspendThresholdEditor(
@@ -527,7 +527,7 @@ final class SettingsTableViewController: UITableViewController {
                         tableView.deselectRow(at: indexPath, animated: true)
                     })
 
-                    self.present(hostingController, animated: true)
+                    present(hostingController, animated: true)
                 }
 
                 if let minBGGuard = dataManager.loopManager.settings.suspendThreshold {

@@ -113,7 +113,7 @@ struct CorrectionRangeOverridesEditor: View {
                         forceDisableAnimations: true
                     )
                 },
-                valuePicker: {
+                expandedContent: {
                     GlucoseRangePicker(
                         range: Binding(
                             get: { self.value.ranges[preset] ?? self.guardrail(for: preset).recommendedBounds },
