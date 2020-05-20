@@ -10,13 +10,13 @@ import CoreData
 import LoopKit
 
 extension StoredAlert {
-
+    
     static var encoder = JSONEncoder()
           
-    convenience init(from deviceAlert: DeviceAlert, context: NSManagedObjectContext, issuedTimestamp: Date = Date()) {
+    convenience init(from deviceAlert: DeviceAlert, context: NSManagedObjectContext, issuedDate: Date = Date()) {
         do {
             self.init(context: context)
-            self.issuedTimestamp = issuedTimestamp
+            self.issuedDate = issuedDate
             identifier = deviceAlert.identifier.value
             // Encode as JSON strings
             let encoder = StoredAlert.encoder
@@ -25,7 +25,6 @@ extension StoredAlert {
             foregroundContent = try encoder.encodeToStringIfPresent(deviceAlert.foregroundContent)
             backgroundContent = try encoder.encodeToStringIfPresent(deviceAlert.backgroundContent)
             isCritical = deviceAlert.foregroundContent?.isCritical ?? false || deviceAlert.backgroundContent?.isCritical ?? false
-            modificationCounter = 0
         } catch {
             fatalError("Failed to encode: \(error)")
         }
@@ -39,10 +38,17 @@ extension StoredAlert {
     }
 }
 
+enum JSONEncoderError: Swift.Error {
+    case stringEncodingError
+}
+
 fileprivate extension JSONEncoder {
     func encodeToStringIfPresent<T>(_ encodable: T?) throws -> String? where T: Encodable {
         guard let encodable = encodable else { return nil }
         let data = try self.encode(encodable)
-        return String(data: data, encoding: .utf8)
+        guard let result = String(data: data, encoding: .utf8) else {
+            throw JSONEncoderError.stringEncodingError
+        }
+        return result
     }
 }

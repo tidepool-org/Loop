@@ -15,15 +15,32 @@ class AlertStoreTests: XCTestCase {
     
     var alertStore: AlertStore!
     
-    static let identifier1 = DeviceAlert.Identifier(managerIdentifier: "managerIdentifier", alertIdentifier: "alertIdentifier")
+    static let identifier1 = DeviceAlert.Identifier(managerIdentifier: "managerIdentifier1", alertIdentifier: "alertIdentifier1")
     let alert1 = DeviceAlert(identifier: identifier1, foregroundContent: nil, backgroundContent: nil, trigger: .immediate, sound: nil)
-    
+    static let identifier2 = DeviceAlert.Identifier(managerIdentifier: "managerIdentifier2", alertIdentifier: "alertIdentifier2")
+    static let content = DeviceAlert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label", isCritical: true)
+    let alert2 = DeviceAlert(identifier: identifier2, foregroundContent: content, backgroundContent: content, trigger: .immediate, sound: .sound(name: "soundName"))
+
     override func setUp() {
         alertStore = AlertStore()
     }
     
     override func tearDown() {
         alertStore = nil
+    }
+    
+    func testStoredAlertSerialization() {
+        let object = StoredAlert(from: alert2, context: alertStore.managedObjectContext, issuedDate: Date.distantPast)
+        XCTAssertNil(object.acknowledgedDate)
+        XCTAssertNil(object.retractedDate)
+        XCTAssertEqual("{\"body\":\"body\",\"isCritical\":true,\"title\":\"title\",\"acknowledgeActionButtonLabel\":\"label\"}", object.backgroundContent)
+        XCTAssertEqual("{\"body\":\"body\",\"isCritical\":true,\"title\":\"title\",\"acknowledgeActionButtonLabel\":\"label\"}", object.foregroundContent)
+        XCTAssertEqual("managerIdentifier2.alertIdentifier2", object.identifier)
+        XCTAssertEqual(true, object.isCritical)
+        XCTAssertEqual(Date.distantPast, object.issuedDate)
+        XCTAssertEqual(0, object.modificationCounter)
+        XCTAssertEqual("{\"sound\":{\"name\":\"soundName\"}}", object.sound)
+        XCTAssertEqual("\"immediate\"", object.trigger)
     }
     
     func testRecordIssued() {
@@ -38,9 +55,9 @@ class AlertStoreTests: XCTestCase {
                         case .success(let storedAlerts):
                             XCTAssertEqual(1, storedAlerts.count)
                             XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
-                            XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedTimestamp)
-                            XCTAssertNil(storedAlerts[0].acknowledgedTimestamp)
-                            XCTAssertNil(storedAlerts[0].retractedTimestamp)
+                            XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
+                            XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                            XCTAssertNil(storedAlerts[0].retractedDate)
                     }
                     expect.fulfill()
                 }
@@ -67,9 +84,9 @@ class AlertStoreTests: XCTestCase {
                             case .success(let storedAlerts):
                                 XCTAssertEqual(1, storedAlerts.count)
                                 XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
-                                XCTAssertEqual(issuedDate, storedAlerts[0].issuedTimestamp)
-                                XCTAssertEqual(acknowledgedDate, storedAlerts[0].acknowledgedTimestamp)
-                                XCTAssertNil(storedAlerts[0].retractedTimestamp)
+                                XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
+                                XCTAssertEqual(acknowledgedDate, storedAlerts[0].acknowledgedDate)
+                                XCTAssertNil(storedAlerts[0].retractedDate)
                             }
                             expect.fulfill()
                         }
@@ -98,9 +115,9 @@ class AlertStoreTests: XCTestCase {
                             case .success(let storedAlerts):
                                 XCTAssertEqual(1, storedAlerts.count)
                                 XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
-                                XCTAssertEqual(issuedDate, storedAlerts[0].issuedTimestamp)
-                                XCTAssertEqual(retractedDate, storedAlerts[0].retractedTimestamp)
-                                XCTAssertNil(storedAlerts[0].acknowledgedTimestamp)
+                                XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
+                                XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
+                                XCTAssertNil(storedAlerts[0].acknowledgedDate)
                             }
                             expect.fulfill()
                         }

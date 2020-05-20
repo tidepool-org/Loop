@@ -58,7 +58,6 @@ public class InAppModalDeviceAlertPresenter: DeviceAlertPresenter {
         }
     }
         
-    // For tests only
     func removeDeliveredAlert(identifier: DeviceAlert.Identifier, completion: (() -> Void)?) {
         self.alertsShowing[identifier]?.0.dismiss(animated: true, completion: completion)
         self.clearDeliveredAlert(identifier: identifier)
@@ -95,7 +94,6 @@ extension InAppModalDeviceAlertPresenter {
                 return
             }
             self.playSound(for: alert)
-            print("Alert: \(try! alert.encodeToString())")
             let alertController = self.presentAlert(title: content.title, message: content.body, action: content.acknowledgeActionButtonLabel) { [weak self] in
                 self?.clearDeliveredAlert(identifier: alert.identifier)
                 self?.deviceAlertManagerResponder?.acknowledgeDeviceAlert(identifier: alert.identifier)
