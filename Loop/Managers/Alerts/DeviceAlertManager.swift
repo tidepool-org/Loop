@@ -53,8 +53,10 @@ public final class DeviceAlertManager {
                 fileManager: FileManager = FileManager.default) {
         self.userNotificationCenter = userNotificationCenter
         self.fileManager = fileManager
-        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        alertStore = AlertStore(storageFileURL: documentsDirectory.appendingPathComponent("AlertStore.sqlite"))
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
+        alertStore = AlertStore(storageFileURL: documentsDirectory?
+            .appendingPathComponent("AlertStore")
+            .appendingPathComponent("AlertStore.sqlite"))
         self.handlers = handlers ??
             [UserNotificationDeviceAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalDeviceAlertPresenter(rootViewController: rootViewController, deviceAlertManagerResponder: self)]

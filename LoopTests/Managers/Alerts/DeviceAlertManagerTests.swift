@@ -58,6 +58,9 @@ class DeviceAlertManagerTests: XCTestCase {
             copiedSrcURLs.append(srcURL)
             copiedDstURLs.append(dstURL)
         }
+        override func urls(for directory: FileManager.SearchPathDirectory, in domainMask: FileManager.SearchPathDomainMask) -> [URL] {
+            return []
+        }
     }
 
     class MockSoundVendor: DeviceAlertSoundVendor {

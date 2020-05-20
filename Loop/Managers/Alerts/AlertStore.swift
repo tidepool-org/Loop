@@ -59,7 +59,7 @@ extension AlertStore {
                     self.log.default("Recorded alert: %{public}@", alert.identifier.value)
                     completion?(.success)
                 } catch {
-                    self.log.error("Could not store alert: %{public}@", String(describing: error))
+                    self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
                     completion?(.failure(error))
                 }
             }
@@ -91,7 +91,7 @@ extension AlertStore {
                                 self.log.default("Recorded alert: %{public}@", identifier.value)
                                 completion?(.success)
                             } catch {
-                                self.log.error("Could not store alert: %{public}@", String(describing: error))
+                                self.log.error("Could not store alert: %{public}@, %{public}@", identifier.value, String(describing: error))
                                 completion?(.failure(error))
                             }
                         } else {
@@ -111,7 +111,8 @@ extension AlertStore {
             do {
                 let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
                 fetchRequest.predicate = predicate
-                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
+                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: false) ]
+                fetchRequest.fetchLimit = 1
                 let result = try self.managedObjectContext.fetch(fetchRequest)
                 completion(.success(result.last))
             } catch {
@@ -127,11 +128,11 @@ extension AlertStore {
 extension AlertStore {
 
     // At the moment, this is only used for unit testing
-    func fetch(identifier: DeviceAlert.Identifier, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+    internal func fetch(identifier: DeviceAlert.Identifier, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
         dataAccessQueue.async {
             self.managedObjectContext.performAndWait {
                 let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                storedRequest.predicate = NSPredicate(format: "identifier = %@", identifier.value)
+                storedRequest.predicate = NSPredicate(format: "identifier == %@", identifier.value)
                 do {
                     let stored = try self.managedObjectContext.fetch(storedRequest)
                     completion(.success(stored))
