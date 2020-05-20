@@ -95,6 +95,7 @@ extension AlertStore {
                                 completion?(.failure(error))
                             }
                         } else {
+                            self.log.default("Alert not found for update: %{public}@", identifier.value)
                             completion?(.failure(AlertStoreError.notFound))
                         }
                     case .failure(let error):
