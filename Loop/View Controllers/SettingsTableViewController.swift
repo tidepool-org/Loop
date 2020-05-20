@@ -245,7 +245,7 @@ final class SettingsTableViewController: UITableViewController {
                 }
             case .correctionRangeOverrides:
                 // TODO: Copy not final.
-                configCell.textLabel?.text = NSLocalizedString("Correction Range Overrides", comment: "The title text for the correction range overrides")
+                configCell.textLabel?.text = NSLocalizedString("Temporary Correction Ranges", comment: "The title text for the correction range overrides")
                 if dataManager.loopManager.settings.preMealTargetRange == nil {
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 } else {
