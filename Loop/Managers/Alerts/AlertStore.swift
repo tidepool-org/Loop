@@ -150,7 +150,7 @@ extension AlertStore {
     }
     typealias QueryResult = Result<(QueryAnchor, [StoredAlert]), Error>
 
-    func executeAlertQuery(fromQueryAnchor queryAnchor: QueryAnchor? = nil, limit: Int = 100, completion: @escaping (QueryResult) -> Void) {
+    func executeAlertQuery(fromQueryAnchor queryAnchor: QueryAnchor? = nil, limit: Int, completion: @escaping (QueryResult) -> Void) {
         dataAccessQueue.async {
             var queryAnchor = queryAnchor ?? QueryAnchor()
             var queryResult = [StoredAlert]()

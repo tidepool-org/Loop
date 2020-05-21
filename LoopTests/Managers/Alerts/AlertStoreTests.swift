@@ -144,7 +144,7 @@ class AlertStoreTests: XCTestCase {
             switch $0 {
             case .failure(let error): XCTFail("Unexpected \(error)")
             case .success:
-                self.alertStore.executeAlertQuery {
+                self.alertStore.executeAlertQuery(limit: 100) {
                     switch $0 {
                     case .failure(let error): XCTFail("Unexpected \(error)")
                     case .success(let (anchor, storedAlerts)):
@@ -172,7 +172,7 @@ class AlertStoreTests: XCTestCase {
             switch $0 {
             case .failure(let error): XCTFail("Unexpected \(error)")
             case .success:
-                self.alertStore.executeAlertQuery {
+                self.alertStore.executeAlertQuery(limit: 100) {
                     switch $0 {
                     case .failure(let error): XCTFail("Unexpected \(error)")
                     case .success(let (anchor, storedAlerts)):
@@ -188,7 +188,7 @@ class AlertStoreTests: XCTestCase {
                             switch $0 {
                             case .failure(let error): XCTFail("Unexpected \(error)")
                             case .success:
-                                self.alertStore.executeAlertQuery(fromQueryAnchor: anchor) {
+                                self.alertStore.executeAlertQuery(fromQueryAnchor: anchor, limit: 100) {
                                     switch $0 {
                                     case .failure(let error): XCTFail("Unexpected \(error)")
                                     case .success(let (anchor, storedAlerts)):
