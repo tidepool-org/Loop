@@ -20,7 +20,8 @@ extension StoredAlert {
             identifier = deviceAlert.identifier.value
             // Encode as JSON strings
             let encoder = StoredAlert.encoder
-            trigger = try encoder.encodeToStringIfPresent(deviceAlert.trigger)
+            triggerType = deviceAlert.trigger.storedType
+            triggerInterval = deviceAlert.trigger.storedInterval
             sound = try encoder.encodeToStringIfPresent(deviceAlert.sound)
             foregroundContent = try encoder.encodeToStringIfPresent(deviceAlert.foregroundContent)
             backgroundContent = try encoder.encodeToStringIfPresent(deviceAlert.backgroundContent)
@@ -30,11 +31,61 @@ extension StoredAlert {
         }
     }
 
+    public var trigger: DeviceAlert.Trigger {
+        get {
+            do {
+                return try DeviceAlert.Trigger(storedType: triggerType, storedInterval: triggerInterval)
+            } catch {
+                fatalError("\(error): \(triggerType) \(String(describing: triggerInterval))")
+            }
+        }
+    }
+    
     public override func willSave() {
         if isInserted || isUpdated {
             setPrimitiveValue(managedObjectContext!.modificationCounter ?? 0, forKey: "modificationCounter")
         }
         super.willSave()
+    }
+}
+
+extension DeviceAlert.Trigger {
+    enum StorageError: Error {
+        case invalidStoredInterval, invalidStoredType
+    }
+    
+    var storedType: Int16 {
+        switch self {
+        case .immediate: return 0
+        case .delayed: return 1
+        case .repeating: return 2
+        }
+    }
+    var storedInterval: NSNumber? {
+        switch self {
+        case .immediate: return nil
+        case .delayed(let interval): return NSNumber(value: interval)
+        case .repeating(let repeatInterval): return NSNumber(value: repeatInterval)
+        }
+    }
+    init(storedType: Int16, storedInterval: NSNumber?) throws {
+        switch storedType {
+        case 0: self = .immediate
+        case 1:
+            if let storedInterval = storedInterval {
+                self = .delayed(interval: storedInterval.doubleValue)
+            } else {
+                throw StorageError.invalidStoredInterval
+            }
+        case 2:
+            if let storedInterval = storedInterval {
+                self = .repeating(repeatInterval: storedInterval.doubleValue)
+            } else {
+                throw StorageError.invalidStoredInterval
+            }
+        default:
+            throw StorageError.invalidStoredType
+        }
     }
 }
 

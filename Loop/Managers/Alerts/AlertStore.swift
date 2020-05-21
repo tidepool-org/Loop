@@ -35,6 +35,8 @@ public class AlertStore {
         } else {
             storeDescription.type = NSInMemoryStoreType
         }
+        storeDescription.shouldMigrateStoreAutomatically = true
+        storeDescription.shouldInferMappingModelAutomatically = true
         persistentContainer = NSPersistentContainer(name: "AlertStore")
         persistentContainer.persistentStoreDescriptions = [storeDescription]
         persistentContainer.loadPersistentStores { _, error in
