@@ -29,6 +29,16 @@ class AlertStoreTests: XCTestCase {
         alertStore = nil
     }
     
+    func testTriggerTypeIntervalConversion() {
+        let immediate = DeviceAlert.Trigger.immediate
+        let delayed = DeviceAlert.Trigger.delayed(interval: 1.0)
+        let repeating = DeviceAlert.Trigger.repeating(repeatInterval: 2.0)
+        XCTAssertEqual(immediate, try? DeviceAlert.Trigger(storedType: immediate.storedType, storedInterval: immediate.storedInterval))
+        XCTAssertEqual(delayed, try? DeviceAlert.Trigger(storedType: delayed.storedType, storedInterval: delayed.storedInterval))
+        XCTAssertEqual(repeating, try? DeviceAlert.Trigger(storedType: repeating.storedType, storedInterval: repeating.storedInterval))
+        XCTAssertNil(immediate.storedInterval)
+    }
+    
     func testStoredAlertSerialization() {
         let object = StoredAlert(from: alert2, context: alertStore.managedObjectContext, issuedDate: Date.distantPast)
         XCTAssertNil(object.acknowledgedDate)
@@ -40,7 +50,7 @@ class AlertStoreTests: XCTestCase {
         XCTAssertEqual(Date.distantPast, object.issuedDate)
         XCTAssertEqual(0, object.modificationCounter)
         XCTAssertEqual("{\"sound\":{\"name\":\"soundName\"}}", object.sound)
-        XCTAssertEqual("\"immediate\"", object.trigger)
+        XCTAssertEqual(DeviceAlert.Trigger.immediate, object.trigger)
     }
     
     func testRecordIssued() {
