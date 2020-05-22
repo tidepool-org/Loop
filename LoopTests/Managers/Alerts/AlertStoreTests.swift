@@ -45,7 +45,7 @@ class AlertStoreTests: XCTestCase {
         XCTAssertNil(object.retractedDate)
         XCTAssertEqual("{\"body\":\"body\",\"isCritical\":true,\"title\":\"title\",\"acknowledgeActionButtonLabel\":\"label\"}", object.backgroundContent)
         XCTAssertEqual("{\"body\":\"body\",\"isCritical\":true,\"title\":\"title\",\"acknowledgeActionButtonLabel\":\"label\"}", object.foregroundContent)
-        XCTAssertEqual("managerIdentifier2.alertIdentifier2", object.identifier)
+        XCTAssertEqual("managerIdentifier2.alertIdentifier2", object.identifier.value)
         XCTAssertEqual(true, object.isCritical)
         XCTAssertEqual(Date.distantPast, object.issuedDate)
         XCTAssertEqual(0, object.modificationCounter)
@@ -64,7 +64,7 @@ class AlertStoreTests: XCTestCase {
                         case .failure(let error): XCTFail("Unexpected \(error)")
                         case .success(let storedAlerts):
                             XCTAssertEqual(1, storedAlerts.count)
-                            XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                            XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
                             XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
                             XCTAssertNil(storedAlerts[0].acknowledgedDate)
                             XCTAssertNil(storedAlerts[0].retractedDate)
@@ -93,7 +93,7 @@ class AlertStoreTests: XCTestCase {
                             case .failure(let error): XCTFail("Unexpected \(error)")
                             case .success(let storedAlerts):
                                 XCTAssertEqual(1, storedAlerts.count)
-                                XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                                XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
                                 XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
                                 XCTAssertEqual(acknowledgedDate, storedAlerts[0].acknowledgedDate)
                                 XCTAssertNil(storedAlerts[0].retractedDate)
@@ -124,7 +124,7 @@ class AlertStoreTests: XCTestCase {
                             case .failure(let error): XCTFail("Unexpected \(error)")
                             case .success(let storedAlerts):
                                 XCTAssertEqual(1, storedAlerts.count)
-                                XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                                XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
                                 XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
                                 XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
                                 XCTAssertNil(storedAlerts[0].acknowledgedDate)
@@ -169,7 +169,7 @@ class AlertStoreTests: XCTestCase {
                     case .success(let (anchor, storedAlerts)):
                         XCTAssertEqual(1, anchor.modificationCounter)
                         XCTAssertEqual(1, storedAlerts.count)
-                        XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                        XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
                         XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
                         XCTAssertNil(storedAlerts[0].acknowledgedDate)
                         XCTAssertNil(storedAlerts[0].retractedDate)
@@ -195,7 +195,7 @@ class AlertStoreTests: XCTestCase {
                     case .success(let (anchor, storedAlerts)):
                         XCTAssertEqual(1, anchor.modificationCounter)
                         XCTAssertEqual(1, storedAlerts.count)
-                        XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                        XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
                         XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
                         XCTAssertNil(storedAlerts[0].acknowledgedDate)
                         XCTAssertNil(storedAlerts[0].retractedDate)
@@ -209,7 +209,7 @@ class AlertStoreTests: XCTestCase {
                                     case .success(let (anchor, storedAlerts)):
                                         XCTAssertEqual(2, anchor.modificationCounter)
                                         XCTAssertEqual(1, storedAlerts.count)
-                                        XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                                        XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
                                         XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
                                         XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
                                         XCTAssertNil(storedAlerts[0].acknowledgedDate)
@@ -242,7 +242,7 @@ class AlertStoreTests: XCTestCase {
                             case .success(let (anchor, storedAlerts)):
                                 XCTAssertEqual(2, anchor.modificationCounter)
                                 XCTAssertEqual(1, storedAlerts.count)
-                                XCTAssertEqual(Self.identifier2.value, storedAlerts[0].identifier)
+                                XCTAssertEqual(Self.identifier2, storedAlerts[0].identifier)
                                 XCTAssertEqual(now, storedAlerts[0].issuedDate)
                                 XCTAssertNil(storedAlerts[0].acknowledgedDate)
                                 XCTAssertNil(storedAlerts[0].retractedDate)
@@ -272,7 +272,7 @@ class AlertStoreTests: XCTestCase {
                             case .success(let (anchor, storedAlerts)):
                                 XCTAssertEqual(1, anchor.modificationCounter)
                                 XCTAssertEqual(1, storedAlerts.count)
-                                XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                                XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
                                 XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
                                 XCTAssertNil(storedAlerts[0].acknowledgedDate)
                                 XCTAssertNil(storedAlerts[0].retractedDate)
@@ -307,7 +307,7 @@ class AlertStoreTests: XCTestCase {
                                     case .success(let (anchor, storedAlerts)):
                                         XCTAssertEqual(2, anchor.modificationCounter)
                                         XCTAssertEqual(1, storedAlerts.count)
-                                        XCTAssertEqual(Self.identifier2.value, storedAlerts[0].identifier)
+                                        XCTAssertEqual(Self.identifier2, storedAlerts[0].identifier)
                                         XCTAssertEqual(now, storedAlerts[0].issuedDate)
                                         XCTAssertNil(storedAlerts[0].acknowledgedDate)
                                         XCTAssertNil(storedAlerts[0].retractedDate)

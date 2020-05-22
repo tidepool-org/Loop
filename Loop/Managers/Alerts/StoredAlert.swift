@@ -18,7 +18,8 @@ extension StoredAlert {
         do {
             self.init(context: context)
             self.issuedDate = issuedDate
-            identifier = deviceAlert.identifier.value
+            alertIdentifier = deviceAlert.identifier.alertIdentifier
+            managerIdentifier = deviceAlert.identifier.managerIdentifier
             triggerType = deviceAlert.trigger.storedType
             triggerInterval = deviceAlert.trigger.storedInterval
             isCritical = deviceAlert.foregroundContent?.isCritical ?? false || deviceAlert.backgroundContent?.isCritical ?? false
@@ -49,6 +50,10 @@ extension StoredAlert {
             return content.title
         }
         return nil
+    }
+    
+    public var identifier: DeviceAlert.Identifier {
+        return DeviceAlert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier)
     }
     
     public override func willSave() {

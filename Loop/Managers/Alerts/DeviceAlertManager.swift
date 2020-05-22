@@ -236,14 +236,16 @@ extension DeviceAlertManager {
     func getStoredEntries(startDate: Date, completion: @escaping (_ report: String) -> Void) {
         alertStore.executeQuery(since: startDate, limit: 100) { result in
             switch result {
-            case .failure(let error): completion("Error: \(error)")
+            case .failure(let error):
+                completion("Error: \(error)")
             case .success(let entries):
                 let report = "## Alerts\n" + entries.1.map { storedAlert in
                     return """
                     **\(storedAlert.title ?? "??")**
                     
-                    * identifier: \(storedAlert.identifier!)
-                    * issued: \(storedAlert.issuedDate!)
+                    * alertIdentifier: \(storedAlert.alertIdentifier)
+                    * managerIdentifier: \(storedAlert.managerIdentifier)
+                    * issued: \(storedAlert.issuedDate)
                     * acknowledged: \(storedAlert.acknowledgedDate?.description ?? "n/a")
                     * retracted: \(storedAlert.retractedDate?.description ?? "n/a")
                     * isCritical: \(storedAlert.isCritical)

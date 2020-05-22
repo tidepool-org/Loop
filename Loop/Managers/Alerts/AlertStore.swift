@@ -102,13 +102,11 @@ extension AlertStore {
         }
     }
 
-    
     private func lookupLatest(identifier: DeviceAlert.Identifier, completion: @escaping (Result<StoredAlert?, Error>) -> Void) {
         managedObjectContext.perform {
-            let predicate = NSPredicate(format: "identifier = %@", identifier.value)
             do {
                 let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                fetchRequest.predicate = predicate
+                fetchRequest.predicate = identifier.equalsPredicate
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: false) ]
                 fetchRequest.fetchLimit = 1
                 let result = try self.managedObjectContext.fetch(fetchRequest)
@@ -121,11 +119,11 @@ extension AlertStore {
 
 }
 
+// MARK: Query Support
+
 public protocol QueryFilter: Equatable {
     var predicate: NSPredicate? { get }
 }
-
-// MARK: Query Support
 
 extension AlertStore {
     
@@ -204,7 +202,7 @@ extension AlertStore {
     internal func fetch(identifier: DeviceAlert.Identifier, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
         self.managedObjectContext.perform {
             let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-            storedRequest.predicate = NSPredicate(format: "identifier == %@", identifier.value)
+            storedRequest.predicate = identifier.equalsPredicate
             do {
                 let stored = try self.managedObjectContext.fetch(storedRequest)
                 completion(.success(stored))
@@ -212,6 +210,15 @@ extension AlertStore {
                 completion(.failure(error))
             }
         }
+    }
+}
+
+extension DeviceAlert.Identifier {
+    var equalsPredicate: NSPredicate {
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [
+            NSPredicate(format: "managerIdentifier == %@", managerIdentifier),
+            NSPredicate(format: "alertIdentifier == %@", alertIdentifier)
+        ])
     }
 }
 
