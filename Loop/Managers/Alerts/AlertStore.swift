@@ -149,8 +149,8 @@ extension AlertStore {
         }
     }
     typealias QueryResult = Result<(QueryAnchor, [StoredAlert]), Error>
-
-    func executeAlertQuery(fromQueryAnchor queryAnchor: QueryAnchor? = nil, limit: Int, completion: @escaping (QueryResult) -> Void) {
+    
+    func executeAlertQuery(from queryAnchor: QueryAnchor? = nil, since date: Date? = nil, limit: Int, completion: @escaping (QueryResult) -> Void) {
         dataAccessQueue.async {
             var queryAnchor = queryAnchor ?? QueryAnchor()
             var queryResult = [StoredAlert]()
@@ -163,8 +163,14 @@ extension AlertStore {
 
             self.managedObjectContext.performAndWait {
                 let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-
-                storedRequest.predicate = NSPredicate(format: "modificationCounter > %d", queryAnchor.modificationCounter)
+                if let date = date {
+                    storedRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                        NSPredicate(format: "modificationCounter > %d", queryAnchor.modificationCounter),
+                        NSPredicate(format: "issuedDate >= %@", date as NSDate)
+                    ])
+                } else {
+                    storedRequest.predicate = NSPredicate(format: "modificationCounter > %d", queryAnchor.modificationCounter)
+                }
                 storedRequest.sortDescriptors = [NSSortDescriptor(key: "modificationCounter", ascending: true)]
                 storedRequest.fetchLimit = limit
 
@@ -188,8 +194,7 @@ extension AlertStore {
             completion(.success((queryAnchor, queryResult)))
         }
     }
-
-    
+        
     // At the moment, this is only used for unit testing
     internal func fetch(identifier: DeviceAlert.Identifier, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
         dataAccessQueue.async {

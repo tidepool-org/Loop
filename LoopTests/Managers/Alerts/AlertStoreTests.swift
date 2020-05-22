@@ -188,7 +188,7 @@ class AlertStoreTests: XCTestCase {
                             switch $0 {
                             case .failure(let error): XCTFail("Unexpected \(error)")
                             case .success:
-                                self.alertStore.executeAlertQuery(fromQueryAnchor: anchor, limit: 100) {
+                                self.alertStore.executeAlertQuery(from: anchor, limit: 100) {
                                     switch $0 {
                                     case .failure(let error): XCTFail("Unexpected \(error)")
                                     case .success(let (anchor, storedAlerts)):
@@ -211,4 +211,70 @@ class AlertStoreTests: XCTestCase {
         }
         wait(for: [expect], timeout: 1)
     }
+    
+    func testQueryByDate() {
+        let expect = self.expectation(description: #function)
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
+            switch $0 {
+            case .failure(let error): XCTFail("Unexpected \(error)")
+            case .success:
+                let now = Date()
+                self.alertStore.recordIssued(alert: self.alert2, at: now) {
+                    switch $0 {
+                    case .failure(let error): XCTFail("Unexpected \(error)")
+                    case .success:
+                        self.alertStore.executeAlertQuery(since: now, limit: 100) {
+                            switch $0 {
+                            case .failure(let error): XCTFail("Unexpected \(error)")
+                            case .success(let (anchor, storedAlerts)):
+                                var expectedAnchor = AlertStore.QueryAnchor()
+                                expectedAnchor.modificationCounter = 2
+                                XCTAssertEqual(expectedAnchor, anchor)
+                                XCTAssertEqual(1, storedAlerts.count)
+                                XCTAssertEqual(Self.identifier2.value, storedAlerts[0].identifier)
+                                XCTAssertEqual(now, storedAlerts[0].issuedDate)
+                                XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                                XCTAssertNil(storedAlerts[0].retractedDate)
+                                expect.fulfill()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func testQueryWithLimit() {
+        let expect = self.expectation(description: #function)
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
+            switch $0 {
+            case .failure(let error): XCTFail("Unexpected \(error)")
+            case .success:
+                self.alertStore.recordIssued(alert: self.alert2, at: Date()) {
+                    switch $0 {
+                    case .failure(let error): XCTFail("Unexpected \(error)")
+                    case .success:
+                        self.alertStore.executeAlertQuery(limit: 1) {
+                            switch $0 {
+                            case .failure(let error): XCTFail("Unexpected \(error)")
+                            case .success(let (anchor, storedAlerts)):
+                                var expectedAnchor = AlertStore.QueryAnchor()
+                                expectedAnchor.modificationCounter = 1
+                                XCTAssertEqual(expectedAnchor, anchor)
+                                XCTAssertEqual(1, storedAlerts.count)
+                                XCTAssertEqual(Self.identifier1.value, storedAlerts[0].identifier)
+                                XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
+                                XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                                XCTAssertNil(storedAlerts[0].retractedDate)
+                                expect.fulfill()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        wait(for: [expect], timeout: 1)
+    }
+
 }
