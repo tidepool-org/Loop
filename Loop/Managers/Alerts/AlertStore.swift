@@ -21,8 +21,6 @@ public class AlertStore {
     private let persistentContainer: NSPersistentContainer
         
     private let log = DiagnosticLog(category: "AlertStore")
-
-    private let dataAccessQueue = DispatchQueue(label: "com.loop.AlertStore.dataAccessQueue", qos: .utility)
     
     public init(storageFileURL: URL? = nil) {
         managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -53,17 +51,15 @@ public class AlertStore {
 extension AlertStore {
     
     public func recordIssued(alert: DeviceAlert, at date: Date = Date(), completion: ((Result<Void, Error>) -> Void)? = nil) {
-        dataAccessQueue.async {
-            self.managedObjectContext.perform {
-                _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
-                do {
-                    try self.managedObjectContext.save()
-                    self.log.default("Recorded alert: %{public}@", alert.identifier.value)
-                    completion?(.success)
-                } catch {
-                    self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
-                    completion?(.failure(error))
-                }
+        self.managedObjectContext.perform {
+            _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
+            do {
+                try self.managedObjectContext.save()
+                self.log.default("Recorded alert: %{public}@", alert.identifier.value)
+                completion?(.success)
+            } catch {
+                self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
+                completion?(.failure(error))
             }
         }
     }
@@ -81,32 +77,31 @@ extension AlertStore {
     private func recordUpdateOfLatest(of identifier: DeviceAlert.Identifier,
                                       with block: @escaping (StoredAlert) -> Void,
                                       completion: ((Result<Void, Error>) -> Void)?) {
-        dataAccessQueue.async {
-            self.managedObjectContext.perform {
-                self.lookupLatest(identifier: identifier) {
-                    switch $0 {
-                    case .success(let object):
-                        if let object = object {
-                            block(object)
-                            do {
-                                try self.managedObjectContext.save()
-                                self.log.default("Recorded alert: %{public}@", identifier.value)
-                                completion?(.success)
-                            } catch {
-                                self.log.error("Could not store alert: %{public}@, %{public}@", identifier.value, String(describing: error))
-                                completion?(.failure(error))
-                            }
-                        } else {
-                            self.log.default("Alert not found for update: %{public}@", identifier.value)
-                            completion?(.failure(AlertStoreError.notFound))
+        self.managedObjectContext.perform {
+            self.lookupLatest(identifier: identifier) {
+                switch $0 {
+                case .success(let object):
+                    if let object = object {
+                        block(object)
+                        do {
+                            try self.managedObjectContext.save()
+                            self.log.default("Recorded alert: %{public}@", identifier.value)
+                            completion?(.success)
+                        } catch {
+                            self.log.error("Could not store alert: %{public}@, %{public}@", identifier.value, String(describing: error))
+                            completion?(.failure(error))
                         }
-                    case .failure(let error):
-                        completion?(.failure(error))
+                    } else {
+                        self.log.default("Alert not found for update: %{public}@", identifier.value)
+                        completion?(.failure(AlertStoreError.notFound))
                     }
+                case .failure(let error):
+                    completion?(.failure(error))
                 }
             }
         }
     }
+
     
     private func lookupLatest(identifier: DeviceAlert.Identifier, completion: @escaping (Result<StoredAlert?, Error>) -> Void) {
         managedObjectContext.perform {
@@ -126,15 +121,24 @@ extension AlertStore {
 
 }
 
+public protocol QueryFilter: Equatable {
+    var predicate: NSPredicate? { get }
+}
+
 // MARK: Query Support
 
 extension AlertStore {
-
-    public struct QueryAnchor: RawRepresentable, Equatable {
+    
+    public struct QueryAnchor<Filter: QueryFilter>: RawRepresentable, Equatable {
         public typealias RawValue = [String: Any]
         internal var modificationCounter: Int64
+        internal var filter: Filter?
         public init() {
             self.modificationCounter = 0
+        }
+        init(modificationCounter: Int64? = nil, filter: Filter?) {
+            self.modificationCounter = modificationCounter ?? 0
+            self.filter = filter
         }
         public init?(rawValue: RawValue) {
             guard let modificationCounter = rawValue["modificationCounter"] as? Int64 else {
@@ -148,60 +152,64 @@ extension AlertStore {
             return rawValue
         }
     }
-    typealias QueryResult = Result<(QueryAnchor, [StoredAlert]), Error>
-
-    func executeAlertQuery(fromQueryAnchor queryAnchor: QueryAnchor? = nil, limit: Int, completion: @escaping (QueryResult) -> Void) {
-        dataAccessQueue.async {
-            var queryAnchor = queryAnchor ?? QueryAnchor()
-            var queryResult = [StoredAlert]()
-            var queryError: Error?
-
-            guard limit > 0 else {
-                completion(.success((queryAnchor, queryResult)))
-                return
-            }
-
-            self.managedObjectContext.performAndWait {
-                let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-
-                storedRequest.predicate = NSPredicate(format: "modificationCounter > %d", queryAnchor.modificationCounter)
-                storedRequest.sortDescriptors = [NSSortDescriptor(key: "modificationCounter", ascending: true)]
-                storedRequest.fetchLimit = limit
-
-                do {
-                    let stored = try self.managedObjectContext.fetch(storedRequest)
-                    if let modificationCounter = stored.max(by: { $0.modificationCounter < $1.modificationCounter })?.modificationCounter {
-                        queryAnchor.modificationCounter = modificationCounter
-                    }
-                    queryResult.append(contentsOf: stored)
-                } catch let error {
-                    queryError = error
-                    return
-                }
-            }
-
-            if let queryError = queryError {
-                completion(.failure(queryError))
-                return
-            }
-
-            completion(.success((queryAnchor, queryResult)))
-        }
+    typealias QueryResult<Filter: QueryFilter> = Result<(QueryAnchor<Filter>, [StoredAlert]), Error>
+    
+    struct NoFilter: QueryFilter {
+        let predicate: NSPredicate?
+    }
+    struct SinceDateFilter: QueryFilter {
+        let date: Date
+        var predicate: NSPredicate? { NSPredicate(format: "issuedDate >= %@", date as NSDate) }
+    }
+    
+    func executeQuery(since date: Date, limit: Int, completion: @escaping (QueryResult<SinceDateFilter>) -> Void) {
+        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date)), limit: limit, completion: completion)
+    }
+    
+    func continueQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, completion: @escaping (QueryResult<Filter>) -> Void) {
+        executeAlertQuery(from: anchor, limit: limit, completion: completion)
     }
 
+    private func executeAlertQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, completion: @escaping (QueryResult<Filter>) -> Void) {
+        self.managedObjectContext.perform {
+            guard limit > 0 else {
+                completion(.success((anchor, [])))
+                return
+            }
+            let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+            let anchorPredicate = NSPredicate(format: "modificationCounter > %d", anchor.modificationCounter)
+            if let filterPredicate = anchor.filter?.predicate {
+                storedRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                    anchorPredicate,
+                    filterPredicate
+                ])
+            } else {
+                storedRequest.predicate = anchorPredicate
+            }
+            storedRequest.sortDescriptors = [NSSortDescriptor(key: "modificationCounter", ascending: true)]
+            storedRequest.fetchLimit = limit
+            
+            do {
+                let stored = try self.managedObjectContext.fetch(storedRequest)
+                let modificationCounter = stored.max(by: { $0.modificationCounter < $1.modificationCounter })?.modificationCounter
+                let newAnchor = QueryAnchor<Filter>(modificationCounter: modificationCounter, filter: anchor.filter)
+                completion(.success((newAnchor, stored)))
+            } catch let error {
+                completion(.failure(error))
+            }
+        }
+    }
     
     // At the moment, this is only used for unit testing
     internal func fetch(identifier: DeviceAlert.Identifier, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
-        dataAccessQueue.async {
-            self.managedObjectContext.performAndWait {
-                let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                storedRequest.predicate = NSPredicate(format: "identifier == %@", identifier.value)
-                do {
-                    let stored = try self.managedObjectContext.fetch(storedRequest)
-                    completion(.success(stored))
-                } catch {
-                    completion(.failure(error))
-                }
+        self.managedObjectContext.perform {
+            let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+            storedRequest.predicate = NSPredicate(format: "identifier == %@", identifier.value)
+            do {
+                let stored = try self.managedObjectContext.fetch(storedRequest)
+                completion(.success(stored))
+            } catch {
+                completion(.failure(error))
             }
         }
     }

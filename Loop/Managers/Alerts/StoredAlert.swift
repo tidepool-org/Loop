@@ -12,20 +12,21 @@ import LoopKit
 extension StoredAlert {
     
     static var encoder = JSONEncoder()
+    static var decoder = JSONDecoder()
           
     convenience init(from deviceAlert: DeviceAlert, context: NSManagedObjectContext, issuedDate: Date = Date()) {
         do {
             self.init(context: context)
             self.issuedDate = issuedDate
             identifier = deviceAlert.identifier.value
-            // Encode as JSON strings
-            let encoder = StoredAlert.encoder
             triggerType = deviceAlert.trigger.storedType
             triggerInterval = deviceAlert.trigger.storedInterval
+            isCritical = deviceAlert.foregroundContent?.isCritical ?? false || deviceAlert.backgroundContent?.isCritical ?? false
+            // Encode as JSON strings
+            let encoder = StoredAlert.encoder
             sound = try encoder.encodeToStringIfPresent(deviceAlert.sound)
             foregroundContent = try encoder.encodeToStringIfPresent(deviceAlert.foregroundContent)
             backgroundContent = try encoder.encodeToStringIfPresent(deviceAlert.backgroundContent)
-            isCritical = deviceAlert.foregroundContent?.isCritical ?? false || deviceAlert.backgroundContent?.isCritical ?? false
         } catch {
             fatalError("Failed to encode: \(error)")
         }
@@ -39,6 +40,15 @@ extension StoredAlert {
                 fatalError("\(error): \(triggerType) \(String(describing: triggerInterval))")
             }
         }
+    }
+    
+    public var title: String? {
+        if let contentString = foregroundContent ?? backgroundContent,
+            let contentData = contentString.data(using: .utf8),
+            let content = try? StoredAlert.decoder.decode(DeviceAlert.Content.self, from: contentData) {
+            return content.title
+        }
+        return nil
     }
     
     public override func willSave() {

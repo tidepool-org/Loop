@@ -82,6 +82,8 @@ public final class DeviceAlertManager {
     }
 }
 
+// MARK: DeviceAlertManagerResponder implementation
+
 extension DeviceAlertManager: DeviceAlertManagerResponder {
     func acknowledgeDeviceAlert(identifier: DeviceAlert.Identifier) {
         if let responder = responders[identifier.managerIdentifier]?.value {
@@ -94,6 +96,8 @@ extension DeviceAlertManager: DeviceAlertManagerResponder {
         alertStore.recordAcknowledgement(of: identifier)
     }
 }
+
+// MARK: DeviceAlertPresenter implementation
 
 extension DeviceAlertManager: DeviceAlertPresenter {
 
@@ -111,6 +115,8 @@ extension DeviceAlertManager: DeviceAlertPresenter {
         handlers.forEach { $0.issueAlert(alert) }
     }
 }
+
+// MARK: Sound Support
 
 extension DeviceAlertManager {
     
@@ -146,29 +152,7 @@ extension DeviceAlertManager {
     
 }
 
-extension FileManager {
-    func copyIfNewer(from fromURL: URL, to toURL: URL) throws {
-        if fileExists(atPath: toURL.path) {
-            // If the source file is newer, remove the old one, otherwise skip it.
-            let toCreationDate = try toURL.fileCreationDate(self)
-            let fromCreationDate = try fromURL.fileCreationDate(self)
-            if fromCreationDate > toCreationDate {
-                try removeItem(at: toURL)
-            } else {
-                return
-            }
-        }
-        try copyItem(at: fromURL, to: toURL)
-    }
-}
-
-extension URL {
-    
-    func fileCreationDate(_ fileManager: FileManager) throws -> Date {
-        return try fileManager.attributesOfItem(atPath: self.path)[.creationDate] as! Date
-    }
-}
-
+// MARK: Alert Playback
 
 extension DeviceAlertManager {
     
@@ -244,6 +228,61 @@ extension DeviceAlertManager {
         }
     }
 
+}
+
+// MARK: Alert storage access
+extension DeviceAlertManager {
+    
+    func getStoredEntries(startDate: Date, completion: @escaping (_ report: String) -> Void) {
+        alertStore.executeQuery(since: startDate, limit: 100) { result in
+            switch result {
+            case .failure(let error): completion("Error: \(error)")
+            case .success(let entries):
+                let report = "## Alerts\n" + entries.1.map { storedAlert in
+                    return """
+                    **\(storedAlert.title ?? "??")**
+                    
+                    * identifier: \(storedAlert.identifier!)
+                    * issued: \(storedAlert.issuedDate!)
+                    * acknowledged: \(storedAlert.acknowledgedDate?.description ?? "n/a")
+                    * retracted: \(storedAlert.retractedDate?.description ?? "n/a")
+                    * isCritical: \(storedAlert.isCritical)
+                    * trigger: \(storedAlert.trigger)
+                    * foregroundContent: \(storedAlert.foregroundContent ?? "n/a")
+                    * backgroundContent: \(storedAlert.backgroundContent ?? "n/a")
+                    * sound: \(storedAlert.sound ?? "n/a")
+
+                    """
+                }.joined(separator: "\n")
+                completion(report)
+            }
+        }
+    }
+}
+
+// MARK: Extensions
+
+extension FileManager {
+    func copyIfNewer(from fromURL: URL, to toURL: URL) throws {
+        if fileExists(atPath: toURL.path) {
+            // If the source file is newer, remove the old one, otherwise skip it.
+            let toCreationDate = try toURL.fileCreationDate(self)
+            let fromCreationDate = try fromURL.fileCreationDate(self)
+            if fromCreationDate > toCreationDate {
+                try removeItem(at: toURL)
+            } else {
+                return
+            }
+        }
+        try copyItem(at: fromURL, to: toURL)
+    }
+}
+
+extension URL {
+    
+    func fileCreationDate(_ fileManager: FileManager) throws -> Date {
+        return try fileManager.attributesOfItem(atPath: self.path)[.creationDate] as! Date
+    }
 }
 
 public extension DeviceAlert {
