@@ -234,23 +234,23 @@ extension DeviceAlertManager {
 extension DeviceAlertManager {
     
     func getStoredEntries(startDate: Date, completion: @escaping (_ report: String) -> Void) {
-        alertStore.executeAlertQuery(since: startDate, limit: 100) {
-            switch $0 {
+        alertStore.executeQuery(since: startDate, limit: 100) { result in
+            switch result {
             case .failure(let error): completion("Error: \(error)")
             case .success(let entries):
-                let report = "## Alerts\n" + entries.1.map {
+                let report = "## Alerts\n" + entries.1.map { storedAlert in
                     return """
-                    **\($0.title ?? "??")**
+                    **\(storedAlert.title ?? "??")**
                     
-                    * identifier: \($0.identifier!)
-                    * issued: \($0.issuedDate!)
-                    * acknowledged: \($0.acknowledgedDate?.description ?? "n/a")
-                    * retracted: \($0.retractedDate?.description ?? "n/a")
-                    * isCritical: \($0.isCritical)
-                    * trigger: \($0.trigger)
-                    * foregroundContent: \($0.foregroundContent ?? "n/a")
-                    * backgroundContent: \($0.backgroundContent ?? "n/a")
-                    * sound: \($0.sound ?? "n/a")
+                    * identifier: \(storedAlert.identifier!)
+                    * issued: \(storedAlert.issuedDate!)
+                    * acknowledged: \(storedAlert.acknowledgedDate?.description ?? "n/a")
+                    * retracted: \(storedAlert.retractedDate?.description ?? "n/a")
+                    * isCritical: \(storedAlert.isCritical)
+                    * trigger: \(storedAlert.trigger)
+                    * foregroundContent: \(storedAlert.foregroundContent ?? "n/a")
+                    * backgroundContent: \(storedAlert.backgroundContent ?? "n/a")
+                    * sound: \(storedAlert.sound ?? "n/a")
 
                     """
                 }.joined(separator: "\n")

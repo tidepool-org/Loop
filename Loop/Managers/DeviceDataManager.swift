@@ -20,7 +20,7 @@ final class DeviceDataManager {
     private let log = DiagnosticLog(category: "DeviceDataManager")
 
     let pluginManager: PluginManager
-    weak var deviceAlertManager: DeviceAlertManager?
+    weak var deviceAlertManager: DeviceAlertManager!
 
     /// Remember the launch date of the app for diagnostic reporting
     private let launchDate = Date()
@@ -253,7 +253,7 @@ final class DeviceDataManager {
     func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
         self.loopManager.generateDiagnosticReport { (loopReport) in
             
-            self.deviceAlertManager?.getStoredEntries(startDate: Date() - .hours(48)) { (alertReport) in
+            self.deviceAlertManager.getStoredEntries(startDate: Date() - .hours(48)) { (alertReport) in
                 
                 self.deviceLog.getLogEntries(startDate: Date() - .hours(48)) { (result) in
                     let deviceLogReport: String
