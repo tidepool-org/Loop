@@ -77,6 +77,13 @@ class StoredDosingDecisionCodableTests: XCTestCase {
                                                   pumpBatteryChargeRemaining: 3.5,
                                                   basalDeliveryState: .initiatingTempBasal,
                                                   bolusState: .none)
+        let deviceSettings = StoredDosingDecision.DeviceSettings(name: "Device Name",
+                                                                 systemName: "Device System Name",
+                                                                 systemVersion: "Device System Version",
+                                                                 model: "Device Model",
+                                                                 modelIdentifier: "Device Model Identifier",
+                                                                 batteryLevel: 0.5,
+                                                                 batteryState: .charging)
         let errors: [Error] = [CarbStore.CarbStoreError.notConfigured,
                                DoseStore.DoseStoreError.configurationError,
                                LoopError.connectionError,
@@ -97,6 +104,8 @@ class StoredDosingDecisionCodableTests: XCTestCase {
                                                         recommendedTempBasal: recommendedTempBasal,
                                                         recommendedBolus: recommendedBolus,
                                                         pumpManagerStatus: pumpManagerStatus,
+                                                        notificationSettings: notificationSettings,
+                                                        deviceSettings: deviceSettings,
                                                         errors: errors,
                                                         syncIdentifier: "2A67A303-5203-4CB8-8263-79498265368E")
         try assertStoredDosingDecisionCodable(storedDosingDecision, encodesJSON: """
@@ -108,6 +117,15 @@ class StoredDosingDecisionCodableTests: XCTestCase {
     "startDate" : "2020-05-14T22:48:41Z"
   },
   "date" : "2020-05-14T22:38:14Z",
+  "deviceSettings" : {
+    "batteryLevel" : 0.5,
+    "batteryState" : "charging",
+    "model" : "Device Model",
+    "modelIdentifier" : "Device Model Identifier",
+    "name" : "Device Name",
+    "systemName" : "Device System Name",
+    "systemVersion" : "Device System Version"
+  },
   "errors" : [
     {
       "carbStoreError" : "notConfigured"
@@ -228,6 +246,7 @@ class StoredDosingDecisionCodableTests: XCTestCase {
     "startDate" : "2020-05-14T22:07:19Z",
     "unitVolume" : 113.3
   },
+  "notificationSettings" : "\(notificationSettingsBase64)",
   "predictedGlucose" : [
     {
       "quantity" : 123.3,
@@ -365,6 +384,8 @@ extension StoredDosingDecision: Equatable {
             lhs.recommendedTempBasal == rhs.recommendedTempBasal &&
             lhs.recommendedBolus == rhs.recommendedBolus &&
             lhs.pumpManagerStatus == rhs.pumpManagerStatus &&
+            lhs.notificationSettings == rhs.notificationSettings &&
+            lhs.deviceSettings == rhs.deviceSettings &&
             errorsEqual(lhs.errors, rhs.errors) &&
             lhs.syncIdentifier == rhs.syncIdentifier
     }
@@ -421,3 +442,13 @@ extension StoredDosingDecision.BolusRecommendationWithDate: Equatable {
         return lhs.recommendation == rhs.recommendation && lhs.date == rhs.date
     }
 }
+
+fileprivate let notificationSettingsBase64 = "YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V" +
+    "5ZWRBcmNoaXZlctEICVRyb290gAGjCwwgVSRudWxs3g0ODxAREhMUFRYXGBkaGxsbGxscHBwdHhsfHBtcYmFkZ2VTZXR0aW5nXxATYXV0aG9yaXphdGlvblN0YXR" +
+    "1c1xzb3VuZFNldHRpbmdfEBlub3RpZmljYXRpb25DZW50ZXJTZXR0aW5nXxAUY3JpdGljYWxBbGVydFNldHRpbmdfEBNzaG93UHJldmlld3NTZXR0aW5nXxAPZ3J" +
+    "vdXBpbmdTZXR0aW5nXmNhclBsYXlTZXR0aW5nXxAfcHJvdmlkZXNBcHBOb3RpZmljYXRpb25TZXR0aW5nc1YkY2xhc3NfEBFsb2NrU2NyZWVuU2V0dGluZ1phbGV" +
+    "ydFN0eWxlXxATYW5ub3VuY2VtZW50U2V0dGluZ1xhbGVydFNldHRpbmcQAhAACIACEAHSISIjJFokY2xhc3NuYW1lWCRjbGFzc2VzXxAWVU5Ob3RpZmljYXRpb25" +
+    "TZXR0aW5nc6IlJl8QFlVOTm90aWZpY2F0aW9uU2V0dGluZ3NYTlNPYmplY3QACAARABoAJAApADIANwBJAEwAUQBTAFcAXQB6AIcAnQCqAMYA3QDzAQUBFAE2AT0" +
+    "BUQFcAXIBfwGBAYMBhAGGAYgBjQGYAaEBugG9AdYAAAAAAAACAQAAAAAAAAAnAAAAAAAAAAAAAAAAAAAB3w=="
+fileprivate let notificationSettingsData = Data(base64Encoded: notificationSettingsBase64)!
+fileprivate let notificationSettings = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(notificationSettingsData) as! UNNotificationSettings
