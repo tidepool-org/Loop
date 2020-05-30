@@ -100,10 +100,11 @@ final class DeviceDataManager {
     private(set) var loopManager: LoopDataManager!
     
     init(pluginManager: PluginManager, deviceAlertManager: DeviceAlertManager) {
-        
+        let localCacheDuration = Bundle.main.localCacheDuration ?? .days(1)
+
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        deviceLog = PersistentDeviceLog(storageFile: documentsDirectory.appendingPathComponent("DeviceLog.sqlite"))
+        deviceLog = PersistentDeviceLog(storageFile: documentsDirectory.appendingPathComponent("DeviceLog.sqlite"), maxEntryAge: localCacheDuration)
 
         loggingServicesManager = LoggingServicesManager()
         analyticsServicesManager = AnalyticsServicesManager()
@@ -129,7 +130,8 @@ final class DeviceDataManager {
             lastLoopCompleted: statusExtensionManager.context?.lastLoopCompleted,
             basalDeliveryState: pumpManager?.status.basalDeliveryState,
             lastPumpEventsReconciliation: pumpManager?.lastReconciliation,
-            analyticsServicesManager: analyticsServicesManager
+            analyticsServicesManager: analyticsServicesManager,
+            localCacheDuration: localCacheDuration
         )
         watchManager = WatchDataManager(deviceManager: self)
         
@@ -149,7 +151,7 @@ final class DeviceDataManager {
         )
 
 
-        if debugEnabled {
+        if FeatureFlags.scenariosEnabled {
             testingScenariosManager = LocalTestingScenariosManager(deviceManager: self)
         }
 
@@ -703,7 +705,9 @@ extension DeviceDataManager: SettingsStoreDelegate {
 // MARK: - TestingPumpManager
 extension DeviceDataManager {
     func deleteTestingPumpData(completion: ((Error?) -> Void)? = nil) {
-        assertDebugOnly()
+        guard FeatureFlags.scenariosEnabled else {
+            fatalError("\(#function) should be invoked only when scenarios are enabled")
+        }
 
         guard let testingPumpManager = pumpManager as? TestingPumpManager else {
             assertionFailure("\(#function) should be invoked only when a testing pump manager is in use")
@@ -730,7 +734,9 @@ extension DeviceDataManager {
     }
 
     func deleteTestingCGMData(completion: ((Error?) -> Void)? = nil) {
-        assertDebugOnly()
+        guard FeatureFlags.scenariosEnabled else {
+            fatalError("\(#function) should be invoked only when scenarios are enabled")
+        }
 
         guard let testingCGMManager = cgmManager as? TestingCGMManager else {
             assertionFailure("\(#function) should be invoked only when a testing CGM manager is in use")
@@ -810,6 +816,45 @@ extension DeviceDataManager {
             } else {
                 log.info("Unhandled remote notification: %{public}@", String(describing: notification))
             }
+        }
+    }
+}
+
+// MARK: - Simulated Core Data
+
+extension DeviceDataManager {
+    public func generateSimulatedHistoricalCoreData(completion: @escaping (Error?) -> Void) {
+        guard FeatureFlags.simulatedCoreDataEnabled else {
+            fatalError("\(#function) should be invoked only when simulated core data is enabled")
+        }
+
+        purgeHistoricalCoreData() { error in
+            guard error == nil else {
+                completion(error)
+                return
+            }
+
+            self.loopManager.generateSimulatedHistoricalCoreData() { error in
+                guard error == nil else {
+                    completion(error)
+                    return
+                }
+                self.deviceLog.generateSimulatedHistoricalDeviceLogEntries(completion: completion)
+            }
+        }
+    }
+
+    public func purgeHistoricalCoreData(completion: @escaping (Error?) -> Void) {
+        guard FeatureFlags.simulatedCoreDataEnabled else {
+            fatalError("\(#function) should be invoked only when simulated core data is enabled")
+        }
+
+        deviceLog.purgeHistoricalDeviceLogEntries() { error in
+            guard error == nil else {
+                completion(error)
+                return
+            }
+            self.loopManager.purgeHistoricalCoreData(completion: completion)
         }
     }
 }

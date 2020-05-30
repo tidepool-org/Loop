@@ -244,3 +244,11 @@ public struct CodableLocalizedError: LocalizedError, Codable {
         self.init(localizedError)
     }
 }
+
+// MARK: - Simulated Core Data
+
+extension DosingDecisionStore {
+    public func generateSimulatedHistoricalDosingDecisionObjects(completion: @escaping (Error?) -> Void) {
+        generateSimulatedHistoricalDosingDecisionObjects(encoder: encodeDosingDecision, completion: completion)
+    }
+}
