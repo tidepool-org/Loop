@@ -145,7 +145,11 @@ struct NotificationManager {
             }
 
             notification.title = NSLocalizedString("Loop Failure", comment: "The notification title for a loop failure")
-            notification.sound = isCritical ? .defaultCritical : .default
+            if isCritical, FeatureFlags.criticalAlertsEnabled, #available(iOS 12.0, *) {
+                notification.sound = .defaultCritical
+            } else {
+                notification.sound = .default
+            }
             notification.categoryIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
             notification.threadIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
 
