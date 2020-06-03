@@ -131,7 +131,7 @@ struct NotificationManager {
         // Give a little extra time for a loop-in-progress to complete
         let gracePeriod = TimeInterval(minutes: 0.5)
 
-        for (minutes, isCritical): (Double, Bool) in [(20, false), (40, false), (60, true), (120, true)] {
+        for (minutes, isCritical) in [(20.0, false), (40.0, false), (60.0, true), (120.0, true)] {
             let notification = UNMutableNotificationContent()
             let failureInterval = TimeInterval(minutes: minutes)
 
