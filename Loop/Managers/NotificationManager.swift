@@ -131,7 +131,7 @@ struct NotificationManager {
         // Give a little extra time for a loop-in-progress to complete
         let gracePeriod = TimeInterval(minutes: 0.5)
 
-        for minutes: Double in [20, 40, 60, 120] {
+        for (minutes, isCritical): (Double, Bool) in [(20, false), (40, false), (60, true), (120, true)] {
             let notification = UNMutableNotificationContent()
             let failureInterval = TimeInterval(minutes: minutes)
 
@@ -145,7 +145,7 @@ struct NotificationManager {
             }
 
             notification.title = NSLocalizedString("Loop Failure", comment: "The notification title for a loop failure")
-            notification.sound = .default
+            notification.sound = isCritical ? .defaultCritical : .default
             notification.categoryIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
             notification.threadIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
 
