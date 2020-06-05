@@ -245,10 +245,16 @@ public struct CodableLocalizedError: LocalizedError, Codable {
     }
 }
 
-// MARK: - Simulated Core Data
+// MARK: - Core Data (Bulk) - TEST ONLY
 
 extension DosingDecisionStore {
-    public func generateSimulatedHistoricalDosingDecisionObjects(completion: @escaping (Error?) -> Void) {
-        generateSimulatedHistoricalDosingDecisionObjects(encoder: encodeDosingDecision, completion: completion)
+    public func addStoredDosingDecisions(dosingDecisions: [StoredDosingDecision], completion: @escaping (Error?) -> Void) {
+        let dosingDecisionDatas: [StoredDosingDecisionData] = dosingDecisions.compactMap { dosingDecision in
+            guard let data = encodeDosingDecision(dosingDecision) else {
+                return nil
+            }
+            return StoredDosingDecisionData(date: dosingDecision.date, data: data)
+        }
+        addStoredDosingDecisionDatas(dosingDecisionDatas: dosingDecisionDatas, completion: completion)
     }
 }

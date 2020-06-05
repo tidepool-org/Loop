@@ -1743,33 +1743,27 @@ extension LoopDataManager {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
 
-        purgeHistoricalCoreData() { error in
+        self.settingsStore.generateSimulatedHistoricalSettingsObjects() { error in
             guard error == nil else {
                 completion(error)
                 return
             }
-            self.settingsStore.generateSimulatedHistoricalSettingsObjects() { error in
+            self.glucoseStore.generateSimulatedHistoricalGlucoseObjects() { error in
                 guard error == nil else {
                     completion(error)
                     return
                 }
-                self.glucoseStore.generateSimulatedHistoricalGlucoseObjects() { error in
+                self.carbStore.generateSimulatedHistoricalCarbObjects() { error in
                     guard error == nil else {
                         completion(error)
                         return
                     }
-                    self.carbStore.generateSimulatedHistoricalCarbObjects() { error in
+                    self.dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects() { error in
                         guard error == nil else {
                             completion(error)
                             return
                         }
-                        self.dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects() { error in
-                            guard error == nil else {
-                                completion(error)
-                                return
-                            }
-                            self.doseStore.generateSimulatedHistoricalPumpEvents(completion: completion)
-                        }
+                        self.doseStore.generateSimulatedHistoricalPumpEvents(completion: completion)
                     }
                 }
             }

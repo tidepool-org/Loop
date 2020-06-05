@@ -1384,11 +1384,21 @@ final class StatusTableViewController: ChartsTableViewController {
         }
 
         presentActivityIndicator(title: "Simulated Core Data", message: "Generating simulated historical...") { dismissActivityIndicator in
-            self.deviceManager.generateSimulatedHistoricalCoreData() { error in
-                DispatchQueue.main.async {
-                    dismissActivityIndicator()
-                    if let error = error {
+            self.deviceManager.purgeHistoricalCoreData() { error in
+                if let error = error {
+                    DispatchQueue.main.async {
+                        dismissActivityIndicator()
                         self.presentError(error)
+                    }
+                    return
+                }
+
+                self.deviceManager.generateSimulatedHistoricalCoreData() { error in
+                    DispatchQueue.main.async {
+                        dismissActivityIndicator()
+                        if let error = error {
+                            self.presentError(error)
+                        }
                     }
                 }
             }

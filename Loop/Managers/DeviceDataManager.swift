@@ -828,19 +828,12 @@ extension DeviceDataManager {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
 
-        purgeHistoricalCoreData() { error in
+        self.loopManager.generateSimulatedHistoricalCoreData() { error in
             guard error == nil else {
                 completion(error)
                 return
             }
-
-            self.loopManager.generateSimulatedHistoricalCoreData() { error in
-                guard error == nil else {
-                    completion(error)
-                    return
-                }
-                self.deviceLog.generateSimulatedHistoricalDeviceLogEntries(completion: completion)
-            }
+            self.deviceLog.generateSimulatedHistoricalDeviceLogEntries(completion: completion)
         }
     }
 
