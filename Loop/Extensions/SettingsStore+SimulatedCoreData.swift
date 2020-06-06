@@ -15,21 +15,41 @@ extension SettingsStore {
     private var historicalEndDate: Date { Date(timeIntervalSinceNow: -.hours(24)) }
 
     private var simulatedPerDay: Int { 2 }
+    private var simulatedLimit: Int { 10000 }
 
     public func generateSimulatedHistoricalSettingsObjects(completion: @escaping (Error?) -> Void) {
         var startDate = Calendar.current.startOfDay(for: expireDate)
         let endDate = Calendar.current.startOfDay(for: historicalEndDate)
-        var settings = [StoredSettings]()
+        var simulated = [StoredSettings]()
 
         while startDate < endDate {
             for index in 0..<simulatedPerDay {
-                settings.append(StoredSettings.simulated(date: startDate.addingTimeInterval(.hours(24) * Double(index) / Double(simulatedPerDay))))
+                simulated.append(StoredSettings.simulated(date: startDate.addingTimeInterval(.hours(24) * Double(index) / Double(simulatedPerDay))))
+            }
+
+            if simulated.count >= simulatedLimit {
+                if let error = addSimulatedHistoricalSettingsObjects(settings: simulated) {
+                    completion(error)
+                    return
+                }
+                simulated = []
             }
 
             startDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
         }
 
-        addStoredSettings(settings: settings, completion: completion)
+        completion(addSimulatedHistoricalSettingsObjects(settings: simulated))
+    }
+
+    private func addSimulatedHistoricalSettingsObjects(settings: [StoredSettings]) -> Error? {
+        var addError: Error?
+        let semaphore = DispatchSemaphore(value: 0)
+        addStoredSettings(settings: settings) { error in
+            addError = error
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return addError
     }
 
     public func purgeHistoricalSettingsObjects(completion: @escaping (Error?) -> Void) {

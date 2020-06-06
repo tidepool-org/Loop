@@ -19,20 +19,41 @@ extension GlucoseStore {
     private var simulatedValueBase: Double { 110 }
     private var simulatedValueAmplitude: Double { 40 }
     private var simulatedValueIncrement: Double { 2.0 * .pi / 72.0 }    // 6 hour period
+    private var simulatedLimit: Int { 10000 }
 
     public func generateSimulatedHistoricalGlucoseObjects(completion: @escaping (Error?) -> Void) {
         var startDate = Calendar.current.startOfDay(for: earliestCacheDate)
         let endDate = Calendar.current.startOfDay(for: historicalEndDate)
         var value = 0.0
-        var samples = [StoredGlucoseSample]()
+        var simulated = [StoredGlucoseSample]()
 
         while startDate < endDate {
-            samples.append(StoredGlucoseSample.simulated(startDate: startDate, value: simulatedValueBase + simulatedValueAmplitude * sin(value)))
+            simulated.append(StoredGlucoseSample.simulated(startDate: startDate, value: simulatedValueBase + simulatedValueAmplitude * sin(value)))
+
+            if simulated.count >= simulatedLimit {
+                if let error = addSimulatedHistoricalGlucoseObjects(samples: simulated) {
+                    completion(error)
+                    return
+                }
+                simulated = []
+            }
+
             value += simulatedValueIncrement
             startDate = startDate.addingTimeInterval(simulatedStartDateInterval)
         }
 
-        addGlucoseSamples(samples: samples, completion: completion)
+        completion(addSimulatedHistoricalGlucoseObjects(samples: simulated))
+    }
+
+    private func addSimulatedHistoricalGlucoseObjects(samples: [StoredGlucoseSample]) -> Error? {
+        var addError: Error?
+        let semaphore = DispatchSemaphore(value: 0)
+        addGlucoseSamples(samples: samples) { error in
+            addError = error
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return addError
     }
 
     public func purgeHistoricalGlucoseObjects(completion: @escaping (Error?) -> Void) {

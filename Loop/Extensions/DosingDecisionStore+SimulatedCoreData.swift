@@ -15,21 +15,40 @@ import LoopKit
 extension DosingDecisionStore {
     private var historicalEndDate: Date { Date(timeIntervalSinceNow: -.hours(24)) }
 
-    private var simulatedPerDay: Int { 288 }
+    private var simulatedStartDateInterval: TimeInterval { .minutes(5) }
+    private var simulatedLimit: Int { 10000 }
 
     public func generateSimulatedHistoricalDosingDecisionObjects(completion: @escaping (Error?) -> Void) {
         var startDate = Calendar.current.startOfDay(for: expireDate)
         let endDate = Calendar.current.startOfDay(for: historicalEndDate)
-        var dosingDecisions = [StoredDosingDecision]()
+        var simulated = [StoredDosingDecision]()
 
         while startDate < endDate {
-            for index in 0..<simulatedPerDay {
-                dosingDecisions.append(StoredDosingDecision.simulated(date: startDate.addingTimeInterval(.hours(24) * Double(index) / Double(simulatedPerDay))))
+            simulated.append(StoredDosingDecision.simulated(date: startDate))
+
+            if simulated.count >= simulatedLimit {
+                if let error = addSimulatedHistoricalDosingDecisionObjects(dosingDecisions: simulated) {
+                    completion(error)
+                    return
+                }
+                simulated = []
             }
-            startDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
+
+            startDate = startDate.addingTimeInterval(simulatedStartDateInterval)
         }
 
-        addStoredDosingDecisions(dosingDecisions: dosingDecisions, completion: completion)
+        completion(addSimulatedHistoricalDosingDecisionObjects(dosingDecisions: simulated))
+    }
+
+    private func addSimulatedHistoricalDosingDecisionObjects(dosingDecisions: [StoredDosingDecision]) -> Error? {
+        var addError: Error?
+        let semaphore = DispatchSemaphore(value: 0)
+        addStoredDosingDecisions(dosingDecisions: dosingDecisions) { error in
+            addError = error
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return addError
     }
 
     public func purgeHistoricalDosingDecisionObjects(completion: @escaping (Error?) -> Void) {
