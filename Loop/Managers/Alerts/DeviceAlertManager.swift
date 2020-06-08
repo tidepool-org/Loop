@@ -38,15 +38,25 @@ public final class DeviceAlertManager {
     
     private let log = DiagnosticLog(category: "DeviceAlertManager")
 
-    var handlers: [DeviceAlertPresenter] = []
-    var responders: [String: Weak<DeviceAlertResponder>] = [:]
-    var soundVendors: [String: Weak<DeviceAlertSoundVendor>] = [:]
+    private var handlers: [DeviceAlertPresenter] = []
+    private var responders: [String: Weak<DeviceAlertResponder>] = [:]
+    private var soundVendors: [String: Weak<DeviceAlertSoundVendor>] = [:]
     
-    let userNotificationCenter: UserNotificationCenter
-    let fileManager: FileManager
+    private let userNotificationCenter: UserNotificationCenter
+    private let fileManager: FileManager
     
-    let alertStore: AlertStore
-
+    private let alertStore: AlertStore
+    
+    /// If true, all alerts issued are critical
+    public var forceIssueCriticalAlert : Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "DeviceAlertManager.forceIssueCriticalAlert")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "DeviceAlertManager.forceIssueCriticalAlert")
+        }
+    }
+    
     public init(rootViewController: UIViewController,
                 handlers: [DeviceAlertPresenter]? = nil,
                 userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
@@ -102,8 +112,9 @@ extension DeviceAlertManager: DeviceAlertManagerResponder {
 extension DeviceAlertManager: DeviceAlertPresenter {
 
     public func issueAlert(_ alert: DeviceAlert) {
-        handlers.forEach { $0.issueAlert(alert) }
-        alertStore.recordIssued(alert: alert)
+        let newAlert = alert.maybeForceIsCritical(self.forceIssueCriticalAlert)
+        handlers.forEach { $0.issueAlert(newAlert) }
+        alertStore.recordIssued(alert: newAlert)
     }
     
     public func retractAlert(identifier: DeviceAlert.Identifier) {
@@ -360,3 +371,30 @@ fileprivate extension UNTimeIntervalNotificationTrigger {
         }
     }
 }
+
+extension DeviceAlert {
+    func maybeForceIsCritical(_ forceIsCritical: Bool) -> DeviceAlert {
+        guard forceIsCritical else { return self }
+        return DeviceAlert(identifier: identifier,
+                           foregroundContent: DeviceAlert.Content(title: foregroundContent?.title,
+                                                                  body: foregroundContent?.body,
+                                                                  acknowledgeActionButtonLabel: foregroundContent?.acknowledgeActionButtonLabel,
+                                                                  isCritical: true),
+                           backgroundContent: DeviceAlert.Content(title: backgroundContent?.title,
+                                                                  body: backgroundContent?.body,
+                                                                  acknowledgeActionButtonLabel: backgroundContent?.acknowledgeActionButtonLabel,
+                                                                  isCritical: true),
+                           trigger: trigger,
+                           sound: sound)
+    }
+}
+
+extension DeviceAlert.Content {
+    init?(title: String?, body: String?, acknowledgeActionButtonLabel: String?, isCritical: Bool?) {
+        guard let title = title, let body = body, let acknowledgeActionButtonLabel = acknowledgeActionButtonLabel, let isCritical = isCritical else {
+            return nil
+        }
+        self = DeviceAlert.Content(title: title, body: body, acknowledgeActionButtonLabel: acknowledgeActionButtonLabel, isCritical: isCritical)
+    }
+}
+

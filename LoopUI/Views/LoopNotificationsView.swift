@@ -10,24 +10,23 @@ import LoopKitUI
 import SwiftUI
 
 public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
-    @State var forceCriticalAlerts: Bool = false
     @Environment(\.dismiss) var dismiss
-
+    
     private let backButtonText: String
-    private let completion: (() -> Void)?
-
-    public init(backButtonText: String = "", completion: (() -> Void)? = nil) {
+    @ObservedObject private var viewModel: LoopNotificationsViewModel
+    
+    public init(backButtonText: String = "", viewModel: LoopNotificationsViewModel) {
         self.backButtonText = backButtonText
-        self.completion = completion
+        self.viewModel = viewModel
     }
 
     public var body: some View {
         NavigationView {
             VStack {
                 List {
-                    forceCriticalAlertsSection
-                    loopNotificationsSection
-                    notificationScheduleSection
+//                    forceCriticalAlertsSection
+//                    loopNotificationsSection
+//                    notificationScheduleSection
                     notificationAndCriticalAlertPermissionSection
                     supportSection
                 }
@@ -49,7 +48,7 @@ public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
 
     private var forceCriticalAlertsSection: some View {
         Section {
-            Toggle(isOn: $forceCriticalAlerts) {
+            Toggle(isOn: $viewModel.forceCriticalAlerts) {
                 Text(LocalizedString("Make all notifications critical", comment: "Toggle for notifications to use critical alert"))
             }
             DescriptiveText(label: LocalizedString("When turned on, this will make every notification a Critical Alert. This means your phone will make a noise when any notifications are delivered, even when Silent or Do Not Disturb is turned on.\n\nLoop Hasn't Completed and Some Other Junk are always critical.", comment: "Description of the force critical alerts toggle"))
@@ -78,7 +77,7 @@ public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
     }
     
     private var notificationAndCriticalAlertPermissionSection: some View {
-        Section {
+        Section(header: SectionHeader(label: LocalizedString("Tidepool Loop Notifications", comment: "Section title for Tidepool Loop notifications"))) {
             NavigationLink(destination: Text("Notification & Critical Alert Permissions screen")) {
                 Text(LocalizedString("Notification & Critical Alert Permissions", comment: "Notification & Critical Alert Permissions button text"))
             }
@@ -95,14 +94,14 @@ public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
     }
 }
 
-public struct LoopNotificationsView_Previews: PreviewProvider {
-    public static var previews: some View {
+struct LoopNotificationsView_Previews: PreviewProvider {
+    static var previews: some View {
         return Group {
-            LoopNotificationsView(backButtonText: "Settings")
+            LoopNotificationsView(backButtonText: "Settings", viewModel: LoopNotificationsViewModel(initialValue: true, criticalAlertForcer: {_ in}))
                 .colorScheme(.light)
                 .previewDevice(PreviewDevice(rawValue: "iPhone SE"))
                 .previewDisplayName("SE light")
-            LoopNotificationsView(backButtonText: "Settings")
+            LoopNotificationsView(backButtonText: "Settings", viewModel: LoopNotificationsViewModel(initialValue: true, criticalAlertForcer: {_ in}))
                 .colorScheme(.dark)
                 .previewDevice(PreviewDevice(rawValue: "iPhone XS Max"))
                 .previewDisplayName("XS Max dark")

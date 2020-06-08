@@ -579,11 +579,11 @@ final class SettingsTableViewController: UITableViewController {
                 } else {
                     vc.timeZone = pumpManager.status.timeZone
                 }
-
+                
                 vc.title = NSLocalizedString("Basal Rates", comment: "The title of the basal rate profile screen")
                 vc.delegate = self
                 vc.syncSource = pumpManager
-
+                
                 show(vc, sender: sender)
             }
         case .loop:
@@ -591,17 +591,19 @@ final class SettingsTableViewController: UITableViewController {
             case .dosing:
                 break
             case .notifications:
-
+                let viewModel = LoopNotificationsViewModel(initialValue: dataManager.deviceAlertManager.forceIssueCriticalAlert) { [weak dataManager] in
+                    dataManager?.deviceAlertManager.forceIssueCriticalAlert = $0
+                }
                 let hostingController = DismissibleHostingController(
                     rootView: LoopNotificationsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
-                                                    completion: {
-                    }),  onDisappear: {
-                    tableView.deselectRow(at: indexPath, animated: true)
+                                                    viewModel: viewModel),
+                    onDisappear: {
+                        tableView.deselectRow(at: indexPath, animated: true)
                 })
-
+                
                 present(hostingController, animated: true)
                 tableView.deselectRow(at: indexPath, animated: true)
-
+                
                 break
             }
         case .services:
@@ -617,7 +619,7 @@ final class SettingsTableViewController: UITableViewController {
                 let alert = UIAlertController(services: inactiveServices) { [weak self] (identifier) in
                     self?.setupService(withIdentifier: identifier)
                 }
-
+                
                 alert.addCancelAction { (_) in
                     tableView.deselectRow(at: indexPath, animated: true)
                 }
