@@ -6,10 +6,10 @@
 //  Copyright © 2015 Nathan Racklyeft. All rights reserved.
 //
 
-import UIKit
 import Intents
 import LoopCore
 import LoopKit
+import UIKit
 import UserNotifications
 
 @UIApplicationMain
@@ -20,6 +20,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     private lazy var pluginManager = PluginManager()
 
     private var deviceDataManager: DeviceDataManager!
+    private var loopAlertsManager: LoopAlertsManager!
     private var alertManager: AlertManager!
     
     var window: UIWindow?
@@ -33,6 +34,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         alertManager = AlertManager(rootViewController: rootViewController)
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertManager: alertManager)
+        loopAlertsManager = LoopAlertsManager(deviceAlertManager: alertManager)
 
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 
@@ -117,6 +119,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
+// MARK: UNUserNotificationCenterDelegate implementation
 
 extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
