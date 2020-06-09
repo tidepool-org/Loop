@@ -193,10 +193,10 @@ extension AlertManager {
             let savedAlert = try Alert.decode(from: savedAlertString)
             let newTrigger = trigger ?? determineNewTrigger(from: savedAlert, timestamp: savedAlertTimestamp)
             let newAlert = Alert(identifier: savedAlert.identifier,
-                                       foregroundContent: savedAlert.foregroundContent,
-                                       backgroundContent: savedAlert.backgroundContent,
-                                       trigger: newTrigger,
-                                       sound: savedAlert.sound)
+                                 foregroundContent: savedAlert.foregroundContent,
+                                 backgroundContent: savedAlert.backgroundContent,
+                                 trigger: newTrigger,
+                                 sound: savedAlert.sound)
             self.log.debug("Replaying %@Alert: %@ with %@trigger %@",
                            trigger != nil ? "" : "Pending ",
                            trigger != nil ? "" : "new ",
