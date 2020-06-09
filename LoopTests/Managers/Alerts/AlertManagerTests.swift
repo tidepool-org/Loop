@@ -30,7 +30,7 @@ class AlertManagerTests: XCTestCase {
             acknowledged[alertIdentifier] = true
         }
     }
-
+    
     class MockFileManager: FileManager {
         
         var fileExists = true
@@ -46,7 +46,7 @@ class AlertManagerTests: XCTestCase {
         }
         override func attributesOfItem(atPath path: String) throws -> [FileAttributeKey : Any] {
             return path.contains("Sounds") ? path.contains("existsNewer") ? [.creationDate: newer] : [.creationDate: older] :
-                 [.creationDate: newer]
+                [.creationDate: newer]
         }
         var removedURLs = [URL]()
         override func removeItem(at URL: URL) throws {
@@ -62,7 +62,7 @@ class AlertManagerTests: XCTestCase {
             return []
         }
     }
-
+    
     class MockSoundVendor: AlertSoundVendor {
         func getSoundBaseURL() -> URL? {
             // Hm.  It's not easy to make a "fake" URL, so we'll use this one:
@@ -95,9 +95,9 @@ class AlertManagerTests: XCTestCase {
         mockPresenter = MockPresenter()
         mockUserNotificationCenter = MockUserNotificationCenter()
         alertManager = AlertManager(rootViewController: UIViewController(),
-                                                handlers: [mockPresenter],
-                                                userNotificationCenter: mockUserNotificationCenter,
-                                                fileManager: mockFileManager)
+                                    handlers: [mockPresenter],
+                                    userNotificationCenter: mockUserNotificationCenter,
+                                    fileManager: mockFileManager)
     }
     
     func testIssueAlertOnHandlerCalled() {
@@ -161,13 +161,13 @@ class AlertManagerTests: XCTestCase {
         let date = Date()
         let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
         let alert = Alert(identifier: Self.mockIdentifier,
-                                foregroundContent: content, backgroundContent: content, trigger: .immediate)
-
+                          foregroundContent: content, backgroundContent: content, trigger: .immediate)
+        
         mockUserNotificationCenter.pendingRequests = [ try! UNNotificationRequest(from: alert, timestamp: date) ]
         alertManager = AlertManager(rootViewController: UIViewController(),
-                                                handlers: [mockPresenter],
-                                                userNotificationCenter: mockUserNotificationCenter,
-                                                fileManager: mockFileManager)
+                                    handlers: [mockPresenter],
+                                    userNotificationCenter: mockUserNotificationCenter,
+                                    fileManager: mockFileManager)
         XCTAssertEqual(alert, mockPresenter.issuedAlert)
     }
     
@@ -175,13 +175,13 @@ class AlertManagerTests: XCTestCase {
         let date = Date.distantPast
         let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
         let alert = Alert(identifier: Self.mockIdentifier,
-                                foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
-
+                          foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
+        
         mockUserNotificationCenter.pendingRequests = [ try! UNNotificationRequest(from: alert, timestamp: date) ]
         alertManager = AlertManager(rootViewController: UIViewController(),
-                                                handlers: [mockPresenter],
-                                                userNotificationCenter: mockUserNotificationCenter,
-                                                fileManager: mockFileManager)
+                                    handlers: [mockPresenter],
+                                    userNotificationCenter: mockUserNotificationCenter,
+                                    fileManager: mockFileManager)
         let expected = Alert(identifier: Self.mockIdentifier, foregroundContent: content, backgroundContent: content, trigger: .immediate)
         XCTAssertEqual(expected, mockPresenter.issuedAlert)
     }
@@ -190,13 +190,13 @@ class AlertManagerTests: XCTestCase {
         let date = Date().addingTimeInterval(-15.0) // Pretend the 30-second-delayed alert was issued 15 seconds ago
         let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
         let alert = Alert(identifier: Self.mockIdentifier,
-                                foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
-
+                          foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
+        
         mockUserNotificationCenter.pendingRequests = [ try! UNNotificationRequest(from: alert, timestamp: date) ]
         alertManager = AlertManager(rootViewController: UIViewController(),
-                                                handlers: [mockPresenter],
-                                                userNotificationCenter: mockUserNotificationCenter,
-                                                fileManager: mockFileManager)
+                                    handlers: [mockPresenter],
+                                    userNotificationCenter: mockUserNotificationCenter,
+                                    fileManager: mockFileManager)
         // The trigger for this should be `.delayed` by "something less than 15 seconds",
         // but the exact value depends on the speed of executing this test.
         // As long as it is <= 15 seconds, we call it good.
@@ -213,22 +213,22 @@ class AlertManagerTests: XCTestCase {
         let date = Date.distantPast
         let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
         let alert = Alert(identifier: Self.mockIdentifier,
-                                foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
-
+                          foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
+        
         mockUserNotificationCenter.pendingRequests = [ try! UNNotificationRequest(from: alert, timestamp: date) ]
         alertManager = AlertManager(rootViewController: UIViewController(),
-                                                handlers: [mockPresenter],
-                                                userNotificationCenter: mockUserNotificationCenter,
-                                                fileManager: mockFileManager)
+                                    handlers: [mockPresenter],
+                                    userNotificationCenter: mockUserNotificationCenter,
+                                    fileManager: mockFileManager)
         XCTAssertEqual(alert, mockPresenter.issuedAlert)
     }
 }
 
 class MockUserNotificationCenter: UserNotificationCenter {
-        
+    
     var pendingRequests = [UNNotificationRequest]()
     var deliveredRequests = [UNNotificationRequest]()
-            
+    
     func add(_ request: UNNotificationRequest, withCompletionHandler completionHandler: ((Error?) -> Void)? = nil) {
         pendingRequests.append(request)
     }
@@ -238,7 +238,7 @@ class MockUserNotificationCenter: UserNotificationCenter {
             pendingRequests.removeAll { $0.identifier == identifier }
         }
     }
-
+    
     func removeDeliveredNotifications(withIdentifiers identifiers: [String]) {
         identifiers.forEach { identifier in
             deliveredRequests.removeAll { $0.identifier == identifier }
