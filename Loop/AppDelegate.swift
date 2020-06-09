@@ -19,9 +19,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private lazy var pluginManager = PluginManager()
 
+    private var alertManager: AlertManager!
     private var deviceDataManager: DeviceDataManager!
     private var loopAlertsManager: LoopAlertsManager!
-    private var alertManager: AlertManager!
     
     var window: UIWindow?
 
@@ -34,7 +34,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         alertManager = AlertManager(rootViewController: rootViewController)
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertManager: alertManager)
-        loopAlertsManager = LoopAlertsManager(deviceAlertManager: alertManager)
+        loopAlertsManager = LoopAlertsManager(alertManager: alertManager)
 
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 

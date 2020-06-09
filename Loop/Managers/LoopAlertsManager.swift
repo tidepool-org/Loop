@@ -16,10 +16,10 @@ class LoopAlertsManager: NSObject {
     private weak var alertManager: AlertManager?
     private let bluetoothPoweredOffIdentifier = Alert.Identifier(managerIdentifier: "Loop", alertIdentifier: "bluetoothPoweredOff")
 
-    init(deviceAlertManager: AlertManager) {
+    init(alertManager: AlertManager) {
         super.init()
         bluetoothCentralManager = CBCentralManager(delegate: self, queue: nil)
-        self.alertManager = deviceAlertManager
+        self.alertManager = alertManager
     }
 }
 
@@ -29,22 +29,12 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
-        case .unauthorized:
-            switch central.authorization {
-            case .allowedAlways: break
-            case .denied: break
-            case .restricted: break
-            case .notDetermined: break
-            @unknown default: break
-            }
-        case .unknown: break
-        case .unsupported: break
         case .poweredOn:
             onBluetoothPoweredOn()
         case .poweredOff:
             onBluetoothPoweredOff()
-        case .resetting: break
-        @unknown default: break
+        default:
+            break
         }
     }
     
@@ -56,10 +46,10 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
     private func onBluetoothPoweredOff() {
         log.default("Bluetooth powered off")
         let bgcontent = Alert.Content(title: NSLocalizedString("Bluetooth Off Alert", comment: "Bluetooth off background alert title"),
-                                      body: NSLocalizedString("Turn on Bluetooth to receive alerts, alarms or sensor glucose readings.", comment: "Bluetooth off alert body"),
+                                      body: NSLocalizedString("Turn on Bluetooth to receive alerts, alarms or sensor glucose readings, and communicate with your pump.", comment: "Bluetooth off alert body"),
                                       acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Default alert dismissal"))
         let fgcontent = Alert.Content(title: NSLocalizedString("Bluetooth Off", comment: "Bluetooth off foreground alert title"),
-                                      body: NSLocalizedString("Turn on Bluetooth to receive alerts, alarms or sensor glucose readings.", comment: "Bluetooth off alert body"),
+                                      body: NSLocalizedString("Turn on Bluetooth to receive alerts, alarms or sensor glucose readings, and communicate with your pump.", comment: "Bluetooth off alert body"),
                                       acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Default alert dismissal"))
         alertManager?.issueAlert(Alert(identifier: bluetoothPoweredOffIdentifier, foregroundContent: fgcontent, backgroundContent: bgcontent, trigger: .immediate))
     }
