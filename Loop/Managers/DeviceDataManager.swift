@@ -20,7 +20,7 @@ final class DeviceDataManager {
     private let log = DiagnosticLog(category: "DeviceDataManager")
 
     let pluginManager: PluginManager
-    weak var deviceAlertManager: DeviceAlertManager!
+    weak var alertManager: AlertManager!
 
     /// Remember the launch date of the app for diagnostic reporting
     private let launchDate = Date()
@@ -33,7 +33,7 @@ final class DeviceDataManager {
 
     /// The last time a BLE heartbeat was received and acted upon.
     private var lastBLEDrivenUpdate = Date.distantPast
-    
+
     private var deviceLog: PersistentDeviceLog
 
     // MARK: - CGM
@@ -45,22 +45,22 @@ final class DeviceDataManager {
             UserDefaults.appGroup?.cgmManagerRawValue = cgmManager?.rawValue
         }
     }
-    
+
     // MARK: - Pump
-    
+
     var pumpManager: PumpManagerUI? {
         didSet {
             dispatchPrecondition(condition: .onQueue(.main))
-            
+
             // If the current CGMManager is a PumpManager, we clear it out.
             if cgmManager is PumpManagerUI {
                 cgmManager = nil
             }
-            
+
             setupPump()
-            
+
             NotificationCenter.default.post(name: .PumpManagerChanged, object: self, userInfo: nil)
-            
+
             UserDefaults.appGroup?.pumpManagerRawValue = pumpManager?.rawValue
         }
     }
@@ -74,7 +74,7 @@ final class DeviceDataManager {
     var remoteDataServicesManager: RemoteDataServicesManager { return servicesManager.remoteDataServicesManager }
 
     private(set) var pumpManagerHUDProvider: HUDProvider?
-    
+
     var maximumBasalRatePerHour: Double? {
         set {
             loopManager.settings.maximumBasalRatePerHour = newValue
@@ -98,8 +98,8 @@ final class DeviceDataManager {
     // MARK: - Initialization
 
     private(set) var loopManager: LoopDataManager!
-    
-    init(pluginManager: PluginManager, deviceAlertManager: DeviceAlertManager) {
+
+    init(pluginManager: PluginManager, alertManager: AlertManager) {
         let localCacheDuration = Bundle.main.localCacheDuration ?? .days(1)
 
         let fileManager = FileManager.default
@@ -108,9 +108,9 @@ final class DeviceDataManager {
 
         loggingServicesManager = LoggingServicesManager()
         analyticsServicesManager = AnalyticsServicesManager()
-        
+
         self.pluginManager = pluginManager
-        self.deviceAlertManager = deviceAlertManager
+        self.alertManager = alertManager
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
             pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
@@ -134,7 +134,7 @@ final class DeviceDataManager {
             localCacheDuration: localCacheDuration
         )
         watchManager = WatchDataManager(deviceManager: self)
-        
+
         let remoteDataServicesManager = RemoteDataServicesManager(
             carbStore: loopManager.carbStore,
             doseStore: loopManager.doseStore,
@@ -142,7 +142,7 @@ final class DeviceDataManager {
             glucoseStore: loopManager.glucoseStore,
             settingsStore: loopManager.settingsStore
         )
-        
+
         servicesManager = ServicesManager(
             pluginManager: pluginManager,
             analyticsServicesManager: analyticsServicesManager,
@@ -200,7 +200,7 @@ final class DeviceDataManager {
 
         return Manager.init(rawState: rawState) as? PumpManagerUI
     }
-    
+
     private func processCGMResult(_ manager: CGMManager, result: CGMResult) {
         switch result {
         case .newData(let values):
@@ -212,16 +212,16 @@ final class DeviceDataManager {
             }
         case .noData:
             log.default("CGMManager:%{public}@ did update with no data", String(describing: type(of: manager)))
-            
+
             pumpManager?.assertCurrentPumpData()
         case .error(let error):
             log.default("CGMManager:%{public}@ did update with error: %{public}@", String(describing: type(of: manager)), String(describing: error))
-            
+
             self.setLastError(error: error)
             log.default("Asserting current pump data")
             pumpManager?.assertCurrentPumpData()
         }
-        
+
         updatePumpManagerBLEHeartbeatPreference()
     }
 
@@ -251,12 +251,12 @@ final class DeviceDataManager {
 
         return Manager.init(rawState: rawState) as? CGMManagerUI
     }
-    
+
     func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
         self.loopManager.generateDiagnosticReport { (loopReport) in
-            
-            self.deviceAlertManager.getStoredEntries(startDate: Date() - .hours(48)) { (alertReport) in
-                
+
+            self.alertManager.getStoredEntries(startDate: Date() - .hours(48)) { (alertReport) in
+
                 self.deviceLog.getLogEntries(startDate: Date() - .hours(48)) { (result) in
                     let deviceLogReport: String
                     switch result {
@@ -265,7 +265,7 @@ final class DeviceDataManager {
                     case .success(let entries):
                         deviceLogReport = entries.map { "* \($0.timestamp) \($0.managerIdentifier) \($0.deviceIdentifier ?? "") \($0.type) \($0.message)" }.joined(separator: "\n")
                     }
-                    
+
                     let report = [
                         Bundle.main.localizedNameAndVersion,
                         "* gitRevision: \(Bundle.main.gitRevision ?? "N/A")",
@@ -296,7 +296,7 @@ final class DeviceDataManager {
                         loopReport,
                         alertReport
                         ].joined(separator: "\n")
-                    
+
                     completion(report)
                 }
             }
@@ -310,14 +310,14 @@ private extension DeviceDataManager {
 
         cgmManager?.cgmManagerDelegate = self
         cgmManager?.delegateQueue = queue
-        
+
         loopManager.glucoseStore.managedDataInterval = cgmManager?.managedDataInterval
 
         updatePumpManagerBLEHeartbeatPreference()
         if let cgmManager = cgmManager {
-            deviceAlertManager?.addAlertResponder(managerIdentifier: cgmManager.managerIdentifier,
+            alertManager?.addAlertResponder(managerIdentifier: cgmManager.managerIdentifier,
                                                   alertResponder: cgmManager)
-            deviceAlertManager?.addAlertSoundVendor(managerIdentifier: cgmManager.managerIdentifier,
+            alertManager?.addAlertSoundVendor(managerIdentifier: cgmManager.managerIdentifier,
                                                     soundVendor: cgmManager)
         }
     }
@@ -336,9 +336,9 @@ private extension DeviceDataManager {
             loopManager?.doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
         }
         if let pumpManager = pumpManager {
-            deviceAlertManager?.addAlertResponder(managerIdentifier: pumpManager.managerIdentifier,
+            alertManager?.addAlertResponder(managerIdentifier: pumpManager.managerIdentifier,
                                                   alertResponder: pumpManager)
-            deviceAlertManager?.addAlertSoundVendor(managerIdentifier: pumpManager.managerIdentifier,
+            alertManager?.addAlertSoundVendor(managerIdentifier: pumpManager.managerIdentifier,
                                                     soundVendor: pumpManager)
         }
     }
@@ -408,25 +408,25 @@ extension DeviceDataManager: DeviceManagerDelegate {
     func clearNotification(for manager: DeviceManager, identifier: String) {
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [identifier])
     }
-    
+
     func removeNotificationRequests(for manager: DeviceManager, identifiers: [String]) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
     }
-    
+
     func deviceManager(_ manager: DeviceManager, logEventForDeviceIdentifier deviceIdentifier: String?, type: DeviceLogEntryType, message: String, completion: ((Error?) -> Void)?) {
         deviceLog.log(managerIdentifier: Swift.type(of: manager).managerIdentifier, deviceIdentifier: deviceIdentifier, type: type, message: message, completion: completion)
     }
 }
 
 // MARK: - UserAlertHandler
-extension DeviceDataManager: DeviceAlertPresenter {
+extension DeviceDataManager: AlertPresenter {
 
-    func issueAlert(_ alert: DeviceAlert) {
-        deviceAlertManager?.issueAlert(alert)
+    func issueAlert(_ alert: Alert) {
+        alertManager?.issueAlert(alert)
     }
-    
-    func retractAlert(identifier: DeviceAlert.Identifier) {
-        deviceAlertManager?.retractAlert(identifier: identifier)
+
+    func retractAlert(identifier: Alert.Identifier) {
+        alertManager?.retractAlert(identifier: identifier)
     }
 }
 
@@ -653,26 +653,26 @@ extension DeviceDataManager: PumpManagerDelegate {
 
 // MARK: - CarbStoreDelegate
 extension DeviceDataManager: CarbStoreDelegate {
-    
+
     func carbStoreHasUpdatedCarbData(_ carbStore: CarbStore) {
         remoteDataServicesManager.carbStoreHasUpdatedCarbData(carbStore)
     }
-    
+
     func carbStore(_ carbStore: CarbStore, didError error: CarbStore.CarbStoreError) {}
-    
+
 }
 
 // MARK: - DoseStoreDelegate
 extension DeviceDataManager: DoseStoreDelegate {
-    
+
     func doseStoreHasUpdatedDoseData(_ doseStore: DoseStore) {
         remoteDataServicesManager.doseStoreHasUpdatedDoseData(doseStore)
     }
-    
+
     func doseStoreHasUpdatedPumpEventData(_ doseStore: DoseStore) {
         remoteDataServicesManager.doseStoreHasUpdatedPumpEventData(doseStore)
     }
-    
+
 }
 
 // MARK: - DosingDecisionStoreDelegate
@@ -686,20 +686,20 @@ extension DeviceDataManager: DosingDecisionStoreDelegate {
 
 // MARK: - GlucoseStoreDelegate
 extension DeviceDataManager: GlucoseStoreDelegate {
-    
+
     func glucoseStoreHasUpdatedGlucoseData(_ glucoseStore: GlucoseStore) {
         remoteDataServicesManager.glucoseStoreHasUpdatedGlucoseData(glucoseStore)
     }
-    
+
 }
 
 // MARK: - SettingsStoreDelegate
 extension DeviceDataManager: SettingsStoreDelegate {
-    
+
     func settingsStoreHasUpdatedSettingsData(_ settingsStore: SettingsStore) {
         remoteDataServicesManager.settingsStoreHasUpdatedSettingsData(settingsStore)
     }
-    
+
 }
 
 // MARK: - TestingPumpManager
@@ -802,7 +802,7 @@ extension Notification.Name {
 
 // MARK: - Remote Notification Handling
 extension DeviceDataManager {
-    func handleRemoteNotification(_ notification: [String: AnyObject]) {        
+    func handleRemoteNotification(_ notification: [String: AnyObject]) {
         if FeatureFlags.remoteOverridesEnabled {
             if let command = RemoteCommand(notification: notification, allowedPresets: loopManager.settings.overridePresets) {
                 switch command {
