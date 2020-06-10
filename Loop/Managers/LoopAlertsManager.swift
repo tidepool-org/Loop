@@ -29,6 +29,13 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
+        case .unauthorized:
+            switch central.authorization {
+            case .denied:
+                onBluetoothPermissionDenied()
+            default:
+                break
+            }
         case .poweredOn:
             onBluetoothPoweredOn()
         case .poweredOff:
@@ -38,6 +45,15 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
         }
     }
     
+    private func onBluetoothPermissionDenied() {
+        log.default("Bluetooth permission denied")
+        let content = Alert.Content(title: NSLocalizedString("Bluetooth Permission Denied", comment: "Bluetooth permission denied alert title"),
+                                      body: NSLocalizedString("You must accept permission to use bluetooth to receive alerts, alarms or sensor glucose readings, and communicate with your pump.",
+                                                              comment: "Bluetooth permission denied alert body"),
+                                      acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Default alert dismissal"))
+        alertManager?.issueAlert(Alert(identifier: bluetoothPoweredOffIdentifier, foregroundContent: content, backgroundContent: content, trigger: .immediate))
+    }
+
     private func onBluetoothPoweredOn() {
         log.default("Bluetooth powered on")
         alertManager?.retractAlert(identifier: bluetoothPoweredOffIdentifier)
