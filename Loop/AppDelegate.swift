@@ -149,7 +149,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         switch notification.request.identifier {
-            // Until these notifications are converted to use the new alert system, they shall still show in the foreground
+        // TODO: Until these notifications are converted to use the new alert system, they shall still show in the foreground
         case LoopNotificationCategory.bolusFailure.rawValue,
              LoopNotificationCategory.pumpReservoirLow.rawValue,
              LoopNotificationCategory.pumpReservoirEmpty.rawValue,
