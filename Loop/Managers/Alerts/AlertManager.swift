@@ -61,7 +61,7 @@ public final class AlertManager {
             [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalAlertPresenter(rootViewController: rootViewController, alertManagerResponder: self)]
             
-        playbackAlertsFromUserNotificationCenter()
+        playbackAlertsFromPersistence()
     }
 
     public func addAlertResponder(managerIdentifier: String, alertResponder: AlertResponder) {
@@ -155,6 +155,28 @@ extension AlertManager {
 // MARK: Alert Playback
 
 extension AlertManager {
+    
+    private func playbackAlertsFromPersistence() {
+//        playbackAlertsFromUserNotificationCenter()
+        playbackAlertsFromAlertStore()
+    }
+    
+    private func playbackAlertsFromAlertStore() {
+        alertStore.lookupAllUnacknowledged {
+            switch $0 {
+            case .failure(let error):
+                self.log.error("Could not fetch unacknowledged alerts: %@", error.localizedDescription)
+            case .success(let alerts):
+                alerts.forEach { alert in
+                    do {
+                        self.replayAlert(try Alert(from: alert))
+                    } catch {
+                        self.log.error("Error decoding alert from persistent storage: %@", error.localizedDescription)
+                    }
+                }
+            }
+        }
+    }
     
     private func playbackAlertsFromUserNotificationCenter() {
     

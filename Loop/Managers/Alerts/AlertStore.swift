@@ -116,6 +116,24 @@ extension AlertStore {
             }
         }
     }
+    
+    public func lookupAllUnacknowledged(completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+        managedObjectContext.perform {
+            do {
+                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                    NSPredicate(format: "acknowledgedDate == nil"),
+                    NSPredicate(format: "retractedDate == nil")
+                ])
+                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
+                fetchRequest.fetchLimit = 20 // TODO: Seems reasonable to put some limit here, but is this a good value?
+                let result = try self.managedObjectContext.fetch(fetchRequest)
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
 
 }
 

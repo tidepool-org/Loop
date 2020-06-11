@@ -44,12 +44,7 @@ extension StoredAlert {
     }
     
     public var title: String? {
-        if let contentString = foregroundContent ?? backgroundContent,
-            let contentData = contentString.data(using: .utf8),
-            let content = try? StoredAlert.decoder.decode(Alert.Content.self, from: contentData) {
-            return content.title
-        }
-        return nil
+        return try? Alert.Content(contentString: foregroundContent ?? backgroundContent)?.title
     }
     
     public var identifier: Alert.Identifier {
@@ -61,6 +56,43 @@ extension StoredAlert {
             setPrimitiveValue(managedObjectContext!.modificationCounter ?? 0, forKey: "modificationCounter")
         }
         super.willSave()
+    }
+}
+
+extension Alert {
+    init(from storedAlert: StoredAlert, adjustedForStorageTime: Bool = true) throws {
+        let fgContent = try Alert.Content(contentString: storedAlert.foregroundContent)
+        let bgContent = try Alert.Content(contentString: storedAlert.backgroundContent)
+        let sound = try Alert.Sound(soundString: storedAlert.sound)
+        let trigger = try Alert.Trigger(storedType: storedAlert.triggerType,
+                                        storedInterval: storedAlert.triggerInterval,
+                                        storageDate: adjustedForStorageTime ? storedAlert.issuedDate : nil)
+        self.init(identifier: storedAlert.identifier,
+                  foregroundContent: fgContent, backgroundContent: bgContent, trigger: trigger, sound: sound)
+    }
+}
+
+extension Alert.Content {
+    init?(contentString: String?) throws {
+        guard let contentString = contentString else {
+            return nil
+        }
+        guard let contentData = contentString.data(using: .utf8) else {
+            throw JSONEncoderError.stringEncodingError
+        }
+        self = try StoredAlert.decoder.decode(Alert.Content.self, from: contentData)
+    }
+}
+
+extension Alert.Sound {
+    init?(soundString: String?) throws {
+        guard let soundString = soundString else {
+            return nil
+        }
+        guard let soundData = soundString.data(using: .utf8) else {
+            throw JSONEncoderError.stringEncodingError
+        }
+        self = try StoredAlert.decoder.decode(Alert.Sound.self, from: soundData)
     }
 }
 
@@ -83,16 +115,26 @@ extension Alert.Trigger {
         case .repeating(let repeatInterval): return NSNumber(value: repeatInterval)
         }
     }
-    init(storedType: Int16, storedInterval: NSNumber?) throws {
+    init(storedType: Int16, storedInterval: NSNumber?, storageDate: Date? = nil, now: Date = Date()) throws {
         switch storedType {
         case 0: self = .immediate
         case 1:
             if let storedInterval = storedInterval {
-                self = .delayed(interval: storedInterval.doubleValue)
+                if let storageDate = storageDate {
+                    let intervalLeft = storedInterval.doubleValue - now.timeIntervalSince(storageDate)
+                    if intervalLeft <= 0 {
+                        self = .immediate
+                    } else {
+                        self = .delayed(interval: intervalLeft)
+                    }
+                } else {
+                    self = .delayed(interval: storedInterval.doubleValue)
+                }
             } else {
                 throw StorageError.invalidStoredInterval
             }
         case 2:
+            // TODO: for now, we do not adjust repeating triggers by storage date
             if let storedInterval = storedInterval {
                 self = .repeating(repeatInterval: storedInterval.doubleValue)
             } else {
