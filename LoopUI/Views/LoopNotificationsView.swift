@@ -15,6 +15,9 @@ public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
     private let backButtonText: String
     @ObservedObject private var viewModel: LoopNotificationsViewModel
     
+    private let notificationAndCriticalAlertPermissionScreen =
+        NotificationsCriticalAlertPermissionsView(viewModel: NotificationsCriticalAlertPermissionsViewModel())
+    
     public init(backButtonText: String = "", viewModel: LoopNotificationsViewModel) {
         self.backButtonText = backButtonText
         self.viewModel = viewModel
@@ -24,9 +27,6 @@ public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
         NavigationView {
             VStack {
                 List {
-//                    forceCriticalAlertsSection
-//                    loopNotificationsSection
-//                    notificationScheduleSection
                     notificationAndCriticalAlertPermissionSection
                     supportSection
                 }
@@ -45,40 +45,10 @@ public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
             Text(backButtonText)
         }
     }
-
-    private var forceCriticalAlertsSection: some View {
-        Section {
-            Toggle(isOn: $viewModel.forceCriticalAlerts) {
-                Text(LocalizedString("Make all notifications critical", comment: "Toggle for notifications to use critical alert"))
-            }
-            DescriptiveText(label: LocalizedString("When turned on, this will make every notification a Critical Alert. This means your phone will make a noise when any notifications are delivered, even when Silent or Do Not Disturb is turned on.\n\nLoop Hasn't Completed and Some Other Junk are always critical.", comment: "Description of the force critical alerts toggle"))
-        }
-    }
-    
-    private var loopNotificationsSection: some View {
-        Section(header: SectionHeader(label: LocalizedString("Tidepool Loop Notifications", comment: "Section title for Tidepool Loop notifications")))
-        {
-            NavigationLink(destination: Text("A Thing screen")) {
-                Text("A Thing")
-            }
-            NavigationLink(destination: Text("Another Thing screen")) {
-                Text("Another Thing")
-            }
-        }
-    }
-    
-    private var notificationScheduleSection: some View {
-        Section {
-            NavigationLink(destination: Text("Notification Schedule screen")) {
-                Text(LocalizedString("Notification Schedule", comment: "Notification Schedule button text"))
-            }
-            DescriptiveText(label: LocalizedString("Create a different set of notification settings based on a schedule. For example, configure the schedule for  school, work, or at night.", comment: "Notification schedule descriptive text"))
-        }
-    }
-    
+            
     private var notificationAndCriticalAlertPermissionSection: some View {
         Section(header: SectionHeader(label: LocalizedString("Tidepool Loop Notifications", comment: "Section title for Tidepool Loop notifications"))) {
-            NavigationLink(destination: Text("Notification & Critical Alert Permissions screen")) {
+            NavigationLink(destination: notificationAndCriticalAlertPermissionScreen) {
                 Text(LocalizedString("Notification & Critical Alert Permissions", comment: "Notification & Critical Alert Permissions button text"))
             }
         }
@@ -97,11 +67,11 @@ public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
 struct LoopNotificationsView_Previews: PreviewProvider {
     static var previews: some View {
         return Group {
-            LoopNotificationsView(backButtonText: "Settings", viewModel: LoopNotificationsViewModel(initialValue: true, criticalAlertForcer: {_ in}))
+            LoopNotificationsView(backButtonText: "Settings", viewModel: LoopNotificationsViewModel())
                 .colorScheme(.light)
                 .previewDevice(PreviewDevice(rawValue: "iPhone SE"))
                 .previewDisplayName("SE light")
-            LoopNotificationsView(backButtonText: "Settings", viewModel: LoopNotificationsViewModel(initialValue: true, criticalAlertForcer: {_ in}))
+            LoopNotificationsView(backButtonText: "Settings", viewModel: LoopNotificationsViewModel())
                 .colorScheme(.dark)
                 .previewDevice(PreviewDevice(rawValue: "iPhone XS Max"))
                 .previewDisplayName("XS Max dark")

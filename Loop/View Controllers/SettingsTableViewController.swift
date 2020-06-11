@@ -591,9 +591,7 @@ final class SettingsTableViewController: UITableViewController {
             case .dosing:
                 break
             case .notifications:
-                let viewModel = LoopNotificationsViewModel(initialValue: dataManager.alertManager.forceIssueCriticalAlert) { [weak dataManager] in
-                    dataManager?.alertManager.forceIssueCriticalAlert = $0
-                }
+                let viewModel = LoopNotificationsViewModel()
                 let hostingController = DismissibleHostingController(
                     rootView: LoopNotificationsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
                                                     viewModel: viewModel),
