@@ -373,29 +373,29 @@ fileprivate extension UNTimeIntervalNotificationTrigger {
     }
 }
 
-extension DeviceAlert {
-    func maybeForceIsCritical(_ forceIsCritical: Bool) -> DeviceAlert {
+extension Alert {
+    func maybeForceIsCritical(_ forceIsCritical: Bool) -> Alert {
         guard forceIsCritical else { return self }
-        return DeviceAlert(identifier: identifier,
-                           foregroundContent: DeviceAlert.Content(title: foregroundContent?.title,
-                                                                  body: foregroundContent?.body,
-                                                                  acknowledgeActionButtonLabel: foregroundContent?.acknowledgeActionButtonLabel,
-                                                                  isCritical: true),
-                           backgroundContent: DeviceAlert.Content(title: backgroundContent?.title,
-                                                                  body: backgroundContent?.body,
-                                                                  acknowledgeActionButtonLabel: backgroundContent?.acknowledgeActionButtonLabel,
-                                                                  isCritical: true),
-                           trigger: trigger,
-                           sound: sound)
+        return Alert(identifier: identifier,
+                     foregroundContent: Alert.Content(title: foregroundContent?.title,
+                                                      body: foregroundContent?.body,
+                                                      acknowledgeActionButtonLabel: foregroundContent?.acknowledgeActionButtonLabel,
+                                                      isCritical: true),
+                     backgroundContent: Alert.Content(title: backgroundContent?.title,
+                                                      body: backgroundContent?.body,
+                                                      acknowledgeActionButtonLabel: backgroundContent?.acknowledgeActionButtonLabel,
+                                                      isCritical: true),
+                     trigger: trigger,
+                     sound: sound)
     }
 }
 
-extension DeviceAlert.Content {
+extension Alert.Content {
     init?(title: String?, body: String?, acknowledgeActionButtonLabel: String?, isCritical: Bool?) {
         guard let title = title, let body = body, let acknowledgeActionButtonLabel = acknowledgeActionButtonLabel, let isCritical = isCritical else {
             return nil
         }
-        self = DeviceAlert.Content(title: title, body: body, acknowledgeActionButtonLabel: acknowledgeActionButtonLabel, isCritical: isCritical)
+        self = Alert.Content(title: title, body: body, acknowledgeActionButtonLabel: acknowledgeActionButtonLabel, isCritical: isCritical)
     }
 }
 
