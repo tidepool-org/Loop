@@ -78,7 +78,7 @@ extension AlertStore {
                                       with block: @escaping (StoredAlert) -> Void,
                                       completion: ((Result<Void, Error>) -> Void)?) {
         self.managedObjectContext.perform {
-            self.lookupLatest(identifier: identifier) {
+            self.lookupLatestUnacknowledged(identifier: identifier) {
                 switch $0 {
                 case .success(let object):
                     if let object = object {
@@ -92,7 +92,7 @@ extension AlertStore {
                             completion?(.failure(error))
                         }
                     } else {
-                        self.log.default("Alert not found for update: %{public}@", identifier.value)
+                        self.log.error("Alert not found for update: %{public}@", identifier.value)
                         completion?(.failure(AlertStoreError.notFound))
                     }
                 case .failure(let error):
@@ -102,11 +102,15 @@ extension AlertStore {
         }
     }
 
-    private func lookupLatest(identifier: Alert.Identifier, completion: @escaping (Result<StoredAlert?, Error>) -> Void) {
+    private func lookupLatestUnacknowledged(identifier: Alert.Identifier, completion: @escaping (Result<StoredAlert?, Error>) -> Void) {
         managedObjectContext.perform {
             do {
                 let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                fetchRequest.predicate = identifier.equalsPredicate
+                fetchRequest.predicate = NSCompoundPredicate( andPredicateWithSubpredicates: [
+                    identifier.equalsPredicate,
+                    NSPredicate(format: "acknowledgedDate == nil"),
+                    NSPredicate(format: "retractedDate == nil")
+                ])
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: false) ]
                 fetchRequest.fetchLimit = 1
                 let result = try self.managedObjectContext.fetch(fetchRequest)
