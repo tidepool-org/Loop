@@ -20,9 +20,11 @@ public class AlertStore {
 
     private let persistentContainer: NSPersistentContainer
         
+    private let expireAfter: TimeInterval
+
     private let log = DiagnosticLog(category: "AlertStore")
     
-    public init(storageFileURL: URL? = nil) {
+    public init(storageFileURL: URL? = nil, expireAfter: TimeInterval = 24 /* hours */ * 60 /* minutes */ * 60 /* seconds */) {
         managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         managedObjectContext.automaticallyMergesChangesFromParent = true
@@ -43,6 +45,8 @@ public class AlertStore {
             }
         }
         managedObjectContext.persistentStoreCoordinator = persistentContainer.persistentStoreCoordinator
+
+        self.expireAfter = expireAfter
     }
 }
 
@@ -56,6 +60,7 @@ extension AlertStore {
             do {
                 try self.managedObjectContext.save()
                 self.log.default("Recorded alert: %{public}@", alert.identifier.value)
+                self.purgeExpired()
                 completion?(.success)
             } catch {
                 self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
@@ -86,6 +91,7 @@ extension AlertStore {
                         do {
                             try self.managedObjectContext.save()
                             self.log.default("Recorded alert: %{public}@", identifier.value)
+                            self.purgeExpired()
                             completion?(.success)
                         } catch {
                             self.log.error("Could not store alert: %{public}@, %{public}@", identifier.value, String(describing: error))
@@ -117,6 +123,29 @@ extension AlertStore {
         }
     }
 
+}
+
+// MARK: Alert Purging
+
+extension AlertStore {
+    var expireDate: Date {
+        return Date(timeIntervalSinceNow: -expireAfter)
+    }
+
+    private func purgeExpired() {
+        purge(before: expireDate)
+    }
+
+    func purge(before date: Date, completion: ((Error?) -> Void)? = nil) {
+        do {
+            let count = try self.managedObjectContext.purgeObjects(of: StoredAlert.self, matching: NSPredicate(format: "issuedDate < %@", date as NSDate))
+            self.log.info("Purged %d StoredAlerts", count)
+            completion?(nil)
+        } catch let error {
+            self.log.error("Unable to purge StoredAlerts: %{public}@", String(describing: error))
+            completion?(error)
+        }
+    }
 }
 
 // MARK: Query Support
@@ -225,5 +254,36 @@ extension Alert.Identifier {
 extension Result where Success == Void {
     static var success: Result {
         return Result.success(Void())
+    }
+}
+
+// MARK: - Core Data (Bulk) - TEST ONLY
+
+extension AlertStore {
+    public func addAlerts(alerts: [Alert]) -> Error? {
+        guard !alerts.isEmpty else {
+            return nil
+        }
+
+        var error: Error?
+
+        self.managedObjectContext.performAndWait {
+            for alert in alerts {
+                _ = StoredAlert(from: alert, context: self.managedObjectContext)
+            }
+
+            do {
+                try self.managedObjectContext.save()
+            } catch let saveError {
+                error = saveError
+            }
+        }
+
+        guard error == nil else {
+            return error
+        }
+
+        self.log.info("Added %d StoredAlerts", alerts.count)
+        return nil
     }
 }

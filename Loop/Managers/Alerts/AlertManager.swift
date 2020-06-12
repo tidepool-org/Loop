@@ -50,13 +50,15 @@ public final class AlertManager {
     public init(rootViewController: UIViewController,
                 handlers: [AlertPresenter]? = nil,
                 userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
-                fileManager: FileManager = FileManager.default) {
+                fileManager: FileManager = FileManager.default,
+                expireAfter: TimeInterval = 24 /* hours */ * 60 /* minutes */ * 60 /* seconds */) {
         self.userNotificationCenter = userNotificationCenter
         self.fileManager = fileManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
         alertStore = AlertStore(storageFileURL: documentsDirectory?
             .appendingPathComponent("AlertStore")
-            .appendingPathComponent("AlertStore.sqlite"))
+            .appendingPathComponent("AlertStore.sqlite"),
+                                expireAfter: expireAfter)
         self.handlers = handlers ??
             [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalAlertPresenter(rootViewController: rootViewController, alertManagerResponder: self)]

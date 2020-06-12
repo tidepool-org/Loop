@@ -833,7 +833,13 @@ extension DeviceDataManager {
                 completion(error)
                 return
             }
-            self.deviceLog.generateSimulatedHistoricalDeviceLogEntries(completion: completion)
+            self.deviceLog.generateSimulatedHistoricalDeviceLogEntries() { error in
+                guard error == nil else {
+                    completion(error)
+                    return
+                }
+                self.alertManager.alertStore.generateSimulatedHistoricalStoredAlerts(completion: completion)
+            }
         }
     }
 
@@ -842,12 +848,18 @@ extension DeviceDataManager {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
 
-        deviceLog.purgeHistoricalDeviceLogEntries() { error in
+        alertManager.alertStore.purgeHistoricalStoredAlerts() { error in
             guard error == nil else {
                 completion(error)
                 return
             }
-            self.loopManager.purgeHistoricalCoreData(completion: completion)
+            self.deviceLog.purgeHistoricalDeviceLogEntries() { error in
+                guard error == nil else {
+                    completion(error)
+                    return
+                }
+                self.loopManager.purgeHistoricalCoreData(completion: completion)
+            }
         }
     }
 }
