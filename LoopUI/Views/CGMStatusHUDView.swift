@@ -67,7 +67,6 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     }
     
     override public func dismissAlert() {
-        //TODO only dismiss the alert if it is being displayed
         guard statusStackView.arrangedSubviews.contains(alertStatusView) else {
             return
         }
