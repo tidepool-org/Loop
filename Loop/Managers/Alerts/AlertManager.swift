@@ -47,17 +47,6 @@ public final class AlertManager {
     
     let alertStore: AlertStore
 
-    /// If true, all alerts issued are critical
-    public var forceIssueCriticalAlert : Bool {
-        get {
-            return UserDefaults.standard.bool(forKey: "AlertManager.forceIssueCriticalAlert")
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "AlertManager.forceIssueCriticalAlert")
-        }
-    }
-
-
     public init(rootViewController: UIViewController,
                 handlers: [AlertPresenter]? = nil,
                 userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
@@ -113,9 +102,8 @@ extension AlertManager: AlertManagerResponder {
 extension AlertManager: AlertPresenter {
 
     public func issueAlert(_ alert: Alert) {
-        let newAlert = alert.maybeForceIsCritical(self.forceIssueCriticalAlert)
-        handlers.forEach { $0.issueAlert(newAlert) }
-        alertStore.recordIssued(alert: newAlert)
+        handlers.forEach { $0.issueAlert(alert) }
+        alertStore.recordIssued(alert: alert)
     }
     
     public func retractAlert(identifier: Alert.Identifier) {
@@ -370,23 +358,6 @@ fileprivate extension UNTimeIntervalNotificationTrigger {
         case .repeating(let repeatInterval):
             self.init(timeInterval: repeatInterval, repeats: true)
         }
-    }
-}
-
-extension Alert {
-    func maybeForceIsCritical(_ forceIsCritical: Bool) -> Alert {
-        guard forceIsCritical else { return self }
-        return Alert(identifier: identifier,
-                     foregroundContent: Alert.Content(title: foregroundContent?.title,
-                                                      body: foregroundContent?.body,
-                                                      acknowledgeActionButtonLabel: foregroundContent?.acknowledgeActionButtonLabel,
-                                                      isCritical: true),
-                     backgroundContent: Alert.Content(title: backgroundContent?.title,
-                                                      body: backgroundContent?.body,
-                                                      acknowledgeActionButtonLabel: backgroundContent?.acknowledgeActionButtonLabel,
-                                                      isCritical: true),
-                     trigger: trigger,
-                     sound: sound)
     }
 }
 
