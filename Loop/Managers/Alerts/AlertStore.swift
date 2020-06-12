@@ -22,11 +22,6 @@ public class AlertStore {
         
     private let log = DiagnosticLog(category: "AlertStore")
     
-    private let unacknowledgedValidAlertPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-        NSPredicate(format: "acknowledgedDate == nil"),
-        NSPredicate(format: "retractedDate == nil")
-    ])
-
     public init(storageDirectoryURL: URL? = nil) {
         managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
@@ -81,19 +76,21 @@ extension AlertStore {
     
     public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date(),
                                       _ completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier, with: { $0.acknowledgedDate = date }, completion)
+        recordUpdateOfLatest(of: identifier, field: "acknowledgedDate", with: { $0.acknowledgedDate = date }, completion)
     }
     
     public func recordRetraction(of identifier: Alert.Identifier, at date: Date = Date(),
                                  _ completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier, with: { $0.retractedDate = date }, completion)
+        recordUpdateOfLatest(of: identifier, field: "retractedDate", with: { $0.retractedDate = date }, completion)
     }
     
     private func recordUpdateOfLatest(of identifier: Alert.Identifier,
+                                      field: String,
                                       with block: @escaping (StoredAlert) -> Void,
                                       _ completion: ((Result<Void, Error>) -> Void)?) {
         self.managedObjectContext.perform {
-            self.lookupLatestUnacknowledged(identifier: identifier) {
+            let predicate = NSPredicate(format: "\(field) == nil")
+            self.lookupLatest(identifier: identifier, predicate: predicate) {
                 switch $0 {
                 case .success(let object):
                     if let object = object {
@@ -117,17 +114,18 @@ extension AlertStore {
         }
     }
 
-    private func lookupLatestUnacknowledged(identifier: Alert.Identifier, completion: @escaping (Result<StoredAlert?, Error>) -> Void) {
+    private func lookupLatest(identifier: Alert.Identifier, predicate: NSPredicate, completion: @escaping (Result<StoredAlert?, Error>) -> Void) {
         managedObjectContext.perform {
             do {
                 let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
                 fetchRequest.predicate = NSCompoundPredicate( andPredicateWithSubpredicates: [
                     identifier.equalsPredicate,
-                    self.unacknowledgedValidAlertPredicate
+                    predicate
                 ])
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: false) ]
                 fetchRequest.fetchLimit = 1
                 let result = try self.managedObjectContext.fetch(fetchRequest)
+                print("predicate = \(fetchRequest.predicate)")
                 print("result.last = \(result.last?.modificationCounter)")
                 completion(.success(result.last))
             } catch {
@@ -140,7 +138,10 @@ extension AlertStore {
         managedObjectContext.perform {
             do {
                 let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                fetchRequest.predicate = self.unacknowledgedValidAlertPredicate
+                fetchRequest.predicate =  NSCompoundPredicate(andPredicateWithSubpredicates: [
+                       NSPredicate(format: "acknowledgedDate == nil"),
+                       NSPredicate(format: "retractedDate == nil")
+                   ])
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
                 fetchRequest.fetchLimit = 20 // TODO: Seems reasonable to put some limit here, but is this a good value?
                 let result = try self.managedObjectContext.fetch(fetchRequest)
@@ -233,10 +234,11 @@ extension AlertStore {
     }
     
     // At the moment, this is only used for unit testing
-    internal func fetch(identifier: Alert.Identifier, _ completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+    internal func fetch(identifier: Alert.Identifier? = nil, _ completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
         self.managedObjectContext.perform {
             let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-            storedRequest.predicate = identifier.equalsPredicate
+            storedRequest.predicate = identifier?.equalsPredicate
+            storedRequest.sortDescriptors = [NSSortDescriptor(key: "modificationCounter", ascending: true)]
             do {
                 let stored = try self.managedObjectContext.fetch(storedRequest)
                 completion(.success(stored))

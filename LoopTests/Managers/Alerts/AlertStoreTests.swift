@@ -106,6 +106,52 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: 1)
     }
     
+    // These next two tests are admittedly weird corner cases, but theoretically they might be race conditions,
+    // and so are allowed
+    func testRecordRetractedThenAcknowledged() {
+        let expect = self.expectation(description: #function)
+        let issuedDate = Date.distantPast
+        let retractedDate = issuedDate.addingTimeInterval(2)
+        let acknowledgedDate = issuedDate.addingTimeInterval(4)
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.recordRetraction(of: Self.identifier1, at: retractedDate, self.expectSuccess {
+                self.alertStore.recordAcknowledgement(of: Self.identifier1, at: acknowledgedDate, self.expectSuccess {
+                    self.alertStore.fetch(identifier: Self.identifier1, self.expectSuccess { storedAlerts in
+                        XCTAssertEqual(1, storedAlerts.count)
+                        XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
+                        XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
+                        XCTAssertEqual(acknowledgedDate, storedAlerts[0].acknowledgedDate)
+                        XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
+                        expect.fulfill()
+                    })
+                })
+            })
+        })
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func testRecordAcknowledgedThenRetracted() {
+        let expect = self.expectation(description: #function)
+        let issuedDate = Date.distantPast
+        let retractedDate = issuedDate.addingTimeInterval(2)
+        let acknowledgedDate = issuedDate.addingTimeInterval(4)
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.recordAcknowledgement(of: Self.identifier1, at: acknowledgedDate, self.expectSuccess {
+                self.alertStore.recordRetraction(of: Self.identifier1, at: retractedDate, self.expectSuccess {
+                    self.alertStore.fetch(identifier: Self.identifier1, self.expectSuccess { storedAlerts in
+                        XCTAssertEqual(1, storedAlerts.count)
+                        XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
+                        XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
+                        XCTAssertEqual(acknowledgedDate, storedAlerts[0].acknowledgedDate)
+                        XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
+                        expect.fulfill()
+                    })
+                })
+            })
+        })
+        wait(for: [expect], timeout: 1)
+    }
+    
     func testEmptyQuery() {
         let expect = self.expectation(description: #function)
         alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
@@ -219,6 +265,32 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: 1)
     }
     
+    func testAcknowledgeFindsCorrectOne() {
+        let expect = self.expectation(description: #function)
+        let now = Date()
+        fillWith(startDate: Date.distantPast, data: [
+            (alert1, false, false),
+            (alert2, false, false),
+            (alert1, true, false)
+        ]) {
+            self.alertStore.recordAcknowledgement(of: self.alert1.identifier, at: now, self.expectSuccess {
+                self.alertStore.fetch(self.expectSuccess { storedAlerts in
+                    XCTAssertEqual(3, storedAlerts.count)
+                    // Last one is last-modified
+                    XCTAssertNotNil(storedAlerts.last)
+                    if let last = storedAlerts.last {
+                        XCTAssertEqual(Self.identifier1, last.identifier)
+                        XCTAssertEqual(Date.distantPast, last.issuedDate)
+                        XCTAssertEqual(now, last.acknowledgedDate)
+                        XCTAssertNil(last.retractedDate)
+                    }
+                    expect.fulfill()
+                })
+            })
+        }
+        wait(for: [expect], timeout: 1)
+    }
+    
     func testLookupAllUnacknowledgedEmpty() {
         let expect = self.expectation(description: #function)
         alertStore.lookupAllUnacknowledged(completion: expectSuccess { alerts in
@@ -230,23 +302,100 @@ class AlertStoreTests: XCTestCase {
     
     func testLookupAllUnacknowledgedOne() {
         let expect = self.expectation(description: #function)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+        fillWith(startDate: Date.distantPast, data: [(alert1, false, false)]) {
             self.alertStore.lookupAllUnacknowledged(completion: self.expectSuccess { alerts in
                 self.assertEqual([self.alert1], alerts)
                 expect.fulfill()
             })
-        })
+        }
         wait(for: [expect], timeout: 1)
     }
     
-    func assertEqual(_ alerts: [Alert], _ storedAlerts: [StoredAlert], file: StaticString = #file, line: UInt = #line) {
-        XCTAssertEqual(alerts.count, storedAlerts.count, file: file, line: line)
-        for (index, alert) in alerts.enumerated() {
-            XCTAssertEqual(alert.identifier, storedAlerts[index].identifier, file: file, line: line)
+    
+    func testLookupAllUnacknowledgedOneAcknowledged() {
+        let expect = self.expectation(description: #function)
+        fillWith(startDate: Date.distantPast, data: [(alert1, true, false)]) {
+            self.alertStore.lookupAllUnacknowledged(completion: self.expectSuccess { alerts in
+                self.assertEqual([], alerts)
+                expect.fulfill()
+            })
+        }
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func testLookupAllUnacknowledgedSomeNot() {
+        let expect = self.expectation(description: #function)
+        fillWith(startDate: Date.distantPast, data: [
+            (alert1, false, false),
+            (alert2, false, false),
+            (alert1, true, false)
+        ]) {
+            self.alertStore.lookupAllUnacknowledged(completion: self.expectSuccess { alerts in
+                self.assertEqual([self.alert1, self.alert2], alerts)
+                expect.fulfill()
+            })
+        }
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func testLookupAllUnacknowledgedSomeRetracted() {
+        let expect = self.expectation(description: #function)
+        fillWith(startDate: Date.distantPast, data: [
+            (alert1, false, true),
+            (alert2, false, false),
+            (alert1, false, true)
+        ]) {
+            self.alertStore.lookupAllUnacknowledged(completion: self.expectSuccess { alerts in
+                self.assertEqual([self.alert2], alerts)
+                expect.fulfill()
+            })
+        }
+        wait(for: [expect], timeout: 1)
+    }
+    
+    private func fillWith(startDate: Date, data: [(alert: Alert, acknowledged: Bool, retracted: Bool)], _ completion: @escaping () -> Void) {
+        let increment = 1.0
+        if let value = data.first {
+            alertStore.recordIssued(alert: value.alert, at: startDate, self.expectSuccess {
+                var next = startDate.addingTimeInterval(increment)
+                self.maybeRecordAcknowledge(acknowledged: value.acknowledged, identifier: value.alert.identifier, at: next) {
+                    next = next.addingTimeInterval(increment)
+                    self.maybeRecordRetracted(retracted: value.retracted, identifier: value.alert.identifier, at: next) {
+                        self.fillWith(startDate: startDate.addingTimeInterval(increment).addingTimeInterval(increment), data: data.suffix(data.count - 1), completion)
+                    }
+                }
+            })
+        } else {
+            completion()
         }
     }
     
-    func expectSuccess<T>(file: StaticString = #file, line: UInt = #line, _ completion: @escaping (T) -> Void) -> ((Result<T, Error>) -> Void) {
+    private func maybeRecordAcknowledge(acknowledged: Bool, identifier: Alert.Identifier, at date: Date, _ completion: @escaping () -> Void) {
+        if acknowledged {
+            self.alertStore.recordAcknowledgement(of: identifier, at: date, self.expectSuccess(completion))
+        } else {
+            completion()
+        }
+    }
+    
+    private func maybeRecordRetracted(retracted: Bool, identifier: Alert.Identifier, at date: Date, _ completion: @escaping () -> Void) {
+        if retracted {
+            self.alertStore.recordRetraction(of: identifier, at: date, self.expectSuccess(completion))
+        } else {
+            completion()
+        }
+    }
+
+    private func assertEqual(_ alerts: [Alert], _ storedAlerts: [StoredAlert], file: StaticString = #file, line: UInt = #line) {
+        XCTAssertEqual(alerts.count, storedAlerts.count, file: file, line: line)
+        if alerts.count == storedAlerts.count {
+            for (index, alert) in alerts.enumerated() {
+                XCTAssertEqual(alert.identifier, storedAlerts[index].identifier, file: file, line: line)
+            }
+        }
+    }
+    
+    private func expectSuccess<T>(file: StaticString = #file, line: UInt = #line, _ completion: @escaping (T) -> Void) -> ((Result<T, Error>) -> Void) {
         return {
             switch $0 {
             case .failure(let error): XCTFail("Unexpected \(error)", file: file, line: line)
