@@ -13,8 +13,4 @@ import SwiftUI
 public class LoopNotificationsViewModel: ObservableObject {
     // TODO: Nothing yet...
     public init() { }
-    
-    public func gotoSettings() {
-        UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
-    }
 }
