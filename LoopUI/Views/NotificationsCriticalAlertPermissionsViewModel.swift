@@ -6,12 +6,29 @@
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
-import Foundation
-import LoopKit
 import SwiftUI
 
-public class NotificationsCriticalAlertPermissionsViewModel {
-    public init() { }
+public class NotificationsCriticalAlertPermissionsViewModel: ObservableObject {
+    
+    @Published var notificationsPermissionsGiven = true
+    @Published var criticalAlertsPermissionsGiven = true
+
+    public init() {
+        NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: nil) {
+            [weak self] _ in
+            self?.updateState()
+        }
+        updateState()
+    }
+    
+    private func updateState() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            self.notificationsPermissionsGiven = settings.alertSetting == .enabled
+            self.criticalAlertsPermissionsGiven = settings.criticalAlertSetting == .enabled
+            print("notificationsPermissionsGiven = \(self.notificationsPermissionsGiven)")
+            print("criticalAlertsPermissionsGiven = \(self.criticalAlertsPermissionsGiven)")
+        }
+    }
     
     public func gotoSettings() {
         UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)

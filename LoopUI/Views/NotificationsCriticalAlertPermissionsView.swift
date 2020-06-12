@@ -11,7 +11,7 @@ import SwiftUI
 
 public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeClassOverride {
 
-    private var viewModel: NotificationsCriticalAlertPermissionsViewModel
+    @ObservedObject private var viewModel: NotificationsCriticalAlertPermissionsViewModel
 
     public init(viewModel: NotificationsCriticalAlertPermissionsViewModel) {
         self.viewModel = viewModel
@@ -39,7 +39,12 @@ extension NotificationsCriticalAlertPermissionsView {
     private var manageNotificationsSection: some View {
         Section {
             Button( action: { self.viewModel.gotoSettings() } ) {
-                Text(LocalizedString("Manage Notifications in Settings", comment: "Manage Notifications in Settings button text"))
+                HStack {
+                    Text(LocalizedString("Manage Notifications in Settings", comment: "Manage Notifications in Settings button text"))
+                    if !viewModel.notificationsPermissionsGiven {
+                        Text("⚠️")
+                    }
+                }
             }
             DescriptiveText(label: LocalizedString("""
                 Notifications can appear while you are using another app on your iPhone, or while your iPhone is locked.
@@ -53,7 +58,12 @@ extension NotificationsCriticalAlertPermissionsView {
     private var manageCriticalAlertsSection: some View {
         Section {
             Button( action: { self.viewModel.gotoSettings() } ) {
-                Text(LocalizedString("Manage Critical Alerts in Settings", comment: "Manage Critical Alerts in Settings button text"))
+                HStack {
+                    Text(LocalizedString("Manage Critical Alerts in Settings", comment: "Manage Critical Alerts in Settings button text"))
+                    if !viewModel.criticalAlertsPermissionsGiven {
+                        Text("⚠️")
+                    }
+                }
             }
             DescriptiveText(label: LocalizedString("""
                 Critical Alerts will always play a sound and appear on the Lock screen even if your iPhone is muted or Do Not Disturb is on.
