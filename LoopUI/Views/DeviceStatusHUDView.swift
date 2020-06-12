@@ -1,5 +1,5 @@
 //
-//  DeviceStatusContainerHUDView.swift
+//  DeviceStatusHUDView.swift
 //  LoopUI
 //
 //  Created by Nathaniel Hamming on 2020-06-05.
@@ -11,7 +11,7 @@ import HealthKit
 import LoopKit
 import LoopKitUI
 
-@objc open class DeviceStatusContainerHUDView: BaseHUDView {
+@objc open class DeviceStatusHUDView: BaseHUDView {
     
     public var alertStatusView: AlertStatusHUDView! {
         didSet {

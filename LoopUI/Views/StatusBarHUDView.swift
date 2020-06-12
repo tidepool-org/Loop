@@ -11,11 +11,11 @@ import LoopKitUI
 
 public class StatusBarHUDView: UIView, NibLoadable {
     
+    @IBOutlet public weak var cgmStatusHUD: CGMStatusHUDView!
+    
     @IBOutlet public weak var loopCompletionHUD: LoopCompletionHUDView!
     
-    @IBOutlet public weak var cgmStatusContainer: CGMStatusContainerHUDView!
-    
-    @IBOutlet public weak var basalRateHUD: BasalRateHUDView!
+    @IBOutlet public weak var pumpStatusHUD: PumpStatusHUDView!
         
     public var containerView: UIView!
 
@@ -44,18 +44,12 @@ public class StatusBarHUDView: UIView, NibLoadable {
         
         self.backgroundColor = UIColor.secondarySystemBackground
     }
-    
-    // TODO update based on the pump manager device specific reservoir view
-    public func addHUDView(_ viewToAdd: BaseHUDView) {
-        //NOP
+        
+    public func removePumpManagerProvidedViews() {
+        pumpStatusHUD.removePumpManagerProvidedHUD()
     }
     
-    // TODO the pump manager will only add a device specific reservoir view
-    public func removePumpManagerProvidedViews() {
-        let standardViews: [UIView] = [cgmStatusContainer, loopCompletionHUD, basalRateHUD]
-        let pumpManagerViews = containerView.subviews.filter { !standardViews.contains($0) }
-        for view in pumpManagerViews {
-            view.removeFromSuperview()
-        }
+    public func addPumpManagerProvidedHUDView(_ pumpManagerProvidedHUD: LevelHUDView) {
+        pumpStatusHUD.addPumpManagerProvidedHUDView(pumpManagerProvidedHUD)
     }
 }

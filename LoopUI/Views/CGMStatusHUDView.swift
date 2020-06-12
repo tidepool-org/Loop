@@ -1,5 +1,5 @@
 //
-//  CGMStatusContainerHUDView.swift
+//  CGMStatusHUDView.swift
 //  LoopUI
 //
 //  Created by Nathaniel Hamming on 2020-06-05.
@@ -11,7 +11,7 @@ import HealthKit
 import LoopKit
 import LoopKitUI
 
-public final class CGMStatusContainerHUDView: DeviceStatusContainerHUDView, NibLoadable {
+public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     
     @IBOutlet public weak var glucoseValueHUD: GlucoseValueHUDView!
     
@@ -29,6 +29,12 @@ public final class CGMStatusContainerHUDView: DeviceStatusContainerHUDView, NibL
     public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         setup()
+        
+    }
+    
+    override func setup() {
+        super.setup()
+        alertStatusView.setIconPosition(.right)
     }
     
     public override func tintColorDidChange() {
@@ -39,9 +45,6 @@ public final class CGMStatusContainerHUDView: DeviceStatusContainerHUDView, NibL
     }
     
     public func presentAddCGMAlert() {
-        if alertStatusView == nil {
-            alertStatusView = AlertStatusHUDView(frame: statusStackView.frame)
-        }
         alertStatusView.alertMessageLabel.text = LocalizedString("No CGM Selected", comment: "Title text for button to set up a CGM")
         alertStatusView.alertMessageLabel.tintColor = .label
         alertStatusView.alertIcon.image = UIImage(systemName: "plus.circle")
@@ -50,16 +53,27 @@ public final class CGMStatusContainerHUDView: DeviceStatusContainerHUDView, NibL
     }
     
     override public func presentAlert() {
+        guard !statusStackView.arrangedSubviews.contains(alertStatusView) else {
+            return
+        }
+        
         // need to also hide these view, since they will be added back to the stack at some point
         glucoseValueHUD.isHidden = true
         glucoseTrendHUD.isHidden = true
         statusStackView.removeArrangedSubview(glucoseValueHUD)
         statusStackView.removeArrangedSubview(glucoseTrendHUD)
+        
         super.presentAlert()
     }
     
     override public func dismissAlert() {
+        //TODO only dismiss the alert if it is being displayed
+        guard statusStackView.arrangedSubviews.contains(alertStatusView) else {
+            return
+        }
+        
         super.dismissAlert()
+        
         statusStackView.addArrangedSubview(glucoseValueHUD)
         statusStackView.addArrangedSubview(glucoseTrendHUD)
         glucoseValueHUD.isHidden = false

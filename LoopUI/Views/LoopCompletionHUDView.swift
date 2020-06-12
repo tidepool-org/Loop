@@ -15,7 +15,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
     @IBOutlet private weak var loopStateView: LoopStateView!
     
     override public var orderPriority: HUDViewOrderPriority {
-        return 1
+        return 2
     }
 
     private(set) var freshness = LoopCompletionFreshness.unknown {

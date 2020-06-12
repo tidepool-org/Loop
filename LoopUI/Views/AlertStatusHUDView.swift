@@ -10,13 +10,35 @@ import UIKit
 
 public class AlertStatusHUDView: UIView, NibLoadable {
     
-    private var containerView: UIView!
+    private var stackView: UIStackView!
     
     @IBOutlet public weak var alertMessageLabel: UILabel!
     
     @IBOutlet public weak var alertIcon: UIImageView! {
         didSet {
             alertIcon.tintColor = tintColor
+        }
+    }
+    
+    public enum IconPosition {
+        case left
+        case right
+    }
+    
+    private var iconPosition: IconPosition = .right {
+        didSet {
+            stackView.removeArrangedSubview(alertMessageLabel)
+            stackView.removeArrangedSubview(alertIcon)
+            switch iconPosition {
+            case .left:
+                stackView.addArrangedSubview(alertIcon)
+                stackView.addArrangedSubview(alertMessageLabel)
+                alertMessageLabel.textAlignment = .left
+            case .right:
+                stackView.addArrangedSubview(alertMessageLabel)
+                stackView.addArrangedSubview(alertIcon)
+                alertMessageLabel.textAlignment = .right
+            }
         }
     }
     
@@ -31,16 +53,22 @@ public class AlertStatusHUDView: UIView, NibLoadable {
     }
     
     func setup() {
-        containerView = (AlertStatusHUDView.nib().instantiate(withOwner: self, options: nil)[0] as! UIView)
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(containerView)
+        stackView = (AlertStatusHUDView.nib().instantiate(withOwner: self, options: nil)[0] as! UIStackView)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(stackView)
 
         // Use AutoLayout to have the stack view fill its entire container.
         NSLayoutConstraint.activate([
-            containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            containerView.widthAnchor.constraint(equalTo: widthAnchor),
-            containerView.heightAnchor.constraint(equalTo: heightAnchor),
+            stackView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            stackView.widthAnchor.constraint(equalTo: widthAnchor),
+            stackView.heightAnchor.constraint(equalTo: heightAnchor),
         ])
+    }
+    
+    public func setIconPosition(_ iconPosition: IconPosition) {
+        if self.iconPosition != iconPosition {
+            self.iconPosition = iconPosition
+        }
     }
 }
