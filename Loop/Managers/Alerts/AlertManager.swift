@@ -360,13 +360,3 @@ fileprivate extension UNTimeIntervalNotificationTrigger {
         }
     }
 }
-
-extension Alert.Content {
-    init?(title: String?, body: String?, acknowledgeActionButtonLabel: String?, isCritical: Bool?) {
-        guard let title = title, let body = body, let acknowledgeActionButtonLabel = acknowledgeActionButtonLabel, let isCritical = isCritical else {
-            return nil
-        }
-        self = Alert.Content(title: title, body: body, acknowledgeActionButtonLabel: acknowledgeActionButtonLabel, isCritical: isCritical)
-    }
-}
-
