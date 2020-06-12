@@ -20,7 +20,7 @@ class AlertStoreTests: XCTestCase {
     static let identifier2 = Alert.Identifier(managerIdentifier: "managerIdentifier2", alertIdentifier: "alertIdentifier2")
     static let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label", isCritical: true)
     let alert2 = Alert(identifier: identifier2, foregroundContent: content, backgroundContent: content, trigger: .immediate, sound: .sound(name: "soundName"))
-
+    
     override func setUp() {
         alertStore = AlertStore()
     }
@@ -55,24 +55,16 @@ class AlertStoreTests: XCTestCase {
     
     func testRecordIssued() {
         let expect = self.expectation(description: #function)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
-            switch $0 {
-            case .failure(let error): XCTFail("Unexpected \(error)")
-            case .success:
-                self.alertStore.fetch(identifier: Self.identifier1) {
-                    switch $0 {
-                        case .failure(let error): XCTFail("Unexpected \(error)")
-                        case .success(let storedAlerts):
-                            XCTAssertEqual(1, storedAlerts.count)
-                            XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
-                            XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
-                            XCTAssertNil(storedAlerts[0].acknowledgedDate)
-                            XCTAssertNil(storedAlerts[0].retractedDate)
-                    }
-                    expect.fulfill()
-                }
-            }
-        }
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.fetch(identifier: Self.identifier1, self.expectSuccess { storedAlerts in
+                XCTAssertEqual(1, storedAlerts.count)
+                XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
+                XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
+                XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                XCTAssertNil(storedAlerts[0].retractedDate)
+                expect.fulfill()
+            })
+        })
         wait(for: [expect], timeout: 1)
     }
     
@@ -80,30 +72,18 @@ class AlertStoreTests: XCTestCase {
         let expect = self.expectation(description: #function)
         let issuedDate = Date.distantPast
         let acknowledgedDate = issuedDate.addingTimeInterval(1)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
-            switch $0 {
-            case .failure(let error): XCTFail("Unexpected \(error)")
-            case .success:
-                self.alertStore.recordAcknowledgement(of: Self.identifier1, at: acknowledgedDate) {
-                    switch $0 {
-                    case .failure(let error): XCTFail("Unexpected \(error)")
-                    case .success:
-                        self.alertStore.fetch(identifier: Self.identifier1) {
-                            switch $0 {
-                            case .failure(let error): XCTFail("Unexpected \(error)")
-                            case .success(let storedAlerts):
-                                XCTAssertEqual(1, storedAlerts.count)
-                                XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
-                                XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
-                                XCTAssertEqual(acknowledgedDate, storedAlerts[0].acknowledgedDate)
-                                XCTAssertNil(storedAlerts[0].retractedDate)
-                            }
-                            expect.fulfill()
-                        }
-                    }
-                }
-            }
-        }
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.recordAcknowledgement(of: Self.identifier1, at: acknowledgedDate, self.expectSuccess {
+                self.alertStore.fetch(identifier: Self.identifier1, self.expectSuccess { storedAlerts in
+                    XCTAssertEqual(1, storedAlerts.count)
+                    XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
+                    XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
+                    XCTAssertEqual(acknowledgedDate, storedAlerts[0].acknowledgedDate)
+                    XCTAssertNil(storedAlerts[0].retractedDate)
+                    expect.fulfill()
+                })
+            })
+        })
         wait(for: [expect], timeout: 1)
     }
     
@@ -111,73 +91,45 @@ class AlertStoreTests: XCTestCase {
         let expect = self.expectation(description: #function)
         let issuedDate = Date.distantPast
         let retractedDate = issuedDate.addingTimeInterval(2)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
-            switch $0 {
-            case .failure(let error): XCTFail("Unexpected \(error)")
-            case .success:
-                self.alertStore.recordRetraction(of: Self.identifier1, at: retractedDate) {
-                    switch $0 {
-                    case .failure(let error): XCTFail("Unexpected \(error)")
-                    case .success:
-                        self.alertStore.fetch(identifier: Self.identifier1) {
-                            switch $0 {
-                            case .failure(let error): XCTFail("Unexpected \(error)")
-                            case .success(let storedAlerts):
-                                XCTAssertEqual(1, storedAlerts.count)
-                                XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
-                                XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
-                                XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
-                                XCTAssertNil(storedAlerts[0].acknowledgedDate)
-                            }
-                            expect.fulfill()
-                        }
-                    }
-                }
-            }
-        }
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.recordRetraction(of: Self.identifier1, at: retractedDate, self.expectSuccess {
+                self.alertStore.fetch(identifier: Self.identifier1, self.expectSuccess { storedAlerts in
+                    XCTAssertEqual(1, storedAlerts.count)
+                    XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
+                    XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
+                    XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
+                    XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                    expect.fulfill()
+                })
+            })
+        })
         wait(for: [expect], timeout: 1)
     }
     
     func testEmptyQuery() {
         let expect = self.expectation(description: #function)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
-            switch $0 {
-            case .failure(let error): XCTFail("Unexpected \(error)")
-            case .success:
-                self.alertStore.executeQuery(since: Date.distantPast, limit: 0) {
-                    switch $0 {
-                    case .failure(let error): XCTFail("Unexpected \(error)")
-                    case .success(let (_, storedAlerts)):
-                        XCTAssertTrue(storedAlerts.isEmpty)
-                        expect.fulfill()
-                    }
-                }
-            }
-        }
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.executeQuery(since: Date.distantPast, limit: 0, self.expectSuccess { _, storedAlerts in
+                XCTAssertTrue(storedAlerts.isEmpty)
+                expect.fulfill()
+            })
+        })
         wait(for: [expect], timeout: 1)
     }
     
     func testSimpleQuery() {
         let expect = self.expectation(description: #function)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
-            switch $0 {
-            case .failure(let error): XCTFail("Unexpected \(error)")
-            case .success:
-                self.alertStore.executeQuery(since: Date.distantPast, limit: 100) {
-                    switch $0 {
-                    case .failure(let error): XCTFail("Unexpected \(error)")
-                    case .success(let (anchor, storedAlerts)):
-                        XCTAssertEqual(1, anchor.modificationCounter)
-                        XCTAssertEqual(1, storedAlerts.count)
-                        XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
-                        XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
-                        XCTAssertNil(storedAlerts[0].acknowledgedDate)
-                        XCTAssertNil(storedAlerts[0].retractedDate)
-                        expect.fulfill()
-                    }
-                }
-            }
-        }
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.executeQuery(since: Date.distantPast, limit: 100, self.expectSuccess { anchor, storedAlerts in
+                XCTAssertEqual(1, anchor.modificationCounter)
+                XCTAssertEqual(1, storedAlerts.count)
+                XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
+                XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
+                XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                XCTAssertNil(storedAlerts[0].retractedDate)
+                expect.fulfill()
+            })
+        })
         wait(for: [expect], timeout: 1)
     }
     
@@ -185,142 +137,121 @@ class AlertStoreTests: XCTestCase {
         let expect = self.expectation(description: #function)
         let issuedDate = Date.distantPast
         let retractedDate = issuedDate.addingTimeInterval(2)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
-            switch $0 {
-            case .failure(let error): XCTFail("Unexpected \(error)")
-            case .success:
-                self.alertStore.executeQuery(since: Date.distantPast, limit: 100) {
-                    switch $0 {
-                    case .failure(let error): XCTFail("Unexpected \(error)")
-                    case .success(let (anchor, storedAlerts)):
-                        XCTAssertEqual(1, anchor.modificationCounter)
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.executeQuery(since: Date.distantPast, limit: 100, self.expectSuccess { anchor, storedAlerts in
+                XCTAssertEqual(1, anchor.modificationCounter)
+                XCTAssertEqual(1, storedAlerts.count)
+                XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
+                XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
+                XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                XCTAssertNil(storedAlerts[0].retractedDate)
+                self.alertStore.recordRetraction(of: Self.identifier1, at: retractedDate, self.expectSuccess {
+                    self.alertStore.executeQuery(since: Date.distantPast, limit: 100, self.expectSuccess { anchor, storedAlerts in
+                        XCTAssertEqual(2, anchor.modificationCounter)
                         XCTAssertEqual(1, storedAlerts.count)
                         XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
-                        XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
+                        XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
+                        XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
                         XCTAssertNil(storedAlerts[0].acknowledgedDate)
-                        XCTAssertNil(storedAlerts[0].retractedDate)
-                        self.alertStore.recordRetraction(of: Self.identifier1, at: retractedDate) {
-                            switch $0 {
-                            case .failure(let error): XCTFail("Unexpected \(error)")
-                            case .success:
-                                self.alertStore.executeQuery(since: Date.distantPast, limit: 100) {
-                                    switch $0 {
-                                    case .failure(let error): XCTFail("Unexpected \(error)")
-                                    case .success(let (anchor, storedAlerts)):
-                                        XCTAssertEqual(2, anchor.modificationCounter)
-                                        XCTAssertEqual(1, storedAlerts.count)
-                                        XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
-                                        XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
-                                        XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
-                                        XCTAssertNil(storedAlerts[0].acknowledgedDate)
-                                    }
-                                    expect.fulfill()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+                        expect.fulfill()
+                    })
+                })
+            })
+        })
         wait(for: [expect], timeout: 1)
     }
     
     func testQueryByDate() {
         let expect = self.expectation(description: #function)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
-            switch $0 {
-            case .failure(let error): XCTFail("Unexpected \(error)")
-            case .success:
-                let now = Date()
-                self.alertStore.recordIssued(alert: self.alert2, at: now) {
-                    switch $0 {
-                    case .failure(let error): XCTFail("Unexpected \(error)")
-                    case .success:
-                        self.alertStore.executeQuery(since: now, limit: 100) {
-                            switch $0 {
-                            case .failure(let error): XCTFail("Unexpected \(error)")
-                            case .success(let (anchor, storedAlerts)):
-                                XCTAssertEqual(2, anchor.modificationCounter)
-                                XCTAssertEqual(1, storedAlerts.count)
-                                XCTAssertEqual(Self.identifier2, storedAlerts[0].identifier)
-                                XCTAssertEqual(now, storedAlerts[0].issuedDate)
-                                XCTAssertNil(storedAlerts[0].acknowledgedDate)
-                                XCTAssertNil(storedAlerts[0].retractedDate)
-                                expect.fulfill()
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            let now = Date()
+            self.alertStore.recordIssued(alert: self.alert2, at: now, self.expectSuccess {
+                self.alertStore.executeQuery(since: now, limit: 100, self.expectSuccess { anchor, storedAlerts in
+                    XCTAssertEqual(2, anchor.modificationCounter)
+                    XCTAssertEqual(1, storedAlerts.count)
+                    XCTAssertEqual(Self.identifier2, storedAlerts[0].identifier)
+                    XCTAssertEqual(now, storedAlerts[0].issuedDate)
+                    XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                    XCTAssertNil(storedAlerts[0].retractedDate)
+                    expect.fulfill()
+                })
+            })
+        })
         wait(for: [expect], timeout: 1)
     }
     
     func testQueryWithLimit() {
         let expect = self.expectation(description: #function)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
-            switch $0 {
-            case .failure(let error): XCTFail("Unexpected \(error)")
-            case .success:
-                self.alertStore.recordIssued(alert: self.alert2, at: Date()) {
-                    switch $0 {
-                    case .failure(let error): XCTFail("Unexpected \(error)")
-                    case .success:
-                        self.alertStore.executeQuery(since: Date.distantPast, limit: 1) {
-                            switch $0 {
-                            case .failure(let error): XCTFail("Unexpected \(error)")
-                            case .success(let (anchor, storedAlerts)):
-                                XCTAssertEqual(1, anchor.modificationCounter)
-                                XCTAssertEqual(1, storedAlerts.count)
-                                XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
-                                XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
-                                XCTAssertNil(storedAlerts[0].acknowledgedDate)
-                                XCTAssertNil(storedAlerts[0].retractedDate)
-                                expect.fulfill()
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.recordIssued(alert: self.alert2, at: Date(), self.expectSuccess {
+                self.alertStore.executeQuery(since: Date.distantPast, limit: 1, self.expectSuccess { anchor, storedAlerts in
+                    XCTAssertEqual(1, anchor.modificationCounter)
+                    XCTAssertEqual(1, storedAlerts.count)
+                    XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
+                    XCTAssertEqual(Date.distantPast, storedAlerts[0].issuedDate)
+                    XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                    XCTAssertNil(storedAlerts[0].retractedDate)
+                    expect.fulfill()
+                })
+            })
+        })
         wait(for: [expect], timeout: 1)
     }
     
     func testQueryThenContinue() {
         let expect = self.expectation(description: #function)
-        alertStore.recordIssued(alert: alert1, at: Date.distantPast) {
-            switch $0 {
-            case .failure(let error): XCTFail("Unexpected \(error)")
-            case .success:
-                let now = Date()
-                self.alertStore.recordIssued(alert: self.alert2, at: now) {
-                    switch $0 {
-                    case .failure(let error): XCTFail("Unexpected \(error)")
-                    case .success:
-                        self.alertStore.executeQuery(since: Date.distantPast, limit: 1) {
-                            switch $0 {
-                            case .failure(let error): XCTFail("Unexpected \(error)")
-                            case .success(let (anchor, _)):
-                                self.alertStore.continueQuery(from: anchor, limit: 1) {
-                                    switch $0 {
-                                    case .failure(let error): XCTFail("Unexpected \(error)")
-                                    case .success(let (anchor, storedAlerts)):
-                                        XCTAssertEqual(2, anchor.modificationCounter)
-                                        XCTAssertEqual(1, storedAlerts.count)
-                                        XCTAssertEqual(Self.identifier2, storedAlerts[0].identifier)
-                                        XCTAssertEqual(now, storedAlerts[0].issuedDate)
-                                        XCTAssertNil(storedAlerts[0].acknowledgedDate)
-                                        XCTAssertNil(storedAlerts[0].retractedDate)
-                                        expect.fulfill()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, expectSuccess {
+            let now = Date()
+            self.alertStore.recordIssued(alert: self.alert2, at: now, self.expectSuccess {
+                self.alertStore.executeQuery(since: Date.distantPast, limit: 1, self.expectSuccess { anchor, _ in
+                    self.alertStore.continueQuery(from: anchor, limit: 1, self.expectSuccess { anchor, storedAlerts in
+                        XCTAssertEqual(2, anchor.modificationCounter)
+                        XCTAssertEqual(1, storedAlerts.count)
+                        XCTAssertEqual(Self.identifier2, storedAlerts[0].identifier)
+                        XCTAssertEqual(now, storedAlerts[0].issuedDate)
+                        XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                        XCTAssertNil(storedAlerts[0].retractedDate)
+                        expect.fulfill()
+                    })
+                })
+            })
+        })
         wait(for: [expect], timeout: 1)
     }
-
+    
+    func testLookupAllUnacknowledgedEmpty() {
+        let expect = self.expectation(description: #function)
+        alertStore.lookupAllUnacknowledged(completion: expectSuccess { alerts in
+            XCTAssertTrue(alerts.isEmpty)
+            expect.fulfill()
+        })
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func testLookupAllUnacknowledgedOne() {
+        let expect = self.expectation(description: #function)
+        alertStore.recordIssued(alert: alert1, at: Date.distantPast, self.expectSuccess {
+            self.alertStore.lookupAllUnacknowledged(completion: self.expectSuccess { alerts in
+                self.assertEqual([self.alert1], alerts)
+                expect.fulfill()
+            })
+        })
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func assertEqual(_ alerts: [Alert], _ storedAlerts: [StoredAlert], file: StaticString = #file, line: UInt = #line) {
+        XCTAssertEqual(alerts.count, storedAlerts.count, file: file, line: line)
+        for (index, alert) in alerts.enumerated() {
+            XCTAssertEqual(alert.identifier, storedAlerts[index].identifier, file: file, line: line)
+        }
+    }
+    
+    func expectSuccess<T>(file: StaticString = #file, line: UInt = #line, _ completion: @escaping (T) -> Void) -> ((Result<T, Error>) -> Void) {
+        return {
+            switch $0 {
+            case .failure(let error): XCTFail("Unexpected \(error)", file: file, line: line)
+            case .success(let value): completion(value)
+            }
+        }
+    }
 }

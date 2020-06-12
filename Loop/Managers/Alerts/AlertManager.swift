@@ -32,36 +32,35 @@ public enum AlertUserNotificationUserInfoKey: String {
 /// - serializing alerts to storage
 /// - etc.
 public final class AlertManager {
-    static let soundsDirectoryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).last!.appendingPathComponent("Sounds")
+    private static let soundsDirectoryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).last!.appendingPathComponent("Sounds")
     
-    static let timestampFormatter = ISO8601DateFormatter()
+    fileprivate static let timestampFormatter = ISO8601DateFormatter()
     
     private let log = DiagnosticLog(category: "AlertManager")
 
-    var handlers: [AlertPresenter] = []
-    var responders: [String: Weak<AlertResponder>] = [:]
-    var soundVendors: [String: Weak<AlertSoundVendor>] = [:]
+    private var handlers: [AlertPresenter] = []
+    private var responders: [String: Weak<AlertResponder>] = [:]
+    private var soundVendors: [String: Weak<AlertSoundVendor>] = [:]
     
-    let userNotificationCenter: UserNotificationCenter
-    let fileManager: FileManager
+    private let userNotificationCenter: UserNotificationCenter
+    private let fileManager: FileManager
     
-    let alertStore: AlertStore
+    private var alertStore: AlertStore!
 
     public init(rootViewController: UIViewController,
                 handlers: [AlertPresenter]? = nil,
                 userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
-                fileManager: FileManager = FileManager.default) {
+                fileManager: FileManager = FileManager.default,
+                inMemoryAlertStore: Bool = false) {
         self.userNotificationCenter = userNotificationCenter
         self.fileManager = fileManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
-        alertStore = AlertStore(storageFileURL: documentsDirectory?
-            .appendingPathComponent("AlertStore")
-            .appendingPathComponent("AlertStore.sqlite"))
+        alertStore = AlertStore(storageDirectoryURL: inMemoryAlertStore ? nil : documentsDirectory)
         self.handlers = handlers ??
             [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalAlertPresenter(rootViewController: rootViewController, alertManagerResponder: self)]
-            
-        playbackAlertsFromPersistence()
+        
+        self.playbackAlertsFromPersistence()
     }
 
     public func addAlertResponder(managerIdentifier: String, alertResponder: AlertResponder) {

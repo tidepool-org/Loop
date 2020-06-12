@@ -97,7 +97,8 @@ class AlertManagerTests: XCTestCase {
         alertManager = AlertManager(rootViewController: UIViewController(),
                                     handlers: [mockPresenter],
                                     userNotificationCenter: mockUserNotificationCenter,
-                                    fileManager: mockFileManager)
+                                    fileManager: mockFileManager,
+                                    inMemoryAlertStore: true)
     }
     
     func testIssueAlertOnHandlerCalled() {

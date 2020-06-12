@@ -22,13 +22,22 @@ public class AlertStore {
         
     private let log = DiagnosticLog(category: "AlertStore")
     
-    public init(storageFileURL: URL? = nil) {
+    private let unacknowledgedValidAlertPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+        NSPredicate(format: "acknowledgedDate == nil"),
+        NSPredicate(format: "retractedDate == nil")
+    ])
+
+    public init(storageDirectoryURL: URL? = nil) {
         managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         managedObjectContext.automaticallyMergesChangesFromParent = true
 
         let storeDescription = NSPersistentStoreDescription()
-        if let storageFileURL = storageFileURL {
+        if let storageDirectoryURL = storageDirectoryURL {
+            let storageFileURL = storageDirectoryURL
+                .appendingPathComponent("AlertStore")
+                .appendingPathComponent("AlertStore.sqlite")
+            print("storageFile = \(storageFileURL.path)")
             storeDescription.url = storageFileURL
         } else {
             storeDescription.type = NSInMemoryStoreType
@@ -37,11 +46,17 @@ public class AlertStore {
         storeDescription.shouldInferMappingModelAutomatically = true
         persistentContainer = NSPersistentContainer(name: "AlertStore")
         persistentContainer.persistentStoreDescriptions = [storeDescription]
+        
+        let group = DispatchGroup()
+        group.enter()
         persistentContainer.loadPersistentStores { _, error in
             if let error = error {
                 fatalError("Unable to load persistent stores: \(error)")
             }
+            group.leave()
         }
+        group.wait()
+        
         managedObjectContext.persistentStoreCoordinator = persistentContainer.persistentStoreCoordinator
     }
 }
@@ -50,7 +65,7 @@ public class AlertStore {
 
 extension AlertStore {
     
-    public func recordIssued(alert: Alert, at date: Date = Date(), completion: ((Result<Void, Error>) -> Void)? = nil) {
+    public func recordIssued(alert: Alert, at date: Date = Date(), _ completion: ((Result<Void, Error>) -> Void)? = nil) {
         self.managedObjectContext.perform {
             _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
             do {
@@ -65,18 +80,18 @@ extension AlertStore {
     }
     
     public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date(),
-                                      completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier, with: { $0.acknowledgedDate = date }, completion: completion)
+                                      _ completion: ((Result<Void, Error>) -> Void)? = nil) {
+        recordUpdateOfLatest(of: identifier, with: { $0.acknowledgedDate = date }, completion)
     }
     
     public func recordRetraction(of identifier: Alert.Identifier, at date: Date = Date(),
-                                 completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier, with: { $0.retractedDate = date }, completion: completion)
+                                 _ completion: ((Result<Void, Error>) -> Void)? = nil) {
+        recordUpdateOfLatest(of: identifier, with: { $0.retractedDate = date }, completion)
     }
     
     private func recordUpdateOfLatest(of identifier: Alert.Identifier,
                                       with block: @escaping (StoredAlert) -> Void,
-                                      completion: ((Result<Void, Error>) -> Void)?) {
+                                      _ completion: ((Result<Void, Error>) -> Void)?) {
         self.managedObjectContext.perform {
             self.lookupLatestUnacknowledged(identifier: identifier) {
                 switch $0 {
@@ -108,12 +123,12 @@ extension AlertStore {
                 let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
                 fetchRequest.predicate = NSCompoundPredicate( andPredicateWithSubpredicates: [
                     identifier.equalsPredicate,
-                    NSPredicate(format: "acknowledgedDate == nil"),
-                    NSPredicate(format: "retractedDate == nil")
+                    self.unacknowledgedValidAlertPredicate
                 ])
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: false) ]
                 fetchRequest.fetchLimit = 1
                 let result = try self.managedObjectContext.fetch(fetchRequest)
+                print("result.last = \(result.last?.modificationCounter)")
                 completion(.success(result.last))
             } catch {
                 completion(.failure(error))
@@ -125,10 +140,7 @@ extension AlertStore {
         managedObjectContext.perform {
             do {
                 let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-                    NSPredicate(format: "acknowledgedDate == nil"),
-                    NSPredicate(format: "retractedDate == nil")
-                ])
+                fetchRequest.predicate = self.unacknowledgedValidAlertPredicate
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
                 fetchRequest.fetchLimit = 20 // TODO: Seems reasonable to put some limit here, but is this a good value?
                 let result = try self.managedObjectContext.fetch(fetchRequest)
@@ -182,15 +194,15 @@ extension AlertStore {
         var predicate: NSPredicate? { NSPredicate(format: "issuedDate >= %@", date as NSDate) }
     }
     
-    func executeQuery(since date: Date, limit: Int, completion: @escaping (QueryResult<SinceDateFilter>) -> Void) {
-        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date)), limit: limit, completion: completion)
+    func executeQuery(since date: Date, limit: Int, _ completion: @escaping (QueryResult<SinceDateFilter>) -> Void) {
+        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date)), limit: limit, completion)
     }
     
-    func continueQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, completion: @escaping (QueryResult<Filter>) -> Void) {
-        executeAlertQuery(from: anchor, limit: limit, completion: completion)
+    func continueQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, _ completion: @escaping (QueryResult<Filter>) -> Void) {
+        executeAlertQuery(from: anchor, limit: limit, completion)
     }
 
-    private func executeAlertQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, completion: @escaping (QueryResult<Filter>) -> Void) {
+    private func executeAlertQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, _ completion: @escaping (QueryResult<Filter>) -> Void) {
         self.managedObjectContext.perform {
             guard limit > 0 else {
                 completion(.success((anchor, [])))
@@ -221,7 +233,7 @@ extension AlertStore {
     }
     
     // At the moment, this is only used for unit testing
-    internal func fetch(identifier: Alert.Identifier, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+    internal func fetch(identifier: Alert.Identifier, _ completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
         self.managedObjectContext.perform {
             let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
             storedRequest.predicate = identifier.equalsPredicate
