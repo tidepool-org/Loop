@@ -54,11 +54,6 @@ public class AlertStore {
         
         managedObjectContext.persistentStoreCoordinator = persistentContainer.persistentStoreCoordinator
     }
-}
-
-// MARK: Alert Recording
-
-extension AlertStore {
     
     public func recordIssued(alert: Alert, at date: Date = Date(), _ completion: ((Result<Void, Error>) -> Void)? = nil) {
         self.managedObjectContext.perform {
@@ -83,6 +78,30 @@ extension AlertStore {
                                  _ completion: ((Result<Void, Error>) -> Void)? = nil) {
         recordUpdateOfLatest(of: identifier, field: "retractedDate", with: { $0.retractedDate = date }, completion)
     }
+    
+    public func lookupAllUnacknowledged(completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+        managedObjectContext.perform {
+            do {
+                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+                fetchRequest.predicate =  NSCompoundPredicate(andPredicateWithSubpredicates: [
+                    NSPredicate(format: "acknowledgedDate == nil"),
+                    NSPredicate(format: "retractedDate == nil")
+                ])
+                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
+                fetchRequest.fetchLimit = 20 // TODO: Seems reasonable to put some limit here, but is this a good value?
+                let result = try self.managedObjectContext.fetch(fetchRequest)
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
+}
+
+// MARK: Private functions
+
+extension AlertStore {
     
     private func recordUpdateOfLatest(of identifier: Alert.Identifier,
                                       field: String,
@@ -133,25 +152,6 @@ extension AlertStore {
             }
         }
     }
-    
-    public func lookupAllUnacknowledged(completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
-        managedObjectContext.perform {
-            do {
-                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                fetchRequest.predicate =  NSCompoundPredicate(andPredicateWithSubpredicates: [
-                       NSPredicate(format: "acknowledgedDate == nil"),
-                       NSPredicate(format: "retractedDate == nil")
-                   ])
-                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
-                fetchRequest.fetchLimit = 20 // TODO: Seems reasonable to put some limit here, but is this a good value?
-                let result = try self.managedObjectContext.fetch(fetchRequest)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error))
-            }
-        }
-    }
-
 }
 
 // MARK: Query Support

@@ -45,17 +45,17 @@ public final class AlertManager {
     private let userNotificationCenter: UserNotificationCenter
     private let fileManager: FileManager
     
-    private var alertStore: AlertStore!
+    private let alertStore: AlertStore
 
     public init(rootViewController: UIViewController,
                 handlers: [AlertPresenter]? = nil,
                 userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
                 fileManager: FileManager = FileManager.default,
-                inMemoryAlertStore: Bool = false) {
+                alertStore: AlertStore? = nil) {
         self.userNotificationCenter = userNotificationCenter
         self.fileManager = fileManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
-        alertStore = AlertStore(storageDirectoryURL: inMemoryAlertStore ? nil : documentsDirectory)
+        self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: documentsDirectory)
         self.handlers = handlers ??
             [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalAlertPresenter(rootViewController: rootViewController, alertManagerResponder: self)]
@@ -156,7 +156,6 @@ extension AlertManager {
 extension AlertManager {
     
     private func playbackAlertsFromPersistence() {
-//        playbackAlertsFromUserNotificationCenter()
         playbackAlertsFromAlertStore()
     }
     
@@ -176,58 +175,7 @@ extension AlertManager {
             }
         }
     }
-    
-    private func playbackAlertsFromUserNotificationCenter() {
-    
-        userNotificationCenter.getDeliveredNotifications {
-            $0.forEach { notification in
-                self.log.debug("Delivered alert: %@", "\(notification)")
-                self.playbackDeliveredNotification(notification)
-            }
-        }
-        
-        userNotificationCenter.getPendingNotificationRequests {
-            $0.forEach { request in
-                self.log.debug("Pending alert: %@", "\(request)")
-                self.playbackPendingNotificationRequest(request)
-            }
-        }
-    }
 
-    private func playbackDeliveredNotification(_ notification: UNNotification) {
-        // Assume if it was delivered, the trigger should be .immediate.
-        playbackAnyNotificationRequest(notification.request, usingTrigger: .immediate)
-    }
-
-    private func playbackPendingNotificationRequest(_ request: UNNotificationRequest) {
-        playbackAnyNotificationRequest(request)
-    }
-    
-    private func playbackAnyNotificationRequest(_ request: UNNotificationRequest, usingTrigger trigger: Alert.Trigger? = nil) {
-        guard let savedAlertString = request.content.userInfo[AlertUserNotificationUserInfoKey.alert.rawValue] as? String,
-            let savedAlertTimestampString = request.content.userInfo[AlertUserNotificationUserInfoKey.alertTimestamp.rawValue] as? String,
-            let savedAlertTimestamp = AlertManager.timestampFormatter.date(from: savedAlertTimestampString) else  {
-            self.log.error("Could not find persistent alert in notification")
-            return
-        }
-        do {
-            let savedAlert = try Alert.decode(from: savedAlertString)
-            let newTrigger = trigger ?? determineNewTrigger(from: savedAlert, timestamp: savedAlertTimestamp)
-            let newAlert = Alert(identifier: savedAlert.identifier,
-                                 foregroundContent: savedAlert.foregroundContent,
-                                 backgroundContent: savedAlert.backgroundContent,
-                                 trigger: newTrigger,
-                                 sound: savedAlert.sound)
-            self.log.debug("Replaying %@Alert: %@ with %@trigger %@",
-                           trigger != nil ? "" : "Pending ",
-                           trigger != nil ? "" : "new ",
-                           savedAlertString, "\(newTrigger)")
-            self.replayAlert(newAlert)
-        } catch {
-            self.log.error("Could not decode alert: error %@, from %@", error.localizedDescription, savedAlertString)
-        }
-    }
-    
     private func determineNewTrigger(from alert: Alert, timestamp: Date) -> Alert.Trigger {
         switch alert.trigger {
         case .immediate:
