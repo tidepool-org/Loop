@@ -32,7 +32,6 @@ public class AlertStore {
             let storageFileURL = storageDirectoryURL
                 .appendingPathComponent("AlertStore")
                 .appendingPathComponent("AlertStore.sqlite")
-            print("storageFile = \(storageFileURL.path)")
             storeDescription.url = storageFileURL
         } else {
             storeDescription.type = NSInMemoryStoreType
@@ -144,8 +143,6 @@ extension AlertStore {
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: false) ]
                 fetchRequest.fetchLimit = 1
                 let result = try self.managedObjectContext.fetch(fetchRequest)
-                print("predicate = \(fetchRequest.predicate)")
-                print("result.last = \(result.last?.modificationCounter)")
                 completion(.success(result.last))
             } catch {
                 completion(.failure(error))
