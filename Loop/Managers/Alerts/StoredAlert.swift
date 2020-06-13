@@ -120,7 +120,7 @@ extension Alert.Trigger {
         case 0: self = .immediate
         case 1:
             if let storedInterval = storedInterval {
-                if let storageDate = storageDate {
+                if let storageDate = storageDate, storageDate <= now {
                     let intervalLeft = storedInterval.doubleValue - now.timeIntervalSince(storageDate)
                     if intervalLeft <= 0 {
                         self = .immediate

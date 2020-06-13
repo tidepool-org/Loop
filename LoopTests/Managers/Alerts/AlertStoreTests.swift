@@ -39,6 +39,23 @@ class AlertStoreTests: XCTestCase {
         XCTAssertNil(immediate.storedInterval)
     }
     
+    func testTriggerTypeIntervalConversionAdjustedForStorageTime() {
+        let immediate = Alert.Trigger.immediate
+        let delayed = Alert.Trigger.delayed(interval: 10.0)
+        let repeating = Alert.Trigger.repeating(repeatInterval: 20.0)
+        XCTAssertEqual(immediate, try? Alert.Trigger(storedType: immediate.storedType, storedInterval: immediate.storedInterval, storageDate: Date.distantPast))
+        XCTAssertEqual(immediate, try? Alert.Trigger(storedType: delayed.storedType, storedInterval: delayed.storedInterval, storageDate: Date.distantPast))
+        XCTAssertEqual(immediate, try? Alert.Trigger(storedType: delayed.storedType, storedInterval: delayed.storedInterval, storageDate: Date(timeIntervalSinceNow: -10.0.nextUp)))
+        XCTAssertEqual(Alert.Trigger.delayed(interval: 10.0), try? Alert.Trigger(storedType: delayed.storedType, storedInterval: delayed.storedInterval, storageDate: Date(timeIntervalSinceNow: 5.0)))
+        let adjustedTrigger = try? Alert.Trigger(storedType: delayed.storedType, storedInterval: delayed.storedInterval, storageDate: Date(timeIntervalSinceNow: -5.0))
+        switch adjustedTrigger {
+        case .delayed(let interval): XCTAssertLessThanOrEqual(interval, 5.0) // The new delay interval value may be close to, but no more than 5, but not exact
+        default: XCTFail("Wrong trigger")
+        }
+        XCTAssertEqual(repeating, try? Alert.Trigger(storedType: repeating.storedType, storedInterval: repeating.storedInterval, storageDate: Date.distantPast))
+        XCTAssertNil(immediate.storedInterval)
+    }
+    
     func testStoredAlertSerialization() {
         let object = StoredAlert(from: alert2, context: alertStore.managedObjectContext, issuedDate: Date.distantPast)
         XCTAssertNil(object.acknowledgedDate)
