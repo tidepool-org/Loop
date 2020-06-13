@@ -134,7 +134,9 @@ extension Alert.Trigger {
                 throw StorageError.invalidStoredInterval
             }
         case 2:
-            // TODO: for now, we do not adjust repeating triggers by storage date
+            // Strange case here: if it is a repeating trigger, we can't really play back exactly
+            // at the right "remaining time" and then repeat at the original period.  So, I think
+            // the best we can do is just use the original trigger
             if let storedInterval = storedInterval {
                 self = .repeating(repeatInterval: storedInterval.doubleValue)
             } else {

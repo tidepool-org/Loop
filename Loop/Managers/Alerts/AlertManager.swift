@@ -176,27 +176,6 @@ extension AlertManager {
         }
     }
 
-    private func determineNewTrigger(from alert: Alert, timestamp: Date) -> Alert.Trigger {
-        switch alert.trigger {
-        case .immediate:
-            return alert.trigger
-        case .delayed(let interval):
-            let triggerTime = timestamp.addingTimeInterval(interval)
-            let timeIntervalSinceNow = triggerTime.timeIntervalSinceNow
-            if timeIntervalSinceNow < 0 {
-                // Trigger time has passed...trigger immediately
-                return .immediate
-            } else {
-                return .delayed(interval: timeIntervalSinceNow)
-            }
-        case .repeating:
-            // Strange case here: if it is a repeating trigger, we can't really play back exactly
-            // at the right "remaining time" and then repeat at the original period.  So, I think
-            // the best we can do is just use the original trigger
-            return alert.trigger
-        }
-    }
-
 }
 
 // MARK: Alert storage access
