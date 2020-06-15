@@ -77,7 +77,7 @@ class AlertManagerTests: XCTestCase {
     class MockAlertStore: AlertStore {
         
         var issuedAlert: Alert?
-        override public func recordIssued(alert: Alert, at date: Date = Date(), _ completion: ((Result<Void, Error>) -> Void)? = nil) {
+        override public func recordIssued(alert: Alert, at date: Date = Date(), completion: ((Result<Void, Error>) -> Void)? = nil) {
             issuedAlert = alert
             completion?(.success)
         }
@@ -85,7 +85,7 @@ class AlertManagerTests: XCTestCase {
         var acknowledgedAlertIdentifier: Alert.Identifier?
         var acknowledgedAlertDate: Date?
         override public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date(),
-                                                   _ completion: ((Result<Void, Error>) -> Void)? = nil) {
+                                                   completion: ((Result<Void, Error>) -> Void)? = nil) {
             acknowledgedAlertIdentifier = identifier
             acknowledgedAlertDate = date
             completion?(.success)
@@ -94,7 +94,7 @@ class AlertManagerTests: XCTestCase {
         var retractededAlertIdentifier: Alert.Identifier?
         var retractedAlertDate: Date?
         override public func recordRetraction(of identifier: Alert.Identifier, at date: Date = Date(),
-                                              _ completion: ((Result<Void, Error>) -> Void)? = nil) {
+                                              completion: ((Result<Void, Error>) -> Void)? = nil) {
             retractededAlertIdentifier = identifier
             retractedAlertDate = date
             completion?(.success)

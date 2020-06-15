@@ -68,7 +68,10 @@ extension Alert {
                                         storedInterval: storedAlert.triggerInterval,
                                         storageDate: adjustedForStorageTime ? storedAlert.issuedDate : nil)
         self.init(identifier: storedAlert.identifier,
-                  foregroundContent: fgContent, backgroundContent: bgContent, trigger: trigger, sound: sound)
+                  foregroundContent: fgContent,
+                  backgroundContent: bgContent,
+                  trigger: trigger,
+                  sound: sound)
     }
 }
 
