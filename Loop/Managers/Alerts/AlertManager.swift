@@ -32,53 +32,51 @@ public enum AlertUserNotificationUserInfoKey: String {
 /// - serializing alerts to storage
 /// - etc.
 public final class AlertManager {
-    static let soundsDirectoryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).last!.appendingPathComponent("Sounds")
-    
-    static let timestampFormatter = ISO8601DateFormatter()
-    
+    private static let soundsDirectoryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).last!.appendingPathComponent("Sounds")
+
+    fileprivate static let timestampFormatter = ISO8601DateFormatter()
+
     private let log = DiagnosticLog(category: "AlertManager")
 
-    var handlers: [AlertPresenter] = []
-    var responders: [String: Weak<AlertResponder>] = [:]
-    var soundVendors: [String: Weak<AlertSoundVendor>] = [:]
-    
-    let userNotificationCenter: UserNotificationCenter
-    let fileManager: FileManager
-    
-    let alertStore: AlertStore
+    private var handlers: [AlertPresenter] = []
+    private var responders: [String: Weak<AlertResponder>] = [:]
+    private var soundVendors: [String: Weak<AlertSoundVendor>] = [:]
+
+    private let userNotificationCenter: UserNotificationCenter
+    private let fileManager: FileManager
+
+    private let alertStore: AlertStore
 
     public init(rootViewController: UIViewController,
                 handlers: [AlertPresenter]? = nil,
                 userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
                 fileManager: FileManager = FileManager.default,
+                alertStore: AlertStore? = nil,
                 expireAfter: TimeInterval = 24 /* hours */ * 60 /* minutes */ * 60 /* seconds */) {
         self.userNotificationCenter = userNotificationCenter
         self.fileManager = fileManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
-        alertStore = AlertStore(storageFileURL: documentsDirectory?
-            .appendingPathComponent("AlertStore")
-            .appendingPathComponent("AlertStore.sqlite"),
-                                expireAfter: expireAfter)
+        self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: documentsDirectory, expireAfter: expireAfter)
         self.handlers = handlers ??
             [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalAlertPresenter(rootViewController: rootViewController, alertManagerResponder: self)]
-            
-        playbackAlertsFromUserNotificationCenter()
+
+        playbackAlertsFromPersistence()
     }
 
     public func addAlertResponder(managerIdentifier: String, alertResponder: AlertResponder) {
         responders[managerIdentifier] = Weak(alertResponder)
     }
-    
+
     public func removeAlertResponder(managerIdentifier: String) {
         responders.removeValue(forKey: managerIdentifier)
     }
-    
+
     public func addAlertSoundVendor(managerIdentifier: String, soundVendor: AlertSoundVendor) {
         soundVendors[managerIdentifier] = Weak(soundVendor)
         initializeSoundVendor(managerIdentifier, soundVendor)
     }
-    
+
     public func removeAlertSoundVendor(managerIdentifier: String) {
         soundVendors.removeValue(forKey: managerIdentifier)
     }
@@ -107,12 +105,12 @@ extension AlertManager: AlertPresenter {
         handlers.forEach { $0.issueAlert(alert) }
         alertStore.recordIssued(alert: alert)
     }
-    
+
     public func retractAlert(identifier: Alert.Identifier) {
         handlers.forEach { $0.retractAlert(identifier: identifier) }
         alertStore.recordRetraction(of: identifier)
     }
-    
+
     private func replayAlert(_ alert: Alert) {
         handlers.forEach { $0.issueAlert(alert) }
     }
@@ -121,19 +119,19 @@ extension AlertManager: AlertPresenter {
 // MARK: Sound Support
 
 extension AlertManager {
-    
+
     public static func soundURL(for alert: Alert) -> URL? {
         guard let sound = alert.sound else { return nil }
         return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: sound)
     }
-    
+
     private static func soundURL(managerIdentifier: String, sound: Alert.Sound) -> URL? {
         guard let soundFileName = sound.filename else { return nil }
-        
+
         // Seems all the sound files need to be in the sounds directory, so we namespace the filenames
         return soundsDirectoryURL.appendingPathComponent("\(managerIdentifier)-\(soundFileName)")
     }
-    
+
     private func initializeSoundVendor(_ managerIdentifier: String, _ soundVendor: AlertSoundVendor) {
         let sounds = soundVendor.getSounds()
         guard let baseURL = soundVendor.getSoundBaseURL(), !sounds.isEmpty else {
@@ -151,82 +149,31 @@ extension AlertManager {
             log.error("Unable to copy sound files from soundVendor %@: %@", managerIdentifier, String(describing: error))
         }
     }
-    
+
 }
 
 // MARK: Alert Playback
 
 extension AlertManager {
-    
-    private func playbackAlertsFromUserNotificationCenter() {
-    
-        userNotificationCenter.getDeliveredNotifications {
-            $0.forEach { notification in
-                self.log.debug("Delivered alert: %@", "\(notification)")
-                self.playbackDeliveredNotification(notification)
-            }
-        }
-        
-        userNotificationCenter.getPendingNotificationRequests {
-            $0.forEach { request in
-                self.log.debug("Pending alert: %@", "\(request)")
-                self.playbackPendingNotificationRequest(request)
-            }
-        }
+
+    private func playbackAlertsFromPersistence() {
+        playbackAlertsFromAlertStore()
     }
 
-    private func playbackDeliveredNotification(_ notification: UNNotification) {
-        // Assume if it was delivered, the trigger should be .immediate.
-        playbackAnyNotificationRequest(notification.request, usingTrigger: .immediate)
-    }
-
-    private func playbackPendingNotificationRequest(_ request: UNNotificationRequest) {
-        playbackAnyNotificationRequest(request)
-    }
-    
-    private func playbackAnyNotificationRequest(_ request: UNNotificationRequest, usingTrigger trigger: Alert.Trigger? = nil) {
-        guard let savedAlertString = request.content.userInfo[AlertUserNotificationUserInfoKey.alert.rawValue] as? String,
-            let savedAlertTimestampString = request.content.userInfo[AlertUserNotificationUserInfoKey.alertTimestamp.rawValue] as? String,
-            let savedAlertTimestamp = AlertManager.timestampFormatter.date(from: savedAlertTimestampString) else  {
-            self.log.error("Could not find persistent alert in notification")
-            return
-        }
-        do {
-            let savedAlert = try Alert.decode(from: savedAlertString)
-            let newTrigger = trigger ?? determineNewTrigger(from: savedAlert, timestamp: savedAlertTimestamp)
-            let newAlert = Alert(identifier: savedAlert.identifier,
-                                 foregroundContent: savedAlert.foregroundContent,
-                                 backgroundContent: savedAlert.backgroundContent,
-                                 trigger: newTrigger,
-                                 sound: savedAlert.sound)
-            self.log.debug("Replaying %@Alert: %@ with %@trigger %@",
-                           trigger != nil ? "" : "Pending ",
-                           trigger != nil ? "" : "new ",
-                           savedAlertString, "\(newTrigger)")
-            self.replayAlert(newAlert)
-        } catch {
-            self.log.error("Could not decode alert: error %@, from %@", error.localizedDescription, savedAlertString)
-        }
-    }
-    
-    private func determineNewTrigger(from alert: Alert, timestamp: Date) -> Alert.Trigger {
-        switch alert.trigger {
-        case .immediate:
-            return alert.trigger
-        case .delayed(let interval):
-            let triggerTime = timestamp.addingTimeInterval(interval)
-            let timeIntervalSinceNow = triggerTime.timeIntervalSinceNow
-            if timeIntervalSinceNow < 0 {
-                // Trigger time has passed...trigger immediately
-                return .immediate
-            } else {
-                return .delayed(interval: timeIntervalSinceNow)
+    private func playbackAlertsFromAlertStore() {
+        alertStore.lookupAllUnacknowledged {
+            switch $0 {
+            case .failure(let error):
+                self.log.error("Could not fetch unacknowledged alerts: %@", error.localizedDescription)
+            case .success(let alerts):
+                alerts.forEach { alert in
+                    do {
+                        self.replayAlert(try Alert(from: alert))
+                    } catch {
+                        self.log.error("Error decoding alert from persistent storage: %@", error.localizedDescription)
+                    }
+                }
             }
-        case .repeating:
-            // Strange case here: if it is a repeating trigger, we can't really play back exactly
-            // at the right "remaining time" and then repeat at the original period.  So, I think
-            // the best we can do is just use the original trigger
-            return alert.trigger
         }
     }
 
@@ -234,7 +181,7 @@ extension AlertManager {
 
 // MARK: Alert storage access
 extension AlertManager {
-    
+
     func getStoredEntries(startDate: Date, completion: @escaping (_ report: String) -> Void) {
         alertStore.executeQuery(since: startDate, limit: 100) { result in
             switch result {
@@ -244,7 +191,7 @@ extension AlertManager {
                 let report = "## Alerts\n" + entries.1.map { storedAlert in
                     return """
                     **\(storedAlert.title ?? "??")**
-                    
+
                     * alertIdentifier: \(storedAlert.alertIdentifier)
                     * managerIdentifier: \(storedAlert.managerIdentifier)
                     * issued: \(storedAlert.issuedDate)
@@ -283,18 +230,18 @@ extension FileManager {
 }
 
 extension URL {
-    
+
     func fileCreationDate(_ fileManager: FileManager) throws -> Date {
         return try fileManager.attributesOfItem(atPath: self.path)[.creationDate] as! Date
     }
 }
 
 public extension Alert {
-    
+
     enum Error: String, Swift.Error {
         case noBackgroundContent
     }
-        
+
     fileprivate func getUserNotificationContent(timestamp: Date) throws -> UNNotificationContent {
         guard let content = backgroundContent else {
             throw Error.noBackgroundContent
@@ -316,7 +263,7 @@ public extension Alert {
             AlertManager.timestampFormatter.string(from: timestamp)
         return userNotificationContent
     }
-    
+
     private func getUserNotificationSound() -> UNNotificationSound? {
         guard let content = backgroundContent else {
             return nil
@@ -336,7 +283,7 @@ public extension Alert {
                 }
             }
         }
-        
+
         return content.isCritical ? .defaultCritical : .default
     }
 }
