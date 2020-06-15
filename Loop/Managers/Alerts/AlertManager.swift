@@ -45,7 +45,7 @@ public final class AlertManager {
     private let userNotificationCenter: UserNotificationCenter
     private let fileManager: FileManager
 
-    private let alertStore: AlertStore
+    let alertStore: AlertStore
 
     public init(rootViewController: UIViewController,
                 handlers: [AlertPresenter]? = nil,
