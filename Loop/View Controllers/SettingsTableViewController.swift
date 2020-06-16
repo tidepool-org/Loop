@@ -180,6 +180,7 @@ final class SettingsTableViewController: UITableViewController {
                     cell.imageView?.image = pumpManager.smallImage
                     cell.textLabel?.text = pumpManager.localizedTitle
                     cell.detailTextLabel?.text = nil
+                    cell.accessoryType = .disclosureIndicator
                     return cell
                 } else {
                     let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath)

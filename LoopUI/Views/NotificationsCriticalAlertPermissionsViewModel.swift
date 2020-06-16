@@ -25,8 +25,6 @@ public class NotificationsCriticalAlertPermissionsViewModel: ObservableObject {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             self.notificationsPermissionsGiven = settings.alertSetting == .enabled
             self.criticalAlertsPermissionsGiven = settings.criticalAlertSetting == .enabled
-            print("notificationsPermissionsGiven = \(self.notificationsPermissionsGiven)")
-            print("criticalAlertsPermissionsGiven = \(self.criticalAlertsPermissionsGiven)")
         }
     }
     

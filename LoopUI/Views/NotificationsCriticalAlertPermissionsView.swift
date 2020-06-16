@@ -42,7 +42,7 @@ extension NotificationsCriticalAlertPermissionsView {
                 HStack {
                     Text(LocalizedString("Manage Notifications in Settings", comment: "Manage Notifications in Settings button text"))
                     if !viewModel.notificationsPermissionsGiven {
-                        Text("⚠️")
+                        Text(LocalizedString("⚠️", comment: "Warning symbol"))
                     }
                 }
             }
@@ -61,7 +61,7 @@ extension NotificationsCriticalAlertPermissionsView {
                 HStack {
                     Text(LocalizedString("Manage Critical Alerts in Settings", comment: "Manage Critical Alerts in Settings button text"))
                     if !viewModel.criticalAlertsPermissionsGiven {
-                        Text("⚠️")
+                        Text(LocalizedString("⚠️", comment: "Warning symbol"))
                     }
                 }
             }

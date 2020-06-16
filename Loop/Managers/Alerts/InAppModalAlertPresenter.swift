@@ -94,7 +94,8 @@ extension InAppModalAlertPresenter {
                 return
             }
             self.playSound(for: alert)
-            let alertController = self.presentAlert(title: content.title, message: content.body,
+            let alertController = self.presentAlert(title: content.title,
+                                                    message: content.body,
                                                     action: content.acknowledgeActionButtonLabel,
                                                     isCritical: content.isCritical) { [weak self] in
                 self?.clearDeliveredAlert(identifier: alert.identifier)
