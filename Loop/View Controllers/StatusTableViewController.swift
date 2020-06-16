@@ -1249,11 +1249,8 @@ final class StatusTableViewController: ChartsTableViewController {
         if let hudView = hudView {
             hudView.removePumpManagerProvidedViews()
             if let pumpManagerHUDProvider = deviceManager.pumpManagerHUDProvider {
-                let views = pumpManagerHUDProvider.createHUDViews()
-                for view in views {
-                    if let view = view as? LevelHUDView {
-                        addPumpManagerViewToHUD(view)
-                    }
+                if let view = pumpManagerHUDProvider.createHUDView() {
+                    addPumpManagerViewToHUD(view)
                 }
                 pumpManagerHUDProvider.visible = active && onscreen
                 hudView.pumpStatusHUD.dismissAlert()
