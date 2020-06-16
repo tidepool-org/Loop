@@ -17,7 +17,7 @@ extension AlertStore {
     private var simulatedPerDay: Int { 12 }
     private var simulatedLimit: Int { 10000 }
 
-    public func generateSimulatedHistoricalStoredAlerts(completion: @escaping (Error?) -> Void) {
+    func generateSimulatedHistoricalStoredAlerts(completion: @escaping (Error?) -> Void) {
         var startDate = Calendar.current.startOfDay(for: expireDate)
         let endDate = Calendar.current.startOfDay(for: historicalEndDate)
         var simulated = [DatedAlert]()
@@ -41,7 +41,7 @@ extension AlertStore {
         completion(addAlerts(alerts: simulated))
     }
 
-    public func purgeHistoricalStoredAlerts(completion: @escaping (Error?) -> Void) {
+    func purgeHistoricalStoredAlerts(completion: @escaping (Error?) -> Void) {
         purge(before: historicalEndDate, completion: completion)
     }
 }

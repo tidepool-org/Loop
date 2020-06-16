@@ -293,12 +293,12 @@ extension Result where Success == Void {
 // MARK: - Core Data (Bulk) - TEST ONLY
 
 extension AlertStore {
-    public struct DatedAlert {
+    struct DatedAlert {
         let date: Date
         let alert: Alert
     }
 
-    public func addAlerts(alerts: [DatedAlert]) -> Error? {
+    func addAlerts(alerts: [DatedAlert]) -> Error? {
         guard !alerts.isEmpty else {
             return nil
         }

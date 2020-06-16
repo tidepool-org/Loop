@@ -823,7 +823,7 @@ extension DeviceDataManager {
 // MARK: - Simulated Core Data
 
 extension DeviceDataManager {
-    public func generateSimulatedHistoricalCoreData(completion: @escaping (Error?) -> Void) {
+    func generateSimulatedHistoricalCoreData(completion: @escaping (Error?) -> Void) {
         guard FeatureFlags.simulatedCoreDataEnabled else {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
@@ -843,7 +843,7 @@ extension DeviceDataManager {
         }
     }
 
-    public func purgeHistoricalCoreData(completion: @escaping (Error?) -> Void) {
+    func purgeHistoricalCoreData(completion: @escaping (Error?) -> Void) {
         guard FeatureFlags.simulatedCoreDataEnabled else {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
