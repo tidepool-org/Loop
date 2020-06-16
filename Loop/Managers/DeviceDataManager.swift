@@ -255,7 +255,7 @@ final class DeviceDataManager {
     func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
         self.loopManager.generateDiagnosticReport { (loopReport) in
 
-            self.alertManager.getStoredEntries(startDate: Date() - .hours(48)) { (alertReport) in
+            self.alertManager.getStoredEntries(startDate: Date() - .hours(48), excludeRetracted: true) { (alertReport) in
 
                 self.deviceLog.getLogEntries(startDate: Date() - .hours(48)) { (result) in
                     let deviceLogReport: String

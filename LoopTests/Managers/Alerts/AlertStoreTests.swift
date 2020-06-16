@@ -372,6 +372,21 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: 1)
     }
     
+    func testQueryExcludeRetracted() {
+        let expect = self.expectation(description: #function)
+        fillWith(startDate: Date.distantPast, data: [
+            (alert1, false, true),
+            (alert2, false, false),
+            (alert1, false, true)
+        ]) {
+            self.alertStore.executeQuery(since: Date.distantPast, excludeRetracted: true, limit: 10, completion: self.expectSuccess { result in
+                self.assertEqual([self.alert2], result.1)
+                expect.fulfill()
+            })
+        }
+        wait(for: [expect], timeout: 1)
+    }
+    
     private func fillWith(startDate: Date, data: [(alert: Alert, acknowledged: Bool, retracted: Bool)], _ completion: @escaping () -> Void) {
         let increment = 1.0
         if let value = data.first {

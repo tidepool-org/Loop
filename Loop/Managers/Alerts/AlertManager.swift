@@ -181,9 +181,9 @@ extension AlertManager {
 
 // MARK: Alert storage access
 extension AlertManager {
-
-    func getStoredEntries(startDate: Date, completion: @escaping (_ report: String) -> Void) {
-        alertStore.executeQuery(since: startDate, limit: 100) { result in
+    
+    func getStoredEntries(startDate: Date, excludeRetracted: Bool = false, completion: @escaping (_ report: String) -> Void) {
+        alertStore.executeQuery(since: startDate, excludeRetracted: excludeRetracted, limit: 100) { result in
             switch result {
             case .failure(let error):
                 completion("Error: \(error)")

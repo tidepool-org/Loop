@@ -218,11 +218,18 @@ extension AlertStore {
     }
     struct SinceDateFilter: QueryFilter {
         let date: Date
-        var predicate: NSPredicate? { NSPredicate(format: "issuedDate >= %@", date as NSDate) }
+        let excludeRetracted: Bool
+        var predicate: NSPredicate? {
+            let datePredicate = NSPredicate(format: "issuedDate >= %@", date as NSDate)
+            return excludeRetracted ?
+                NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, NSPredicate(format: "retractedDate == nil")])
+                : datePredicate
+        }
     }
-
-    func executeQuery(since date: Date, limit: Int, completion: @escaping (QueryResult<SinceDateFilter>) -> Void) {
-        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date)), limit: limit, completion: completion)
+    
+    func executeQuery(since date: Date, excludeRetracted: Bool = false, limit: Int, completion: @escaping (QueryResult<SinceDateFilter>) -> Void) {
+        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date, excludeRetracted: excludeRetracted)),
+                          limit: limit, completion: completion)
     }
 
     func continueQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, completion: @escaping (QueryResult<Filter>) -> Void) {
