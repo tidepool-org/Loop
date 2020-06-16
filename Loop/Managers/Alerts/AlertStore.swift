@@ -168,7 +168,9 @@ extension AlertStore {
 
     func purge(before date: Date, completion: ((Error?) -> Void)? = nil) {
         do {
-            let count = try self.managedObjectContext.purgeObjects(of: StoredAlert.self, matching: NSPredicate(format: "issuedDate < %@", date as NSDate))
+            let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "issuedDate < %@", date as NSDate)
+            let count = try self.managedObjectContext.deleteObjects(matching: fetchRequest)
             self.log.info("Purged %d StoredAlerts", count)
             completion?(nil)
         } catch let error {
