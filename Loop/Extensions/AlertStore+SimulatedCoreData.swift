@@ -20,11 +20,11 @@ extension AlertStore {
     public func generateSimulatedHistoricalStoredAlerts(completion: @escaping (Error?) -> Void) {
         var startDate = Calendar.current.startOfDay(for: expireDate)
         let endDate = Calendar.current.startOfDay(for: historicalEndDate)
-        var simulated = [Alert]()
+        var simulated = [DatedAlert]()
 
         while startDate < endDate {
             for index in 0..<simulatedPerDay {
-                simulated.append(Alert.simulated(date: startDate.addingTimeInterval(.hours(24) * Double(index) / Double(simulatedPerDay))))
+                simulated.append(DatedAlert.simulated(date: startDate.addingTimeInterval(.hours(24) * Double(index) / Double(simulatedPerDay))))
             }
 
             if simulated.count >= simulatedLimit {
@@ -46,19 +46,20 @@ extension AlertStore {
     }
 }
 
-fileprivate extension Alert {
-    static func simulated(date: Date) -> Alert {
-        return Alert(identifier: Alert.Identifier(managerIdentifier: "simulatedManagerIdentifier",
-                                                  alertIdentifier: "simulatedAlertIdentifier"),
-                     foregroundContent: Alert.Content(title: "Simulated Alert Foreground Title",
-                                                      body: "The body of a foreground simulated alert approximates an actual alert body.",
-                                                      acknowledgeActionButtonLabel: "Acknowledged",
-                                                      isCritical: false),
-                     backgroundContent: Alert.Content(title: "Simulated Alert Background Title",
-                                                      body: "The body of a background simulated alert approximates an actual alert body.",
-                                                      acknowledgeActionButtonLabel: "Acknowledged",
-                                                      isCritical: false),
-                     trigger: .delayed(interval: 60),
-                     sound: .sound(name: "simulated"))
+fileprivate extension AlertStore.DatedAlert {
+    static func simulated(date: Date) -> AlertStore.DatedAlert {
+        let alert = Alert(identifier: Alert.Identifier(managerIdentifier: "simulatedManagerIdentifier",
+                                                       alertIdentifier: "simulatedAlertIdentifier"),
+                          foregroundContent: Alert.Content(title: "Simulated Alert Foreground Title",
+                                                           body: "The body of a foreground simulated alert approximates an actual alert body.",
+                                                           acknowledgeActionButtonLabel: "Acknowledged",
+                                                           isCritical: false),
+                          backgroundContent: Alert.Content(title: "Simulated Alert Background Title",
+                                                           body: "The body of a background simulated alert approximates an actual alert body.",
+                                                           acknowledgeActionButtonLabel: "Acknowledged",
+                                                           isCritical: false),
+                          trigger: .delayed(interval: 60),
+                          sound: .sound(name: "simulated"))
+        return AlertStore.DatedAlert(date: date, alert: alert)
     }
 }

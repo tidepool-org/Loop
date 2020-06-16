@@ -293,7 +293,12 @@ extension Result where Success == Void {
 // MARK: - Core Data (Bulk) - TEST ONLY
 
 extension AlertStore {
-    public func addAlerts(alerts: [Alert]) -> Error? {
+    public struct DatedAlert {
+        let date: Date
+        let alert: Alert
+    }
+
+    public func addAlerts(alerts: [DatedAlert]) -> Error? {
         guard !alerts.isEmpty else {
             return nil
         }
@@ -302,7 +307,8 @@ extension AlertStore {
 
         self.managedObjectContext.performAndWait {
             for alert in alerts {
-                _ = StoredAlert(from: alert, context: self.managedObjectContext)
+                let storedAlert = StoredAlert(from: alert.alert, context: self.managedObjectContext, issuedDate: alert.date)
+                storedAlert.acknowledgedDate = alert.date
             }
 
             do {
