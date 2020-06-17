@@ -22,7 +22,10 @@ class AlertStoreTests: XCTestCase {
     static let identifier2 = Alert.Identifier(managerIdentifier: "managerIdentifier2", alertIdentifier: "alertIdentifier2")
     static let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label", isCritical: true)
     let alert2 = Alert(identifier: identifier2, foregroundContent: content, backgroundContent: content, trigger: .immediate, sound: .sound(name: "soundName"))
-    
+    static let delay3 = 30.0 // seconds
+    static let identifier3 = Alert.Identifier(managerIdentifier: "managerIdentifier3", alertIdentifier: "alertIdentifier3")
+    let alert3 = Alert(identifier: identifier3, foregroundContent: nil, backgroundContent: nil, trigger: .delayed(interval: delay3), sound: nil)
+
     override func setUp() {
         alertStore = AlertStore()
     }
@@ -115,6 +118,55 @@ class AlertStoreTests: XCTestCase {
                 self.alertStore.fetch(identifier: Self.identifier1, completion: self.expectSuccess { storedAlerts in
                     XCTAssertEqual(1, storedAlerts.count)
                     XCTAssertEqual(Self.identifier1, storedAlerts[0].identifier)
+                    XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
+                    XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
+                    XCTAssertNil(storedAlerts[0].acknowledgedDate)
+                    expect.fulfill()
+                })
+            })
+        })
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func testRecordRetractedBeforeDelayShouldDelete() {
+        let expect = self.expectation(description: #function)
+        let issuedDate = Date.distantPast
+        let retractedDate = issuedDate + Self.delay3 - 1.0
+        alertStore.recordIssued(alert: alert3, at: issuedDate, completion: self.expectSuccess {
+            self.alertStore.recordRetraction(of: Self.identifier3, at: retractedDate, completion: self.expectSuccess {
+                self.alertStore.fetch(identifier: Self.identifier3, completion: self.expectSuccess { storedAlerts in
+                    XCTAssertEqual(0, storedAlerts.count)
+                    expect.fulfill()
+                })
+            })
+        })
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func testRecordRetractedExactlyAtDelayShouldDelete() {
+        let expect = self.expectation(description: #function)
+        let issuedDate = Date.distantPast
+        let retractedDate = issuedDate + Self.delay3
+        alertStore.recordIssued(alert: alert3, at: issuedDate, completion: self.expectSuccess {
+            self.alertStore.recordRetraction(of: Self.identifier3, at: retractedDate, completion: self.expectSuccess {
+                self.alertStore.fetch(identifier: Self.identifier3, completion: self.expectSuccess { storedAlerts in
+                    XCTAssertEqual(0, storedAlerts.count)
+                    expect.fulfill()
+                })
+            })
+        })
+        wait(for: [expect], timeout: 1)
+    }
+
+    func testRecordRetractedAfterDelayShouldRetract() {
+        let expect = self.expectation(description: #function)
+        let issuedDate = Date.distantPast
+        let retractedDate = issuedDate + Self.delay3 + 1.0
+        alertStore.recordIssued(alert: alert3, at: issuedDate, completion: self.expectSuccess {
+            self.alertStore.recordRetraction(of: Self.identifier3, at: retractedDate, completion: self.expectSuccess {
+                self.alertStore.fetch(identifier: Self.identifier3, completion: self.expectSuccess { storedAlerts in
+                    XCTAssertEqual(1, storedAlerts.count)
+                    XCTAssertEqual(Self.identifier3, storedAlerts[0].identifier)
                     XCTAssertEqual(issuedDate, storedAlerts[0].issuedDate)
                     XCTAssertEqual(retractedDate, storedAlerts[0].retractedDate)
                     XCTAssertNil(storedAlerts[0].acknowledgedDate)

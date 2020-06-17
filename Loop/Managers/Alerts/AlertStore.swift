@@ -75,12 +75,23 @@ public class AlertStore {
 
     public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date(),
                                       completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier, addingPredicate: NSPredicate(format: "acknowledgedDate == nil"), with: { $0.acknowledgedDate = date }, completion: completion)
+        recordUpdateOfLatest(of: identifier, addingPredicate: NSPredicate(format: "acknowledgedDate == nil"),
+                             with: { $0.acknowledgedDate = date; return true }, completion: completion)
     }
 
     public func recordRetraction(of identifier: Alert.Identifier, at date: Date = Date(),
                                  completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier, addingPredicate: NSPredicate(format: "retractedDate == nil"), with: { $0.retractedDate = date }, completion: completion)
+        recordUpdateOfLatest(of: identifier, addingPredicate: NSPredicate(format: "retractedDate == nil"),
+                             with: {
+                                // if the alert was retracted before it was ever shown, delete it. Note: this only
+                                // applies to .delayed alerts!
+                                if case .delayed(let interval) = $0.trigger, $0.issuedDate + interval >= date {
+                                    return false
+                                } else {
+                                    $0.retractedDate = date
+                                    return true
+                                }
+        }, completion: completion)
     }
 
     public func lookupAllUnacknowledged(completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
@@ -108,17 +119,21 @@ extension AlertStore {
 
     private func recordUpdateOfLatest(of identifier: Alert.Identifier,
                                       addingPredicate predicate: NSPredicate,
-                                      with block: @escaping (StoredAlert) -> Void,
+                                      with block: @escaping (StoredAlert) -> Bool,
                                       completion: ((Result<Void, Error>) -> Void)?) {
         self.managedObjectContext.perform {
             self.lookupLatest(identifier: identifier, predicate: predicate) {
                 switch $0 {
                 case .success(let object):
                     if let object = object {
-                        block(object)
+                        // Returning false from the function block means "delete it"
+                        let shouldDelete = block(object) == false
                         do {
+                            if shouldDelete {
+                                self.managedObjectContext.delete(object)
+                            }
                             try self.managedObjectContext.save()
-                            self.log.default("Recorded alert: %{public}@", identifier.value)
+                            self.log.default("%{public}@ alert: %{public}@", shouldDelete ? "Deleted" : "Recorded", identifier.value)
                             self.purgeExpired()
                             completion?(.success)
                         } catch {
