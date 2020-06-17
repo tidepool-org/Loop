@@ -1318,7 +1318,12 @@ final class StatusTableViewController: ChartsTableViewController {
             completionNotifyingVC.completionDelegate = self
             self.present(completionNotifyingVC, animated: true, completion: nil)
         } else {
-            performSegue(withIdentifier: SettingsTableViewController.className, sender: toolbarItems![8])
+            // currently only one pump manager is supported, so start that setup workflow
+            if let pumpManager = deviceManager.availablePumpManagers.first,
+                let pumpManagerType = deviceManager.pumpManagerTypeByIdentifier(pumpManager.identifier)
+            {
+                setupPumpManager(for: pumpManagerType)
+            }
         }
     }
     
@@ -1328,7 +1333,12 @@ final class StatusTableViewController: ChartsTableViewController {
             completionNotifyingVC.completionDelegate = self
             self.present(completionNotifyingVC, animated: true, completion: nil)
         } else {
-            performSegue(withIdentifier: SettingsTableViewController.className, sender: toolbarItems![8])
+            // currently only one CGM manager is supported, so start that setup workflow
+            if let cgmManager = deviceManager.availableCGMManagers.first,
+                let cgmManagerType = deviceManager.cgmManagerTypeByIdentifier(cgmManager.identifier)
+            {
+                setupCGMManager(for: cgmManagerType)
+            }
         }
     }
     
@@ -1428,5 +1438,51 @@ extension StatusTableViewController: AddEditOverrideTableViewControllerDelegate 
     
     func addEditOverrideTableViewController(_ vc: AddEditOverrideTableViewController, didCancelOverride override: TemporaryScheduleOverride) {
         deviceManager.loopManager.settings.scheduleOverride = nil
+    }
+}
+
+extension StatusTableViewController: CGMManagerSetupViewControllerDelegate {
+    fileprivate func setupCGMManager(for cgmManagerType: CGMManagerUI.Type) {
+        if var setupViewController = cgmManagerType.setupViewController() {
+            setupViewController.setupDelegate = self
+            setupViewController.completionDelegate = self
+            present(setupViewController, animated: true, completion: nil)
+        }
+    }
+    
+    func cgmManagerSetupViewController(_ cgmManagerSetupViewController: CGMManagerSetupViewController,
+                                       didSetUpCGMManager cgmManager: CGMManagerUI)
+    {
+        deviceManager.cgmManager = cgmManager
+    }
+}
+
+extension StatusTableViewController: PumpManagerSetupViewControllerDelegate {
+    fileprivate func setupPumpManager(for pumpManagerType: PumpManagerUI.Type) {
+        var setupViewController = pumpManagerType.setupViewController()
+        setupViewController.setupDelegate = self
+        setupViewController.completionDelegate = self
+        setupViewController.basalSchedule = deviceManager.loopManager.basalRateSchedule
+        setupViewController.maxBolusUnits = deviceManager.loopManager.settings.maximumBolus
+        setupViewController.maxBasalRateUnitsPerHour = deviceManager.loopManager.settings.maximumBasalRatePerHour
+        present(setupViewController, animated: true, completion: nil)
+    }
+
+    func pumpManagerSetupViewController(_ pumpManagerSetupViewController: PumpManagerSetupViewController,
+                                        didSetUpPumpManager pumpManager: PumpManagerUI)
+    {
+        deviceManager.pumpManager = pumpManager
+        
+        if let basalRateSchedule = pumpManagerSetupViewController.basalSchedule {
+            deviceManager.loopManager.basalRateSchedule = basalRateSchedule
+        }
+        
+        if let maxBasalRateUnitsPerHour = pumpManagerSetupViewController.maxBasalRateUnitsPerHour {
+            deviceManager.loopManager.settings.maximumBasalRatePerHour = maxBasalRateUnitsPerHour
+        }
+        
+        if let maxBolusUnits = pumpManagerSetupViewController.maxBolusUnits {
+            deviceManager.loopManager.settings.maximumBolus = maxBolusUnits
+        }
     }
 }
