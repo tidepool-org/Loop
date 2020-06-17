@@ -14,7 +14,7 @@ class LoopAlertsManager: NSObject {
     private var bluetoothCentralManager: CBCentralManager!
     private lazy var log = DiagnosticLog(category: String(describing: LoopAlertsManager.self))
     private weak var alertManager: AlertManager?
-    private let bluetoothPoweredOffIdentifier = Alert.Identifier(managerIdentifier: "Loop", alertIdentifier: "bluetoothPoweredOff")
+    private let bluetoothPoweredOffIdentifier = Alert.Identifier(managerIdentifier: Alert.defaultManagerIdentifier, alertIdentifier: "bluetoothPoweredOff")
 
     init(alertManager: AlertManager) {
         super.init()

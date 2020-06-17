@@ -1028,8 +1028,7 @@ final class StatusTableViewController: ChartsTableViewController {
                                 // show user confirmation and actual delivery amount?
                                 break
                             case .failure(let error):
-                                let alert = UIAlertController(with: error, title: NSLocalizedString("Error Canceling Bolus", comment: "The alert title for an error while canceling a bolus"))
-                                self.present(alert, animated: true, completion: nil)
+                                self.log.error("Error Canceling Bolus: %@", error.localizedDescription)
                                 if case .inProgress(let dose) = self.bolusState {
                                     self.updateHUDandStatusRows(statusRowMode: .bolusing(dose: dose), newSize: nil, animated: true)
                                 } else {
