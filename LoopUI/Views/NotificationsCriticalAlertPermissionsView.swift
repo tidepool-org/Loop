@@ -19,15 +19,13 @@ public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeCla
     
     public var body: some View {
         VStack {
-            Text(LocalizedString("Notification & Critical Alert Permissions", comment: "Notification & Critical Alert Permissions screen title"))
-                .font(.largeTitle)
-                .bold()
             List {
                 manageNotificationsSection
                 manageCriticalAlertsSection
                 notificationAndCriticalAlertPermissionSupportSection
             }
             .listStyle(GroupedListStyle())
+            .navigationBarTitle(Text(LocalizedString("Alert Permissions", comment: "Notification & Critical Alert Permissions screen title")))
             .navigationBarBackButtonHidden(false)
             .navigationBarHidden(false)
             .environment(\.horizontalSizeClass, horizontalOverride)
