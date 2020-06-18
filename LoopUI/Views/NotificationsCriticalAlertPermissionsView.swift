@@ -11,9 +11,9 @@ import SwiftUI
 
 public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeClassOverride {
 
-    @ObservedObject private var viewModel: NotificationsCriticalAlertPermissionsViewModel
+    @ObservedObject private var viewModel: LoopNotificationsViewModel
 
-    public init(viewModel: NotificationsCriticalAlertPermissionsViewModel) {
+    public init(viewModel: LoopNotificationsViewModel) {
         self.viewModel = viewModel
     }
     
@@ -42,6 +42,7 @@ extension NotificationsCriticalAlertPermissionsView {
                 HStack {
                     Text(LocalizedString("Manage Notifications in Settings", comment: "Manage Notifications in Settings button text"))
                     if !viewModel.notificationsPermissionsGiven {
+                        Spacer()
                         Text(LocalizedString("⚠️", comment: "Warning symbol"))
                     }
                 }
@@ -61,6 +62,7 @@ extension NotificationsCriticalAlertPermissionsView {
                 HStack {
                     Text(LocalizedString("Manage Critical Alerts in Settings", comment: "Manage Critical Alerts in Settings button text"))
                     if !viewModel.criticalAlertsPermissionsGiven {
+                        Spacer()
                         Text(LocalizedString("⚠️", comment: "Warning symbol"))
                     }
                 }
@@ -85,11 +87,11 @@ extension NotificationsCriticalAlertPermissionsView {
 struct NotificationsCriticalAlertPermissionsView_Previews: PreviewProvider {
     static var previews: some View {
         return Group {
-            NotificationsCriticalAlertPermissionsView(viewModel: NotificationsCriticalAlertPermissionsViewModel())
+            NotificationsCriticalAlertPermissionsView(viewModel: LoopNotificationsViewModel())
                 .colorScheme(.light)
                 .previewDevice(PreviewDevice(rawValue: "iPhone SE"))
                 .previewDisplayName("SE light")
-            NotificationsCriticalAlertPermissionsView(viewModel: NotificationsCriticalAlertPermissionsViewModel())
+            NotificationsCriticalAlertPermissionsView(viewModel: LoopNotificationsViewModel())
                 .colorScheme(.dark)
                 .previewDevice(PreviewDevice(rawValue: "iPhone XS Max"))
                 .previewDisplayName("XS Max dark")

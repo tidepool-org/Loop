@@ -15,12 +15,12 @@ public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
     private let backButtonText: String
     @ObservedObject private var viewModel: LoopNotificationsViewModel
     
-    private let notificationAndCriticalAlertPermissionScreen =
-        NotificationsCriticalAlertPermissionsView(viewModel: NotificationsCriticalAlertPermissionsViewModel())
+    private let notificationAndCriticalAlertPermissionScreen: NotificationsCriticalAlertPermissionsView
     
     public init(backButtonText: String = "", viewModel: LoopNotificationsViewModel) {
         self.backButtonText = backButtonText
         self.viewModel = viewModel
+        self.notificationAndCriticalAlertPermissionScreen = NotificationsCriticalAlertPermissionsView(viewModel: viewModel)
     }
 
     public var body: some View {
@@ -49,7 +49,13 @@ public struct LoopNotificationsView: View, HorizontalSizeClassOverride {
     private var notificationAndCriticalAlertPermissionSection: some View {
         Section(header: SectionHeader(label: LocalizedString("Tidepool Loop Notifications", comment: "Section title for Tidepool Loop notifications"))) {
             NavigationLink(destination: notificationAndCriticalAlertPermissionScreen) {
-                Text(LocalizedString("Notification & Critical Alert Permissions", comment: "Notification & Critical Alert Permissions button text"))
+                HStack {
+                    Text(LocalizedString("Notification & Critical Alert Permissions", comment: "Notification & Critical Alert Permissions button text"))
+                    if viewModel.showWarning {
+                        Spacer()
+                        Text(LocalizedString("⚠️", comment: "Warning symbol"))
+                    }
+                }
             }
         }
     }

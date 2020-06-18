@@ -6,6 +6,7 @@
 //  Copyright © 2015 Nathan Racklyeft. All rights reserved.
 //
 
+import Combine
 import UIKit
 import HealthKit
 import LoopKit
@@ -18,6 +19,8 @@ final class SettingsTableViewController: UITableViewController {
 
     @IBOutlet var devicesSectionTitleView: UIView?
 
+    private var trash = Set<AnyCancellable>()
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -28,6 +31,13 @@ final class SettingsTableViewController: UITableViewController {
         tableView.register(SettingsImageTableViewCell.self, forCellReuseIdentifier: SettingsImageTableViewCell.className)
         tableView.register(SwitchTableViewCell.self, forCellReuseIdentifier: SwitchTableViewCell.className)
         tableView.register(TextButtonTableViewCell.self, forCellReuseIdentifier: TextButtonTableViewCell.className)
+        
+        loopNotificationsViewModel.$showWarning
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                self.tableView.reloadRows(at: [[Section.loop.rawValue, LoopRow.notifications.rawValue]], with: .none)
+            }
+        .store(in: &trash)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -41,6 +51,8 @@ final class SettingsTableViewController: UITableViewController {
     private lazy var isTestingPumpManager = dataManager.pumpManager is TestingPumpManager
     private lazy var isTestingCGMManager = dataManager.cgmManager is TestingCGMManager
 
+    let loopNotificationsViewModel = LoopNotificationsViewModel()
+    
     fileprivate enum Section: Int, CaseIterable {
         case loop = 0
         case pump
@@ -169,6 +181,9 @@ final class SettingsTableViewController: UITableViewController {
             case .notifications:
                 let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.className, for: indexPath)
                 cell.textLabel?.text = NSLocalizedString("Notifications", comment: "Title text for notifications button cell")
+                if loopNotificationsViewModel.showWarning {
+                    cell.detailTextLabel?.text = NSLocalizedString("⚠️", comment: "Warning symbol")
+                }
                 cell.accessoryType = .disclosureIndicator
                 return cell
             }
@@ -596,10 +611,9 @@ final class SettingsTableViewController: UITableViewController {
             case .dosing:
                 break
             case .notifications:
-                let viewModel = LoopNotificationsViewModel()
                 let hostingController = DismissibleHostingController(
                     rootView: LoopNotificationsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
-                                                    viewModel: viewModel),
+                                                    viewModel: loopNotificationsViewModel),
                     onDisappear: {
                         tableView.deselectRow(at: indexPath, animated: true)
                 })
