@@ -259,8 +259,7 @@ extension AlertStore {
             let datePredicate = NSPredicate(format: "issuedDate >= %@", date as NSDate)
             // This predicate only _includes_ a record if it either has no interval (i.e. is 'immediate')
             // _or_ it is a 'delayed' or 'repeating' alert (a non-nil triggerInterval) whose time has already come
-            // (that is, issuedDate + triggerInterval < now).  Note that the CAST() directives are necessary to
-            // perform the math inside the predicate.
+            // (that is, issuedDate + triggerInterval < now).
             let futurePredicate = NSPredicate(format: "triggerInterval == nil OR \(predicateExpressionNotYetExpired)", now as NSDate)
             return excludingFutureAlerts ?
                 NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, futurePredicate])
