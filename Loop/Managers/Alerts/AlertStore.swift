@@ -15,6 +15,11 @@ public class AlertStore {
         case notFound
     }
 
+    private enum PostUpdateAction {
+        case save, delete
+    }
+    private typealias ManagedObjectUpdateBlock = (StoredAlert) -> PostUpdateAction
+    
     // Available for tests only
     let managedObjectContext: NSManagedObjectContext
 
@@ -72,28 +77,32 @@ public class AlertStore {
             }
         }
     }
-
+    
     public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date(),
                                       completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier, addingPredicate: NSPredicate(format: "acknowledgedDate == nil"),
-                             with: { $0.acknowledgedDate = date; return true }, completion: completion)
+        recordUpdateOfLatest(of: identifier,
+                             addingPredicate: NSPredicate(format: "acknowledgedDate == nil"),
+                             with: { $0.acknowledgedDate = date; return .save },
+                             completion: completion)
     }
-
+    
     public func recordRetraction(of identifier: Alert.Identifier, at date: Date = Date(),
                                  completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier, addingPredicate: NSPredicate(format: "retractedDate == nil"),
+        recordUpdateOfLatest(of: identifier,
+                             addingPredicate: NSPredicate(format: "retractedDate == nil"),
                              with: {
                                 // if the alert was retracted before it was ever shown, delete it. Note: this only
                                 // applies to .delayed alerts!
                                 if case .delayed(let interval) = $0.trigger, $0.issuedDate + interval >= date {
-                                    return false
+                                    return .delete
                                 } else {
                                     $0.retractedDate = date
-                                    return true
+                                    return .save
                                 }
-        }, completion: completion)
+                             },
+                             completion: completion)
     }
-
+    
     public func lookupAllUnacknowledged(completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
         managedObjectContext.perform {
             do {
@@ -119,15 +128,14 @@ extension AlertStore {
 
     private func recordUpdateOfLatest(of identifier: Alert.Identifier,
                                       addingPredicate predicate: NSPredicate,
-                                      with block: @escaping (StoredAlert) -> Bool,
+                                      with block: @escaping ManagedObjectUpdateBlock,
                                       completion: ((Result<Void, Error>) -> Void)?) {
         self.managedObjectContext.perform {
             self.lookupLatest(identifier: identifier, predicate: predicate) {
                 switch $0 {
                 case .success(let object):
                     if let object = object {
-                        // Returning false from the function block means "delete it"
-                        let shouldDelete = block(object) == false
+                        let shouldDelete = block(object) == .delete
                         do {
                             if shouldDelete {
                                 self.managedObjectContext.delete(object)
@@ -233,11 +241,20 @@ extension AlertStore {
     }
     struct SinceDateFilter: QueryFilter {
         let date: Date
-        var predicate: NSPredicate? { NSPredicate(format: "issuedDate >= %@", date as NSDate) }
+        let now: Date
+        let excludingFutureAlerts: Bool
+        var predicate: NSPredicate? {
+            let datePredicate = NSPredicate(format: "issuedDate >= %@", date as NSDate)
+            // if case .delayed(let interval) = $0.trigger, $0.issuedDate + interval >= date {
+            let futurePredicate = NSPredicate(format: "triggerInterval == nil OR (triggerType == 1 AND CAST(issuedDate, 'NSNumber') + triggerInterval < CAST(%@, 'NSNumber'))", now as NSDate)
+            return excludingFutureAlerts ?
+                NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, futurePredicate])
+                : datePredicate
+        }
     }
 
-    func executeQuery(since date: Date, limit: Int, completion: @escaping (QueryResult<SinceDateFilter>) -> Void) {
-        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date)), limit: limit, completion: completion)
+    func executeQuery(since date: Date, excludingFutureAlerts: Bool = true, now: Date = Date(), limit: Int, completion: @escaping (QueryResult<SinceDateFilter>) -> Void) {
+        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date, now: now, excludingFutureAlerts: excludingFutureAlerts)), limit: limit, completion: completion)
     }
 
     func continueQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, completion: @escaping (QueryResult<Filter>) -> Void) {
