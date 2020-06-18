@@ -29,6 +29,12 @@ public class AlertStore {
 
     private let log = DiagnosticLog(category: "AlertStore")
 
+    // This is terribly inconvenient, but it turns out that executing the following expression in CoreData _differs_
+    // depending on whether it is in-memory or SQLite
+    private let predicateExpressionNotYetExpiredSQLite = "issuedDate + triggerInterval < %@"
+    private let predicateExpressionNotYetExpiredInMemory = "CAST(issuedDate, 'NSNumber') + triggerInterval < CAST(%@, 'NSNumber')"
+    private let predicateExpressionNotYetExpired: String
+    
     public init(storageDirectoryURL: URL? = nil, expireAfter: TimeInterval = 24 /* hours */ * 60 /* minutes */ * 60 /* seconds */) {
         managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
@@ -40,8 +46,10 @@ public class AlertStore {
                 .appendingPathComponent("AlertStore")
                 .appendingPathComponent("AlertStore.sqlite")
             storeDescription.url = storageFileURL
+            predicateExpressionNotYetExpired = predicateExpressionNotYetExpiredSQLite
         } else {
             storeDescription.type = NSInMemoryStoreType
+            predicateExpressionNotYetExpired = predicateExpressionNotYetExpiredInMemory
         }
         storeDescription.shouldMigrateStoreAutomatically = true
         storeDescription.shouldInferMappingModelAutomatically = true
@@ -243,6 +251,7 @@ extension AlertStore {
         let predicate: NSPredicate?
     }
     struct SinceDateFilter: QueryFilter {
+        let predicateExpressionNotYetExpired: String
         let date: Date
         let excludingFutureAlerts: Bool
         let now: Date
@@ -252,7 +261,7 @@ extension AlertStore {
             // _or_ it is a 'delayed' or 'repeating' alert (a non-nil triggerInterval) whose time has already come
             // (that is, issuedDate + triggerInterval < now).  Note that the CAST() directives are necessary to
             // perform the math inside the predicate.
-            let futurePredicate = NSPredicate(format: "triggerInterval == nil OR CAST(issuedDate, 'NSNumber') + triggerInterval < CAST(%@, 'NSNumber')", now as NSDate)
+            let futurePredicate = NSPredicate(format: "triggerInterval == nil OR \(predicateExpressionNotYetExpired)", now as NSDate)
             return excludingFutureAlerts ?
                 NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, futurePredicate])
                 : datePredicate
@@ -260,7 +269,11 @@ extension AlertStore {
     }
 
     func executeQuery(since date: Date, excludingFutureAlerts: Bool = true, now: Date = Date(), limit: Int, completion: @escaping (QueryResult<SinceDateFilter>) -> Void) {
-        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date, excludingFutureAlerts: excludingFutureAlerts, now: now)), limit: limit, completion: completion)
+        let sinceDateFilter = SinceDateFilter(predicateExpressionNotYetExpired: predicateExpressionNotYetExpired,
+                                              date: date,
+                                              excludingFutureAlerts: excludingFutureAlerts,
+                                              now: now)
+        executeAlertQuery(from: QueryAnchor(filter: sinceDateFilter), limit: limit, completion: completion)
     }
 
     func continueQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, completion: @escaping (QueryResult<Filter>) -> Void) {
