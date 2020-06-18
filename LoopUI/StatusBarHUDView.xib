@@ -19,7 +19,7 @@
             <rect key="frame" x="0.0" y="0.0" width="375" height="80"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
             <subviews>
-                <view contentMode="scaleToFill" horizontalHuggingPriority="240" translatesAutoresizingMaskIntoConstraints="NO" id="76s-1c-uyr" customClass="CGMStatusHUDView" customModule="LoopUI" customModuleProvider="target">
+                <view contentMode="scaleToFill" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="76s-1c-uyr" customClass="CGMStatusHUDView" customModule="LoopUI" customModuleProvider="target">
                     <rect key="frame" x="0.0" y="0.0" width="150" height="80"/>
                     <subviews>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QwU-5e-NnT">
@@ -27,19 +27,19 @@
                             <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         </view>
                         <stackView opaque="NO" contentMode="scaleToFill" distribution="fillProportionally" translatesAutoresizingMaskIntoConstraints="NO" id="u3Q-Vj-Efw">
-                            <rect key="frame" x="8" y="10" width="142" height="50"/>
+                            <rect key="frame" x="8" y="10" width="134" height="50"/>
                             <subviews>
                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4ED-GN-I8z" customClass="GlucoseValueHUDView" customModule="LoopUI" customModuleProvider="target">
-                                    <rect key="frame" x="0.0" y="0.0" width="87.5" height="50"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="82.5" height="50"/>
                                     <subviews>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" text="399" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zNz-ko-2fC">
-                                            <rect key="frame" x="0.0" y="-2" width="87.5" height="41"/>
+                                            <rect key="frame" x="0.0" y="-2" width="82.5" height="41"/>
                                             <fontDescription key="fontDescription" style="UICTFontTextStyleTitle0"/>
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="mmol/L" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JDP-Om-JBq">
-                                            <rect key="frame" x="0.0" y="31" width="87.5" height="14.5"/>
+                                            <rect key="frame" x="0.0" y="31" width="82.5" height="14.5"/>
                                             <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
@@ -62,10 +62,10 @@
                                     </connections>
                                 </view>
                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uZi-T5-4vg" customClass="GlucoseTrendHUDView" customModule="LoopUI" customModuleProvider="target">
-                                    <rect key="frame" x="87.5" y="0.0" width="54.5" height="50"/>
+                                    <rect key="frame" x="82.5" y="0.0" width="51.5" height="50"/>
                                     <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" misplaced="YES" text="⇈" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="O42-yg-eBc">
-                                            <rect key="frame" x="12" y="12" width="26" height="26"/>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" text="⇈" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="O42-yg-eBc">
+                                            <rect key="frame" x="12" y="8.5" width="27.5" height="33.5"/>
                                             <fontDescription key="fontDescription" style="UICTFontTextStyleTitle1"/>
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
@@ -105,7 +105,7 @@
                         <constraint firstItem="u3Q-Vj-Efw" firstAttribute="top" secondItem="76s-1c-uyr" secondAttribute="top" constant="10" id="7eK-H8-1dG"/>
                         <constraint firstItem="QwU-5e-NnT" firstAttribute="top" secondItem="76s-1c-uyr" secondAttribute="top" constant="10" id="FJE-uP-HIa"/>
                         <constraint firstAttribute="bottom" secondItem="QwU-5e-NnT" secondAttribute="bottom" constant="20" id="HX0-Mo-7hM"/>
-                        <constraint firstAttribute="trailing" secondItem="u3Q-Vj-Efw" secondAttribute="trailing" id="SQf-2L-eun"/>
+                        <constraint firstAttribute="trailing" secondItem="u3Q-Vj-Efw" secondAttribute="trailing" constant="8" id="SQf-2L-eun"/>
                         <constraint firstAttribute="bottom" secondItem="vmJ-km-UjN" secondAttribute="bottom" constant="8" id="Ski-fr-qQY"/>
                         <constraint firstItem="u3Q-Vj-Efw" firstAttribute="leading" secondItem="76s-1c-uyr" secondAttribute="leading" constant="8" id="Yxh-ch-Sdk"/>
                         <constraint firstAttribute="bottom" secondItem="u3Q-Vj-Efw" secondAttribute="bottom" constant="20" id="cK2-Am-j0i"/>
@@ -121,14 +121,14 @@
                         <outlet property="statusStackView" destination="u3Q-Vj-Efw" id="A6H-Zp-m79"/>
                     </connections>
                 </view>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="vE4-Dc-89O" customClass="LoopCompletionHUDView" customModule="LoopUI">
+                <view contentMode="scaleToFill" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="vE4-Dc-89O" customClass="LoopCompletionHUDView" customModule="LoopUI">
                     <rect key="frame" x="150" y="0.0" width="75" height="80"/>
                     <subviews>
-                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="O9F-BA-uLT" customClass="LoopStateView" customModule="LoopUI" customModuleProvider="target">
-                            <rect key="frame" x="12.5" y="10" width="50" height="50"/>
+                        <view contentMode="scaleToFill" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="O9F-BA-uLT" customClass="LoopStateView" customModule="LoopUI" customModuleProvider="target">
+                            <rect key="frame" x="15.5" y="13" width="44" height="44"/>
                             <constraints>
-                                <constraint firstAttribute="height" constant="50" id="BXI-Or-RKm"/>
-                                <constraint firstAttribute="width" constant="50" id="GBT-hY-xYS"/>
+                                <constraint firstAttribute="height" constant="44" id="BXI-Or-RKm"/>
+                                <constraint firstAttribute="width" constant="44" id="GBT-hY-xYS"/>
                                 <constraint firstAttribute="width" secondItem="O9F-BA-uLT" secondAttribute="height" multiplier="1:1" id="Zc2-YA-IHj"/>
                             </constraints>
                             <variation key="default">
@@ -146,23 +146,23 @@
                         <constraint firstAttribute="width" constant="75" id="BfT-x3-qpZ"/>
                         <constraint firstAttribute="height" constant="80" id="WoE-8d-jwY"/>
                         <constraint firstItem="O9F-BA-uLT" firstAttribute="centerX" secondItem="vE4-Dc-89O" secondAttribute="centerX" id="hWU-3l-rwB"/>
-                        <constraint firstItem="O9F-BA-uLT" firstAttribute="top" secondItem="vE4-Dc-89O" secondAttribute="top" constant="10" id="xmo-fd-yq0"/>
+                        <constraint firstItem="O9F-BA-uLT" firstAttribute="top" secondItem="vE4-Dc-89O" secondAttribute="top" constant="13" id="xmo-fd-yq0"/>
                     </constraints>
                     <connections>
                         <outlet property="loopStateView" destination="O9F-BA-uLT" id="Ec0-XW-OEc"/>
                     </connections>
                 </view>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="F6P-l9-6hk" customClass="PumpStatusHUDView" customModule="LoopUI" customModuleProvider="target">
+                <view contentMode="scaleToFill" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="F6P-l9-6hk" customClass="PumpStatusHUDView" customModule="LoopUI" customModuleProvider="target">
                     <rect key="frame" x="225" y="0.0" width="150" height="80"/>
                     <subviews>
-                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="cSv-zq-wo3">
+                        <view contentMode="scaleToFill" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="cSv-zq-wo3">
                             <rect key="frame" x="0.0" y="10" width="142" height="50"/>
                             <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         </view>
                         <stackView opaque="NO" contentMode="scaleToFill" distribution="fillProportionally" translatesAutoresizingMaskIntoConstraints="NO" id="xRi-qE-U6T">
-                            <rect key="frame" x="0.0" y="10" width="142" height="50"/>
+                            <rect key="frame" x="8" y="10" width="134" height="50"/>
                             <subviews>
-                                <view contentMode="scaleToFill" horizontalHuggingPriority="240" translatesAutoresizingMaskIntoConstraints="NO" id="fsr-gH-zny" customClass="BasalRateHUDView" customModule="LoopUI">
+                                <view contentMode="scaleToFill" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="fsr-gH-zny" customClass="BasalRateHUDView" customModule="LoopUI">
                                     <rect key="frame" x="0.0" y="0.0" width="90" height="50"/>
                                     <subviews>
                                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="geI-yt-4dZ" customClass="BasalStateView" customModule="LoopUI">
@@ -195,8 +195,8 @@
                                         <outlet property="basalStateView" destination="geI-yt-4dZ" id="XOw-MT-ckm"/>
                                     </connections>
                                 </view>
-                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zyz-JH-sNX" customClass="LevelHUDView" customModule="LoopKitUI">
-                                    <rect key="frame" x="90" y="0.0" width="52" height="50"/>
+                                <view contentMode="scaleToFill" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="zyz-JH-sNX" customClass="LevelHUDView" customModule="LoopKitUI">
+                                    <rect key="frame" x="90" y="0.0" width="44" height="50"/>
                                     <subviews>
                                         <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="jfu-In-s2Y">
                                             <rect key="frame" x="0.0" y="5" width="38" height="40"/>
@@ -234,11 +234,11 @@
                                         <bool key="isElement" value="YES"/>
                                     </accessibility>
                                     <constraints>
-                                        <constraint firstAttribute="width" constant="52" id="5PW-rw-7mW"/>
+                                        <constraint firstAttribute="width" constant="44" id="5PW-rw-7mW"/>
                                         <constraint firstItem="K9w-1i-FGo" firstAttribute="centerY" secondItem="jfu-In-s2Y" secondAttribute="centerY" id="BWD-ZK-UZ5"/>
                                         <constraint firstAttribute="bottom" secondItem="jfu-In-s2Y" secondAttribute="bottom" constant="5" id="JC7-IZ-sXa"/>
                                         <constraint firstItem="K9w-1i-FGo" firstAttribute="centerX" secondItem="jfu-In-s2Y" secondAttribute="centerX" id="Mah-jP-K8a"/>
-                                        <constraint firstAttribute="trailing" secondItem="jfu-In-s2Y" secondAttribute="trailing" constant="14" id="bOX-CB-65r"/>
+                                        <constraint firstAttribute="trailing" secondItem="jfu-In-s2Y" secondAttribute="trailing" constant="6" id="bOX-CB-65r"/>
                                         <constraint firstItem="jfu-In-s2Y" firstAttribute="centerY" secondItem="zyz-JH-sNX" secondAttribute="centerY" id="br7-jS-HiF"/>
                                         <constraint firstItem="jfu-In-s2Y" firstAttribute="top" secondItem="zyz-JH-sNX" secondAttribute="top" constant="5" id="gsV-RE-Izc"/>
                                         <constraint firstItem="jfu-In-s2Y" firstAttribute="leading" secondItem="zyz-JH-sNX" secondAttribute="leading" id="wAS-6q-RSM"/>
@@ -264,7 +264,7 @@
                     </accessibility>
                     <constraints>
                         <constraint firstAttribute="trailing" secondItem="cSv-zq-wo3" secondAttribute="trailing" constant="8" id="44c-GO-CFS"/>
-                        <constraint firstItem="xRi-qE-U6T" firstAttribute="leading" secondItem="F6P-l9-6hk" secondAttribute="leading" id="4KS-fe-oLr"/>
+                        <constraint firstItem="xRi-qE-U6T" firstAttribute="leading" secondItem="F6P-l9-6hk" secondAttribute="leading" constant="8" id="4KS-fe-oLr"/>
                         <constraint firstAttribute="trailing" secondItem="xRi-qE-U6T" secondAttribute="trailing" constant="8" id="MKi-JT-ZCr"/>
                         <constraint firstAttribute="bottom" secondItem="cSv-zq-wo3" secondAttribute="bottom" constant="20" id="My7-an-f3Q"/>
                         <constraint firstItem="cSv-zq-wo3" firstAttribute="leading" secondItem="F6P-l9-6hk" secondAttribute="leading" id="UVW-4k-vOK"/>

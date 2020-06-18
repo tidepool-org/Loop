@@ -45,9 +45,9 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     }
     
     public func presentAddCGMAlert() {
-        alertStatusView.alertMessageLabel.text = LocalizedString("No CGM Selected", comment: "Title text for button to set up a CGM")
+        alertStatusView.alertMessageLabel.text = LocalizedString("Add CGM", comment: "Title text for button to set up a CGM")
         alertStatusView.alertMessageLabel.tintColor = .label
-        alertStatusView.alertIcon.image = UIImage(systemName: "plus.circle")
+        alertStatusView.alertIcon.image = UIImage(systemName: "plus.circle.fill")
         alertStatusView.alertIcon.tintColor = .systemRed
         presentAlert()
     }

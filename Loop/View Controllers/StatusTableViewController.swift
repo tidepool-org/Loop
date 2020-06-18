@@ -108,6 +108,8 @@ final class StatusTableViewController: ChartsTableViewController {
         tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
         
         addScenarioStepGestureRecognizers()
+        
+        self.tableView.backgroundColor = .secondarySystemBackground
     }
     
     override func didReceiveMemoryWarning() {

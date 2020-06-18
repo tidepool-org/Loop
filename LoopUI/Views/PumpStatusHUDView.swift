@@ -44,9 +44,9 @@ public final class PumpStatusHUDView: DeviceStatusHUDView, NibLoadable {
     }
     
     public func presentAddPumpAlert() {
-        alertStatusView.alertMessageLabel.text = LocalizedString("No Pump Selected", comment: "Title text for button to set up a pump")
+        alertStatusView.alertMessageLabel.text = LocalizedString("Add Pump", comment: "Title text for button to set up a pump")
         alertStatusView.alertMessageLabel.tintColor = .label
-        alertStatusView.alertIcon.image = UIImage(systemName: "plus.circle")
+        alertStatusView.alertIcon.image = UIImage(systemName: "plus.circle.fill")
         alertStatusView.alertIcon.tintColor = .systemRed
         presentAlert()
     }
