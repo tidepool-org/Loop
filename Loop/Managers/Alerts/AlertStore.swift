@@ -82,7 +82,10 @@ public class AlertStore {
                                       completion: ((Result<Void, Error>) -> Void)? = nil) {
         recordUpdateOfLatest(of: identifier,
                              addingPredicate: NSPredicate(format: "acknowledgedDate == nil"),
-                             with: { $0.acknowledgedDate = date; return .save },
+                             with: {
+                                $0.acknowledgedDate = date
+                                return .save
+                             },
                              completion: completion)
     }
     
@@ -241,8 +244,8 @@ extension AlertStore {
     }
     struct SinceDateFilter: QueryFilter {
         let date: Date
-        let now: Date
         let excludingFutureAlerts: Bool
+        let now: Date
         var predicate: NSPredicate? {
             let datePredicate = NSPredicate(format: "issuedDate >= %@", date as NSDate)
             // This predicate only _includes_ a record if it either has no interval (i.e. is 'immediate')
@@ -257,7 +260,7 @@ extension AlertStore {
     }
 
     func executeQuery(since date: Date, excludingFutureAlerts: Bool = true, now: Date = Date(), limit: Int, completion: @escaping (QueryResult<SinceDateFilter>) -> Void) {
-        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date, now: now, excludingFutureAlerts: excludingFutureAlerts)), limit: limit, completion: completion)
+        executeAlertQuery(from: QueryAnchor(filter: SinceDateFilter(date: date, excludingFutureAlerts: excludingFutureAlerts, now: now)), limit: limit, completion: completion)
     }
 
     func continueQuery<Filter: QueryFilter>(from anchor: QueryAnchor<Filter>, limit: Int, completion: @escaping (QueryResult<Filter>) -> Void) {
