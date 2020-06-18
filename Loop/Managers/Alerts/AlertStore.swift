@@ -91,9 +91,9 @@ public class AlertStore {
         recordUpdateOfLatest(of: identifier,
                              addingPredicate: NSPredicate(format: "retractedDate == nil"),
                              with: {
-                                // if the alert was retracted before it was ever shown, delete it. Note: this only
-                                // applies to .delayed alerts!
-                                if case .delayed(let interval) = $0.trigger, $0.issuedDate + interval >= date {
+                                // if the alert was retracted before it was ever shown, delete it.
+                                // Note: this only applies to .delayed or .repeating alerts!
+                                if let delay = $0.trigger.interval, $0.issuedDate + delay >= date {
                                     return .delete
                                 } else {
                                     $0.retractedDate = date
@@ -246,10 +246,10 @@ extension AlertStore {
         var predicate: NSPredicate? {
             let datePredicate = NSPredicate(format: "issuedDate >= %@", date as NSDate)
             // This predicate only _includes_ a record if it either has no interval (i.e. is 'immediate')
-            // _or_ it is a 'delayed' (trigger type 1) alert whose time has already come
-            // (that is, issuedDate + triggerInterval < now).  The CAST() directives are necessary to
+            // _or_ it is a 'delayed' or 'repeating' alert (a non-nil triggerInterval) whose time has already come
+            // (that is, issuedDate + triggerInterval < now).  Note that the CAST() directives are necessary to
             // perform the math inside the predicate.
-            let futurePredicate = NSPredicate(format: "triggerInterval == nil OR (triggerType == 1 AND CAST(issuedDate, 'NSNumber') + triggerInterval < CAST(%@, 'NSNumber'))", now as NSDate)
+            let futurePredicate = NSPredicate(format: "triggerInterval == nil OR CAST(issuedDate, 'NSNumber') + triggerInterval < CAST(%@, 'NSNumber')", now as NSDate)
             return excludingFutureAlerts ?
                 NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, futurePredicate])
                 : datePredicate
@@ -316,6 +316,16 @@ extension Alert.Identifier {
             NSPredicate(format: "managerIdentifier == %@", managerIdentifier),
             NSPredicate(format: "alertIdentifier == %@", alertIdentifier)
         ])
+    }
+}
+
+extension Alert.Trigger {
+    var interval: TimeInterval? {
+        switch self {
+        case .delayed(let interval): return interval
+        case .repeating(let repeatInterval): return repeatInterval
+        case .immediate: return nil
+        }
     }
 }
 
