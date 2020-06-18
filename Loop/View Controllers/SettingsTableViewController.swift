@@ -20,7 +20,8 @@ final class SettingsTableViewController: UITableViewController {
     @IBOutlet var devicesSectionTitleView: UIView?
 
     private var trash = Set<AnyCancellable>()
-
+    private var showNotificationsWarning = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -32,9 +33,10 @@ final class SettingsTableViewController: UITableViewController {
         tableView.register(SwitchTableViewCell.self, forCellReuseIdentifier: SwitchTableViewCell.className)
         tableView.register(TextButtonTableViewCell.self, forCellReuseIdentifier: TextButtonTableViewCell.className)
         
-        loopNotificationsViewModel.$showWarning
+        loopNotificationsViewModel.showWarningPublisher
             .receive(on: RunLoop.main)
-            .sink { _ in
+            .sink {
+                self.showNotificationsWarning = $0
                 self.tableView.reloadRows(at: [[Section.loop.rawValue, LoopRow.notifications.rawValue]], with: .none)
             }
         .store(in: &trash)
@@ -181,7 +183,7 @@ final class SettingsTableViewController: UITableViewController {
             case .notifications:
                 let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.className, for: indexPath)
                 cell.textLabel?.text = NSLocalizedString("Notifications", comment: "Title text for notifications button cell")
-                if loopNotificationsViewModel.showWarning {
+                if showNotificationsWarning {
                     cell.detailTextLabel?.text = NSLocalizedString("⚠️", comment: "Warning symbol")
                 }
                 cell.accessoryType = .disclosureIndicator

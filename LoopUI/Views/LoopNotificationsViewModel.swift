@@ -6,6 +6,7 @@
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
+import Combine
 import Foundation
 import LoopKit
 import SwiftUI
@@ -15,15 +16,27 @@ public class LoopNotificationsViewModel: ObservableObject {
     @Published var notificationsPermissionsGiven = true
     @Published var criticalAlertsPermissionsGiven = true
 
-    // Sad panda.  What I really want to do is make this a computed property of the above, but I can't.
-    @Published public var showWarning = false
-    
+    lazy public var showWarningPublisher: AnyPublisher<Bool, Never> = {
+        $notificationsPermissionsGiven
+            .combineLatest($criticalAlertsPermissionsGiven)
+            .map { $0 == false || $1 == false }
+            .eraseToAnyPublisher()
+    }()
+
+    @Published var showWarning = false
+    lazy private var trash = Set<AnyCancellable>()
+
     public init() {
         NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: nil) {
             [weak self] _ in
             self?.updateState()
         }
         updateState()
+        
+        showWarningPublisher
+            .receive(on: RunLoop.main)
+            .assign(to: \.showWarning, on: self)
+            .store(in: &trash)
     }
     
     private func updateState() {
@@ -31,7 +44,6 @@ public class LoopNotificationsViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self.notificationsPermissionsGiven = settings.alertSetting == .enabled
                 self.criticalAlertsPermissionsGiven = settings.criticalAlertSetting == .enabled
-                self.showWarning = self.notificationsPermissionsGiven == false || self.criticalAlertsPermissionsGiven == false
             }
         }
     }
