@@ -14,12 +14,12 @@ private let managersByIdentifier: [String: PumpManagerUI.Type] = staticPumpManag
     map[Type.managerIdentifier] = Type
 }
 
-typealias PumpManagerHUDViewsRawValue = [String: Any]
+typealias PumpManagerHUDViewRawValue = [String: Any]
 
-func PumpManagerHUDViewFromRawValue(_ rawValue: PumpManagerHUDViewsRawValue, pluginManager: PluginManager) -> LevelHUDView? {
+func PumpManagerHUDViewFromRawValue(_ rawValue: PumpManagerHUDViewRawValue, pluginManager: PluginManager) -> LevelHUDView? {
     guard
         let identifier = rawValue["managerIdentifier"] as? String,
-        let rawState = rawValue["hudProviderViews"] as? HUDProvider.HUDViewsRawState,
+        let rawState = rawValue["hudProviderViews"] as? HUDProvider.HUDViewRawState,
         let manager = pluginManager.getPumpManagerTypeByIdentifier(identifier) ?? staticPumpManagersByIdentifier[identifier] as? PumpManagerUI.Type else
     {
         return nil
@@ -27,9 +27,9 @@ func PumpManagerHUDViewFromRawValue(_ rawValue: PumpManagerHUDViewsRawValue, plu
     return manager.createHUDView(rawValue: rawState)
 }
 
-func PumpManagerHUDViewsRawValueFromHUDProvider(_ hudProvider: HUDProvider) -> PumpManagerHUDViewsRawValue {
+func PumpManagerHUDViewRawValueFromHUDProvider(_ hudProvider: HUDProvider) -> PumpManagerHUDViewRawValue {
     return [
         "managerIdentifier": hudProvider.managerIdentifier,
-        "hudProviderViews": hudProvider.hudViewsRawState
+        "hudProviderView": hudProvider.hudViewRawState
     ]
 }
