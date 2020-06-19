@@ -6,10 +6,10 @@
 //  Copyright © 2015 Nathan Racklyeft. All rights reserved.
 //
 
-import UIKit
 import Intents
 import LoopCore
 import LoopKit
+import UIKit
 import UserNotifications
 
 @UIApplicationMain
@@ -19,8 +19,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private lazy var pluginManager = PluginManager()
 
+    private var alertManager: AlertManager!
     private var deviceDataManager: DeviceDataManager!
-    private var deviceAlertManager: DeviceAlertManager!
+    private var loopAlertsManager: LoopAlertsManager!
     
     var window: UIWindow?
 
@@ -31,8 +32,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         UIDevice.current.isBatteryMonitoringEnabled = true
 
-        deviceAlertManager = DeviceAlertManager(rootViewController: rootViewController)
-        deviceDataManager = DeviceDataManager(pluginManager: pluginManager, deviceAlertManager: deviceAlertManager)
+        alertManager = AlertManager(rootViewController: rootViewController, expireAfter: Bundle.main.localCacheDuration ?? .days(1))
+        deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertManager: alertManager)
+        loopAlertsManager = LoopAlertsManager(alertManager: alertManager)
 
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 
@@ -117,6 +119,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
+// MARK: UNUserNotificationCenterDelegate implementation
 
 extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
@@ -133,12 +136,12 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                 }
                 return
             }
-        case NotificationManager.Action.acknowledgeDeviceAlert.rawValue:
+        case NotificationManager.Action.acknowledgeAlert.rawValue:
             let userInfo = response.notification.request.content.userInfo
-            if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? DeviceAlert.AlertIdentifier,
+            if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? Alert.AlertIdentifier,
                 let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String {
-                deviceAlertManager.acknowledgeDeviceAlert(identifier:
-                    DeviceAlert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier))
+                alertManager.acknowledgeAlert(identifier:
+                    Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier))
             }
         default:
             break
@@ -148,8 +151,19 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        // UserNotifications are not to be displayed while in the foreground
-        completionHandler([])
+        switch notification.request.identifier {
+        // TODO: Until these notifications are converted to use the new alert system, they shall still show in the foreground
+        case LoopNotificationCategory.bolusFailure.rawValue,
+             LoopNotificationCategory.pumpReservoirLow.rawValue,
+             LoopNotificationCategory.pumpReservoirEmpty.rawValue,
+             LoopNotificationCategory.pumpBatteryLow.rawValue,
+             LoopNotificationCategory.pumpExpired.rawValue,
+             LoopNotificationCategory.pumpFault.rawValue:
+            completionHandler([.badge, .sound, .alert])
+        default:
+            // All other userNotifications are not to be displayed while in the foreground
+            completionHandler([])
+        }
     }
     
 }

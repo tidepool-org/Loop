@@ -65,7 +65,7 @@ struct CorrectionRangeOverridesEditor: View {
     var body: some View {
         ConfigurationPage(
             title: Text("Temporary\nCorrection Ranges", comment: "Title for temporary correction ranges page"),
-            isSaveButtonEnabled: value != initialValue,
+            saveButtonState: value != initialValue ? .enabled : .disabled,
             cards: {
                 card(for: .preMeal)
                 if !FeatureFlags.sensitivityOverridesEnabled {
@@ -199,8 +199,8 @@ struct CorrectionRangeOverridesEditor: View {
             }
     }
 
-    private func confirmationAlert() -> Alert {
-        Alert(
+    private func confirmationAlert() -> SwiftUI.Alert {
+        SwiftUI.Alert(
             title: Text("Save Correction Range Overrides?", comment: "Alert title for confirming correction range overrides outside the recommended range"),
             message: Text("One or more of the values you have entered are outside of what Tidepool generally recommends.", comment: "Alert message for confirming correction range overrides outside the recommended range"),
             primaryButton: .cancel(Text("Go Back")),

@@ -14,29 +14,29 @@ extension StoredAlert {
     static var encoder = JSONEncoder()
     static var decoder = JSONDecoder()
           
-    convenience init(from deviceAlert: DeviceAlert, context: NSManagedObjectContext, issuedDate: Date = Date()) {
+    convenience init(from alert: Alert, context: NSManagedObjectContext, issuedDate: Date = Date()) {
         do {
             self.init(context: context)
             self.issuedDate = issuedDate
-            alertIdentifier = deviceAlert.identifier.alertIdentifier
-            managerIdentifier = deviceAlert.identifier.managerIdentifier
-            triggerType = deviceAlert.trigger.storedType
-            triggerInterval = deviceAlert.trigger.storedInterval
-            isCritical = deviceAlert.foregroundContent?.isCritical ?? false || deviceAlert.backgroundContent?.isCritical ?? false
+            alertIdentifier = alert.identifier.alertIdentifier
+            managerIdentifier = alert.identifier.managerIdentifier
+            triggerType = alert.trigger.storedType
+            triggerInterval = alert.trigger.storedInterval
+            isCritical = alert.foregroundContent?.isCritical ?? false || alert.backgroundContent?.isCritical ?? false
             // Encode as JSON strings
             let encoder = StoredAlert.encoder
-            sound = try encoder.encodeToStringIfPresent(deviceAlert.sound)
-            foregroundContent = try encoder.encodeToStringIfPresent(deviceAlert.foregroundContent)
-            backgroundContent = try encoder.encodeToStringIfPresent(deviceAlert.backgroundContent)
+            sound = try encoder.encodeToStringIfPresent(alert.sound)
+            foregroundContent = try encoder.encodeToStringIfPresent(alert.foregroundContent)
+            backgroundContent = try encoder.encodeToStringIfPresent(alert.backgroundContent)
         } catch {
             fatalError("Failed to encode: \(error)")
         }
     }
 
-    public var trigger: DeviceAlert.Trigger {
+    public var trigger: Alert.Trigger {
         get {
             do {
-                return try DeviceAlert.Trigger(storedType: triggerType, storedInterval: triggerInterval)
+                return try Alert.Trigger(storedType: triggerType, storedInterval: triggerInterval)
             } catch {
                 fatalError("\(error): \(triggerType) \(String(describing: triggerInterval))")
             }
@@ -44,16 +44,11 @@ extension StoredAlert {
     }
     
     public var title: String? {
-        if let contentString = foregroundContent ?? backgroundContent,
-            let contentData = contentString.data(using: .utf8),
-            let content = try? StoredAlert.decoder.decode(DeviceAlert.Content.self, from: contentData) {
-            return content.title
-        }
-        return nil
+        return try? Alert.Content(contentString: foregroundContent ?? backgroundContent)?.title
     }
     
-    public var identifier: DeviceAlert.Identifier {
-        return DeviceAlert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier)
+    public var identifier: Alert.Identifier {
+        return Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier)
     }
     
     public override func willSave() {
@@ -64,7 +59,47 @@ extension StoredAlert {
     }
 }
 
-extension DeviceAlert.Trigger {
+extension Alert {
+    init(from storedAlert: StoredAlert, adjustedForStorageTime: Bool = true) throws {
+        let fgContent = try Alert.Content(contentString: storedAlert.foregroundContent)
+        let bgContent = try Alert.Content(contentString: storedAlert.backgroundContent)
+        let sound = try Alert.Sound(soundString: storedAlert.sound)
+        let trigger = try Alert.Trigger(storedType: storedAlert.triggerType,
+                                        storedInterval: storedAlert.triggerInterval,
+                                        storageDate: adjustedForStorageTime ? storedAlert.issuedDate : nil)
+        self.init(identifier: storedAlert.identifier,
+                  foregroundContent: fgContent,
+                  backgroundContent: bgContent,
+                  trigger: trigger,
+                  sound: sound)
+    }
+}
+
+extension Alert.Content {
+    init?(contentString: String?) throws {
+        guard let contentString = contentString else {
+            return nil
+        }
+        guard let contentData = contentString.data(using: .utf8) else {
+            throw JSONEncoderError.stringEncodingError
+        }
+        self = try StoredAlert.decoder.decode(Alert.Content.self, from: contentData)
+    }
+}
+
+extension Alert.Sound {
+    init?(soundString: String?) throws {
+        guard let soundString = soundString else {
+            return nil
+        }
+        guard let soundData = soundString.data(using: .utf8) else {
+            throw JSONEncoderError.stringEncodingError
+        }
+        self = try StoredAlert.decoder.decode(Alert.Sound.self, from: soundData)
+    }
+}
+
+extension Alert.Trigger {
     enum StorageError: Error {
         case invalidStoredInterval, invalidStoredType
     }
@@ -83,16 +118,28 @@ extension DeviceAlert.Trigger {
         case .repeating(let repeatInterval): return NSNumber(value: repeatInterval)
         }
     }
-    init(storedType: Int16, storedInterval: NSNumber?) throws {
+    init(storedType: Int16, storedInterval: NSNumber?, storageDate: Date? = nil, now: Date = Date()) throws {
         switch storedType {
         case 0: self = .immediate
         case 1:
             if let storedInterval = storedInterval {
-                self = .delayed(interval: storedInterval.doubleValue)
+                if let storageDate = storageDate, storageDate <= now {
+                    let intervalLeft = storedInterval.doubleValue - now.timeIntervalSince(storageDate)
+                    if intervalLeft <= 0 {
+                        self = .immediate
+                    } else {
+                        self = .delayed(interval: intervalLeft)
+                    }
+                } else {
+                    self = .delayed(interval: storedInterval.doubleValue)
+                }
             } else {
                 throw StorageError.invalidStoredInterval
             }
         case 2:
+            // Strange case here: if it is a repeating trigger, we can't really play back exactly
+            // at the right "remaining time" and then repeat at the original period.  So, I think
+            // the best we can do is just use the original trigger
             if let storedInterval = storedInterval {
                 self = .repeating(repeatInterval: storedInterval.doubleValue)
             } else {

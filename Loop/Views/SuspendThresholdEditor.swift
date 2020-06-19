@@ -56,7 +56,7 @@ struct SuspendThresholdEditor: View {
     var body: some View {
         ConfigurationPage(
             title: Text("Suspend Threshold", comment: "Title for suspend threshold configuration page"),
-            isSaveButtonEnabled: isSaveButtonEnabled,
+            saveButtonState: saveButtonState,
             cards: {
                 // TODO: Remove conditional when Swift 5.3 ships
                 // https://bugs.swift.org/browse/SR-11628
@@ -110,8 +110,8 @@ struct SuspendThresholdEditor: View {
         Text("When your glucose is predicted to go below this value, the app will recommend a basal rate of 0 U/h and will not recommend a bolus.", comment: "Suspend threshold description")
     }
 
-    private var isSaveButtonEnabled: Bool {
-        initialValue == nil || value != initialValue!
+    private var saveButtonState: ConfigurationPageActionButtonState {
+        initialValue == nil || value != initialValue! ? .enabled : .disabled
     }
 
     private var warningThreshold: SafetyClassification.Threshold? {
@@ -123,8 +123,8 @@ struct SuspendThresholdEditor: View {
         }
     }
 
-    private func confirmationAlert() -> Alert {
-        Alert(
+    private func confirmationAlert() -> SwiftUI.Alert {
+        SwiftUI.Alert(
             title: Text("Save Suspend Threshold?", comment: "Alert title for confirming a suspend threshold outside the recommended range"),
             message: Text("The suspend threshold you have entered is outside of what Tidepool generally recommends.", comment: "Alert message for confirming a suspend threshold outside the recommended range"),
             primaryButton: .cancel(Text("Go Back")),

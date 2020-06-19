@@ -12,7 +12,7 @@ import LoopKit
 import LoopKitUI
 import LoopCore
 import LoopTestingKit
-
+import LoopUI
 
 final class SettingsTableViewController: UITableViewController, IdentifiableClass {
 
@@ -49,11 +49,12 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         case services
         case testingPumpDataDeletion
         case testingCGMDataDeletion
+        case support
     }
 
     fileprivate enum LoopRow: Int, CaseCountable {
         case dosing = 0
-        case diagnostic
+        case notifications
     }
 
     fileprivate enum PumpRow: Int, CaseCountable {
@@ -73,6 +74,10 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         case insulinModel
         case carbRatio
         case insulinSensitivity
+    }
+    
+    fileprivate enum SupportRow: Int, CaseCountable {
+        case diagnostic
     }
 
     fileprivate lazy var valueNumberFormatter: NumberFormatter = {
@@ -142,6 +147,8 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             return min(activeServices.count + 1, availableServices.count)
         case .testingPumpDataDeletion, .testingCGMDataDeletion:
             return 1
+        case .support:
+            return SupportRow.count
         }
     }
 
@@ -159,13 +166,10 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 switchCell.switch?.addTarget(self, action: #selector(dosingEnabledChanged(_:)), for: .valueChanged)
 
                 return switchCell
-            case .diagnostic:
+            case .notifications:
                 let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.className, for: indexPath)
-
-                cell.textLabel?.text = NSLocalizedString("Issue Report", comment: "The title text for the issue report cell")
-                cell.detailTextLabel?.text = nil
+                cell.textLabel?.text = NSLocalizedString("Notifications", comment: "Title text for notifications button cell")
                 cell.accessoryType = .disclosureIndicator
-
                 return cell
             }
         case .pump:
@@ -176,6 +180,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     cell.imageView?.image = pumpManager.smallImage
                     cell.textLabel?.text = pumpManager.localizedTitle
                     cell.detailTextLabel?.text = nil
+                    cell.accessoryType = .disclosureIndicator
                     return cell
                 } else {
                     let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath)
@@ -194,6 +199,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 }
                 cell.textLabel?.text = cgmManager.localizedTitle
                 cell.detailTextLabel?.text = nil
+                cell.accessoryType = .disclosureIndicator
                 return cell
             } else {
                 let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath)
@@ -313,6 +319,17 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             cell.tintColor = .delete
             cell.isEnabled = true
             return cell
+        case .support:
+            switch SupportRow(rawValue: indexPath.row)! {
+            case .diagnostic:
+                let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.className, for: indexPath)
+
+                cell.textLabel?.text = NSLocalizedString("Issue Report", comment: "The title text for the issue report cell")
+                cell.detailTextLabel?.text = nil
+                cell.accessoryType = .disclosureIndicator
+
+                return cell
+            }
         }
     }
 
@@ -330,6 +347,8 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             return NSLocalizedString("Services", comment: "The title of the services section in settings")
         case .testingPumpDataDeletion, .testingCGMDataDeletion:
             return nil
+        case .support:
+            return NSLocalizedString("Support", comment: "The title of the support section in settings")
         }
     }
 
@@ -553,29 +572,41 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     tableView.deselectRow(at: indexPath, animated: true)
                     return
                 }
-                let vc = BasalScheduleTableViewController(allowedBasalRates: pumpManager.supportedBasalRates, maximumScheduleItemCount: pumpManager.maximumBasalScheduleEntryCount, minimumTimeInterval: pumpManager.minimumBasalScheduleEntryDuration)
 
-                if let profile = dataManager.loopManager.basalRateSchedule {
-                    vc.scheduleItems = profile.items
-                    vc.timeZone = profile.timeZone
-                } else {
-                    vc.timeZone = pumpManager.status.timeZone
-                }
+                let editor = BasalRateScheduleEditor(
+                    schedule: dataManager.loopManager.basalRateSchedule,
+                    supportedBasalRates: pumpManager.supportedBasalRates,
+                    maximumBasalRate: dataManager.loopManager.settings.maximumBasalRatePerHour,
+                    maximumScheduleEntryCount: pumpManager.maximumBasalScheduleEntryCount,
+                    syncSchedule: pumpManager.syncBasalRateSchedule,
+                    onSave: { [dataManager] newSchedule in
+                        dataManager!.loopManager.basalRateSchedule = newSchedule
+                        tableView.reloadRows(at: [indexPath], with: .automatic)
+                    }
+                )
 
-                vc.title = NSLocalizedString("Basal Rates", comment: "The title of the basal rate profile screen")
-                vc.delegate = self
-                vc.syncSource = pumpManager
+                let hostingController = DismissibleHostingController(rootView: editor, onDisappear: {
+                    tableView.deselectRow(at: indexPath, animated: true)
+                })
 
-                show(vc, sender: sender)
+                present(hostingController, animated: true)
             }
         case .loop:
             switch LoopRow(rawValue: indexPath.row)! {
-            case .diagnostic:
-                let vc = CommandResponseViewController.generateDiagnosticReport(deviceManager: dataManager)
-                vc.title = sender?.textLabel?.text
-
-                show(vc, sender: sender)
             case .dosing:
+                break
+            case .notifications:
+                let viewModel = LoopNotificationsViewModel()
+                let hostingController = DismissibleHostingController(
+                    rootView: LoopNotificationsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
+                                                    viewModel: viewModel),
+                    onDisappear: {
+                        tableView.deselectRow(at: indexPath, animated: true)
+                })
+                
+                present(hostingController, animated: true)
+                tableView.deselectRow(at: indexPath, animated: true)
+                
                 break
             }
         case .services:
@@ -591,7 +622,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 let alert = UIAlertController(services: inactiveServices) { [weak self] (identifier) in
                     self?.setupService(withIdentifier: identifier)
                 }
-
+                
                 alert.addCancelAction { (_) in
                     tableView.deselectRow(at: indexPath, animated: true)
                 }
@@ -607,6 +638,14 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             let confirmVC = UIAlertController(cgmDataDeletionHandler: { self.dataManager.deleteTestingCGMData() })
             present(confirmVC, animated: true) {
                 tableView.deselectRow(at: indexPath, animated: true)
+            }
+        case .support:
+            switch SupportRow(rawValue: indexPath.row)! {
+            case .diagnostic:
+                let vc = CommandResponseViewController.generateDiagnosticReport(deviceManager: dataManager)
+                vc.title = sender?.textLabel?.text
+                
+                show(vc, sender: sender)
             }
         }
     }
@@ -777,30 +816,6 @@ extension SettingsTableViewController: ServiceSetupDelegate {
 extension SettingsTableViewController: ServiceSettingsDelegate {
     func serviceSettingsNotifying(_ object: ServiceSettingsNotifying, didDeleteService service: Service) {
         dataManager.servicesManager.removeActiveService(service)
-    }
-}
-
-extension SettingsTableViewController: DailyValueScheduleTableViewControllerDelegate {
-    func dailyValueScheduleTableViewControllerWillFinishUpdating(_ controller: DailyValueScheduleTableViewController) {
-        guard let indexPath = tableView.indexPathForSelectedRow else {
-            return
-        }
-
-        switch sections[indexPath.section] {
-        case .configuration:
-            switch ConfigurationRow(rawValue: indexPath.row)! {
-            case .basalRate:
-                if let controller = controller as? BasalScheduleTableViewController {
-                    dataManager.loopManager.basalRateSchedule = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-                }
-            default:
-                break
-            }
-        default:
-            break
-        }
-
-        tableView.reloadRows(at: [indexPath], with: .none)
     }
 }
 
