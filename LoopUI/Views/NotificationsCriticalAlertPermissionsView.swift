@@ -10,30 +10,44 @@ import LoopKitUI
 import SwiftUI
 
 public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeClassOverride {
+    @Environment(\.dismiss) var dismiss
 
-    @ObservedObject private var viewModel: LoopNotificationsViewModel
+    private let backButtonText: String
+    @ObservedObject private var viewModel: NotificationsCriticalAlertPermissionsViewModel
 
-    public init(viewModel: LoopNotificationsViewModel) {
+    public init(backButtonText: String = "", viewModel: NotificationsCriticalAlertPermissionsViewModel) {
+        self.backButtonText = backButtonText
         self.viewModel = viewModel
     }
     
     public var body: some View {
-        VStack {
-            List {
-                manageNotificationsSection
-                manageCriticalAlertsSection
-                notificationAndCriticalAlertPermissionSupportSection
+        NavigationView {
+            VStack {
+                List {
+                    manageNotificationsSection
+                    manageCriticalAlertsSection
+                    notificationAndCriticalAlertPermissionSupportSection
+                }
+                .listStyle(GroupedListStyle())
+                .navigationBarTitle(Text(LocalizedString("Alert Permissions", comment: "Notification & Critical Alert Permissions screen title")))
+                .navigationBarBackButtonHidden(false)
+                .navigationBarHidden(false)
+                .navigationBarItems(leading: dismissButton)
+                .environment(\.horizontalSizeClass, horizontalOverride)
             }
-            .listStyle(GroupedListStyle())
-            .navigationBarTitle(Text(LocalizedString("Alert Permissions", comment: "Notification & Critical Alert Permissions screen title")))
-            .navigationBarBackButtonHidden(false)
-            .navigationBarHidden(false)
-            .environment(\.horizontalSizeClass, horizontalOverride)
         }
     }
+    
 }
 
 extension NotificationsCriticalAlertPermissionsView {
+    
+    private var dismissButton: some View {
+        Button( action: { self.dismiss() }) {
+            Text(backButtonText)
+        }
+    }
+
     private var manageNotificationsSection: some View {
         Section {
             Button( action: { self.viewModel.gotoSettings() } ) {
@@ -85,11 +99,11 @@ extension NotificationsCriticalAlertPermissionsView {
 struct NotificationsCriticalAlertPermissionsView_Previews: PreviewProvider {
     static var previews: some View {
         return Group {
-            NotificationsCriticalAlertPermissionsView(viewModel: LoopNotificationsViewModel())
+            NotificationsCriticalAlertPermissionsView(viewModel: NotificationsCriticalAlertPermissionsViewModel())
                 .colorScheme(.light)
                 .previewDevice(PreviewDevice(rawValue: "iPhone SE"))
                 .previewDisplayName("SE light")
-            NotificationsCriticalAlertPermissionsView(viewModel: LoopNotificationsViewModel())
+            NotificationsCriticalAlertPermissionsView(viewModel: NotificationsCriticalAlertPermissionsViewModel())
                 .colorScheme(.dark)
                 .previewDevice(PreviewDevice(rawValue: "iPhone XS Max"))
                 .previewDisplayName("XS Max dark")

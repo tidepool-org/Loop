@@ -1,5 +1,5 @@
 //
-//  LoopNotificationsViewModel.swift
+//  NotificationsCriticalAlertPermissionsViewModel.swift
 //  LoopUI
 //
 //  Created by Rick Pasetto on 6/5/20.
@@ -11,11 +11,14 @@ import Foundation
 import LoopKit
 import SwiftUI
 
-public class LoopNotificationsViewModel: ObservableObject {
+public class NotificationsCriticalAlertPermissionsViewModel: ObservableObject {
     
     @Published var notificationsPermissionsGiven = true
     @Published var criticalAlertsPermissionsGiven = true
 
+    // This is a "bridge" between old & new UI; it allows us to "combine" the two @Published variables above into
+    // one published item, and also provides it in a way that may be `.assign`ed in the new UI (see `init()`) and
+    // added as a `.sink` (see `SettingsTableViewController.swift`) in the old UI.
     lazy public var showWarningPublisher: AnyPublisher<Bool, Never> = {
         $notificationsPermissionsGiven
             .combineLatest($criticalAlertsPermissionsGiven)

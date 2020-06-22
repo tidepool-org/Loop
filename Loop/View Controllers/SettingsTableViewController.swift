@@ -33,11 +33,11 @@ final class SettingsTableViewController: UITableViewController {
         tableView.register(SwitchTableViewCell.self, forCellReuseIdentifier: SwitchTableViewCell.className)
         tableView.register(TextButtonTableViewCell.self, forCellReuseIdentifier: TextButtonTableViewCell.className)
         
-        loopNotificationsViewModel.showWarningPublisher
+        notificationsCriticalAlertPermissionsViewModel.showWarningPublisher
             .receive(on: RunLoop.main)
             .sink {
                 self.showNotificationsWarning = $0
-                self.tableView.reloadRows(at: [[Section.loop.rawValue, LoopRow.notifications.rawValue]], with: .none)
+                self.tableView.reloadSections([Section.loop.rawValue], with: .none)
             }
         .store(in: &trash)
     }
@@ -53,7 +53,7 @@ final class SettingsTableViewController: UITableViewController {
     private lazy var isTestingPumpManager = dataManager.pumpManager is TestingPumpManager
     private lazy var isTestingCGMManager = dataManager.cgmManager is TestingCGMManager
 
-    let loopNotificationsViewModel = LoopNotificationsViewModel()
+    let notificationsCriticalAlertPermissionsViewModel = NotificationsCriticalAlertPermissionsViewModel()
     
     fileprivate enum Section: Int, CaseIterable {
         case loop = 0
@@ -150,7 +150,11 @@ final class SettingsTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch sections[section] {
         case .loop:
-            return LoopRow.count
+            if showNotificationsWarning {
+                return LoopRow.count
+            } else {
+                return LoopRow.count - 1
+            }
         case .pump:
             return PumpRow.count
         case .cgm:
@@ -182,7 +186,7 @@ final class SettingsTableViewController: UITableViewController {
                 return switchCell
             case .notifications:
                 let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.className, for: indexPath)
-                cell.textLabel?.text = NSLocalizedString("Notifications", comment: "Title text for notifications button cell")
+                cell.textLabel?.text = NSLocalizedString("Notification & Critical Alert Permissions", comment: "Title text for Notification & Critical Alert Permissions button cell")
                 if showNotificationsWarning {
                     cell.detailTextLabel?.text = NSLocalizedString("⚠️", comment: "Warning symbol")
                 }
@@ -614,8 +618,8 @@ final class SettingsTableViewController: UITableViewController {
                 break
             case .notifications:
                 let hostingController = DismissibleHostingController(
-                    rootView: LoopNotificationsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
-                                                    viewModel: loopNotificationsViewModel),
+                    rootView: NotificationsCriticalAlertPermissionsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
+                                                                        viewModel: notificationsCriticalAlertPermissionsViewModel),
                     onDisappear: {
                         tableView.deselectRow(at: indexPath, animated: true)
                 })
