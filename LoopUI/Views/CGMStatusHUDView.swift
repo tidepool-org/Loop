@@ -79,7 +79,13 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         glucoseTrendHUD.isHidden = false
     }
     
-    public func setGlucoseQuantity(_ glucoseQuantity: Double, at glucoseStartDate: Date, unit: HKUnit, staleGlucoseAge: TimeInterval, sensor: SensorDisplayable?) {
+    public func setGlucoseQuantity(_ glucoseQuantity: Double,
+                                   at glucoseStartDate: Date,
+                                   unit: HKUnit,
+                                   staleGlucoseAge: TimeInterval,
+                                   sensor: SensorDisplayable?)
+    {
+        // TODO refactor this function with LOOP-1293. Suggestion is to make a view model. Need to check with design about the display of stale glucose values.
         var accessibilityStrings = [String]()
         
         let time = timeFormatter.string(from: glucoseStartDate)
