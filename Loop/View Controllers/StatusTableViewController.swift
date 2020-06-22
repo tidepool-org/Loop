@@ -1353,6 +1353,8 @@ final class StatusTableViewController: ChartsTableViewController {
                 }
             }
             
+            alert.addCancelAction { _ in }
+            
             present(alert, animated: true, completion: nil)
         default:
             break
@@ -1391,6 +1393,9 @@ final class StatusTableViewController: ChartsTableViewController {
                     }
                 }
             }
+            
+            alert.addCancelAction { _ in }
+            
             present(alert, animated: true, completion: nil)
         default:
             break
