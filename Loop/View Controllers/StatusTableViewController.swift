@@ -1344,7 +1344,7 @@ final class StatusTableViewController: ChartsTableViewController {
             {
                 setupPumpManager(for: pumpManagerType)
             }
-        case let x where x > 1:
+        default:
             let alert = UIAlertController(pumpManagers: pumpManagers) { [weak self] (identifier) in
                 if let strongSelf = self,
                     let manager = strongSelf.deviceManager.pumpManagerTypeByIdentifier(identifier)
@@ -1352,12 +1352,8 @@ final class StatusTableViewController: ChartsTableViewController {
                     strongSelf.setupPumpManager(for: manager)
                 }
             }
-            
             alert.addCancelAction { _ in }
-            
             present(alert, animated: true, completion: nil)
-        default:
-            break
         }
     }
     
@@ -1381,7 +1377,7 @@ final class StatusTableViewController: ChartsTableViewController {
             {
                 setupCGMManager(for: cgmManagerType)
             }
-        case let x where x > 1:
+        default:
             let alert = UIAlertController(cgmManagers: cgmManagers, pumpManager: deviceManager.pumpManager as? CGMManager) { [weak self] (identifier, pumpManager) in
                 if let strongSelf = self {
                     if let cgmManagerIdentifier = identifier,
@@ -1393,12 +1389,8 @@ final class StatusTableViewController: ChartsTableViewController {
                     }
                 }
             }
-            
             alert.addCancelAction { _ in }
-            
             present(alert, animated: true, completion: nil)
-        default:
-            break
         }
     }
     
