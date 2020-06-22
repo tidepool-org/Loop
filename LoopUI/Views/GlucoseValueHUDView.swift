@@ -39,10 +39,8 @@ public final class GlucoseValueHUDView: BaseHUDView {
         switch self.tintColor {
         case UIColor.label:
             glucoseLabel.textColor = tintColor
-            unitLabel.textColor = .secondaryLabel
         default:
             glucoseLabel.textColor = tintColor
-            unitLabel.textColor = tintColor
         }
     }
 }

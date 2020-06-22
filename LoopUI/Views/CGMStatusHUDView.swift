@@ -41,15 +41,18 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         super.tintColorDidChange()
         
         glucoseValueHUD.tintColor = tintColor
-        glucoseTrendHUD.tintColor = tintColor
+        switch tintColor {
+        case UIColor.label:
+            glucoseTrendHUD.tintColor = .systemPurple
+        default:
+            glucoseTrendHUD.tintColor = tintColor
+        }
     }
     
     public func presentAddCGMHighlight() {
-        statusHighlightView.messageLabel.text = LocalizedString("Add CGM", comment: "Title text for button to set up a CGM")
-        statusHighlightView.messageLabel.tintColor = .label
-        statusHighlightView.icon.image = UIImage(systemName: "plus.circle")
-        statusHighlightView.icon.tintColor = .systemBlue
-        presentStatusHighlight()
+        presentStatusHighlight(withMessage: LocalizedString("Add CGM", comment: "Title text for button to set up a CGM"),
+                               icon: UIImage(systemName: "plus.circle")!,
+                               color: .systemBlue)
     }
     
     override public func presentStatusHighlight() {
@@ -108,6 +111,11 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         if let trend = sensor?.trendType, glucoseValueCurrent {
             glucoseTrendHUD.setTrend(trend)
             accessibilityStrings.append(trend.localizedDescription)
+        }
+        
+        // set glucose color
+        if let tintColor = sensor?.glucoseValueType?.color {
+            self.tintColor = tintColor
         }
         
         if sensor == nil {
