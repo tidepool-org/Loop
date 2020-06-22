@@ -1630,6 +1630,9 @@ extension StatusTableViewController: CGMManagerSetupViewControllerDelegate {
             setupViewController.setupDelegate = self
             setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
+        } else {
+            // adds the CGM simulator
+            deviceManager.cgmManager = cgmManagerType.init(rawState: [:])
         }
     }
     
