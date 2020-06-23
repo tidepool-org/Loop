@@ -151,11 +151,11 @@ final class WatchDataManager: NSObject {
             context.loopLastRunDate = manager.lastLoopCompleted
             context.recommendedBolusDose = state.recommendedBolus?.recommendation.amount
             context.cob = state.carbsOnBoard?.quantity.doubleValue(for: HKUnit.gram())
-            context.glucoseTrendRawValue = self.deviceManager.sensorState?.trendType?.rawValue
+            context.glucoseTrendRawValue = self.deviceManager.cgmStatusReport?.trendType?.rawValue
 
             context.cgmManagerState = self.deviceManager.cgmManager?.rawValue
 
-            if let trend = self.deviceManager.cgmManager?.sensorState?.trendType {
+            if let trend = self.deviceManager.cgmManager?.statusReport?.trendType {
                 context.glucoseTrendRawValue = trend.rawValue
             }
 
