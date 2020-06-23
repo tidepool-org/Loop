@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import LoopKit
 
 let FeatureFlags = FeatureFlagConfiguration()
 
@@ -78,10 +77,8 @@ struct FeatureFlagConfiguration: Decodable {
         
         #if EXCLUDE_HEALTHKIT_DATA_FROM_OTHER_APPS
         self.excludeHealthKitDataFromOtherApps = true
-        LoopKit.excludeHealthKitDataFromOtherApps = true
         #else
         self.excludeHealthKitDataFromOtherApps = false
-        LoopKit.excludeHealthKitDataFromOtherApps = false
         #endif
     }
 }
