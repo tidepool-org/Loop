@@ -429,8 +429,8 @@
 		B4E96D4F248A6E20002DABAD /* CGMStatusHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E96D4E248A6E20002DABAD /* CGMStatusHUDView.swift */; };
 		B4E96D53248A7386002DABAD /* GlucoseValueHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E96D52248A7386002DABAD /* GlucoseValueHUDView.swift */; };
 		B4E96D55248A7509002DABAD /* GlucoseTrendHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E96D54248A7509002DABAD /* GlucoseTrendHUDView.swift */; };
-		B4E96D57248A7B0F002DABAD /* AlertStatusHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E96D56248A7B0F002DABAD /* AlertStatusHUDView.swift */; };
-		B4E96D59248A7F9A002DABAD /* AlertStatusHUDView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4E96D58248A7F9A002DABAD /* AlertStatusHUDView.xib */; };
+		B4E96D57248A7B0F002DABAD /* StatusMessageHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E96D56248A7B0F002DABAD /* StatusMessageHUDView.swift */; };
+		B4E96D59248A7F9A002DABAD /* StatusMessageHUDView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4E96D58248A7F9A002DABAD /* StatusMessageHUDView.xib */; };
 		B4E96D5B248A8229002DABAD /* StatusBarHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E96D5A248A8229002DABAD /* StatusBarHUDView.swift */; };
 		B4E96D5D248A82A2002DABAD /* StatusBarHUDView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4E96D5C248A82A2002DABAD /* StatusBarHUDView.xib */; };
 		C10B28461EA9BA5E006EA1FC /* far_future_high_bg_forecast.json in Resources */ = {isa = PBXBuildFile; fileRef = C10B28451EA9BA5E006EA1FC /* far_future_high_bg_forecast.json */; };
@@ -1155,8 +1155,8 @@
 		B4E96D4E248A6E20002DABAD /* CGMStatusHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMStatusHUDView.swift; sourceTree = "<group>"; };
 		B4E96D52248A7386002DABAD /* GlucoseValueHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseValueHUDView.swift; sourceTree = "<group>"; };
 		B4E96D54248A7509002DABAD /* GlucoseTrendHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseTrendHUDView.swift; sourceTree = "<group>"; };
-		B4E96D56248A7B0F002DABAD /* AlertStatusHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStatusHUDView.swift; sourceTree = "<group>"; };
-		B4E96D58248A7F9A002DABAD /* AlertStatusHUDView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AlertStatusHUDView.xib; sourceTree = "<group>"; };
+		B4E96D56248A7B0F002DABAD /* StatusMessageHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusMessageHUDView.swift; sourceTree = "<group>"; };
+		B4E96D58248A7F9A002DABAD /* StatusMessageHUDView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = StatusMessageHUDView.xib; sourceTree = "<group>"; };
 		B4E96D5A248A8229002DABAD /* StatusBarHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarHUDView.swift; sourceTree = "<group>"; };
 		B4E96D5C248A82A2002DABAD /* StatusBarHUDView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = StatusBarHUDView.xib; sourceTree = "<group>"; };
 		C10B28451EA9BA5E006EA1FC /* far_future_high_bg_forecast.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = far_future_high_bg_forecast.json; sourceTree = "<group>"; };
@@ -1816,7 +1816,7 @@
 				4F75288E1DFE1DC600C322D6 /* Info.plist */,
 				4F2C15941E09BF3C00E160D4 /* HUDView.xib */,
 				4F2C15961E09E94E00E160D4 /* HUDAssets.xcassets */,
-				B4E96D58248A7F9A002DABAD /* AlertStatusHUDView.xib */,
+				B4E96D58248A7F9A002DABAD /* StatusMessageHUDView.xib */,
 				B4E96D5C248A82A2002DABAD /* StatusBarHUDView.xib */,
 			);
 			path = LoopUI;
@@ -1843,7 +1843,7 @@
 				B4E96D4E248A6E20002DABAD /* CGMStatusHUDView.swift */,
 				B4E96D52248A7386002DABAD /* GlucoseValueHUDView.swift */,
 				B4E96D54248A7509002DABAD /* GlucoseTrendHUDView.swift */,
-				B4E96D56248A7B0F002DABAD /* AlertStatusHUDView.swift */,
+				B4E96D56248A7B0F002DABAD /* StatusMessageHUDView.swift */,
 				B4E96D5A248A8229002DABAD /* StatusBarHUDView.swift */,
 				B48B0BAB24900093009A48DE /* PumpStatusHUDView.swift */,
 			);
@@ -2621,7 +2621,7 @@
 				7D7076451FE06EE0004AC8EA /* InfoPlist.strings in Resources */,
 				4F2C15951E09BF3C00E160D4 /* HUDView.xib in Resources */,
 				B4E96D5D248A82A2002DABAD /* StatusBarHUDView.xib in Resources */,
-				B4E96D59248A7F9A002DABAD /* AlertStatusHUDView.xib in Resources */,
+				B4E96D59248A7F9A002DABAD /* StatusMessageHUDView.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3222,7 +3222,7 @@
 				4F75289C1DFE1F6000C322D6 /* GlucoseHUDView.swift in Sources */,
 				B4E96D53248A7386002DABAD /* GlucoseValueHUDView.swift in Sources */,
 				4FB76FB81E8C429D00B39636 /* CGPoint.swift in Sources */,
-				B4E96D57248A7B0F002DABAD /* AlertStatusHUDView.swift in Sources */,
+				B4E96D57248A7B0F002DABAD /* StatusMessageHUDView.swift in Sources */,
 				43FCEEB5221BCA020013DD30 /* COBChart.swift in Sources */,
 				4F75289E1DFE1F6000C322D6 /* LoopCompletionHUDView.swift in Sources */,
 			);
