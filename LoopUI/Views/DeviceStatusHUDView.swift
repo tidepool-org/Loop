@@ -40,12 +40,12 @@ import LoopKitUI
         }
     }
     
-    func presentAlert() {
+    func presentMessage() {
         statusStackView?.addArrangedSubview(statusMessageView)
         statusMessageView.isHidden = false
     }
     
-    func dismissAlert() {
+    func dismissMessage() {
         // need to also hide this view, since it will be added back to the stack at some point
         statusMessageView.isHidden = true
         statusStackView?.removeArrangedSubview(statusMessageView)

@@ -44,15 +44,15 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         glucoseTrendHUD.tintColor = tintColor
     }
     
-    public func presentAddCGMAlert() {
+    public func presentAddCGMMessage() {
         statusMessageView.messageLabel.text = LocalizedString("Add CGM", comment: "Title text for button to set up a CGM")
         statusMessageView.messageLabel.tintColor = .label
         statusMessageView.messageIcon.image = UIImage(systemName: "plus.circle")
         statusMessageView.messageIcon.tintColor = .systemBlue
-        presentAlert()
+        presentMessage()
     }
     
-    override public func presentAlert() {
+    override public func presentMessage() {
         guard !statusStackView.arrangedSubviews.contains(statusMessageView) else {
             return
         }
@@ -63,15 +63,15 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         statusStackView.removeArrangedSubview(glucoseValueHUD)
         statusStackView.removeArrangedSubview(glucoseTrendHUD)
         
-        super.presentAlert()
+        super.presentMessage()
     }
     
-    override public func dismissAlert() {
+    override public func dismissMessage() {
         guard statusStackView.arrangedSubviews.contains(statusMessageView) else {
             return
         }
         
-        super.dismissAlert()
+        super.dismissMessage()
         
         statusStackView.addArrangedSubview(glucoseValueHUD)
         statusStackView.addArrangedSubview(glucoseTrendHUD)

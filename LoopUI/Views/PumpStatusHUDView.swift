@@ -43,15 +43,15 @@ public final class PumpStatusHUDView: DeviceStatusHUDView, NibLoadable {
         pumpManagerProvidedHUD?.tintColor = tintColor
     }
     
-    public func presentAddPumpAlert() {
+    public func presentAddPumpMessage() {
         statusMessageView.messageLabel.text = LocalizedString("Add Pump", comment: "Title text for button to set up a pump")
         statusMessageView.messageLabel.tintColor = .label
         statusMessageView.messageIcon.image = UIImage(systemName: "plus.circle")
         statusMessageView.messageIcon.tintColor = .systemBlue
-        presentAlert()
+        presentMessage()
     }
     
-    override public func presentAlert() {
+    override public func presentMessage() {
         guard !statusStackView.arrangedSubviews.contains(statusMessageView) else {
             return
         }
@@ -65,15 +65,15 @@ public final class PumpStatusHUDView: DeviceStatusHUDView, NibLoadable {
             statusStackView.removeArrangedSubview(pumpManagerProvidedHUD)
         }
 
-        super.presentAlert()
+        super.presentMessage()
     }
     
-    override public func dismissAlert() {
+    override public func dismissMessage() {
         guard statusStackView.arrangedSubviews.contains(statusMessageView) else {
             return
         }
         
-        super.dismissAlert()
+        super.dismissMessage()
         
         statusStackView.addArrangedSubview(basalRateHUD)
         basalRateHUD.isHidden = false
