@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+import LoopKit
 
 let FeatureFlags = FeatureFlagConfiguration()
 
@@ -20,6 +20,7 @@ struct FeatureFlagConfiguration: Decodable {
     let simulatedCoreDataEnabled: Bool
     let walshInsulinModelEnabled: Bool
     let fiaspInsulinModelEnabled: Bool
+    let excludeHealthKitDataFromOtherApps: Bool
 
     fileprivate init() {
         // Swift compiler config is inverse, since the default state is enabled.
@@ -73,6 +74,14 @@ struct FeatureFlagConfiguration: Decodable {
         self.fiaspInsulinModelEnabled = false
         #else
         self.fiaspInsulinModelEnabled = true
+        #endif
+        
+        #if EXCLUDE_HEALTHKIT_DATA_FROM_OTHER_APPS
+        self.excludeHealthKitDataFromOtherApps = true
+        LoopKit.excludeHealthKitDataFromOtherApps = true
+        #else
+        self.excludeHealthKitDataFromOtherApps = false
+        LoopKit.excludeHealthKitDataFromOtherApps = false
         #endif
     }
 }
