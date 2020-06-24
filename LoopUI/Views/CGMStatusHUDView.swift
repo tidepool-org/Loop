@@ -69,7 +69,9 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     }
     
     override public func presentStatusHighlight() {
-        guard !statusStackView.arrangedSubviews.contains(statusHighlightView) else {
+        guard statusStackView.arrangedSubviews.contains(glucoseValueHUD),
+            statusStackView.arrangedSubviews.contains(glucoseTrendHUD) else
+        {
             return
         }
         
@@ -99,7 +101,8 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
                                    at glucoseStartDate: Date,
                                    unit: HKUnit,
                                    staleGlucoseAge: TimeInterval,
-                                   sensor: SensorDisplayable?)
+                                   sensor: SensorDisplayable?,
+                                   statusHighlight: DeviceStatusHighlight?)
     {
         viewModel.setGlucoseQuantity(glucoseQuantity,
                                      at: glucoseStartDate,
@@ -112,5 +115,13 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         glucoseTrendHUD.setTrend(viewModel.trend)
         tintColor = viewModel.tintColor ?? .label
         accessibilityValue = viewModel.accessibilityString
+        
+        if let statusHighlight = statusHighlight {
+            presentStatusHighlight(withMessage: statusHighlight.localizedMessage,
+                                   icon: statusHighlight.icon,
+                                   color: statusHighlight.color)
+        } else {
+            dismissStatusHighlight()
+        }
     }
 }
