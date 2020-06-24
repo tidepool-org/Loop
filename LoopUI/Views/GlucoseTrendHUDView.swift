@@ -30,7 +30,12 @@ public final class GlucoseTrendHUDView: BaseHUDView {
         trendIcon.tintColor = tintColor
     }
 
-    public func setTrend(_ trend: GlucoseTrend) {
+    public func setTrend(_ trend: GlucoseTrend?) {
+        guard let trend = trend else {
+            trendIcon.image = UIImage(systemName: "questionmark.circle")
+            return
+        }
+        
         switch trend {
         case .upUpUp:
             // TODO this is a placeholder until I get the correct icon from design
