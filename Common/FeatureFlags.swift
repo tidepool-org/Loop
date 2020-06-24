@@ -19,7 +19,7 @@ struct FeatureFlagConfiguration: Decodable {
     let simulatedCoreDataEnabled: Bool
     let walshInsulinModelEnabled: Bool
     let fiaspInsulinModelEnabled: Bool
-    let excludeHealthKitDataFromOtherApps: Bool
+    let observeHealthKitForCurrentAppOnly: Bool
 
     fileprivate init() {
         // Swift compiler config is inverse, since the default state is enabled.
@@ -75,10 +75,10 @@ struct FeatureFlagConfiguration: Decodable {
         self.fiaspInsulinModelEnabled = true
         #endif
         
-        #if EXCLUDE_HEALTHKIT_DATA_FROM_OTHER_APPS
-        self.excludeHealthKitDataFromOtherApps = true
+        #if OBSERVE_HEALTHKIT_FOR_CURRENT_APP_ONLY
+        self.observeHealthKitForCurrentAppOnly = true
         #else
-        self.excludeHealthKitDataFromOtherApps = false
+        self.observeHealthKitForCurrentAppOnly = false
         #endif
     }
 }

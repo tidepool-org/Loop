@@ -75,7 +75,7 @@ final class LoopDataManager {
 
         carbStore = CarbStore(
             healthStore: healthStore,
-            forCurrentAppOnly: FeatureFlags.excludeHealthKitDataFromOtherApps,
+            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
             cacheStore: cacheStore,
             cacheLength: localCacheDuration,
             defaultAbsorptionTimes: LoopSettings.defaultCarbAbsorptionTimes,
@@ -87,7 +87,7 @@ final class LoopDataManager {
 
         doseStore = DoseStore(
             healthStore: healthStore,
-            forCurrentAppOnly: FeatureFlags.excludeHealthKitDataFromOtherApps,
+            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
             cacheStore: cacheStore,
             cacheLength: localCacheDuration,
             insulinModel: insulinModelSettings?.model,
@@ -101,7 +101,7 @@ final class LoopDataManager {
 
         glucoseStore = GlucoseStore(
             healthStore: healthStore,
-            forCurrentAppOnly: FeatureFlags.excludeHealthKitDataFromOtherApps,
+            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
             cacheStore: cacheStore,
             cacheLength: localCacheDuration,
             observationInterval: .hours(24)
