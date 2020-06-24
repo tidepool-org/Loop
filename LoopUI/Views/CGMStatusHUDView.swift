@@ -34,7 +34,7 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     
     override func setup() {
         super.setup()
-        specialStatusView.setIconPosition(.right)
+        statusHighlightView.setIconPosition(.right)
     }
     
     public override func tintColorDidChange() {
@@ -45,15 +45,15 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     }
     
     public func presentAddCGMAlert() {
-        specialStatusView.messageLabel.text = LocalizedString("Add CGM", comment: "Title text for button to set up a CGM")
-        specialStatusView.messageLabel.tintColor = .label
-        specialStatusView.icon.image = UIImage(systemName: "plus.circle")
-        specialStatusView.icon.tintColor = .systemBlue
+        statusHighlightView.messageLabel.text = LocalizedString("Add CGM", comment: "Title text for button to set up a CGM")
+        statusHighlightView.messageLabel.tintColor = .label
+        statusHighlightView.icon.image = UIImage(systemName: "plus.circle")
+        statusHighlightView.icon.tintColor = .systemBlue
         presentAlert()
     }
     
     override public func presentAlert() {
-        guard !statusStackView.arrangedSubviews.contains(specialStatusView) else {
+        guard !statusStackView.arrangedSubviews.contains(statusHighlightView) else {
             return
         }
         
@@ -67,7 +67,7 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     }
     
     override public func dismissAlert() {
-        guard statusStackView.arrangedSubviews.contains(specialStatusView) else {
+        guard statusStackView.arrangedSubviews.contains(statusHighlightView) else {
             return
         }
         

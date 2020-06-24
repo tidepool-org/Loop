@@ -13,9 +13,9 @@ import LoopKitUI
 
 @objc open class DeviceStatusHUDView: BaseHUDView {
     
-    public var specialStatusView: SpecialStatusHUDView! {
+    public var statusHighlightView: StatusHighlightHUDView! {
         didSet {
-            specialStatusView.isHidden = true
+            statusHighlightView.isHidden = true
         }
     }
     
@@ -35,19 +35,19 @@ import LoopKitUI
     @IBOutlet public weak var statusStackView: UIStackView!
     
     func setup() {
-        if specialStatusView == nil {
-            specialStatusView = SpecialStatusHUDView(frame: self.frame)
+        if statusHighlightView == nil {
+            statusHighlightView = StatusHighlightHUDView(frame: self.frame)
         }
     }
     
     func presentAlert() {
-        statusStackView?.addArrangedSubview(specialStatusView)
-        specialStatusView.isHidden = false
+        statusStackView?.addArrangedSubview(statusHighlightView)
+        statusHighlightView.isHidden = false
     }
     
     func dismissAlert() {
         // need to also hide this view, since it will be added back to the stack at some point
-        specialStatusView.isHidden = true
-        statusStackView?.removeArrangedSubview(specialStatusView)
+        statusHighlightView.isHidden = true
+        statusStackView?.removeArrangedSubview(statusHighlightView)
     }
 }

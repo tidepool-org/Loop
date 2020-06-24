@@ -382,8 +382,8 @@ extension DeviceDataManager {
         return pumpManager?.status
     }
 
-    var cgmStatus: CGMManagerStatus? {
-        return cgmManager?.status
+    var sensorState: SensorDisplayable? {
+        return cgmManager?.sensorState
     }
 
     func updatePumpManagerBLEHeartbeatPreference() {

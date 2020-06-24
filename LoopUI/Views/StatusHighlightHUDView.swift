@@ -1,5 +1,5 @@
 //
-//  SpecialStatusHUDView.swift
+//  StatusHighlightHUDView.swift
 //  LoopUI
 //
 //  Created by Nathaniel Hamming on 2020-06-05.
@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class SpecialStatusHUDView: UIView, NibLoadable {
+public class StatusHighlightHUDView: UIView, NibLoadable {
     
     private var stackView: UIStackView!
     
@@ -53,7 +53,7 @@ public class SpecialStatusHUDView: UIView, NibLoadable {
     }
     
     func setup() {
-        stackView = (SpecialStatusHUDView.nib().instantiate(withOwner: self, options: nil)[0] as! UIStackView)
+        stackView = (StatusHighlightHUDView.nib().instantiate(withOwner: self, options: nil)[0] as! UIStackView)
         stackView.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(stackView)
 

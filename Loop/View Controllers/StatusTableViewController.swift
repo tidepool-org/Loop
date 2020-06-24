@@ -496,7 +496,7 @@ final class StatusTableViewController: ChartsTableViewController {
                                                             at: glucose.startDate,
                                                             unit: unit,
                                                             staleGlucoseAge: self.deviceManager.loopManager.settings.inputDataRecencyInterval,
-                                                            sensor: self.deviceManager.cgmStatus
+                                                            sensor: self.deviceManager.sensorState
                     )
                 }
             }
