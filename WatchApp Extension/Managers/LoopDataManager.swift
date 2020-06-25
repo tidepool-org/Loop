@@ -53,11 +53,16 @@ class LoopDataManager {
 
         let healthStore = HKHealthStore()
         let cacheStore = PersistenceController.controllerInLocalDirectory()
+        
+        let absorptionTimes = LoopSettings.defaultCarbAbsorptionTimes
+        let cacheDuration = absorptionTimes.slow * 2
 
         carbStore = CarbStore(
             healthStore: healthStore,
             cacheStore: cacheStore,
-            defaultAbsorptionTimes: LoopSettings.defaultCarbAbsorptionTimes,
+            cacheLength: cacheDuration,
+            defaultAbsorptionTimes: absorptionTimes,
+            observationInterval: cacheDuration,
             syncVersion: 0
         )
         glucoseStore = GlucoseStore(
