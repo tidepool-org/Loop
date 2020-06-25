@@ -69,12 +69,14 @@ class StatusViewController: UIViewController, NCWidgetProviding {
 
     lazy var glucoseStore = GlucoseStore(
         healthStore: healthStore,
+        observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
         cacheStore: cacheStore,
         observationEnabled: false
     )
 
     lazy var doseStore = DoseStore(
         healthStore: healthStore,
+        observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
         cacheStore: cacheStore,
         observationEnabled: false,
         insulinModel: defaults?.insulinModelSettings?.model,
@@ -206,21 +208,17 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 return
             }
 
-            let hudViews: [BaseHUDView]
-
-            if let hudViewsContext = context.pumpManagerHUDViewsContext,
-                let contextHUDViews = PumpManagerHUDViewsFromRawValue(hudViewsContext.pumpManagerHUDViewsRawValue, pluginManager: self.pluginManager)
+            let pumpManagerHUDView: LevelHUDView
+            if let hudViewContext = context.pumpManagerHUDViewContext,
+                let contextHUDView = PumpManagerHUDViewFromRawValue(hudViewContext.pumpManagerHUDViewRawValue, pluginManager: self.pluginManager)
             {
-                hudViews = contextHUDViews
+                pumpManagerHUDView = contextHUDView
             } else {
-                hudViews = [ReservoirVolumeHUDView.instantiate(), BatteryLevelHUDView.instantiate()]
+                pumpManagerHUDView = ReservoirVolumeHUDView.instantiate()
             }
-
+            pumpManagerHUDView.stateColors = .pumpStatus
             self.hudView.removePumpManagerProvidedViews()
-            for view in hudViews {
-                view.stateColors = .pumpStatus
-                self.hudView.addHUDView(view)
-            }
+            self.hudView.addHUDView(pumpManagerHUDView)
 
             if let netBasal = context.netBasal {
                 self.hudView.basalRateHUD.setNetBasalRate(netBasal.rate, percent: netBasal.percentage, at: netBasal.start)
