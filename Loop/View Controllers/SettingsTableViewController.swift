@@ -16,6 +16,7 @@ import LoopTestingKit
 import LoopUI
 
 final class SettingsTableViewController: UITableViewController, IdentifiableClass {
+    private let temporaryNewSettingsViewTesting = true
 
     @IBOutlet var devicesSectionTitleView: UIView?
 
@@ -68,7 +69,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
 
     fileprivate enum LoopRow: Int, CaseCountable {
         case dosing = 0
-        case notifications
+        case alertPermissions
     }
 
     fileprivate enum PumpRow: Int, CaseCountable {
@@ -184,11 +185,15 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 switchCell.switch?.addTarget(self, action: #selector(dosingEnabledChanged(_:)), for: .valueChanged)
 
                 return switchCell
-            case .notifications:
+            case .alertPermissions:
                 let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.className, for: indexPath)
-                cell.textLabel?.text = NSLocalizedString("Alert Permissions", comment: "Title text for Notification & Critical Alert Permissions button cell")
-                if showNotificationsWarning {
-                    cell.detailTextLabel?.text = NSLocalizedString("⚠️", comment: "Warning symbol")
+                if temporaryNewSettingsViewTesting {
+                    cell.textLabel?.text = "New Settings"
+                } else {
+                    cell.textLabel?.text = NSLocalizedString("Alert Permissions", comment: "Title text for Notification & Critical Alert Permissions button cell")
+                    if showNotificationsWarning {
+                        cell.detailTextLabel?.text = NSLocalizedString("⚠️", comment: "Warning symbol")
+                    }
                 }
                 cell.accessoryType = .disclosureIndicator
                 return cell
@@ -198,7 +203,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             case .pumpSettings:
                 if let pumpManager = dataManager.pumpManager {
                     let cell = tableView.dequeueReusableCell(withIdentifier: SettingsImageTableViewCell.className, for: indexPath)
-                    cell.imageView?.image = pumpManager.smallImage
+                    cell.imageView?.image = type(of: pumpManager).smallImage
                     cell.textLabel?.text = pumpManager.localizedTitle
                     cell.detailTextLabel?.text = nil
                     cell.accessoryType = .disclosureIndicator
@@ -211,9 +216,10 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             }
         case .cgm:
             if let cgmManager = dataManager.cgmManager {
-                let cgmManagerUI = cgmManager as? CGMManagerUI
-
-                let image = cgmManagerUI?.smallImage
+                var image: UIImage? = nil
+                if let cgmManagerUI = cgmManager as? CGMManagerUI {
+                    image = type(of: cgmManagerUI).smallImage
+                }
                 let cell = tableView.dequeueReusableCell(withIdentifier: image == nil ? SettingsTableViewCell.className : SettingsImageTableViewCell.className, for: indexPath)
                 if let image = image {
                     cell.imageView?.image = image
@@ -378,7 +384,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
     override func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
         return true
     }
-
+        
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let sender = tableView.cellForRow(at: indexPath)
 
@@ -386,92 +392,13 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         case .pump:
             switch PumpRow(rawValue: indexPath.row)! {
             case .pumpSettings:
-                if var settings = dataManager.pumpManager?.settingsViewController() {
-                    settings.completionDelegate = self
-                    present(settings, animated: true)
+                pumpSelected {
                     tableView.deselectRow(at: indexPath, animated: true)
-                } else {
-                    // Add new pump
-                    let pumpManagers = dataManager.availablePumpManagers
-
-                    switch pumpManagers.count {
-                    case 1:
-                        if let pumpManager = pumpManagers.first, let PumpManagerType = dataManager.pumpManagerTypeByIdentifier(pumpManager.identifier) {
-
-                            let setupViewController = configuredSetupViewController(for: PumpManagerType)
-                            present(setupViewController, animated: true, completion: nil)
-                        }
-                        tableView.deselectRow(at: indexPath, animated: true)
-                    case let x where x > 1:
-                        let alert = UIAlertController(pumpManagers: pumpManagers) { [weak self] (identifier) in
-                            if let self = self, let manager = self.dataManager.pumpManagerTypeByIdentifier(identifier) {
-                                let setupViewController = self.configuredSetupViewController(for: manager)
-                                self.present(setupViewController, animated: true, completion: nil)
-                                self.tableView.deselectRow(at: indexPath, animated: true)
-                            }
-                        }
-
-                        alert.addCancelAction { (_) in
-                            tableView.deselectRow(at: indexPath, animated: true)
-                        }
-
-                        present(alert, animated: true, completion: nil)
-                    default:
-                        break
-                    }
                 }
             }
         case .cgm:
-            if let cgmManager = dataManager.cgmManager as? CGMManagerUI {
-                if let unit = dataManager.loopManager.glucoseStore.preferredUnit {
-                    var settings = cgmManager.settingsViewController(for: unit)
-                    settings.completionDelegate = self
-                    present(settings, animated: true)
-                    tableView.deselectRow(at: indexPath, animated: true)
-                }
-            } else if dataManager.cgmManager is PumpManagerUI {
-                // The pump manager is providing glucose, but allow reverting the CGM
-                let alert = UIAlertController(deleteCGMManagerHandler: { [weak self] (isDeleted) in
-                    if isDeleted {
-                        self?.dataManager.cgmManager = nil
-                    }
-
-                    tableView.deselectRow(at: indexPath, animated: true)
-                    self?.updateCGMManagerRows()
-                })
-                present(alert, animated: true, completion: nil)
-            } else {
-                // Add new CGM
-                let cgmManagers = dataManager.availableCGMManagers
-
-                switch cgmManagers.count {
-                case 1:
-                    if let cgmManager = cgmManagers.first, let CGMManagerType = dataManager.cgmManagerTypeByIdentifier(cgmManager.identifier) {
-                        setupCGMManager(CGMManagerType)
-                    }
-
-                    tableView.deselectRow(at: indexPath, animated: true)
-                case let x where x > 1:
-                    let alert = UIAlertController(cgmManagers: cgmManagers, pumpManager: dataManager.pumpManager as? CGMManager) { [weak self] (identifier, pumpManager) in
-                        if let self = self {
-                            if let cgmManagerIdentifier = identifier, let CGMManagerType = self.dataManager.cgmManagerTypeByIdentifier(cgmManagerIdentifier) {
-                                self.setupCGMManager(CGMManagerType)
-                            } else if let pumpManager = pumpManager {
-                                self.completeCGMManagerSetup(pumpManager)
-                            }
-                        }
-
-                        tableView.deselectRow(at: indexPath, animated: true)
-                    }
-
-                    alert.addCancelAction { (_) in
-                        tableView.deselectRow(at: indexPath, animated: true)
-                    }
-
-                    present(alert, animated: true, completion: nil)
-                default:
-                    break
-                }
+            cgmSelected {
+                tableView.deselectRow(at: indexPath, animated: true)
             }
         case .configuration:
             let row = ConfigurationRow(rawValue: indexPath.row)!
@@ -638,17 +565,8 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             switch LoopRow(rawValue: indexPath.row)! {
             case .dosing:
                 break
-            case .notifications:
-                let hostingController = DismissibleHostingController(
-                    rootView: NotificationsCriticalAlertPermissionsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
-                                                                        viewModel: notificationsCriticalAlertPermissionsViewModel),
-                    onDisappear: {
-                        tableView.deselectRow(at: indexPath, animated: true)
-                })
-                
-                present(hostingController, animated: true)
-                tableView.deselectRow(at: indexPath, animated: true)
-                
+            case .alertPermissions:
+                presentAlertPermissionsSettings(tableView, indexPath)
                 break
             }
         case .services:
@@ -691,6 +609,133 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             }
         }
     }
+    
+    private func pumpSelected(completion: (() -> Void)? = nil) {
+        if var settings = dataManager.pumpManager?.settingsViewController() {
+            settings.completionDelegate = self
+            present(settings, animated: true)
+        } else {
+            // Add new pump
+            let pumpManagers = dataManager.availablePumpManagers
+            
+            switch pumpManagers.count {
+            case 1:
+                if let pumpManager = pumpManagers.first, let PumpManagerType = dataManager.pumpManagerTypeByIdentifier(pumpManager.identifier) {
+                    
+                    let setupViewController = configuredSetupViewController(for: PumpManagerType)
+                    present(setupViewController, animated: true, completion: nil)
+                }
+                completion?()
+            case let x where x > 1:
+                let alert = UIAlertController(pumpManagers: pumpManagers) { [weak self] (identifier) in
+                    if let self = self, let manager = self.dataManager.pumpManagerTypeByIdentifier(identifier) {
+                        let setupViewController = self.configuredSetupViewController(for: manager)
+                        self.present(setupViewController, animated: true, completion: nil)
+                        completion?()
+                    }
+                }
+                
+                alert.addCancelAction { (_) in
+                    completion?()
+                }
+                
+                present(alert, animated: true, completion: nil)
+            default:
+                break
+            }
+        }
+    }
+    
+    private func cgmSelected(completion: (() -> Void)? = nil) {
+        if let cgmManager = dataManager.cgmManager as? CGMManagerUI {
+            if let unit = dataManager.loopManager.glucoseStore.preferredUnit {
+                var settings = cgmManager.settingsViewController(for: unit)
+                settings.completionDelegate = self
+                present(settings, animated: true)
+                completion?()
+            }
+        } else if dataManager.cgmManager is PumpManagerUI {
+            // The pump manager is providing glucose, but allow reverting the CGM
+            let alert = UIAlertController(deleteCGMManagerHandler: { [weak self] (isDeleted) in
+                if isDeleted {
+                    self?.dataManager.cgmManager = nil
+                }
+                
+                completion?()
+                self?.updateCGMManagerRows()
+            })
+            present(alert, animated: true, completion: nil)
+        } else {
+            // Add new CGM
+            let cgmManagers = dataManager.availableCGMManagers
+            
+            switch cgmManagers.count {
+            case 1:
+                if let cgmManager = cgmManagers.first, let CGMManagerType = dataManager.cgmManagerTypeByIdentifier(cgmManager.identifier) {
+                    setupCGMManager(CGMManagerType)
+                }
+                
+                completion?()
+            case let x where x > 1:
+                let alert = UIAlertController(cgmManagers: cgmManagers, pumpManager: dataManager.pumpManager as? CGMManager) { [weak self] (identifier, pumpManager) in
+                    if let self = self {
+                        if let cgmManagerIdentifier = identifier, let CGMManagerType = self.dataManager.cgmManagerTypeByIdentifier(cgmManagerIdentifier) {
+                            self.setupCGMManager(CGMManagerType)
+                        } else if let pumpManager = pumpManager {
+                            self.completeCGMManagerSetup(pumpManager)
+                        }
+                    }
+                    
+                    completion?()
+                }
+                
+                alert.addCancelAction { (_) in
+                    completion?()
+                }
+                
+                present(alert, animated: true, completion: nil)
+            default:
+                break
+            }
+        }
+    }
+
+
+    private func presentAlertPermissionsSettings(_ tableView: UITableView, _ indexPath: IndexPath) {
+        
+        let hostingController: DismissibleHostingController
+        if !temporaryNewSettingsViewTesting {
+            hostingController = DismissibleHostingController(
+                rootView: NotificationsCriticalAlertPermissionsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
+                                                                    viewModel: notificationsCriticalAlertPermissionsViewModel),
+                onDisappear: {
+                    tableView.deselectRow(at: indexPath, animated: true)
+            })
+        } else {
+            // TODO: please leave this in for testing...
+            let pumpManagerType = dataManager.pumpManager == nil ? nil : type(of: dataManager.pumpManager! as DeviceManagerUI)
+            let cgmManagerType = dataManager.cgmManager as? CGMManagerUI == nil ? nil : type(of: (dataManager.cgmManager as! CGMManagerUI) as DeviceManagerUI)
+            let pumpViewModel = DeviceViewModel(deviceManagerUI: pumpManagerType, isSetUp: dataManager.pumpManager != nil) { [weak self] in
+                self?.pumpSelected()
+            }
+            let cgmViewModel = DeviceViewModel(deviceManagerUI: cgmManagerType, isSetUp: dataManager.cgmManager != nil) { [weak self] in
+                self?.cgmSelected()
+            }
+            let viewModel = SettingsViewModel(appNameAndVersion: Bundle.main.localizedNameAndVersion,
+                                              notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
+                                              pumpManagerSettingsViewModel: pumpViewModel,
+                                              cgmManagerSettingsViewModel: cgmViewModel)
+            hostingController = DismissibleHostingController(
+                rootView: SettingsView(viewModel: viewModel),
+                onDisappear: {
+                    tableView.deselectRow(at: indexPath, animated: true)
+            })
+        }
+        
+        present(hostingController, animated: true)
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
 
     @objc private func dosingEnabledChanged(_ sender: UISwitch) {
         dataManager.loopManager.settings.dosingEnabled = sender.isOn

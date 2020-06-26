@@ -26,6 +26,7 @@
 		1D05219D2469F1F5000EBBDE /* AlertStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D05219C2469F1F5000EBBDE /* AlertStore.swift */; };
 		1D080CBD2473214A00356610 /* AlertStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1D080CBB2473214A00356610 /* AlertStore.xcdatamodeld */; };
 		1D2609AD248EEB9900A6F258 /* LoopAlertsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D2609AC248EEB9900A6F258 /* LoopAlertsManager.swift */; };
+		1D3234B024A404F7005A2DF6 /* SettingsAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D3234AF24A404F7005A2DF6 /* SettingsAssets.xcassets */; };
 		1D4990E824A25931005CC357 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E267FB2292456700A3F2AF /* FeatureFlags.swift */; };
 		1D4A3E2D2478628500FD601B /* StoredAlert+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4A3E2B2478628500FD601B /* StoredAlert+CoreDataClass.swift */; };
 		1D4A3E2E2478628500FD601B /* StoredAlert+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4A3E2C2478628500FD601B /* StoredAlert+CoreDataProperties.swift */; };
@@ -36,6 +37,9 @@
 		1DA7A84224476EAD008257F0 /* AlertManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA7A84124476EAD008257F0 /* AlertManagerTests.swift */; };
 		1DA7A84424477698008257F0 /* InAppModalAlertPresenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA7A84324477698008257F0 /* InAppModalAlertPresenterTests.swift */; };
 		1DB1065124467E18005542BD /* AlertManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1065024467E18005542BD /* AlertManager.swift */; };
+		1DB1CA4D24A55F0000B3B94C /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1CA4C24A55F0000B3B94C /* Image.swift */; };
+		1DB1CA4F24A56D7600B3B94C /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1CA4E24A56D7600B3B94C /* SettingsViewModel.swift */; };
+		1DE09BA924A3E23F009EE9F9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DE09BA824A3E23F009EE9F9 /* SettingsView.swift */; };
 		1DFE9E172447B6270082C280 /* UserNotificationAlertPresenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DFE9E162447B6270082C280 /* UserNotificationAlertPresenterTests.swift */; };
 		43027F0F1DFE0EC900C51989 /* HKUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F526D5E1DF2459000A04910 /* HKUnit.swift */; };
 		4302F4E11D4E9C8900F0FCAF /* TextFieldTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4302F4E01D4E9C8900F0FCAF /* TextFieldTableViewController.swift */; };
@@ -644,6 +648,7 @@
 		1D05219C2469F1F5000EBBDE /* AlertStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStore.swift; sourceTree = "<group>"; };
 		1D080CBC2473214A00356610 /* AlertStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = AlertStore.xcdatamodel; sourceTree = "<group>"; };
 		1D2609AC248EEB9900A6F258 /* LoopAlertsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopAlertsManager.swift; sourceTree = "<group>"; };
+		1D3234AF24A404F7005A2DF6 /* SettingsAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = SettingsAssets.xcassets; sourceTree = "<group>"; };
 		1D4A3E2B2478628500FD601B /* StoredAlert+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1D4A3E2C2478628500FD601B /* StoredAlert+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1D80313C24746274002810DF /* AlertStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStoreTests.swift; sourceTree = "<group>"; };
@@ -653,6 +658,9 @@
 		1DA7A84124476EAD008257F0 /* AlertManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertManagerTests.swift; sourceTree = "<group>"; };
 		1DA7A84324477698008257F0 /* InAppModalAlertPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppModalAlertPresenterTests.swift; sourceTree = "<group>"; };
 		1DB1065024467E18005542BD /* AlertManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlertManager.swift; sourceTree = "<group>"; };
+		1DB1CA4C24A55F0000B3B94C /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
+		1DB1CA4E24A56D7600B3B94C /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		1DE09BA824A3E23F009EE9F9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		1DFE9E162447B6270082C280 /* UserNotificationAlertPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserNotificationAlertPresenterTests.swift; sourceTree = "<group>"; };
 		4302F4E01D4E9C8900F0FCAF /* TextFieldTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFieldTableViewController.swift; sourceTree = "<group>"; };
 		4302F4E21D4EA54200F0FCAF /* InsulinDeliveryTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InsulinDeliveryTableViewController.swift; sourceTree = "<group>"; };
@@ -1816,6 +1824,7 @@
 				4F75288E1DFE1DC600C322D6 /* Info.plist */,
 				4F2C15941E09BF3C00E160D4 /* HUDView.xib */,
 				4F2C15961E09E94E00E160D4 /* HUDAssets.xcassets */,
+				1D3234AF24A404F7005A2DF6 /* SettingsAssets.xcassets */,
 				B4E96D58248A7F9A002DABAD /* StatusHighlightHUDView.xib */,
 				B4E96D5C248A82A2002DABAD /* StatusBarHUDView.xib */,
 			);
@@ -1841,6 +1850,8 @@
 				438DADC71CDE8F8B007697A5 /* LoopStateView.swift */,
 				1DA46B5F2492E2E300D71A63 /* NotificationsCriticalAlertPermissionsView.swift */,
 				B48B0BAB24900093009A48DE /* PumpStatusHUDView.swift */,
+				1DE09BA824A3E23F009EE9F9 /* SettingsView.swift */,
+				1DB1CA4E24A56D7600B3B94C /* SettingsViewModel.swift */,
 				B4E96D5A248A8229002DABAD /* StatusBarHUDView.swift */,
 				B4E96D56248A7B0F002DABAD /* StatusHighlightHUDView.swift */,
 			);
@@ -1890,6 +1901,7 @@
 				438991661E91B563000EEF90 /* ChartPoint.swift */,
 				43649A621C7A347F00523D7F /* CollectionType.swift */,
 				43FCEEAC221A66780013DD30 /* DateFormatter.swift */,
+				1DB1CA4C24A55F0000B3B94C /* Image.swift */,
 				434F54561D287FDB002A9274 /* NibLoadable.swift */,
 				43FCEEAE221A67A70013DD30 /* NumberFormatter+Charts.swift */,
 			);
@@ -2626,6 +2638,7 @@
 				7D70764A1FE06EE1004AC8EA /* Localizable.strings in Resources */,
 				7D7076451FE06EE0004AC8EA /* InfoPlist.strings in Resources */,
 				4F2C15951E09BF3C00E160D4 /* HUDView.xib in Resources */,
+				1D3234B024A404F7005A2DF6 /* SettingsAssets.xcassets in Resources */,
 				B4E96D5D248A82A2002DABAD /* StatusBarHUDView.xib in Resources */,
 				B4E96D59248A7F9A002DABAD /* StatusHighlightHUDView.xib in Resources */,
 			);
@@ -3186,6 +3199,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4FB76FB91E8C42B000B39636 /* CollectionType.swift in Sources */,
+				1DE09BA924A3E23F009EE9F9 /* SettingsView.swift in Sources */,
 				7D23667D21250C7E0028B67D /* LocalizedString.swift in Sources */,
 				43FCEEBD22212DD50013DD30 /* PredictedGlucoseChart.swift in Sources */,
 				436961911F19D11E00447E89 /* ChartPointsContextFillLayer.swift in Sources */,
@@ -3220,6 +3234,7 @@
 				B48B0BAC24900093009A48DE /* PumpStatusHUDView.swift in Sources */,
 				4FB76FCE1E8C835D00B39636 /* ChartColorPalette.swift in Sources */,
 				43FCEEAD221A66780013DD30 /* DateFormatter.swift in Sources */,
+				1DB1CA4D24A55F0000B3B94C /* Image.swift in Sources */,
 				B4E96D55248A7509002DABAD /* GlucoseTrendHUDView.swift in Sources */,
 				4FB76FB51E8C41E200B39636 /* ChartPointsScatterDownTrianglesLayer.swift in Sources */,
 				43FCEEAF221A67A70013DD30 /* NumberFormatter+Charts.swift in Sources */,
@@ -3231,6 +3246,7 @@
 				43FCEEB5221BCA020013DD30 /* COBChart.swift in Sources */,
 				B42C951424A3C76000857C73 /* CGMStatusHUDViewModel.swift in Sources */,
 				4F75289E1DFE1F6000C322D6 /* LoopCompletionHUDView.swift in Sources */,
+				1DB1CA4F24A56D7600B3B94C /* SettingsViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -21,25 +21,37 @@ public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeCla
     }
     
     public var body: some View {
-        NavigationView {
-            List {
-                manageNotificationsSection
-                manageCriticalAlertsSection
-                notificationAndCriticalAlertPermissionSupportSection
-            }
-            .listStyle(GroupedListStyle())
-            .navigationBarTitle(Text(LocalizedString("Alert Permissions", comment: "Notification & Critical Alert Permissions screen title")))
-            .navigationBarBackButtonHidden(false)
-            .navigationBarHidden(false)
-            .navigationBarItems(leading: dismissButton)
-            .environment(\.horizontalSizeClass, horizontalOverride)
+        if backButtonText == "" {
+            return AnyView(content())
+        } else {
+            return AnyView(navigationContent())
         }
     }
     
+    private func navigationContent() -> some View {
+        return NavigationView {
+            content()
+        }
+    }
+    
+    private func content() -> some View {
+        return List {
+            manageNotificationsSection
+            manageCriticalAlertsSection
+            notificationAndCriticalAlertPermissionSupportSection
+        }
+        .listStyle(GroupedListStyle())
+        .navigationBarTitle(Text(LocalizedString("Alert Permissions", comment: "Notification & Critical Alert Permissions screen title")))
+        .navigationBarBackButtonHidden(false)
+        .navigationBarHidden(false)
+        .navigationBarItems(leading: dismissButton)
+        .environment(\.horizontalSizeClass, horizontalOverride)
+    }
 }
 
 extension NotificationsCriticalAlertPermissionsView {
     
+    // TODO: Remove this when the new SettingsView is in place
     private var dismissButton: some View {
         Button( action: { self.dismiss() }) {
             Text(backButtonText)
