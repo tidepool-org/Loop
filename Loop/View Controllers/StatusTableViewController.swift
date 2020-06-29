@@ -508,11 +508,15 @@ final class StatusTableViewController: ChartsTableViewController {
                                                             staleGlucoseAge: self.deviceManager.loopManager.settings.inputDataRecencyInterval,
                                                             sensor: self.deviceManager.sensorState)
 
-                    hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
+                    if self.deviceManager.cgmManager != nil {
+                        hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
+                    }
                 }
                 
                 // Pump Status HUD
-                hudView.pumpStatusHUD.presentStatusHighlight(self.pumpStatusHighlight)
+                if self.deviceManager.pumpManager != nil {
+                    hudView.pumpStatusHUD.presentStatusHighlight(self.pumpStatusHighlight)
+                }
             }
             
             // Show/hide the table view rows
