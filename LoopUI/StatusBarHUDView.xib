@@ -209,18 +209,20 @@
                                                         <userDefinedRuntimeAttribute type="image" keyPath="maskImage" value="reservoir_mask"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </view>
-                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="1000" image="reservoir" translatesAutoresizingMaskIntoConstraints="NO" id="bgN-kj-x8X">
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" image="reservoir" translatesAutoresizingMaskIntoConstraints="NO" id="bgN-kj-x8X">
                                                     <rect key="frame" x="4" y="0.0" width="28" height="34"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="28" id="hv8-TM-khh"/>
+                                                    </constraints>
                                                 </imageView>
                                             </subviews>
                                             <constraints>
                                                 <constraint firstItem="bgN-kj-x8X" firstAttribute="top" secondItem="jfu-In-s2Y" secondAttribute="top" id="1TH-Im-TzL"/>
-                                                <constraint firstAttribute="trailing" secondItem="Q7F-Ri-GZd" secondAttribute="trailing" constant="4" id="EZG-RS-ksK"/>
+                                                <constraint firstItem="Q7F-Ri-GZd" firstAttribute="centerX" secondItem="bgN-kj-x8X" secondAttribute="centerX" id="36o-GB-9KH"/>
                                                 <constraint firstAttribute="bottom" secondItem="bgN-kj-x8X" secondAttribute="bottom" id="KB5-zl-gNb"/>
-                                                <constraint firstItem="Q7F-Ri-GZd" firstAttribute="leading" secondItem="jfu-In-s2Y" secondAttribute="leading" constant="4" id="Kfs-JN-0mQ"/>
-                                                <constraint firstAttribute="trailing" secondItem="bgN-kj-x8X" secondAttribute="trailing" constant="4" id="Ksd-e5-YWC"/>
+                                                <constraint firstItem="Q7F-Ri-GZd" firstAttribute="width" secondItem="bgN-kj-x8X" secondAttribute="width" id="N9u-2i-9yF"/>
                                                 <constraint firstItem="Q7F-Ri-GZd" firstAttribute="top" secondItem="jfu-In-s2Y" secondAttribute="top" constant="5" id="dYt-8z-iYf"/>
-                                                <constraint firstItem="bgN-kj-x8X" firstAttribute="leading" secondItem="jfu-In-s2Y" secondAttribute="leading" constant="4" id="v7A-wa-7fx"/>
+                                                <constraint firstItem="bgN-kj-x8X" firstAttribute="centerX" secondItem="jfu-In-s2Y" secondAttribute="centerX" id="hJj-63-th5"/>
                                                 <constraint firstAttribute="bottom" secondItem="Q7F-Ri-GZd" secondAttribute="bottom" id="zyL-Cl-nRf"/>
                                             </constraints>
                                         </view>

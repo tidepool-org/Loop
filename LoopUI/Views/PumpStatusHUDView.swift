@@ -93,11 +93,6 @@ public final class PumpStatusHUDView: DeviceStatusHUDView, NibLoadable {
     public func addPumpManagerProvidedHUDView(_ pumpManagerProvidedHUD: LevelHUDView) {
         self.pumpManagerProvidedHUD = pumpManagerProvidedHUD
         statusStackView.addArrangedSubview(self.pumpManagerProvidedHUD)
-        
-        // Use AutoLayout to have the reservoir volume view fill 2/5 of the stack view (fill)
-        NSLayoutConstraint.activate([
-            self.pumpManagerProvidedHUD.widthAnchor.constraint(equalToConstant: statusStackView.frame.width*2/5)
-        ])
     }
     
 }
