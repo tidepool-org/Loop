@@ -28,7 +28,7 @@ import LoopKitUI
     @IBOutlet public weak var backgroundView: UIView! {
         didSet {
             backgroundView.backgroundColor = .systemBackground
-            backgroundView.layer.cornerRadius = 25
+            backgroundView.layer.cornerRadius = 23
         }
     }
     

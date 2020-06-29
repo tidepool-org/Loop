@@ -40,7 +40,6 @@ public final class PumpStatusHUDView: DeviceStatusHUDView, NibLoadable {
         super.tintColorDidChange()
         
         basalRateHUD.tintColor = tintColor
-        pumpManagerProvidedHUD?.tintColor = tintColor
     }
     
     public func presentAddPumpHighlight() {
@@ -95,9 +94,9 @@ public final class PumpStatusHUDView: DeviceStatusHUDView, NibLoadable {
         self.pumpManagerProvidedHUD = pumpManagerProvidedHUD
         statusStackView.addArrangedSubview(self.pumpManagerProvidedHUD)
         
-        // Use AutoLayout to have the reservoir volume view fill 1/3 of the stack view (fill proportionally)
+        // Use AutoLayout to have the reservoir volume view fill 2/5 of the stack view (fill)
         NSLayoutConstraint.activate([
-            self.pumpManagerProvidedHUD.widthAnchor.constraint(equalToConstant: statusStackView.frame.width*1/3)
+            self.pumpManagerProvidedHUD.widthAnchor.constraint(equalToConstant: statusStackView.frame.width*2/5)
         ])
     }
     

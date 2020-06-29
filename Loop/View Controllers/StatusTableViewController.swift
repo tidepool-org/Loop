@@ -1260,8 +1260,6 @@ final class StatusTableViewController: ChartsTableViewController {
     
     private func addPumpManagerViewToHUD(_ view: LevelHUDView) {
         if let hudView = hudView {
-            let hudTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(hudViewTapped(_:)))
-            view.addGestureRecognizer(hudTapGestureRecognizer)
             view.stateColors = .pumpStatus
             hudView.addPumpManagerProvidedHUDView(view)
         }
