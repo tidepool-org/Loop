@@ -9,20 +9,47 @@
 import CoreBluetooth
 import LoopKit
 
+
+public protocol LoopAlertsManagerBluetoothStateObserver: class {
+    func loopAlertsManager(_ loopAlertsManager: LoopAlertsManager, bluetoothStateDidUpdate bluetoothState: LoopAlertsManager.BluetoothState)
+}
+
 /// Class responsible for monitoring "system level" operations and alerting the user to any anomalous situations (e.g. bluetooth off)
-class LoopAlertsManager: NSObject {
+public class LoopAlertsManager: NSObject {
+    
+    public enum BluetoothState {
+        case on
+        case off
+    }
     
     static let managerIdentifier = "Loop"
     
     private var bluetoothCentralManager: CBCentralManager!
+    
     private lazy var log = DiagnosticLog(category: String(describing: LoopAlertsManager.self))
+    
     private weak var alertManager: AlertManager?
+    
     private let bluetoothPoweredOffIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "bluetoothPoweredOff")
 
+    private var bluetoothStateObservers = WeakSynchronizedSet<LoopAlertsManagerBluetoothStateObserver>()
+    
+    private var bluetoothState: BluetoothState = .off
+    
     init(alertManager: AlertManager) {
         super.init()
         bluetoothCentralManager = CBCentralManager(delegate: self, queue: nil)
         self.alertManager = alertManager
+    }
+    
+    public func addBluetoothObserver(_ observer: LoopAlertsManagerBluetoothStateObserver,
+                                     queue: DispatchQueue = .main)
+    {
+        bluetoothStateObservers.insert(observer, queue: queue)
+    }
+    
+    public func removeBluetoothObserver(_ observer: LoopAlertsManagerBluetoothStateObserver) {
+        bluetoothStateObservers.removeElement(observer)
     }
 }
 
@@ -30,9 +57,10 @@ class LoopAlertsManager: NSObject {
 
 extension LoopAlertsManager: CBCentralManagerDelegate {
     
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .unauthorized:
+            bluetoothState = .off
             switch central.authorization {
             case .denied:
                 onBluetoothPermissionDenied()
@@ -41,11 +69,15 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
             }
         case .poweredOn:
             onBluetoothPoweredOn()
+            bluetoothState = .on
         case .poweredOff:
             onBluetoothPoweredOff()
+            bluetoothState = .off
         default:
+            bluetoothState = .off
             break
         }
+        bluetoothStateObservers.forEach { $0.loopAlertsManager(self, bluetoothStateDidUpdate: self.bluetoothState) }
     }
     
     private func onBluetoothPermissionDenied() {
@@ -74,4 +106,18 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
         alertManager?.issueAlert(Alert(identifier: bluetoothPoweredOffIdentifier, foregroundContent: fgcontent, backgroundContent: bgcontent, trigger: .immediate))
     }
 
+}
+
+
+// MARK: - Bluetooth Off Status Highlight
+extension LoopAlertsManager {
+    struct BluetoothOffStatusHighlight: DeviceStatusHighlight {
+        var localizedMessage: String = NSLocalizedString("Enable Bluetooth", comment: "Message to the user to enable bluetooth")
+        var icon: UIImage = UIImage(systemName: "wifi.slash")!
+        var color: UIColor = .systemRed
+    }
+    
+    public static var bluetoothStateOffHighlight: DeviceStatusHighlight {
+        return BluetoothOffStatusHighlight()
+    }
 }

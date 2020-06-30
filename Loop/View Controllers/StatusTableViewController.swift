@@ -508,13 +508,17 @@ final class StatusTableViewController: ChartsTableViewController {
                                                             staleGlucoseAge: self.deviceManager.loopManager.settings.inputDataRecencyInterval,
                                                             sensor: self.deviceManager.sensorState)
 
-                    if self.deviceManager.cgmManager != nil {
+                    if self.deviceManager.bluetoothState == .off {
+                        hudView.cgmStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateOffHighlight)
+                    } else if self.deviceManager.cgmManager != nil {
                         hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
                     }
                 }
                 
                 // Pump Status HUD
-                if self.deviceManager.pumpManager != nil {
+                if self.deviceManager.bluetoothState == .off {
+                    hudView.pumpStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateOffHighlight)
+                } else if self.deviceManager.pumpManager != nil {
                     hudView.pumpStatusHUD.presentStatusHighlight(self.pumpStatusHighlight)
                 }
             }
@@ -1299,6 +1303,11 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func pumpStatusTapped( _ sender: UIGestureRecognizer) {
+        guard deviceManager.bluetoothState == .on else {
+            UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+            return
+        }
+        
         if let pumpManagerUI = deviceManager.pumpManager {
             var completionNotifyingVC = pumpManagerUI.settingsViewController()
             completionNotifyingVC.completionDelegate = self
@@ -1332,6 +1341,11 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func cgmStatusTapped( _ sender: UIGestureRecognizer) {
+        guard deviceManager.bluetoothState == .on else {
+            UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+            return
+        }
+        
         if let cgmManagerUI = deviceManager.cgmManager as? CGMManagerUI {
             var completionNotifyingVC = cgmManagerUI.settingsViewController(for: statusCharts.glucose.glucoseUnit)
             completionNotifyingVC.completionDelegate = self
