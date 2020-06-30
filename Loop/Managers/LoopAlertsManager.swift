@@ -20,6 +20,7 @@ public class LoopAlertsManager: NSObject {
     public enum BluetoothState {
         case on
         case off
+        case unauthorized
     }
     
     static let managerIdentifier = "Loop"
@@ -60,7 +61,7 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .unauthorized:
-            bluetoothState = .off
+            bluetoothState = .unauthorized
             switch central.authorization {
             case .denied:
                 onBluetoothPermissionDenied()
@@ -109,15 +110,24 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
 }
 
 
-// MARK: - Bluetooth Off Status Highlight
+// MARK: - Bluetooth Status Highlight
 extension LoopAlertsManager {
-    struct BluetoothStateOffHighlight: DeviceStatusHighlight {
-        var localizedMessage: String = NSLocalizedString("Enable Bluetooth", comment: "Message to the user to enable bluetooth")
+    struct BluetoothStateHighlight: DeviceStatusHighlight {
+        var localizedMessage: String
+        //TODO need correct icon from design
         var icon: UIImage = UIImage(systemName: "wifi.slash")!
         var color: UIColor = .systemRed
+        
+        init(localizedMessage: String) {
+            self.localizedMessage = localizedMessage
+        }
     }
     
     public static var bluetoothStateOffHighlight: DeviceStatusHighlight {
-        return BluetoothStateOffHighlight()
+        return BluetoothStateHighlight(localizedMessage: NSLocalizedString("Enable Bluetooth", comment: "Message to the user to enable bluetooth"))
+    }
+    
+    public static var bluetoothStateUnauthorizedHighlight: DeviceStatusHighlight {
+        return BluetoothStateHighlight(localizedMessage: NSLocalizedString("Allow Bluetooth", comment: "Message to the user to allow bluetooth"))
     }
 }

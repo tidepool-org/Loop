@@ -229,7 +229,14 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
-    var bluetoothState: LoopAlertsManager.BluetoothState = .off
+    var bluetoothState: LoopAlertsManager.BluetoothState = .off {
+        didSet {
+            if bluetoothState != oldValue {
+                refreshContext.update(with: .status)
+                reloadData(animated: true)
+            }
+        }
+    }
     
     // Toggles the display mode based on the screen aspect ratio. Should not be updated outside of reloadData().
     private var landscapeMode = false
@@ -511,16 +518,24 @@ final class StatusTableViewController: ChartsTableViewController {
                                                             sensor: self.deviceManager.sensorState)
                 }
                 
-                if self.bluetoothState == .off {
+                if self.bluetoothState == .unauthorized {
+                    hudView.cgmStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateUnauthorizedHighlight)
+                } else if self.bluetoothState == .off {
                     hudView.cgmStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateOffHighlight)
-                } else if self.deviceManager.cgmManager != nil {
+                } else if self.deviceManager.cgmManager == nil {
+                    hudView.cgmStatusHUD.presentAddCGMHighlight()
+                } else {
                     hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
                 }
                 
                 // Pump Status
-                if self.bluetoothState == .off {
+                if self.bluetoothState == .unauthorized {
+                    hudView.pumpStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateUnauthorizedHighlight)
+                } else if self.bluetoothState == .off {
                     hudView.pumpStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateOffHighlight)
-                } else if self.deviceManager.pumpManager != nil {
+                } else if self.deviceManager.pumpManager == nil {
+                    hudView.pumpStatusHUD.presentAddPumpHighlight()
+                } else {
                     hudView.pumpStatusHUD.presentStatusHighlight(self.pumpStatusHighlight)
                 }
             }
@@ -1305,8 +1320,12 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func pumpStatusTapped( _ sender: UIGestureRecognizer) {
-        guard bluetoothState == .on else {
+        guard bluetoothState != .unauthorized else {
             UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+            return
+        }
+        
+        guard bluetoothState != .off else {
             return
         }
         
@@ -1343,8 +1362,12 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func cgmStatusTapped( _ sender: UIGestureRecognizer) {
-        guard bluetoothState == .on else {
+        guard bluetoothState != .unauthorized else {
             UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+            return
+        }
+        
+        guard bluetoothState != .off else {
             return
         }
         
@@ -1661,6 +1684,5 @@ extension StatusTableViewController: LoopAlertsManagerBluetoothStateObserver {
                            bluetoothStateDidUpdate bluetoothState: LoopAlertsManager.BluetoothState)
     {
         self.bluetoothState = bluetoothState
-        self.reloadData(animated: true)
     }
 }
