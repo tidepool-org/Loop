@@ -12,12 +12,6 @@ import LoopKit
 import LoopKitUI
 import SwiftUI
 
-public protocol SettingsViewModelDelegate: class {
-    func onSettingsScreenDisplayed()
-
-    var dosingEnabled: Bool { get set }
-}
-
 public class DeviceViewModel: ObservableObject {
     public init(deviceManagerUI: DeviceManagerUI.Type? = nil,
                 isSetUp: Bool = true,
@@ -41,11 +35,16 @@ public class DeviceViewModel: ObservableObject {
 
 public class SettingsViewModel: ObservableObject {
     
-    weak var delegate: SettingsViewModelDelegate?
     let notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel
 
     @Published var appNameAndVersion: String
-    @State var dosingEnabled: Bool = false
+    @Published var dosingEnabled: Bool = false {
+        didSet {
+            dosingEnabledChanged?(dosingEnabled)
+        }
+    }
+    private let dosingEnabledChanged: ((Bool) -> Void)?
+    
     var showWarning: Bool {
         notificationsCriticalAlertPermissionsViewModel.showWarning
     }
@@ -54,15 +53,19 @@ public class SettingsViewModel: ObservableObject {
     @ObservedObject var cgmManagerSettingsViewModel: DeviceViewModel
 
     public init(appNameAndVersion: String,
-                delegate: SettingsViewModelDelegate? = nil,
                 notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel,
                 pumpManagerSettingsViewModel: DeviceViewModel,
-                cgmManagerSettingsViewModel: DeviceViewModel) {
-        self.delegate = delegate
+                cgmManagerSettingsViewModel: DeviceViewModel,
+                // TODO: This is temporary until I can figure out something cleaner
+                initialDosingEnabled: Bool,
+                dosingEnabledChanged: ((Bool) -> Void)? = nil
+                ) {
         self.notificationsCriticalAlertPermissionsViewModel = notificationsCriticalAlertPermissionsViewModel
         self.appNameAndVersion = appNameAndVersion
         self.pumpManagerSettingsViewModel = pumpManagerSettingsViewModel
         self.cgmManagerSettingsViewModel = cgmManagerSettingsViewModel
+        self.dosingEnabledChanged = dosingEnabledChanged
+        self.dosingEnabled = initialDosingEnabled
     }
 
 }

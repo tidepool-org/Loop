@@ -11,7 +11,7 @@ import SwiftUI
 
 public struct SettingsView: View, HorizontalSizeClassOverride {
     @Environment(\.dismiss) var dismiss
-
+    
     @ObservedObject var viewModel: SettingsViewModel
 
     public init(viewModel: SettingsViewModel) {
@@ -50,7 +50,7 @@ extension SettingsView {
     
     private var loopSection: some View {
         Section (header: SectionHeader(label: viewModel.appNameAndVersion)) {
-            Toggle(isOn: viewModel.$dosingEnabled) {
+            Toggle(isOn: $viewModel.dosingEnabled) {
                 Text(LocalizedString("Closed Loop", comment: "The title text for the looping enabled switch cell"))
             }
         }
@@ -190,7 +190,8 @@ public struct SettingsView_Previews: PreviewProvider {
         let viewModel = SettingsViewModel(appNameAndVersion: "Tidepool Loop v1.2.3.456",
                                           notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel(),
                                           pumpManagerSettingsViewModel: DeviceViewModel(),
-                                          cgmManagerSettingsViewModel: DeviceViewModel())
+                                          cgmManagerSettingsViewModel: DeviceViewModel(),
+                                          initialDosingEnabled: true)
         return Group {
             SettingsView(viewModel: viewModel)
                 .colorScheme(.light)

@@ -724,7 +724,9 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             let viewModel = SettingsViewModel(appNameAndVersion: Bundle.main.localizedNameAndVersion,
                                               notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
                                               pumpManagerSettingsViewModel: pumpViewModel,
-                                              cgmManagerSettingsViewModel: cgmViewModel)
+                                              cgmManagerSettingsViewModel: cgmViewModel,
+                                              initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
+                                              dosingEnabledChanged: dosingEnabledChangedInternal)
             hostingController = DismissibleHostingController(
                 rootView: SettingsView(viewModel: viewModel),
                 onDisappear: {
@@ -736,9 +738,14 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
-
     @objc private func dosingEnabledChanged(_ sender: UISwitch) {
         dataManager.loopManager.settings.dosingEnabled = sender.isOn
+    }
+    
+    private func dosingEnabledChangedInternal(_ value: Bool) {
+        DispatchQueue.main.async {
+            self.dataManager.loopManager.settings.dosingEnabled = value
+        }
     }
 }
 
