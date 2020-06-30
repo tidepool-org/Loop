@@ -35,7 +35,7 @@ final class DeviceDataManager {
     private var lastBLEDrivenUpdate = Date.distantPast
 
     private var deviceLog: PersistentDeviceLog
-    
+
     // MARK: - CGM
 
     var cgmManager: CGMManager? {

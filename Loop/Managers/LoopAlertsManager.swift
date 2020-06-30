@@ -42,13 +42,13 @@ public class LoopAlertsManager: NSObject {
         self.alertManager = alertManager
     }
     
-    public func addBluetoothObserver(_ observer: LoopAlertsManagerBluetoothStateObserver,
+    public func addBluetoothStateObserver(_ observer: LoopAlertsManagerBluetoothStateObserver,
                                      queue: DispatchQueue = .main)
     {
         bluetoothStateObservers.insert(observer, queue: queue)
     }
     
-    public func removeBluetoothObserver(_ observer: LoopAlertsManagerBluetoothStateObserver) {
+    public func removeBluetoothStateObserver(_ observer: LoopAlertsManagerBluetoothStateObserver) {
         bluetoothStateObservers.removeElement(observer)
     }
 }

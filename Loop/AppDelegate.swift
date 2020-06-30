@@ -45,7 +45,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         deviceDataManager.analyticsServicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
 
         rootViewController.rootViewController.deviceManager = deviceDataManager
-        loopAlertsManager.addBluetoothObserver(rootViewController.rootViewController)
+        loopAlertsManager.addBluetoothStateObserver(rootViewController.rootViewController)
         
         let notificationOption = launchOptions?[.remoteNotification]
         
