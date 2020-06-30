@@ -26,9 +26,8 @@ public class DeviceViewModel: ObservableObject {
     @Published private(set) var isSetUp: Bool = false
     
     var image: UIImage? { deviceManagerUI?.image }
-    // TODO: Remove the defaults here...they are only here for illustrative purposes
-    var name: String { deviceManagerUI?.name ?? "device" }
-    var details: String { deviceManagerUI?.details ?? "device details"  }
+    var name: String { deviceManagerUI?.name ?? "" }
+    var details: String { deviceManagerUI?.details ?? "" }
    
     let onTapped: () -> Void
 }
@@ -38,12 +37,12 @@ public class SettingsViewModel: ObservableObject {
     let notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel
 
     @Published var appNameAndVersion: String
-    @Published var dosingEnabled: Bool = false {
+    @Published var dosingEnabled: Bool {
         didSet {
-            dosingEnabledChanged?(dosingEnabled)
+            setDosingEnabled?(dosingEnabled)
         }
     }
-    private let dosingEnabledChanged: ((Bool) -> Void)?
+    private let setDosingEnabled: ((Bool) -> Void)?
     
     var showWarning: Bool {
         notificationsCriticalAlertPermissionsViewModel.showWarning
@@ -58,13 +57,13 @@ public class SettingsViewModel: ObservableObject {
                 cgmManagerSettingsViewModel: DeviceViewModel,
                 // TODO: This is temporary until I can figure out something cleaner
                 initialDosingEnabled: Bool,
-                dosingEnabledChanged: ((Bool) -> Void)? = nil
+                setDosingEnabled: ((Bool) -> Void)? = nil
                 ) {
         self.notificationsCriticalAlertPermissionsViewModel = notificationsCriticalAlertPermissionsViewModel
         self.appNameAndVersion = appNameAndVersion
         self.pumpManagerSettingsViewModel = pumpManagerSettingsViewModel
         self.cgmManagerSettingsViewModel = cgmManagerSettingsViewModel
-        self.dosingEnabledChanged = dosingEnabledChanged
+        self.setDosingEnabled = setDosingEnabled
         self.dosingEnabled = initialDosingEnabled
     }
 

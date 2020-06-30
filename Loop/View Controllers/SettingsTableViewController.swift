@@ -16,7 +16,7 @@ import LoopTestingKit
 import LoopUI
 
 final class SettingsTableViewController: UITableViewController, IdentifiableClass {
-    private let temporaryNewSettingsViewTesting = true
+    private let temporaryNewSettingsViewTesting = false
 
     @IBOutlet var devicesSectionTitleView: UIView?
 
@@ -726,8 +726,8 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                               pumpManagerSettingsViewModel: pumpViewModel,
                                               cgmManagerSettingsViewModel: cgmViewModel,
                                               initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
-                                              dosingEnabledChanged: { [weak self] in
-                                                self?.dosingEnabledChangedInternal($0)
+                                              setDosingEnabled: { [weak self] in
+                                                self?.setDosingEnabled($0)
             })
             hostingController = DismissibleHostingController(
                 rootView: SettingsView(viewModel: viewModel),
@@ -741,10 +741,10 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
     }
     
     @objc private func dosingEnabledChanged(_ sender: UISwitch) {
-        dataManager.loopManager.settings.dosingEnabled = sender.isOn
+        setDosingEnabled(sender.isOn)
     }
     
-    private func dosingEnabledChangedInternal(_ value: Bool) {
+    private func setDosingEnabled(_ value: Bool) {
         DispatchQueue.main.async {
             self.dataManager.loopManager.settings.dosingEnabled = value
         }

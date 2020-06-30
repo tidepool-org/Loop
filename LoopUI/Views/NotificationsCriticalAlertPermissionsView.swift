@@ -15,16 +15,24 @@ public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeCla
     private let backButtonText: String
     @ObservedObject private var viewModel: NotificationsCriticalAlertPermissionsViewModel
 
-    public init(backButtonText: String = "", viewModel: NotificationsCriticalAlertPermissionsViewModel) {
+    // TODO: This screen is used in both the 'old Settings UI' and the 'new Settings UI'.  This is temporary.
+    // In the old UI, it is a "top level" navigation view.  In the new UI, it is just part of the "flow".  This
+    // enum tries to make this clear, for now.
+    public enum PresentationMode {
+        case topLevel, flow
+    }
+    private let mode: PresentationMode
+    
+    public init(backButtonText: String = "", mode: PresentationMode = .topLevel, viewModel: NotificationsCriticalAlertPermissionsViewModel) {
         self.backButtonText = backButtonText
         self.viewModel = viewModel
+        self.mode = mode
     }
     
     public var body: some View {
-        if backButtonText == "" {
-            return AnyView(content())
-        } else {
-            return AnyView(navigationContent())
+        switch mode {
+        case .flow: return AnyView(content())
+        case .topLevel: return AnyView(navigationContent())
         }
     }
     

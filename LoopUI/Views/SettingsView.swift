@@ -31,7 +31,6 @@ public struct SettingsView: View, HorizontalSizeClassOverride {
             }
             .listStyle(GroupedListStyle())
             .navigationBarTitle(Text(LocalizedString("Settings", comment: "Settings screen title")))
-            .navigationBarHidden(false)
             .navigationBarItems(trailing: dismissButton)
             .environment(\.horizontalSizeClass, horizontalOverride)
         }
@@ -42,13 +41,13 @@ public struct SettingsView: View, HorizontalSizeClassOverride {
 extension SettingsView {
         
     private var dismissButton: some View {
-        Button( action: { self.dismiss() }) {
+        Button(action: { self.dismiss() }) {
             Text("Done").bold()
         }
     }
     
     private var loopSection: some View {
-        Section (header: SectionHeader(label: viewModel.appNameAndVersion)) {
+        Section(header: SectionHeader(label: viewModel.appNameAndVersion)) {
             Toggle(isOn: $viewModel.dosingEnabled) {
                 Text(LocalizedString("Closed Loop", comment: "The title text for the looping enabled switch cell"))
             }
@@ -58,8 +57,7 @@ extension SettingsView {
     private var alertPermissionsSection: some View {
         Section {
             NavigationLink(destination:
-                NotificationsCriticalAlertPermissionsView(
-                    viewModel: NotificationsCriticalAlertPermissionsViewModel()))
+                NotificationsCriticalAlertPermissionsView(mode: .flow, viewModel: NotificationsCriticalAlertPermissionsViewModel()))
             {
                 HStack {
                     Text(LocalizedString("Alert Permissions", comment: "Alert Permissions button text"))
@@ -73,11 +71,11 @@ extension SettingsView {
     }
         
     private var therapySettingsSection: some View {
-        Section (header: SectionHeader(label: LocalizedString("Configuration", comment: "The title of the Configuration section in settings"))) {
+        Section(header: SectionHeader(label: LocalizedString("Configuration", comment: "The title of the Configuration section in settings"))) {
             NavigationLink(destination: Text("Therapy Settings")) {
                 LargeButton(action: { },
                             includeArrow: false,
-                            image: Image(bundleString: "Therapy Icon"),
+                            image: Image(frameworkImage: "Therapy Icon"),
                             label: LocalizedString("Therapy Settings", comment: "Title text for button to Therapy Settings"),
                             details: LocalizedString("Diabetes Treatment", comment: "Descriptive text for Therapy Settings"))
             }
@@ -95,13 +93,13 @@ extension SettingsView {
         if viewModel.pumpManagerSettingsViewModel.isSetUp {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.pumpManagerSettingsViewModel.onTapped() },
-                               image: Image(uiImage: viewModel.pumpManagerSettingsViewModel.image, bundleString: "Omnipod"),
+                               image: Image(uiImage: viewModel.pumpManagerSettingsViewModel.image, orFallback: "Omnipod"),
                                label: viewModel.pumpManagerSettingsViewModel.name,
                                details: viewModel.pumpManagerSettingsViewModel.details)
         } else {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.pumpManagerSettingsViewModel.onTapped() },
-                               image: Image(bundleString: "Omnipod"),
+                               image: Image(frameworkImage: "Omnipod"),
                                label: LocalizedString("Add Pump", comment: "Title text for button to add pump device"),
                                details: LocalizedString("Tap here to set up a pump", comment: "Descriptive text for button to add pump device"))
         }
@@ -111,20 +109,20 @@ extension SettingsView {
         if viewModel.cgmManagerSettingsViewModel.isSetUp {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.cgmManagerSettingsViewModel.onTapped() },
-                               image: Image(uiImage: viewModel.cgmManagerSettingsViewModel.image, bundleString: "Dexcom G6"),
+                               image: Image(uiImage: viewModel.cgmManagerSettingsViewModel.image, orFallback: "Dexcom G6"),
                                label: viewModel.cgmManagerSettingsViewModel.name,
                                details: viewModel.cgmManagerSettingsViewModel.details)
         } else {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.cgmManagerSettingsViewModel.onTapped() },
-                               image: Image(bundleString: "Dexcom G6"),
+                               image: Image(frameworkImage: "Dexcom G6"),
                                label: LocalizedString("Add CGM", comment: "Title text for button to add CGM device"),
                                details: LocalizedString("Tap here to set up a CGM", comment: "Descriptive text for button to add CGM device"))
         }
     }
     
     private var supportSection: some View {
-        Section (header: SectionHeader(label: NSLocalizedString("Support", comment: "The title of the support section in settings"))) {
+        Section(header: SectionHeader(label: NSLocalizedString("Support", comment: "The title of the support section in settings"))) {
             NavigationLink(destination: Text("Support")) {
                 Text(NSLocalizedString("Support", comment: "The title of the support section in settings"))
             }
@@ -175,7 +173,7 @@ fileprivate struct LargeButton: View {
 
 extension Image {
     
-    init(uiImage: UIImage? = nil, bundleString: String) {
+    init(uiImage: UIImage? = nil, orFallback bundleString: String) {
         if let uiImage = uiImage {
             self = Image(uiImage: uiImage)
         } else {
