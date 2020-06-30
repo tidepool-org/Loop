@@ -507,11 +507,13 @@ final class StatusTableViewController: ChartsTableViewController {
                                                             unit: unit,
                                                             staleGlucoseAge: self.deviceManager.loopManager.settings.inputDataRecencyInterval,
                                                             sensor: self.deviceManager.sensorState)
-
-                    if self.deviceManager.cgmManager != nil {
-                        hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
-                    }
                 }
+                
+                if self.deviceManager.cgmManager != nil {
+                    hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
+                }
+
+                hudView.cgmStatusHUD.statusProgress = (self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusProgress
                 
                 // Pump Status HUD
                 if self.deviceManager.pumpManager != nil {
