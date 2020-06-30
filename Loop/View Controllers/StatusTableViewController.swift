@@ -229,6 +229,8 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
+    var bluetoothState: LoopAlertsManager.BluetoothState = .off
+    
     // Toggles the display mode based on the screen aspect ratio. Should not be updated outside of reloadData().
     private var landscapeMode = false
     
@@ -499,7 +501,7 @@ final class StatusTableViewController: ChartsTableViewController {
             
             self.tableView.beginUpdates()
             if let hudView = self.hudView {
-                // CGM Status HUD
+                // CGM Status
                 if let glucose = self.deviceManager.loopManager.glucoseStore.latestGlucose {
                     let unit = self.statusCharts.glucose.glucoseUnit
                     hudView.cgmStatusHUD.setGlucoseQuantity(glucose.quantity.doubleValue(for: unit),
@@ -507,16 +509,16 @@ final class StatusTableViewController: ChartsTableViewController {
                                                             unit: unit,
                                                             staleGlucoseAge: self.deviceManager.loopManager.settings.inputDataRecencyInterval,
                                                             sensor: self.deviceManager.sensorState)
-
-                    if self.deviceManager.bluetoothState == .off {
-                        hudView.cgmStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateOffHighlight)
-                    } else if self.deviceManager.cgmManager != nil {
-                        hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
-                    }
                 }
                 
-                // Pump Status HUD
-                if self.deviceManager.bluetoothState == .off {
+                if self.bluetoothState == .off {
+                    hudView.cgmStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateOffHighlight)
+                } else if self.deviceManager.cgmManager != nil {
+                    hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
+                }
+                
+                // Pump Status
+                if self.bluetoothState == .off {
                     hudView.pumpStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateOffHighlight)
                 } else if self.deviceManager.pumpManager != nil {
                     hudView.pumpStatusHUD.presentStatusHighlight(self.pumpStatusHighlight)
@@ -1303,7 +1305,7 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func pumpStatusTapped( _ sender: UIGestureRecognizer) {
-        guard deviceManager.bluetoothState == .on else {
+        guard bluetoothState == .on else {
             UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
             return
         }
@@ -1341,7 +1343,7 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func cgmStatusTapped( _ sender: UIGestureRecognizer) {
-        guard deviceManager.bluetoothState == .on else {
+        guard bluetoothState == .on else {
             UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
             return
         }
@@ -1651,5 +1653,14 @@ extension StatusTableViewController: PumpManagerSetupViewControllerDelegate {
         if let maxBolusUnits = pumpManagerSetupViewController.maxBolusUnits {
             deviceManager.loopManager.settings.maximumBolus = maxBolusUnits
         }
+    }
+}
+
+extension StatusTableViewController: LoopAlertsManagerBluetoothStateObserver {
+    func loopAlertsManager(_ loopAlertsManager: LoopAlertsManager,
+                           bluetoothStateDidUpdate bluetoothState: LoopAlertsManager.BluetoothState)
+    {
+        self.bluetoothState = bluetoothState
+        self.reloadData(animated: true)
     }
 }

@@ -35,7 +35,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         alertManager = AlertManager(rootViewController: rootViewController, expireAfter: Bundle.main.localCacheDuration ?? .days(1))
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertManager: alertManager)
         loopAlertsManager = LoopAlertsManager(alertManager: alertManager)
-        loopAlertsManager.addBluetoothObserver(deviceDataManager)
 
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 
@@ -46,6 +45,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         deviceDataManager.analyticsServicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
 
         rootViewController.rootViewController.deviceManager = deviceDataManager
+        loopAlertsManager.addBluetoothObserver(rootViewController.rootViewController)
         
         let notificationOption = launchOptions?[.remoteNotification]
         

@@ -111,13 +111,13 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
 
 // MARK: - Bluetooth Off Status Highlight
 extension LoopAlertsManager {
-    struct BluetoothOffStatusHighlight: DeviceStatusHighlight {
+    struct BluetoothStateOffHighlight: DeviceStatusHighlight {
         var localizedMessage: String = NSLocalizedString("Enable Bluetooth", comment: "Message to the user to enable bluetooth")
         var icon: UIImage = UIImage(systemName: "wifi.slash")!
         var color: UIColor = .systemRed
     }
     
     public static var bluetoothStateOffHighlight: DeviceStatusHighlight {
-        return BluetoothOffStatusHighlight()
+        return BluetoothStateOffHighlight()
     }
 }
