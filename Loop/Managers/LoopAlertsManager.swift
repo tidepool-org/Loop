@@ -74,6 +74,11 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
         case .poweredOff:
             onBluetoothPoweredOff()
             bluetoothState = .off
+        case .unsupported:
+            // to support the iphone simulator
+            #if DEBUG
+            bluetoothState = .on
+            #endif
         default:
             bluetoothState = .off
             break
