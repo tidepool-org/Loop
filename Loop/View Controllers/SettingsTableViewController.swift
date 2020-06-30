@@ -726,7 +726,9 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                               pumpManagerSettingsViewModel: pumpViewModel,
                                               cgmManagerSettingsViewModel: cgmViewModel,
                                               initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
-                                              dosingEnabledChanged: dosingEnabledChangedInternal)
+                                              dosingEnabledChanged: { [weak self] in
+                                                self?.dosingEnabledChangedInternal($0)
+            })
             hostingController = DismissibleHostingController(
                 rootView: SettingsView(viewModel: viewModel),
                 onDisappear: {
