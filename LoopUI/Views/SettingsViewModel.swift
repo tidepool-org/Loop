@@ -25,7 +25,7 @@ public class DeviceViewModel: ObservableObject {
 
     @Published private(set) var isSetUp: Bool = false
     
-    var image: UIImage? { deviceManagerUI?.smallImage }
+    var image: UIImage? { deviceManagerUI?.image }
     // TODO: Remove the defaults here...they are only here for illustrative purposes
     var name: String { deviceManagerUI?.name ?? "device" }
     var details: String { deviceManagerUI?.details ?? "device details"  }

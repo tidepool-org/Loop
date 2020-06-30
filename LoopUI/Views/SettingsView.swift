@@ -31,7 +31,6 @@ public struct SettingsView: View, HorizontalSizeClassOverride {
             }
             .listStyle(GroupedListStyle())
             .navigationBarTitle(Text(LocalizedString("Settings", comment: "Settings screen title")))
-            .navigationBarBackButtonHidden(false)
             .navigationBarHidden(false)
             .navigationBarItems(trailing: dismissButton)
             .environment(\.horizontalSizeClass, horizontalOverride)
