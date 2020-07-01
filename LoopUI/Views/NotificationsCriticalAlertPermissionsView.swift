@@ -50,8 +50,6 @@ public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeCla
         }
         .listStyle(GroupedListStyle())
         .navigationBarTitle(Text(LocalizedString("Alert Permissions", comment: "Notification & Critical Alert Permissions screen title")))
-        .navigationBarBackButtonHidden(false)
-        .navigationBarHidden(false)
         .navigationBarItems(leading: dismissButton)
         .environment(\.horizontalSizeClass, horizontalOverride)
     }
