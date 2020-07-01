@@ -77,7 +77,7 @@ extension SettingsView {
                             includeArrow: false,
                             image: Image(frameworkImage: "Therapy Icon"),
                             label: LocalizedString("Therapy Settings", comment: "Title text for button to Therapy Settings"),
-                            details: LocalizedString("Diabetes Treatment", comment: "Descriptive text for Therapy Settings"))
+                            descriptiveText: LocalizedString("Diabetes Treatment", comment: "Descriptive text for Therapy Settings"))
             }
         }
     }
@@ -95,13 +95,13 @@ extension SettingsView {
             return LargeButton(action: { self.dismiss(); self.viewModel.pumpManagerSettingsViewModel.onTapped() },
                                image: Image(uiImage: viewModel.pumpManagerSettingsViewModel.image, orFallback: "Omnipod"),
                                label: viewModel.pumpManagerSettingsViewModel.name,
-                               details: viewModel.pumpManagerSettingsViewModel.details)
+                               descriptiveText: LocalizedString("Insulin Pump", comment: "Descriptive text for Insulin Pump"))
         } else {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.pumpManagerSettingsViewModel.onTapped() },
-                               image: Image(frameworkImage: "Omnipod"),
+                               image: Image(systemName: "plus.circle"),
                                label: LocalizedString("Add Pump", comment: "Title text for button to add pump device"),
-                               details: LocalizedString("Tap here to set up a pump", comment: "Descriptive text for button to add pump device"))
+                               descriptiveText: LocalizedString("Tap here to set up a pump", comment: "Descriptive text for button to add pump device"))
         }
     }
     
@@ -111,13 +111,13 @@ extension SettingsView {
             return LargeButton(action: { self.dismiss(); self.viewModel.cgmManagerSettingsViewModel.onTapped() },
                                image: Image(uiImage: viewModel.cgmManagerSettingsViewModel.image, orFallback: "Dexcom G6"),
                                label: viewModel.cgmManagerSettingsViewModel.name,
-                               details: viewModel.cgmManagerSettingsViewModel.details)
+                               descriptiveText: LocalizedString("Continuous Glucose Monitor", comment: "Descriptive text for Continuous Glucose Monitor"))
         } else {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.cgmManagerSettingsViewModel.onTapped() },
-                               image: Image(frameworkImage: "Dexcom G6"),
+                               image: Image(systemName: "plus.circle"),
                                label: LocalizedString("Add CGM", comment: "Title text for button to add CGM device"),
-                               details: LocalizedString("Tap here to set up a CGM", comment: "Descriptive text for button to add CGM device"))
+                               descriptiveText: LocalizedString("Tap here to set up a CGM", comment: "Descriptive text for button to add CGM device"))
         }
     }
     
@@ -137,7 +137,7 @@ fileprivate struct LargeButton: View {
     var includeArrow: Bool = true
     let image: Image
     let label: String
-    let details: String
+    let descriptiveText: String
 
     // TODO: The design doesn't show this, but do we need to consider different values here for different size classes?
     static let spacing: CGFloat = 15
@@ -157,7 +157,7 @@ fileprivate struct LargeButton: View {
                     VStack(alignment: .leading) {
                         Text(label)
                             .foregroundColor(.primary)
-                        DescriptiveText(label: details)
+                        DescriptiveText(label: descriptiveText)
                     }
                 }
                 if includeArrow {

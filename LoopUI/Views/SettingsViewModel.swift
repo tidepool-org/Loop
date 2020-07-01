@@ -14,7 +14,7 @@ import SwiftUI
 
 public class DeviceViewModel: ObservableObject {
     public init(deviceManagerUI: DeviceManagerUI.Type? = nil,
-                isSetUp: Bool = true,
+                isSetUp: Bool = false,
                 onTapped: @escaping () -> Void = { }) {
         self.deviceManagerUI = deviceManagerUI
         self.isSetUp = isSetUp
@@ -25,9 +25,8 @@ public class DeviceViewModel: ObservableObject {
 
     @Published private(set) var isSetUp: Bool = false
     
-    var image: UIImage? { deviceManagerUI?.image }
-    var name: String { deviceManagerUI?.name ?? "" }
-    var details: String { deviceManagerUI?.details ?? "" }
+    var image: UIImage? { deviceManagerUI?.smallImage }
+    var name: String { deviceManagerUI?.localizedTitle ?? "" }
    
     let onTapped: () -> Void
 }

@@ -203,7 +203,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             case .pumpSettings:
                 if let pumpManager = dataManager.pumpManager {
                     let cell = tableView.dequeueReusableCell(withIdentifier: SettingsImageTableViewCell.className, for: indexPath)
-                    cell.imageView?.image = type(of: pumpManager).image
+                    cell.imageView?.image = pumpManager.smallImage
                     cell.textLabel?.text = pumpManager.localizedTitle
                     cell.detailTextLabel?.text = nil
                     cell.accessoryType = .disclosureIndicator
@@ -216,10 +216,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             }
         case .cgm:
             if let cgmManager = dataManager.cgmManager {
-                var image: UIImage? = nil
-                if let cgmManagerUI = cgmManager as? CGMManagerUI {
-                    image = type(of: cgmManagerUI).image
-                }
+                let image: UIImage? = (cgmManager as? CGMManagerUI)?.smallImage
                 let cell = tableView.dequeueReusableCell(withIdentifier: image == nil ? SettingsTableViewCell.className : SettingsImageTableViewCell.className, for: indexPath)
                 if let image = image {
                     cell.imageView?.image = image
