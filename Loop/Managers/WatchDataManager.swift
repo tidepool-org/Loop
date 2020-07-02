@@ -349,7 +349,12 @@ extension WatchDataManager: WCSessionDelegate {
 
             // This might be useless, as userInfoTransfer.userInfo seems to be nil when error is non-nil.
             switch userInfoTransfer.userInfo["name"] as? String {
-            case LoopSettingsUserInfo.name?, .none:
+            case nil:
+                lastSentSettings = nil
+                sendSettingsIfNeeded()
+                lastSentBolusVolumes = nil
+                sendSupportedBolusVolumesIfNeeded()
+            case LoopSettingsUserInfo.name:
                 lastSentSettings = nil
                 sendSettingsIfNeeded()
             case SupportedBolusVolumesUserInfo.name:
