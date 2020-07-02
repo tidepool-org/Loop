@@ -43,13 +43,13 @@ public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeCla
     }
     
     private func content() -> some View {
-        return List {
+        List {
             manageNotificationsSection
             manageCriticalAlertsSection
             notificationAndCriticalAlertPermissionSupportSection
         }
         .listStyle(GroupedListStyle())
-        .navigationBarTitle(Text(LocalizedString("Alert Permissions", comment: "Notification & Critical Alert Permissions screen title")))
+        .navigationBarTitle(Text(NSLocalizedString("Alert Permissions", comment: "Notification & Critical Alert Permissions screen title")))
         .navigationBarItems(leading: dismissButton)
         .environment(\.horizontalSizeClass, horizontalOverride)
     }
@@ -65,48 +65,49 @@ extension NotificationsCriticalAlertPermissionsView {
     }
 
     private var manageNotificationsSection: some View {
-        Section {
+        Section(header: Spacer(),
+                footer: DescriptiveText(label: NSLocalizedString("""
+            Notifications can appear while you are using another app on your iPhone, or while your iPhone is locked.
+
+            Notifications let you know about issues Tidepool Loop has without needing to open the app.
+            You can customize when you want to receive notificiations, and how they should be delivered inside Tidepool Loop.
+            """, comment: "Manage Notifications in Settings descriptive text")))
+        {
             Button( action: { self.viewModel.gotoSettings() } ) {
                 HStack {
-                    Text(LocalizedString("Manage Notifications in Settings", comment: "Manage Notifications in Settings button text"))
+                    Text(NSLocalizedString("Manage Notifications in Settings", comment: "Manage Notifications in Settings button text"))
                     if !viewModel.notificationsPermissionsGiven {
                         Spacer()
-                        Text(LocalizedString("⚠️", comment: "Warning symbol"))
+                        Text(NSLocalizedString("⚠️", comment: "Warning symbol"))
                     }
                 }
             }
-            DescriptiveText(label: LocalizedString("""
-                Notifications can appear while you are using another app on your iPhone, or while your iPhone is locked.
-
-                Notifications let you know about issues Tidepool Loop has without needing to open the app.
-                You can customize when you want to recieve notificiations, and how they should be delivered inside Tidepool Loop.
-                """, comment: "Manage Notifications in Settings descriptive text"))
         }
     }
     
     private var manageCriticalAlertsSection: some View {
-        Section {
+        Section(footer:      DescriptiveText(label: NSLocalizedString("""
+            Critical Alerts will always play a sound and appear on the Lock screen even if your iPhone is muted or Do Not Disturb is on.
+            """, comment: "Manage Notifications in Settings descriptive text")))
+        {
             Button( action: { self.viewModel.gotoSettings() } ) {
                 HStack {
-                    Text(LocalizedString("Manage Critical Alerts in Settings", comment: "Manage Critical Alerts in Settings button text"))
+                    Text(NSLocalizedString("Manage Critical Alerts in Settings", comment: "Manage Critical Alerts in Settings button text"))
                     if !viewModel.criticalAlertsPermissionsGiven {
                         Spacer()
-                        Text(LocalizedString("⚠️", comment: "Warning symbol"))
+                        Text(NSLocalizedString("⚠️", comment: "Warning symbol"))
                     }
                 }
             }
-            DescriptiveText(label: LocalizedString("""
-                Critical Alerts will always play a sound and appear on the Lock screen even if your iPhone is muted or Do Not Disturb is on.
-                """, comment: "Manage Notifications in Settings descriptive text"))
+
         }
     }
     
     private var notificationAndCriticalAlertPermissionSupportSection: some View {
-        Section(header: SectionHeader(label: LocalizedString("Support", comment: "Section title for Support"))) {
+        Section(header: SectionHeader(label: NSLocalizedString("Support", comment: "Section title for Support"))) {
             NavigationLink(destination: Text("Get help with Notification & Critical Alert Permissions screen")) {
-                Text(LocalizedString("Get help with Notification & Critical Alert Permissions", comment: "Get help with Notification & Critical Alert Permissions support button text"))
+                Text(NSLocalizedString("Get help with Notification & Critical Alert Permissions", comment: "Get help with Notification & Critical Alert Permissions support button text"))
             }
-            DescriptiveText(label: LocalizedString("Text description here.", comment: ""))
         }
     }
 

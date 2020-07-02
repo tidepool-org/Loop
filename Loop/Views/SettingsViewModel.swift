@@ -13,7 +13,7 @@ import LoopKitUI
 import SwiftUI
 
 public class DeviceViewModel: ObservableObject {
-    public init(deviceManagerUI: DeviceManagerUI.Type? = nil,
+    public init(deviceManagerUI: DeviceManagerUI? = nil,
                 isSetUp: Bool = false,
                 onTapped: @escaping () -> Void = { }) {
         self.deviceManagerUI = deviceManagerUI
@@ -21,7 +21,7 @@ public class DeviceViewModel: ObservableObject {
         self.onTapped = onTapped
     }
     
-    let deviceManagerUI: DeviceManagerUI.Type?
+    let deviceManagerUI: DeviceManagerUI?
 
     @Published private(set) var isSetUp: Bool = false
     
