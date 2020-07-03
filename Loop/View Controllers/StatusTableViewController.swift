@@ -229,6 +229,16 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
+    var pumpStatusProgress: PumpManagerStatus.PumpStatusProgress? {
+        didSet {
+            if oldValue != pumpStatusProgress {
+                log.debug("New pumpStatusProgress: %@", String(describing: pumpStatusHighlight))
+                refreshContext.update(with: .status)
+                self.reloadData(animated: true)
+            }
+        }
+    }
+    
     // Toggles the display mode based on the screen aspect ratio. Should not be updated outside of reloadData().
     private var landscapeMode = false
     
@@ -519,6 +529,8 @@ final class StatusTableViewController: ChartsTableViewController {
                 if self.deviceManager.pumpManager != nil {
                     hudView.pumpStatusHUD.presentStatusHighlight(self.pumpStatusHighlight)
                 }
+                
+                hudView.pumpStatusHUD.statusProgress = self.pumpStatusProgress
             }
             
             // Show/hide the table view rows
@@ -1550,6 +1562,7 @@ extension StatusTableViewController: PumpManagerStatusObserver {
         self.basalDeliveryState = status.basalDeliveryState
         self.bolusState = status.bolusState
         self.pumpStatusHighlight = status.pumpStatusHighlight
+        self.pumpStatusProgress = status.pumpStatusProgress
     }
 }
 
