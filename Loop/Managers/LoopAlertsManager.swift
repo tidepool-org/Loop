@@ -6,16 +6,10 @@
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
-import CoreBluetooth
 import LoopKit
 
-
-public protocol LoopAlertsManagerBluetoothStateObserver: class {
-    func loopAlertsManager(_ loopAlertsManager: LoopAlertsManager, bluetoothStateDidUpdate bluetoothState: LoopAlertsManager.BluetoothState)
-}
-
 /// Class responsible for monitoring "system level" operations and alerting the user to any anomalous situations (e.g. bluetooth off)
-public class LoopAlertsManager: NSObject {
+public class LoopAlertsManager {
     
     public enum BluetoothState {
         case on
@@ -25,67 +19,16 @@ public class LoopAlertsManager: NSObject {
     
     static let managerIdentifier = "Loop"
     
-    private var bluetoothCentralManager: CBCentralManager!
-    
     private lazy var log = DiagnosticLog(category: String(describing: LoopAlertsManager.self))
     
     private weak var alertManager: AlertManager?
     
     private let bluetoothPoweredOffIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "bluetoothPoweredOff")
-
-    private var bluetoothStateObservers = WeakSynchronizedSet<LoopAlertsManagerBluetoothStateObserver>()
-    
-    private var bluetoothState: BluetoothState = .off
     
     init(alertManager: AlertManager) {
-        super.init()
-        bluetoothCentralManager = CBCentralManager(delegate: self, queue: nil)
         self.alertManager = alertManager
     }
-    
-    public func addBluetoothStateObserver(_ observer: LoopAlertsManagerBluetoothStateObserver,
-                                     queue: DispatchQueue = .main)
-    {
-        bluetoothStateObservers.insert(observer, queue: queue)
-    }
-    
-    public func removeBluetoothStateObserver(_ observer: LoopAlertsManagerBluetoothStateObserver) {
-        bluetoothStateObservers.removeElement(observer)
-    }
-}
-
-// MARK: CBCentralManagerDelegate implementation
-
-extension LoopAlertsManager: CBCentralManagerDelegate {
-    
-    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        switch central.state {
-        case .unauthorized:
-            bluetoothState = .unauthorized
-            switch central.authorization {
-            case .denied:
-                onBluetoothPermissionDenied()
-            default:
-                break
-            }
-        case .poweredOn:
-            onBluetoothPoweredOn()
-            bluetoothState = .on
-        case .poweredOff:
-            onBluetoothPoweredOff()
-            bluetoothState = .off
-        case .unsupported:
-            // to support the iphone simulator
-            #if DEBUG
-            bluetoothState = .on
-            #endif
-        default:
-            bluetoothState = .off
-            break
-        }
-        bluetoothStateObservers.forEach { $0.loopAlertsManager(self, bluetoothStateDidUpdate: self.bluetoothState) }
-    }
-    
+        
     private func onBluetoothPermissionDenied() {
         log.default("Bluetooth permission denied")
         let content = Alert.Content(title: NSLocalizedString("Bluetooth Permission Denied", comment: "Bluetooth permission denied alert title"),
@@ -114,25 +57,21 @@ extension LoopAlertsManager: CBCentralManagerDelegate {
 
 }
 
+// MARK: - Bluetooth State Observer
 
-// MARK: - Bluetooth Status Highlight
-extension LoopAlertsManager {
-    struct BluetoothStateHighlight: DeviceStatusHighlight {
-        var localizedMessage: String
-        //TODO need correct icon from design
-        var icon: UIImage = UIImage(systemName: "wifi.slash")!
-        var color: UIColor = .systemRed
-        
-        init(localizedMessage: String) {
-            self.localizedMessage = localizedMessage
+extension LoopAlertsManager: BluetoothStateManagerObserver {
+    public func bluetoothStateManager(_ bluetoothStateManager: BluetoothStateManager,
+                                      bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
+    {
+        switch bluetoothState {
+        case .poweredOn:
+            onBluetoothPoweredOn()
+        case .poweredOff:
+            onBluetoothPoweredOff()
+        case .denied:
+            onBluetoothPermissionDenied()
+        default:
+            return
         }
-    }
-    
-    public static var bluetoothStateOffHighlight: DeviceStatusHighlight {
-        return BluetoothStateHighlight(localizedMessage: NSLocalizedString("Enable Bluetooth", comment: "Message to the user to enable bluetooth"))
-    }
-    
-    public static var bluetoothStateUnauthorizedHighlight: DeviceStatusHighlight {
-        return BluetoothStateHighlight(localizedMessage: NSLocalizedString("Allow Bluetooth", comment: "Message to the user to allow bluetooth"))
     }
 }

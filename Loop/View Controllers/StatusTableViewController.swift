@@ -229,7 +229,7 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
-    var bluetoothState: LoopAlertsManager.BluetoothState = .off {
+    var bluetoothState: BluetoothStateManager.BluetoothState = .other {
         didSet {
             if bluetoothState != oldValue {
                 refreshContext.update(with: .status)
@@ -518,10 +518,8 @@ final class StatusTableViewController: ChartsTableViewController {
                                                             sensor: self.deviceManager.sensorState)
                 }
                 
-                if self.bluetoothState == .unauthorized {
-                    hudView.cgmStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateUnauthorizedHighlight)
-                } else if self.bluetoothState == .off {
-                    hudView.cgmStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateOffHighlight)
+                if let bluetoothStatusHighlight = self.bluetoothState.statusHighlight {
+                    hudView.cgmStatusHUD.presentStatusHighlight(bluetoothStatusHighlight)
                 } else if self.deviceManager.cgmManager == nil {
                     hudView.cgmStatusHUD.presentAddCGMHighlight()
                 } else {
@@ -529,10 +527,8 @@ final class StatusTableViewController: ChartsTableViewController {
                 }
                 
                 // Pump Status
-                if self.bluetoothState == .unauthorized {
-                    hudView.pumpStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateUnauthorizedHighlight)
-                } else if self.bluetoothState == .off {
-                    hudView.pumpStatusHUD.presentStatusHighlight(LoopAlertsManager.bluetoothStateOffHighlight)
+                if let bluetoothStatusHighlight = self.bluetoothState.statusHighlight {
+                    hudView.pumpStatusHUD.presentStatusHighlight(bluetoothStatusHighlight)
                 } else if self.deviceManager.pumpManager == nil {
                     hudView.pumpStatusHUD.presentAddPumpHighlight()
                 } else {
@@ -1320,16 +1316,9 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func pumpStatusTapped( _ sender: UIGestureRecognizer) {
-        guard bluetoothState != .unauthorized else {
-            UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
-            return
-        }
-        
-        guard bluetoothState != .off else {
-            return
-        }
-        
-        if let pumpManagerUI = deviceManager.pumpManager {
+        if bluetoothState.action != nil {
+            bluetoothState.action?()
+        } else if let pumpManagerUI = deviceManager.pumpManager {
             var completionNotifyingVC = pumpManagerUI.settingsViewController()
             completionNotifyingVC.completionDelegate = self
             self.present(completionNotifyingVC, animated: true, completion: nil)
@@ -1362,16 +1351,9 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func cgmStatusTapped( _ sender: UIGestureRecognizer) {
-        guard bluetoothState != .unauthorized else {
-            UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
-            return
-        }
-        
-        guard bluetoothState != .off else {
-            return
-        }
-        
-        if let cgmManagerUI = deviceManager.cgmManager as? CGMManagerUI {
+        if bluetoothState.action != nil {
+            bluetoothState.action?()
+        } else if let cgmManagerUI = deviceManager.cgmManager as? CGMManagerUI {
             var completionNotifyingVC = cgmManagerUI.settingsViewController(for: statusCharts.glucose.glucoseUnit)
             completionNotifyingVC.completionDelegate = self
             self.present(completionNotifyingVC, animated: true, completion: nil)
@@ -1679,9 +1661,9 @@ extension StatusTableViewController: PumpManagerSetupViewControllerDelegate {
     }
 }
 
-extension StatusTableViewController: LoopAlertsManagerBluetoothStateObserver {
-    func loopAlertsManager(_ loopAlertsManager: LoopAlertsManager,
-                           bluetoothStateDidUpdate bluetoothState: LoopAlertsManager.BluetoothState)
+extension StatusTableViewController: BluetoothStateManagerObserver {
+    func bluetoothStateManager(_ bluetoothStateManager: BluetoothStateManager,
+                           bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
     {
         self.bluetoothState = bluetoothState
     }

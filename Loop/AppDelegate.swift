@@ -22,7 +22,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     private var alertManager: AlertManager!
     private var deviceDataManager: DeviceDataManager!
     private var loopAlertsManager: LoopAlertsManager!
-    
+    private var bluetoothStateManager: BluetoothStateManager!
+
     var window: UIWindow?
 
     private var rootViewController: RootNavigationController! {
@@ -35,7 +36,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         alertManager = AlertManager(rootViewController: rootViewController, expireAfter: Bundle.main.localCacheDuration ?? .days(1))
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertManager: alertManager)
         loopAlertsManager = LoopAlertsManager(alertManager: alertManager)
-
+        bluetoothStateManager = BluetoothStateManager()
+        bluetoothStateManager.addBluetoothStateObserver(loopAlertsManager)
+        bluetoothStateManager.addBluetoothStateObserver(rootViewController.rootViewController)
+        
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 
         NotificationManager.authorize(delegate: self)
@@ -45,7 +49,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         deviceDataManager.analyticsServicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
 
         rootViewController.rootViewController.deviceManager = deviceDataManager
-        loopAlertsManager.addBluetoothStateObserver(rootViewController.rootViewController)
         
         let notificationOption = launchOptions?[.remoteNotification]
         
