@@ -83,6 +83,7 @@ extension NotificationsCriticalAlertPermissionsView {
                     }
                 }
             }
+            .accentColor(.primary)
         }
     }
     
@@ -101,7 +102,7 @@ extension NotificationsCriticalAlertPermissionsView {
                     }
                 }
             }
-
+            .accentColor(.primary)
         }
     }
     
