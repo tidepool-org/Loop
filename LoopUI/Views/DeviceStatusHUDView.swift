@@ -38,15 +38,19 @@ import LoopKitUI
     public var statusProgress: DeviceStatusProgress? {
         didSet {
             guard let statusProgress = statusProgress else {
-                progressView.isHidden = true
-                progressView.progress = 0
+                resetProgress()
                 return
             }
              
             progressView.isHidden = false
             progressView.progress = Float(statusProgress.percentComplete.clamped(to: 0...1))
-            progressView.tintColor = statusProgress.color
+            progressView.tintColor = statusProgress.progressState.color
         }
+    }
+    
+    public func resetProgress() {
+        progressView.isHidden = true
+        progressView.progress = 0
     }
     
     func setup() {

@@ -21,7 +21,9 @@ public class CGMStatusHUDViewModel {
     
     var accessibilityString: String = ""
     
-    var tintColor: UIColor?
+    var glucoseValueTintColor: UIColor = .label
+    
+    var glucoseTrendTintColor: UIColor = .systemPurple
     
     var staleGlucoseValueHandler: (String) -> Void
     
@@ -98,7 +100,8 @@ public class CGMStatusHUDViewModel {
             trend = nil
         }
         
-        tintColor = sensor?.glucoseValueType?.color
+        glucoseValueTintColor = sensor?.glucoseValueType?.glucoseColor ?? .label
+        glucoseTrendTintColor = sensor?.glucoseValueType?.trendColor ?? .systemPurple
         
         unitsString = unit.localizedShortUnitString
         accessibilityString = accessibilityStrings.joined(separator: ", ")
