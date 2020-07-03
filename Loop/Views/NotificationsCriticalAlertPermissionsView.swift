@@ -11,6 +11,7 @@ import SwiftUI
 
 public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeClassOverride {
     @Environment(\.dismiss) var dismiss
+    @Environment(\.appName) var appName
 
     private let backButtonText: String
     @ObservedObject private var viewModel: NotificationsCriticalAlertPermissionsViewModel
@@ -67,10 +68,9 @@ extension NotificationsCriticalAlertPermissionsView {
     private var manageNotificationsSection: some View {
         Section(header: Spacer(),
                 footer: DescriptiveText(label: NSLocalizedString("""
-            Notifications can appear while you are using another app on your iPhone, or while your iPhone is locked.
-
-            Notifications let you know about issues Tidepool Loop has without needing to open the app.
-            You can customize when you want to receive notificiations, and how they should be delivered inside Tidepool Loop.
+            Notifications appear on your Lock screen or pop up while you’re using other apps.
+            
+            Notifications give you important \(appName) app information without requiring you to open the app.  You can customize when and how you want to receive these notifications.
             """, comment: "Manage Notifications in Settings descriptive text")))
         {
             Button( action: { self.viewModel.gotoSettings() } ) {
