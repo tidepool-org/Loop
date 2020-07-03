@@ -78,7 +78,8 @@ extension NotificationsCriticalAlertPermissionsView {
                     Text(NSLocalizedString("Manage Notifications in Settings", comment: "Manage Notifications in Settings button text"))
                     if !viewModel.notificationsPermissionsGiven {
                         Spacer()
-                        Text(NSLocalizedString("⚠️", comment: "Warning symbol"))
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.warning)
                     }
                 }
             }
@@ -95,7 +96,8 @@ extension NotificationsCriticalAlertPermissionsView {
                     Text(NSLocalizedString("Manage Critical Alerts in Settings", comment: "Manage Critical Alerts in Settings button text"))
                     if !viewModel.criticalAlertsPermissionsGiven {
                         Spacer()
-                        Text(NSLocalizedString("⚠️", comment: "Warning symbol"))
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.severeWarning)
                     }
                 }
             }
@@ -116,7 +118,7 @@ extension NotificationsCriticalAlertPermissionsView {
 struct NotificationsCriticalAlertPermissionsView_Previews: PreviewProvider {
     static var previews: some View {
         return Group {
-            NotificationsCriticalAlertPermissionsView(viewModel: NotificationsCriticalAlertPermissionsViewModel())
+            NotificationsCriticalAlertPermissionsView(viewModel: NotificationsCriticalAlertPermissionsViewModel(criticalAlertsPermissionsGiven: false))
                 .colorScheme(.light)
                 .previewDevice(PreviewDevice(rawValue: "iPhone SE"))
                 .previewDisplayName("SE light")

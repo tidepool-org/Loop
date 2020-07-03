@@ -63,7 +63,8 @@ extension SettingsView {
                     Text(NSLocalizedString("Alert Permissions", comment: "Alert Permissions button text"))
                     if viewModel.showWarning {
                         Spacer()
-                        Text(NSLocalizedString("⚠️", comment: "Warning symbol"))
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.severeWarning)
                     }
                 }
             }

@@ -188,7 +188,9 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 let cell = tableView.dequeueReusableCell(withIdentifier: SettingsTableViewCell.className, for: indexPath)
                 cell.textLabel?.text = NSLocalizedString("Alert Permissions", comment: "Title text for Notification & Critical Alert Permissions button cell")
                 if showNotificationsWarning {
-                    cell.detailTextLabel?.text = NSLocalizedString("⚠️", comment: "Warning symbol")
+                    let exclamationPoint = UIImageView(image: UIImage(systemName: "exclamationmark.triangle.fill"))
+                    exclamationPoint.tintColor = .red
+                    cell.accessoryView = exclamationPoint
                 }
                 cell.accessoryType = .disclosureIndicator
                 return cell
