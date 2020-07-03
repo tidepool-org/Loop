@@ -85,8 +85,15 @@ public class CGMStatusHUDViewModel {
         let numberFormatter = NumberFormatter.glucoseFormatter(for: unit)
         if let valueString = numberFormatter.string(from: glucoseQuantity) {
             if glucoseValueCurrent {
-                glucoseValueString = valueString
                 startStalenessTimerIfNeeded()
+                switch sensor?.glucoseValueType {
+                case .some(.belowRange):
+                    glucoseValueString = LocalizedString("LOW", comment: "String displayed instead of a glucose value below the CGM range")
+                case .some(.aboveRange):
+                    glucoseValueString = LocalizedString("HIGH", comment: "String displayed instead of a glucose value above the CGM range")
+                default:
+                    glucoseValueString = valueString
+                }
             } else {
                 glucoseValueString = CGMStatusHUDViewModel.staleGlucoseRepresentation
             }

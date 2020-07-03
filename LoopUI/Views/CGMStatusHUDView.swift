@@ -53,13 +53,8 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     public override func tintColorDidChange() {
         super.tintColorDidChange()
         
-        glucoseValueHUD.tintColor = tintColor
-        switch tintColor {
-        case UIColor.label:
-            glucoseTrendHUD.tintColor = .systemPurple
-        default:
-            glucoseTrendHUD.tintColor = tintColor
-        }
+        glucoseValueHUD.tintColor = viewModel.glucoseValueTintColor
+        glucoseTrendHUD.tintColor = viewModel.glucoseTrendTintColor
     }
     
     public func presentAddCGMHighlight() {
