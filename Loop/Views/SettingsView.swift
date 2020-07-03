@@ -100,7 +100,7 @@ extension SettingsView {
         } else {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.pumpManagerSettingsViewModel.onTapped() },
-                               image: Image(systemName: "plus.circle"),
+                               image: nil,
                                label: NSLocalizedString("Add Pump", comment: "Title text for button to add pump device"),
                                descriptiveText: NSLocalizedString("Tap here to set up a pump", comment: "Descriptive text for button to add pump device"))
         }
@@ -116,7 +116,7 @@ extension SettingsView {
         } else {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.cgmManagerSettingsViewModel.onTapped() },
-                               image: Image(systemName: "plus.circle"),
+                               image: nil,
                                label: NSLocalizedString("Add CGM", comment: "Title text for button to add CGM device"),
                                descriptiveText: NSLocalizedString("Tap here to set up a CGM", comment: "Descriptive text for button to add CGM device"))
         }
@@ -136,7 +136,7 @@ fileprivate struct LargeButton: View {
     
     let action: () -> Void
     var includeArrow: Bool = true
-    let image: Image
+    let image: Image?
     let label: String
     let descriptiveText: String
 
@@ -150,11 +150,19 @@ fileprivate struct LargeButton: View {
         Button(action: action) {
             HStack {
                 HStack(spacing: Self.spacing) {
-                    image
-                        .renderingMode(.original)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: Self.imageWidth, height: Self.imageHeight)
+                    if image == nil {
+                        Image(systemName: "plus.circle")
+                            .resizable()
+                            .scaledToFit()
+                            .accentColor(.blue)
+                            .frame(width: Self.imageWidth, height: Self.imageHeight)
+                    } else {
+                        image?
+                            .renderingMode(.original)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: Self.imageWidth, height: Self.imageHeight)
+                    }
                     VStack(alignment: .leading) {
                         Text(label)
                             .foregroundColor(.primary)
