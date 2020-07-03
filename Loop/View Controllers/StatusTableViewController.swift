@@ -513,7 +513,7 @@ final class StatusTableViewController: ChartsTableViewController {
                     hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
                 }
 
-                hudView.cgmStatusHUD.statusProgress = (self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusProgress
+                hudView.cgmStatusHUD.lifecycleProgress = (self.deviceManager.cgmManager as? CGMManagerUI)?.cgmLifecycleProgress
                 
                 // Pump Status HUD
                 if self.deviceManager.pumpManager != nil {

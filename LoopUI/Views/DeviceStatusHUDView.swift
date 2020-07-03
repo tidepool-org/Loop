@@ -35,16 +35,16 @@ import LoopKitUI
     
     @IBOutlet public weak var statusStackView: UIStackView!
     
-    public var statusProgress: DeviceStatusProgress? {
+    public var lifecycleProgress: DeviceLifecycleProgress? {
         didSet {
-            guard let statusProgress = statusProgress else {
+            guard let lifecycleProgress = lifecycleProgress else {
                 resetProgress()
                 return
             }
              
             progressView.isHidden = false
-            progressView.progress = Float(statusProgress.percentComplete.clamped(to: 0...1))
-            progressView.tintColor = statusProgress.progressState.color
+            progressView.progress = Float(lifecycleProgress.percentComplete.clamped(to: 0...1))
+            progressView.tintColor = lifecycleProgress.progressState.color
         }
     }
     
