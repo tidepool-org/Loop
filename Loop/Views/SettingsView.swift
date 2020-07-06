@@ -76,7 +76,7 @@ extension SettingsView {
             NavigationLink(destination: Text("Therapy Settings")) {
                 LargeButton(action: { },
                             includeArrow: false,
-                            image: Image("Therapy Icon"),
+                            imageView: AnyView(Image("Therapy Icon")),
                             label: NSLocalizedString("Therapy Settings", comment: "Title text for button to Therapy Settings"),
                             descriptiveText: NSLocalizedString("Diabetes Treatment", comment: "Descriptive text for Therapy Settings"))
             }
@@ -94,13 +94,13 @@ extension SettingsView {
         if viewModel.pumpManagerSettingsViewModel.isSetUp {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.pumpManagerSettingsViewModel.onTapped() },
-                               image: Image(uiImage: viewModel.pumpManagerSettingsViewModel.image, orFallback: "Omnipod"),
+                               imageView: deviceImage(uiImage: viewModel.pumpManagerSettingsViewModel.image),
                                label: viewModel.pumpManagerSettingsViewModel.name,
                                descriptiveText: NSLocalizedString("Insulin Pump", comment: "Descriptive text for Insulin Pump"))
         } else {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.pumpManagerSettingsViewModel.onTapped() },
-                               image: nil,
+                               imageView: AnyView(plusImage),
                                label: NSLocalizedString("Add Pump", comment: "Title text for button to add pump device"),
                                descriptiveText: NSLocalizedString("Tap here to set up a pump", comment: "Descriptive text for button to add pump device"))
         }
@@ -110,13 +110,13 @@ extension SettingsView {
         if viewModel.cgmManagerSettingsViewModel.isSetUp {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.cgmManagerSettingsViewModel.onTapped() },
-                               image: Image(uiImage: viewModel.cgmManagerSettingsViewModel.image, orFallback: "Dexcom G6"),
+                               imageView: deviceImage(uiImage: viewModel.cgmManagerSettingsViewModel.image),
                                label: viewModel.cgmManagerSettingsViewModel.name,
                                descriptiveText: NSLocalizedString("Continuous Glucose Monitor", comment: "Descriptive text for Continuous Glucose Monitor"))
         } else {
             // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
             return LargeButton(action: { self.dismiss(); self.viewModel.cgmManagerSettingsViewModel.onTapped() },
-                               image: nil,
+                               imageView: AnyView(plusImage),
                                label: NSLocalizedString("Add CGM", comment: "Title text for button to add CGM device"),
                                descriptiveText: NSLocalizedString("Tap here to set up a CGM", comment: "Descriptive text for button to add CGM device"))
         }
@@ -130,13 +130,30 @@ extension SettingsView {
         }
     }
 
+    private var plusImage: some View {
+        Image(systemName: "plus.circle")
+            .resizable()
+            .scaledToFit()
+            .accentColor(.blue)
+    }
+    
+    private func deviceImage(uiImage: UIImage?) -> AnyView {
+        if let uiImage = uiImage {
+            return AnyView(Image(uiImage: uiImage)
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit())
+        } else {
+            return AnyView(Spacer())
+        }
+    }
 }
 
 fileprivate struct LargeButton: View {
     
     let action: () -> Void
     var includeArrow: Bool = true
-    let image: Image?
+    let imageView: AnyView
     let label: String
     let descriptiveText: String
 
@@ -150,19 +167,7 @@ fileprivate struct LargeButton: View {
         Button(action: action) {
             HStack {
                 HStack(spacing: Self.spacing) {
-                    if image == nil {
-                        Image(systemName: "plus.circle")
-                            .resizable()
-                            .scaledToFit()
-                            .accentColor(.blue)
-                            .frame(width: Self.imageWidth, height: Self.imageHeight)
-                    } else {
-                        image?
-                            .renderingMode(.original)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: Self.imageWidth, height: Self.imageHeight)
-                    }
+                    imageView.frame(width: Self.imageWidth, height: Self.imageHeight)
                     VStack(alignment: .leading) {
                         Text(label)
                             .foregroundColor(.primary)
@@ -176,17 +181,6 @@ fileprivate struct LargeButton: View {
                 }
             }
             .padding(EdgeInsets(top: Self.topBottomPadding, leading: 0, bottom: Self.topBottomPadding, trailing: 0))
-        }
-    }
-}
-
-extension Image {
-    
-    init(uiImage: UIImage? = nil, orFallback name: String) {
-        if let uiImage = uiImage {
-            self = Image(uiImage: uiImage)
-        } else {
-            self = Image(name)
         }
     }
 }
