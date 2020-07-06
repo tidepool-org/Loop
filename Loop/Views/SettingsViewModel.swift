@@ -33,7 +33,7 @@ public class DeviceViewModel: ObservableObject {
 
 public class SettingsViewModel: ObservableObject {
     
-    let notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel
+    @ObservedObject var notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel
 
     @Published var appNameAndVersion: String
     @Published var dosingEnabled: Bool {
@@ -49,6 +49,8 @@ public class SettingsViewModel: ObservableObject {
 
     @ObservedObject var pumpManagerSettingsViewModel: DeviceViewModel
     @ObservedObject var cgmManagerSettingsViewModel: DeviceViewModel
+    
+    lazy private var trash = Set<AnyCancellable>()
 
     public init(appNameAndVersion: String,
                 notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel,
@@ -64,6 +66,19 @@ public class SettingsViewModel: ObservableObject {
         self.cgmManagerSettingsViewModel = cgmManagerSettingsViewModel
         self.setDosingEnabled = setDosingEnabled
         self.dosingEnabled = initialDosingEnabled
+        
+        // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
+        notificationsCriticalAlertPermissionsViewModel.objectWillChange.sink { [weak self] in
+            self?.objectWillChange.send()
+        }
+        .store(in: &trash)
+        pumpManagerSettingsViewModel.objectWillChange.sink { [weak self] in
+            self?.objectWillChange.send()
+        }
+        .store(in: &trash)
+        cgmManagerSettingsViewModel.objectWillChange.sink { [weak self] in
+            self?.objectWillChange.send()
+        }
+        .store(in: &trash)
     }
-
 }
