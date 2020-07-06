@@ -1266,7 +1266,7 @@ final class StatusTableViewController: ChartsTableViewController {
     
     private func configurePumpManagerHUDViews() {
         if let hudView = hudView {
-            hudView.removePumpManagerProvidedViews()
+            hudView.removePumpManagerProvidedView()
             if let pumpManagerHUDProvider = deviceManager.pumpManagerHUDProvider {
                 if let view = pumpManagerHUDProvider.createHUDView() {
                     addPumpManagerViewToHUD(view)
