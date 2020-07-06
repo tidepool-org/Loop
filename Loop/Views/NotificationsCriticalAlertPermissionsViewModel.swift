@@ -27,7 +27,7 @@ public class NotificationsCriticalAlertPermissionsViewModel: ObservableObject {
     }()
 
     @Published var showWarning = false
-    lazy private var trash = Set<AnyCancellable>()
+    lazy private var cancellables = Set<AnyCancellable>()
 
     public init(notificationsPermissionsGiven: Bool = true, criticalAlertsPermissionsGiven: Bool = true) {
         self.notificationsPermissionsGiven = notificationsPermissionsGiven
@@ -42,7 +42,7 @@ public class NotificationsCriticalAlertPermissionsViewModel: ObservableObject {
         showWarningPublisher
             .receive(on: RunLoop.main)
             .assign(to: \.showWarning, on: self)
-            .store(in: &trash)
+            .store(in: &cancellables)
     }
     
     private func updateState() {

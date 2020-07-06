@@ -33,7 +33,7 @@ public class DeviceViewModel: ObservableObject {
 
 public class SettingsViewModel: ObservableObject {
     
-    @ObservedObject var notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel
+    var notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel
 
     @Published var appNameAndVersion: String
     @Published var dosingEnabled: Bool {
@@ -47,10 +47,10 @@ public class SettingsViewModel: ObservableObject {
         notificationsCriticalAlertPermissionsViewModel.showWarning
     }
 
-    @ObservedObject var pumpManagerSettingsViewModel: DeviceViewModel
-    @ObservedObject var cgmManagerSettingsViewModel: DeviceViewModel
+    var pumpManagerSettingsViewModel: DeviceViewModel
+    var cgmManagerSettingsViewModel: DeviceViewModel
     
-    lazy private var trash = Set<AnyCancellable>()
+    lazy private var cancellables = Set<AnyCancellable>()
 
     public init(appNameAndVersion: String,
                 notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel,
@@ -71,14 +71,14 @@ public class SettingsViewModel: ObservableObject {
         notificationsCriticalAlertPermissionsViewModel.objectWillChange.sink { [weak self] in
             self?.objectWillChange.send()
         }
-        .store(in: &trash)
+        .store(in: &cancellables)
         pumpManagerSettingsViewModel.objectWillChange.sink { [weak self] in
             self?.objectWillChange.send()
         }
-        .store(in: &trash)
+        .store(in: &cancellables)
         cgmManagerSettingsViewModel.objectWillChange.sink { [weak self] in
             self?.objectWillChange.send()
         }
-        .store(in: &trash)
+        .store(in: &cancellables)
     }
 }
