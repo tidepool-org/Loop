@@ -18,12 +18,12 @@ import SwiftCharts
 
 class StatusViewController: UIViewController, NCWidgetProviding {
 
-    @IBOutlet weak var hudView: HUDView! {
+    @IBOutlet weak var hudView: StatusBarHUDView! {
         didSet {
             hudView.loopCompletionHUD.stateColors = .loopStatus
-            hudView.glucoseHUD.stateColors = .cgmStatus
-            hudView.glucoseHUD.tintColor = .glucoseTintColor
-            hudView.basalRateHUD.tintColor = .doseTintColor
+            hudView.cgmStatusHUD.stateColors = .cgmStatus
+            hudView.cgmStatusHUD.tintColor = .label
+            hudView.pumpStatusHUD.tintColor = .doseTintColor
         }
     }
     @IBOutlet weak var subtitleLabel: UILabel!
@@ -91,7 +91,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         subtitleLabel.isHidden = true
         if #available(iOSApplicationExtension 13.0, iOS 13.0, *) {
             subtitleLabel.textColor = .secondaryLabel
@@ -208,6 +208,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 return
             }
 
+            // Pump Status HUD
             let pumpManagerHUDView: LevelHUDView
             if let hudViewContext = context.pumpManagerHUDViewContext,
                 let contextHUDView = PumpManagerHUDViewFromRawValue(hudViewContext.pumpManagerHUDViewRawValue, pluginManager: self.pluginManager)
@@ -217,11 +218,11 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 pumpManagerHUDView = ReservoirVolumeHUDView.instantiate()
             }
             pumpManagerHUDView.stateColors = .pumpStatus
-            self.hudView.removePumpManagerProvidedViews()
-            self.hudView.addHUDView(pumpManagerHUDView)
+            self.hudView.removePumpManagerProvidedView()
+            self.hudView.addPumpManagerProvidedHUDView(pumpManagerHUDView)
 
             if let netBasal = context.netBasal {
-                self.hudView.basalRateHUD.setNetBasalRate(netBasal.rate, percent: netBasal.percentage, at: netBasal.start)
+                self.hudView.pumpStatusHUD.basalRateHUD.setNetBasalRate(netBasal.rate, percent: netBasal.percentage, at: netBasal.start)
             }
 
             self.hudView.loopCompletionHUD.dosingEnabled = defaults.loopSettings?.dosingEnabled ?? false
@@ -249,13 +250,16 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                     self.insulinLabel.isHidden = false
                 }
             }
+            
+            // TODO need to store the pumpStatusHighlight in the status extension context (or the information to re-create it from status context).
 
+            // CGM Status HUD
             guard let unit = context.predictedGlucose?.unit else {
                 return
             }
 
             if let lastGlucose = glucose.last, let recencyInterval = defaults.loopSettings?.inputDataRecencyInterval {
-                self.hudView.glucoseHUD.setGlucoseQuantity(
+                self.hudView.cgmStatusHUD.setGlucoseQuantity(
                     lastGlucose.quantity.doubleValue(for: unit),
                     at: lastGlucose.startDate,
                     unit: unit,
@@ -263,7 +267,10 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                     sensor: context.sensor
                 )
             }
-
+            
+            // TODO need to store the cgmStatusHighlight in the status extension context (or the information to re-create it from status context).
+            
+            // Charts
             let glucoseFormatter = QuantityFormatter()
             glucoseFormatter.setPreferredNumberFormatter(for: unit)
 

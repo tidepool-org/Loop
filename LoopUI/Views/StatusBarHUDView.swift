@@ -45,7 +45,7 @@ public class StatusBarHUDView: UIView, NibLoadable {
         self.backgroundColor = UIColor.secondarySystemBackground
     }
         
-    public func removePumpManagerProvidedViews() {
+    public func removePumpManagerProvidedView() {
         pumpStatusHUD.removePumpManagerProvidedHUD()
     }
     
