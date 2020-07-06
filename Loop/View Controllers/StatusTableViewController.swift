@@ -229,10 +229,10 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
-    var pumpStatusProgress: PumpManagerStatus.PumpStatusProgress? {
+    var pumpLifecycleProgress: PumpManagerStatus.PumpLifecycleProgress? {
         didSet {
-            if oldValue != pumpStatusProgress {
-                log.debug("New pumpStatusProgress: %@", String(describing: pumpStatusHighlight))
+            if oldValue != pumpLifecycleProgress {
+                log.debug("New pumpLifecycleProgress: %@", String(describing: pumpLifecycleProgress))
                 refreshContext.update(with: .status)
                 self.reloadData(animated: true)
             }
@@ -530,7 +530,7 @@ final class StatusTableViewController: ChartsTableViewController {
                     hudView.pumpStatusHUD.presentStatusHighlight(self.pumpStatusHighlight)
                 }
                 
-                hudView.pumpStatusHUD.statusProgress = self.pumpStatusProgress
+                hudView.pumpStatusHUD.lifecycleProgress = self.pumpLifecycleProgress
             }
             
             // Show/hide the table view rows
@@ -1562,7 +1562,7 @@ extension StatusTableViewController: PumpManagerStatusObserver {
         self.basalDeliveryState = status.basalDeliveryState
         self.bolusState = status.bolusState
         self.pumpStatusHighlight = status.pumpStatusHighlight
-        self.pumpStatusProgress = status.pumpStatusProgress
+        self.pumpLifecycleProgress = status.pumpLifecycleProgress
     }
 }
 
