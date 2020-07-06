@@ -10,6 +10,7 @@ import HealthKit
 import LoopCore
 import LoopKit
 import LoopUI
+import LoopKitUI
 
 
 protocol InsulinModelSettingsViewControllerDelegate: class {
@@ -234,9 +235,9 @@ class InsulinModelSettingsViewController: ChartsTableViewController, Identifiabl
         case .charts:
             let cell = tableView.dequeueReusableCell(withIdentifier: ChartTableViewCell.className, for: indexPath) as! ChartTableViewCell
             cell.contentView.layoutMargins.left = tableView.separatorInset.left
-            cell.chartContentView.chartGenerator = { [weak self] (frame) in
+            cell.setChartGenerator(generator: { [weak self] (frame) in
                 return self?.charts.chart(atIndex: 0, frame: frame)?.view
-            }
+            }) 
 
             return cell
         case .models:

@@ -13,6 +13,7 @@ import SwiftCharts
 
 
 public class COBChart: ChartProviding {
+    
     public init() {
     }
 

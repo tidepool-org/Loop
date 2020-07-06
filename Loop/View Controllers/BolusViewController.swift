@@ -447,12 +447,12 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
         case .chart:
             let cell = cell as! ChartTableViewCell
             cell.contentView.layoutMargins.left = tableView.separatorInset.left
-            cell.chartContentView.chartGenerator = { [weak self] (frame) in
+            cell.setChartGenerator(generator: { [weak self] (frame) in
                 return self?.charts.chart(atIndex: 0, frame: frame)?.view
-            }
+            })
 
-            cell.titleLabel?.text?.removeAll()
-            cell.subtitleLabel?.textColor = UIColor.secondaryLabelColor
+            cell.removeTitleLabelText()
+            cell.setSubtitleTextColor(color: UIColor.secondaryLabelColor)
             self.tableView(tableView, updateSubtitleFor: cell, at: indexPath)
             cell.selectionStyle = .none
 
@@ -470,9 +470,9 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
         assert(Row(rawValue: indexPath.row) == .chart)
 
         if let eventualGlucose = eventualGlucoseDescription {
-            cell.subtitleLabel?.text = String(format: NSLocalizedString("Eventually %@", comment: "The subtitle format describing eventual glucose. (1: localized glucose value description)"), eventualGlucose)
+            cell.setSubtitleLabel(label: String(format: NSLocalizedString("Eventually %@", comment: "The subtitle format describing eventual glucose. (1: localized glucose value description)"), eventualGlucose))
         } else {
-            cell.subtitleLabel?.text?.removeAll()
+            cell.removeSubtitleLabelText()
         }
     }
 

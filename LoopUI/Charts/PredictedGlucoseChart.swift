@@ -11,6 +11,7 @@ import LoopKitUI
 import SwiftCharts
 
 public class PredictedGlucoseChart: GlucoseChart, ChartProviding {
+    
 
     public private(set) var glucosePoints: [ChartPoint] = [] {
         didSet {

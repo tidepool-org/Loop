@@ -28,7 +28,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
     }
     @IBOutlet weak var subtitleLabel: UILabel!
     @IBOutlet weak var insulinLabel: UILabel!
-    @IBOutlet weak var glucoseChartContentView: LoopUI.ChartContainerView!
+    @IBOutlet weak var glucoseChartContentView: LoopKitUI.ChartContainerView!
 
     private lazy var charts: StatusChartsManager = {
         let charts = StatusChartsManager(

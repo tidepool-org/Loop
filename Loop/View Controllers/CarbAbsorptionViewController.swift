@@ -293,16 +293,15 @@ final class CarbAbsorptionViewController: ChartsTableViewController, Identifiabl
 
             switch ChartRow(rawValue: indexPath.row)! {
             case .carbEffect:
-                cell.chartContentView.chartGenerator = { [weak self] (frame) in
+                cell.setChartGenerator(generator: { [weak self] (frame) in
                     return self?.charts.chart(atIndex: 0, frame: frame)?.view
-                }
+                })
             }
 
             let alpha: CGFloat = charts.gestureRecognizer?.state == .possible ? 1 : 0
-            cell.titleLabel?.alpha = alpha
-            cell.subtitleLabel?.alpha = alpha
+            cell.setAlpha(alpha: alpha)
 
-            cell.subtitleLabel?.textColor = UIColor.secondaryLabelColor
+            cell.setSubtitleTextColor(color: UIColor.secondaryLabelColor)
 
             return cell
         case .totals:

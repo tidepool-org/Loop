@@ -210,12 +210,12 @@ class PredictionTableViewController: ChartsTableViewController, IdentifiableClas
         case .charts:
             let cell = tableView.dequeueReusableCell(withIdentifier: ChartTableViewCell.className, for: indexPath) as! ChartTableViewCell
             cell.contentView.layoutMargins.left = tableView.separatorInset.left
-            cell.chartContentView.chartGenerator = { [weak self] (frame) in
+            cell.setChartGenerator(generator: { [weak self] (frame) in
                 return self?.charts.chart(atIndex: 0, frame: frame)?.view
-            }
+            })
 
             self.tableView(tableView, updateTitleFor: cell, at: indexPath)
-            cell.titleLabel?.textColor = UIColor.secondaryLabelColor
+            cell.setTitleTextColor(color: UIColor.secondaryLabelColor)
             cell.selectionStyle = .none
 
             cell.addGestureRecognizer(charts.gestureRecognizer!)
@@ -234,9 +234,9 @@ class PredictionTableViewController: ChartsTableViewController, IdentifiableClas
         }
 
         if let eventualGlucose = eventualGlucoseDescription {
-            cell.titleLabel?.text = String(format: NSLocalizedString("Eventually %@", comment: "The subtitle format describing eventual glucose. (1: localized glucose value description)"), eventualGlucose)
+            cell.setTitleLabelText(label: String(format: NSLocalizedString("Eventually %@", comment: "The subtitle format describing eventual glucose. (1: localized glucose value description)"), eventualGlucose))
         } else {
-            cell.titleLabel?.text = SettingsTableViewCell.NoValueString
+            cell.setTitleLabelText(label: SettingsTableViewCell.NoValueString)
         }
     }
 
