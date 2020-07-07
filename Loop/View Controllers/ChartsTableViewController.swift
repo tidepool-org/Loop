@@ -76,30 +76,7 @@ extension Set where Element == RefreshContext {
     }
 }
 
-extension ChartsManager {
-    // ANNA TODO
-//    weak var deviceManager: DeviceDataManager! {
-//        didSet {
-//            NotificationCenter.default.addObserver(self, selector: #selector(unitPreferencesDidChange(_:)), name: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore)
-//        }
-//    }
-//
-//    @objc private func unitPreferencesDidChange(_ note: Notification) {
-//        DispatchQueue.main.async {
-//            if let unit = self.deviceManager.loopManager.glucoseStore.preferredUnit {
-//                self.setGlucoseUnit(unit)
-//
-//                self.glucoseUnitDidChange()
-//            }
-//            self.log.debug("[reloadData] for HealthKit unit preference change")
-//            self.reloadData()
-//        }
-//    }
-//
-//    func setGlucoseUnit(_ unit: HKUnit) {
-//        for case let chart as GlucoseChart in charts {
-//            chart.glucoseUnit = unit
-//        }
-//    }
+open class ChartsTableViewController: ChartsTableViewController2 {
+    weak var deviceManager: DeviceDataManager!
 }
 
