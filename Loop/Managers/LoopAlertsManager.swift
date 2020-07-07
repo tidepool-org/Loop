@@ -25,8 +25,9 @@ public class LoopAlertsManager {
     
     private let bluetoothPoweredOffIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "bluetoothPoweredOff")
     
-    init(alertManager: AlertManager) {
+    init(alertManager: AlertManager, bluetoothStateManager: BluetoothStateManager) {
         self.alertManager = alertManager
+        bluetoothStateManager.addBluetoothStateObserver(self)
     }
         
     private func onBluetoothPermissionDenied() {

@@ -1770,6 +1770,7 @@
 			children = (
 				1DA6499D2441266400F61E75 /* Alerts */,
 				439897361CD2F80600223065 /* AnalyticsServicesManager.swift */,
+				B4F3D25024AF890C0095CE44 /* BluetoothStateManager.swift */,
 				439BED291E76093C00B0AED5 /* CGMManager.swift */,
 				43DBF0521C93EC8200B3C386 /* DeviceDataManager.swift */,
 				43F78D251C8FC000002152D1 /* DoseMath.swift */,
@@ -1785,7 +1786,6 @@
 				4F70C20F1DE8FAC5006380B7 /* StatusExtensionDataManager.swift */,
 				89ADE13A226BFA0F0067222B /* TestingScenariosManager.swift */,
 				4328E0341CFC0AE100E199AA /* WatchDataManager.swift */,
-				B4F3D25024AF890C0095CE44 /* BluetoothStateManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";

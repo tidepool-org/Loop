@@ -35,10 +35,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         alertManager = AlertManager(rootViewController: rootViewController, expireAfter: Bundle.main.localCacheDuration ?? .days(1))
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertManager: alertManager)
-        loopAlertsManager = LoopAlertsManager(alertManager: alertManager)
         bluetoothStateManager = BluetoothStateManager()
-        bluetoothStateManager.addBluetoothStateObserver(loopAlertsManager)
         bluetoothStateManager.addBluetoothStateObserver(rootViewController.rootViewController)
+        loopAlertsManager = LoopAlertsManager(alertManager: alertManager, bluetoothStateManager: bluetoothStateManager)
         
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 
