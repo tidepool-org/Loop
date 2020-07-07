@@ -525,6 +525,8 @@ final class StatusTableViewController: ChartsTableViewController {
                 } else {
                     hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
                 }
+
+                hudView.cgmStatusHUD.lifecycleProgress = (self.deviceManager.cgmManager as? CGMManagerUI)?.cgmLifecycleProgress
                 
                 // Pump Status
                 if let bluetoothStatusHighlight = self.bluetoothState.statusHighlight {
