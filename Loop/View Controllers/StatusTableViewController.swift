@@ -229,6 +229,15 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
+    var bluetoothState: BluetoothStateManager.BluetoothState = .other {
+        didSet {
+            if bluetoothState != oldValue {
+                refreshContext.update(with: .status)
+                reloadData(animated: true)
+            }
+        }
+    }
+    
     // Toggles the display mode based on the screen aspect ratio. Should not be updated outside of reloadData().
     private var landscapeMode = false
     
@@ -499,7 +508,7 @@ final class StatusTableViewController: ChartsTableViewController {
             
             self.tableView.beginUpdates()
             if let hudView = self.hudView {
-                // CGM Status HUD
+                // CGM Status
                 if let glucose = self.deviceManager.loopManager.glucoseStore.latestGlucose {
                     let unit = self.statusCharts.glucose.glucoseUnit
                     hudView.cgmStatusHUD.setGlucoseQuantity(glucose.quantity.doubleValue(for: unit),
@@ -507,14 +516,24 @@ final class StatusTableViewController: ChartsTableViewController {
                                                             unit: unit,
                                                             staleGlucoseAge: self.deviceManager.loopManager.settings.inputDataRecencyInterval,
                                                             sensor: self.deviceManager.sensorState)
-
-                    if self.deviceManager.cgmManager != nil {
-                        hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
-                    }
                 }
                 
-                // Pump Status HUD
-                if self.deviceManager.pumpManager != nil {
+                if let bluetoothStatusHighlight = self.bluetoothState.statusHighlight {
+                    hudView.cgmStatusHUD.presentStatusHighlight(bluetoothStatusHighlight)
+                } else if self.deviceManager.cgmManager == nil {
+                    hudView.cgmStatusHUD.presentAddCGMHighlight()
+                } else {
+                    hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
+                }
+
+                hudView.cgmStatusHUD.lifecycleProgress = (self.deviceManager.cgmManager as? CGMManagerUI)?.cgmLifecycleProgress
+                
+                // Pump Status
+                if let bluetoothStatusHighlight = self.bluetoothState.statusHighlight {
+                    hudView.pumpStatusHUD.presentStatusHighlight(bluetoothStatusHighlight)
+                } else if self.deviceManager.pumpManager == nil {
+                    hudView.pumpStatusHUD.presentAddPumpHighlight()
+                } else {
                     hudView.pumpStatusHUD.presentStatusHighlight(self.pumpStatusHighlight)
                 }
             }
@@ -1032,7 +1051,7 @@ final class StatusTableViewController: ChartsTableViewController {
     private func presentErrorCancelingBolus(_ error: (Error)) {
         self.log.error("Error Canceling Bolus: %@", error.localizedDescription)
         let title = NSLocalizedString("Error Canceling Bolus", comment: "The alert title for an error while canceling a bolus")
-        let body = NSLocalizedString("The app was unable to stop the bolus in progress. Move your iPhone closer to the pump and try again. Confirm total insulin delivered in your insulin delivery history and monitor your glucose closely.", comment: "The alert body for an error while canceling a bolus")
+        let body = NSLocalizedString("Unable to stop the bolus in progress. Move your iPhone closer to the pump and try again. Check your insulin delivery history for details, and monitor your glucose closely.", comment: "The alert body for an error while canceling a bolus")
         let action = UIAlertAction(
             title: NSLocalizedString("com.loudnate.LoopKit.errorAlertActionTitle", value: "OK", comment: "The title of the action used to dismiss an error alert"), style: .default)
         let alert = UIAlertController(title: title, message: body, preferredStyle: .alert)
@@ -1298,7 +1317,9 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func pumpStatusTapped( _ sender: UIGestureRecognizer) {
-        if let pumpManagerUI = deviceManager.pumpManager {
+        if bluetoothState.action != nil {
+            bluetoothState.action?()
+        } else if let pumpManagerUI = deviceManager.pumpManager {
             var completionNotifyingVC = pumpManagerUI.settingsViewController()
             completionNotifyingVC.completionDelegate = self
             self.present(completionNotifyingVC, animated: true, completion: nil)
@@ -1331,7 +1352,9 @@ final class StatusTableViewController: ChartsTableViewController {
     }
     
     @objc private func cgmStatusTapped( _ sender: UIGestureRecognizer) {
-        if let cgmManagerUI = deviceManager.cgmManager as? CGMManagerUI {
+        if bluetoothState.action != nil {
+            bluetoothState.action?()
+        } else if let cgmManagerUI = deviceManager.cgmManager as? CGMManagerUI {
             var completionNotifyingVC = cgmManagerUI.settingsViewController(for: statusCharts.glucose.glucoseUnit)
             completionNotifyingVC.completionDelegate = self
             self.present(completionNotifyingVC, animated: true, completion: nil)
@@ -1636,5 +1659,13 @@ extension StatusTableViewController: PumpManagerSetupViewControllerDelegate {
         if let maxBolusUnits = pumpManagerSetupViewController.maxBolusUnits {
             deviceManager.loopManager.settings.maximumBolus = maxBolusUnits
         }
+    }
+}
+
+extension StatusTableViewController: BluetoothStateManagerObserver {
+    func bluetoothStateManager(_ bluetoothStateManager: BluetoothStateManager,
+                           bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
+    {
+        self.bluetoothState = bluetoothState
     }
 }
