@@ -7,6 +7,7 @@
 
 import LoopCore
 
+
 struct LoopSettingsUserInfo {
     let settings: LoopSettings
 }
