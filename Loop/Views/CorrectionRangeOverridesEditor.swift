@@ -214,11 +214,11 @@ struct CorrectionRangeOverridesEditor: View {
         }
     }
 
-    private var crossedThresholds: [SafetyClassification.Threshold] {
-        return value.ranges
-            .flatMap { (preset, range) -> [SafetyClassification.Threshold] in
+    private var crossedThresholds: [CorrectionRangeOverrides.Preset: [SafetyClassification.Threshold]] {
+        value.ranges
+            .compactMapValuesWithKeys { preset, range in
                 let guardrail = self.guardrail(for: preset)
-                return [range.lowerBound, range.upperBound].compactMap { bound in
+                let thresholds: [SafetyClassification.Threshold] = [range.lowerBound, range.upperBound].compactMap { bound in
                     switch guardrail.classification(for: bound) {
                     case .withinRecommendedRange:
                         return nil
@@ -226,6 +226,8 @@ struct CorrectionRangeOverridesEditor: View {
                         return threshold
                     }
                 }
+
+                return thresholds.isEmpty ? nil : thresholds
             }
     }
 
@@ -248,14 +250,23 @@ struct CorrectionRangeOverridesEditor: View {
 }
 
 private struct CorrectionRangeOverridesGuardrailWarning: View {
-    var crossedThresholds: [SafetyClassification.Threshold]
+    var crossedThresholds: [CorrectionRangeOverrides.Preset: [SafetyClassification.Threshold]]
 
     var body: some View {
         assert(!crossedThresholds.isEmpty)
         return GuardrailWarning(
-            title: crossedThresholds.count == 1 ? singularWarningTitle(for: crossedThresholds.first!) : multipleWarningTitle,
-            thresholds: crossedThresholds
+            title: title,
+            thresholds: Array(crossedThresholds.values.flatMap { $0 }),
+            caption: caption
         )
+    }
+
+    private var title: Text {
+        if crossedThresholds.count == 1, crossedThresholds.values.first!.count == 1 {
+            return singularWarningTitle(for: crossedThresholds.values.first!.first!)
+        } else {
+            return multipleWarningTitle
+        }
     }
 
     private func singularWarningTitle(for threshold: SafetyClassification.Threshold) -> Text {
@@ -269,5 +280,18 @@ private struct CorrectionRangeOverridesGuardrailWarning: View {
 
     private var multipleWarningTitle: Text {
         Text("Correction Values", comment: "Title text for multi-value correction value warning")
+    }
+
+    var caption: Text? {
+        guard
+            crossedThresholds.count == 1,
+            let crossedPreMealThresholds = crossedThresholds[.preMeal]
+        else {
+            return nil
+        }
+
+        return crossedPreMealThresholds.allSatisfy { $0 == .aboveRecommended || $0 == .maximum }
+            ? Text("The value you have entered for this range is higher than your usual correction range. Tidepool typically recommends your pre-meal range be lower than your usual correction range.", comment: "Warning text for high pre-meal target value")
+            : nil
     }
 }
