@@ -169,10 +169,10 @@
                                     <rect key="frame" x="0.0" y="0.0" width="70" height="44"/>
                                     <subviews>
                                         <view contentMode="scaleToFill" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="geI-yt-4dZ" customClass="BasalStateView" customModule="LoopUI">
-                                            <rect key="frame" x="13" y="2" width="44" height="24"/>
+                                            <rect key="frame" x="13" y="4" width="44" height="22"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="44" id="MH2-vl-X1f"/>
-                                                <constraint firstAttribute="height" constant="24" id="RH0-65-hn8"/>
+                                                <constraint firstAttribute="height" constant="22" id="RH0-65-hn8"/>
                                             </constraints>
                                         </view>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="-0.85 U" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="x36-Sl-eth">
@@ -189,7 +189,7 @@
                                         <constraint firstItem="x36-Sl-eth" firstAttribute="leading" secondItem="fsr-gH-zny" secondAttribute="leading" id="HLa-kN-zKm"/>
                                         <constraint firstItem="x36-Sl-eth" firstAttribute="top" secondItem="geI-yt-4dZ" secondAttribute="bottom" constant="1" id="IhN-WP-cis"/>
                                         <constraint firstAttribute="bottom" secondItem="x36-Sl-eth" secondAttribute="bottom" constant="3.5" id="PnU-P2-jqu"/>
-                                        <constraint firstItem="geI-yt-4dZ" firstAttribute="top" secondItem="fsr-gH-zny" secondAttribute="top" constant="2" id="dMd-u4-EV0"/>
+                                        <constraint firstItem="geI-yt-4dZ" firstAttribute="top" secondItem="fsr-gH-zny" secondAttribute="top" constant="4" id="dMd-u4-EV0"/>
                                         <constraint firstItem="x36-Sl-eth" firstAttribute="trailing" secondItem="fsr-gH-zny" secondAttribute="trailing" id="epR-pj-I12"/>
                                         <constraint firstItem="geI-yt-4dZ" firstAttribute="centerX" secondItem="fsr-gH-zny" secondAttribute="centerX" id="h0T-1M-q42"/>
                                     </constraints>
