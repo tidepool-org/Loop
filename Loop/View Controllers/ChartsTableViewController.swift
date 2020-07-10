@@ -76,7 +76,7 @@ extension Set where Element == RefreshContext {
     }
 }
 
-open class ChartsTableViewController: ChartsTableViewController2 {
+open class ChartsTableViewController: ChartsTableViewContainer {
     weak var deviceManager: DeviceDataManager!
 }
 
