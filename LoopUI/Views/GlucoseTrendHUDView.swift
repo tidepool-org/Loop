@@ -38,8 +38,7 @@ public final class GlucoseTrendHUDView: BaseHUDView {
         
         switch trend {
         case .upUpUp:
-            // TODO this is a placeholder until I get the correct icon from design
-            trendIcon.image = UIImage(systemName: "arrow.up.circle")
+            trendIcon.image = UIImage(frameworkImage: "arrow.double.up.circle")
         case .upUp:
             trendIcon.image = UIImage(systemName: "arrow.up.circle")
         case .up:

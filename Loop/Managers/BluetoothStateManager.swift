@@ -89,7 +89,7 @@ extension BluetoothStateManager {
     struct BluetoothStateHighlight: DeviceStatusHighlight {
         var localizedMessage: String
         //TODO need correct icon from design
-        var imageSystemName: String = "wifi.slash"
+        var imageName: String = "wifi.slash"
         var state: DeviceStatusHighlightState = .critical
         
         init(localizedMessage: String) {
