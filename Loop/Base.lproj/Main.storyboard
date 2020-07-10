@@ -102,7 +102,7 @@
                                     <rect key="frame" x="0.0" y="0.0" width="375" height="270"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="FBL-RL-faM" customClass="ChartContainerView" customModule="LoopUI">
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="FBL-RL-faM" customClass="ChartContainerView" customModule="LoopKitUI">
                                             <rect key="frame" x="0.0" y="29" width="375" height="170"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="170" id="ogp-Hm-zo0"/>
@@ -251,7 +251,7 @@
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
-                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MJM-pI-lcq" customClass="ChartContainerView" customModule="LoopUI">
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MJM-pI-lcq" customClass="ChartContainerView" customModule="LoopKitUI">
                                             <rect key="frame" x="0.0" y="29" width="375" height="130"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="130" id="DPc-dp-Smc"/>
@@ -628,7 +628,7 @@
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
-                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ADL-hs-cfT" customClass="ChartContainerView" customModule="LoopUI">
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ADL-hs-cfT" customClass="ChartContainerView" customModule="LoopKitUI">
                                             <rect key="frame" x="0.0" y="29" width="375" height="171"/>
                                         </view>
                                     </subviews>
@@ -716,7 +716,7 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qaB-0q-V2d" customClass="ChartContainerView" customModule="LoopUI">
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qaB-0q-V2d" customClass="ChartContainerView" customModule="LoopKitUI">
                                                     <rect key="frame" x="0.0" y="29" width="375" height="217"/>
                                                 </view>
                                             </subviews>
@@ -1046,7 +1046,7 @@
                                     <rect key="frame" x="0.0" y="0.0" width="375" height="270"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="m4y-ya-ryt" customClass="ChartContainerView" customModule="LoopUI">
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="m4y-ya-ryt" customClass="ChartContainerView" customModule="LoopKitUI">
                                             <rect key="frame" x="0.0" y="11" width="375" height="170"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="170" id="6cy-yd-uxX"/>
