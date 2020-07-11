@@ -290,3 +290,16 @@ extension LoopSettings: RawRepresentable {
         return raw
     }
 }
+
+extension LoopSettings {
+    public var therapySettings: TherapySettings {
+        TherapySettings(glucoseTargetRangeSchedule: self.glucoseTargetRangeSchedule,
+                        preMealTargetRange: self.preMealTargetRange,
+                        workoutTargetRange: self.legacyWorkoutTargetRange,
+                        maximumBasalRatePerHour: self.maximumBasalRatePerHour,
+                        maximumBolus: self.maximumBolus,
+                        suspendThreshold: self.suspendThreshold,
+                        insulinSensitivitySchedule: nil, // TODO
+                        carbRatioSchedule: nil) // TODO
+    }
+}
