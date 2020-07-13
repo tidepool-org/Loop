@@ -24,6 +24,9 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             hudView.cgmStatusHUD.stateColors = .cgmStatus
             hudView.cgmStatusHUD.tintColor = .label
             hudView.pumpStatusHUD.tintColor = .doseTintColor
+            
+            // given the reduced width of the widget, allow for tighter spacing
+            hudView.containerView.spacing = 6.0
         }
     }
     @IBOutlet weak var subtitleLabel: UILabel!
