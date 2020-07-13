@@ -59,21 +59,6 @@ extension DeviceDataManager {
         var state: DeviceStatusHighlightState = .normal
     }
     
-    func didTapOnPumpStatus(_ view: BaseHUDView? = nil) -> HUDTapAction? {
-        if let action = bluetoothState.action {
-            return action
-        } else if let pumpManagerHUDProvider = pumpManagerHUDProvider,
-            let view = view,
-            let action = pumpManagerHUDProvider.didTapOnHUDView(view)
-        {
-            return action
-        } else if let pumpManager = pumpManager {
-            return .presentViewController(pumpManager.settingsViewController())
-        } else {
-            return .setupNewPump
-        }
-    }
-    
     func didTapOnCGMStatus(_ view: BaseHUDView? = nil) -> HUDTapAction? {
         if let action = bluetoothState.action {
             return action
@@ -87,6 +72,21 @@ extension DeviceDataManager {
             return .presentViewController(cgmManagerUI.settingsViewController(for: unit))
         } else {
             return .setupNewCGM
+        }
+    }
+    
+    func didTapOnPumpStatus(_ view: BaseHUDView? = nil) -> HUDTapAction? {
+        if let action = bluetoothState.action {
+            return action
+        } else if let pumpManagerHUDProvider = pumpManagerHUDProvider,
+            let view = view,
+            let action = pumpManagerHUDProvider.didTapOnHUDView(view)
+        {
+            return action
+        } else if let pumpManager = pumpManager {
+            return .presentViewController(pumpManager.settingsViewController())
+        } else {
+            return .setupNewPump
         }
     }
 }

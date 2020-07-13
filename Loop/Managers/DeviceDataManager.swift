@@ -875,7 +875,7 @@ extension DeviceDataManager {
 
 extension DeviceDataManager: BluetoothStateManagerObserver {
     func bluetoothStateManager(_ bluetoothStateManager: BluetoothStateManager,
-                           bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
+                               bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
     {
         self.bluetoothState = bluetoothState
     }

@@ -1220,10 +1220,10 @@ final class StatusTableViewController: ChartsTableViewController {
             hudView.loopCompletionHUD.addGestureRecognizer(statusTapGestureRecognizer)
             hudView.loopCompletionHUD.accessibilityHint = NSLocalizedString("Shows last loop error", comment: "Loop Completion HUD accessibility hint")
             
-            let pumpStatusTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(deviceStatusTapped(_:)))
+            let pumpStatusTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(pumpStatusTapped(_:)))
             hudView.pumpStatusHUD.addGestureRecognizer(pumpStatusTapGestureRecognizer)
             
-            let cgmStatusTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(deviceStatusTapped(_:)))
+            let cgmStatusTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(cgmStatusTapped(_:)))
             hudView.cgmStatusHUD.addGestureRecognizer(cgmStatusTapGestureRecognizer)
             
             configurePumpManagerHUDViews()
@@ -1280,30 +1280,34 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
-    @objc private func deviceStatusTapped( _ sender: UIGestureRecognizer) {
-        var action: HUDTapAction? = nil
-        
-        if let _ = sender.view as? CGMStatusHUDView {
-            action = deviceManager.didTapOnCGMStatus()
-        } else if let pumpStatusView = sender.view as? PumpStatusHUDView {
-            action = deviceManager.didTapOnPumpStatus(pumpStatusView.pumpManagerProvidedHUD)
+    @objc private func pumpStatusTapped(_ sender: UIGestureRecognizer) {
+        if let pumpStatusView = sender.view as? PumpStatusHUDView {
+            executeHUDTapAction(deviceManager.didTapOnPumpStatus(pumpStatusView.pumpManagerProvidedHUD))
+        }
+    }
+    
+    @objc private func cgmStatusTapped( _ sender: UIGestureRecognizer) {
+        executeHUDTapAction(deviceManager.didTapOnCGMStatus())
+    }
+    
+    private func executeHUDTapAction(_ action: HUDTapAction?) {
+        guard let action = action else {
+            return
         }
         
-        if let action = action {
-            switch action {
-            case .presentViewController(let vc):
-                var completionNotifyingVC = vc
-                completionNotifyingVC.completionDelegate = self
-                self.present(completionNotifyingVC, animated: true, completion: nil)
-            case .openAppURL(let url):
-                UIApplication.shared.open(url)
-            case .setupNewCGM:
-                addNewCGMManager()
-            case .setupNewPump:
-                addNewPumpManager()
-            default:
-                return
-            }
+        switch action {
+        case .presentViewController(let vc):
+            var completionNotifyingVC = vc
+            completionNotifyingVC.completionDelegate = self
+            self.present(completionNotifyingVC, animated: true, completion: nil)
+        case .openAppURL(let url):
+            UIApplication.shared.open(url)
+        case .setupNewCGM:
+            addNewCGMManager()
+        case .setupNewPump:
+            addNewPumpManager()
+        default:
+            return
         }
     }
     
