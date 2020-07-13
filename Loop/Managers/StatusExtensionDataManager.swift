@@ -9,7 +9,6 @@
 import HealthKit
 import UIKit
 import LoopKit
-import LoopKitUI
 
 
 final class StatusExtensionDataManager {
