@@ -35,6 +35,8 @@ final class DeviceDataManager {
     private var lastBLEDrivenUpdate = Date.distantPast
 
     private var deviceLog: PersistentDeviceLog
+    
+    var bluetoothState: BluetoothStateManager.BluetoothState = .other
 
     // MARK: - CGM
 
@@ -864,5 +866,13 @@ extension DeviceDataManager {
                 self.loopManager.purgeHistoricalCoreData(completion: completion)
             }
         }
+    }
+}
+
+extension DeviceDataManager: BluetoothStateManagerObserver {
+    func bluetoothStateManager(_ bluetoothStateManager: BluetoothStateManager,
+                           bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
+    {
+        self.bluetoothState = bluetoothState
     }
 }

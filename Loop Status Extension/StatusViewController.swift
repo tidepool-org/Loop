@@ -24,7 +24,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             hudView.cgmStatusHUD.stateColors = .cgmStatus
             hudView.cgmStatusHUD.tintColor = .label
             hudView.pumpStatusHUD.tintColor = .doseTintColor
-            
+            hudView.backgroundColor = .clear
+
             // given the reduced width of the widget, allow for tighter spacing
             hudView.containerView.spacing = 6.0
         }
@@ -211,7 +212,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 return
             }
 
-            // Pump Status HUD
+            // Pump Status
             let pumpManagerHUDView: LevelHUDView
             if let hudViewContext = context.pumpManagerHUDViewContext,
                 let contextHUDView = PumpManagerHUDViewFromRawValue(hudViewContext.pumpManagerHUDViewRawValue, pluginManager: self.pluginManager)
@@ -254,9 +255,10 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 }
             }
             
-            // TODO need to store the pumpStatusHighlight in the status extension context (or the information to re-create it from status context).
+            self.hudView.pumpStatusHUD.presentStatusHighlight(context.pumpStatusHighlightContext)
+            self.hudView.pumpStatusHUD.lifecycleProgress = context.pumpLifecycleProgressContext
 
-            // CGM Status HUD
+            // CGM Status
             guard let unit = context.predictedGlucose?.unit else {
                 return
             }
@@ -271,7 +273,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 )
             }
             
-            // TODO need to store the cgmStatusHighlight in the status extension context (or the information to re-create it from status context).
+            self.hudView.cgmStatusHUD.presentStatusHighlight(context.cgmStatusHighlightContext)
+            self.hudView.cgmStatusHUD.lifecycleProgress = context.cgmLifecycleProgressContext
             
             // Charts
             let glucoseFormatter = QuantityFormatter()

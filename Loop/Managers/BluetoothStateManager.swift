@@ -33,12 +33,12 @@ public class BluetoothStateManager: NSObject {
             }
         }
         
-        var action: (() -> Void)? {
+        var action: DeviceStatusAction? {
             switch self {
             case .unauthorized, .denied:
-                return { UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!) }
+                return .openAppURL(URL(string: UIApplication.openSettingsURLString)!)
             case .poweredOff:
-                return { }
+                return .takeNoAction
             default:
                 return nil
             }

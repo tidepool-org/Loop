@@ -57,20 +57,34 @@ public final class BasalStateView: UIView {
         let startX = bounds.minX
         let endX = bounds.maxX
         let midY = bounds.midY
+        
+        let baselineY: CGFloat
+        if netBasalPercent == 0 {
+            baselineY = bounds.midY
+        } else if netBasalPercent < 0 {
+            baselineY = bounds.maxY * 1/5
+        } else {
+            baselineY = bounds.maxY * 4/5
+        }
 
         let path = UIBezierPath()
-        path.move(to: CGPoint(x: startX, y: midY))
+//        path.move(to: CGPoint(x: startX, y: midY))
+        path.move(to: CGPoint(x: startX, y: baselineY))
 
         let leftAnchor = startX + 1/6 * bounds.size.width
         let rightAnchor = startX + 5/6 * bounds.size.width
 
-        let yAnchor = bounds.midY - CGFloat(netBasalPercent) * (bounds.size.height - shapeLayer.lineWidth) / 2
+//        let yAnchor = bounds.midY - CGFloat(netBasalPercent) * (bounds.size.height - shapeLayer.lineWidth) / 2
+        let yAnchor = baselineY - CGFloat(netBasalPercent) * (bounds.size.height * 4/5 - shapeLayer.lineWidth)
 
-        path.addLine(to: CGPoint(x: leftAnchor, y: midY))
+//        path.addLine(to: CGPoint(x: leftAnchor, y: midY))
+        path.addLine(to: CGPoint(x: leftAnchor, y: baselineY))
         path.addLine(to: CGPoint(x: leftAnchor, y: yAnchor))
         path.addLine(to: CGPoint(x: rightAnchor, y: yAnchor))
-        path.addLine(to: CGPoint(x: rightAnchor, y: midY))
-        path.addLine(to: CGPoint(x: endX, y: midY))
+//        path.addLine(to: CGPoint(x: rightAnchor, y: midY))
+        path.addLine(to: CGPoint(x: rightAnchor, y: baselineY))
+//        path.addLine(to: CGPoint(x: endX, y: midY))
+        path.addLine(to: CGPoint(x: endX, y: baselineY))
 
         return path.cgPath
     }

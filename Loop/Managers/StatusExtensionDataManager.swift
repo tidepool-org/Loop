@@ -9,6 +9,7 @@
 import HealthKit
 import UIKit
 import LoopKit
+import LoopKitUI
 
 
 final class StatusExtensionDataManager {
@@ -119,6 +120,12 @@ final class StatusExtensionDataManager {
             if let pumpManagerHUDProvider = dataManager.pumpManagerHUDProvider {
                 context.pumpManagerHUDViewContext = PumpManagerHUDViewContext(pumpManagerHUDViewRawValue: PumpManagerHUDViewRawValueFromHUDProvider(pumpManagerHUDProvider))
             }
+            
+            context.pumpStatusHighlightContext = DeviceStatusHighlightContext(from: dataManager.pumpStatusHighlight)
+            context.pumpLifecycleProgressContext = DeviceLifecycleProgressContext(from: dataManager.pumpLifecycleProgress)
+
+            context.cgmStatusHighlightContext = DeviceStatusHighlightContext(from: dataManager.cgmStatusHighlight)
+            context.cgmLifecycleProgressContext = DeviceLifecycleProgressContext(from: dataManager.cgmLifecycleProgress)
 
             completionHandler(context)
         }

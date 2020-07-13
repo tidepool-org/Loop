@@ -53,6 +53,52 @@ struct PredictedGlucoseContext {
     }
 }
 
+struct DeviceStatusHighlightContext: DeviceStatusHighlight {
+    var localizedMessage: String
+    var imageSystemName: String
+    var state: DeviceStatusHighlightState
+    
+    init(localizedMessage: String,
+         imageSystemName: String,
+         state: DeviceStatusHighlightState)
+    {
+        self.localizedMessage = localizedMessage
+        self.imageSystemName = imageSystemName
+        self.state = state
+    }
+    
+    init?(from deviceStatusHighlight: DeviceStatusHighlight?) {
+        guard let deviceStatusHighlight = deviceStatusHighlight else {
+            return nil
+        }
+        
+        self.init(localizedMessage: deviceStatusHighlight.localizedMessage,
+                  imageSystemName: deviceStatusHighlight.imageSystemName,
+                  state: deviceStatusHighlight.state)
+    }
+}
+
+struct DeviceLifecycleProgressContext: DeviceLifecycleProgress {
+    var percentComplete: Double
+    var progressState: DeviceLifecycleProgressState
+    
+    init(percentComplete: Double,
+         progressState: DeviceLifecycleProgressState)
+    {
+        self.percentComplete = percentComplete
+        self.progressState = progressState
+    }
+    
+    init?(from deviceLifecycleProgress: DeviceLifecycleProgress?) {
+        guard let deviceLifecycleProgress = deviceLifecycleProgress else {
+            return nil
+        }
+        
+        self.init(percentComplete: deviceLifecycleProgress.percentComplete,
+                  progressState: deviceLifecycleProgress.progressState)
+    }
+}
+
 extension NetBasalContext: RawRepresentable {
     typealias RawValue = [String: Any]
 
@@ -161,6 +207,55 @@ extension PredictedGlucoseContext: RawRepresentable {
     }
 }
 
+extension DeviceStatusHighlightContext: RawRepresentable {
+    typealias RawValue = [String: Any]
+
+    var rawValue: RawValue {
+        return [
+            "localizedMessage": localizedMessage,
+            "imageSystemName": imageSystemName,
+            "state": state.rawValue,
+        ]
+    }
+
+    init?(rawValue: RawValue) {
+        guard let localizedMessage = rawValue["localizedMessage"] as? String,
+            let imageSystemName = rawValue["imageSystemName"] as? String,
+            let rawState = rawValue["state"] as? DeviceStatusHighlightState.RawValue,
+            let state = DeviceStatusHighlightState(rawValue: rawState) else
+        {
+            return nil
+        }
+
+        self.localizedMessage = localizedMessage
+        self.imageSystemName = imageSystemName
+        self.state = state
+    }
+}
+
+extension DeviceLifecycleProgressContext: RawRepresentable {
+    typealias RawValue = [String: Any]
+
+    var rawValue: RawValue {
+        return [
+            "percentComplete": percentComplete,
+            "progressState": progressState.rawValue,
+        ]
+    }
+
+    init?(rawValue: RawValue) {
+        guard let percentComplete = rawValue["percentComplete"] as? Double,
+            let rawProgressState = rawValue["progressState"] as? DeviceLifecycleProgressState.RawValue,
+            let progressState = DeviceLifecycleProgressState(rawValue: rawProgressState) else
+        {
+            return nil
+        }
+
+        self.percentComplete = percentComplete
+        self.progressState = progressState
+    }
+}
+
 struct PumpManagerHUDViewContext: RawRepresentable {
     typealias RawValue = [String: Any]
 
@@ -194,6 +289,10 @@ struct StatusExtensionContext: RawRepresentable {
     var reservoirCapacity: Double?
     var sensor: SensorDisplayableContext?
     var pumpManagerHUDViewContext: PumpManagerHUDViewContext?
+    var pumpStatusHighlightContext: DeviceStatusHighlightContext?
+    var pumpLifecycleProgressContext: DeviceLifecycleProgressContext?
+    var cgmStatusHighlightContext: DeviceStatusHighlightContext?
+    var cgmLifecycleProgressContext: DeviceLifecycleProgressContext?
     
     init() { }
     
@@ -221,6 +320,22 @@ struct StatusExtensionContext: RawRepresentable {
         if let rawPumpManagerHUDViewContext = rawValue["pumpManagerHUDViewContext"] as? PumpManagerHUDViewContext.RawValue {
             pumpManagerHUDViewContext = PumpManagerHUDViewContext(rawValue: rawPumpManagerHUDViewContext)
         }
+        
+        if let rawPumpStatusHighlightContext = rawValue["pumpStatusHighlightContext"] as? DeviceStatusHighlightContext.RawValue {
+            pumpStatusHighlightContext = DeviceStatusHighlightContext(rawValue: rawPumpStatusHighlightContext)
+        }
+        
+        if let rawPumpLifecycleProgressContext = rawValue["pumpLifecycleProgressContext"] as? DeviceLifecycleProgressContext.RawValue {
+            pumpLifecycleProgressContext = DeviceLifecycleProgressContext(rawValue: rawPumpLifecycleProgressContext)
+        }
+        
+        if let rawCGMStatusHighlightContext = rawValue["cgmStatusHighlightContext"] as? DeviceStatusHighlightContext.RawValue {
+            cgmStatusHighlightContext = DeviceStatusHighlightContext(rawValue: rawCGMStatusHighlightContext)
+        }
+        
+        if let rawCGMLifecycleProgressContext = rawValue["cgmLifecycleProgressContext"] as? DeviceLifecycleProgressContext.RawValue {
+            cgmLifecycleProgressContext = DeviceLifecycleProgressContext(rawValue: rawCGMLifecycleProgressContext)
+        }
     }
     
     var rawValue: RawValue {
@@ -235,6 +350,10 @@ struct StatusExtensionContext: RawRepresentable {
         raw["reservoirCapacity"] = reservoirCapacity
         raw["sensor"] = sensor?.rawValue
         raw["pumpManagerHUDViewContext"] = pumpManagerHUDViewContext?.rawValue
+        raw["pumpStatusHighlightContext"] = pumpStatusHighlightContext?.rawValue
+        raw["pumpLifecycleProgressContext"] = pumpLifecycleProgressContext?.rawValue
+        raw["cgmStatusHighlightContext"] = cgmStatusHighlightContext?.rawValue
+        raw["cgmLifecycleProgressContext"] = cgmLifecycleProgressContext?.rawValue
         
         return raw
     }

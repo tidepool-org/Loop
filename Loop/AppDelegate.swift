@@ -34,8 +34,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         UIDevice.current.isBatteryMonitoringEnabled = true
 
         alertManager = AlertManager(rootViewController: rootViewController, expireAfter: Bundle.main.localCacheDuration ?? .days(1))
-        deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertManager: alertManager)
         bluetoothStateManager = BluetoothStateManager()
+        deviceDataManager = DeviceDataManager(pluginManager: pluginManager, alertManager: alertManager) //, bluetoothStateManager: bluetoothStateManager)
+        bluetoothStateManager.addBluetoothStateObserver(deviceDataManager)
         bluetoothStateManager.addBluetoothStateObserver(rootViewController.rootViewController)
         loopAlertsManager = LoopAlertsManager(alertManager: alertManager, bluetoothStateManager: bluetoothStateManager)
         
