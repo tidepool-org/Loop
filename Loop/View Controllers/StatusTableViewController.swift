@@ -218,7 +218,7 @@ final class StatusTableViewController: ChartsTableViewController {
             }
         }
     }
-        
+
     // Toggles the display mode based on the screen aspect ratio. Should not be updated outside of reloadData().
     private var landscapeMode = false
     
