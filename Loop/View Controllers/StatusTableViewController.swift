@@ -218,26 +218,6 @@ final class StatusTableViewController: ChartsTableViewController {
             }
         }
     }
-    
-    var pumpStatusHighlight: PumpManagerStatus.PumpStatusHighlight? {
-        didSet {
-            if oldValue != pumpStatusHighlight {
-                log.debug("New pumpStatusHighlight: %@", String(describing: pumpStatusHighlight))
-                refreshContext.update(with: .status)
-                self.reloadData(animated: true)
-            }
-        }
-    }
-    
-    var pumpLifecycleProgress: PumpManagerStatus.PumpLifecycleProgress? {
-        didSet {
-            if oldValue != pumpLifecycleProgress {
-                log.debug("New pumpLifecycleProgress: %@", String(describing: pumpLifecycleProgress))
-                refreshContext.update(with: .status)
-                self.reloadData(animated: true)
-            }
-        }
-    }
         
     // Toggles the display mode based on the screen aspect ratio. Should not be updated outside of reloadData().
     private var landscapeMode = false
@@ -1540,8 +1520,6 @@ extension StatusTableViewController: PumpManagerStatusObserver {
         
         self.basalDeliveryState = status.basalDeliveryState
         self.bolusState = status.bolusState
-        self.pumpStatusHighlight = status.pumpStatusHighlight
-        self.pumpLifecycleProgress = status.pumpLifecycleProgress
     }
 }
 
