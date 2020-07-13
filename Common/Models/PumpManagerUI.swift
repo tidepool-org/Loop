@@ -9,6 +9,7 @@
 import Foundation
 import LoopKit
 import LoopKitUI
+import MockKitUI
 
 private let managersByIdentifier: [String: PumpManagerUI.Type] = staticPumpManagers.compactMap{ $0 as? PumpManagerUI.Type}.reduce(into: [:]) { (map, Type) in
     map[Type.managerIdentifier] = Type
