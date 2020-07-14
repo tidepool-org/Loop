@@ -218,26 +218,7 @@ final class StatusTableViewController: ChartsTableViewController {
             }
         }
     }
-    
-    var pumpStatusHighlight: PumpManagerStatus.PumpStatusHighlight? {
-        didSet {
-            if oldValue != pumpStatusHighlight {
-                log.debug("New pumpStatusHighlight: %@", String(describing: pumpStatusHighlight))
-                refreshContext.update(with: .status)
-                self.reloadData(animated: true)
-            }
-        }
-    }
-    
-    var bluetoothState: BluetoothStateManager.BluetoothState = .other {
-        didSet {
-            if bluetoothState != oldValue {
-                refreshContext.update(with: .status)
-                reloadData(animated: true)
-            }
-        }
-    }
-    
+        
     // Toggles the display mode based on the screen aspect ratio. Should not be updated outside of reloadData().
     private var landscapeMode = false
     
@@ -518,24 +499,12 @@ final class StatusTableViewController: ChartsTableViewController {
                                                             sensor: self.deviceManager.sensorState)
                 }
                 
-                if let bluetoothStatusHighlight = self.bluetoothState.statusHighlight {
-                    hudView.cgmStatusHUD.presentStatusHighlight(bluetoothStatusHighlight)
-                } else if self.deviceManager.cgmManager == nil {
-                    hudView.cgmStatusHUD.presentAddCGMHighlight()
-                } else {
-                    hudView.cgmStatusHUD.presentStatusHighlight((self.deviceManager.cgmManager as? CGMManagerUI)?.cgmStatusHighlight)
-                }
-
-                hudView.cgmStatusHUD.lifecycleProgress = (self.deviceManager.cgmManager as? CGMManagerUI)?.cgmLifecycleProgress
+                hudView.cgmStatusHUD.presentStatusHighlight(self.deviceManager.cgmStatusHighlight)
+                hudView.cgmStatusHUD.lifecycleProgress = self.deviceManager.cgmLifecycleProgress
                 
                 // Pump Status
-                if let bluetoothStatusHighlight = self.bluetoothState.statusHighlight {
-                    hudView.pumpStatusHUD.presentStatusHighlight(bluetoothStatusHighlight)
-                } else if self.deviceManager.pumpManager == nil {
-                    hudView.pumpStatusHUD.presentAddPumpHighlight()
-                } else {
-                    hudView.pumpStatusHUD.presentStatusHighlight(self.pumpStatusHighlight)
-                }
+                hudView.pumpStatusHUD.presentStatusHighlight(self.deviceManager.pumpStatusHighlight)
+                hudView.pumpStatusHUD.lifecycleProgress = self.deviceManager.pumpLifecycleProgress
             }
             
             // Show/hide the table view rows
@@ -1260,20 +1229,16 @@ final class StatusTableViewController: ChartsTableViewController {
                     addPumpManagerViewToHUD(view)
                 }
                 pumpManagerHUDProvider.visible = active && onscreen
-                hudView.pumpStatusHUD.dismissStatusHighlight()
-            } else {
-                hudView.pumpStatusHUD.presentAddPumpHighlight()
             }
+            hudView.pumpStatusHUD.presentStatusHighlight(deviceManager.pumpStatusHighlight)
+            hudView.pumpStatusHUD.lifecycleProgress = deviceManager.pumpLifecycleProgress
         }
     }
     
     private func configureCGMManagerHUDViews() {
         if let hudView = hudView {
-            if deviceManager.cgmManager != nil {
-                hudView.cgmStatusHUD.dismissStatusHighlight()
-            } else {
-                hudView.cgmStatusHUD.presentAddCGMHighlight()
-            }
+            hudView.cgmStatusHUD.presentStatusHighlight(deviceManager.cgmStatusHighlight)
+            hudView.cgmStatusHUD.lifecycleProgress = deviceManager.cgmLifecycleProgress
         }
     }
     
@@ -1295,37 +1260,34 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
-    @objc private func openCGMApp(_: Any) {
-        if let url = deviceManager.cgmManager?.appURL, UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url)
+    @objc private func pumpStatusTapped(_ sender: UIGestureRecognizer) {
+        if let pumpStatusView = sender.view as? PumpStatusHUDView {
+            executeHUDTapAction(deviceManager.didTapOnPumpStatus(pumpStatusView.pumpManagerProvidedHUD))
         }
     }
     
-    @objc private func hudViewTapped(_ sender: UIGestureRecognizer) {
-        if let hudSubView = sender.view as? BaseHUDView,
-            let pumpManagerHUDProvider = deviceManager.pumpManagerHUDProvider,
-            let action = pumpManagerHUDProvider.didTapOnHUDView(hudSubView)
-        {
-            switch action {
-            case .presentViewController(let vc):
-                var completionNotifyingVC = vc
-                completionNotifyingVC.completionDelegate = self
-                self.present(vc, animated: true, completion: nil)
-            case .openAppURL(let url):
-                UIApplication.shared.open(url)
-            }
-        }
+    @objc private func cgmStatusTapped( _ sender: UIGestureRecognizer) {
+        executeHUDTapAction(deviceManager.didTapOnCGMStatus())
     }
     
-    @objc private func pumpStatusTapped( _ sender: UIGestureRecognizer) {
-        if bluetoothState.action != nil {
-            bluetoothState.action?()
-        } else if let pumpManagerUI = deviceManager.pumpManager {
-            var completionNotifyingVC = pumpManagerUI.settingsViewController()
+    private func executeHUDTapAction(_ action: HUDTapAction?) {
+        guard let action = action else {
+            return
+        }
+        
+        switch action {
+        case .presentViewController(let vc):
+            var completionNotifyingVC = vc
             completionNotifyingVC.completionDelegate = self
             self.present(completionNotifyingVC, animated: true, completion: nil)
-        } else {
+        case .openAppURL(let url):
+            UIApplication.shared.open(url)
+        case .setupNewCGM:
+            addNewCGMManager()
+        case .setupNewPump:
             addNewPumpManager()
+        default:
+            return
         }
     }
     
@@ -1349,18 +1311,6 @@ final class StatusTableViewController: ChartsTableViewController {
             }
             alert.addCancelAction { _ in }
             present(alert, animated: true, completion: nil)
-        }
-    }
-    
-    @objc private func cgmStatusTapped( _ sender: UIGestureRecognizer) {
-        if bluetoothState.action != nil {
-            bluetoothState.action?()
-        } else if let cgmManagerUI = deviceManager.cgmManager as? CGMManagerUI {
-            var completionNotifyingVC = cgmManagerUI.settingsViewController(for: statusCharts.glucose.glucoseUnit)
-            completionNotifyingVC.completionDelegate = self
-            self.present(completionNotifyingVC, animated: true, completion: nil)
-        } else {
-            addNewCGMManager()
         }
     }
     
@@ -1570,7 +1520,6 @@ extension StatusTableViewController: PumpManagerStatusObserver {
         
         self.basalDeliveryState = status.basalDeliveryState
         self.bolusState = status.bolusState
-        self.pumpStatusHighlight = status.pumpStatusHighlight
     }
 }
 
@@ -1667,6 +1616,7 @@ extension StatusTableViewController: BluetoothStateManagerObserver {
     func bluetoothStateManager(_ bluetoothStateManager: BluetoothStateManager,
                            bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
     {
-        self.bluetoothState = bluetoothState
+        refreshContext.update(with: .status)
+        reloadData(animated: true)
     }
 }
