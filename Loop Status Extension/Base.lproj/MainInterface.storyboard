@@ -15,11 +15,11 @@
                         <viewControllerLayoutGuide type="bottom" id="Vi1-50-EGe"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="Vhu-kB-paW">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="220"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="245"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="QEK-eF-fK6">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="220"/>
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="245"/>
                                 <subviews>
                                     <view contentMode="scaleToFill" verticalHuggingPriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="VIh-8L-VsB" customClass="StatusBarHUDView" customModule="LoopUI">
                                         <rect key="frame" x="0.0" y="0.0" width="375" height="74"/>
@@ -40,18 +40,18 @@
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" layoutMarginsFollowReadableWidth="YES" text="Active Insulin" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UPi-dG-yYD">
-                                                <rect key="frame" x="209.66666666666666" y="9" width="95.333333333333343" height="18"/>
+                                                <rect key="frame" x="241.00000000000003" y="9" width="95.333333333333343" height="18"/>
                                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
                                                 <color key="textColor" systemColor="secondaryLabelColor" red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="35.75 U" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Vgf-p1-2QP">
-                                                <rect key="frame" x="309" y="9" width="56" height="18"/>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0 U" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Vgf-p1-2QP">
+                                                <rect key="frame" x="340.33333333333331" y="9" width="24.666666666666686" height="18"/>
                                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="18 g" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dPp-lJ-5sh">
-                                                <rect key="frame" x="105" y="9" width="30.333333333333343" height="18"/>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0 g" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dPp-lJ-5sh">
+                                                <rect key="frame" x="105" y="9" width="23" height="18"/>
                                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
@@ -74,9 +74,9 @@
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="GVu-hk-PBg" customClass="ChartContainerView" customModule="LoopUI">
-                                        <rect key="frame" x="0.0" y="110" width="375" height="110"/>
+                                        <rect key="frame" x="0.0" y="110" width="375" height="135"/>
                                         <constraints>
-                                            <constraint firstAttribute="height" relation="greaterThanOrEqual" priority="750" constant="100" id="rLK-f9-lLl"/>
+                                            <constraint firstAttribute="height" relation="greaterThanOrEqual" priority="750" constant="135" id="rLK-f9-lLl"/>
                                         </constraints>
                                     </view>
                                 </subviews>
@@ -94,7 +94,7 @@
                     <nil key="simulatedTopBarMetrics"/>
                     <nil key="simulatedBottomBarMetrics"/>
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
-                    <size key="freeformSize" width="375" height="220"/>
+                    <size key="freeformSize" width="375" height="245"/>
                     <connections>
                         <outlet property="activeCarbsAmountLabel" destination="dPp-lJ-5sh" id="o3v-ZM-8DQ"/>
                         <outlet property="activeCarbsTitleLabel" destination="9iF-xY-Bh4" id="777-58-OdQ"/>

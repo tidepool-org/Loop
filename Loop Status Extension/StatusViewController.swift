@@ -155,7 +155,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
 
         switch activeDisplayMode {
         case .expanded:
-            preferredContentSize = CGSize(width: maxSize.width, height: compactHeight + 110)
+            preferredContentSize = CGSize(width: maxSize.width, height: compactHeight + 135)
         case .compact:
             fallthrough
         @unknown default:
