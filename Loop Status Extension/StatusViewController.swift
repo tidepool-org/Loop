@@ -106,12 +106,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        activeCarbsTitleLabel.isHidden = true
         activeCarbsTitleLabel.text = NSLocalizedString("Active Carbs", comment: "Widget label title describing the active carbs")
-        activeCarbsAmountLabel.isHidden = true
-        activeInsulinTitleLabel.isHidden = true
         activeInsulinTitleLabel.text = NSLocalizedString("Active Insulin", comment: "Widget label title describing the active insulin")
-        activeInsulinAmountLabel.isHidden = true
         if #available(iOSApplicationExtension 13.0, iOS 13.0, *) {
             activeCarbsTitleLabel.textColor = .secondaryLabel
             activeCarbsAmountLabel.textColor = .label
@@ -159,7 +155,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
 
         switch activeDisplayMode {
         case .expanded:
-            preferredContentSize = CGSize(width: maxSize.width, height: compactHeight + 100)
+            preferredContentSize = CGSize(width: maxSize.width, height: compactHeight + 110)
         case .compact:
             fallthrough
         @unknown default:
@@ -193,15 +189,11 @@ class StatusViewController: UIViewController, NCWidgetProviding {
     
     @discardableResult
     func update() -> NCUpdateResult {
-        activeCarbsTitleLabel.isHidden = true
-        activeCarbsAmountLabel.isHidden = true
-        activeInsulinTitleLabel.isHidden = true
-        activeInsulinAmountLabel.isHidden = true
-
         let group = DispatchGroup()
 
-        var activeInsulin: Double?
-        var activeCarbs: HKQuantity?
+        var activeInsulin: Double = 0
+        let carbUnit = HKUnit.gram()
+        var activeCarbs = HKQuantity(unit: carbUnit, doubleValue: 0)
         var glucose: [StoredGlucoseSample] = []
 
         group.enter()
@@ -210,7 +202,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             case .success(let iobValue):
                 activeInsulin = iobValue.value
             case .failure:
-                activeInsulin = nil
+                activeInsulin = 0
             }
             group.leave()
         }
@@ -221,7 +213,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             case .success(let cobValue):
                 activeCarbs = cobValue.quantity
             case .failure:
-                activeCarbs = nil
+                activeCarbs = HKQuantity(unit: carbUnit, doubleValue: 0)
             }
             group.leave()
         }
@@ -266,25 +258,19 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 self.hudView.loopCompletionHUD.lastLoopCompleted = lastCompleted
             }
 
-            if let activeInsulin = activeInsulin {
-                let insulinFormatter: NumberFormatter = {
-                    let numberFormatter = NumberFormatter()
+            let insulinFormatter: NumberFormatter = {
+                let numberFormatter = NumberFormatter()
+                
+                numberFormatter.numberStyle = .decimal
+                numberFormatter.minimumFractionDigits = 1
+                numberFormatter.maximumFractionDigits = 1
+                
+                return numberFormatter
+            }()
 
-                    numberFormatter.numberStyle = .decimal
-                    numberFormatter.minimumFractionDigits = 1
-                    numberFormatter.maximumFractionDigits = 1
-
-                    return numberFormatter
-                }()
-
-                if let valueStr = insulinFormatter.string(from: activeInsulin) {
-                    self.activeInsulinAmountLabel.text = String(format: NSLocalizedString("%1$@ U",
-                        comment: "The subtitle format describing units of active insulin. (1: localized insulin value description)"),
-                        valueStr
-                    )
-                    self.activeInsulinTitleLabel.isHidden = false
-                    self.activeInsulinAmountLabel.isHidden = false
-                }
+            
+            if let valueStr = insulinFormatter.string(from: activeInsulin) {
+                self.activeInsulinAmountLabel.text = String(format: NSLocalizedString("%1$@ U", comment: "The subtitle format describing units of active insulin. (1: localized insulin value description)"), valueStr)
             }
             
             self.hudView.pumpStatusHUD.presentStatusHighlight(context.pumpStatusHighlightContext)
@@ -292,20 +278,16 @@ class StatusViewController: UIViewController, NCWidgetProviding {
 
             // Active carbs
             let carbsFormatter = QuantityFormatter()
-            let carbUnit = HKUnit.gram()
+            
             carbsFormatter.setPreferredNumberFormatter(for: carbUnit)
-            if let activeCarbs = activeCarbs {
-                if let activeCarbsNumberString = carbsFormatter.string(from: activeCarbs, for: carbUnit) {
-                    self.activeCarbsAmountLabel.text = String(
-                        format: NSLocalizedString(
-                            "%1$@",
-                            comment: "The subtitle format describing the grams of active carbs.  (1: localized carb value description)"
-                        ),
-                        activeCarbsNumberString
-                    )
-                    self.activeCarbsTitleLabel.isHidden = false
-                    self.activeCarbsAmountLabel.isHidden = false
-                }
+            if let activeCarbsNumberString = carbsFormatter.string(from: activeCarbs, for: carbUnit) {
+                self.activeCarbsAmountLabel.text = String(
+                    format: NSLocalizedString(
+                        "%1$@",
+                        comment: "The subtitle format describing the grams of active carbs.  (1: localized carb value description)"
+                    ),
+                    activeCarbsNumberString
+                )
             }
             
             // CGM Status
