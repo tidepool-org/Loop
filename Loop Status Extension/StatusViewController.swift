@@ -47,7 +47,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             ),
             settings: {
                 var settings = ChartSettings()
-                settings.top = 4
+                settings.top = 8
                 settings.bottom = 8
                 settings.trailing = 8
                 settings.axisTitleLabelsToLabelsSpacing = 0
