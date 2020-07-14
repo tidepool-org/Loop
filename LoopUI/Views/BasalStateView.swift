@@ -57,21 +57,21 @@ public final class BasalStateView: UIView {
         let startX = bounds.minX
         let endX = bounds.maxX
         let midY = bounds.midY
-        
+
         let path = UIBezierPath()
         path.move(to: CGPoint(x: startX, y: midY))
-        
+
         let leftAnchor = startX + 1/6 * bounds.size.width
         let rightAnchor = startX + 5/6 * bounds.size.width
-        
+
         let yAnchor = bounds.midY - CGFloat(netBasalPercent) * (bounds.size.height - shapeLayer.lineWidth) / 2
-        
+
         path.addLine(to: CGPoint(x: leftAnchor, y: midY))
         path.addLine(to: CGPoint(x: leftAnchor, y: yAnchor))
         path.addLine(to: CGPoint(x: rightAnchor, y: yAnchor))
         path.addLine(to: CGPoint(x: rightAnchor, y: midY))
         path.addLine(to: CGPoint(x: endX, y: midY))
-        
+
         return path.cgPath
     }
 
