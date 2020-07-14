@@ -28,10 +28,10 @@
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="3n2-yC-jGi">
-                                        <rect key="frame" x="0.0" y="74" width="375" height="32"/>
+                                        <rect key="frame" x="0.0" y="74" width="375" height="36"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" layoutMarginsFollowReadableWidth="YES" text="Active Carbs" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9iF-xY-Bh4">
-                                                <rect key="frame" x="10" y="7" width="91" height="18"/>
+                                                <rect key="frame" x="10" y="9" width="91" height="18"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="18" id="aVA-Mg-CvQ"/>
                                                 </constraints>
@@ -40,18 +40,18 @@
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" layoutMarginsFollowReadableWidth="YES" text="Active Insulin" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UPi-dG-yYD">
-                                                <rect key="frame" x="209.66666666666666" y="7" width="95.333333333333343" height="18"/>
+                                                <rect key="frame" x="209.66666666666666" y="9" width="95.333333333333343" height="18"/>
                                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
                                                 <color key="textColor" systemColor="secondaryLabelColor" red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="35.75 U" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Vgf-p1-2QP">
-                                                <rect key="frame" x="309" y="7" width="56" height="18"/>
+                                                <rect key="frame" x="309" y="9" width="56" height="18"/>
                                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="18 g" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dPp-lJ-5sh">
-                                                <rect key="frame" x="105" y="7" width="30.333333333333343" height="18"/>
+                                                <rect key="frame" x="105" y="9" width="30.333333333333343" height="18"/>
                                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
@@ -66,7 +66,7 @@
                                             <constraint firstItem="dPp-lJ-5sh" firstAttribute="centerY" secondItem="9iF-xY-Bh4" secondAttribute="centerY" id="GGa-dC-QsZ"/>
                                             <constraint firstItem="UPi-dG-yYD" firstAttribute="height" secondItem="9iF-xY-Bh4" secondAttribute="height" id="Qa0-KT-ozH"/>
                                             <constraint firstItem="9iF-xY-Bh4" firstAttribute="leading" secondItem="3n2-yC-jGi" secondAttribute="leading" constant="10" id="cIA-WI-DT4"/>
-                                            <constraint firstAttribute="height" constant="32" id="hjr-Q0-cFm"/>
+                                            <constraint firstAttribute="height" constant="36" id="hjr-Q0-cFm"/>
                                             <constraint firstItem="UPi-dG-yYD" firstAttribute="centerY" secondItem="9iF-xY-Bh4" secondAttribute="centerY" id="kEu-66-pll"/>
                                             <constraint firstItem="9iF-xY-Bh4" firstAttribute="centerY" secondItem="3n2-yC-jGi" secondAttribute="centerY" id="q5T-KE-E40"/>
                                             <constraint firstItem="Vgf-p1-2QP" firstAttribute="centerY" secondItem="UPi-dG-yYD" secondAttribute="centerY" id="wj7-pR-S8P"/>
@@ -74,7 +74,7 @@
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="GVu-hk-PBg" customClass="ChartContainerView" customModule="LoopUI">
-                                        <rect key="frame" x="0.0" y="106" width="375" height="114"/>
+                                        <rect key="frame" x="0.0" y="110" width="375" height="110"/>
                                         <constraints>
                                             <constraint firstAttribute="height" relation="greaterThanOrEqual" priority="750" constant="100" id="rLK-f9-lLl"/>
                                         </constraints>
