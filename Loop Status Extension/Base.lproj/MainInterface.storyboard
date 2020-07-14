@@ -28,41 +28,53 @@
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="3n2-yC-jGi">
-                                        <rect key="frame" x="0.0" y="74" width="375" height="36"/>
+                                        <rect key="frame" x="0.0" y="74" width="375" height="32"/>
                                         <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" layoutMarginsFollowReadableWidth="YES" text="Eventually 92 mg/dL" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9iF-xY-Bh4">
-                                                <rect key="frame" x="8" y="0.0" width="359" height="36"/>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" layoutMarginsFollowReadableWidth="YES" text="Active Carbs" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9iF-xY-Bh4">
+                                                <rect key="frame" x="10" y="7" width="91" height="18"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="36" id="aVA-Mg-CvQ"/>
+                                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="18" id="aVA-Mg-CvQ"/>
                                                 </constraints>
-                                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
-                                                <nil key="textColor"/>
+                                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
+                                                <color key="textColor" systemColor="secondaryLabelColor" red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" layoutMarginsFollowReadableWidth="YES" text="IOB 1.0 U" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UPi-dG-yYD">
-                                                <rect key="frame" x="8" y="0.0" width="359" height="36"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="36" id="Va8-zN-Zxc"/>
-                                                </constraints>
-                                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" layoutMarginsFollowReadableWidth="YES" text="Active Insulin" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UPi-dG-yYD">
+                                                <rect key="frame" x="209.66666666666666" y="7" width="95.333333333333343" height="18"/>
+                                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
+                                                <color key="textColor" systemColor="secondaryLabelColor" red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="35.75 U" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Vgf-p1-2QP">
+                                                <rect key="frame" x="309" y="7" width="56" height="18"/>
+                                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="18 g" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dPp-lJ-5sh">
+                                                <rect key="frame" x="105" y="7" width="30.333333333333343" height="18"/>
+                                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                         </subviews>
                                         <constraints>
-                                            <constraint firstItem="UPi-dG-yYD" firstAttribute="leading" secondItem="9iF-xY-Bh4" secondAttribute="leading" id="7Jj-0n-7D1"/>
-                                            <constraint firstItem="UPi-dG-yYD" firstAttribute="bottom" secondItem="9iF-xY-Bh4" secondAttribute="bottom" id="GsE-4E-FbA"/>
-                                            <constraint firstItem="9iF-xY-Bh4" firstAttribute="top" secondItem="3n2-yC-jGi" secondAttribute="top" id="HSD-ba-SBR"/>
-                                            <constraint firstAttribute="bottom" secondItem="9iF-xY-Bh4" secondAttribute="bottom" id="LtS-Ct-5Wl"/>
+                                            <constraint firstItem="dPp-lJ-5sh" firstAttribute="leading" secondItem="9iF-xY-Bh4" secondAttribute="trailing" constant="4" id="47L-LB-sXC"/>
+                                            <constraint firstAttribute="trailing" secondItem="Vgf-p1-2QP" secondAttribute="trailing" constant="10" id="Atb-Dw-GQX"/>
+                                            <constraint firstItem="Vgf-p1-2QP" firstAttribute="height" secondItem="UPi-dG-yYD" secondAttribute="height" id="D5w-wI-Vs7"/>
+                                            <constraint firstItem="UPi-dG-yYD" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="dPp-lJ-5sh" secondAttribute="trailing" constant="8" id="Faa-gi-5tA"/>
+                                            <constraint firstItem="Vgf-p1-2QP" firstAttribute="leading" secondItem="UPi-dG-yYD" secondAttribute="trailing" constant="4" id="Fe2-UJ-7aS"/>
+                                            <constraint firstItem="dPp-lJ-5sh" firstAttribute="centerY" secondItem="9iF-xY-Bh4" secondAttribute="centerY" id="GGa-dC-QsZ"/>
                                             <constraint firstItem="UPi-dG-yYD" firstAttribute="height" secondItem="9iF-xY-Bh4" secondAttribute="height" id="Qa0-KT-ozH"/>
-                                            <constraint firstItem="9iF-xY-Bh4" firstAttribute="leading" secondItem="3n2-yC-jGi" secondAttribute="leading" constant="8" id="cIA-WI-DT4"/>
-                                            <constraint firstAttribute="height" constant="36" id="hjr-Q0-cFm"/>
-                                            <constraint firstAttribute="trailing" secondItem="UPi-dG-yYD" secondAttribute="trailing" constant="8" id="uU7-uQ-0lP"/>
-                                            <constraint firstAttribute="trailing" secondItem="9iF-xY-Bh4" secondAttribute="trailing" constant="8" id="x9b-EB-fji"/>
+                                            <constraint firstItem="9iF-xY-Bh4" firstAttribute="leading" secondItem="3n2-yC-jGi" secondAttribute="leading" constant="10" id="cIA-WI-DT4"/>
+                                            <constraint firstAttribute="height" constant="32" id="hjr-Q0-cFm"/>
+                                            <constraint firstItem="UPi-dG-yYD" firstAttribute="centerY" secondItem="9iF-xY-Bh4" secondAttribute="centerY" id="kEu-66-pll"/>
+                                            <constraint firstItem="9iF-xY-Bh4" firstAttribute="centerY" secondItem="3n2-yC-jGi" secondAttribute="centerY" id="q5T-KE-E40"/>
+                                            <constraint firstItem="Vgf-p1-2QP" firstAttribute="centerY" secondItem="UPi-dG-yYD" secondAttribute="centerY" id="wj7-pR-S8P"/>
+                                            <constraint firstItem="dPp-lJ-5sh" firstAttribute="height" secondItem="9iF-xY-Bh4" secondAttribute="height" id="xxM-w3-vHR"/>
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="GVu-hk-PBg" customClass="ChartContainerView" customModule="LoopUI">
-                                        <rect key="frame" x="0.0" y="110" width="375" height="110"/>
+                                        <rect key="frame" x="0.0" y="106" width="375" height="114"/>
                                         <constraints>
                                             <constraint firstAttribute="height" relation="greaterThanOrEqual" priority="750" constant="100" id="rLK-f9-lLl"/>
                                         </constraints>
@@ -84,10 +96,12 @@
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
                     <size key="freeformSize" width="375" height="220"/>
                     <connections>
+                        <outlet property="activeCarbsAmountLabel" destination="dPp-lJ-5sh" id="o3v-ZM-8DQ"/>
+                        <outlet property="activeCarbsTitleLabel" destination="9iF-xY-Bh4" id="777-58-OdQ"/>
+                        <outlet property="activeInsulinAmountLabel" destination="Vgf-p1-2QP" id="7a4-mK-7Dg"/>
+                        <outlet property="activeInsulinTitleLabel" destination="UPi-dG-yYD" id="bxo-oZ-lmq"/>
                         <outlet property="glucoseChartContentView" destination="GVu-hk-PBg" id="gfZ-nx-P6V"/>
                         <outlet property="hudView" destination="VIh-8L-VsB" id="NsP-iq-J4a"/>
-                        <outlet property="insulinLabel" destination="UPi-dG-yYD" id="mhC-fv-uD4"/>
-                        <outlet property="subtitleLabel" destination="9iF-xY-Bh4" id="PM8-hd-IB3"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="d69-6q-UCR" userLabel="First Responder" sceneMemberID="firstResponder"/>

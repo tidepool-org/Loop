@@ -30,8 +30,10 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             hudView.containerView.spacing = 6.0
         }
     }
-    @IBOutlet weak var subtitleLabel: UILabel!
-    @IBOutlet weak var insulinLabel: UILabel!
+    @IBOutlet weak var activeCarbsTitleLabel: UILabel!
+    @IBOutlet weak var activeCarbsAmountLabel: UILabel!
+    @IBOutlet weak var activeInsulinTitleLabel: UILabel!
+    @IBOutlet weak var activeInsulinAmountLabel: UILabel!
     @IBOutlet weak var glucoseChartContentView: LoopUI.ChartContainerView!
 
     private lazy var charts: StatusChartsManager = {
@@ -88,6 +90,14 @@ class StatusViewController: UIViewController, NCWidgetProviding {
         insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule
     )
     
+    let absorptionTimes = LoopSettings.defaultCarbAbsorptionTimes
+    lazy var carbStore = CarbStore(healthStore: healthStore,
+                                   observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+                                   cacheStore: cacheStore,
+                                   cacheLength: TimeInterval(days: 1),
+                                   defaultAbsorptionTimes: absorptionTimes,
+                                   observationInterval: absorptionTimes.slow * 2)
+    
     private var pluginManager: PluginManager = {
         let containingAppFrameworksURL = Bundle.main.privateFrameworksURL?.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Frameworks")
         return PluginManager(pluginsURL: containingAppFrameworksURL)
@@ -96,16 +106,23 @@ class StatusViewController: UIViewController, NCWidgetProviding {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        subtitleLabel.isHidden = true
+        activeCarbsTitleLabel.isHidden = true
+        activeCarbsTitleLabel.text = NSLocalizedString("Active Carbs", comment: "Widget label title describing the active carbs")
+        activeCarbsAmountLabel.isHidden = true
+        activeInsulinTitleLabel.isHidden = true
+        activeInsulinTitleLabel.text = NSLocalizedString("Active Insulin", comment: "Widget label title describing the active insulin")
+        activeInsulinAmountLabel.isHidden = true
         if #available(iOSApplicationExtension 13.0, iOS 13.0, *) {
-            subtitleLabel.textColor = .secondaryLabel
-            insulinLabel.textColor = .secondaryLabel
+            activeCarbsTitleLabel.textColor = .secondaryLabel
+            activeCarbsAmountLabel.textColor = .label
+            activeInsulinTitleLabel.textColor = .secondaryLabel
+            activeInsulinAmountLabel.textColor = .label
         } else {
-            subtitleLabel.textColor = .subtitleLabelColor
-            insulinLabel.textColor = .subtitleLabelColor
+            activeCarbsTitleLabel.textColor = .subtitleLabelColor
+            activeCarbsAmountLabel.textColor = .black
+            activeInsulinTitleLabel.textColor = .subtitleLabelColor
+            activeCarbsAmountLabel.textColor = .black
         }
-
-        insulinLabel.isHidden = true
 
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(openLoopApp(_:)))
         view.addGestureRecognizer(tapGestureRecognizer)
@@ -138,7 +155,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
     }
     
     func widgetActiveDisplayModeDidChange(_ activeDisplayMode: NCWidgetDisplayMode, withMaximumSize maxSize: CGSize) {
-        let compactHeight = hudView.systemLayoutSizeFitting(maxSize).height + subtitleLabel.systemLayoutSizeFitting(maxSize).height
+        let compactHeight = hudView.systemLayoutSizeFitting(maxSize).height + activeCarbsTitleLabel.systemLayoutSizeFitting(maxSize).height
 
         switch activeDisplayMode {
         case .expanded:
@@ -176,12 +193,15 @@ class StatusViewController: UIViewController, NCWidgetProviding {
     
     @discardableResult
     func update() -> NCUpdateResult {
-        subtitleLabel.isHidden = true
-        insulinLabel.isHidden = true
+        activeCarbsTitleLabel.isHidden = true
+        activeCarbsAmountLabel.isHidden = true
+        activeInsulinTitleLabel.isHidden = true
+        activeInsulinAmountLabel.isHidden = true
 
         let group = DispatchGroup()
 
         var activeInsulin: Double?
+        var activeCarbs: HKQuantity?
         var glucose: [StoredGlucoseSample] = []
 
         group.enter()
@@ -191,6 +211,17 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 activeInsulin = iobValue.value
             case .failure:
                 activeInsulin = nil
+            }
+            group.leave()
+        }
+        
+        group.enter()
+        carbStore.carbsOnBoard(at: Date()) { (result) in
+            switch result {
+            case .success(let cobValue):
+                activeCarbs = cobValue.quantity
+            case .failure:
+                activeCarbs = nil
             }
             group.leave()
         }
@@ -247,17 +278,36 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 }()
 
                 if let valueStr = insulinFormatter.string(from: activeInsulin) {
-                    self.insulinLabel.text = String(format: NSLocalizedString("IOB %1$@ U",
+                    self.activeInsulinAmountLabel.text = String(format: NSLocalizedString("%1$@ U",
                         comment: "The subtitle format describing units of active insulin. (1: localized insulin value description)"),
                         valueStr
                     )
-                    self.insulinLabel.isHidden = false
+                    self.activeInsulinTitleLabel.isHidden = false
+                    self.activeInsulinAmountLabel.isHidden = false
                 }
             }
             
             self.hudView.pumpStatusHUD.presentStatusHighlight(context.pumpStatusHighlightContext)
             self.hudView.pumpStatusHUD.lifecycleProgress = context.pumpLifecycleProgressContext
 
+            // Active carbs
+            let carbsFormatter = QuantityFormatter()
+            let carbUnit = HKUnit.gram()
+            carbsFormatter.setPreferredNumberFormatter(for: carbUnit)
+            if let activeCarbs = activeCarbs {
+                if let activeCarbsNumberString = carbsFormatter.string(from: activeCarbs, for: carbUnit) {
+                    self.activeCarbsAmountLabel.text = String(
+                        format: NSLocalizedString(
+                            "%1$@",
+                            comment: "The subtitle format describing the grams of active carbs.  (1: localized carb value description)"
+                        ),
+                        activeCarbsNumberString
+                    )
+                    self.activeCarbsTitleLabel.isHidden = false
+                    self.activeCarbsAmountLabel.isHidden = false
+                }
+            }
+            
             // CGM Status
             guard let unit = context.predictedGlucose?.unit else {
                 return
@@ -285,19 +335,6 @@ class StatusViewController: UIViewController, NCWidgetProviding {
 
             if let predictedGlucose = context.predictedGlucose?.samples {
                 self.charts.predictedGlucose.setPredictedGlucoseValues(predictedGlucose)
-
-                if let eventualGlucose = predictedGlucose.last {
-                    if let eventualGlucoseNumberString = glucoseFormatter.string(from: eventualGlucose.quantity, for: unit) {
-                        self.subtitleLabel.text = String(
-                            format: NSLocalizedString(
-                                "Eventually %1$@",
-                                comment: "The subtitle format describing eventual glucose.  (1: localized glucose value description)"
-                            ),
-                            eventualGlucoseNumberString
-                        )
-                        self.subtitleLabel.isHidden = false
-                    }
-                }
             }
 
             self.charts.predictedGlucose.targetGlucoseSchedule = defaults.loopSettings?.glucoseTargetRangeSchedule
