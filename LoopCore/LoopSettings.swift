@@ -4,9 +4,9 @@
 //
 //  Copyright © 2017 LoopKit Authors. All rights reserved.
 //
+
 import LoopKit
 import HealthKit
-
 
 public struct LoopSettings: Equatable {
     public var dosingEnabled = false
