@@ -74,7 +74,7 @@ extension SettingsView {
         
     private var therapySettingsSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Configuration", comment: "The title of the Configuration section in settings"))) {
-            NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(therapySettings: viewModel.therapySettings, supportedBasalRates: viewModel.supportedBasalRates))) {
+            NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(therapySettings: viewModel.therapySettings, supportedBasalRates: viewModel.supportedBasalRates, supportedBolusVolumes: viewModel.supportedBolusVolumes))) {
                 LargeButton(action: { },
                             includeArrow: false,
                             imageView: AnyView(Image("Therapy Icon")),
@@ -194,6 +194,7 @@ public struct SettingsView_Previews: PreviewProvider {
                                           cgmManagerSettingsViewModel: DeviceViewModel(),
                                           therapySettings: TherapySettings(),
                                           supportedBasalRates: nil,
+                                          supportedBolusVolumes: nil,
                                           initialDosingEnabled: true)
         return Group {
             SettingsView(viewModel: viewModel)

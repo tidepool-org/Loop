@@ -745,6 +745,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                           cgmManagerSettingsViewModel: cgmViewModel,
                                           therapySettings: dataManager.loopManager.therapySettings,
                                           supportedBasalRates: dataManager.pumpManager?.supportedBasalRates,
+                                          supportedBolusVolumes: dataManager.pumpManager?.supportedBolusVolumes,
                                           initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
                                           setDosingEnabled: { [weak self] in
                                             self?.setDosingEnabled($0)
