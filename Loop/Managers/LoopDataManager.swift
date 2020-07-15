@@ -1818,6 +1818,13 @@ extension LoopDataManager {
 }
 
 extension LoopDataManager {
+    private var glucoseUnit: BGUnit {
+        if let unit = settings.glucoseTargetRangeSchedule?.unit, unit == .millimolesPerLiter {
+            return .mmol
+        }
+        return .mgdl
+    }
+    
     public var therapySettings: TherapySettings {
         TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
                         preMealTargetRange: settings.preMealTargetRange,
@@ -1826,6 +1833,7 @@ extension LoopDataManager {
                         maximumBolus: settings.maximumBolus,
                         suspendThreshold: settings.suspendThreshold,
                         insulinSensitivitySchedule: insulinSensitivitySchedule,
-                        carbRatioSchedule: carbRatioSchedule)
+                        carbRatioSchedule: carbRatioSchedule,
+                        glucoseUnit: glucoseUnit)
     }
 }
