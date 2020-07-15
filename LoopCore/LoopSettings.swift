@@ -7,6 +7,7 @@
 import LoopKit
 import HealthKit
 
+
 public struct LoopSettings: Equatable {
     public var dosingEnabled = false
 
