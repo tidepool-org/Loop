@@ -53,8 +53,6 @@ struct DeliveryLimitsEditor: View {
     @State var showingConfirmationAlert = false
     @Environment(\.dismiss) var dismiss
 
-    static let recommendedMaximumScheduledBasalScaleFactor: Double = 6
-
     init(
         value: DeliveryLimits,
         supportedBasalRates: [Double],
@@ -106,21 +104,7 @@ struct DeliveryLimitsEditor: View {
     }
 
     var maximumBasalRateGuardrail: Guardrail<HKQuantity> {
-        let minimumSupportedBasalRate = supportedBasalRates.first!
-        let recommendedLowerBound = minimumSupportedBasalRate == 0 ? supportedBasalRates.dropFirst().first! : minimumSupportedBasalRate
-        let recommendedUpperBound: Double
-        if let maximumScheduledBasalRate = scheduledBasalRange?.upperBound {
-            recommendedUpperBound = maximumScheduledBasalRate == 0
-                ? recommendedLowerBound
-                : Self.recommendedMaximumScheduledBasalScaleFactor * maximumScheduledBasalRate
-        } else {
-            recommendedUpperBound = supportedBasalRates.last!
-        }
-        return Guardrail(
-            absoluteBounds: supportedBasalRates.first!...supportedBasalRates.last!,
-            recommendedBounds: recommendedLowerBound...recommendedUpperBound,
-            unit: .internationalUnitsPerHour
-        )
+        return Guardrail.maximumBasalRate(supportedBasalRates: supportedBasalRates, scheduledBasalRange: scheduledBasalRange)
     }
 
     var maximumBasalRateCard: Card {
@@ -168,15 +152,7 @@ struct DeliveryLimitsEditor: View {
     }
 
     var maximumBolusGuardrail: Guardrail<HKQuantity> {
-        let maxBolusWarningThresholdUnits: Double = 20
-        let minimumSupportedBolusVolume = supportedBolusVolumes.first!
-        let recommendedLowerBound = minimumSupportedBolusVolume == 0 ? supportedBolusVolumes.dropFirst().first! : minimumSupportedBolusVolume
-        let recommendedUpperBound = min(maxBolusWarningThresholdUnits.nextDown, supportedBolusVolumes.last!)
-        return Guardrail(
-            absoluteBounds: supportedBolusVolumes.first!...supportedBolusVolumes.last!,
-            recommendedBounds: recommendedLowerBound...recommendedUpperBound,
-            unit: .internationalUnit()
-        )
+        return Guardrail.maximumBolus(supportedBolusVolumes: supportedBolusVolumes)
     }
 
     var maximumBolusCard: Card {
@@ -303,7 +279,7 @@ struct DeliveryLimitsGuardrailWarning: View {
                     }
 
                     title = Text("High Maximum Basal Rate", comment: "Title text for high maximum basal rate warning")
-                    let scheduledBasalRateMultiplierString = Self.scheduledBasalRateMultiplierFormatter.string(from: DeliveryLimitsEditor.recommendedMaximumScheduledBasalScaleFactor) ?? String(describing: DeliveryLimitsEditor.recommendedMaximumScheduledBasalScaleFactor)
+                    let scheduledBasalRateMultiplierString = Self.scheduledBasalRateMultiplierFormatter.string(from: Guardrail.recommendedMaximumScheduledBasalScaleFactor) ?? String(describing:  Guardrail.recommendedMaximumScheduledBasalScaleFactor)
                     let maximumScheduledBasalRateString = Self.basalRateFormatter.string(from: maximumScheduledBasalRate) ?? String(describing: maximumScheduledBasalRate)
                     caption = Text("The value you have entered exceeds \(scheduledBasalRateMultiplierString) times your highest scheduled basal rate of \(maximumScheduledBasalRateString) U/hr, which is higher than Tidepool generally recommends.", comment: "Caption text for high maximum basal rate warning")
                 }
