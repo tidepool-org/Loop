@@ -60,7 +60,7 @@ public struct LoopSettings: Equatable {
 
     /// The amount of time since a given date that input data should be considered valid
     public let inputDataRecencyInterval = TimeInterval(minutes: 15)
-
+    
     /// Loop completion aging category limits
     public let completionFreshLimit = TimeInterval(minutes: 6)
     public let completionAgingLimit = TimeInterval(minutes: 16)
@@ -69,21 +69,25 @@ public struct LoopSettings: Equatable {
     public let batteryReplacementDetectionThreshold = 0.5
 
     public let defaultWatchCarbPickerValue = 15 // grams
+
     public let defaultWatchBolusPickerValue = 1.0 // %
+
     // MARK - Display settings
+
     public let minimumChartWidthPerHour: CGFloat = 50
 
     public let statusChartMinimumHistoryDisplay: TimeInterval = .hours(1)
-
+    
     public var glucoseUnit: HKUnit? {
         return glucoseTargetRangeSchedule?.unit
     }
-
+    
     // MARK - Push Notifications
     
     public var deviceToken: Data?
-
+    
     // MARK - Guardrails
+
     public func allowedSensitivityValues(for unit: HKUnit) -> [Double] {
         switch unit {
         case HKUnit.milligramsPerDeciliter:
