@@ -191,9 +191,9 @@ class StatusViewController: UIViewController, NCWidgetProviding {
     func update() -> NCUpdateResult {
         let group = DispatchGroup()
 
-        var activeInsulin: Double = 0
+        var activeInsulin: Double?
         let carbUnit = HKUnit.gram()
-        var activeCarbs = HKQuantity(unit: carbUnit, doubleValue: 0)
+        var activeCarbs: HKQuantity?
         var glucose: [StoredGlucoseSample] = []
 
         group.enter()
@@ -202,7 +202,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             case .success(let iobValue):
                 activeInsulin = iobValue.value
             case .failure:
-                activeInsulin = 0
+                activeInsulin = nil
             }
             group.leave()
         }
@@ -213,7 +213,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             case .success(let cobValue):
                 activeCarbs = cobValue.quantity
             case .failure:
-                activeCarbs = HKQuantity(unit: carbUnit, doubleValue: 0)
+                activeCarbs = nil
             }
             group.leave()
         }
@@ -269,8 +269,12 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             }()
 
             
-            if let valueStr = insulinFormatter.string(from: activeInsulin) {
+            if let activeInsulin = activeInsulin,
+                let valueStr = insulinFormatter.string(from: activeInsulin)
+            {
                 self.activeInsulinAmountLabel.text = String(format: NSLocalizedString("%1$@ U", comment: "The subtitle format describing units of active insulin. (1: localized insulin value description)"), valueStr)
+            } else {
+                self.activeInsulinAmountLabel.text = NSLocalizedString("? U", comment: "Displayed in the widget when the amount of active insulin cannot be determined.")
             }
             
             self.hudView.pumpStatusHUD.presentStatusHighlight(context.pumpStatusHighlightContext)
@@ -278,16 +282,14 @@ class StatusViewController: UIViewController, NCWidgetProviding {
 
             // Active carbs
             let carbsFormatter = QuantityFormatter()
-            
             carbsFormatter.setPreferredNumberFormatter(for: carbUnit)
-            if let activeCarbsNumberString = carbsFormatter.string(from: activeCarbs, for: carbUnit) {
-                self.activeCarbsAmountLabel.text = String(
-                    format: NSLocalizedString(
-                        "%1$@",
-                        comment: "The subtitle format describing the grams of active carbs.  (1: localized carb value description)"
-                    ),
-                    activeCarbsNumberString
-                )
+            
+            if let activeCarbs = activeCarbs,
+                let activeCarbsNumberString = carbsFormatter.string(from: activeCarbs, for: carbUnit)
+            {
+                self.activeCarbsAmountLabel.text = String(format: NSLocalizedString("%1$@", comment: "The subtitle format describing the grams of active carbs.  (1: localized carb value description)"), activeCarbsNumberString)
+            } else {
+                self.activeInsulinAmountLabel.text = NSLocalizedString("? g", comment: "Displayed in the widget when the amount of active carbs cannot be determined.")
             }
             
             // CGM Status

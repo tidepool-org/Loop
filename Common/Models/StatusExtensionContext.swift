@@ -102,16 +102,6 @@ struct DeviceLifecycleProgressContext: DeviceLifecycleProgress {
 extension NetBasalContext: RawRepresentable {
     typealias RawValue = [String: Any]
 
-    var rawValue: RawValue {
-        var value: RawValue = [
-            "rate": rate,
-            "percentage": percentage,
-            "start": start
-        ]
-        value["end"] = end
-        return value
-    }
-
     init?(rawValue: RawValue) {
         guard
             let rate       = rawValue["rate"] as? Double,
@@ -126,22 +116,20 @@ extension NetBasalContext: RawRepresentable {
         self.start = start
         self.end = rawValue["end"] as? Date
     }
+    
+    var rawValue: RawValue {
+        var value: RawValue = [
+            "rate": rate,
+            "percentage": percentage,
+            "start": start
+        ]
+        value["end"] = end
+        return value
+    }
 }
 
 extension SensorDisplayableContext: RawRepresentable {
     typealias RawValue = [String: Any]
-
-    var rawValue: RawValue {
-        var raw: RawValue = [
-            "isStateValid": isStateValid,
-            "stateDescription": stateDescription,
-            "isLocal": isLocal
-        ]
-        raw["trendType"] = trendType?.rawValue
-        raw["glucoseValueType"] = glucoseValueType?.rawValue
-
-        return raw
-    }
 
     init(_ other: SensorDisplayable) {
         isStateValid = other.isStateValid
@@ -176,19 +164,22 @@ extension SensorDisplayableContext: RawRepresentable {
             glucoseValueType = nil
         }
     }
+    
+    var rawValue: RawValue {
+        var raw: RawValue = [
+            "isStateValid": isStateValid,
+            "stateDescription": stateDescription,
+            "isLocal": isLocal
+        ]
+        raw["trendType"] = trendType?.rawValue
+        raw["glucoseValueType"] = glucoseValueType?.rawValue
+
+        return raw
+    }
 }
 
 extension PredictedGlucoseContext: RawRepresentable {
     typealias RawValue = [String: Any]
-
-    var rawValue: RawValue {
-        return [
-            "values": values,
-            "unit": unit.unitString,
-            "startDate": startDate,
-            "interval": interval
-        ]
-    }
 
     init?(rawValue: RawValue) {
         guard
@@ -205,18 +196,19 @@ extension PredictedGlucoseContext: RawRepresentable {
         self.startDate = startDate
         self.interval = interval
     }
+    
+    var rawValue: RawValue {
+        return [
+            "values": values,
+            "unit": unit.unitString,
+            "startDate": startDate,
+            "interval": interval
+        ]
+    }
 }
 
 extension DeviceStatusHighlightContext: RawRepresentable {
     typealias RawValue = [String: Any]
-
-    var rawValue: RawValue {
-        return [
-            "localizedMessage": localizedMessage,
-            "imageSystemName": imageSystemName,
-            "state": state.rawValue,
-        ]
-    }
 
     init?(rawValue: RawValue) {
         guard let localizedMessage = rawValue["localizedMessage"] as? String,
@@ -231,17 +223,18 @@ extension DeviceStatusHighlightContext: RawRepresentable {
         self.imageSystemName = imageSystemName
         self.state = state
     }
+    
+    var rawValue: RawValue {
+        return [
+            "localizedMessage": localizedMessage,
+            "imageSystemName": imageSystemName,
+            "state": state.rawValue,
+        ]
+    }
 }
 
 extension DeviceLifecycleProgressContext: RawRepresentable {
     typealias RawValue = [String: Any]
-
-    var rawValue: RawValue {
-        return [
-            "percentComplete": percentComplete,
-            "progressState": progressState.rawValue,
-        ]
-    }
 
     init?(rawValue: RawValue) {
         guard let percentComplete = rawValue["percentComplete"] as? Double,
@@ -253,6 +246,13 @@ extension DeviceLifecycleProgressContext: RawRepresentable {
 
         self.percentComplete = percentComplete
         self.progressState = progressState
+    }
+    
+    var rawValue: RawValue {
+        return [
+            "percentComplete": percentComplete,
+            "progressState": progressState.rawValue,
+        ]
     }
 }
 
