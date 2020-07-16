@@ -11,6 +11,8 @@ import LoopCore
 import LoopKit
 import UIKit
 import UserNotifications
+import HealthKit
+import LoopKitUI
 
 @UIApplicationMain
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -48,6 +50,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         deviceDataManager.analyticsServicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
 
         rootViewController.rootViewController.deviceManager = deviceDataManager
+        rootViewController.rootViewController.delegate = self
         
         let notificationOption = launchOptions?[.remoteNotification]
         
@@ -169,4 +172,14 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         }
     }
     
+}
+
+extension AppDelegate: ChartsTableViewControllerDelegate {
+    var preferredUnit: HKUnit {
+        return deviceDataManager.loopManager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
+    }
+    
+    var healthStore: HKHealthStore {
+        return deviceDataManager.loopManager.glucoseStore.healthStore
+    }
 }

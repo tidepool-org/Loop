@@ -1052,11 +1052,12 @@ final class StatusTableViewController: ChartsTableViewController {
         case let vc as CarbAbsorptionViewController:
             vc.deviceManager = deviceManager
             vc.hidesBottomBarWhenPushed = true
+            vc.delegate = self
         case let vc as CarbEntryViewController:
             vc.deviceManager = deviceManager
             vc.glucoseUnit = statusCharts.glucose.glucoseUnit
             vc.defaultAbsorptionTimes = deviceManager.loopManager.carbStore.defaultAbsorptionTimes
-            vc.preferredUnit = deviceManager.loopManager.carbStore.preferredUnit
+            vc.preferredCarbUnit = deviceManager.loopManager.carbStore.preferredUnit
             vc.glucoseChartCellHeight = glucoseChartCellHeight
             
             if let activity = sender as? NSUserActivity {
@@ -1080,6 +1081,7 @@ final class StatusTableViewController: ChartsTableViewController {
             vc.delegate = self
         case let vc as PredictionTableViewController:
             vc.deviceManager = deviceManager
+            vc.delegate = self
         case let vc as SettingsTableViewController:
             vc.dataManager = deviceManager
         default:
@@ -1617,5 +1619,15 @@ extension StatusTableViewController: BluetoothStateManagerObserver {
     {
         refreshContext.update(with: .status)
         reloadData(animated: true)
+    }
+}
+
+extension StatusTableViewController: ChartsTableViewControllerDelegate {
+    var preferredUnit: HKUnit {
+        return deviceManager.loopManager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
+    }
+    
+    var healthStore: HKHealthStore {
+        return deviceManager.loopManager.glucoseStore.healthStore
     }
 }
