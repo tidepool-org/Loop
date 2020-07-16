@@ -44,14 +44,14 @@ final class InsulinModelSelectionViewModel: ObservableObject {
 }
 
 struct InsulinModelSelection: View, HorizontalSizeClassOverride {
-    struct FeatureFlags {
+    struct SupportedModelSettings {
         var fiaspModelEnabled: Bool
         var walshModelEnabled: Bool
     }
 
     @ObservedObject var viewModel: InsulinModelSelectionViewModel
     var glucoseUnit: HKUnit
-    var featureFlags: FeatureFlags
+    var featureFlags: SupportedModelSettings
 
     let chartManager: ChartsManager = {
         let chartManager = ChartsManager(
@@ -124,7 +124,7 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
                     }
 
                     if featureFlags.walshModelEnabled {
-                        SelectableDurationInsulinModelSettingsRow(
+                        DurationBasedInsulinModelSettingsRow(
                             title: Text("Walsh", comment: "Title for Walsh insulin model"),
                             description: Text("A legacy model, allowing customization of action duration."),
                             isSelected: isWalshModelSelected,
@@ -270,7 +270,7 @@ fileprivate struct InsulinModelSettingsRow: View {
     }
 }
 
-fileprivate struct SelectableDurationInsulinModelSettingsRow: View {
+fileprivate struct DurationBasedInsulinModelSettingsRow: View {
     var title: Text
     var description: Text
     @Binding var isSelected: Bool
