@@ -51,7 +51,7 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
 
     @ObservedObject var viewModel: InsulinModelSelectionViewModel
     var glucoseUnit: HKUnit
-    var featureFlags: SupportedModelSettings
+    var supportedModelSettings: SupportedModelSettings
 
     let chartManager: ChartsManager = {
         let chartManager = ChartsManager(
@@ -112,9 +112,9 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
                         isSelected: isSelected(.exponentialPreset(.humalogNovologChild))
                     )
                     .padding(.vertical, 4)
-                    .padding(.bottom, featureFlags.fiaspModelEnabled ? 0 : 4)
+                    .padding(.bottom, supportedModelSettings.fiaspModelEnabled ? 0 : 4)
 
-                    if featureFlags.fiaspModelEnabled {
+                    if supportedModelSettings.fiaspModelEnabled {
                         InsulinModelSettingsRow(
                             title: Text("Fiasp", comment: "Title for Fiasp insulin model"),
                             description: Text("This model assumes peak insulin activity at 55 minutes.", comment: "Description for Fiasp insulin model"),
@@ -123,7 +123,7 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
                         .padding(.vertical, 4)
                     }
 
-                    if featureFlags.walshModelEnabled {
+                    if supportedModelSettings.walshModelEnabled {
                         DurationBasedInsulinModelSettingsRow(
                             title: Text("Walsh", comment: "Title for Walsh insulin model"),
                             description: Text("A legacy model, allowing customization of action duration."),
@@ -160,11 +160,11 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
             .exponentialPreset(.humalogNovologChild)
         ]
 
-        if featureFlags.fiaspModelEnabled {
+        if supportedModelSettings.fiaspModelEnabled {
             options.append(.exponentialPreset(.fiasp))
         }
 
-        if featureFlags.walshModelEnabled {
+        if supportedModelSettings.walshModelEnabled {
             options.append(.walsh(WalshInsulinModel(actionDuration: viewModel.walshActionDuration)))
         }
 

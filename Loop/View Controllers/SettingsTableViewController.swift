@@ -519,7 +519,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
-                    featureFlags: .init(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled)
+                    supportedModelSettings: .init(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled)
                 )
 
                 let hostingController = DismissibleHostingController(rootView: modelSelectionView, onDisappear: {
