@@ -16,26 +16,30 @@ import LoopUI
 
 final class InsulinModelSelectionViewModel: ObservableObject {
     @Published var insulinModelSettings: InsulinModelSettings
+    var insulinSensitivitySchedule: InsulinSensitivitySchedule
 
-    let defaultWalshInsulinModelDuration = TimeInterval(hours: 6)
-    let validWalshModelDurationRange = TimeInterval(hours: 2)...TimeInterval(hours: 8)
+    static let defaultInsulinSensitivitySchedule = InsulinSensitivitySchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue<Double>(startTime: 0, value: 40)])!
+
+    static let defaultWalshInsulinModelDuration = TimeInterval(hours: 6)
+    static let validWalshModelDurationRange = TimeInterval(hours: 2)...TimeInterval(hours: 8)
 
     var walshActionDuration: TimeInterval {
         get {
             if case .walsh(let walshModel) = insulinModelSettings {
                 return walshModel.actionDuration
             } else {
-                return defaultWalshInsulinModelDuration
+                return Self.defaultWalshInsulinModelDuration
             }
         }
         set {
-            precondition(validWalshModelDurationRange.contains(newValue))
+            precondition(Self.validWalshModelDurationRange.contains(newValue))
             insulinModelSettings = .walsh(WalshInsulinModel(actionDuration: newValue))
         }
     }
 
-    init(insulinModelSettings: InsulinModelSettings) {
-        _insulinModelSettings = Published(wrappedValue: insulinModelSettings)
+    init(insulinModelSettings: InsulinModelSettings, insulinSensitivitySchedule: InsulinSensitivitySchedule?) {
+        self._insulinModelSettings = Published(wrappedValue: insulinModelSettings)
+        self.insulinSensitivitySchedule = insulinSensitivitySchedule ?? Self.defaultInsulinSensitivitySchedule
     }
 }
 
@@ -47,7 +51,6 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
 
     @ObservedObject var viewModel: InsulinModelSelectionViewModel
     var glucoseUnit: HKUnit
-    var insulinSensitivitySchedule: InsulinSensitivitySchedule
     var featureFlags: FeatureFlags
 
     let chartManager: ChartsManager = {
@@ -126,7 +129,7 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
                             description: Text("A legacy model, allowing customization of action duration."),
                             isSelected: isWalshModelSelected,
                             duration: $viewModel.walshActionDuration,
-                            validDurationRange: viewModel.validWalshModelDurationRange
+                            validDurationRange: InsulinModelSelectionViewModel.validWalshModelDurationRange
                         )
                         .padding(.vertical, 4)
                         .padding(.bottom, 4)
@@ -181,12 +184,12 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
     private func oneUnitBolusEffectPrediction(using model: InsulinModel) -> [GlucoseValue] {
         let bolus = DoseEntry(type: .bolus, startDate: chartManager.startDate, value: 1, unit: .units)
         let startingGlucoseSample = HKQuantitySample(type: HKQuantityType.quantityType(forIdentifier: .bloodGlucose)!, quantity: startingGlucoseQuantity, start: chartManager.startDate, end: chartManager.startDate)
-        let effects = [bolus].glucoseEffects(insulinModel: model, insulinSensitivity: insulinSensitivitySchedule)
+        let effects = [bolus].glucoseEffects(insulinModel: model, insulinSensitivity: viewModel.insulinSensitivitySchedule)
         return LoopMath.predictGlucose(startingAt: startingGlucoseSample, effects: effects)
     }
 
     private var startingGlucoseQuantity: HKQuantity {
-        let startingGlucoseValue = insulinSensitivitySchedule.quantity(at: chartManager.startDate).doubleValue(for: glucoseUnit) + glucoseUnit.glucoseExampleTargetValue
+        let startingGlucoseValue = viewModel.insulinSensitivitySchedule.quantity(at: chartManager.startDate).doubleValue(for: glucoseUnit) + glucoseUnit.glucoseExampleTargetValue
         return HKQuantity(unit: glucoseUnit, doubleValue: startingGlucoseValue)
     }
 

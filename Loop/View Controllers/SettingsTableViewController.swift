@@ -503,15 +503,11 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     presentSuspendThresholdEditor(initialValue: nil, unit: unit)
                 }
             case .insulinModel:
-                guard
-                    let glucoseUnit = dataManager.loopManager.settings.glucoseUnit,
-                    let insulinSensitivitySchedule = dataManager.loopManager.insulinSensitivitySchedule
-                else {
-                    tableView.deselectRow(at: indexPath, animated: true)
-                    return
-                }
-
-                let viewModel = InsulinModelSelectionViewModel(insulinModelSettings: dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult))
+                let glucoseUnit = dataManager.loopManager.insulinSensitivitySchedule?.unit ?? dataManager.loopManager.glucoseStore.preferredUnit ?? HKUnit.milligramsPerDeciliter
+                let viewModel = InsulinModelSelectionViewModel(
+                    insulinModelSettings: dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult),
+                    insulinSensitivitySchedule: dataManager.loopManager.insulinSensitivitySchedule
+                )
 
                 viewModel.$insulinModelSettings
                     .sink { [dataManager] newValue in
@@ -523,7 +519,6 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
-                    insulinSensitivitySchedule: insulinSensitivitySchedule,
                     featureFlags: .init(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled)
                 )
 
