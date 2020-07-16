@@ -10,6 +10,7 @@ import SwiftUI
 import HealthKit
 import LoopKit
 import LoopUI
+import LoopKitUI
 
 
 struct InsulinModelChartView: UIViewRepresentable {
