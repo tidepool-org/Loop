@@ -523,10 +523,11 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
-                    insulinSensitivitySchedule: insulinSensitivitySchedule
+                    insulinSensitivitySchedule: insulinSensitivitySchedule,
+                    featureFlags: .init(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled)
                 )
 
-                let hostingController = ExplicitlyDismissibleModal(rootView: modelSelectionView, onDisappear: {
+                let hostingController = DismissibleHostingController(rootView: modelSelectionView, onDisappear: {
                     tableView.deselectRow(at: indexPath, animated: true)
                 })
 

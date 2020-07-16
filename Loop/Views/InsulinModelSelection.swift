@@ -40,9 +40,15 @@ final class InsulinModelSelectionViewModel: ObservableObject {
 }
 
 struct InsulinModelSelection: View, HorizontalSizeClassOverride {
+    struct FeatureFlags {
+        var fiaspModelEnabled: Bool
+        var walshModelEnabled: Bool
+    }
+
     @ObservedObject var viewModel: InsulinModelSelectionViewModel
     var glucoseUnit: HKUnit
     var insulinSensitivitySchedule: InsulinSensitivitySchedule
+    var featureFlags: FeatureFlags
 
     let chartManager: ChartsManager = {
         let chartManager = ChartsManager(
@@ -63,72 +69,76 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
     }()
 
     @Environment(\.appName) var appName
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        List {
-            Section {
-                SettingDescription(
-                    text: insulinModelSettingDescription,
-                    informationalContent: {
-                        // TODO: Implement informational content
-                        Text("Not implemented")
+        NavigationView {
+            List {
+                Section {
+                    SettingDescription(
+                        text: insulinModelSettingDescription,
+                        informationalContent: {
+                            // TODO: Implement informational content
+                            Text("Not implemented")
+                        }
+                    )
+                    .padding(4)
+                    .padding(.top, 4)
+
+                    VStack {
+                        InsulinModelChartView(
+                            chartManager: chartManager,
+                            glucoseUnit: glucoseUnit,
+                            selectedInsulinModelValues: selectedInsulinModelValues,
+                            unselectedInsulinModelValues: unselectedInsulinModelValues,
+                            glucoseDisplayRange: endingGlucoseQuantity...startingGlucoseQuantity
+                        )
+                        .frame(height: 170)
+
+                        InsulinModelSettingsRow(
+                            title: Text("Rapid Acting - Adult", comment: "Title for rapid acting adult insulin model"),
+                            description: Text("This model assumes peak insulin activity at 75 minutes.", comment: "Description for rapid acting adult insulin model"),
+                            isSelected: isSelected(.exponentialPreset(.humalogNovologAdult))
+                        )
+                        .padding(.vertical, 4)
                     }
-                )
-                .padding(4)
-                .padding(.top, 4)
-
-                VStack {
-                    InsulinModelChartView(
-                        chartManager: chartManager,
-                        glucoseUnit: glucoseUnit,
-                        selectedInsulinModelValues: selectedInsulinModelValues,
-                        unselectedInsulinModelValues: unselectedInsulinModelValues,
-                        glucoseDisplayRange: endingGlucoseQuantity...startingGlucoseQuantity
-                    )
-                    .frame(height: 170)
 
                     InsulinModelSettingsRow(
-                        title: Text("Rapid Acting - Adult", comment: "Title for rapid acting adult insulin model"),
-                        description: Text("This model assumes peak insulin activity at 75 minutes.", comment: "Description for rapid acting adult insulin model"),
-                        isSelected: isSelected(.exponentialPreset(.humalogNovologAdult))
+                        title: Text("Rapid Acting - Child", comment: "Title for rapid acting child insulin model"),
+                        description: Text("This model assumes peak insulin activity at 65 minutes.", comment: "Description for rapid acting child insulin model"),
+                        isSelected: isSelected(.exponentialPreset(.humalogNovologChild))
                     )
                     .padding(.vertical, 4)
-                }
+                    .padding(.bottom, featureFlags.fiaspModelEnabled ? 0 : 4)
 
-                InsulinModelSettingsRow(
-                    title: Text("Rapid Acting - Child", comment: "Title for rapid acting child insulin model"),
-                    description: Text("This model assumes peak insulin activity at 65 minutes.", comment: "Description for rapid acting child insulin model"),
-                    isSelected: isSelected(.exponentialPreset(.humalogNovologChild))
-                )
-                .padding(.vertical, 4)
-                .padding(.bottom, FeatureFlags.fiaspInsulinModelEnabled ? 0 : 4)
+                    if featureFlags.fiaspModelEnabled {
+                        InsulinModelSettingsRow(
+                            title: Text("Fiasp", comment: "Title for Fiasp insulin model"),
+                            description: Text("This model assumes peak insulin activity at 55 minutes.", comment: "Description for Fiasp insulin model"),
+                            isSelected: isSelected(.exponentialPreset(.fiasp))
+                        )
+                        .padding(.vertical, 4)
+                    }
 
-                if FeatureFlags.fiaspInsulinModelEnabled {
-                    InsulinModelSettingsRow(
-                        title: Text("Fiasp", comment: "Title for Fiasp insulin model"),
-                        description: Text("This model assumes peak insulin activity at 55 minutes.", comment: "Description for Fiasp insulin model"),
-                        isSelected: isSelected(.exponentialPreset(.fiasp))
-                    )
-                    .padding(.vertical, 4)
+                    if featureFlags.walshModelEnabled {
+                        SelectableDurationInsulinModelSettingsRow(
+                            title: Text("Walsh", comment: "Title for Walsh insulin model"),
+                            description: Text("A legacy model, allowing customization of action duration."),
+                            isSelected: isWalshModelSelected,
+                            duration: $viewModel.walshActionDuration,
+                            validDurationRange: viewModel.validWalshModelDurationRange
+                        )
+                        .padding(.vertical, 4)
+                        .padding(.bottom, 4)
+                    }
                 }
-
-                if FeatureFlags.walshInsulinModelEnabled {
-                    SelectableDurationInsulinModelSettingsRow(
-                        title: Text("Walsh", comment: "Title for Walsh insulin model"),
-                        description: Text("A legacy model, allowing customization of action duration."),
-                        isSelected: isWalshModelSelected,
-                        duration: $viewModel.walshActionDuration,
-                        validDurationRange: viewModel.validWalshModelDurationRange
-                    )
-                    .padding(.vertical, 4)
-                    .padding(.bottom, 4)
-                }
+                .buttonStyle(PlainButtonStyle()) // Disable row highlighting on selection
             }
-            .buttonStyle(PlainButtonStyle()) // Disable row highlighting on selection
+            .listStyle(GroupedListStyle())
+            .environment(\.horizontalSizeClass, horizontalOverride)
+            .navigationBarTitle(Text("Insulin Model", comment: "Title for insulin model selection screen"), displayMode: .large)
+            .navigationBarItems(leading: dismissButton)
         }
-        .listStyle(GroupedListStyle())
-        .environment(\.horizontalSizeClass, horizontalOverride)
-        .navigationBarTitle(Text("Insulin Model", comment: "Title for insulin model selection screen"), displayMode: .large)
     }
 
     var insulinModelSettingDescription: Text {
@@ -147,11 +157,11 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
             .exponentialPreset(.humalogNovologChild)
         ]
 
-        if FeatureFlags.fiaspInsulinModelEnabled {
+        if featureFlags.fiaspModelEnabled {
             options.append(.exponentialPreset(.fiasp))
         }
 
-        if FeatureFlags.walshInsulinModelEnabled {
+        if featureFlags.walshModelEnabled {
             options.append(.walsh(WalshInsulinModel(actionDuration: viewModel.walshActionDuration)))
         }
 
@@ -209,6 +219,12 @@ struct InsulinModelSelection: View, HorizontalSizeClassOverride {
             }
         )
     }
+
+    var dismissButton: some View {
+        Button(action: dismiss) {
+            Text("Close", comment: "Button text to close a modal")
+        }
+    }
 }
 
 fileprivate struct InsulinModelSettingsRow: View {
@@ -239,6 +255,7 @@ fileprivate struct InsulinModelSettingsRow: View {
         if isSelected {
             Image(systemName: "checkmark.circle.fill")
                 .resizable()
+                .background(Circle().stroke()) // Ensure size aligns with open circle
                 .foregroundColor(.accentColor)
         } else {
             Button(action: { self.isSelected = true }) {
