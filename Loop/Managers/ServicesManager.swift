@@ -26,6 +26,8 @@ class ServicesManager {
     // ANNA TODO: check this should be weak
     weak var dataManager: LoopDataManager?
 
+    weak var loopDataManager: LoopDataManager?
+
     init(
         pluginManager: PluginManager,
         analyticsServicesManager: AnalyticsServicesManager,
@@ -37,7 +39,7 @@ class ServicesManager {
         self.analyticsServicesManager = analyticsServicesManager
         self.loggingServicesManager = loggingServicesManager
         self.remoteDataServicesManager = remoteDataServicesManager
-        self.dataManager = dataManager
+        self.loopDataManager = dataManager
         
         restoreState()
     }
@@ -116,8 +118,16 @@ class ServicesManager {
         UserDefaults.appGroup?.servicesState = services.compactMap { $0.rawValue }
     }
     
-    private func storeSettings(settings: LoopSettings) {
-        dataManager?.settings = settings
+    private func storeSettings(settings: TherapySettings) {
+        loopDataManager?.settings.glucoseTargetRangeSchedule = settings.glucoseTargetRangeSchedule
+        loopDataManager?.settings.preMealTargetRange = settings.preMealTargetRange
+        loopDataManager?.settings.legacyWorkoutTargetRange = settings.workoutTargetRange
+        loopDataManager?.settings.suspendThreshold = settings.suspendThreshold
+        loopDataManager?.settings.maximumBolus = settings.maximumBolus
+        loopDataManager?.settings.maximumBasalRatePerHour = settings.maximumBasalRatePerHour
+        loopDataManager?.insulinSensitivitySchedule = settings.insulinSensitivitySchedule
+        loopDataManager?.carbRatioSchedule = settings.carbRatioSchedule
+        loopDataManager?.basalRateSchedule = settings.basalRateSchedule
     }
 
     private func restoreState() {
@@ -147,7 +157,7 @@ extension ServicesManager: ServiceDelegate {
         saveState()
     }
 
-    func serviceHasNewTherapySettings(_ settings: LoopSettings) {
+    func serviceHasNewTherapySettings(_ settings: TherapySettings) {
         storeSettings(settings: settings)
     }
 }

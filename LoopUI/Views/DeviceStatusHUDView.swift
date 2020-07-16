@@ -23,6 +23,11 @@ import LoopKitUI
         didSet {
             progressView.isHidden = true
             progressView.tintColor = .systemPurple
+            // round the edges of the progress view
+            progressView.layer.cornerRadius = 2
+            progressView.clipsToBounds = true
+            progressView.layer.sublayers![1].cornerRadius = 2
+            progressView.subviews[1].clipsToBounds = true
         }
     }
     
@@ -66,17 +71,17 @@ import LoopKitUI
         }
         
         presentStatusHighlight(withMessage: statusHighlight.localizedMessage,
-                               icon: statusHighlight.icon,
+                               image: statusHighlight.image,
                                color: statusHighlight.color)
     }
     
     public func presentStatusHighlight(withMessage message: String,
-                                       icon: UIImage,
+                                       image: UIImage,
                                        color: UIColor)
     {
         statusHighlightView.messageLabel.text = message
         statusHighlightView.messageLabel.tintColor = .label
-        statusHighlightView.icon.image = icon
+        statusHighlightView.icon.image = image
         statusHighlightView.icon.tintColor = color
         presentStatusHighlight()
     }

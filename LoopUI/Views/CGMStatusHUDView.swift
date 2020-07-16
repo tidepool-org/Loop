@@ -56,14 +56,7 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         glucoseValueHUD.tintColor = viewModel.glucoseValueTintColor
         glucoseTrendHUD.tintColor = viewModel.glucoseTrendTintColor
     }
-    
-    public func presentAddCGMHighlight() {
-        resetProgress()
-        presentStatusHighlight(withMessage: LocalizedString("Add CGM", comment: "Title text for button to set up a CGM"),
-                               icon: UIImage(systemName: "plus.circle")!,
-                               color: .systemBlue)
-    }
-    
+
     override func presentStatusHighlight() {
         guard statusStackView.arrangedSubviews.contains(glucoseValueHUD),
             statusStackView.arrangedSubviews.contains(glucoseTrendHUD) else

@@ -454,8 +454,13 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
 
                 present(hostingController, animated: true)
             case .correctionRangeOverrides:
-                let unit = dataManager.loopManager.settings.glucoseTargetRangeSchedule?.unit ?? dataManager.loopManager.glucoseStore.preferredUnit ?? HKUnit.milligramsPerDeciliter
+                guard let correctionRangeSchedule = dataManager.loopManager.settings.glucoseTargetRangeSchedule else {
+                    // Disallow correction range override configuration without a configured correction range schedule.
+                    tableView.deselectRow(at: indexPath, animated: true)
+                    return
+                }
 
+                let unit = correctionRangeSchedule.unit
                 let editor = CorrectionRangeOverridesEditor(
                     value: CorrectionRangeOverrides(
                         preMeal: dataManager.loopManager.settings.preMealTargetRange,
@@ -463,12 +468,13 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                         unit: unit
                     ),
                     unit: unit,
+                    correctionRangeScheduleRange: correctionRangeSchedule.scheduleRange(),
                     minValue: dataManager.loopManager.settings.suspendThreshold?.quantity,
                     onSave: { [dataManager] overrides in
                         dataManager?.loopManager.settings.preMealTargetRange = overrides.preMeal?.doubleRange(for: unit)
                         dataManager?.loopManager.settings.legacyWorkoutTargetRange = overrides.workout?.doubleRange(for: unit)
                     },
-                    sensitivityOverridesEnabled: !FeatureFlags.sensitivityOverridesEnabled
+                    sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled
                 )
 
                 let hostingController = ExplicitlyDismissibleModal(rootView: editor, onDisappear: {
@@ -478,10 +484,20 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 present(hostingController, animated: true)
             case .suspendThreshold:
                 func presentSuspendThresholdEditor(initialValue: HKQuantity?, unit: HKUnit) {
+                    let settings = dataManager.loopManager.settings
+                    let maxAllowableSuspendThreshold = [
+                        settings.glucoseTargetRangeSchedule?.minLowerBound().doubleValue(for: unit),
+                        settings.preMealTargetRange?.minValue,
+                        settings.legacyWorkoutTargetRange?.minValue
+                    ]
+                    .compactMap { $0 }
+                    .min()
+                    .map { HKQuantity(unit: unit, doubleValue: $0) }
+
                     let editor = SuspendThresholdEditor(
                         value: initialValue,
                         unit: unit,
-                        maxValue: dataManager.loopManager.settings.glucoseTargetRangeSchedule?.minLowerBound(),
+                        maxValue: maxAllowableSuspendThreshold,
                         onSave: { [dataManager, tableView] newValue in
                             dataManager!.loopManager.settings.suspendThreshold = GlucoseThreshold(unit: unit, value: newValue.doubleValue(for: unit))
 
@@ -727,6 +743,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                           notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,
+                                          therapySettings: dataManager.loopManager.therapySettings,
                                           initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
                                           setDosingEnabled: { [weak self] in
                                             self?.setDosingEnabled($0)
