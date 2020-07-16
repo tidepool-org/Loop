@@ -289,7 +289,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             {
                 self.activeCarbsAmountLabel.text = String(format: NSLocalizedString("%1$@", comment: "The subtitle format describing the grams of active carbs.  (1: localized carb value description)"), activeCarbsNumberString)
             } else {
-                self.activeInsulinAmountLabel.text = NSLocalizedString("? g", comment: "Displayed in the widget when the amount of active carbs cannot be determined.")
+                self.activeCarbsAmountLabel.text = NSLocalizedString("? g", comment: "Displayed in the widget when the amount of active carbs cannot be determined.")
             }
             
             // CGM Status
