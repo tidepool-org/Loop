@@ -76,6 +76,8 @@ extension Set where Element == RefreshContext {
     }
 }
 
+/// Abstract class providing boilerplate setup for chart-based table view controllers
+/// The logic is split between Loop and LoopKit because the DeviceDataManager is a Loop-specific concept
 open class ChartsTableViewController: ChartsTableViewContainer {
     weak var deviceManager: DeviceDataManager!
 }
