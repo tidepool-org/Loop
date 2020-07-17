@@ -79,7 +79,7 @@ class StoredDosingDecisionCodableTests: XCTestCase {
                                                   bolusState: .none,
                                                   pumpStatusHighlight: PumpManagerStatus.PumpStatusHighlight(localizedMessage: "Test message",
                                                                                                              imageSystemName: "test.image",
-                                                                                                             state: .normal),
+                                                                                                             state: .normalPump),
                                                   pumpLifecycleProgress: PumpManagerStatus.PumpLifecycleProgress(percentComplete: 0.5,
                                                                                                                  progressState: .warning))
         let deviceSettings = StoredDosingDecision.DeviceSettings(name: "Device Name",
@@ -307,7 +307,7 @@ class StoredDosingDecisionCodableTests: XCTestCase {
     "pumpStatusHighlight" : {
       "imageSystemName" : "test.image",
       "localizedMessage" : "Test message",
-      "state" : "normal"
+      "state" : "normalPump"
     },
     "timeZone" : {
       "identifier" : "America/Los_Angeles"
