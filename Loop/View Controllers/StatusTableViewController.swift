@@ -95,7 +95,7 @@ final class StatusTableViewController: ChartsTableViewController {
         
         // Toolbar
         toolbarItems![0].accessibilityLabel = NSLocalizedString("Add Meal", comment: "The label of the carb entry button")
-        toolbarItems![0].tintColor = UIColor.COBTintColor
+        toolbarItems![0].tintColor = UIColor.cobTintColor
         toolbarItems![4].accessibilityLabel = NSLocalizedString("Bolus", comment: "The label of the bolus entry button")
         toolbarItems![4].tintColor = UIColor.doseTintColor
         
@@ -103,7 +103,7 @@ final class StatusTableViewController: ChartsTableViewController {
             toolbarItems![8].image = UIImage(systemName: "gear")
         }
         toolbarItems![8].accessibilityLabel = NSLocalizedString("Settings", comment: "The label of the settings button")
-        toolbarItems![8].tintColor = UIColor.secondaryLabelColor
+        toolbarItems![8].tintColor = UIColor.secondaryLabel
         
         tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
         
@@ -786,7 +786,7 @@ final class StatusTableViewController: ChartsTableViewController {
             cell.titleLabel?.alpha = alpha
             cell.subtitleLabel?.alpha = alpha
             
-            cell.subtitleLabel?.textColor = UIColor.secondaryLabelColor
+            cell.subtitleLabel?.textColor = UIColor.secondaryLabel
             
             return cell
         case .status:
@@ -1142,7 +1142,7 @@ final class StatusTableViewController: ChartsTableViewController {
             item.accessibilityHint = NSLocalizedString("Enables", comment: "The action hint of the workout mode toggle button when disabled")
         }
         
-        item.tintColor = UIColor.COBTintColor
+        item.tintColor = UIColor.cobTintColor
         
         return item
     }

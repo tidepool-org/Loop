@@ -97,8 +97,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             subtitleLabel.textColor = .secondaryLabel
             insulinLabel.textColor = .secondaryLabel
         } else {
-            subtitleLabel.textColor = .subtitleLabelColor
-            insulinLabel.textColor = .subtitleLabelColor
+            subtitleLabel.textColor = .secondaryLabel
+            insulinLabel.textColor = .secondaryLabel
         }
 
         insulinLabel.isHidden = true

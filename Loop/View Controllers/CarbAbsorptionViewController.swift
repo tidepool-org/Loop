@@ -302,7 +302,7 @@ final class CarbAbsorptionViewController: ChartsTableViewController, Identifiabl
             cell.titleLabel?.alpha = alpha
             cell.subtitleLabel?.alpha = alpha
 
-            cell.subtitleLabel?.textColor = UIColor.secondaryLabelColor
+            cell.subtitleLabel?.textColor = UIColor.secondaryLabel
 
             return cell
         case .totals:
@@ -352,7 +352,7 @@ final class CarbAbsorptionViewController: ChartsTableViewController, Identifiabl
                     )
 
                     if absorption.isActive {
-                        cell.observedValueTextColor = UIColor.COBTintColor
+                        cell.observedValueTextColor = UIColor.cobTintColor
                     } else if 0.9 <= observedProgress && observedProgress <= 1.1 {
                         cell.observedValueTextColor = UIColor.systemGray
                     } else {
@@ -366,7 +366,7 @@ final class CarbAbsorptionViewController: ChartsTableViewController, Identifiabl
 
                 // Absorbed time
                 if absorption.isActive {
-                    cell.observedDateTextColor = UIColor.COBTintColor
+                    cell.observedDateTextColor = UIColor.cobTintColor
                 } else {
                     cell.observedDateTextColor = UIColor.systemGray
 
@@ -401,7 +401,7 @@ final class CarbAbsorptionViewController: ChartsTableViewController, Identifiabl
             case let t where t < .minutes(-15):
                 textColor = .agingColor
             default:
-                textColor = .secondaryLabelColor
+                textColor = .secondaryLabel
             }
 
             cell.COBDateLabel.textColor = textColor

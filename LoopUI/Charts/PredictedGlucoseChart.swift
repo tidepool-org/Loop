@@ -196,7 +196,7 @@ extension PredictedGlucoseChart {
         var prediction: ChartLayer?
 
         if predictedGlucosePoints.count > 1 {
-            let lineColor = (alternatePrediction == nil) ? colors.glucoseTint : UIColor.secondaryLabelColor
+            let lineColor = (alternatePrediction == nil) ? colors.glucoseTint : UIColor.secondaryLabel
 
             let lineModel = ChartLineModel.predictionLine(
                 points: predictedGlucosePoints,

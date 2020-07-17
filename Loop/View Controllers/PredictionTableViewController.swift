@@ -215,7 +215,7 @@ class PredictionTableViewController: ChartsTableViewController, IdentifiableClas
             }
 
             self.tableView(tableView, updateTitleFor: cell, at: indexPath)
-            cell.titleLabel?.textColor = UIColor.secondaryLabelColor
+            cell.titleLabel?.textColor = UIColor.secondaryLabel
             cell.selectionStyle = .none
 
             cell.addGestureRecognizer(charts.gestureRecognizer!)

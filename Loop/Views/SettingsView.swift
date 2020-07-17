@@ -65,7 +65,7 @@ extension SettingsView {
                     if viewModel.showWarning {
                         Spacer()
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.severeWarning)
+                            .foregroundColor(.critical)
                     }
                 }
             }

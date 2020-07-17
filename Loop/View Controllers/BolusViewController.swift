@@ -452,7 +452,7 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
             }
 
             cell.titleLabel?.text?.removeAll()
-            cell.subtitleLabel?.textColor = UIColor.secondaryLabelColor
+            cell.subtitleLabel?.textColor = UIColor.secondaryLabel
             self.tableView(tableView, updateSubtitleFor: cell, at: indexPath)
             cell.selectionStyle = .none
 
