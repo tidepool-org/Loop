@@ -23,8 +23,6 @@ class ServicesManager {
 
     private let servicesLock = UnfairLock()
 
-    weak var dataManager: LoopDataManager?
-
     weak var loopDataManager: LoopDataManager?
 
     init(
