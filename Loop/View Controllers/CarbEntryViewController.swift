@@ -351,6 +351,7 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
         }
         bolusVC.selectedDefaultAbsorptionTimeEmoji = selectedDefaultAbsorptionTimeEmoji
         bolusVC.glucoseChartCellHeight = glucoseChartCellHeight
+        bolusVC.delegate = self
         if #available(iOS 13.0, *) {
             bolusVC.isModalInPresentation = true
         }
