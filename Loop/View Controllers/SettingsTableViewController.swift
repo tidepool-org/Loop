@@ -519,7 +519,8 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
-                    supportedModelSettings: .init(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled)
+                    supportedModelSettings: .init(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
+                    appName: "Tidepool Loop" // ANNA TODO: this def shouldn't be hardcoded
                 )
 
                 let hostingController = DismissibleHostingController(rootView: modelSelectionView, onDisappear: {
