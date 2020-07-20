@@ -44,14 +44,10 @@ final class InsulinModelSelectionViewModel: ObservableObject {
 }
 
 struct InsulinModelSelection: View, HorizontalSizeClassOverride {
-    struct SupportedModelSettings {
-        var fiaspModelEnabled: Bool
-        var walshModelEnabled: Bool
-    }
 
     @ObservedObject var viewModel: InsulinModelSelectionViewModel
     var glucoseUnit: HKUnit
-    var supportedModelSettings: SupportedModelSettings
+    var supportedModelSettings: SupportedInsulinModelSettings
 
     let chartManager: ChartsManager = {
         let chartManager = ChartsManager(
