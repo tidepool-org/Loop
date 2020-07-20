@@ -6,7 +6,6 @@
 //
 
 import LoopCore
-import LoopKit
 
 
 struct LoopSettingsUserInfo {
