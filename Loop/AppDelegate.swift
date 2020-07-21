@@ -50,7 +50,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         deviceDataManager.analyticsServicesManager.application(application, didFinishLaunchingWithOptions: launchOptions)
 
         rootViewController.rootViewController.deviceManager = deviceDataManager
-        rootViewController.rootViewController.delegate = self
+        rootViewController.rootViewController.preferredGlucoseUnit = deviceDataManager.loopManager.glucoseStore.preferredUnit
         
         let notificationOption = launchOptions?[.remoteNotification]
         
@@ -170,16 +170,5 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             // All other userNotifications are not to be displayed while in the foreground
             completionHandler([])
         }
-    }
-    
-}
-
-extension AppDelegate: ChartsTableViewControllerDelegate {
-    var preferredUnit: HKUnit {
-        return deviceDataManager.loopManager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
-    }
-    
-    var healthStore: HKHealthStore {
-        return deviceDataManager.loopManager.glucoseStore.healthStore
     }
 }

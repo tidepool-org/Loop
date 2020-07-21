@@ -29,6 +29,10 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
     fileprivate var orderedAbsorptionTimes = [TimeInterval]()
 
     var preferredCarbUnit = HKUnit.gram()
+    
+    private var preferredUnit: HKUnit? {
+        return deviceManager.loopManager.glucoseStore.preferredUnit
+    }
 
     var maxQuantity = HKQuantity(unit: .gram(), doubleValue: 250)
 
@@ -351,7 +355,7 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
         }
         bolusVC.selectedDefaultAbsorptionTimeEmoji = selectedDefaultAbsorptionTimeEmoji
         bolusVC.glucoseChartCellHeight = glucoseChartCellHeight
-        bolusVC.delegate = self
+        bolusVC.preferredGlucoseUnit = preferredUnit
         if #available(iOS 13.0, *) {
             bolusVC.isModalInPresentation = true
         }
@@ -502,16 +506,6 @@ extension CarbEntryViewController: EmojiInputControllerDelegate {
         if let cell = tableView.cellForRow(at: IndexPath(row: Row.absorptionTime.rawValue, section: 0)) as? DateAndDurationTableViewCell {
             cell.duration = max(lastAbsorptionTime ?? 0, orderedAbsorptionTimes[section])
         }
-    }
-}
-
-extension CarbEntryViewController: ChartsTableViewControllerDelegate {
-    var preferredUnit: HKUnit {
-        return deviceManager.loopManager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
-    }
-    
-    var healthStore: HKHealthStore {
-        return deviceManager.loopManager.glucoseStore.healthStore
     }
 }
 

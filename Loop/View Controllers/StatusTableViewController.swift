@@ -27,6 +27,10 @@ final class StatusTableViewController: ChartsTableViewController {
     
     lazy var quantityFormatter: QuantityFormatter = QuantityFormatter()
     
+    private var preferredUnit: HKUnit? {
+        return deviceManager.loopManager.glucoseStore.preferredUnit
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -80,8 +84,13 @@ final class StatusTableViewController: ChartsTableViewController {
                     self?.refreshContext.update(with: .insulin)
                     self?.reloadData(animated: true)
                 }
+            },
+            notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {_ in
+                DispatchQueue.main.async {
+                    self.unitPreferencesDidChange(to: self.preferredGlucoseUnit)
+                    self.refreshContext = RefreshContext.all
+                }
             }
-            
         ]
         
         if let gestureRecognizer = charts.gestureRecognizer {
@@ -1052,7 +1061,7 @@ final class StatusTableViewController: ChartsTableViewController {
         case let vc as CarbAbsorptionViewController:
             vc.deviceManager = deviceManager
             vc.hidesBottomBarWhenPushed = true
-            vc.delegate = self
+            vc.preferredGlucoseUnit = preferredUnit
         case let vc as CarbEntryViewController:
             vc.deviceManager = deviceManager
             vc.glucoseUnit = statusCharts.glucose.glucoseUnit
@@ -1081,7 +1090,7 @@ final class StatusTableViewController: ChartsTableViewController {
             vc.delegate = self
         case let vc as PredictionTableViewController:
             vc.deviceManager = deviceManager
-            vc.delegate = self
+            vc.preferredGlucoseUnit = preferredUnit
         case let vc as SettingsTableViewController:
             vc.dataManager = deviceManager
         default:
@@ -1619,15 +1628,5 @@ extension StatusTableViewController: BluetoothStateManagerObserver {
     {
         refreshContext.update(with: .status)
         reloadData(animated: true)
-    }
-}
-
-extension StatusTableViewController: ChartsTableViewControllerDelegate {
-    var preferredUnit: HKUnit {
-        return deviceManager.loopManager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
-    }
-    
-    var healthStore: HKHealthStore {
-        return deviceManager.loopManager.glucoseStore.healthStore
     }
 }

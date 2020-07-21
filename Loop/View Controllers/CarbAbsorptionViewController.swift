@@ -47,6 +47,12 @@ final class CarbAbsorptionViewController: ChartsTableViewController, Identifiabl
                     self?.refreshContext.update(with: .status)
                     self?.reloadData(animated: true)
                 }
+            },
+            notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {_ in
+                DispatchQueue.main.async {
+                    self.unitPreferencesDidChange(to: self.deviceManager.loopManager.glucoseStore.preferredUnit)
+                    self.refreshContext = RefreshContext.all
+                }
             }
         ]
 
