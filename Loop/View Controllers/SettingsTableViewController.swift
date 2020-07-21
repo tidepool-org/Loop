@@ -745,7 +745,11 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         let cgmViewModel = DeviceViewModel(deviceManagerUI: dataManager.cgmManager as? DeviceManagerUI, isSetUp: dataManager.cgmManager != nil) { [weak self] in
             self?.didSelectCGM()
         }
-        let pumpSupportedIncrements = dataManager.pumpManager.map { PumpSupportedIncrements(basalRates: $0.supportedBasalRates, bolusVolumes: $0.supportedBolusVolumes) }
+        let pumpSupportedIncrements = dataManager.pumpManager.map {
+            PumpSupportedIncrements(basalRates: $0.supportedBasalRates,
+                                    bolusVolumes: $0.supportedBolusVolumes,
+                                    maximumBasalScheduleEntryCount: $0.maximumBasalScheduleEntryCount)
+        }
         let viewModel = SettingsViewModel(appNameAndVersion: Bundle.main.localizedNameAndVersion,
                                           notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
@@ -753,6 +757,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                           therapySettings: dataManager.loopManager.therapySettings,
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
                                           pumpSupportedIncrements: pumpSupportedIncrements,
+                                          pumpSyncSchedule: dataManager.pumpManager?.syncBasalRateSchedule,
                                           initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
                                           setDosingEnabled: { [weak self] in
                                             self?.setDosingEnabled($0)

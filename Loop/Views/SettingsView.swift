@@ -76,7 +76,8 @@ extension SettingsView {
         Section(header: SectionHeader(label: NSLocalizedString("Configuration", comment: "The title of the Configuration section in settings"))) {
             return NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(therapySettings: viewModel.therapySettings,
                                                                                                        supportedInsulinModelSettings: viewModel.supportedInsulinModelSettings,
-                                                                                                       pumpSupportedIncrements: viewModel.pumpSupportedIncrements))) {
+                                                                                                       pumpSupportedIncrements: viewModel.pumpSupportedIncrements,
+                                                                                                       pumpSyncSchedule: viewModel.pumpSyncSchedule))) {
                 LargeButton(action: { },
                             includeArrow: false,
                             imageView: AnyView(Image("Therapy Icon")),
@@ -197,6 +198,7 @@ public struct SettingsView_Previews: PreviewProvider {
                                           therapySettings: TherapySettings(),
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: true, walshModelEnabled: true),
                                           pumpSupportedIncrements: nil,
+                                          pumpSyncSchedule: nil,
                                           initialDosingEnabled: true)
         return Group {
             SettingsView(viewModel: viewModel)

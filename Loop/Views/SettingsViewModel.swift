@@ -52,6 +52,7 @@ public class SettingsViewModel: ObservableObject {
     var therapySettings: TherapySettings
     let supportedInsulinModelSettings: SupportedInsulinModelSettings
     let pumpSupportedIncrements: PumpSupportedIncrements?
+    let pumpSyncSchedule: PumpManager.SyncSchedule?
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -62,6 +63,7 @@ public class SettingsViewModel: ObservableObject {
                 therapySettings: TherapySettings,
                 supportedInsulinModelSettings: SupportedInsulinModelSettings,
                 pumpSupportedIncrements: PumpSupportedIncrements?,
+                pumpSyncSchedule: PumpManager.SyncSchedule?,
                 // TODO: This is temporary until I can figure out something cleaner
                 initialDosingEnabled: Bool,
                 setDosingEnabled: ((Bool) -> Void)? = nil
@@ -75,6 +77,7 @@ public class SettingsViewModel: ObservableObject {
         self.therapySettings = therapySettings
         self.supportedInsulinModelSettings = supportedInsulinModelSettings
         self.pumpSupportedIncrements = pumpSupportedIncrements
+        self.pumpSyncSchedule = pumpSyncSchedule
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
         notificationsCriticalAlertPermissionsViewModel.objectWillChange.sink { [weak self] in
