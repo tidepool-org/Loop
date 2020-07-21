@@ -87,7 +87,7 @@ final class StatusTableViewController: ChartsTableViewController {
             },
             notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {_ in
                 DispatchQueue.main.async {
-                    self.unitPreferencesDidChange(to: self.preferredGlucoseUnit)
+                    self.unitPreferencesDidChange(to: self.preferredUnit)
                     self.refreshContext = RefreshContext.all
                 }
             }
