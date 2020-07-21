@@ -50,8 +50,9 @@ public class SettingsViewModel: ObservableObject {
     var pumpManagerSettingsViewModel: DeviceViewModel
     var cgmManagerSettingsViewModel: DeviceViewModel
     var therapySettings: TherapySettings
-    let supportedBasalRates: [Double]?
-    
+    let supportedInsulinModelSettings: SupportedInsulinModelSettings
+    let pumpSupportedIncrements: PumpSupportedIncrements?
+
     lazy private var cancellables = Set<AnyCancellable>()
 
     public init(appNameAndVersion: String,
@@ -59,7 +60,8 @@ public class SettingsViewModel: ObservableObject {
                 pumpManagerSettingsViewModel: DeviceViewModel,
                 cgmManagerSettingsViewModel: DeviceViewModel,
                 therapySettings: TherapySettings,
-                supportedBasalRates: [Double]?,
+                supportedInsulinModelSettings: SupportedInsulinModelSettings,
+                pumpSupportedIncrements: PumpSupportedIncrements?,
                 // TODO: This is temporary until I can figure out something cleaner
                 initialDosingEnabled: Bool,
                 setDosingEnabled: ((Bool) -> Void)? = nil
@@ -71,7 +73,8 @@ public class SettingsViewModel: ObservableObject {
         self.setDosingEnabled = setDosingEnabled
         self.dosingEnabled = initialDosingEnabled
         self.therapySettings = therapySettings
-        self.supportedBasalRates = supportedBasalRates
+        self.supportedInsulinModelSettings = supportedInsulinModelSettings
+        self.pumpSupportedIncrements = pumpSupportedIncrements
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
         notificationsCriticalAlertPermissionsViewModel.objectWillChange.sink { [weak self] in
