@@ -25,4 +25,3 @@ extension LoopSettings {
         return StandardRetrospectiveCorrection(effectDuration: LoopSettings.retrospectiveCorrectionEffectDuration)
     }
 }
-

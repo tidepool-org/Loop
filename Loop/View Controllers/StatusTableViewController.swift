@@ -1065,7 +1065,6 @@ final class StatusTableViewController: ChartsTableViewController {
             vc.preferredGlucoseUnit = preferredUnit
         case let vc as CarbEntryViewController:
             vc.deviceManager = deviceManager
-            vc.glucoseUnit = statusCharts.glucose.glucoseUnit
             vc.defaultAbsorptionTimes = deviceManager.loopManager.carbStore.defaultAbsorptionTimes
             vc.preferredCarbUnit = deviceManager.loopManager.carbStore.preferredUnit
             vc.glucoseChartCellHeight = glucoseChartCellHeight
