@@ -13,6 +13,7 @@ import LoopKitUI
 import HealthKit
 import LoopCore
 import LoopUI
+import os.log
 
 
 private extension RefreshContext {
@@ -27,6 +28,7 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
         case bolus
     }
 
+    private let log = OSLog(category: "BolusViewController")
     var glucoseChartCellHeight: CGFloat?
 
     override func viewDidLoad() {
@@ -54,6 +56,7 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
             },
             NotificationCenter.default.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
+                    self?.log.debug("[reloadData] for HealthKit unit preference change")
                     self?.unitPreferencesDidChange(to: self?.deviceManager.loopManager.glucoseStore.preferredUnit)
                     self?.refreshContext = RefreshContext.all
                 }

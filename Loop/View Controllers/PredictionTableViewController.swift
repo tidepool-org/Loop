@@ -12,6 +12,7 @@ import LoopKit
 import LoopKitUI
 import LoopUI
 import UIKit
+import os.log
 
 
 private extension RefreshContext {
@@ -20,6 +21,7 @@ private extension RefreshContext {
 
 
 class PredictionTableViewController: ChartsTableViewController, IdentifiableClass {
+    private let log = OSLog(category: "PredictionTableViewController")
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,6 +51,7 @@ class PredictionTableViewController: ChartsTableViewController, IdentifiableClas
             },
             notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
+                    self?.log.debug("[reloadData] for HealthKit unit preference change")
                     self?.unitPreferencesDidChange(to: self?.deviceManager.loopManager.glucoseStore.preferredUnit)
                     self?.refreshContext = RefreshContext.all
                 }
