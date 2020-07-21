@@ -341,21 +341,26 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
             return
         }
 
-        let bolusVC = BolusViewController.instance()
-        bolusVC.deviceManager = deviceManager
-        bolusVC.glucoseUnit = glucoseUnit
-        if let originalEntry = originalCarbEntry {
-            bolusVC.configuration = .updatedCarbEntry(from: originalEntry, to: updatedEntry)
-        } else {
-            bolusVC.configuration = .newCarbEntry(updatedEntry)
-        }
-        bolusVC.selectedDefaultAbsorptionTimeEmoji = selectedDefaultAbsorptionTimeEmoji
-        bolusVC.glucoseChartCellHeight = glucoseChartCellHeight
-        if #available(iOS 13.0, *) {
-            bolusVC.isModalInPresentation = true
-        }
+        let viewModel = BolusEntryViewModel(dataManager: deviceManager, glucoseChartHeight: glucoseChartCellHeight, originalCarbEntry: originalCarbEntry, potentialCarbEntry: updatedEntry, selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji)
+        let bolusEntryView = BolusEntryView(viewModel: viewModel)
+        let hostingController = DismissibleHostingController(rootView: bolusEntryView)
+        show(hostingController, sender: footerView.primaryButton)
 
-        show(bolusVC, sender: footerView.primaryButton)
+//        let bolusVC = BolusViewController.instance()
+//        bolusVC.deviceManager = deviceManager
+//        bolusVC.glucoseUnit = glucoseUnit
+//        if let originalEntry = originalCarbEntry {
+//            bolusVC.configuration = .updatedCarbEntry(from: originalEntry, to: updatedEntry)
+//        } else {
+//            bolusVC.configuration = .newCarbEntry(updatedEntry)
+//        }
+//        bolusVC.selectedDefaultAbsorptionTimeEmoji = selectedDefaultAbsorptionTimeEmoji
+//        bolusVC.glucoseChartCellHeight = glucoseChartCellHeight
+//        if #available(iOS 13.0, *) {
+//            bolusVC.isModalInPresentation = true
+//        }
+//
+//        show(bolusVC, sender: footerView.primaryButton)
     }
 
     private func validateInput() -> Bool {
