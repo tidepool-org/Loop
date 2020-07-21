@@ -52,10 +52,10 @@ final class BolusViewController: ChartsTableViewController, IdentifiableClass, U
                     self?.reloadData(animated: true)
                 }
             },
-            NotificationCenter.default.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {_ in
+            NotificationCenter.default.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
-                    self.unitPreferencesDidChange(to: self.deviceManager.loopManager.glucoseStore.preferredUnit)
-                    self.refreshContext = RefreshContext.all
+                    self?.unitPreferencesDidChange(to: self?.deviceManager.loopManager.glucoseStore.preferredUnit)
+                    self?.refreshContext = RefreshContext.all
                 }
             }
         ]

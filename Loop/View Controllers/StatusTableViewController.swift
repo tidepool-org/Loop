@@ -85,10 +85,10 @@ final class StatusTableViewController: ChartsTableViewController {
                     self?.reloadData(animated: true)
                 }
             },
-            notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {_ in
+            notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
-                    self.unitPreferencesDidChange(to: self.preferredUnit)
-                    self.refreshContext = RefreshContext.all
+                    self?.unitPreferencesDidChange(to: self?.preferredUnit)
+                    self?.refreshContext = RefreshContext.all
                 }
             }
         ]
