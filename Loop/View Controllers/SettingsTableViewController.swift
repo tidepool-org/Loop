@@ -261,7 +261,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 }
             case .correctionRangeOverrides:
-                configCell.textLabel?.text = NSLocalizedString("Temporary Ranges", comment: "The title text for the correction range overrides")
+                configCell.textLabel?.text = TherapySetting.correctionRangeOverrides.title
                 if dataManager.loopManager.settings.preMealTargetRange == nil {
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 } else {
@@ -752,6 +752,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,
                                           therapySettings: dataManager.loopManager.therapySettings,
+                                          supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
                                           pumpSupportedIncrements: pumpSupportedIncrements,
                                           initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
                                           setDosingEnabled: { [weak self] in
