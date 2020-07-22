@@ -77,7 +77,8 @@ extension SettingsView {
             return NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(therapySettings: viewModel.therapySettings,
                                                                                                        supportedInsulinModelSettings: viewModel.supportedInsulinModelSettings,
                                                                                                        pumpSupportedIncrements: viewModel.pumpSupportedIncrements,
-                                                                                                       pumpSyncSchedule: viewModel.pumpSyncSchedule))) {
+                                                                                                       pumpSyncSchedule: viewModel.pumpSyncSchedule,
+                                                                                                       didSave: viewModel.didSave))) {
                 LargeButton(action: { },
                             includeArrow: false,
                             imageView: AnyView(Image("Therapy Icon")),

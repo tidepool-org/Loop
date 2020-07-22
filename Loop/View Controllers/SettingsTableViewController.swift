@@ -761,6 +761,9 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                           initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
                                           setDosingEnabled: { [weak self] in
                                             self?.setDosingEnabled($0)
+                                          },
+                                          didSave: { [weak self] in
+                                            self?.saveTherapySetting($0, $1)
         })
         let hostingController = DismissibleHostingController(
             rootView: SettingsView(viewModel: viewModel),
@@ -778,6 +781,35 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
     private func setDosingEnabled(_ value: Bool) {
         DispatchQueue.main.async {
             self.dataManager.loopManager.settings.dosingEnabled = value
+        }
+    }
+    
+    private func saveTherapySetting(_ therapySetting: TherapySetting, _ therapySettings: TherapySettings) {
+        switch therapySetting {
+        case .glucoseTargetRange:
+            dataManager?.loopManager.settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule
+        case .correctionRangeOverrides:
+            dataManager?.loopManager.settings.preMealTargetRange = therapySettings.preMealTargetRange
+            dataManager?.loopManager.settings.legacyWorkoutTargetRange = therapySettings.workoutTargetRange
+        case .suspendThreshold:
+            dataManager?.loopManager.settings.suspendThreshold = therapySettings.suspendThreshold
+        case .basalRate:
+            dataManager?.loopManager.basalRateSchedule = therapySettings.basalRateSchedule
+        case .deliveryLimits:
+            dataManager?.loopManager.settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour
+            dataManager?.loopManager.settings.maximumBolus = therapySettings.maximumBolus
+        case .insulinModel:
+            if let insulinModel = therapySettings.insulinModel {
+                dataManager?.loopManager.insulinModelSettings = InsulinModelSettings(model: insulinModel as! InsulinModel)
+            }
+        case .carbRatio:
+            dataManager?.loopManager.carbRatioSchedule = therapySettings.carbRatioSchedule
+            dataManager?.analyticsServicesManager.didChangeCarbRatioSchedule()
+        case .insulinSensitivity:
+            dataManager?.loopManager.insulinSensitivitySchedule = therapySettings.insulinSensitivitySchedule
+            dataManager?.analyticsServicesManager.didChangeInsulinSensitivitySchedule()
+        case .none:
+            break // NO-OP
         }
     }
 }
