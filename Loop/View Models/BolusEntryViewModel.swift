@@ -17,6 +17,7 @@ import LoopUI
 
 final class BolusEntryViewModel: ObservableObject {
     enum Alert: Int {
+        case recommendationChanged
         case maxBolusExceeded
     }
 
@@ -136,13 +137,13 @@ final class BolusEntryViewModel: ObservableObject {
                 reply: { success, error in
                     if success {
                         DispatchQueue.main.async {
-                            self.dataManager.enactBolus(units: bolusVolume) { _ in }
+                            self.dataManager.enactBolus(units: bolusVolume)
                         }
                     }
                 }
             )
         } else {
-            dataManager.enactBolus(units: bolusVolume) { _ in }
+            dataManager.enactBolus(units: bolusVolume)
         }
     }
 
@@ -244,7 +245,14 @@ final class BolusEntryViewModel: ObservableObject {
             let activeCarbs = state.carbsOnBoard.map { $0.quantity }
 
             DispatchQueue.main.async {
+                let priorRecommendedBolus = self.recommendedBolus
                 self.recommendedBolus = recommendedBolus
+
+                if priorRecommendedBolus != recommendedBolus, self.enteredBolus.doubleValue(for: .internationalUnit()) > 0 {
+                    self.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
+                    self.activeAlert = .recommendationChanged
+                }
+
                 self.glucoseUnit = manager.settings.glucoseUnit ?? manager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
 
                 self.activeCarbs = activeCarbs

@@ -76,19 +76,18 @@ struct PredictedGlucoseChartView: UIViewRepresentable {
         }
 
         @objc func handlePan(_ recognizer: UIPanGestureRecognizer) {
-            // FIXME: disappearance happens abruptly
-            let animation = Animation
-                .easeInOut(duration: parent.isInteractingWithChart ? 0.5 : 0.2)
-                .delay(parent.isInteractingWithChart ? 1 : 0)
-
             switch recognizer.state {
             case .began:
-                withAnimation(animation) {
+                withAnimation(.easeInOut(duration: 0.2)) {
                     parent.isInteractingWithChart = true
                 }
             case .cancelled, .ended, .failed:
-                withAnimation(animation) {
-                    parent.isInteractingWithChart = false
+                // Workaround: applying the delay on the animation directly does not delay the disappearance of the touch indicator.
+                // FIXME: No animation is applied to the disappearance of the touch indicator; it simply disappears.
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) { [weak self] in
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        self?.parent.isInteractingWithChart = false
+                    }
                 }
             default:
                 break
@@ -103,6 +102,9 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     @State private var enteredBolusAmount = ""
     @State private var isInteractingWithChart = false
+    @State private var isKeyboardVisible = false
+
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
@@ -110,15 +112,20 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 historySection
                 summarySection
             }
-//            .keyboardAware()
             .listStyle(GroupedListStyle())
             .environment(\.horizontalSizeClass, horizontalOverride)
 
             actionArea
+                .frame(maxHeight: isKeyboardVisible ? 0 : nil)
+                .hidden(isKeyboardVisible)
         }
-        .edgesIgnoringSafeArea(.bottom)
+        .keyboardAware()
+        .edgesIgnoringSafeArea(isKeyboardVisible ? [] : .bottom)
         .navigationBarTitle(viewModel.potentialCarbEntry == nil ? Text("Bolus", comment: "Title for bolus entry screen") : Text("Meal Bolus", comment: "Title for bolus entry screen when also entering carbs"))
         .alert(item: $viewModel.activeAlert, content: alert(for:))
+        .onReceive(Keyboard.shared.$height) { height in
+            self.isKeyboardVisible = height > 0
+        }
     }
 
     private var historySection: some View {
@@ -130,7 +137,9 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     activeInsulinLabel
                 }
 
-                VStack(spacing: 4) {
+                // Use a ZStack to allow horizontally clipping the predicted glucose chart,
+                // without clipping the point label on highlight, which draws outside the view's bounds.
+                ZStack(alignment: .topLeading) {
                     Text("Glucose", comment: "Title for predicted glucose chart on bolus screen")
                         .font(.subheadline)
                         .bold()
@@ -138,6 +147,9 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                         .opacity(isInteractingWithChart ? 0 : 1)
 
                     predictedGlucoseChart
+                        .padding(.horizontal, -4)
+                        .padding(.top, UIFont.preferredFont(forTextStyle: .subheadline).lineHeight + 8) // Leave space for the 'Glucose' label + spacing
+                        .clipped()
                 }
                 .frame(height: viewModel.glucoseChartHeight ?? 170)
             }
@@ -181,7 +193,6 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             dateInterval: viewModel.chartDateInterval,
             isInteractingWithChart: $isInteractingWithChart
         )
-        .padding(.horizontal, -4)
     }
 
     private var summarySection: some View {
@@ -290,12 +301,15 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var actionArea: some View {
         VStack(spacing: 0) {
-            Text("Warning will go here")
-                .padding([.top, .horizontal])
-                .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
+//            Text("Warning will go here")
+//                .padding([.top, .horizontal])
+//                .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
 
             Button(
-                action: viewModel.saveCarbsAndDeliverBolus,
+                action: {
+                    self.viewModel.saveCarbsAndDeliverBolus()
+                    self.dismiss()
+                },
                 label: {
                     if viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 {
                         Text("Save without Bolusing")
@@ -313,6 +327,11 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private func alert(for alert: BolusEntryViewModel.Alert) -> SwiftUI.Alert {
         switch alert {
+        case .recommendationChanged:
+            return SwiftUI.Alert(
+                title: Text("Bolus Recommendation Updated", comment: "Alert title for an updated bolus recommendation"),
+                message: Text("The bolus recommendation has updated. Please reconfirm the bolus amount.", comment: "Alert message for an updated bolus recommendation")
+            )
         case .maxBolusExceeded:
             return SwiftUI.Alert(
                 title: Text("Exceeds Maximum Bolus", comment: "The title of the alert describing a maximum bolus validation error"),
@@ -368,3 +387,13 @@ struct LabelBackground: ViewModifier {
     }
 }
 
+extension View {
+    @ViewBuilder
+    func hidden(_ isHidden: Bool) -> some View {
+        if isHidden {
+            hidden()
+        } else {
+            self
+        }
+    }
+}
