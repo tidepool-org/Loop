@@ -52,7 +52,8 @@ public class SettingsViewModel: ObservableObject {
     var therapySettings: TherapySettings
     let supportedInsulinModelSettings: SupportedInsulinModelSettings
     let pumpSupportedIncrements: PumpSupportedIncrements?
-    let pumpSyncSchedule: PumpManager.SyncSchedule?
+    let syncPumpSchedule: PumpManager.SyncSchedule?
+    let sensitivityOverridesEnabled: Bool
     let didSave: TherapySettingsViewModel.SaveCompletion?
 
     lazy private var cancellables = Set<AnyCancellable>()
@@ -64,7 +65,8 @@ public class SettingsViewModel: ObservableObject {
                 therapySettings: TherapySettings,
                 supportedInsulinModelSettings: SupportedInsulinModelSettings,
                 pumpSupportedIncrements: PumpSupportedIncrements?,
-                pumpSyncSchedule: PumpManager.SyncSchedule?,
+                syncPumpSchedule: PumpManager.SyncSchedule?,
+                sensitivityOverridesEnabled: Bool,
                 // TODO: This is temporary until I can figure out something cleaner
                 initialDosingEnabled: Bool,
                 setDosingEnabled: ((Bool) -> Void)? = nil,
@@ -79,7 +81,8 @@ public class SettingsViewModel: ObservableObject {
         self.therapySettings = therapySettings
         self.supportedInsulinModelSettings = supportedInsulinModelSettings
         self.pumpSupportedIncrements = pumpSupportedIncrements
-        self.pumpSyncSchedule = pumpSyncSchedule
+        self.syncPumpSchedule = syncPumpSchedule
+        self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.didSave = didSave
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)

@@ -757,7 +757,8 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                           therapySettings: dataManager.loopManager.therapySettings,
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
                                           pumpSupportedIncrements: pumpSupportedIncrements,
-                                          pumpSyncSchedule: dataManager.pumpManager?.syncBasalRateSchedule,
+                                          syncPumpSchedule: dataManager.pumpManager?.syncBasalRateSchedule,
+                                          sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
                                           setDosingEnabled: { [weak self] in
                                             self?.setDosingEnabled($0)

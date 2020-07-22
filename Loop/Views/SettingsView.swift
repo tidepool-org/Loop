@@ -77,7 +77,7 @@ extension SettingsView {
             return NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(therapySettings: viewModel.therapySettings,
                                                                                                        supportedInsulinModelSettings: viewModel.supportedInsulinModelSettings,
                                                                                                        pumpSupportedIncrements: viewModel.pumpSupportedIncrements,
-                                                                                                       pumpSyncSchedule: viewModel.pumpSyncSchedule,
+                                                                                                       syncPumpSchedule: viewModel.syncPumpSchedule,
                                                                                                        didSave: viewModel.didSave))) {
                 LargeButton(action: { },
                             includeArrow: false,
@@ -199,7 +199,8 @@ public struct SettingsView_Previews: PreviewProvider {
                                           therapySettings: TherapySettings(),
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: true, walshModelEnabled: true),
                                           pumpSupportedIncrements: nil,
-                                          pumpSyncSchedule: nil,
+                                          syncPumpSchedule: nil,
+                                          sensitivityOverridesEnabled: false,
                                           initialDosingEnabled: true)
         return Group {
             SettingsView(viewModel: viewModel)
