@@ -124,12 +124,21 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 Text("Bolus Summary", comment: "Title for card displaying carb entry and bolus recommendation")
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
-                potentialCarbEntryRow
+
+                if viewModel.potentialCarbEntry != nil {
+                    potentialCarbEntryRow
+                } else {
+                    recommendedBolusRow
+                }
             }
-            recommendedBolusRow
+            .padding(.top, 8)
+
+            if viewModel.potentialCarbEntry != nil {
+                recommendedBolusRow
+            }
+
             bolusEntryRow
         }
-        .padding(.top, 8)
     }
 
     @ViewBuilder
@@ -223,7 +232,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     self.viewModel.saveCarbsAndDeliverBolus(onSuccess: self.dismiss)
                 },
                 label: {
-                    if viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 {
+                    if viewModel.potentialCarbEntry != nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 {
                         Text("Save without Bolusing")
                     } else {
                         Text("Save and Deliver")
@@ -232,6 +241,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             )
             .buttonStyle(ActionButtonStyle(.primary))
             .padding()
+            .disabled(viewModel.potentialCarbEntry == nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0)
         }
         .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
         .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))

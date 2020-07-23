@@ -209,7 +209,6 @@
 		43D9FFF821EAF2EF00AF44BF /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43F78D4B1C914197002152D1 /* LoopKit.framework */; };
 		43D9FFFA21EAF35900AF44BF /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43F5C2C81B929C09003EB13D /* HealthKit.framework */; };
 		43D9FFFB21EAF3D300AF44BF /* NSTimeInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439897341CD2F7DE00223065 /* NSTimeInterval.swift */; };
-		43DBF04C1C93B8D700B3C386 /* BolusViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DBF04B1C93B8D700B3C386 /* BolusViewController.swift */; };
 		43DBF0531C93EC8200B3C386 /* DeviceDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DBF0521C93EC8200B3C386 /* DeviceDataManager.swift */; };
 		43DBF0591C93F73800B3C386 /* CarbEntryTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DBF0581C93F73800B3C386 /* CarbEntryTableViewController.swift */; };
 		43DFB62320D4CAE7008A7BAE /* PumpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C3B6F620BBCAA30026CAFA /* PumpManager.swift */; };
@@ -811,7 +810,6 @@
 		43D9FFCF21EAE05D00AF44BF /* LoopCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LoopCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		43D9FFD121EAE05D00AF44BF /* LoopCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoopCore.h; sourceTree = "<group>"; };
 		43D9FFD221EAE05D00AF44BF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		43DBF04B1C93B8D700B3C386 /* BolusViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = BolusViewController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		43DBF0521C93EC8200B3C386 /* DeviceDataManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = DeviceDataManager.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		43DBF0581C93F73800B3C386 /* CarbEntryTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarbEntryTableViewController.swift; sourceTree = "<group>"; };
 		43DE92581C5479E4001FFDE1 /* PotentialCarbEntryUserInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PotentialCarbEntryUserInfo.swift; sourceTree = "<group>"; };
@@ -1704,7 +1702,6 @@
 		43F5C2CE1B92A2A0003EB13D /* View Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				43DBF04B1C93B8D700B3C386 /* BolusViewController.swift */,
 				43A51E1E1EB6D62A000736CC /* CarbAbsorptionViewController.swift */,
 				43DBF0581C93F73800B3C386 /* CarbEntryTableViewController.swift */,
 				892D7C5023B54A14008A9656 /* CarbEntryViewController.swift */,
@@ -2906,7 +2903,6 @@
 				438172D91F4E9E37003C3328 /* NewPumpEvent.swift in Sources */,
 				4389916B1E91B689000EEF90 /* ChartSettings+Loop.swift in Sources */,
 				C178249A1E1999FA00D9D25C /* CaseCountable.swift in Sources */,
-				43DBF04C1C93B8D700B3C386 /* BolusViewController.swift in Sources */,
 				B4F3D25124AF890C0095CE44 /* BluetoothStateManager.swift in Sources */,
 				1DDE273D24AEA4B000796622 /* SettingsViewModel.swift in Sources */,
 				A9CBE458248AB564008E7BA2 /* DoseStore+SimulatedCoreData.swift in Sources */,
