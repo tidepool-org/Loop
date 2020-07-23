@@ -519,7 +519,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
-                    supportedModelSettings: SupportedModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
+                    supportedModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
                     appName: appName
                 )
 
