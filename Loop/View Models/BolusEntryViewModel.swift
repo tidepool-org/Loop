@@ -41,7 +41,6 @@ final class BolusEntryViewModel: ObservableObject {
     @Published var enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
 
     @Published var chartDateInterval = DateInterval(start: Date(), duration: .hours(6))
-    let glucoseChartHeight: CGFloat?
 
     @Published var activeAlert: Alert?
 
@@ -59,13 +58,11 @@ final class BolusEntryViewModel: ObservableObject {
 
     init(
         dataManager: DeviceDataManager,
-        glucoseChartHeight: CGFloat?,
         originalCarbEntry: StoredCarbEntry? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
         selectedCarbAbsorptionTimeEmoji: String? = nil
     ) {
         self.dataManager = dataManager
-        self.glucoseChartHeight = glucoseChartHeight
         self.originalCarbEntry = originalCarbEntry
         self.potentialCarbEntry = potentialCarbEntry
         self.selectedCarbAbsorptionTimeEmoji = selectedCarbAbsorptionTimeEmoji
@@ -149,6 +146,15 @@ final class BolusEntryViewModel: ObservableObject {
 
     private lazy var bolusVolumeFormatter = QuantityFormatter(for: .internationalUnit())
 
+    private lazy var absorptionTimeFormatter: DateComponentsFormatter = {
+        let formatter = DateComponentsFormatter()
+        formatter.collapsesLargestUnit = true
+        formatter.unitsStyle = .abbreviated
+        formatter.allowsFractionalUnits = true
+        formatter.allowedUnits = [.hour, .minute]
+        return formatter
+    }()
+
     var enteredBolusAmountString: String {
         let bolusVolume = enteredBolus.doubleValue(for: .internationalUnit())
         return bolusVolumeFormatter.numberFormatter.string(from: bolusVolume) ?? String(bolusVolume)
@@ -159,7 +165,7 @@ final class BolusEntryViewModel: ObservableObject {
         return bolusVolumeFormatter.numberFormatter.string(from: maxBolusVolume) ?? String(maxBolusVolume)
     }
 
-    var carbEntryAndAbsorptionTimeString: String? {
+    var carbEntryAmountAndEmojiString: String? {
         guard
             let potentialCarbEntry = potentialCarbEntry,
             let carbAmountString = QuantityFormatter(for: .gram()).string(from: potentialCarbEntry.quantity, for: .gram())
@@ -171,6 +177,20 @@ final class BolusEntryViewModel: ObservableObject {
             return String(format: NSLocalizedString("%1$@ %2$@", comment: "Format string combining carb entry quantity and absorption time emoji"), carbAmountString, emoji)
         } else {
             return carbAmountString
+        }
+    }
+
+    var carbEntryDateAndAbsorptionTimeString: String? {
+        guard let potentialCarbEntry = potentialCarbEntry else {
+            return nil
+        }
+
+        let entryTimeString = DateFormatter.localizedString(from: potentialCarbEntry.startDate, dateStyle: .none, timeStyle: .short)
+
+        if let absorptionTime = potentialCarbEntry.absorptionTime, let absorptionTimeString = absorptionTimeFormatter.string(from: absorptionTime) {
+            return String(format: NSLocalizedString("%1$@ + %2$@", comment: "Format string combining carb entry time and absorption time"), entryTimeString, absorptionTimeString)
+        } else {
+            return entryTimeString
         }
     }
 

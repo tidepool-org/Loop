@@ -14,89 +14,6 @@ import LoopKitUI
 import LoopUI
 
 
-struct PredictedGlucoseChartView: UIViewRepresentable {
-    let chartManager: ChartsManager
-    var glucoseUnit: HKUnit
-    var glucoseValues: [GlucoseValue]
-    var predictedGlucoseValues: [GlucoseValue]
-    var targetGlucoseSchedule: GlucoseRangeSchedule?
-    var preMealOverride: TemporaryScheduleOverride?
-    var scheduleOverride: TemporaryScheduleOverride?
-    var dateInterval: DateInterval
-
-    @Binding var isInteractingWithChart: Bool
-
-    func makeUIView(context: Context) -> ChartContainerView {
-        let view = ChartContainerView()
-        view.chartGenerator = { [chartManager] frame in
-            chartManager.chart(atIndex: 0, frame: frame)?.view
-        }
-
-        let gestureRecognizer = UILongPressGestureRecognizer()
-        gestureRecognizer.minimumPressDuration = 0.1
-        gestureRecognizer.addTarget(context.coordinator, action: #selector(Coordinator.handlePan(_:)))
-        chartManager.gestureRecognizer = gestureRecognizer
-        view.addGestureRecognizer(gestureRecognizer)
-
-        return view
-    }
-
-    func updateUIView(_ chartContainerView: ChartContainerView, context: Context) {
-        chartManager.invalidateChart(atIndex: 0)
-        chartManager.startDate = dateInterval.start
-        chartManager.maxEndDate = dateInterval.end
-        chartManager.updateEndDate(dateInterval.end)
-        predictedGlucoseChart.glucoseUnit = glucoseUnit
-        predictedGlucoseChart.targetGlucoseSchedule = targetGlucoseSchedule
-        predictedGlucoseChart.preMealOverride = preMealOverride
-        predictedGlucoseChart.scheduleOverride = scheduleOverride
-        predictedGlucoseChart.setGlucoseValues(glucoseValues)
-        predictedGlucoseChart.setPredictedGlucoseValues(predictedGlucoseValues)
-        chartManager.prerender()
-        chartContainerView.reloadChart()
-    }
-
-    var predictedGlucoseChart: PredictedGlucoseChart {
-        guard chartManager.charts.count == 1, let predictedGlucoseChart = chartManager.charts.first as? PredictedGlucoseChart else {
-            fatalError("Expected exactly one predicted glucose chart in ChartsManager")
-        }
-
-        return predictedGlucoseChart
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    final class Coordinator {
-        var parent: PredictedGlucoseChartView
-
-        init(_ parent: PredictedGlucoseChartView) {
-            self.parent = parent
-        }
-
-        @objc func handlePan(_ recognizer: UIPanGestureRecognizer) {
-            switch recognizer.state {
-            case .began:
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    parent.isInteractingWithChart = true
-                }
-            case .cancelled, .ended, .failed:
-                // Workaround: applying the delay on the animation directly does not delay the disappearance of the touch indicator.
-                // FIXME: No animation is applied to the disappearance of the touch indicator; it simply disappears.
-                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) { [weak self] in
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        self?.parent.isInteractingWithChart = false
-                    }
-                }
-            default:
-                break
-            }
-        }
-    }
-}
-
-
 struct BolusEntryView: View, HorizontalSizeClassOverride {
     @ObservedObject var viewModel: BolusEntryViewModel
 
@@ -112,19 +29,25 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 historySection
                 summarySection
             }
+            .padding(.top, -28) // Bring the top card up closer to the navigation bar
             .listStyle(GroupedListStyle())
             .environment(\.horizontalSizeClass, horizontalOverride)
 
             actionArea
-                .frame(maxHeight: isKeyboardVisible ? 0 : nil)
-                .hidden(isKeyboardVisible)
+                .frame(height: isKeyboardVisible ? 0 : nil)
+                .opacity(isKeyboardVisible ? 0 : 1)
         }
+            .onKeyboardStateChange { state in
+                self.isKeyboardVisible = state.height > 0
+            }
         .keyboardAware()
         .edgesIgnoringSafeArea(isKeyboardVisible ? [] : .bottom)
         .navigationBarTitle(viewModel.potentialCarbEntry == nil ? Text("Bolus", comment: "Title for bolus entry screen") : Text("Meal Bolus", comment: "Title for bolus entry screen when also entering carbs"))
         .alert(item: $viewModel.activeAlert, content: alert(for:))
-        .onReceive(Keyboard.shared.$height) { height in
-            self.isKeyboardVisible = height > 0
+        .onReceive(viewModel.$enteredBolus) { updatedBolusEntry in
+            // The view model can update the user's entered bolus when the recommendation changes; ensure the text entry updates in tandem.
+            let amount = updatedBolusEntry.doubleValue(for: .internationalUnit())
+            self.enteredBolusAmount = amount == 0 ? "" : Self.doseAmountFormatter.string(from: amount) ?? String(amount)
         }
     }
 
@@ -151,7 +74,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                         .padding(.top, UIFont.preferredFont(forTextStyle: .subheadline).lineHeight + 8) // Leave space for the 'Glucose' label + spacing
                         .clipped()
                 }
-                .frame(height: viewModel.glucoseChartHeight ?? 170)
+                .frame(height: ceil(UIScreen.main.bounds.height / 4))
             }
             .padding(.top, 12)
             .padding(.bottom, 8)
@@ -209,28 +132,19 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
         .padding(.top, 8)
     }
 
-    private static let absorptionTimeFormatter: DateComponentsFormatter = {
-        let formatter = DateComponentsFormatter()
-        formatter.collapsesLargestUnit = true
-        formatter.unitsStyle = .abbreviated
-        formatter.allowsFractionalUnits = true
-        formatter.allowedUnits = [.hour, .minute]
-        return formatter
-    }()
-
     @ViewBuilder
     private var potentialCarbEntryRow: some View {
-        if viewModel.carbEntryAndAbsorptionTimeString != nil {
+        if viewModel.carbEntryAmountAndEmojiString != nil && viewModel.carbEntryDateAndAbsorptionTimeString != nil {
             HStack {
                 Text("Carb Entry", comment: "Label for carb entry row on bolus screen")
 
-                Text(viewModel.carbEntryAndAbsorptionTimeString!)
+                Text(viewModel.carbEntryAmountAndEmojiString!)
                     .foregroundColor(Color(.COBTintColor))
                     .modifier(LabelBackground())
 
                 Spacer()
 
-                Text("\(DateFormatter.localizedString(from: viewModel.potentialCarbEntry!.startDate, dateStyle: .none, timeStyle: .short)) + \(Self.absorptionTimeFormatter.string(from: viewModel.potentialCarbEntry!.absorptionTime!)!)")
+                Text(viewModel.carbEntryDateAndAbsorptionTimeString!)
                     .foregroundColor(Color(.secondaryLabelColor))
             }
         }
@@ -262,7 +176,8 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
     }
 
     private var recommendedBolusString: String {
-        Self.doseAmountFormatter.string(from: viewModel.recommendedBolus?.doubleValue(for: .internationalUnit()) ?? 0)!
+        let amount = viewModel.recommendedBolus?.doubleValue(for: .internationalUnit()) ?? 0
+        return Self.doseAmountFormatter.string(from: amount) ?? String(amount)
     }
 
     private var bolusEntryRow: some View {
@@ -301,9 +216,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var actionArea: some View {
         VStack(spacing: 0) {
-//            Text("Warning will go here")
-//                .padding([.top, .horizontal])
-//                .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
+            // TODO: Suspend threshold warning here
 
             Button(
                 action: {
@@ -384,16 +297,5 @@ struct LabelBackground: ViewModifier {
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .fill(Color(.systemGray6))
             )
-    }
-}
-
-extension View {
-    @ViewBuilder
-    func hidden(_ isHidden: Bool) -> some View {
-        if isHidden {
-            hidden()
-        } else {
-            self
-        }
     }
 }

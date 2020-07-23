@@ -57,8 +57,6 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
         }
     }
 
-    var glucoseChartCellHeight: CGFloat?
-
     fileprivate var quantity: HKQuantity? {
         didSet {
             updateContinueButtonEnabled()
@@ -137,9 +135,8 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // This gets rid of the empty space at the top.
-        tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: tableView.bounds.size.width, height: 0.01))
+
+        tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: tableView.bounds.size.width, height: 8))
 
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 44
@@ -341,26 +338,15 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
             return
         }
 
-        let viewModel = BolusEntryViewModel(dataManager: deviceManager, glucoseChartHeight: glucoseChartCellHeight, originalCarbEntry: originalCarbEntry, potentialCarbEntry: updatedEntry, selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji)
+        let viewModel = BolusEntryViewModel(
+            dataManager: deviceManager,
+            originalCarbEntry: originalCarbEntry,
+            potentialCarbEntry: updatedEntry,
+            selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji
+        )
         let bolusEntryView = BolusEntryView(viewModel: viewModel)
         let hostingController = DismissibleHostingController(rootView: bolusEntryView)
         show(hostingController, sender: footerView.primaryButton)
-
-//        let bolusVC = BolusViewController.instance()
-//        bolusVC.deviceManager = deviceManager
-//        bolusVC.glucoseUnit = glucoseUnit
-//        if let originalEntry = originalCarbEntry {
-//            bolusVC.configuration = .updatedCarbEntry(from: originalEntry, to: updatedEntry)
-//        } else {
-//            bolusVC.configuration = .newCarbEntry(updatedEntry)
-//        }
-//        bolusVC.selectedDefaultAbsorptionTimeEmoji = selectedDefaultAbsorptionTimeEmoji
-//        bolusVC.glucoseChartCellHeight = glucoseChartCellHeight
-//        if #available(iOS 13.0, *) {
-//            bolusVC.isModalInPresentation = true
-//        }
-//
-//        show(bolusVC, sender: footerView.primaryButton)
     }
 
     private func validateInput() -> Bool {
