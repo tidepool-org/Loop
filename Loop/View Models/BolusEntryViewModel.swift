@@ -24,6 +24,7 @@ final class BolusEntryViewModel: ObservableObject {
     @Published var glucoseValues: [GlucoseValue] = []
     @Published var predictedGlucoseValues: [GlucoseValue] = []
     @Published var glucoseUnit: HKUnit = .milligramsPerDeciliter
+    @Published var chartDateInterval = DateInterval(start: Date(timeIntervalSince1970: -.hours(1)), duration: .hours(7))
 
     @Published var activeCarbs: HKQuantity?
     @Published var activeInsulin: HKQuantity?
@@ -39,8 +40,7 @@ final class BolusEntryViewModel: ObservableObject {
 
     @Published var recommendedBolus: HKQuantity?
     @Published var enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
-
-    @Published var chartDateInterval = DateInterval(start: Date(), duration: .hours(6))
+    private var isInitiatingSaveOrBolus = false
 
     @Published var activeAlert: Alert?
 
@@ -90,14 +90,14 @@ final class BolusEntryViewModel: ObservableObject {
         return recommendedBolus.doubleValue(for: .internationalUnit()) > 0
     }
 
-    func saveCarbsAndDeliverBolus() {
+    func saveCarbsAndDeliverBolus(onSuccess completion: @escaping () -> Void) {
         guard enteredBolus < maximumBolus else {
             activeAlert = .maxBolusExceeded
             return
         }
 
         guard let carbEntry = potentialCarbEntry else {
-            authenticateAndDeliverBolus()
+            authenticateAndDeliverBolus(onSuccess: completion)
             return
         }
 
@@ -110,21 +110,28 @@ final class BolusEntryViewModel: ObservableObject {
             }
         }
 
-        dataManager.loopManager.addCarbEntry(carbEntry) { result in
+        isInitiatingSaveOrBolus = true
+        dataManager.loopManager.addCarbEntry(carbEntry, replacing: originalCarbEntry) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success:
-                    self.authenticateAndDeliverBolus()
+                    self.authenticateAndDeliverBolus(onSuccess: completion)
                 case .failure(let error):
+                    self.isInitiatingSaveOrBolus = false
                     self.log.error("Failed to add carb entry: %{public}@", String(describing: error))
                 }
             }
         }
     }
 
-    private func authenticateAndDeliverBolus() {
+    private func authenticateAndDeliverBolus(onSuccess completion: @escaping () -> Void) {
         let bolusVolume = enteredBolus.doubleValue(for: .internationalUnit())
-        guard bolusVolume > 0 else { return }
+        guard bolusVolume > 0 else {
+            completion()
+            return
+        }
+
+        isInitiatingSaveOrBolus = true
 
         let context = LAContext()
         if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil) {
@@ -132,15 +139,19 @@ final class BolusEntryViewModel: ObservableObject {
                 .deviceOwnerAuthentication,
                 localizedReason: String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString),
                 reply: { success, error in
-                    if success {
-                        DispatchQueue.main.async {
+                    DispatchQueue.main.async {
+                        if success {
                             self.dataManager.enactBolus(units: bolusVolume)
+                            completion()
+                        } else {
+                            self.isInitiatingSaveOrBolus = false
                         }
                     }
                 }
             )
         } else {
             dataManager.enactBolus(units: bolusVolume)
+            completion()
         }
     }
 
@@ -195,6 +206,9 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func update() {
+        // Prevent any UI updates after a bolus has been initiated.
+        guard !isInitiatingSaveOrBolus else { return }
+
         chartDateInterval = updatedChartDateInterval()
 
         updateGlucoseValues()
@@ -268,7 +282,10 @@ final class BolusEntryViewModel: ObservableObject {
                 let priorRecommendedBolus = self.recommendedBolus
                 self.recommendedBolus = recommendedBolus
 
-                if priorRecommendedBolus != recommendedBolus, self.enteredBolus.doubleValue(for: .internationalUnit()) > 0 {
+                if priorRecommendedBolus != recommendedBolus,
+                    self.enteredBolus.doubleValue(for: .internationalUnit()) > 0,
+                    !self.isInitiatingSaveOrBolus
+                {
                     self.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
                     self.activeAlert = .recommendationChanged
                 }

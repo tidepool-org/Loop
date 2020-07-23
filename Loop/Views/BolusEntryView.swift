@@ -220,8 +220,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
             Button(
                 action: {
-                    self.viewModel.saveCarbsAndDeliverBolus()
-                    self.dismiss()
+                    self.viewModel.saveCarbsAndDeliverBolus(onSuccess: self.dismiss)
                 },
                 label: {
                     if viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 {
