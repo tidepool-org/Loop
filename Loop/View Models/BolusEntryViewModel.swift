@@ -255,14 +255,14 @@ final class BolusEntryViewModel: ObservableObject {
         dataManager.loopManager.getLoopState { [weak self] manager, state in
             guard let self = self else { return }
 
+            self.updateCarbsOnBoard(from: state)
+
             let recommendedBolus = try? state.recommendBolus(
                 consideringPotentialCarbEntry: self.potentialCarbEntry,
                 replacingCarbEntry: self.originalCarbEntry
             ).map { recommendation in
                 HKQuantity(unit: .internationalUnit(), doubleValue: recommendation.amount)
             }
-
-            let activeCarbs = state.carbsOnBoard.map { $0.quantity }
 
             DispatchQueue.main.async {
                 let priorRecommendedBolus = self.recommendedBolus
@@ -274,8 +274,6 @@ final class BolusEntryViewModel: ObservableObject {
                 }
 
                 self.glucoseUnit = manager.settings.glucoseUnit ?? manager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
-
-                self.activeCarbs = activeCarbs
 
                 self.targetGlucoseSchedule = manager.settings.glucoseTargetRangeSchedule
                 self.preMealOverride = manager.settings.preMealOverride
@@ -291,6 +289,19 @@ final class BolusEntryViewModel: ObservableObject {
 
                 if let maxBolusAmount = manager.settings.maximumBolus {
                     self.maximumBolus = HKQuantity(unit: .internationalUnit(), doubleValue: maxBolusAmount)
+                }
+            }
+        }
+    }
+
+    private func updateCarbsOnBoard(from state: LoopState) {
+        dataManager.loopManager.carbStore.carbsOnBoard(at: Date(), effectVelocities: state.insulinCounteractionEffects) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let carbValue):
+                    self.activeCarbs = carbValue.quantity
+                case .failure:
+                    self.activeCarbs = nil
                 }
             }
         }
