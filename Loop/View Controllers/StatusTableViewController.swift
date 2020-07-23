@@ -1084,7 +1084,7 @@ final class StatusTableViewController: ChartsTableViewController {
     @IBAction func presentBolusScreen() {
         let viewModel = BolusEntryViewModel(dataManager: deviceManager)
         let bolusEntryView = BolusEntryView(viewModel: viewModel)
-        let hostingController = DismissibleHostingController(rootView: bolusEntryView)
+        let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         let navigationWrapper = UINavigationController(rootViewController: hostingController)
         hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
         self.present(navigationWrapper, animated: true)
