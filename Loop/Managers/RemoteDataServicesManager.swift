@@ -131,8 +131,8 @@ extension RemoteDataServicesManager {
                 case .failure(let error):
                     self.log.error("Error querying carb data: %{public}@", String(describing: error))
                     semaphore.signal()
-                case .success(let queryAnchor, let deleted, let stored):
-                    remoteDataService.uploadCarbData(deleted: deleted, stored: stored) { result in
+                case .success(let queryAnchor, let data):
+                    remoteDataService.uploadCarbData(data) { result in
                         switch result {
                         case .failure(let error):
                             self.log.error("Error synchronizing carb data: %{public}@", String(describing: error))
@@ -368,8 +368,8 @@ fileprivate extension UserDefaults {
     }
 
     func getQueryAnchor<T>(for remoteDataService: RemoteDataService, withRemoteDataType remoteDataType: RemoteDataType) -> T? where T: RawRepresentable, T.RawValue == [String: Any] {
-        let queryAnchorKeyX = queryAnchorKey(for: remoteDataService, withRemoteDataType: remoteDataType)
-        guard let rawQueryAnchor = dictionary(forKey: queryAnchorKeyX) else {
+        let queryAnchorKey = self.queryAnchorKey(for: remoteDataService, withRemoteDataType: remoteDataType)
+        guard let rawQueryAnchor = dictionary(forKey: queryAnchorKey) else {
             return nil
         }
         return T.init(rawValue: rawQueryAnchor)
