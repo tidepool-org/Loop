@@ -256,8 +256,18 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             )
         case .maxBolusExceeded:
             return SwiftUI.Alert(
-                title: Text("Exceeds Maximum Bolus", comment: "The title of the alert describing a maximum bolus validation error"),
-                message: Text("The maximum bolus amount is \(viewModel.maximumBolusAmountString) U", comment: "Body of the alert describing a maximum bolus validation error. (1: The localized max bolus value)")
+                title: Text("Exceeds Maximum Bolus", comment: "Alert title for a maximum bolus validation error"),
+                message: Text("The maximum bolus amount is \(viewModel.maximumBolusAmountString) U", comment: "Alert message for a maximum bolus validation error (1: max bolus value)")
+            )
+        case .noPumpManagerConfigured:
+            return SwiftUI.Alert(
+                title: Text("No Pump Configured", comment: "Alert title for a missing pump error"),
+                message: Text("A pump must be configured before a bolus can be delivered.", comment: "Alert message for a missing pump error")
+            )
+        case .carbEntryPersistenceFailure:
+            return SwiftUI.Alert(
+                title: Text("Failed to Save Carb Entry", comment: "Alert title for a carb entry persistence error"),
+                message: Text("An error occurred while trying to save your carb entry.", comment: "Alert message for a carb entry persistence error")
             )
         }
     }

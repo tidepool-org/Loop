@@ -19,12 +19,14 @@ final class BolusEntryViewModel: ObservableObject {
     enum Alert: Int {
         case recommendationChanged
         case maxBolusExceeded
+        case noPumpManagerConfigured
+        case carbEntryPersistenceFailure
     }
 
     @Published var glucoseValues: [GlucoseValue] = []
     @Published var predictedGlucoseValues: [GlucoseValue] = []
     @Published var glucoseUnit: HKUnit = .milligramsPerDeciliter
-    @Published var chartDateInterval = DateInterval(start: Date(timeIntervalSince1970: -.hours(1)), duration: .hours(7))
+    @Published var chartDateInterval = DateInterval(start: Date(timeIntervalSinceNow: .hours(-1)), duration: .hours(7))
 
     @Published var activeCarbs: HKQuantity?
     @Published var activeInsulin: HKQuantity?
@@ -91,6 +93,11 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     func saveCarbsAndDeliverBolus(onSuccess completion: @escaping () -> Void) {
+        guard dataManager.pumpManager != nil else {
+            activeAlert = .noPumpManagerConfigured
+            return
+        }
+
         guard enteredBolus < maximumBolus else {
             activeAlert = .maxBolusExceeded
             return
@@ -118,6 +125,7 @@ final class BolusEntryViewModel: ObservableObject {
                     self.authenticateAndDeliverBolus(onSuccess: completion)
                 case .failure(let error):
                     self.isInitiatingSaveOrBolus = false
+                    self.activeAlert = .carbEntryPersistenceFailure
                     self.log.error("Failed to add carb entry: %{public}@", String(describing: error))
                 }
             }
