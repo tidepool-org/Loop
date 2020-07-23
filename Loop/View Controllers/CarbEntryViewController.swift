@@ -344,8 +344,15 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
             potentialCarbEntry: updatedEntry,
             selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji
         )
+
         let bolusEntryView = BolusEntryView(viewModel: viewModel)
-        let hostingController = DismissibleHostingController(rootView: bolusEntryView)
+
+        // After confirming a bolus, pop back to this controller's predecessor, i.e. all the way back out of the carb flow.
+        let predecessorViewControllerType = (navigationController?.viewControllers.dropLast().last).map { type(of: $0) } ?? UIViewController.self
+        let hostingController = DismissibleHostingController(
+            rootView: bolusEntryView,
+            dismissalMode: originalCarbEntry == nil ? .modalDismiss : .pop(to: predecessorViewControllerType)
+        )
         show(hostingController, sender: footerView.primaryButton)
     }
 
