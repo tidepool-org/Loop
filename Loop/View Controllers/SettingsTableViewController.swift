@@ -21,6 +21,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
 
     private var cancellables = Set<AnyCancellable>()
     private var showNotificationsWarning = false
+    @Environment(\.appName) var appName
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -501,6 +502,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     presentSuspendThresholdEditor(initialValue: nil, unit: unit)
                 }
             case .insulinModel:
+                precondition(ProcessInfo.processInfo.environment["appName"] != nil)
                 let glucoseUnit = dataManager.loopManager.insulinSensitivitySchedule?.unit ?? dataManager.loopManager.glucoseStore.preferredUnit ?? HKUnit.milligramsPerDeciliter
                 let viewModel = InsulinModelSelectionViewModel(
                     insulinModelSettings: dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult),
@@ -513,12 +515,12 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                         tableView.reloadRows(at: [indexPath], with: .automatic)
                     }
                     .store(in: &cancellables)
-
+                
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
                     supportedModelSettings: SupportedModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
-                    appName: "Tidepool Loop" // ANNA TODO: this def shouldn't be hardcoded
+                    appName: appName
                 )
 
                 let hostingController = DismissibleHostingController(rootView: modelSelectionView, onDisappear: {

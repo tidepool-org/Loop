@@ -14,7 +14,7 @@ import LoopCore
 import LoopUI
 
 
-final class CarbEntryViewController: ChartsTableViewController, IdentifiableClass {
+final class CarbEntryViewController: LoopChartsTableViewController, IdentifiableClass {
 
     var navigationDelegate = CarbEntryNavigationDelegate()
 

@@ -20,7 +20,7 @@ private extension RefreshContext {
 }
 
 
-final class CarbAbsorptionViewController: ChartsTableViewController, IdentifiableClass {
+final class CarbAbsorptionViewController: LoopChartsTableViewController, IdentifiableClass {
 
     private let log = OSLog(category: "StatusTableViewController")
 

@@ -20,7 +20,7 @@ private extension RefreshContext {
 }
 
 
-class PredictionTableViewController: ChartsTableViewController, IdentifiableClass {
+class PredictionTableViewController: LoopChartsTableViewController, IdentifiableClass {
     private let log = OSLog(category: "PredictionTableViewController")
 
     override func viewDidLoad() {

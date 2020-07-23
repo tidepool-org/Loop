@@ -20,7 +20,7 @@ private extension RefreshContext {
     static let all: Set<RefreshContext> = [.glucose, .targets]
 }
 
-final class BolusViewController: ChartsTableViewController, IdentifiableClass, UITextFieldDelegate {
+final class BolusViewController: LoopChartsTableViewController, IdentifiableClass, UITextFieldDelegate {
     private enum Row: Int {
         case chart = 0
         case carbEntry

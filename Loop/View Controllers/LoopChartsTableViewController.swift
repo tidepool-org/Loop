@@ -1,5 +1,5 @@
 //
-//  ChartsTableViewController.swift
+//  LoopChartsTableViewController.swift
 //  Loop
 //
 //  Copyright © 2017 LoopKit Authors. All rights reserved.
@@ -78,7 +78,7 @@ extension Set where Element == RefreshContext {
 
 /// Abstract class providing boilerplate setup for chart-based table view controllers
 /// The logic is split between Loop and LoopKit because the DeviceDataManager is a Loop-specific concept
-open class ChartsTableViewController: ChartsTableViewContainer {
+open class LoopChartsTableViewController: ChartsTableViewController {
     weak var deviceManager: DeviceDataManager!
 }
 
