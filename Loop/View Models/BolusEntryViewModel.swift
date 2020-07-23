@@ -78,7 +78,11 @@ final class BolusEntryViewModel: ObservableObject {
         $enteredBolus
             .removeDuplicates()
             .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
-            .sink { [weak self] _ in self?.updatePredictedGlucoseValues() }
+            .sink { [weak self] _ in
+                self?.dataManager.loopManager.getLoopState { manager, state in
+                    self?.updatePredictedGlucoseValues(from: state)
+                }
+            }
             .store(in: &cancellables)
 
         update()
@@ -142,25 +146,26 @@ final class BolusEntryViewModel: ObservableObject {
         isInitiatingSaveOrBolus = true
 
         let context = LAContext()
-        if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil) {
-            context.evaluatePolicy(
-                .deviceOwnerAuthentication,
-                localizedReason: String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString),
-                reply: { success, error in
-                    DispatchQueue.main.async {
-                        if success {
-                            self.dataManager.enactBolus(units: bolusVolume)
-                            completion()
-                        } else {
-                            self.isInitiatingSaveOrBolus = false
-                        }
-                    }
-                }
-            )
-        } else {
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil) else {
             dataManager.enactBolus(units: bolusVolume)
             completion()
+            return
         }
+
+        context.evaluatePolicy(
+            .deviceOwnerAuthentication,
+            localizedReason: String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString),
+            reply: { success, error in
+                DispatchQueue.main.async {
+                    if success {
+                        self.dataManager.enactBolus(units: bolusVolume)
+                        completion()
+                    } else {
+                        self.isInitiatingSaveOrBolus = false
+                    }
+                }
+            }
+        )
     }
 
     private lazy var bolusVolumeFormatter = QuantityFormatter(for: .internationalUnit())
@@ -218,11 +223,9 @@ final class BolusEntryViewModel: ObservableObject {
         guard !isInitiatingSaveOrBolus else { return }
 
         chartDateInterval = updatedChartDateInterval()
-
         updateGlucoseValues()
-        updatePredictedGlucoseValues()
+        updateFromLoopState()
         updateActiveInsulin()
-        updateSettingsAndRecommendedBolus()
     }
 
     private func updateGlucoseValues() {
@@ -233,28 +236,24 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func updatePredictedGlucoseValues() {
-        dataManager.loopManager.getLoopState { [weak self] manager, state in
-            guard let self = self else { return }
+    private func updatePredictedGlucoseValues(from state: LoopState) {
+        let enteredBolusDose = DoseEntry(type: .bolus, startDate: Date(), value: enteredBolus.doubleValue(for: .internationalUnit()), unit: .units)
 
-            let enteredBolusDose = DoseEntry(type: .bolus, startDate: Date(), value: self.enteredBolus.doubleValue(for: .internationalUnit()), unit: .units)
+        let predictedGlucoseValues: [GlucoseValue]
+        do {
+            predictedGlucoseValues = try state.predictGlucose(
+                using: .all,
+                potentialBolus: enteredBolusDose,
+                potentialCarbEntry: potentialCarbEntry,
+                replacingCarbEntry: originalCarbEntry,
+                includingPendingInsulin: true
+            )
+        } catch {
+            predictedGlucoseValues = []
+        }
 
-            let predictedGlucoseValues: [GlucoseValue]
-            do {
-                predictedGlucoseValues = try state.predictGlucose(
-                    using: .all,
-                    potentialBolus: enteredBolusDose,
-                    potentialCarbEntry: self.potentialCarbEntry,
-                    replacingCarbEntry: self.originalCarbEntry,
-                    includingPendingInsulin: true
-                )
-            } catch {
-                predictedGlucoseValues = []
-            }
-
-            DispatchQueue.main.async {
-                self.predictedGlucoseValues = predictedGlucoseValues
-            }
+        DispatchQueue.main.async {
+            self.predictedGlucoseValues = predictedGlucoseValues
         }
     }
 
@@ -273,10 +272,11 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func updateSettingsAndRecommendedBolus() {
+    private func updateFromLoopState() {
         dataManager.loopManager.getLoopState { [weak self] manager, state in
             guard let self = self else { return }
 
+            self.updatePredictedGlucoseValues(from: state)
             self.updateCarbsOnBoard(from: state)
 
             let recommendedBolus = try? state.recommendBolus(
