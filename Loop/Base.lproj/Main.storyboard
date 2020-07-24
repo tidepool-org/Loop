@@ -94,14 +94,14 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" layoutMarginsFollowReadableWidth="YES" selectionStyle="none" indentationWidth="10" reuseIdentifier="ChartTableViewCell" rowHeight="270" id="mQk-9D-0ub" customClass="ChartTableViewCell" customModule="Loop" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" layoutMarginsFollowReadableWidth="YES" selectionStyle="none" indentationWidth="10" reuseIdentifier="ChartTableViewCell" rowHeight="270" id="mQk-9D-0ub" customClass="ChartTableViewCell" customModule="LoopKitUI">
                                 <rect key="frame" x="0.0" y="28" width="375" height="270"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="mQk-9D-0ub" id="B1i-Pw-wSw">
                                     <rect key="frame" x="0.0" y="0.0" width="375" height="270"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="FBL-RL-faM" customClass="ChartContainerView" customModule="LoopUI">
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="FBL-RL-faM" customClass="ChartContainerView" customModule="LoopKitUI">
                                             <rect key="frame" x="0.0" y="29" width="375" height="170"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="170" id="ogp-Hm-zo0"/>
@@ -237,7 +237,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="ChartTableViewCell" rowHeight="318" id="cuj-C4-IMF" customClass="ChartTableViewCell" customModule="Loop" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="ChartTableViewCell" rowHeight="318" id="cuj-C4-IMF" customClass="ChartTableViewCell" customModule="LoopKitUI">
                                 <rect key="frame" x="0.0" y="28" width="375" height="318"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="cuj-C4-IMF" id="oeh-yE-DB8">
@@ -250,7 +250,7 @@
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
-                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MJM-pI-lcq" customClass="ChartContainerView" customModule="LoopUI">
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MJM-pI-lcq" customClass="ChartContainerView" customModule="LoopKitUI">
                                             <rect key="frame" x="0.0" y="29" width="375" height="130"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="130" id="DPc-dp-Smc"/>
@@ -605,7 +605,7 @@
                                     <outlet property="titleLabel" destination="k3F-Na-7mn" id="Mrt-ZL-fKG"/>
                                 </connections>
                             </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="ChartTableViewCell" rowHeight="200" id="FEV-fX-i48" customClass="ChartTableViewCell" customModule="Loop" customModuleProvider="target">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="ChartTableViewCell" rowHeight="200" id="FEV-fX-i48" customClass="ChartTableViewCell" customModule="LoopKitUI">
                                 <rect key="frame" x="0.0" y="142" width="375" height="200"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="FEV-fX-i48" id="lS6-Qa-Lw7">
@@ -624,7 +624,7 @@
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
-                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ADL-hs-cfT" customClass="ChartContainerView" customModule="LoopUI">
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ADL-hs-cfT" customClass="ChartContainerView" customModule="LoopKitUI">
                                             <rect key="frame" x="0.0" y="29" width="375" height="171"/>
                                         </view>
                                     </subviews>
