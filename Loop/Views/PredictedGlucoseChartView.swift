@@ -9,6 +9,7 @@
 import HealthKit
 import SwiftUI
 import LoopKit
+import LoopKitUI
 import LoopUI
 
 

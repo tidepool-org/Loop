@@ -12,6 +12,7 @@ import LocalAuthentication
 import Intents
 import os.log
 import LoopKit
+import LoopKitUI
 import LoopUI
 
 

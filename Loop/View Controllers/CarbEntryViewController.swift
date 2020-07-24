@@ -14,7 +14,7 @@ import LoopCore
 import LoopUI
 
 
-final class CarbEntryViewController: ChartsTableViewController, IdentifiableClass {
+final class CarbEntryViewController: LoopChartsTableViewController, IdentifiableClass {
 
     var navigationDelegate = CarbEntryNavigationDelegate()
 
@@ -28,7 +28,11 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
 
     fileprivate var orderedAbsorptionTimes = [TimeInterval]()
 
-    var preferredUnit = HKUnit.gram()
+    var preferredCarbUnit = HKUnit.gram()
+    
+    private var glucoseUnit: HKUnit {
+        return deviceManager.loopManager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
+    }
 
     var maxQuantity = HKQuantity(unit: .gram(), doubleValue: 250)
 
@@ -38,8 +42,6 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
     var maxAbsorptionTime = TimeInterval(hours: 8)
 
     var maximumDateFutureInterval = TimeInterval(hours: 4)
-
-    var glucoseUnit: HKUnit = .milligramsPerDeciliter
 
     var originalCarbEntry: StoredCarbEntry? {
         didSet {
@@ -118,7 +120,7 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
     private(set) lazy var footerView: SetupTableFooterView = {
         let footerView = SetupTableFooterView(frame: .zero)
         footerView.primaryButton.addTarget(self, action: #selector(continueButtonPressed), for: .touchUpInside)
-        footerView.primaryButton.isEnabled = quantity != nil && quantity!.doubleValue(for: preferredUnit) > 0
+        footerView.primaryButton.isEnabled = quantity != nil && quantity!.doubleValue(for: preferredCarbUnit) > 0
         return footerView
     }()
 
@@ -205,10 +207,10 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
             let cell = tableView.dequeueReusableCell(withIdentifier: DecimalTextFieldTableViewCell.className) as! DecimalTextFieldTableViewCell
 
             if let quantity = quantity {
-                cell.number = NSNumber(value: quantity.doubleValue(for: preferredUnit))
+                cell.number = NSNumber(value: quantity.doubleValue(for: preferredCarbUnit))
             }
             cell.textField.isEnabled = isSampleEditable
-            cell.unitLabel?.text = String(describing: preferredUnit)
+            cell.unitLabel?.text = String(describing: preferredCarbUnit)
             cell.delegate = self
 
             return cell
@@ -365,7 +367,7 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
             return false
         }
 
-        guard let quantity = quantity, quantity.doubleValue(for: preferredUnit) > 0 else { return false }
+        guard let quantity = quantity, quantity.doubleValue(for: preferredCarbUnit) > 0 else { return false }
         guard quantity.compare(maxQuantity) != .orderedDescending else {
             navigationDelegate.showMaxQuantityValidationWarning(for: self, maxQuantityGrams: maxQuantity.doubleValue(for: .gram()))
             return false
@@ -375,7 +377,7 @@ final class CarbEntryViewController: ChartsTableViewController, IdentifiableClas
     }
 
     private func updateContinueButtonEnabled() {
-        let hasValidQuantity = quantity != nil && quantity!.doubleValue(for: preferredUnit) > 0
+        let hasValidQuantity = quantity != nil && quantity!.doubleValue(for: preferredCarbUnit) > 0
         let haveChangesBeenMade = updatedCarbEntry != nil
         
         let readyToContinue = hasValidQuantity && haveChangesBeenMade
@@ -400,7 +402,7 @@ extension CarbEntryViewController: TextFieldTableViewCellDelegate {
         switch Row(rawValue: row) {
         case .value?:
             if let cell = cell as? DecimalTextFieldTableViewCell, let number = cell.number {
-                quantity = HKQuantity(unit: preferredUnit, doubleValue: number.doubleValue)
+                quantity = HKQuantity(unit: preferredCarbUnit, doubleValue: number.doubleValue)
             } else {
                 quantity = nil
             }
@@ -417,7 +419,7 @@ extension CarbEntryViewController: TextFieldTableViewCellDelegate {
         switch Row(rawValue: row) {
         case .value?:
             if let cell = cell as? DecimalTextFieldTableViewCell, let number = cell.number {
-                quantity = HKQuantity(unit: preferredUnit, doubleValue: number.doubleValue)
+                quantity = HKQuantity(unit: preferredCarbUnit, doubleValue: number.doubleValue)
             } else {
                 quantity = nil
             }
