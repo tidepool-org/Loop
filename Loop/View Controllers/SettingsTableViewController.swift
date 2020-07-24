@@ -502,7 +502,6 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     presentSuspendThresholdEditor(initialValue: nil, unit: unit)
                 }
             case .insulinModel:
-                precondition(ProcessInfo.processInfo.environment["appName"] != nil)
                 let glucoseUnit = dataManager.loopManager.insulinSensitivitySchedule?.unit ?? dataManager.loopManager.glucoseStore.preferredUnit ?? HKUnit.milligramsPerDeciliter
                 let viewModel = InsulinModelSelectionViewModel(
                     insulinModelSettings: dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult),
