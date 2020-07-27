@@ -18,6 +18,10 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
     @ObservedObject var viewModel: BolusEntryViewModel
 
     @State private var enteredBolusAmount = ""
+
+    @State private var isManualGlucoseEntryEnabled = false
+    @State private var enteredManualGlucose = ""
+
     @State private var isInteractingWithChart = false
     @State private var isKeyboardVisible = false
 
@@ -125,7 +129,9 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                if viewModel.potentialCarbEntry != nil {
+                if isManualGlucoseEntryEnabled {
+                    manualGlucoseEntryRow
+                } else if viewModel.potentialCarbEntry != nil {
                     potentialCarbEntryRow
                 } else {
                     recommendedBolusRow
@@ -133,12 +139,61 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             }
             .padding(.top, 8)
 
-            if viewModel.potentialCarbEntry != nil {
+            if isManualGlucoseEntryEnabled && viewModel.potentialCarbEntry != nil {
+                potentialCarbEntryRow
+            }
+
+            if isManualGlucoseEntryEnabled || viewModel.potentialCarbEntry != nil {
                 recommendedBolusRow
             }
 
             bolusEntryRow
         }
+    }
+
+    private var glucoseFormatter: NumberFormatter {
+        QuantityFormatter(for: viewModel.glucoseUnit).numberFormatter
+    }
+
+    private var glucosePlaceholder: HKQuantity {
+        HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 0)
+    }
+
+    @ViewBuilder
+    private var manualGlucoseEntryRow: some View {
+        if isManualGlucoseEntryEnabled {
+            HStack {
+                Text("Manual BG Entry", comment: "Label for manual glucose entry row on bolus screen")
+                Spacer()
+                HStack(alignment: .firstTextBaseline) {
+                    DismissibleKeyboardTextField(
+                        text: typedManualGlucoseEntry,
+                        placeholder: glucoseFormatter.string(from: glucosePlaceholder.doubleValue(for: viewModel.glucoseUnit)) ?? String(describing: glucosePlaceholder),
+                        font: .heavy(.title1),
+                        textAlignment: .right,
+                        keyboardType: .decimalPad
+                    )
+
+                    Text(QuantityFormatter().string(from: viewModel.glucoseUnit))
+                        .foregroundColor(Color(.secondaryLabelColor))
+                }
+            }
+        }
+    }
+
+    private var typedManualGlucoseEntry: Binding<String> {
+        Binding(
+            get: { self.enteredManualGlucose },
+            set: { newValue in
+                if let doubleValue = self.glucoseFormatter.number(from: newValue)?.doubleValue {
+                    self.viewModel.enteredManualGlucose = HKQuantity(unit: self.viewModel.glucoseUnit, doubleValue: doubleValue)
+                } else {
+                    self.viewModel.enteredManualGlucose = nil
+                }
+
+                self.enteredManualGlucose = newValue
+            }
+        )
     }
 
     @ViewBuilder
@@ -217,7 +272,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
         Binding(
             get: { self.enteredBolusAmount },
             set: { newValue in
-                self.viewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: Double(newValue) ?? 0)
+                self.viewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
                 self.enteredBolusAmount = newValue
             }
         )
@@ -227,25 +282,17 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
         VStack(spacing: 0) {
             if viewModel.activeNotice != nil {
                 warning(for: viewModel.activeNotice!)
-                    .padding([.top, .horizontal])
+                    .padding()
                     .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
             }
 
-            Button(
-                action: {
-                    self.viewModel.saveCarbsAndDeliverBolus(onSuccess: self.dismiss)
-                },
-                label: {
-                    if viewModel.potentialCarbEntry != nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 {
-                        Text("Save without Bolusing")
-                    } else {
-                        Text("Save and Deliver")
-                    }
+            VStack(spacing: 10) {
+                if viewModel.activeNotice == .staleGlucoseData {
+                    enterManualGlucoseButton
                 }
-            )
-            .buttonStyle(ActionButtonStyle(.primary))
-            .padding()
-            .disabled(viewModel.potentialCarbEntry == nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0)
+
+                primaryActionButton
+            }
         }
         .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
         .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
@@ -265,6 +312,33 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 caption: Text("Enter a manual glucose for a recommended bolus amount.", comment: "Caption for bolus screen notice when glucose data is missing or stale")
             )
         }
+    }
+
+    private var enterManualGlucoseButton: some View {
+        Button(
+            action: { self.isManualGlucoseEntryEnabled = true },
+            label: { Text("Enter Manual BG") }
+        )
+        .buttonStyle(ActionButtonStyle(.primary))
+        .padding(.horizontal)
+    }
+
+    private var primaryActionButton: some View {
+        Button(
+            action: {
+                self.viewModel.saveCarbsAndDeliverBolus(onSuccess: self.dismiss)
+            },
+            label: {
+                if viewModel.potentialCarbEntry != nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 {
+                    Text("Save without Bolusing")
+                } else {
+                    Text("Save and Deliver")
+                }
+            }
+        )
+        .buttonStyle(ActionButtonStyle(viewModel.activeNotice == .staleGlucoseData ? .secondary : .primary))
+        .padding([.horizontal, .bottom])
+        .disabled(viewModel.potentialCarbEntry == nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0)
     }
 
     private func alert(for alert: BolusEntryViewModel.Alert) -> SwiftUI.Alert {
@@ -344,5 +418,19 @@ struct LabelBackground: ViewModifier {
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .fill(Color(.systemGray6))
             )
+    }
+}
+
+extension UIFont {
+    static func heavy(_ textStyle: UIFont.TextStyle) -> UIFont {
+        let descriptor = UIFontDescriptor
+            .preferredFontDescriptor(withTextStyle: textStyle)
+            .addingAttributes([
+                .traits: [
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+                ]
+            ])
+
+        return UIFont(descriptor: descriptor, size: 0)
     }
 }

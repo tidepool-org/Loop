@@ -25,7 +25,7 @@ final class BolusEntryViewModel: ObservableObject {
         case carbEntryPersistenceFailure
     }
 
-    enum Notice {
+    enum Notice: Equatable {
         case noBolusRecommended(suspendThreshold: HKQuantity)
         case staleGlucoseData
     }
@@ -47,6 +47,7 @@ final class BolusEntryViewModel: ObservableObject {
     let potentialCarbEntry: NewCarbEntry?
     let selectedCarbAbsorptionTimeEmoji: String?
 
+    @Published var enteredManualGlucose: HKQuantity?
     @Published var recommendedBolus: HKQuantity?
     @Published var enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
     private var isInitiatingSaveOrBolus = false
@@ -84,6 +85,16 @@ final class BolusEntryViewModel: ObservableObject {
             .store(in: &cancellables)
 
         $enteredBolus
+            .removeDuplicates()
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.dataManager.loopManager.getLoopState { manager, state in
+                    self?.updatePredictedGlucoseValues(from: state)
+                }
+            }
+            .store(in: &cancellables)
+
+        $enteredManualGlucose
             .removeDuplicates()
             .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             .sink { [weak self] _ in
@@ -252,13 +263,19 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func updatePredictedGlucoseValues(from state: LoopState) {
-        let enteredBolus = DispatchQueue.main.sync { self.enteredBolus }
+        let (enteredGlucose, enteredBolus) = DispatchQueue.main.sync { (self.enteredManualGlucose, self.enteredBolus) }
+
+        let enteredGlucoseValue = enteredGlucose.map { quantity in
+            SimpleGlucoseValue(startDate: Date(), quantity: quantity)
+        }
+
         let enteredBolusDose = DoseEntry(type: .bolus, startDate: Date(), value: enteredBolus.doubleValue(for: .internationalUnit()), unit: .units)
 
         let predictedGlucoseValues: [GlucoseValue]
         do {
             predictedGlucoseValues = try state.predictGlucose(
-                using: .all,
+                startingAt: enteredGlucoseValue,
+                using: enteredGlucoseValue != nil ? [.insulin, .carbs] : .all,
                 potentialBolus: enteredBolusDose,
                 potentialCarbEntry: potentialCarbEntry,
                 replacingCarbEntry: originalCarbEntry,
