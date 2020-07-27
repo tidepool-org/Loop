@@ -321,7 +321,7 @@ final class BolusEntryViewModel: ObservableObject {
             if let recommendation = try state.recommendBolus(
                 consideringPotentialCarbEntry: self.potentialCarbEntry,
                 replacingCarbEntry: self.originalCarbEntry
-                ) {
+            ) {
                 recommendedBolus = HKQuantity(unit: .internationalUnit(), doubleValue: recommendation.amount)
 
                 switch recommendation.notice {
