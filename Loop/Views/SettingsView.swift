@@ -77,10 +77,10 @@ extension SettingsView {
         Section(header: SectionHeader(label: NSLocalizedString("Configuration", comment: "The title of the Configuration section in settings"))) {
             return NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(mode: .settings,
                                                                                                        therapySettings: viewModel.therapySettings,
+                                                                                                       appName: appName,
                                                                                                        supportedInsulinModelSettings: viewModel.supportedInsulinModelSettings,
                                                                                                        pumpSupportedIncrements: viewModel.pumpSupportedIncrements,
                                                                                                        syncPumpSchedule: viewModel.syncPumpSchedule,
-                                                                                                       appName: appName,
                                                                                                        didSave: viewModel.didSave))) {
                 LargeButton(action: { },
                             includeArrow: false,
