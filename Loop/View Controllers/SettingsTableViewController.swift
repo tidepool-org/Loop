@@ -21,6 +21,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
 
     private var cancellables = Set<AnyCancellable>()
     private var showNotificationsWarning = false
+    @Environment(\.appName) var appName
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -261,7 +262,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 }
             case .correctionRangeOverrides:
-                configCell.textLabel?.text = NSLocalizedString("Temporary Correction Ranges", comment: "The title text for the correction range overrides")
+                configCell.textLabel?.text = TherapySetting.correctionRangeOverrides.title
                 if dataManager.loopManager.settings.preMealTargetRange == nil {
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 } else {
@@ -470,14 +471,12 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             case .suspendThreshold:
                 func presentSuspendThresholdEditor(initialValue: HKQuantity?, unit: HKUnit) {
                     let settings = dataManager.loopManager.settings
-                    let maxAllowableSuspendThreshold = [
-                        settings.glucoseTargetRangeSchedule?.minLowerBound().doubleValue(for: unit),
-                        settings.preMealTargetRange?.minValue,
-                        settings.legacyWorkoutTargetRange?.minValue
-                    ]
-                    .compactMap { $0 }
-                    .min()
-                    .map { HKQuantity(unit: unit, doubleValue: $0) }
+                    let maxAllowableSuspendThreshold = Guardrail.maxSuspendThresholdValue(
+                        correctionRangeSchedule: settings.glucoseTargetRangeSchedule,
+                        preMealTargetRange: settings.preMealTargetRange,
+                        workoutTargetRange: settings.legacyWorkoutTargetRange,
+                        unit: unit
+                    )
 
                     let editor = SuspendThresholdEditor(
                         value: initialValue,
@@ -515,11 +514,12 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                         tableView.reloadRows(at: [indexPath], with: .automatic)
                     }
                     .store(in: &cancellables)
-
+                
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
-                    supportedModelSettings: .init(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled)
+                    supportedModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
+                    appName: appName
                 )
 
                 let hostingController = DismissibleHostingController(rootView: modelSelectionView, onDisappear: {
@@ -550,11 +550,11 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     onSave: { [dataManager] limits in
                         dataManager!.loopManager.settings.maximumBasalRatePerHour = limits.maximumBasalRate?.doubleValue(for: .internationalUnitsPerHour)
                         dataManager!.loopManager.settings.maximumBolus = limits.maximumBolus?.doubleValue(for: .internationalUnit())
-
+                        
                         tableView.reloadRows(at: [indexPath], with: .automatic)
                     }
                 )
-
+                
                 let hostingController = ExplicitlyDismissibleModal(rootView: editor, onDisappear: {
                     tableView.deselectRow(at: indexPath, animated: true)
                 })
@@ -747,15 +747,26 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         let cgmViewModel = DeviceViewModel(deviceManagerUI: dataManager.cgmManager as? DeviceManagerUI, isSetUp: dataManager.cgmManager != nil) { [weak self] in
             self?.didSelectCGM()
         }
+        let pumpSupportedIncrements = dataManager.pumpManager.map {
+            PumpSupportedIncrements(basalRates: $0.supportedBasalRates,
+                                    bolusVolumes: $0.supportedBolusVolumes,
+                                    maximumBasalScheduleEntryCount: $0.maximumBasalScheduleEntryCount)
+        }
         let viewModel = SettingsViewModel(appNameAndVersion: Bundle.main.localizedNameAndVersion,
                                           notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,
                                           therapySettings: dataManager.loopManager.therapySettings,
-                                          supportedBasalRates: dataManager.pumpManager?.supportedBasalRates,
+                                          supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
+                                          pumpSupportedIncrements: pumpSupportedIncrements,
+                                          syncPumpSchedule: dataManager.pumpManager?.syncBasalRateSchedule,
+                                          sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: dataManager.loopManager.settings.dosingEnabled,
                                           setDosingEnabled: { [weak self] in
                                             self?.setDosingEnabled($0)
+                                          },
+                                          didSave: { [weak self] in
+                                            self?.saveTherapySetting($0, $1)
         })
         let hostingController = DismissibleHostingController(
             rootView: SettingsView(viewModel: viewModel),
@@ -773,6 +784,36 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
     private func setDosingEnabled(_ value: Bool) {
         DispatchQueue.main.async {
             self.dataManager.loopManager.settings.dosingEnabled = value
+        }
+    }
+    
+    private func saveTherapySetting(_ therapySetting: TherapySetting, _ therapySettings: TherapySettings) {
+        switch therapySetting {
+        case .glucoseTargetRange:
+            dataManager?.loopManager.settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule
+        case .correctionRangeOverrides:
+            dataManager?.loopManager.settings.preMealTargetRange = therapySettings.preMealTargetRange
+            dataManager?.loopManager.settings.legacyWorkoutTargetRange = therapySettings.workoutTargetRange
+        case .suspendThreshold:
+            dataManager?.loopManager.settings.suspendThreshold = therapySettings.suspendThreshold
+        case .basalRate:
+            dataManager?.loopManager.basalRateSchedule = therapySettings.basalRateSchedule
+        case .deliveryLimits:
+            dataManager?.loopManager.settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour
+            dataManager?.loopManager.settings.maximumBolus = therapySettings.maximumBolus
+        case .insulinModel:
+            if let insulinModel = therapySettings.insulinModel {
+                // TODO: Unify InsulinModelSettings and SettingsStore.InsulinModel
+                dataManager?.loopManager.insulinModelSettings = InsulinModelSettings(from: insulinModel)
+            }
+        case .carbRatio:
+            dataManager?.loopManager.carbRatioSchedule = therapySettings.carbRatioSchedule
+            dataManager?.analyticsServicesManager.didChangeCarbRatioSchedule()
+        case .insulinSensitivity:
+            dataManager?.loopManager.insulinSensitivitySchedule = therapySettings.insulinSensitivitySchedule
+            dataManager?.analyticsServicesManager.didChangeInsulinSensitivitySchedule()
+        case .none:
+            break // NO-OP
         }
     }
 }

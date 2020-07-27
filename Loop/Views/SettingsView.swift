@@ -74,7 +74,11 @@ extension SettingsView {
         
     private var therapySettingsSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Configuration", comment: "The title of the Configuration section in settings"))) {
-            NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(therapySettings: viewModel.therapySettings, supportedBasalRates: viewModel.supportedBasalRates))) {
+            return NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(therapySettings: viewModel.therapySettings,
+                                                                                                       supportedInsulinModelSettings: viewModel.supportedInsulinModelSettings,
+                                                                                                       pumpSupportedIncrements: viewModel.pumpSupportedIncrements,
+                                                                                                       syncPumpSchedule: viewModel.syncPumpSchedule,
+                                                                                                       didSave: viewModel.didSave))) {
                 LargeButton(action: { },
                             includeArrow: false,
                             imageView: AnyView(Image("Therapy Icon")),
@@ -193,7 +197,10 @@ public struct SettingsView_Previews: PreviewProvider {
                                           pumpManagerSettingsViewModel: DeviceViewModel(),
                                           cgmManagerSettingsViewModel: DeviceViewModel(),
                                           therapySettings: TherapySettings(),
-                                          supportedBasalRates: nil,
+                                          supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: true, walshModelEnabled: true),
+                                          pumpSupportedIncrements: nil,
+                                          syncPumpSchedule: nil,
+                                          sensitivityOverridesEnabled: false,
                                           initialDosingEnabled: true)
         return Group {
             SettingsView(viewModel: viewModel)
