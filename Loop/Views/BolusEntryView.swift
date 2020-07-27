@@ -37,9 +37,9 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 .frame(height: isKeyboardVisible ? 0 : nil)
                 .opacity(isKeyboardVisible ? 0 : 1)
         }
-            .onKeyboardStateChange { state in
-                self.isKeyboardVisible = state.height > 0
-            }
+        .onKeyboardStateChange { state in
+            self.isKeyboardVisible = state.height > 0
+        }
         .keyboardAware()
         .edgesIgnoringSafeArea(isKeyboardVisible ? [] : .bottom)
         .navigationBarTitle(viewModel.potentialCarbEntry == nil ? Text("Bolus", comment: "Title for bolus entry screen") : Text("Meal Bolus", comment: "Title for bolus entry screen when also entering carbs"))
@@ -225,7 +225,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var actionArea: some View {
         VStack(spacing: 0) {
-            // TODO: Suspend threshold warning here
+            // TODO: Implement notice here for 'no bolus recommended': https://tidepool.atlassian.net/browse/LOOP-1679
 
             Button(
                 action: {
@@ -255,14 +255,22 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 message: Text("The bolus recommendation has updated. Please reconfirm the bolus amount.", comment: "Alert message for an updated bolus recommendation")
             )
         case .maxBolusExceeded:
+            guard let maximumBolusAmountString = viewModel.maximumBolusAmountString else {
+                fatalError("Impossible to exceed max bolus without a configured max bolus")
+            }
             return SwiftUI.Alert(
                 title: Text("Exceeds Maximum Bolus", comment: "Alert title for a maximum bolus validation error"),
-                message: Text("The maximum bolus amount is \(viewModel.maximumBolusAmountString) U", comment: "Alert message for a maximum bolus validation error (1: max bolus value)")
+                message: Text("The maximum bolus amount is \(maximumBolusAmountString) U", comment: "Alert message for a maximum bolus validation error (1: max bolus value)")
             )
         case .noPumpManagerConfigured:
             return SwiftUI.Alert(
                 title: Text("No Pump Configured", comment: "Alert title for a missing pump error"),
                 message: Text("A pump must be configured before a bolus can be delivered.", comment: "Alert message for a missing pump error")
+            )
+        case .noMaxBolusConfigured:
+            return SwiftUI.Alert(
+                title: Text("No Maximum Bolus Configured", comment: "Alert title for a missing maximum bolus setting error"),
+                message: Text("The maximum bolus setting must be configured before a bolus can be delivered.", comment: "Alert message for a missing maximum bolus setting error")
             )
         case .carbEntryPersistenceFailure:
             return SwiftUI.Alert(
