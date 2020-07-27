@@ -21,6 +21,7 @@ final class BolusEntryViewModel: ObservableObject {
         case recommendationChanged
         case maxBolusExceeded
         case noPumpManagerConfigured
+        case noMaxBolusConfigured
         case carbEntryPersistenceFailure
     }
 
@@ -40,7 +41,7 @@ final class BolusEntryViewModel: ObservableObject {
     @Published var targetGlucoseSchedule: GlucoseRangeSchedule?
     @Published var preMealOverride: TemporaryScheduleOverride?
     @Published var scheduleOverride: TemporaryScheduleOverride?
-    var maximumBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 25)
+    var maximumBolus: HKQuantity?
 
     let originalCarbEntry: StoredCarbEntry?
     let potentialCarbEntry: NewCarbEntry?
@@ -106,6 +107,11 @@ final class BolusEntryViewModel: ObservableObject {
     func saveCarbsAndDeliverBolus(onSuccess completion: @escaping () -> Void) {
         guard dataManager.pumpManager != nil else {
             activeAlert = .noPumpManagerConfigured
+            return
+        }
+
+        guard let maximumBolus = maximumBolus else {
+            activeAlert = .noMaxBolusConfigured
             return
         }
 
@@ -191,8 +197,10 @@ final class BolusEntryViewModel: ObservableObject {
         return bolusVolumeFormatter.numberFormatter.string(from: bolusVolume) ?? String(bolusVolume)
     }
 
-    var maximumBolusAmountString: String {
-        let maxBolusVolume = maximumBolus.doubleValue(for: .internationalUnit())
+    var maximumBolusAmountString: String? {
+        guard let maxBolusVolume = maximumBolus?.doubleValue(for: .internationalUnit()) else {
+            return nil
+        }
         return bolusVolumeFormatter.numberFormatter.string(from: maxBolusVolume) ?? String(maxBolusVolume)
     }
 
@@ -229,7 +237,7 @@ final class BolusEntryViewModel: ObservableObject {
         // Prevent any UI updates after a bolus has been initiated.
         guard !isInitiatingSaveOrBolus else { return }
 
-        chartDateInterval = updatedChartDateInterval()
+        updateChartDateInterval()
         updateGlucoseValues()
         updateFromLoopState()
         updateActiveInsulin()
@@ -244,6 +252,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func updatePredictedGlucoseValues(from state: LoopState) {
+        let enteredBolus = DispatchQueue.main.sync { self.enteredBolus }
         let enteredBolusDose = DoseEntry(type: .bolus, startDate: Date(), value: enteredBolus.doubleValue(for: .internationalUnit()), unit: .units)
 
         let predictedGlucoseValues: [GlucoseValue]
@@ -312,7 +321,7 @@ final class BolusEntryViewModel: ObservableObject {
             if let recommendation = try state.recommendBolus(
                 consideringPotentialCarbEntry: self.potentialCarbEntry,
                 replacingCarbEntry: self.originalCarbEntry
-            ) {
+                ) {
                 recommendedBolus = HKQuantity(unit: .internationalUnit(), doubleValue: recommendation.amount)
 
                 switch recommendation.notice {
@@ -369,12 +378,12 @@ final class BolusEntryViewModel: ObservableObject {
             scheduleOverride = nil
         }
 
-        if let maxBolusAmount = settings.maximumBolus {
-            maximumBolus = HKQuantity(unit: .internationalUnit(), doubleValue: maxBolusAmount)
+        maximumBolus = settings.maximumBolus.map { maxBolusAmount in
+            HKQuantity(unit: .internationalUnit(), doubleValue: maxBolusAmount)
         }
     }
 
-    private func updatedChartDateInterval() -> DateInterval {
+    private func updateChartDateInterval() {
         let settings = dataManager.loopManager.settings
 
         // How far back should we show data? Use the screen size as a guide.
@@ -394,7 +403,7 @@ final class BolusEntryViewModel: ObservableObject {
             direction: .backward
         ) ?? date
 
-        return DateInterval(start: chartStartDate, duration: .hours(totalHours))
+        chartDateInterval = DateInterval(start: chartStartDate, duration: .hours(totalHours))
     }
 }
 
