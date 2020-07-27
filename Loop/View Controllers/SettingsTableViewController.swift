@@ -514,14 +514,6 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     insulinModelSettings: binding,
                     insulinSensitivitySchedule: dataManager.loopManager.insulinSensitivitySchedule
                 )
-
-//                viewModel.$insulinModelSettings
-//                    .sink { [dataManager] newValue in
-//                        dataManager!.loopManager!.insulinModelSettings = newValue
-//                        tableView.reloadRows(at: [indexPath], with: .automatic)
-//                    }
-//                    .store(in: &cancellables)
-                
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
