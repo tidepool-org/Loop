@@ -12,7 +12,8 @@ import SwiftUI
 
 public struct SettingsView: View, HorizontalSizeClassOverride {
     @Environment(\.dismiss) var dismiss
-    
+    @Environment(\.appName) var appName
+
     @ObservedObject var viewModel: SettingsViewModel
 
     public init(viewModel: SettingsViewModel) {
@@ -79,6 +80,7 @@ extension SettingsView {
                                                                                                        supportedInsulinModelSettings: viewModel.supportedInsulinModelSettings,
                                                                                                        pumpSupportedIncrements: viewModel.pumpSupportedIncrements,
                                                                                                        syncPumpSchedule: viewModel.syncPumpSchedule,
+                                                                                                       appName: appName,
                                                                                                        didSave: viewModel.didSave))) {
                 LargeButton(action: { },
                             includeArrow: false,

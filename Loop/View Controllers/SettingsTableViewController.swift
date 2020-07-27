@@ -503,23 +503,31 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 }
             case .insulinModel:
                 let glucoseUnit = dataManager.loopManager.insulinSensitivitySchedule?.unit ?? dataManager.loopManager.glucoseStore.preferredUnit ?? HKUnit.milligramsPerDeciliter
+                let binding = Binding<InsulinModelSettings>(
+                    get: { self.dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult)! },
+                    set: {
+                        self.dataManager.loopManager.insulinModelSettings = $0;
+                        self.tableView.reloadRows(at: [indexPath], with: .automatic)
+                    }
+                )
                 let viewModel = InsulinModelSelectionViewModel(
-                    insulinModelSettings: dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult),
+                    insulinModelSettings: binding,
                     insulinSensitivitySchedule: dataManager.loopManager.insulinSensitivitySchedule
                 )
 
-                viewModel.$insulinModelSettings
-                    .sink { [dataManager] newValue in
-                        dataManager!.loopManager!.insulinModelSettings = newValue
-                        tableView.reloadRows(at: [indexPath], with: .automatic)
-                    }
-                    .store(in: &cancellables)
+//                viewModel.$insulinModelSettings
+//                    .sink { [dataManager] newValue in
+//                        dataManager!.loopManager!.insulinModelSettings = newValue
+//                        tableView.reloadRows(at: [indexPath], with: .automatic)
+//                    }
+//                    .store(in: &cancellables)
                 
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
                     supportedModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
-                    appName: appName
+                    appName: appName,
+                    mode: .legacySettings
                 )
 
                 let hostingController = DismissibleHostingController(rootView: modelSelectionView, onDisappear: {
@@ -802,9 +810,8 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             dataManager?.loopManager.settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour
             dataManager?.loopManager.settings.maximumBolus = therapySettings.maximumBolus
         case .insulinModel:
-            if let insulinModel = therapySettings.insulinModel {
-                // TODO: Unify InsulinModelSettings and SettingsStore.InsulinModel
-                dataManager?.loopManager.insulinModelSettings = InsulinModelSettings(from: insulinModel)
+            if let insulinModelSettings = therapySettings.insulinModelSettings {
+                dataManager?.loopManager.insulinModelSettings = insulinModelSettings
             }
         case .carbRatio:
             dataManager?.loopManager.carbRatioSchedule = therapySettings.carbRatioSchedule
