@@ -14,7 +14,7 @@ extension UIColor {
 
     @nonobjc static let critical = UIColor(named: "critical") ?? systemRed
     
-    @nonobjc static let fresh = UIColor(named: "fresh") ?? systemGreen
+    @nonobjc static let fresh = UIColor(named: "fresh") ?? HIGGreenColor()
 
     @nonobjc static let glucose = UIColor(named: "glucose") ?? systemTeal
     
