@@ -253,7 +253,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private func warning(for notice: BolusEntryViewModel.Notice) -> some View {
         switch notice {
-        case .noBolusRecommended(suspendThreshold: let suspendThreshold):
+        case .predictedGlucoseBelowSuspendThreshold(suspendThreshold: let suspendThreshold):
             let suspendThresholdString = QuantityFormatter().string(from: suspendThreshold, for: viewModel.glucoseUnit) ?? String(describing: suspendThreshold)
             return WarningView(
                 title: Text("No Bolus Recommended", comment: "Title for bolus screen notice when no bolus is recommended"),

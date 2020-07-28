@@ -26,7 +26,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     enum Notice {
-        case noBolusRecommended(suspendThreshold: HKQuantity)
+        case predictedGlucoseBelowSuspendThreshold(suspendThreshold: HKQuantity)
         case staleGlucoseData
     }
 
@@ -327,8 +327,7 @@ final class BolusEntryViewModel: ObservableObject {
                 switch recommendation.notice {
                 case .glucoseBelowSuspendThreshold:
                     let suspendThreshold = dataManager.loopManager.settings.suspendThreshold
-                    assert(suspendThreshold != nil)
-                    notice = .noBolusRecommended(suspendThreshold: suspendThreshold!.quantity)
+                    notice = .predictedGlucoseBelowSuspendThreshold(suspendThreshold: suspendThreshold!.quantity)
                 default:
                     notice = nil
                 }
