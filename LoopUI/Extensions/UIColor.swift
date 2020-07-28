@@ -7,11 +7,33 @@
 //
 
 import UIKit
-import LoopKitUI
 
+// MARK: - Color palette for common elements
 extension UIColor {
-    @nonobjc public static let agingColor = UIColor.warning
+    @nonobjc static let carbs = UIColor(named: "carbs") ?? systemGreen
 
+    @nonobjc static let critical = UIColor(named: "critical") ?? systemRed
+    
+    @nonobjc static let fresh = UIColor(named: "fresh") ?? systemGreen
+
+    @nonobjc static let glucose = UIColor(named: "glucose") ?? systemTeal
+    
+    @nonobjc static let insulin = UIColor(named: "insulin") ?? systemOrange
+
+    // The loopAccent color is intended to be use as the app accent color.
+    @nonobjc static let loopAccent = UIColor(named: "accent") ?? systemBlue
+    
+    @nonobjc static let warning = UIColor(named: "warning") ?? systemYellow
+}
+
+// MARK: - Context for colors
+extension UIColor {
+    @nonobjc public static let agingColor = warning
+    
+    @nonobjc public static let axisLabelColor = secondaryLabel
+    
+    @nonobjc public static let axisLineColor = clear
+    
     @nonobjc public static let cellBackgroundColor: UIColor = {
         if #available(iOSApplicationExtension 13.0, iOS 13.0, *) {
             return .secondarySystemBackground
@@ -20,14 +42,26 @@ extension UIColor {
         }
     }()
     
-    @nonobjc public static let delete = UIColor.critical
+    @nonobjc public static let cobTintColor = carbs
     
-    @nonobjc public static let freshColor = UIColor.carbs
-    
-    @nonobjc public static let pumpStatusNormal = UIColor.insulin
-    
-    @nonobjc public static let staleColor = UIColor.critical
+    @nonobjc public static let destructive = critical
 
+    @nonobjc public static let doseTintColor = insulin
+    
+    @nonobjc public static let freshColor = fresh
+
+    @nonobjc public static let glucoseTintColor = glucose
+    
+    @nonobjc public static let gridColor = systemGray3
+    
+    @nonobjc public static let invalid = critical
+
+    @nonobjc public static let iobTintColor = insulin
+    
+    @nonobjc public static let pumpStatusNormal = insulin
+    
+    @nonobjc public static let staleColor = critical
+    
     @nonobjc public static let unknownColor: UIColor = {
         if #available(iOSApplicationExtension 13.0, iOS 13.0, *) {
             return .systemGray4
