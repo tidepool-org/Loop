@@ -273,14 +273,22 @@ final class BolusEntryViewModel: ObservableObject {
 
         let predictedGlucoseValues: [GlucoseValue]
         do {
-            predictedGlucoseValues = try state.predictGlucose(
-                startingAt: enteredGlucoseValue,
-                using: enteredGlucoseValue != nil ? [.insulin, .carbs] : .all,
-                potentialBolus: enteredBolusDose,
-                potentialCarbEntry: potentialCarbEntry,
-                replacingCarbEntry: originalCarbEntry,
-                includingPendingInsulin: true
-            )
+            if let manualGlucoseEntry = enteredGlucoseValue {
+                predictedGlucoseValues = try state.predictGlucoseFromManualGlucose(
+                    startingGlucose: manualGlucoseEntry,
+                    potentialBolus: enteredBolusDose,
+                    potentialCarbEntry: potentialCarbEntry,
+                    replacingCarbEntry: originalCarbEntry
+                )
+            } else {
+                predictedGlucoseValues = try state.predictGlucose(
+                    using: .all,
+                    potentialBolus: enteredBolusDose,
+                    potentialCarbEntry: potentialCarbEntry,
+                    replacingCarbEntry: originalCarbEntry,
+                    includingPendingInsulin: true
+                )
+            }
         } catch {
             predictedGlucoseValues = []
         }
