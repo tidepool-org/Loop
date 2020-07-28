@@ -519,7 +519,6 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
                     supportedModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
-                    appName: appName,
                     mode: .legacySettings
                 )
 
