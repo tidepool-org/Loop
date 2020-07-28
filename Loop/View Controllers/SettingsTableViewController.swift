@@ -503,17 +503,18 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 }
             case .insulinModel:
                 let glucoseUnit = dataManager.loopManager.insulinSensitivitySchedule?.unit ?? dataManager.loopManager.glucoseStore.preferredUnit ?? HKUnit.milligramsPerDeciliter
-                let binding = Binding<InsulinModelSettings>(
-                    get: { self.dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult)! },
-                    set: {
-                        self.dataManager.loopManager.insulinModelSettings = $0;
-                        self.tableView.reloadRows(at: [indexPath], with: .automatic)
-                    }
-                )
                 let viewModel = InsulinModelSelectionViewModel(
-                    insulinModelSettings: binding,
+                    insulinModelSettings: dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult),
                     insulinSensitivitySchedule: dataManager.loopManager.insulinSensitivitySchedule
                 )
+
+                viewModel.$insulinModelSettings
+                    .sink { [dataManager] newValue in
+                        dataManager!.loopManager!.insulinModelSettings = newValue
+                        tableView.reloadRows(at: [indexPath], with: .automatic)
+                    }
+                    .store(in: &cancellables)
+                
                 let modelSelectionView = InsulinModelSelection(
                     viewModel: viewModel,
                     glucoseUnit: glucoseUnit,
