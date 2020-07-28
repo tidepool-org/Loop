@@ -20,6 +20,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
     @State private var enteredBolusAmount = ""
 
     @State private var isManualGlucoseEntryEnabled = false
+    @State private var isManualGlucoseEntryRowVisible = false
     @State private var enteredManualGlucose = ""
 
     @State private var isInteractingWithChart = false
@@ -155,10 +156,6 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
         QuantityFormatter(for: viewModel.glucoseUnit).numberFormatter
     }
 
-    private var glucosePlaceholder: HKQuantity {
-        HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 0)
-    }
-
     @ViewBuilder
     private var manualGlucoseEntryRow: some View {
         if isManualGlucoseEntryEnabled {
@@ -168,14 +165,21 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 HStack(alignment: .firstTextBaseline) {
                     DismissibleKeyboardTextField(
                         text: typedManualGlucoseEntry,
-                        placeholder: glucoseFormatter.string(from: glucosePlaceholder.doubleValue(for: viewModel.glucoseUnit)) ?? String(describing: glucosePlaceholder),
-                        font: .heavy(.title1),
+                        placeholder: "---",
+                        font: typedManualGlucoseEntry.wrappedValue == "" ? .preferredFont(forTextStyle: .title1) : .heavy(.title1),
                         textAlignment: .right,
-                        keyboardType: .decimalPad
+                        keyboardType: .decimalPad,
+                        didBecomeFirstResponder: isManualGlucoseEntryRowVisible
                     )
 
                     Text(QuantityFormatter().string(from: viewModel.glucoseUnit))
                         .foregroundColor(Color(.secondaryLabelColor))
+                }
+            }
+            .onAppear {
+                // After the row is first made visible, make the text field the first responder
+                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(10)) {
+                    self.isManualGlucoseEntryRowVisible = true
                 }
             }
         }
@@ -280,22 +284,35 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var actionArea: some View {
         VStack(spacing: 0) {
-            if viewModel.activeNotice != nil {
+            if isNoticeVisible {
                 warning(for: viewModel.activeNotice!)
-                    .padding()
-                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
+                    .padding([.top, .horizontal])
+                    .transition(AnyTransition.opacity.combined(with: AnyTransition.move(edge: .bottom)))
             }
 
-            VStack(spacing: 10) {
-                if viewModel.activeNotice == .staleGlucoseData {
-                    enterManualGlucoseButton
-                }
-
-                primaryActionButton
+            if isManualGlucosePromptVisible {
+                enterManualGlucoseButton
+                    .transition(AnyTransition.opacity.combined(with: AnyTransition.move(edge: .bottom)))
             }
+
+            primaryActionButton
         }
         .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
         .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
+    }
+
+    private var isNoticeVisible: Bool {
+        if viewModel.activeNotice == nil {
+            return false
+        } else if viewModel.activeNotice != .staleGlucoseData {
+            return true
+        } else {
+            return !isManualGlucoseEntryEnabled
+        }
+    }
+
+    private var isManualGlucosePromptVisible: Bool {
+        viewModel.activeNotice == .staleGlucoseData && !isManualGlucoseEntryEnabled
     }
 
     private func warning(for notice: BolusEntryViewModel.Notice) -> some View {
@@ -316,11 +333,15 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var enterManualGlucoseButton: some View {
         Button(
-            action: { self.isManualGlucoseEntryEnabled = true },
+            action: {
+                withAnimation {
+                    self.isManualGlucoseEntryEnabled = true
+                }
+            },
             label: { Text("Enter Manual BG") }
         )
         .buttonStyle(ActionButtonStyle(.primary))
-        .padding(.horizontal)
+        .padding([.top, .horizontal])
     }
 
     private var primaryActionButton: some View {
@@ -336,8 +357,8 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 }
             }
         )
-        .buttonStyle(ActionButtonStyle(viewModel.activeNotice == .staleGlucoseData ? .secondary : .primary))
-        .padding([.horizontal, .bottom])
+        .buttonStyle(ActionButtonStyle(isManualGlucosePromptVisible ? .secondary : .primary))
+        .padding()
         .disabled(viewModel.potentialCarbEntry == nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0)
     }
 
@@ -418,19 +439,5 @@ struct LabelBackground: ViewModifier {
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .fill(Color(.systemGray6))
             )
-    }
-}
-
-extension UIFont {
-    static func heavy(_ textStyle: UIFont.TextStyle) -> UIFont {
-        let descriptor = UIFontDescriptor
-            .preferredFontDescriptor(withTextStyle: textStyle)
-            .addingAttributes([
-                .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
-                ]
-            ])
-
-        return UIFont(descriptor: descriptor, size: 0)
     }
 }
