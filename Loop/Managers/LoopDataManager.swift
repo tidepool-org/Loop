@@ -1895,6 +1895,6 @@ extension LoopDataManager {
                         insulinSensitivitySchedule: insulinSensitivitySchedule,
                         carbRatioSchedule: carbRatioSchedule,
                         basalRateSchedule: basalRateSchedule,
-                        insulinModel: insulinModelSettings.map { StoredSettings.InsulinModel($0) })
+                        insulinModelSettings: insulinModelSettings)
     }
 }
