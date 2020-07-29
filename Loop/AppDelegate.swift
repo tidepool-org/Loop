@@ -15,7 +15,7 @@ import HealthKit
 import LoopKitUI
 
 @UIApplicationMain
-final class AppDelegate: UIResponder, UIApplicationDelegate, OrientationLockable {
+final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationController {
 
     private lazy var log = DiagnosticLog(category: "AppDelegate")
 
@@ -125,7 +125,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, OrientationLockable
         completionHandler(.noData)
     }
 
-    // MARK: - OrientationLockable
+    // MARK: - DeviceOrientationController
 
     var supportedInterfaceOrientations = UIInterfaceOrientationMask.allButUpsideDown
 
