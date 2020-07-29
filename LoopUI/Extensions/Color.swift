@@ -8,39 +8,52 @@
 
 import SwiftUI
 
+// MARK: - Color palette for common elements
+extension Color {
+    static let carbs = Color("carbs")
+
+    static let critical = Color("critical")
+    
+    static let fresh = Color("fresh")
+
+    static let glucose = Color("glucose")
+    
+    static let insulin = Color("insulin")
+
+    // The loopAccent color is intended to be use as the app accent color.
+    static let loopAccent = Color("accent")
+    
+    static let warning = Color("warning")
+}
+
+
 // Color version of the UIColor context colors
 extension Color {
-    public static let agingColor = Color(UIColor.agingColor)
+    public static let agingColor = warning
     
-    public static let axisLabelColor = Color(UIColor.axisLabelColor)
+    public static let axisLabelColor = secondary
     
-    public static let axisLineColor = Color(UIColor.axisLineColor)
+    public static let axisLineColor = clear
     
     public static let cellBackgroundColor = Color(UIColor.cellBackgroundColor)
-
-    public static let cobTintColor = Color(UIColor.cobTintColor)
     
-    public static let critical = Color(UIColor.critical)
-
-    public static let destructive = Color(UIColor.destructive)
-
-    public static let doseTintColor = Color(UIColor.doseTintColor)
+    public static let cobTintColor = carbs
     
-    public static let freshColor = Color(UIColor.freshColor)
+    public static let destructive = critical
 
-    public static let glucoseTintColor = Color(UIColor.glucoseTintColor)
+    public static let doseTintColor = insulin
+    
+    public static let glucoseTintColor = glucose
     
     public static let gridColor = Color(UIColor.gridColor)
 
-    public static let invalid = Color(UIColor.invalid)
+    public static let invalid = critical
 
-    public static let iobTintColor = Color(UIColor.iobTintColor)
+    public static let iobTintColor = insulin
     
-    public static let pumpStatusNormal = Color(UIColor.pumpStatusNormal)
+    public static let pumpStatusNormal = insulin
     
-    public static let staleColor = Color(UIColor.staleColor)
+    public static let staleColor = critical
     
     public static let unknownColor = Color(UIColor.unknownColor)
-    
-    public static let warning = Color(UIColor.warning)
 }
