@@ -21,6 +21,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
     @State private var isInteractingWithChart = false
     @State private var isKeyboardVisible = false
 
+    @State var orientationLock = OrientationLock(.portrait)
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
