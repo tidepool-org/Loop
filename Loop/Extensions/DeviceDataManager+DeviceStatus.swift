@@ -47,12 +47,12 @@ extension DeviceDataManager {
     
     static var addCGMStatusHighlight: AddDeviceStatusHighlight {
         return AddDeviceStatusHighlight(localizedMessage: NSLocalizedString("Add CGM", comment: "Title text for button to set up a CGM"),
-                                        state: .normalCGM)
+                                        state: .critical)
     }
     
     static var addPumpStatusHighlight: AddDeviceStatusHighlight {
         return AddDeviceStatusHighlight(localizedMessage: NSLocalizedString("Add Pump", comment: "Title text for button to set up a Pump"),
-                                        state: .normalPump)
+                                        state: .critical)
     }
     
     struct AddDeviceStatusHighlight: DeviceStatusHighlight {

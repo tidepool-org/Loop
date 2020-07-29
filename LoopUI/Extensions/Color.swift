@@ -12,7 +12,7 @@ import SwiftUI
 extension Color {
     static let carbs = Color("carbs")
 
-    static let critical = Color("critical")
+    public static let critical = Color("critical")
     
     static let fresh = Color("fresh")
 
