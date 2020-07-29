@@ -347,7 +347,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
     private var primaryActionButton: some View {
         Button(
             action: {
-                self.viewModel.saveCarbsAndDeliverBolus(onSuccess: self.dismiss)
+                self.viewModel.saveAndDeliver(onSuccess: self.dismiss)
             },
             label: {
                 if viewModel.potentialCarbEntry != nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 {
@@ -391,6 +391,19 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             return SwiftUI.Alert(
                 title: Text("Failed to Save Carb Entry", comment: "Alert title for a carb entry persistence error"),
                 message: Text("An error occurred while trying to save your carb entry.", comment: "Alert message for a carb entry persistence error")
+            )
+        case .manualGlucoseEntryOutOfAcceptableRange:
+            let formatter = QuantityFormatter(for: viewModel.glucoseUnit)
+            let acceptableLowerBound = formatter.string(from: BolusEntryViewModel.validManualGlucoseEntryRange.lowerBound, for: viewModel.glucoseUnit) ?? String(describing: BolusEntryViewModel.validManualGlucoseEntryRange.lowerBound)
+            let acceptableUpperBound = formatter.string(from: BolusEntryViewModel.validManualGlucoseEntryRange.upperBound, for: viewModel.glucoseUnit) ?? String(describing: BolusEntryViewModel.validManualGlucoseEntryRange.upperBound)
+            return SwiftUI.Alert(
+                title: Text("Glucose Entry Out of Range", comment: "Alert title for a manual glucose entry out of range error"),
+                message: Text("A manual glucose entry must be between \(acceptableLowerBound) and \(acceptableUpperBound)", comment: "Alert message for a manual glucose entry out of range error")
+            )
+        case .manualGlucoseEntryPersistenceFailure:
+            return SwiftUI.Alert(
+                title: Text("Failed to Manual Glucose Entry", comment: "Alert title for a manual glucose entry persistence error"),
+                message: Text("An error occurred while trying to save your manual glucose entry.", comment: "Alert message for a manual glucose entry persistence error")
             )
         }
     }
