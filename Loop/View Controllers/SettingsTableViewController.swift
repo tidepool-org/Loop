@@ -773,7 +773,8 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             rootView: SettingsView(viewModel: viewModel),
             onDisappear: {
                 tableView.deselectRow(at: indexPath, animated: true)
-        })
+        },
+            colorPalette: ColorPalette(theColor: .red))
         present(hostingController, animated: true)
         tableView.deselectRow(at: indexPath, animated: true)
     }

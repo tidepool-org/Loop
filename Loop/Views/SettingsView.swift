@@ -13,6 +13,7 @@ import SwiftUI
 public struct SettingsView: View, HorizontalSizeClassOverride {
     @Environment(\.dismiss) var dismiss
     @Environment(\.appName) var appName
+    @Environment(\.colorPalette) var colorPalette
 
     @ObservedObject var viewModel: SettingsViewModel
 
@@ -52,6 +53,7 @@ extension SettingsView {
         Section(header: SectionHeader(label: viewModel.appNameAndVersion)) {
             Toggle(isOn: $viewModel.dosingEnabled) {
                 Text(NSLocalizedString("Closed Loop", comment: "The title text for the looping enabled switch cell"))
+                    .foregroundColor(colorPalette?.theColor)
             }
         }
     }
