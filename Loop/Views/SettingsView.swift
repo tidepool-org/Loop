@@ -12,7 +12,8 @@ import SwiftUI
 
 public struct SettingsView: View, HorizontalSizeClassOverride {
     @Environment(\.dismiss) var dismiss
-    
+    @Environment(\.appName) var appName
+
     @ObservedObject var viewModel: SettingsViewModel
 
     public init(viewModel: SettingsViewModel) {
@@ -74,7 +75,9 @@ extension SettingsView {
         
     private var therapySettingsSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Configuration", comment: "The title of the Configuration section in settings"))) {
-            return NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(therapySettings: viewModel.therapySettings,
+            return NavigationLink(destination: TherapySettingsView(viewModel: TherapySettingsViewModel(mode: .settings,
+                                                                                                       therapySettings: viewModel.therapySettings,
+                                                                                                       appName: appName,
                                                                                                        supportedInsulinModelSettings: viewModel.supportedInsulinModelSettings,
                                                                                                        pumpSupportedIncrements: viewModel.pumpSupportedIncrements,
                                                                                                        syncPumpSchedule: viewModel.syncPumpSchedule,
