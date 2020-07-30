@@ -25,6 +25,7 @@ final class BolusEntryViewModel: ObservableObject {
         case carbEntryPersistenceFailure
         case manualGlucoseEntryOutOfAcceptableRange
         case manualGlucoseEntryPersistenceFailure
+        case glucoseNoLongerStale
     }
 
     enum Notice: Equatable {
@@ -52,6 +53,7 @@ final class BolusEntryViewModel: ObservableObject {
     let potentialCarbEntry: NewCarbEntry?
     let selectedCarbAbsorptionTimeEmoji: String?
 
+    @Published var isManualGlucoseEntryEnabled = false
     @Published var enteredManualGlucose: HKQuantity?
     private var manualGlucoseSample: NewGlucoseSample? // derived from `enteredManualGlucose`, but stored to ensure timestamp consistency
 
@@ -351,17 +353,34 @@ final class BolusEntryViewModel: ObservableObject {
         // Prevent any UI updates after a bolus has been initiated.
         guard !isInitiatingSaveOrBolus else { return }
 
+        disableManualGlucoseEntryIfNecessary()
         updateChartDateInterval()
         updateStoredGlucoseValues()
         updateFromLoopState()
         updateActiveInsulin()
     }
 
+    private func disableManualGlucoseEntryIfNecessary() {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        if isManualGlucoseEntryEnabled,
+            let latestGlucose = dataManager.loopManager.glucoseStore.latestGlucose,
+            Date().timeIntervalSince(latestGlucose.startDate) <= dataManager.loopManager.settings.inputDataRecencyInterval
+        {
+            isManualGlucoseEntryEnabled = false
+            enteredManualGlucose = nil
+            manualGlucoseSample = nil
+            activeAlert = .glucoseNoLongerStale
+        }
+    }
+
     private func updateStoredGlucoseValues() {
         dataManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: chartDateInterval.start) { [weak self] values in
             DispatchQueue.main.async {
-                self?.storedGlucoseValues = values
-                self?.updateGlucoseChartValues()
+                guard let self = self else { return }
+
+                self.storedGlucoseValues = values
+                self.updateGlucoseChartValues()
             }
         }
     }

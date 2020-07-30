@@ -19,7 +19,6 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     @State private var enteredBolusAmount = ""
 
-    @State private var isManualGlucoseEntryEnabled = false
     @State private var isManualGlucoseEntryRowVisible = false
     @State private var enteredManualGlucose = ""
 
@@ -47,12 +46,23 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
         }
         .keyboardAware()
         .edgesIgnoringSafeArea(isKeyboardVisible ? [] : .bottom)
-        .navigationBarTitle(viewModel.potentialCarbEntry == nil ? Text("Bolus", comment: "Title for bolus entry screen") : Text("Meal Bolus", comment: "Title for bolus entry screen when also entering carbs"))
+        .navigationBarTitle(
+            viewModel.potentialCarbEntry == nil
+                ? Text("Bolus", comment: "Title for bolus entry screen")
+                : Text("Meal Bolus", comment: "Title for bolus entry screen when also entering carbs")
+        )
         .alert(item: $viewModel.activeAlert, content: alert(for:))
         .onReceive(viewModel.$enteredBolus) { updatedBolusEntry in
             // The view model can update the user's entered bolus when the recommendation changes; ensure the text entry updates in tandem.
             let amount = updatedBolusEntry.doubleValue(for: .internationalUnit())
             self.enteredBolusAmount = amount == 0 ? "" : Self.doseAmountFormatter.string(from: amount) ?? String(amount)
+        }
+        .onReceive(viewModel.$isManualGlucoseEntryEnabled) { isManualGlucoseEntryEnabled in
+            // The view model can disable manual glucose entry if CGM data returns.
+            if !isManualGlucoseEntryEnabled {
+                self.isManualGlucoseEntryRowVisible = false
+                self.enteredManualGlucose = ""
+            }
         }
     }
 
@@ -130,7 +140,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                if isManualGlucoseEntryEnabled {
+                if viewModel.isManualGlucoseEntryEnabled {
                     manualGlucoseEntryRow
                 } else if viewModel.potentialCarbEntry != nil {
                     potentialCarbEntryRow
@@ -140,11 +150,11 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             }
             .padding(.top, 8)
 
-            if isManualGlucoseEntryEnabled && viewModel.potentialCarbEntry != nil {
+            if viewModel.isManualGlucoseEntryEnabled && viewModel.potentialCarbEntry != nil {
                 potentialCarbEntryRow
             }
 
-            if isManualGlucoseEntryEnabled || viewModel.potentialCarbEntry != nil {
+            if viewModel.isManualGlucoseEntryEnabled || viewModel.potentialCarbEntry != nil {
                 recommendedBolusRow
             }
 
@@ -158,7 +168,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     @ViewBuilder
     private var manualGlucoseEntryRow: some View {
-        if isManualGlucoseEntryEnabled {
+        if viewModel.isManualGlucoseEntryEnabled {
             HStack {
                 Text("Manual BG Entry", comment: "Label for manual glucose entry row on bolus screen")
                 Spacer()
@@ -305,12 +315,12 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
         } else if viewModel.activeNotice != .staleGlucoseData {
             return true
         } else {
-            return !isManualGlucoseEntryEnabled
+            return !viewModel.isManualGlucoseEntryEnabled
         }
     }
 
     private var isManualGlucosePromptVisible: Bool {
-        viewModel.activeNotice == .staleGlucoseData && !isManualGlucoseEntryEnabled
+        viewModel.activeNotice == .staleGlucoseData && !viewModel.isManualGlucoseEntryEnabled
     }
 
     private func warning(for notice: BolusEntryViewModel.Notice) -> some View {
@@ -333,7 +343,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
         Button(
             action: {
                 withAnimation {
-                    self.isManualGlucoseEntryEnabled = true
+                    self.viewModel.isManualGlucoseEntryEnabled = true
                 }
             },
             label: { Text("Enter Manual BG", comment: "Button text prompting manual glucose entry on bolus screen") }
@@ -382,7 +392,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             }
             return SwiftUI.Alert(
                 title: Text("Exceeds Maximum Bolus", comment: "Alert title for a maximum bolus validation error"),
-                message: Text("The maximum bolus amount is \(maximumBolusAmountString) U", comment: "Alert message for a maximum bolus validation error (1: max bolus value)")
+                message: Text("The maximum bolus amount is \(maximumBolusAmountString) U.", comment: "Alert message for a maximum bolus validation error (1: max bolus value)")
             )
         case .noPumpManagerConfigured:
             return SwiftUI.Alert(
@@ -411,6 +421,11 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             return SwiftUI.Alert(
                 title: Text("Unable to Save Manual Glucose Entry", comment: "Alert title for a manual glucose entry persistence error"),
                 message: Text("An error occurred while trying to save your manual glucose entry.", comment: "Alert message for a manual glucose entry persistence error")
+            )
+        case .glucoseNoLongerStale:
+            return SwiftUI.Alert(
+                title: Text("Glucose Data Now Available", comment: "Alert title when glucose data returns while on bolus screen"),
+                message: Text("An updated bolus recommendation is available.", comment: "Alert message when glucose data returns while on bolus screen")
             )
         }
     }
