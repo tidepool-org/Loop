@@ -21,4 +21,12 @@ extension DeviceStatusHighlight {
             return .critical
         }
     }
+    
+    public var image: UIImage? {
+        if let image = UIImage(named: imageName) {
+            return image
+        } else {
+            return UIImage(systemName: imageName)
+        }
+    }
 }

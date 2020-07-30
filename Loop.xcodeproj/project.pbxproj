@@ -408,6 +408,7 @@
 		A9F703772489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F703762489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift */; };
 		B405E35924D2A75B00DD058D /* DerivedAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A966152923EA5A37005D8B29 /* DerivedAssets.xcassets */; };
 		B405E35A24D2B1A400DD058D /* HUDAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4F2C15961E09E94E00E160D4 /* HUDAssets.xcassets */; };
+		B405E35B24D2E05600DD058D /* HUDAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4F2C15961E09E94E00E160D4 /* HUDAssets.xcassets */; };
 		B42C951424A3C76000857C73 /* CGMStatusHUDViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42C951324A3C76000857C73 /* CGMStatusHUDViewModel.swift */; };
 		B48B0BAC24900093009A48DE /* PumpStatusHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B48B0BAB24900093009A48DE /* PumpStatusHUDView.swift */; };
 		B490A03F24D0550F00F509FA /* GlucoseValueType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B490A03E24D0550F00F509FA /* GlucoseValueType.swift */; };
@@ -2607,6 +2608,7 @@
 			files = (
 				B491B09E24D0B600004CBE8F /* DerivedAssets.xcassets in Resources */,
 				4F70C1E41DE8DCA7006380B7 /* MainInterface.storyboard in Resources */,
+				B405E35B24D2E05600DD058D /* HUDAssets.xcassets in Resources */,
 				7D7076541FE06EE2004AC8EA /* InfoPlist.strings in Resources */,
 				7D7076351FE06EDE004AC8EA /* Localizable.strings in Resources */,
 			);
