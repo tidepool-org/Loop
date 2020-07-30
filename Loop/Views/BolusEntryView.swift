@@ -295,12 +295,12 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             if isNoticeVisible {
                 warning(for: viewModel.activeNotice!)
                     .padding([.top, .horizontal])
-                    .transition(AnyTransition.opacity.combined(with: AnyTransition.move(edge: .bottom)))
+                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
             }
 
             if isManualGlucosePromptVisible {
                 enterManualGlucoseButton
-                    .transition(AnyTransition.opacity.combined(with: AnyTransition.move(edge: .bottom)))
+                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
             }
 
             primaryActionButton

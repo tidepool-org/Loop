@@ -389,22 +389,14 @@ final class BolusEntryViewModel: ObservableObject {
         dispatchPrecondition(condition: .onQueue(.main))
 
         var chartGlucoseValues = storedGlucoseValues
-        let manualGlucoseEntry = enteredManualGlucose
-        if let manualGlucose = manualGlucoseEntry {
-            let sampleDate = Date()
-            let manualGlucoseSample = HKQuantitySample(
-                type: HKQuantityType.quantityType(forIdentifier: .bloodGlucose)!,
-                quantity: manualGlucose,
-                start: sampleDate,
-                end: sampleDate
-            )
-            chartGlucoseValues.append(manualGlucoseSample)
+        if let manualGlucoseSample = manualGlucoseSample {
+            chartGlucoseValues.append(manualGlucoseSample.quantitySample)
         }
 
         self.glucoseValues = chartGlucoseValues
     }
 
-    /// - NOTE: `completion` is invoked on the main thread after predicted glucose values are updated
+    /// - NOTE: `completion` is invoked on the main queue after predicted glucose values are updated
     private func updatePredictedGlucoseValues(from state: LoopState, completion: @escaping () -> Void = {}) {
         dispatchPrecondition(condition: .notOnQueue(.main))
 
