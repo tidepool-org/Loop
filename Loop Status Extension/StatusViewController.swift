@@ -108,17 +108,10 @@ class StatusViewController: UIViewController, NCWidgetProviding {
         
         activeCarbsTitleLabel.text = NSLocalizedString("Active Carbs", comment: "Widget label title describing the active carbs")
         activeInsulinTitleLabel.text = NSLocalizedString("Active Insulin", comment: "Widget label title describing the active insulin")
-        if #available(iOSApplicationExtension 13.0, iOS 13.0, *) {
-            activeCarbsTitleLabel.textColor = .secondaryLabel
-            activeCarbsAmountLabel.textColor = .label
-            activeInsulinTitleLabel.textColor = .secondaryLabel
-            activeInsulinAmountLabel.textColor = .label
-        } else {
-            activeCarbsTitleLabel.textColor = .systemGray
-            activeCarbsAmountLabel.textColor = .black
-            activeInsulinTitleLabel.textColor = .systemGray
-            activeCarbsAmountLabel.textColor = .black
-        }
+        activeCarbsTitleLabel.textColor = .secondaryLabel
+        activeCarbsAmountLabel.textColor = .label
+        activeInsulinTitleLabel.textColor = .secondaryLabel
+        activeInsulinAmountLabel.textColor = .label
 
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(openLoopApp(_:)))
         view.addGestureRecognizer(tapGestureRecognizer)

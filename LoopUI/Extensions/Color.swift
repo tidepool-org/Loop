@@ -11,8 +11,6 @@ import SwiftUI
 // MARK: - Color palette for common elements
 extension Color {
     static let carbs = Color("carbs")
-
-    public static let critical = Color("critical")
     
     static let fresh = Color("fresh")
 
@@ -38,6 +36,8 @@ extension Color {
     public static let cellBackgroundColor = Color(UIColor.cellBackgroundColor)
     
     public static let cobTintColor = carbs
+    
+    public static let critical = red
     
     public static let destructive = critical
 

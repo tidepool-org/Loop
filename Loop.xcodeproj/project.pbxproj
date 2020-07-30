@@ -406,6 +406,7 @@
 		A9F703732489BC8500C98AD8 /* CarbStore+SimulatedCoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F703722489BC8500C98AD8 /* CarbStore+SimulatedCoreData.swift */; };
 		A9F703752489C9A000C98AD8 /* GlucoseStore+SimulatedCoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F703742489C9A000C98AD8 /* GlucoseStore+SimulatedCoreData.swift */; };
 		A9F703772489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F703762489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift */; };
+		B405E35924D2A75B00DD058D /* DerivedAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A966152923EA5A37005D8B29 /* DerivedAssets.xcassets */; };
 		B42C951424A3C76000857C73 /* CGMStatusHUDViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42C951324A3C76000857C73 /* CGMStatusHUDViewModel.swift */; };
 		B48B0BAC24900093009A48DE /* PumpStatusHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B48B0BAB24900093009A48DE /* PumpStatusHUDView.swift */; };
 		B490A03F24D0550F00F509FA /* GlucoseValueType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B490A03E24D0550F00F509FA /* GlucoseValueType.swift */; };
@@ -2537,6 +2538,7 @@
 				7D70763A1FE06EDF004AC8EA /* InfoPlist.strings in Resources */,
 				7D70763F1FE06EDF004AC8EA /* ckcomplication.strings in Resources */,
 				43A943901B926B7B0051FA24 /* Assets.xcassets in Resources */,
+				B405E35924D2A75B00DD058D /* DerivedAssets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

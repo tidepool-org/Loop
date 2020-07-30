@@ -11,8 +11,6 @@ import UIKit
 // MARK: - Color palette for common elements
 extension UIColor {
     @nonobjc static let carbs = UIColor(named: "carbs") ?? systemGreen
-
-    @nonobjc static let critical = UIColor(named: "critical") ?? systemRed
     
     @nonobjc static let fresh = UIColor(named: "fresh") ?? HIGGreenColor()
 
@@ -34,15 +32,11 @@ extension UIColor {
     
     @nonobjc public static let axisLineColor = clear
     
-    @nonobjc public static let cellBackgroundColor: UIColor = {
-        if #available(iOSApplicationExtension 13.0, iOS 13.0, *) {
-            return .secondarySystemBackground
-        } else {
-            return UIColor(white: 239 / 255, alpha: 1)
-        }
-    }()
+    @nonobjc public static let cellBackgroundColor = secondarySystemBackground
     
     @nonobjc public static let cobTintColor = carbs
+    
+    @nonobjc static let critical = systemRed
     
     @nonobjc public static let destructive = critical
 
@@ -62,11 +56,5 @@ extension UIColor {
     
     @nonobjc public static let staleColor = critical
     
-    @nonobjc public static let unknownColor: UIColor = {
-        if #available(iOSApplicationExtension 13.0, iOS 13.0, *) {
-            return .systemGray4
-        } else {
-            return UIColor(red: 198 / 255, green: 199 / 255, blue: 201 / 255, alpha: 1)
-        }
-    }()
+    @nonobjc public static let unknownColor = systemGray4
 }
