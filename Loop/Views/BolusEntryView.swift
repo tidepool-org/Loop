@@ -233,9 +233,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     .font(.title)
                     .foregroundColor(viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 && viewModel.isBolusRecommended ? .accentColor : Color(.label))
                     .onTapGesture {
-                        if self.viewModel.isBolusRecommended {
-                            self.typedBolusEntry.wrappedValue = self.recommendedBolusString
-                        }
+                        self.viewModel.acceptRecommendedBolus()
                     }
 
                 bolusUnitsLabel
@@ -338,7 +336,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     self.isManualGlucoseEntryEnabled = true
                 }
             },
-            label: { Text("Enter Manual BG") }
+            label: { Text("Enter Manual BG", comment: "Button text prompting manual glucose entry on bolus screen") }
         )
         .buttonStyle(ActionButtonStyle(.primary))
         .padding([.top, .horizontal])
@@ -350,16 +348,25 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 self.viewModel.saveAndDeliver(onSuccess: self.dismiss)
             },
             label: {
-                if viewModel.potentialCarbEntry != nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 {
-                    Text("Save without Bolusing")
+                if canSaveWithoutBolusing {
+                    Text("Save without Bolusing", comment: "Button text to save carbs and/or manual glucose entry without a bolus")
                 } else {
-                    Text("Save and Deliver")
+                    Text("Save and Deliver", comment: "Button text to save carbs and/or manual glucose entry and deliver a bolus")
                 }
             }
         )
         .buttonStyle(ActionButtonStyle(isManualGlucosePromptVisible ? .secondary : .primary))
         .padding()
-        .disabled(viewModel.potentialCarbEntry == nil && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0)
+        .disabled(isPrimaryActionButtonDisabled)
+    }
+
+    private var canSaveWithoutBolusing: Bool {
+        (viewModel.enteredManualGlucose != nil || viewModel.potentialCarbEntry != nil)
+            && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0
+    }
+
+    private var isPrimaryActionButtonDisabled: Bool {
+        !canSaveWithoutBolusing && viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0
     }
 
     private func alert(for alert: BolusEntryViewModel.Alert) -> SwiftUI.Alert {
@@ -389,7 +396,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             )
         case .carbEntryPersistenceFailure:
             return SwiftUI.Alert(
-                title: Text("Failed to Save Carb Entry", comment: "Alert title for a carb entry persistence error"),
+                title: Text("Unable to Save Carb Entry", comment: "Alert title for a carb entry persistence error"),
                 message: Text("An error occurred while trying to save your carb entry.", comment: "Alert message for a carb entry persistence error")
             )
         case .manualGlucoseEntryOutOfAcceptableRange:
@@ -402,7 +409,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             )
         case .manualGlucoseEntryPersistenceFailure:
             return SwiftUI.Alert(
-                title: Text("Failed to Manual Glucose Entry", comment: "Alert title for a manual glucose entry persistence error"),
+                title: Text("Unable to Save Manual Glucose Entry", comment: "Alert title for a manual glucose entry persistence error"),
                 message: Text("An error occurred while trying to save your manual glucose entry.", comment: "Alert message for a manual glucose entry persistence error")
             )
         }
