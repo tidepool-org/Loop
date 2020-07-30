@@ -56,6 +56,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         if let notification = notificationOption as? [String: AnyObject] {
             deviceDataManager.handleRemoteNotification(notification)
         }
+        
+        window?.tintColor = .loopAccent
                 
         return true
     }
