@@ -285,6 +285,9 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             }
 
             // CGM Status
+            self.hudView.cgmStatusHUD.presentStatusHighlight(context.cgmStatusHighlightContext)
+            self.hudView.cgmStatusHUD.lifecycleProgress = context.cgmLifecycleProgressContext
+            
             guard let unit = context.predictedGlucose?.unit else {
                 return
             }
@@ -298,9 +301,6 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                     sensor: context.sensor
                 )
             }
-
-            self.hudView.cgmStatusHUD.presentStatusHighlight(context.cgmStatusHighlightContext)
-            self.hudView.cgmStatusHUD.lifecycleProgress = context.cgmLifecycleProgressContext
 
             // Charts
             let glucoseFormatter = QuantityFormatter()
