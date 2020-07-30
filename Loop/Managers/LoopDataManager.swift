@@ -1006,14 +1006,17 @@ extension LoopDataManager {
         var retrospectiveGlucoseEffect = self.retrospectiveGlucoseEffect
         var effects: [[GlucoseEffect]] = []
 
-        if inputs.contains(.carbs), let carbEffect = carbEffectOverride ?? self.carbEffect {
+        if inputs.contains(.carbs) {
             if let potentialCarbEntry = potentialCarbEntry {
                 let retrospectiveStart = lastGlucoseDate.addingTimeInterval(-retrospectiveCorrection.retrospectionInterval)
 
                 let insulinCounteractionEffects = insulinCounteractionEffectsOverride ?? self.insulinCounteractionEffects
                 if potentialCarbEntry.startDate > lastGlucoseDate || recentCarbEntries?.isEmpty != false, replacedCarbEntry == nil {
                     // The potential carb effect is independent and can be summed with the existing effect
-                    effects.append(carbEffect)
+                    if let carbEffect = carbEffectOverride ?? self.carbEffect {
+                        effects.append(carbEffect)
+                    }
+
                     let potentialCarbEffect = try carbStore.glucoseEffects(
                         of: [potentialCarbEntry],
                         startingAt: retrospectiveStart,
@@ -1021,7 +1024,8 @@ extension LoopDataManager {
                     )
 
                     effects.append(potentialCarbEffect)
-                } else if var recentEntries = recentCarbEntries {
+                } else {
+                    var recentEntries = self.recentCarbEntries ?? []
                     if let replacedCarbEntry = replacedCarbEntry, let index = recentEntries.firstIndex(of: replacedCarbEntry) {
                         recentEntries.remove(at: index)
                     }
@@ -1040,10 +1044,8 @@ extension LoopDataManager {
                     effects.append(potentialCarbEffect)
 
                     retrospectiveGlucoseEffect = computeRetrospectiveGlucoseEffect(startingAt: glucose, carbEffects: potentialCarbEffect)
-                } else {
-                    effects.append(carbEffect)
                 }
-            } else {
+            } else if let carbEffect = carbEffectOverride ?? self.carbEffect {
                 effects.append(carbEffect)
             }
         }
@@ -1055,8 +1057,10 @@ extension LoopDataManager {
             computationInsulinEffect = includingPendingInsulin ? self.insulinEffectIncludingPendingInsulin : self.insulinEffect
         }
 
-        if inputs.contains(.insulin), let insulinEffect = computationInsulinEffect {
-            effects.append(insulinEffect)
+        if inputs.contains(.insulin) {
+            if let insulinEffect = computationInsulinEffect {
+                effects.append(insulinEffect)
+            }
 
             if let potentialBolus = potentialBolus {
                 guard let sensitivity = insulinSensitivityScheduleApplyingOverrideHistory else {
