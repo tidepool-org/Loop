@@ -94,8 +94,10 @@ class RecommendTempBasalTests: XCTestCase {
     var suspendThreshold: GlucoseThreshold {
         return GlucoseThreshold(unit: HKUnit.milligramsPerDeciliter, value: 55)
     }
+    
+    var exponentialInsulinModel: InsulinModel = ExponentialInsulinModel(actionDuration: 21600.0, peakActivityTime: 4500.0)
 
-    var insulinModel: InsulinModel {
+    var walshInsulinModel: InsulinModel {
         return WalshInsulinModel(actionDuration: insulinActionDuration)
     }
 
@@ -111,7 +113,24 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
+            basalRates: basalRateSchedule,
+            maxBasalRate: maxBasalRate,
+            lastTempBasal: nil
+        )
+
+        XCTAssertNil(dose)
+    }
+    
+    func testNoChangeExponential() {
+        let glucose = loadGlucoseValueFixture("recommend_temp_basal_no_change_glucose")
+
+        let dose = glucose.recommendedTempBasal(
+            to: glucoseTargetRange,
+            at: glucose.first!.startDate,
+            suspendThreshold: suspendThreshold.quantity,
+            sensitivity: insulinSensitivitySchedule,
+            model: exponentialInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -128,7 +147,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil,
@@ -147,7 +166,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -169,7 +188,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: lastTempBasal
@@ -187,7 +206,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -208,7 +227,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: lastTempBasal
@@ -235,7 +254,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: lastTempBasal
@@ -249,7 +268,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -266,7 +285,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -284,7 +303,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -305,7 +324,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: lastTempBasal
@@ -323,7 +342,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -341,7 +360,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -359,7 +378,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -377,7 +396,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: self.insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -394,7 +413,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -412,7 +431,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -430,7 +449,7 @@ class RecommendTempBasalTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -447,7 +466,7 @@ class RecommendTempBasalTests: XCTestCase {
             to: glucoseTargetRange,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             basalRates: basalRateSchedule,
             maxBasalRate: maxBasalRate,
             lastTempBasal: nil
@@ -501,8 +520,10 @@ class RecommendBolusTests: XCTestCase {
     var suspendThreshold: GlucoseThreshold {
         return GlucoseThreshold(unit: HKUnit.milligramsPerDeciliter, value: 55)
     }
+    
+    var exponentialInsulinModel: InsulinModel = ExponentialInsulinModel(actionDuration: 21600.0, peakActivityTime: 4500.0)
 
-    var insulinModel: InsulinModel {
+    var walshInsulinModel: InsulinModel {
         return WalshInsulinModel(actionDuration: insulinActionDuration)
     }
 
@@ -518,7 +539,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -534,7 +555,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -550,7 +571,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -566,7 +587,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -582,7 +603,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus,
             volumeRounder: fortyIncrementsPerUnitRounder
@@ -606,7 +627,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 70),
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -629,7 +650,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: nil,  // Expected to default to 90
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -651,7 +672,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus,
             volumeRounder: fortyIncrementsPerUnitRounder
@@ -670,7 +691,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 1,
             maxBolus: maxBolus,
             volumeRounder: fortyIncrementsPerUnitRounder
@@ -687,7 +708,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -703,7 +724,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -719,7 +740,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -735,7 +756,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -749,7 +770,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0.8,
             maxBolus: maxBolus
         )
@@ -765,7 +786,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 0),
             sensitivity: insulinSensitivitySchedule,
-            model: ExponentialInsulinModel(actionDuration: 21600.0, peakActivityTime: 4500.0),
+            model: exponentialInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus,
             volumeRounder: fortyIncrementsPerUnitRounder
@@ -782,7 +803,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: self.insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -797,7 +818,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -813,7 +834,7 @@ class RecommendBolusTests: XCTestCase {
             at: glucose.first!.startDate,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
@@ -829,7 +850,7 @@ class RecommendBolusTests: XCTestCase {
             to: glucoseTargetRange,
             suspendThreshold: suspendThreshold.quantity,
             sensitivity: insulinSensitivitySchedule,
-            model: insulinModel,
+            model: walshInsulinModel,
             pendingInsulin: 0,
             maxBolus: maxBolus
         )
