@@ -179,7 +179,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                         font: typedManualGlucoseEntry.wrappedValue == "" ? .preferredFont(forTextStyle: .title1) : .heavy(.title1),
                         textAlignment: .right,
                         keyboardType: .decimalPad,
-                        didBecomeFirstResponder: isManualGlucoseEntryRowVisible
+                        shouldBecomeFirstResponder: isManualGlucoseEntryRowVisible
                     )
 
                     Text(QuantityFormatter().string(from: viewModel.glucoseUnit))

@@ -1125,7 +1125,13 @@ extension LoopDataManager {
         var insulinCounteractionEffects = self.insulinCounteractionEffects
         if nextEffectDate < glucose.date, let insulinEffect = insulinEffect {
             updateGroup.enter()
-            glucoseStore.getCounteractionEffects(start: nextEffectDate, to: insulinEffect, unstoredGlucoseSample: glucose) { velocities in
+            glucoseStore.getCachedGlucoseSamples(start: nextEffectDate) { samples in
+                var samples = samples
+                let manualSample = StoredGlucoseSample(sample: glucose.quantitySample)
+                let insertionIndex = samples.partitioningIndex(where: { manualSample.startDate < $0.startDate })
+                samples.insert(manualSample, at: insertionIndex)
+                let velocities = self.glucoseStore.counteractionEffects(for: samples, to: insulinEffect)
+
                 insulinCounteractionEffects.append(contentsOf: velocities)
                 insulinCounteractionEffects = insulinCounteractionEffects.filterDateRange(earliestEffectDate, nil)
 
