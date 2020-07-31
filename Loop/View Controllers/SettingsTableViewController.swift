@@ -21,7 +21,6 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
 
     private var cancellables = Set<AnyCancellable>()
     private var showNotificationsWarning = false
-    @Environment(\.appName) var appName
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -321,14 +320,14 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath) as! TextButtonTableViewCell
             cell.textLabel?.text = "Delete Pump Data"
             cell.textLabel?.textAlignment = .center
-            cell.tintColor = .delete
+            cell.tintColor = .destructive
             cell.isEnabled = true
             return cell
         case .testingCGMDataDeletion:
             let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath) as! TextButtonTableViewCell
             cell.textLabel?.text = "Delete CGM Data"
             cell.textLabel?.textAlignment = .center
-            cell.tintColor = .delete
+            cell.tintColor = .destructive
             cell.isEnabled = true
             return cell
         case .support:
@@ -503,24 +502,17 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 }
             case .insulinModel:
                 let glucoseUnit = dataManager.loopManager.insulinSensitivitySchedule?.unit ?? dataManager.loopManager.glucoseStore.preferredUnit ?? HKUnit.milligramsPerDeciliter
-                let viewModel = InsulinModelSelectionViewModel(
-                    insulinModelSettings: dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult),
-                    insulinSensitivitySchedule: dataManager.loopManager.insulinSensitivitySchedule
-                )
-
-                viewModel.$insulinModelSettings
-                    .sink { [dataManager] newValue in
+                let modelSelectionView = InsulinModelSelection(
+                    value: dataManager.loopManager.insulinModelSettings ?? .exponentialPreset(.humalogNovologAdult),
+                    insulinSensitivitySchedule: dataManager.loopManager.insulinSensitivitySchedule,
+                    glucoseUnit: glucoseUnit,
+                    supportedModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
+                    mode: .legacySettings,
+                    onSave: { [dataManager, tableView] newValue in
                         dataManager!.loopManager!.insulinModelSettings = newValue
                         tableView.reloadRows(at: [indexPath], with: .automatic)
                     }
-                    .store(in: &cancellables)
-                
-                let modelSelectionView = InsulinModelSelection(
-                    viewModel: viewModel,
-                    glucoseUnit: glucoseUnit,
-                    supportedModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
-                    appName: appName
-                )
+                ).environment(\.appName, Bundle.main.bundleDisplayName)
 
                 let hostingController = DismissibleHostingController(rootView: modelSelectionView, onDisappear: {
                     tableView.deselectRow(at: indexPath, animated: true)
@@ -732,7 +724,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
     private func presentAlertPermissionsSettings(_ tableView: UITableView, _ indexPath: IndexPath) {
         let hostingController = DismissibleHostingController(
             rootView: NotificationsCriticalAlertPermissionsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
-                                                                viewModel: notificationsCriticalAlertPermissionsViewModel),
+                                                                viewModel: notificationsCriticalAlertPermissionsViewModel).environment(\.appName, Bundle.main.bundleDisplayName),
             onDisappear: {
                 tableView.deselectRow(at: indexPath, animated: true)
         })
@@ -769,7 +761,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                             self?.saveTherapySetting($0, $1)
         })
         let hostingController = DismissibleHostingController(
-            rootView: SettingsView(viewModel: viewModel),
+            rootView: SettingsView(viewModel: viewModel).environment(\.appName, Bundle.main.bundleDisplayName),
             onDisappear: {
                 tableView.deselectRow(at: indexPath, animated: true)
         })
@@ -802,9 +794,8 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             dataManager?.loopManager.settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour
             dataManager?.loopManager.settings.maximumBolus = therapySettings.maximumBolus
         case .insulinModel:
-            if let insulinModel = therapySettings.insulinModel {
-                // TODO: Unify InsulinModelSettings and SettingsStore.InsulinModel
-                dataManager?.loopManager.insulinModelSettings = InsulinModelSettings(from: insulinModel)
+            if let insulinModelSettings = therapySettings.insulinModelSettings {
+                dataManager?.loopManager.insulinModelSettings = insulinModelSettings
             }
         case .carbRatio:
             dataManager?.loopManager.carbRatioSchedule = therapySettings.carbRatioSchedule
