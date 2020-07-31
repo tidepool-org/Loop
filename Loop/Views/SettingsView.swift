@@ -11,8 +11,8 @@ import LoopKitUI
 import SwiftUI
 
 public struct SettingsView: View, HorizontalSizeClassOverride {
-    @Environment(\.dismiss) var dismiss
-    @Environment(\.appName) var appName
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.appName) private var appName
 
     @ObservedObject var viewModel: SettingsViewModel
 
