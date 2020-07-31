@@ -21,13 +21,13 @@ extension Color {
     // The loopAccent color is intended to be use as the app accent color.
     static let loopAccent = Color("accent")
     
-    static let warning = Color("warning")
+    static public let warningColor = Color("warning")
 }
 
 
 // Color version of the UIColor context colors
 extension Color {
-    public static let agingColor = warning
+    public static let agingColor = warningColor
     
     public static let axisLabelColor = secondary
     
@@ -37,9 +37,9 @@ extension Color {
     
     public static let cobTintColor = carbs
     
-    public static let critical = red
+    public static let criticalColor = red
     
-    public static let destructive = critical
+    public static let destructive = criticalColor
 
     public static let doseTintColor = insulin
     
@@ -47,13 +47,13 @@ extension Color {
     
     public static let gridColor = Color(UIColor.gridColor)
 
-    public static let invalid = critical
+    public static let invalid = criticalColor
 
     public static let iobTintColor = insulin
     
     public static let pumpStatusNormal = insulin
     
-    public static let staleColor = critical
+    public static let staleColor = criticalColor
     
     public static let unknownColor = Color(UIColor.unknownColor)
 }
