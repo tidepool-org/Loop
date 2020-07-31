@@ -13,6 +13,7 @@ import UIKit
 import UserNotifications
 import HealthKit
 import LoopKitUI
+import SwiftUI
 
 @UIApplicationMain
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -57,7 +58,17 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             deviceDataManager.handleRemoteNotification(notification)
         }
         
-        window?.tintColor = .loopAccent
+        // DismissibleHostingControler is currently the entry point for SwiftUI environment. Configure needed colours
+        DismissibleHostingController.cobTintColor = .cobTintColor
+        DismissibleHostingController.glucoseTintColor = .glucoseTintColor
+        DismissibleHostingController.warningColor = .warning
+        
+        // configure the chart color palette made available in LoopKit
+        ChartColorPalette.defaultPalette = ChartColorPalette(axisLine: .axisLineColor,
+                                                             axisLabel: .axisLabelColor,
+                                                             grid: .gridColor,
+                                                             glucoseTint: .glucoseTintColor,
+                                                             doseTint: .doseTintColor)
                 
         return true
     }
@@ -145,7 +156,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             }
         case NotificationManager.Action.acknowledgeAlert.rawValue:
             let userInfo = response.notification.request.content.userInfo
-            if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? Alert.AlertIdentifier,
+            if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier,
                 let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String {
                 alertManager.acknowledgeAlert(identifier:
                     Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier))
