@@ -377,10 +377,8 @@ final class BolusEntryViewModel: ObservableObject {
     private func updateStoredGlucoseValues() {
         dataManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: chartDateInterval.start) { [weak self] values in
             DispatchQueue.main.async {
-                guard let self = self else { return }
-
-                self.storedGlucoseValues = values
-                self.updateGlucoseChartValues()
+                self?.storedGlucoseValues = values
+                self?.updateGlucoseChartValues()
             }
         }
     }
@@ -534,8 +532,8 @@ final class BolusEntryViewModel: ObservableObject {
             )
         } else {
             return try state.recommendBolus(
-                consideringPotentialCarbEntry: self.potentialCarbEntry,
-                replacingCarbEntry: self.originalCarbEntry
+                consideringPotentialCarbEntry: potentialCarbEntry,
+                replacingCarbEntry: originalCarbEntry
             )
         }
     }

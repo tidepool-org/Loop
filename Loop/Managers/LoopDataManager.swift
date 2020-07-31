@@ -970,7 +970,7 @@ extension LoopDataManager {
     ///     - LoopError.glucoseTooOld
     ///     - LoopError.pumpDataTooOld
     fileprivate func predictGlucose(
-        startingAt startingGlucose: GlucoseValue? = nil,
+        startingAt startingGlucoseOverride: GlucoseValue? = nil,
         using inputs: PredictionInputEffect,
         historicalInsulinEffect insulinEffectOverride: [GlucoseEffect]? = nil,
         insulinCounteractionEffects insulinCounteractionEffectsOverride: [GlucoseEffectVelocity]? = nil,
@@ -986,7 +986,7 @@ extension LoopDataManager {
             throw LoopError.configurationError(.insulinModel)
         }
 
-        guard let glucose = startingGlucose ?? self.glucoseStore.latestGlucose else {
+        guard let glucose = startingGlucoseOverride ?? self.glucoseStore.latestGlucose else {
             throw LoopError.missingDataError(.glucose)
         }
 
@@ -1125,6 +1125,10 @@ extension LoopDataManager {
         }
 
         updateGroup.wait()
+
+        if let error = effectCalculationError.value {
+            throw error
+        }
 
         var insulinCounteractionEffects = self.insulinCounteractionEffects
         if nextEffectDate < glucose.date, let insulinEffect = insulinEffect {
