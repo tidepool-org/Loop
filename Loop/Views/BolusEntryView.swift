@@ -149,13 +149,13 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 Text("Carb Entry", comment: "Label for carb entry row on bolus screen")
 
                 Text(viewModel.carbEntryAmountAndEmojiString!)
-                    .foregroundColor(Color(.COBTintColor))
+                    .foregroundColor(Color(.cobTintColor))
                     .modifier(LabelBackground())
 
                 Spacer()
 
                 Text(viewModel.carbEntryDateAndAbsorptionTimeString!)
-                    .foregroundColor(Color(.secondaryLabelColor))
+                    .foregroundColor(Color(.secondaryLabel))
             }
         }
     }
@@ -211,7 +211,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var bolusUnitsLabel: some View {
         Text(QuantityFormatter().string(from: .internationalUnit()))
-            .foregroundColor(Color(.secondaryLabelColor))
+            .foregroundColor(Color(.secondaryLabel))
     }
 
     private var typedBolusEntry: Binding<String> {
@@ -313,7 +313,7 @@ struct LabeledQuantity: View {
             label
                 .bold()
             valueText
-                .foregroundColor(Color(.secondaryLabelColor))
+                .foregroundColor(Color(.secondaryLabel))
         }
         .font(.subheadline)
         .modifier(LabelBackground())
