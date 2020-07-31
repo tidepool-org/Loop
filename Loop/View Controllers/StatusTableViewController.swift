@@ -611,7 +611,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             statusRowMode = .cancelingBolus
         } else if case .suspended = basalDeliveryState {
             statusRowMode = .pumpSuspended(resuming: false)
-        } else if self.basalDeliveryState == .resuming {
+        } else if case .resuming = basalDeliveryState {
             statusRowMode = .pumpSuspended(resuming: true)
         } else if case .inProgress(let dose) = bolusState, dose.endDate.timeIntervalSinceNow > 0 {
             statusRowMode = .bolusing(dose: dose)
