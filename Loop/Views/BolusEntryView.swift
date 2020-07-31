@@ -183,7 +183,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     )
 
                     Text(QuantityFormatter().string(from: viewModel.glucoseUnit))
-                        .foregroundColor(Color(.secondaryLabelColor))
+                        .foregroundColor(Color(.secondaryLabel))
                 }
             }
             .onAppear {
