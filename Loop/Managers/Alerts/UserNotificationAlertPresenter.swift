@@ -8,8 +8,6 @@
 
 import LoopKit
 
-fileprivate let timestampFormatter = ISO8601DateFormatter()
-
 class UserNotificationAlertPresenter: AlertPresenter {
     
     let userNotificationCenter: UserNotificationCenter
