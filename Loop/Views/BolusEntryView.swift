@@ -51,6 +51,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 ? Text("Bolus", comment: "Title for bolus entry screen")
                 : Text("Meal Bolus", comment: "Title for bolus entry screen when also entering carbs")
         )
+        .supportedInterfaceOrientations(.portrait)
         .alert(item: $viewModel.activeAlert, content: alert(for:))
         .onReceive(viewModel.$enteredBolus) { updatedBolusEntry in
             // The view model can update the user's entered bolus when the recommendation changes; ensure the text entry updates in tandem.
