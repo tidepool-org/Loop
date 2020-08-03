@@ -77,10 +77,6 @@ fileprivate extension Alert {
             LoopNotificationUserInfoKey.managerIDForAlert.rawValue: identifier.managerIdentifier,
             LoopNotificationUserInfoKey.alertTypeID.rawValue: identifier.alertIdentifier,
         ]
-        let encodedAlert = try encodeToString()
-        userNotificationContent.userInfo[AlertUserNotificationUserInfoKey.alert.rawValue] = encodedAlert
-        userNotificationContent.userInfo[AlertUserNotificationUserInfoKey.alertTimestamp.rawValue] =
-            timestampFormatter.string(from: timestamp)
         return userNotificationContent
     }
 
