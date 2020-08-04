@@ -1874,12 +1874,12 @@
 				43FCEEAC221A66780013DD30 /* DateFormatter.swift */,
 				B490A04024D0559D00F509FA /* DeviceLifecycleProgressState.swift */,
 				B490A04224D055D900F509FA /* DeviceStatusHighlight.swift */,
+				B43DA44024D9C12100CAFF4E /* DismissibleHostingController.swift */,
 				B490A03E24D0550F00F509FA /* GlucoseValueType.swift */,
 				1DB1CA4C24A55F0000B3B94C /* Image.swift */,
 				434F54561D287FDB002A9274 /* NibLoadable.swift */,
 				43FCEEAE221A67A70013DD30 /* NumberFormatter+Charts.swift */,
 				43BFF0B11E45C18400FF19A9 /* UIColor.swift */,
-				B43DA44024D9C12100CAFF4E /* DismissibleHostingController.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";

@@ -13,7 +13,6 @@ import UIKit
 import UserNotifications
 import HealthKit
 import LoopKitUI
-import SwiftUI
 
 @UIApplicationMain
 final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationController {
@@ -163,7 +162,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             }
         case NotificationManager.Action.acknowledgeAlert.rawValue:
             let userInfo = response.notification.request.content.userInfo
-            if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier,
+            if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? Alert.AlertIdentifier,
                 let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String {
                 alertManager.acknowledgeAlert(identifier:
                     Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier))
