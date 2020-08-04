@@ -60,6 +60,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
             deviceDataManager.handleRemoteNotification(notification)
         }
         
+        window?.tintColor = .loopAccent
+        
         // configure the chart color palette made available in LoopKit
         ChartColorPalette.defaultPalette = ChartColorPalette(axisLine: .axisLineColor,
                                                              axisLabel: .axisLabelColor,

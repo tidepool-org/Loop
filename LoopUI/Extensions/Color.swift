@@ -19,7 +19,7 @@ extension Color {
     static let insulin = Color("insulin")
 
     // The loopAccent color is intended to be use as the app accent color.
-    static let loopAccent = Color("accent")
+    public static let loopAccent = Color("accent")
     
     static public let warningColor = Color("warning")
 }
