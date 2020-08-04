@@ -60,11 +60,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
             deviceDataManager.handleRemoteNotification(notification)
         }
         
-        // DismissibleHostingControler is currently the entry point for SwiftUI environment. Configure needed colours
-        DismissibleHostingController.cobTintColor = .cobTintColor
-        DismissibleHostingController.glucoseTintColor = .glucoseTintColor
-        DismissibleHostingController.guardrailColors = GuardrailColors(inRange: .primary, warning: .warningColor, critical: .criticalColor)
-
         // configure the chart color palette made available in LoopKit
         ChartColorPalette.defaultPalette = ChartColorPalette(axisLine: .axisLineColor,
                                                              axisLabel: .axisLabelColor,
