@@ -16,7 +16,7 @@ import LoopKitUI
 import SwiftUI
 
 @UIApplicationMain
-final class AppDelegate: UIResponder, UIApplicationDelegate {
+final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationController {
 
     private lazy var log = DiagnosticLog(category: "AppDelegate")
 
@@ -43,6 +43,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         loopAlertsManager = LoopAlertsManager(alertManager: alertManager, bluetoothStateManager: bluetoothStateManager)
         
         SharedLogging.instance = deviceDataManager.loggingServicesManager
+
+        OrientationLock.deviceOrientationController = self
 
         NotificationManager.authorize(delegate: self)
         
@@ -134,6 +136,14 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
       
         deviceDataManager.handleRemoteNotification(notification)
         completionHandler(.noData)
+    }
+
+    // MARK: - DeviceOrientationController
+
+    var supportedInterfaceOrientations = UIInterfaceOrientationMask.allButUpsideDown
+
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        supportedInterfaceOrientations
     }
 }
 
