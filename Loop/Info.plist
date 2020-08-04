@@ -52,7 +52,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Camera is used to scan barcodes of devices</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Face ID is used to authenticate insulin bolus and to save therapy settings.</string>
+	<string>Face ID is used to authenticate insulin bolus and to save changes to therapy settings.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Meal data from the Health database is used to determine glucose effects. Glucose data from the Health database is used for graphing and momentum calculation.</string>
 	<key>NSHealthUpdateUsageDescription</key>
