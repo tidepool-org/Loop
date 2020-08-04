@@ -456,6 +456,7 @@
 		C1FB428D21791D2500FAB378 /* PumpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C3B6F620BBCAA30026CAFA /* PumpManager.swift */; };
 		C1FB428F217921D600FAB378 /* PumpManagerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FB428E217921D600FAB378 /* PumpManagerUI.swift */; };
 		C1FB4290217922A100FAB378 /* PumpManagerUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FB428E217921D600FAB378 /* PumpManagerUI.swift */; };
+		E91D63AC24DA09F900EEE559 /* EffectsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E91D63AB24DA09F900EEE559 /* EffectsTests.swift */; };
 		E9C00EF224C6221B00628F35 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EEF24C620EF00628F35 /* LoopSettings.swift */; };
 		E9C00EF324C6222400628F35 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EEF24C620EF00628F35 /* LoopSettings.swift */; };
 		E9C00EF524C623EF00628F35 /* LoopSettings+Loop.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EF424C623EF00628F35 /* LoopSettings+Loop.swift */; };
@@ -1181,6 +1182,7 @@
 		C1F8B1DB223862D500DD66CF /* BolusProgressTableViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = BolusProgressTableViewCell.xib; sourceTree = "<group>"; };
 		C1FB428B217806A300FAB378 /* StateColorPalette.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StateColorPalette.swift; sourceTree = "<group>"; };
 		C1FB428E217921D600FAB378 /* PumpManagerUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpManagerUI.swift; sourceTree = "<group>"; };
+		E91D63AB24DA09F900EEE559 /* EffectsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectsTests.swift; sourceTree = "<group>"; };
 		E9C00EEF24C620EF00628F35 /* LoopSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopSettings.swift; sourceTree = "<group>"; };
 		E9C00EF424C623EF00628F35 /* LoopSettings+Loop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoopSettings+Loop.swift"; sourceTree = "<group>"; };
 		E9E5E55F24D3519700B5DFFE /* far_future_high_bg_forecast_after_6_hours.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = far_future_high_bg_forecast_after_6_hours.json; sourceTree = "<group>"; };
@@ -1615,6 +1617,7 @@
 				43E2D8E01D20C0CB004DA55F /* Fixtures */,
 				43E2D8D31D20BF42004DA55F /* DoseMathTests.swift */,
 				43E2D8D51D20BF42004DA55F /* Info.plist */,
+				E91D63AB24DA09F900EEE559 /* EffectsTests.swift */,
 			);
 			path = DoseMathTests;
 			sourceTree = "<group>";
@@ -3122,6 +3125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E91D63AC24DA09F900EEE559 /* EffectsTests.swift in Sources */,
 				43947D731F529FAA00A07D31 /* GlucoseRangeSchedule.swift in Sources */,
 				43E2D8DC1D20C049004DA55F /* DoseMath.swift in Sources */,
 				43E2D8DB1D20C03B004DA55F /* NSTimeInterval.swift in Sources */,
