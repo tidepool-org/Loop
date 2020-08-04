@@ -39,20 +39,57 @@ extension DoseUnit {
     }
 }
 
-class EffectsTests: XCTestCase {
+class MockDoseStore: DoseStoreTestingProtocol {
     private let fixtureTimeZone = TimeZone(secondsFromGMT: -0 * 60 * 60)!
     
+    func getGlucoseEffects(start: Date, end: Date?, basalDosingEnd: Date?, completion: @escaping (_ result: DoseStoreResult<[GlucoseEffect]>) -> Void) {
+        let fixture: [JSONDictionary] = loadFixture("effect_from_history_output")
+        let dateFormatter = ISO8601DateFormatter.localTimeDate(timeZone: fixtureTimeZone)
+
+        return completion(.success(fixture.map {
+            return GlucoseEffect(startDate: dateFormatter.date(from: $0["date"] as! String)!, quantity: HKQuantity(unit: HKUnit(from: $0["unit"] as! String), doubleValue:$0["amount"] as! Double))
+        }))
+    }
+}
+
+extension MockDoseStore {
+    public var bundle: Bundle {
+        return Bundle(for: type(of: self))
+    }
+
+    public func loadFixture<T>(_ resourceName: String) -> T {
+        let path = bundle.path(forResource: resourceName, ofType: "json")!
+        return try! JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: path)), options: []) as! T
+    }
+}
+
+class EffectsTests: XCTestCase {
+    var doseStore: MockDoseStore!
+    private let fixtureTimeZone = TimeZone(secondsFromGMT: -0 * 60 * 60)!
     
-    
+    override func setUp() {
+        super.setUp()
+        doseStore = MockDoseStore()
+    }
+
     func loadGlucoseValueFixture(_ resourceName: String) -> [GlucoseFixtureValue] {
         let fixture: [JSONDictionary] = loadFixture(resourceName)
-        let dateFormatter = ISO8601DateFormatter.localTimeDateFormatter()
+        let dateFormatter = ISO8601DateFormatter.localTimeDate(timeZone: fixtureTimeZone)
 
         return fixture.map {
             return GlucoseFixtureValue(
                 startDate: dateFormatter.date(from: $0["date"] as! String)!,
                 quantity: HKQuantity(unit: HKUnit.milligramsPerDeciliter, doubleValue: $0["amount"] as! Double)
             )
+        }
+    }
+    
+    func loadGlucoseEffectFixture(_ resourceName: String) -> [GlucoseEffect] {
+        let fixture: [JSONDictionary] = loadFixture(resourceName)
+        let dateFormatter = ISO8601DateFormatter.localTimeDate(timeZone: fixtureTimeZone)
+
+        return fixture.map {
+            return GlucoseEffect(startDate: dateFormatter.date(from: $0["date"] as! String)!, quantity: HKQuantity(unit: HKUnit(from: $0["unit"] as! String), doubleValue:$0["amount"] as! Double))
         }
     }
     
