@@ -460,6 +460,8 @@
 		E9C00EF224C6221B00628F35 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EEF24C620EF00628F35 /* LoopSettings.swift */; };
 		E9C00EF324C6222400628F35 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EEF24C620EF00628F35 /* LoopSettings.swift */; };
 		E9C00EF524C623EF00628F35 /* LoopSettings+Loop.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EF424C623EF00628F35 /* LoopSettings+Loop.swift */; };
+		E9C58A6F24DB23F100487A17 /* LoopSettings+Loop.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EF424C623EF00628F35 /* LoopSettings+Loop.swift */; };
+		E9C58A7024DB23F700487A17 /* RetrospectiveCorrection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43511CDF21FD80E400566C63 /* RetrospectiveCorrection.swift */; };
 		E9E5E56024D3519700B5DFFE /* far_future_high_bg_forecast_after_6_hours.json in Resources */ = {isa = PBXBuildFile; fileRef = E9E5E55F24D3519700B5DFFE /* far_future_high_bg_forecast_after_6_hours.json */; };
 /* End PBXBuildFile section */
 
@@ -3145,6 +3147,7 @@
 				A9A63F8D246B261100588D5B /* DosingDecisionStoreTests.swift in Sources */,
 				A9E6DFEF246A0474005B1A1C /* LoopErrorTests.swift in Sources */,
 				A9E6DFEA246A0448005B1A1C /* PumpManagerErrorTests.swift in Sources */,
+				E9C58A7024DB23F700487A17 /* RetrospectiveCorrection.swift in Sources */,
 				1DA7A84424477698008257F0 /* InAppModalAlertPresenterTests.swift in Sources */,
 				8968B114240C55F10074BB48 /* LoopSettingsTests.swift in Sources */,
 				1DA7A84224476EAD008257F0 /* AlertManagerTests.swift in Sources */,
@@ -3152,6 +3155,7 @@
 				A9DAE7D02332D77F006AE942 /* LoopTests.swift in Sources */,
 				A9E6DFEC246A0453005B1A1C /* SetBolusErrorTests.swift in Sources */,
 				1DFE9E172447B6270082C280 /* UserNotificationAlertPresenterTests.swift in Sources */,
+				E9C58A6F24DB23F100487A17 /* LoopSettings+Loop.swift in Sources */,
 				A9E6DFE8246A043D005B1A1C /* DoseStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
