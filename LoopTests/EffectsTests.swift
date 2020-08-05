@@ -209,7 +209,7 @@ class EffectsTests: XCTestCase {
             }
         }
         
-        var insulinCounteractionEffects: [GlucoseEffectVelocity]!
+        var insulinCounteractionEffects: [GlucoseEffectVelocity] = []
         // The date passed into the mock getCounteractionEffects doesn't matter
         glucoseStore.getCounteractionEffects(start: Date(), end: nil, to: insulinEffect) { (velocities) in
             insulinCounteractionEffects.append(contentsOf: velocities)
