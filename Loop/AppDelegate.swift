@@ -60,14 +60,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
         }
         
         window?.tintColor = .loopAccent
-        
-        // configure the chart color palette made available in LoopKit
-        ChartColorPalette.defaultPalette = ChartColorPalette(axisLine: .axisLineColor,
-                                                             axisLabel: .axisLabelColor,
-                                                             grid: .gridColor,
-                                                             glucoseTint: .glucoseTintColor,
-                                                             doseTint: .doseTintColor)
-                
+                        
         return true
     }
 

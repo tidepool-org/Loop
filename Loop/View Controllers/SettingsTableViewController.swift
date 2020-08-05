@@ -508,6 +508,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                     glucoseUnit: glucoseUnit,
                     supportedModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
                     mode: .legacySettings,
+                    chartColors: .default,
                     onSave: { [dataManager, tableView] newValue in
                         dataManager!.loopManager!.insulinModelSettings = newValue
                         tableView.reloadRows(at: [indexPath], with: .automatic)
@@ -591,7 +592,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         case .services:
             if indexPath.row < activeServices.count {
                 if let serviceUI = activeServices[indexPath.row] as? ServiceUI {
-                    var settings = serviceUI.settingsViewController()
+                    var settings = serviceUI.settingsViewController(chartColors: .default)
                     settings.serviceSettingsDelegate = self
                     settings.completionDelegate = self
                     present(settings, animated: true)
