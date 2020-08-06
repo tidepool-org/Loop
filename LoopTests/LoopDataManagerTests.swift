@@ -1,5 +1,5 @@
 //
-//  EffectsTests.swift
+//  LoopDataManagerTests.swift
 //  LoopTests
 //
 //  Created by Anna Quinlan on 8/4/20.
@@ -42,7 +42,39 @@ extension DoseUnit {
     }
 }
 
-class MockDoseStore: DoseStoreTestingProtocol {
+class MockDoseStore: DoseStoreProtocol {
+    var basalProfile: BasalRateSchedule?
+    
+    var insulinModel: InsulinModel?
+    
+    var insulinSensitivitySchedule: InsulinSensitivitySchedule?
+    
+    var sampleType: HKSampleType?
+    
+    var authorizationRequired: Bool = false
+    
+    var sharingDenied: Bool = false
+    
+    var lastReservoirValue: ReservoirValue?
+    
+    var lastAddedPumpData: Date = Date()
+    
+    func addPumpEvents(_ events: [NewPumpEvent], lastReconciliation: Date?, completion: @escaping (DoseStore.DoseStoreError?) -> Void) {
+        completion(nil)
+    }
+    
+    func addReservoirValue(_ unitVolume: Double, at date: Date, completion: @escaping (ReservoirValue?, ReservoirValue?, Bool, DoseStore.DoseStoreError?) -> Void) {
+        completion(nil, nil, false, nil)
+    }
+    
+    func insulinOnBoard(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
+        completion(.failure(.configurationError))
+    }
+    
+    func generateDiagnosticReport(_ completion: @escaping (String) -> Void) {
+        completion("")
+    }
+    
     private let fixtureTimeZone = TimeZone(secondsFromGMT: -0 * 60 * 60)!
     
     func getGlucoseEffects(start: Date, end: Date? = nil, basalDosingEnd: Date? = Date(), completion: @escaping (_ result: DoseStoreResult<[GlucoseEffect]>) -> Void) {
@@ -126,7 +158,7 @@ extension MockCarbStore {
     }
 }
 
-class EffectsTests: XCTestCase {
+class LoopDataManagerDosingTests: XCTestCase {
     /// MARK: constants for testing
     let retrospectiveCorrectionEffectDuration = TimeInterval(hours: 1)
     let retrospectiveCorrectionGroupingInterval = 1.01
@@ -163,7 +195,7 @@ class EffectsTests: XCTestCase {
     }
     
     /// MARK: mock stores
-    var doseStore: DoseStoreTestingProtocol!
+    var doseStore: DoseStoreProtocol!
     var glucoseStore: GlucoseStoreTestingProtocol!
     var carbStore: CarbStoreTestingProtocol!
     var retrospectiveCorrection: RetrospectiveCorrection!
@@ -348,7 +380,7 @@ class EffectsTests: XCTestCase {
     }
 }
 
-extension EffectsTests {
+extension LoopDataManagerDosingTests {
     public var bundle: Bundle {
         return Bundle(for: type(of: self))
     }

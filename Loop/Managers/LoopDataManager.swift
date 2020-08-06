@@ -27,7 +27,7 @@ final class LoopDataManager {
 
     let carbStore: CarbStore
 
-    let doseStore: DoseStore
+    var doseStore: DoseStoreProtocol
 
     let dosingDecisionStore: DosingDecisionStore
 
