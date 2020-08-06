@@ -82,20 +82,6 @@ class MockGlucoseStore: GlucoseStoreTestingProtocol {
             }
         )
     }
-//    ANNA todo
-//    func getCachedGlucoseSamples(start: Date, end: Date? = nil, completion: @escaping (_ samples: [StoredGlucoseSample]) -> Void) {
-//        let fixture: [JSONDictionary] = loadFixture("momentum_effect_bouncing_glucose_input")
-//        let dateFormatter = ISO8601DateFormatter.localTimeDate()
-//
-//        return completion(fixture.map {
-//            return StoredGlucoseSample(sample: HKQuantitySample(
-//                type: HKQuantityType.quantityType(forIdentifier: .bloodGlucose)!,
-//                quantity: HKQuantity(unit: HKUnit.milligramsPerDeciliter, doubleValue: $0["amount"] as! Double),
-//                start: dateFormatter.date(from: $0["date"] as! String)!,
-//                end: dateFormatter.date(from: $0["date"] as! String)!)
-//            )
-//        })
-//    }
     
     func getCounteractionEffects(start: Date, end: Date? = nil, to effects: [GlucoseEffect], _ completion: @escaping (_ effects: [GlucoseEffectVelocity]) -> Void) {
         let fixture: [JSONDictionary] = loadFixture("counteraction_effect_falling_glucose")
