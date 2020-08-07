@@ -821,7 +821,7 @@ extension LoopDataManager {
         if insulinEffect == nil {
             self.logger.debug("Recomputing insulin effects")
             updateGroup.enter()
-            doseStore.getGlucoseEffects(start: nextEffectDate) { (result) -> Void in
+            doseStore.getGlucoseEffects(start: nextEffectDate, end: nil, basalDosingEnd: Date()) { (result) -> Void in
                 switch result {
                 case .failure(let error):
                     self.logger.error("%{public}@", String(describing: error))
@@ -836,7 +836,7 @@ extension LoopDataManager {
 
         if insulinEffectIncludingPendingInsulin == nil {
             updateGroup.enter()
-            doseStore.getGlucoseEffects(start: nextEffectDate, basalDosingEnd: nil) { (result) -> Void in
+            doseStore.getGlucoseEffects(start: nextEffectDate, end: nil, basalDosingEnd: nil) { (result) -> Void in
                 switch result {
                 case .failure(let error):
                     self.logger.error("%{public}@", String(describing: error))
@@ -1113,7 +1113,7 @@ extension LoopDataManager {
         var insulinEffect: [GlucoseEffect]?
         let basalDosingEnd = includingPendingInsulin ? nil : Date()
         updateGroup.enter()
-        doseStore.getGlucoseEffects(start: nextEffectDate, basalDosingEnd: basalDosingEnd) { result in
+        doseStore.getGlucoseEffects(start: nextEffectDate, end: nil, basalDosingEnd: basalDosingEnd) { result in
             switch result {
             case .failure(let error):
                 effectCalculationError.mutate { $0 = error }
@@ -1881,11 +1881,11 @@ extension LoopDataManager {
                         return
                     }
                     self.dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects() { error in
-                        guard error == nil else {
+                        guard error == nil, let doseStore = self.doseStore as? DoseStore else {
                             completion(error)
                             return
                         }
-                        self.doseStore.generateSimulatedHistoricalPumpEvents(completion: completion)
+                        doseStore.generateSimulatedHistoricalPumpEvents(completion: completion)
                     }
                 }
             }
@@ -1896,8 +1896,12 @@ extension LoopDataManager {
         guard FeatureFlags.simulatedCoreDataEnabled else {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
+        
+        guard let doseStore = doseStore as? DoseStore else {
+            fatalError("\(#function) should be invoked only when not using mock stores")
+        }
 
-        self.doseStore.purgeHistoricalPumpEvents() { error in
+        doseStore.purgeHistoricalPumpEvents() { error in
             guard error == nil else {
                 completion(error)
                 return
