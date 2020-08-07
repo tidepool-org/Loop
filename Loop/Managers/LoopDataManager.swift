@@ -62,7 +62,7 @@ final class LoopDataManager {
         lastPumpEventsReconciliation: Date?,
         analyticsServicesManager: AnalyticsServicesManager,
         localCacheDuration: TimeInterval = .days(1),
-        doseStore: DoseStoreProtocol? = nil
+        doseStorage: DoseStoreProtocol? = nil
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -92,8 +92,8 @@ final class LoopDataManager {
             carbAbsorptionModel: FeatureFlags.nonlinearCarbModelEnabled ? .nonlinear : .linear
         )
 
-        if let doseStore = doseStore {
-            self.doseStore = doseStore
+        if let doseStorage = doseStorage {
+            self.doseStore = doseStorage
         } else {
             self.doseStore = DoseStore(
                 healthStore: healthStore,
