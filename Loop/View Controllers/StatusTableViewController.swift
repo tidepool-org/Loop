@@ -388,7 +388,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         if currentContext.contains(.insulin) {
             reloadGroup.enter()
-            deviceManager.loopManager.doseStore.getInsulinOnBoardValues(start: startDate) { (result) -> Void in
+            deviceManager.loopManager.doseStore.getInsulinOnBoardValues(start: startDate, end: nil, basalDosingEnd: nil) { (result) -> Void in
                 switch result {
                 case .failure(let error):
                     self.log.error("DoseStore failed to get insulin on board values: %{public}@", String(describing: error))
@@ -401,7 +401,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
             
             reloadGroup.enter()
-            deviceManager.loopManager.doseStore.getNormalizedDoseEntries(start: startDate) { (result) -> Void in
+            deviceManager.loopManager.doseStore.getNormalizedDoseEntries(start: startDate, end: nil) { (result) -> Void in
                 switch result {
                 case .failure(let error):
                     self.log.error("DoseStore failed to get normalized dose entries: %{public}@", String(describing: error))
@@ -1111,7 +1111,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 vc.restoreUserActivityState(activity)
             }
         case let vc as InsulinDeliveryTableViewController:
-            vc.doseStore = deviceManager.loopManager.doseStore
+            guard let doseStore = deviceManager.loopManager.doseStore as? DoseStore else {
+                fatalError("Mock LoopDataManager should not use UI components")
+            }
+            vc.doseStore = doseStore
             vc.hidesBottomBarWhenPushed = true
         case let vc as OverrideSelectionViewController:
             if deviceManager.loopManager.settings.futureOverrideEnabled() {
