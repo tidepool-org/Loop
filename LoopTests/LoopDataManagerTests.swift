@@ -43,6 +43,25 @@ extension DoseUnit {
 }
 
 class MockDoseStore: DoseStoreProtocol {
+    var basalProfileApplyingOverrideHistory: BasalRateSchedule?
+    
+    
+    var insulinDeliveryStore: InsulinDeliveryStore = InsulinDeliveryStore(
+        healthStore: HKHealthStoreMock(),
+        observeHealthKitForCurrentAppOnly: false,
+        cacheStore: PersistenceController(directoryURL: URL.init(fileURLWithPath: "")),
+        observationEnabled: true,
+        test_currentDate: Date() // ANNA TODO: fix this
+    )
+    
+    var delegate: DoseStoreDelegate?
+    
+    var device: HKDevice?
+    
+    var pumpRecordsBasalProfileStartEvents: Bool = false
+    
+    var pumpEventQueryAfterDate: Date = Date() // ANNA TODO: fix this
+    
     var basalProfile: BasalRateSchedule?
     
     var insulinModel: InsulinModel?
@@ -73,6 +92,30 @@ class MockDoseStore: DoseStoreProtocol {
     
     func generateDiagnosticReport(_ completion: @escaping (String) -> Void) {
         completion("")
+    }
+    
+    func resetPumpData(completion: ((DoseStore.DoseStoreError?) -> Void)?) {
+        completion?(.configurationError)
+    }
+    
+    func getInsulinOnBoardValues(start: Date, end: Date?, basalDosingEnd: Date?, completion: @escaping (DoseStoreResult<[InsulinValue]>) -> Void) {
+        completion(.failure(.configurationError))
+    }
+    
+    func getNormalizedDoseEntries(start: Date, end: Date?, completion: @escaping (DoseStoreResult<[DoseEntry]>) -> Void) {
+        completion(.failure(.configurationError))
+    }
+    
+    func executePumpEventQuery(fromQueryAnchor queryAnchor: DoseStore.QueryAnchor?, limit: Int, completion: @escaping (DoseStore.PumpEventQueryResult) -> Void) {
+        completion(.failure(DoseStore.DoseStoreError.configurationError))
+    }
+    
+    func executeDoseQuery(fromQueryAnchor queryAnchor: DoseStore.QueryAnchor?, limit: Int, completion: @escaping (DoseStore.DoseQueryResult) -> Void) {
+        completion(.failure(DoseStore.DoseStoreError.configurationError))
+    }
+    
+    func getTotalUnitsDelivered(since startDate: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
+        completion(.failure(.configurationError))
     }
     
     private let fixtureTimeZone = TimeZone(secondsFromGMT: -0 * 60 * 60)!

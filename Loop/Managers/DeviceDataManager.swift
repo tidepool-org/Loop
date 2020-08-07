@@ -569,7 +569,7 @@ extension DeviceDataManager: PumpManagerDelegate {
 
         log.default("PumpManager:%{public}@ will deactivate", String(describing: type(of: pumpManager)))
 
-        loopManager.doseStore.resetPumpData(nil)
+        loopManager.doseStore.resetPumpData(completion: nil)
         DispatchQueue.main.async {
             self.pumpManager = nil
         }

@@ -61,7 +61,8 @@ final class LoopDataManager {
         overrideHistory: TemporaryScheduleOverrideHistory = UserDefaults.appGroup?.overrideHistory ?? .init(),
         lastPumpEventsReconciliation: Date?,
         analyticsServicesManager: AnalyticsServicesManager,
-        localCacheDuration: TimeInterval = .days(1)
+        localCacheDuration: TimeInterval = .days(1),
+        doseStore: DoseStoreProtocol? = nil
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -91,17 +92,21 @@ final class LoopDataManager {
             carbAbsorptionModel: FeatureFlags.nonlinearCarbModelEnabled ? .nonlinear : .linear
         )
 
-        doseStore = DoseStore(
-            healthStore: healthStore,
-            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
-            cacheStore: cacheStore,
-            cacheLength: localCacheDuration,
-            insulinModel: insulinModelSettings?.model,
-            basalProfile: basalRateSchedule,
-            insulinSensitivitySchedule: insulinSensitivitySchedule,
-            overrideHistory: overrideHistory,
-            lastPumpEventsReconciliation: lastPumpEventsReconciliation
-        )
+        if let doseStore = doseStore {
+            self.doseStore = doseStore
+        } else {
+            self.doseStore = DoseStore(
+                healthStore: healthStore,
+                observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+                cacheStore: cacheStore,
+                cacheLength: localCacheDuration,
+                insulinModel: insulinModelSettings?.model,
+                basalProfile: basalRateSchedule,
+                insulinSensitivitySchedule: insulinSensitivitySchedule,
+                overrideHistory: overrideHistory,
+                lastPumpEventsReconciliation: lastPumpEventsReconciliation
+            )
+        }
 
         dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
 
