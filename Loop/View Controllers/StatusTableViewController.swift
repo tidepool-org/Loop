@@ -885,6 +885,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     progressCell.tintColor = .insulinTintColor
                     progressCell.unit = HKUnit.internationalUnit()
                     progressCell.deliveredUnits = bolusProgressReporter?.progress.deliveredUnits
+                    progressCell.backgroundColor = .secondarySystemBackground
                     return progressCell
                 case .cancelingBolus:
                     let cell = getTitleSubtitleCell()
