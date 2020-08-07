@@ -463,6 +463,8 @@
 		E93E865824DB75BE00FF40C8 /* predicted_glucose_very_negative.json in Resources */ = {isa = PBXBuildFile; fileRef = E93E865724DB75BD00FF40C8 /* predicted_glucose_very_negative.json */; };
 		E93E86A824DDCC4400FF40C8 /* MockDoseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93E86A724DDCC4400FF40C8 /* MockDoseStore.swift */; };
 		E93E86AE24DDE0E100FF40C8 /* HKHealthStoreMock+LoopTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93E86AD24DDE0E100FF40C8 /* HKHealthStoreMock+LoopTests.swift */; };
+		E93E86B024DDE1BD00FF40C8 /* MockGlucoseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93E86AF24DDE1BD00FF40C8 /* MockGlucoseStore.swift */; };
+		E93E86B224DDE21D00FF40C8 /* MockCarbStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93E86B124DDE21D00FF40C8 /* MockCarbStore.swift */; };
 		E9C00EF224C6221B00628F35 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EEF24C620EF00628F35 /* LoopSettings.swift */; };
 		E9C00EF324C6222400628F35 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EEF24C620EF00628F35 /* LoopSettings.swift */; };
 		E9C00EF524C623EF00628F35 /* LoopSettings+Loop.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EF424C623EF00628F35 /* LoopSettings+Loop.swift */; };
@@ -1201,6 +1203,8 @@
 		E93E865724DB75BD00FF40C8 /* predicted_glucose_very_negative.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = predicted_glucose_very_negative.json; sourceTree = "<group>"; };
 		E93E86A724DDCC4400FF40C8 /* MockDoseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDoseStore.swift; sourceTree = "<group>"; };
 		E93E86AD24DDE0E100FF40C8 /* HKHealthStoreMock+LoopTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HKHealthStoreMock+LoopTests.swift"; sourceTree = "<group>"; };
+		E93E86AF24DDE1BD00FF40C8 /* MockGlucoseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockGlucoseStore.swift; sourceTree = "<group>"; };
+		E93E86B124DDE21D00FF40C8 /* MockCarbStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCarbStore.swift; sourceTree = "<group>"; };
 		E9C00EEF24C620EF00628F35 /* LoopSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopSettings.swift; sourceTree = "<group>"; };
 		E9C00EF424C623EF00628F35 /* LoopSettings+Loop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoopSettings+Loop.swift"; sourceTree = "<group>"; };
 		E9C58A7124DB489100487A17 /* LoopDataManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopDataManagerTests.swift; sourceTree = "<group>"; };
@@ -2153,7 +2157,9 @@
 			isa = PBXGroup;
 			children = (
 				E93E86A724DDCC4400FF40C8 /* MockDoseStore.swift */,
+				E93E86AF24DDE1BD00FF40C8 /* MockGlucoseStore.swift */,
 				E93E86AD24DDE0E100FF40C8 /* HKHealthStoreMock+LoopTests.swift */,
+				E93E86B124DDE21D00FF40C8 /* MockCarbStore.swift */,
 			);
 			path = "Mock Stores";
 			sourceTree = "<group>";
@@ -3211,10 +3217,12 @@
 				E9C58A7324DB4A2700487A17 /* LoopDataManagerTests.swift in Sources */,
 				A9E6DFE6246A042E005B1A1C /* CarbStoreTests.swift in Sources */,
 				A9DAE7D02332D77F006AE942 /* LoopTests.swift in Sources */,
+				E93E86B024DDE1BD00FF40C8 /* MockGlucoseStore.swift in Sources */,
 				E93E86AE24DDE0E100FF40C8 /* HKHealthStoreMock+LoopTests.swift in Sources */,
 				A9E6DFEC246A0453005B1A1C /* SetBolusErrorTests.swift in Sources */,
 				1DFE9E172447B6270082C280 /* UserNotificationAlertPresenterTests.swift in Sources */,
 				A9E6DFE8246A043D005B1A1C /* DoseStoreTests.swift in Sources */,
+				E93E86B224DDE21D00FF40C8 /* MockCarbStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

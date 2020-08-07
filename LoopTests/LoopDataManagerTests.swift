@@ -31,71 +31,6 @@ extension ISO8601DateFormatter {
     }
 }
 
-extension DoseUnit {
-    var unit: HKUnit {
-        switch self {
-        case .units:
-            return .internationalUnit()
-        case .unitsPerHour:
-            return HKUnit(from: "IU/hr")
-        }
-    }
-}
-
-class MockGlucoseStore: GlucoseStoreTestingProtocol {
-    func getRecentMomentumEffect(_ completion: @escaping (_ effects: [GlucoseEffect]) -> Void) {
-        let fixture: [JSONDictionary] = loadFixture("momentum_effect_bouncing")
-        let dateFormatter = ISO8601DateFormatter.localTimeDate()
-
-        return completion(fixture.map {
-            return GlucoseEffect(startDate: dateFormatter.date(from: $0["date"] as! String)!, quantity: HKQuantity(unit: HKUnit(from: $0["unit"] as! String), doubleValue: $0["amount"] as! Double))
-            }
-        )
-    }
-    
-    func getCounteractionEffects(start: Date, end: Date? = nil, to effects: [GlucoseEffect], _ completion: @escaping (_ effects: [GlucoseEffectVelocity]) -> Void) {
-        let fixture: [JSONDictionary] = loadFixture("counteraction_effect_falling_glucose")
-        let dateFormatter = ISO8601DateFormatter.localTimeDate()
-
-        return completion(fixture.map {
-            return GlucoseEffectVelocity(startDate: dateFormatter.date(from: $0["startDate"] as! String)!, endDate: dateFormatter.date(from: $0["endDate"] as! String)!, quantity: HKQuantity(unit: HKUnit(from: $0["unit"] as! String), doubleValue:$0["value"] as! Double))
-        })
-    }
-}
-
-extension MockGlucoseStore {
-    public var bundle: Bundle {
-        return Bundle(for: type(of: self))
-    }
-
-    public func loadFixture<T>(_ resourceName: String) -> T {
-        let path = bundle.path(forResource: resourceName, ofType: "json")!
-        return try! JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: path)), options: []) as! T
-    }
-}
-
-class MockCarbStore: CarbStoreTestingProtocol {
-    func getGlucoseEffects(start: Date, end: Date? = nil, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping(_ result: CarbStoreResult<(samples: [StoredCarbEntry], effects: [GlucoseEffect])>) -> Void) {
-        let fixture: [JSONDictionary] = loadFixture("dynamic_glucose_effect_partially_observed")
-        let dateFormatter = ISO8601DateFormatter.localTimeDate()
-
-        return completion(.success(([], fixture.map {
-            return GlucoseEffect(startDate: dateFormatter.date(from: $0["date"] as! String)!, quantity: HKQuantity(unit: HKUnit(from: $0["unit"] as! String), doubleValue:$0["amount"] as! Double))
-        })))
-    }
-}
-
-extension MockCarbStore {
-    public var bundle: Bundle {
-        return Bundle(for: type(of: self))
-    }
-
-    public func loadFixture<T>(_ resourceName: String) -> T {
-        let path = bundle.path(forResource: resourceName, ofType: "json")!
-        return try! JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: path)), options: []) as! T
-    }
-}
-
 class LoopDataManagerDosingTests: XCTestCase {
     /// MARK: constants for testing
     let retrospectiveCorrectionEffectDuration = TimeInterval(hours: 1)
@@ -134,8 +69,8 @@ class LoopDataManagerDosingTests: XCTestCase {
     
     /// MARK: mock stores
     var doseStore: DoseStoreProtocol!
-    var glucoseStore: GlucoseStoreTestingProtocol!
-    var carbStore: CarbStoreTestingProtocol!
+    var glucoseStore: GlucoseStoreProtocol!
+    var carbStore: CarbStoreProtocol!
     var retrospectiveCorrection: RetrospectiveCorrection!
     
     override func setUp() {

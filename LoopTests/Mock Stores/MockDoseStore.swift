@@ -6,7 +6,6 @@
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
-import XCTest
 import HealthKit
 import LoopKit
 @testable import Loop
