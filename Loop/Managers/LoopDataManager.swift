@@ -62,7 +62,8 @@ final class LoopDataManager {
         lastPumpEventsReconciliation: Date?,
         analyticsServicesManager: AnalyticsServicesManager,
         localCacheDuration: TimeInterval = .days(1),
-        doseStorage: DoseStoreProtocol? = nil
+        doseStorage: DoseStoreProtocol? = nil,
+        glucoseStorage: GlucoseStoreProtocol? = nil
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -110,13 +111,17 @@ final class LoopDataManager {
 
         dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
 
-        glucoseStore = GlucoseStore(
-            healthStore: healthStore,
-            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
-            cacheStore: cacheStore,
-            cacheLength: localCacheDuration,
-            observationInterval: .hours(24)
-        )
+        if let glucoseStorage = glucoseStorage {
+            glucoseStore = glucoseStorage
+        } else {
+            glucoseStore = GlucoseStore(
+                healthStore: healthStore,
+                observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+                cacheStore: cacheStore,
+                cacheLength: localCacheDuration,
+                observationInterval: .hours(24)
+            )
+        }
 
         settingsStore = SettingsStore(store: cacheStore, expireAfter: localCacheDuration)
 
