@@ -194,7 +194,7 @@ final class WatchDataManager: NSObject {
             
             if let glucose = glucose {
                 updateGroup.enter()
-                manager.glucoseStore.getCachedGlucoseSamples(start: glucose.startDate) { (samples) in
+                manager.glucoseStore.getCachedGlucoseSamples(start: glucose.startDate, end: nil) { (samples) in
                     if let sample = samples.last {
                         context.glucose = sample.quantity
                         context.glucoseDate = sample.startDate
@@ -311,7 +311,7 @@ extension WatchDataManager: WCSessionDelegate {
         case GlucoseBackfillRequestUserInfo.name?:
             if let userInfo = GlucoseBackfillRequestUserInfo(rawValue: message),
                 let manager = deviceManager.loopManager {
-                manager.glucoseStore.getCachedGlucoseSamples(start: userInfo.startDate.addingTimeInterval(1)) { (values) in
+                manager.glucoseStore.getCachedGlucoseSamples(start: userInfo.startDate.addingTimeInterval(1), end: nil) { (values) in
                     replyHandler(WatchHistoricalGlucose(with: values).rawValue)
                 }
             } else {

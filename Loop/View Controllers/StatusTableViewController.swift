@@ -380,7 +380,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         if currentContext.contains(.glucose) {
             reloadGroup.enter()
-            self.deviceManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: startDate) { (values) -> Void in
+            self.deviceManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: startDate, end: nil) { (values) -> Void in
                 glucoseValues = values
                 reloadGroup.leave()
             }

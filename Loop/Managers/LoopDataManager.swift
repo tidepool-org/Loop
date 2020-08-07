@@ -31,7 +31,7 @@ final class LoopDataManager {
 
     let dosingDecisionStore: DosingDecisionStore
 
-    let glucoseStore: GlucoseStore
+    var glucoseStore: GlucoseStoreProtocol
 
     let settingsStore: SettingsStore
 
@@ -93,9 +93,9 @@ final class LoopDataManager {
         )
 
         if let doseStorage = doseStorage {
-            self.doseStore = doseStorage
+            doseStore = doseStorage
         } else {
-            self.doseStore = DoseStore(
+            doseStore = DoseStore(
                 healthStore: healthStore,
                 observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
                 cacheStore: cacheStore,
@@ -511,7 +511,7 @@ extension LoopDataManager {
                 // Call the individual authorization methods to trigger query creation
                 self.carbStore.authorize({ _ in })
                 self.doseStore.insulinDeliveryStore.authorize({ _ in })
-                self.glucoseStore.authorize({ _ in })
+                self.glucoseStore.authorize(toShare: true, { _ in })
             }
 
             completion()
@@ -800,7 +800,7 @@ extension LoopDataManager {
         // Fetch glucose effects as far back as we want to make retroactive analysis
         var latestGlucoseDate: Date?
         updateGroup.enter()
-        glucoseStore.getCachedGlucoseSamples(start: Date(timeIntervalSinceNow: -settings.inputDataRecencyInterval)) { (values) in
+        glucoseStore.getCachedGlucoseSamples(start: Date(timeIntervalSinceNow: -settings.inputDataRecencyInterval), end: nil) { (values) in
             latestGlucoseDate = values.last?.startDate
             updateGroup.leave()
         }
@@ -859,7 +859,7 @@ extension LoopDataManager {
         if nextEffectDate < lastGlucoseDate, let insulinEffect = insulinEffect {
             updateGroup.enter()
             self.logger.debug("Fetching counteraction effects after %{public}@", String(describing: nextEffectDate))
-            glucoseStore.getCounteractionEffects(start: nextEffectDate, to: insulinEffect) { (velocities) in
+            glucoseStore.getCounteractionEffects(start: nextEffectDate, end: nil, to: insulinEffect) { (velocities) in
                 self.insulinCounteractionEffects.append(contentsOf: velocities)
                 self.insulinCounteractionEffects = self.insulinCounteractionEffects.filterDateRange(earliestEffectDate, nil)
 
@@ -1138,7 +1138,7 @@ extension LoopDataManager {
         var insulinCounteractionEffects = self.insulinCounteractionEffects
         if nextEffectDate < glucose.date, let insulinEffect = insulinEffect {
             updateGroup.enter()
-            glucoseStore.getCachedGlucoseSamples(start: nextEffectDate) { samples in
+            glucoseStore.getCachedGlucoseSamples(start: nextEffectDate, end: nil) { samples in
                 var samples = samples
                 let manualSample = StoredGlucoseSample(sample: glucose.quantitySample)
                 let insertionIndex = samples.partitioningIndex(where: { manualSample.startDate < $0.startDate })
@@ -1871,11 +1871,11 @@ extension LoopDataManager {
         }
 
         self.settingsStore.generateSimulatedHistoricalSettingsObjects() { error in
-            guard error == nil else {
+            guard error == nil, let glucoseStore = self.glucoseStore as? GlucoseStore else {
                 completion(error)
                 return
             }
-            self.glucoseStore.generateSimulatedHistoricalGlucoseObjects() { error in
+            glucoseStore.generateSimulatedHistoricalGlucoseObjects() { error in
                 guard error == nil else {
                     completion(error)
                     return
@@ -1921,7 +1921,12 @@ extension LoopDataManager {
                         completion(error)
                         return
                     }
-                    self.glucoseStore.purgeHistoricalGlucoseObjects() { error in
+                    
+                    guard let glucoseStore = self.glucoseStore as? GlucoseStore else {
+                        fatalError("\(#function) should be invoked only when not using mock stores")
+                    }
+                    
+                    glucoseStore.purgeHistoricalGlucoseObjects() { error in
                         guard error == nil else {
                             completion(error)
                             return

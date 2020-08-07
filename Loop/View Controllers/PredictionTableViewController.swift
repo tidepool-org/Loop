@@ -120,7 +120,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
 
         if self.refreshContext.remove(.glucose) != nil {
             reloadGroup.enter()
-            self.deviceManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: self.chartStartDate) { (values) -> Void in
+            self.deviceManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: self.chartStartDate, end: nil) { (values) -> Void in
                 glucoseValues = values
                 reloadGroup.leave()
             }

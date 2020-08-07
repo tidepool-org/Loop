@@ -386,7 +386,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func updateStoredGlucoseValues() {
-        dataManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: chartDateInterval.start) { [weak self] values in
+        dataManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: chartDateInterval.start, end: nil) { [weak self] values in
             DispatchQueue.main.async {
                 self?.storedGlucoseValues = values
                 self?.updateGlucoseChartValues()
