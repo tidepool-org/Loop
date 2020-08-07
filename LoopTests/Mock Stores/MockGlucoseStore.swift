@@ -11,6 +11,54 @@ import LoopKit
 @testable import Loop
 
 class MockGlucoseStore: GlucoseStoreProtocol {
+    var latestGlucose: GlucoseSampleValue?
+    
+    var preferredUnit: HKUnit?
+    
+    var sampleType: HKSampleType = HKSampleType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bloodGlucose)!
+    
+    var delegate: GlucoseStoreDelegate?
+    
+    var managedDataInterval: TimeInterval?
+    
+    var authorizationRequired: Bool = false
+    
+    var sharingDenied: Bool = false
+    
+    var healthStore: HKHealthStore = HKHealthStoreMock()
+    
+    func authorize(toShare: Bool, _ completion: @escaping (HealthKitSampleStoreResult<Bool>) -> Void) {
+        completion(.success(true))
+    }
+    
+    func addGlucose(_ glucose: NewGlucoseSample, completion: @escaping (GlucoseStoreResult<GlucoseValue>) -> Void) {
+        completion(.failure(DoseStore.DoseStoreError.configurationError)) // ANNA TODO: add this error to glucose store?
+    }
+    
+    func addGlucose(_ values: [NewGlucoseSample], completion: @escaping (GlucoseStoreResult<[GlucoseValue]>) -> Void) {
+        completion(.failure(DoseStore.DoseStoreError.configurationError)) // ANNA TODO: add this error to glucose store?
+    }
+    
+    func getCachedGlucoseSamples(start: Date, end: Date?, completion: @escaping ([StoredGlucoseSample]) -> Void) {
+        completion([])
+    }
+    
+    func generateDiagnosticReport(_ completion: @escaping (String) -> Void) {
+        completion("")
+    }
+    
+    func purgeGlucoseSamples(matchingCachePredicate cachePredicate: NSPredicate?, healthKitPredicate: NSPredicate, completion: @escaping (Bool, Int, Error?) -> Void) {
+        completion(false, 0, DoseStore.DoseStoreError.configurationError) // ANNA TODO: add this error to glucose store?
+    }
+    
+    func executeGlucoseQuery(fromQueryAnchor queryAnchor: GlucoseStore.QueryAnchor?, limit: Int, completion: @escaping (GlucoseStore.GlucoseQueryResult) -> Void) {
+        completion(.failure( DoseStore.DoseStoreError.configurationError)) // ANNA TODO: add this error to glucose store?))
+    }
+    
+    func counteractionEffects<Sample>(for samples: [Sample], to effects: [GlucoseEffect]) -> [GlucoseEffectVelocity] where Sample : GlucoseSampleValue {
+        return [] // TODO: check if we'll ever want to test this
+    }
+    
     func getRecentMomentumEffect(_ completion: @escaping (_ effects: [GlucoseEffect]) -> Void) {
         let fixture: [JSONDictionary] = loadFixture("momentum_effect_bouncing")
         let dateFormatter = ISO8601DateFormatter.localTimeDate()
