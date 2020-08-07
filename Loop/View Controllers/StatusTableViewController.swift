@@ -369,7 +369,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             
             if currentContext.contains(.carbs) {
                 reloadGroup.enter()
-                manager.carbStore.getCarbsOnBoardValues(start: startDate, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? state.insulinCounteractionEffects : nil) { (values) in
+                manager.carbStore.getCarbsOnBoardValues(start: startDate, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? state.insulinCounteractionEffects : nil) { (values) in
                     cobValues = values
                     reloadGroup.leave()
                 }

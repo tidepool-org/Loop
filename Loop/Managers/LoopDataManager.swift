@@ -25,7 +25,7 @@ final class LoopDataManager {
 
     private let cacheStore: PersistenceController
 
-    let carbStore: CarbStore
+    var carbStore: CarbStoreProtocol
 
     var doseStore: DoseStoreProtocol
 
@@ -514,7 +514,7 @@ extension LoopDataManager {
         carbStore.healthStore.requestAuthorization(toShare: sampleTypes, read: sampleTypes) { (success, error) in
             if success {
                 // Call the individual authorization methods to trigger query creation
-                self.carbStore.authorize({ _ in })
+                self.carbStore.authorize(toShare: true, { _ in })
                 self.doseStore.insulinDeliveryStore.authorize({ _ in })
                 self.glucoseStore.authorize(toShare: true, { _ in })
             }
@@ -877,7 +877,7 @@ extension LoopDataManager {
         if carbEffect == nil {
             updateGroup.enter()
             carbStore.getGlucoseEffects(
-                start: retrospectiveStart,
+                start: retrospectiveStart, end: nil,
                 effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil
             ) { (result) -> Void in
                 switch result {
@@ -1030,6 +1030,7 @@ extension LoopDataManager {
                     let potentialCarbEffect = try carbStore.glucoseEffects(
                         of: [potentialCarbEntry],
                         startingAt: retrospectiveStart,
+                        endingAt: nil,
                         effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil
                     )
 
@@ -1048,6 +1049,7 @@ extension LoopDataManager {
                     let potentialCarbEffect = try carbStore.glucoseEffects(
                         of: entries,
                         startingAt: retrospectiveStart,
+                        endingAt: nil,
                         effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil
                     )
 
@@ -1162,7 +1164,7 @@ extension LoopDataManager {
         var carbEffect: [GlucoseEffect]?
         updateGroup.enter()
         carbStore.getGlucoseEffects(
-            start: retrospectiveStart,
+            start: retrospectiveStart, end: nil,
             effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil
         ) { result in
             switch result {
@@ -1874,9 +1876,13 @@ extension LoopDataManager {
         guard FeatureFlags.simulatedCoreDataEnabled else {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
+        
+        guard let glucoseStore = glucoseStore as? GlucoseStore, let carbStore = carbStore as? CarbStore, let doseStore = doseStore as? DoseStore else {
+            fatalError("Mock stores should not be used to generate simulated core data")
+        }
 
         self.settingsStore.generateSimulatedHistoricalSettingsObjects() { error in
-            guard error == nil, let glucoseStore = self.glucoseStore as? GlucoseStore else {
+            guard error == nil else {
                 completion(error)
                 return
             }
@@ -1885,13 +1891,13 @@ extension LoopDataManager {
                     completion(error)
                     return
                 }
-                self.carbStore.generateSimulatedHistoricalCarbObjects() { error in
+                carbStore.generateSimulatedHistoricalCarbObjects() { error in
                     guard error == nil else {
                         completion(error)
                         return
                     }
                     self.dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects() { error in
-                        guard error == nil, let doseStore = self.doseStore as? DoseStore else {
+                        guard error == nil else {
                             completion(error)
                             return
                         }
@@ -1917,11 +1923,11 @@ extension LoopDataManager {
                 return
             }
             self.dosingDecisionStore.purgeHistoricalDosingDecisionObjects() { error in
-                guard error == nil else {
+                guard error == nil, let carbStore = self.carbStore as? CarbStore else {
                     completion(error)
                     return
                 }
-                self.carbStore.purgeHistoricalCarbObjects() { error in
+                carbStore.purgeHistoricalCarbObjects() { error in
                     guard error == nil else {
                         completion(error)
                         return

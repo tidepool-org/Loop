@@ -150,7 +150,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
                 insulinCounteractionEffects = allInsulinCounteractionEffects.filterDateRange(chartStartDate, nil)
 
                 reloadGroup.enter()
-                manager.carbStore.getCarbStatus(start: listStart, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? allInsulinCounteractionEffects : nil) { (result) in
+                manager.carbStore.getCarbStatus(start: listStart, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? allInsulinCounteractionEffects : nil) { (result) in
                     switch result {
                     case .success(let status):
                         carbStatuses = status
@@ -164,7 +164,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
                 }
 
                 reloadGroup.enter()
-                manager.carbStore.getGlucoseEffects(start: chartStartDate, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil) { (result) in
+                manager.carbStore.getGlucoseEffects(start: chartStartDate, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil) { (result) in
                     switch result {
                     case .success((_, let effects)):
                         carbEffects = effects

@@ -31,7 +31,7 @@ final class RemoteDataServicesManager {
 
     private let log = OSLog(category: "RemoteDataServicesManager")
     
-    private var carbStore: CarbStore
+    private var carbStore: CarbStoreProtocol
 
     private var doseStore: DoseStoreProtocol
 
@@ -42,7 +42,7 @@ final class RemoteDataServicesManager {
     private var settingsStore: SettingsStore
 
     init(
-        carbStore: CarbStore,
+        carbStore: CarbStoreProtocol,
         doseStore: DoseStoreProtocol,
         dosingDecisionStore: DosingDecisionStore,
         glucoseStore: GlucoseStoreProtocol,
@@ -126,7 +126,13 @@ extension RemoteDataServicesManager {
             let semaphore = DispatchSemaphore(value: 0)
             let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withRemoteDataType: .carb) ?? CarbStore.QueryAnchor()
 
-            self.carbStore.executeCarbQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.carbDataLimit ?? Int.max) { result in
+            guard let carbStore = self.carbStore as? CarbStore else {
+                self.log.error("Skipping carb upload from mock stores")
+                semaphore.signal() // ANNA TODO: check this is needed
+                return
+            }
+            
+            carbStore.executeCarbQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.carbDataLimit ?? Int.max) { result in
                 switch result {
                 case .failure(let error):
                     self.log.error("Error querying carb data: %{public}@", String(describing: error))
