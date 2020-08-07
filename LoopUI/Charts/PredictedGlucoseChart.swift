@@ -245,10 +245,46 @@ extension PredictedGlucoseChart {
     }
 
     public func setPredictedGlucoseValues(_ glucoseValues: [GlucoseValue]) {
-        predictedGlucosePoints = glucosePointsFromValues(glucoseValues)
+        let sanitizedPredictedGlucoseValues = sanitizePredictedGlucoseValues(glucoseValues)
+        predictedGlucosePoints = glucosePointsFromValues(sanitizedPredictedGlucoseValues)
     }
 
     public func setAlternatePredictedGlucoseValues(_ glucoseValues: [GlucoseValue]) {
         alternatePredictedGlucosePoints = glucosePointsFromValues(glucoseValues)
+    }
+}
+
+
+// MARK: - Clipping the predicted glucose values to a suggested min and max
+import HealthKit
+
+extension PredictedGlucoseChart {
+    var suggestedPredictedGlucoseMax: HKQuantity {
+        return HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 400)
+    }
+    
+    var suggestedPredictedGlucoseMin: HKQuantity {
+        return HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 0)
+    }
+    
+    var maxChartedGlucoseValue: HKQuantity? {
+        guard let maxChartedGlucosePoint = glucosePoints.max(by: { point1, point2 in point1.y.scalar < point2.y.scalar }) else {
+            return nil
+        }
+        return HKQuantity(unit: glucoseUnit, doubleValue: maxChartedGlucosePoint.y.scalar)
+    }
+    
+    func sanitizePredictedGlucoseValues(_ glucoseValues: [GlucoseValue]) -> [GlucoseValue] {
+        let maxGlucoseValue = maxChartedGlucoseValue != nil ? max(suggestedPredictedGlucoseMax, maxChartedGlucoseValue!) : suggestedPredictedGlucoseMax
+        
+        return glucoseValues.map {
+            if $0.quantity > maxGlucoseValue {
+                return PredictedGlucoseValue(startDate: $0.startDate, quantity: maxGlucoseValue)
+            } else if $0.quantity < suggestedPredictedGlucoseMin {
+                return PredictedGlucoseValue(startDate: $0.startDate, quantity: suggestedPredictedGlucoseMin)
+            } else {
+                return $0
+            }
+        }
     }
 }
