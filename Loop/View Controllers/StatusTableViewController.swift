@@ -258,7 +258,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
     }
     
-    private lazy var statusCharts = StatusChartsManager(colors: .default, settings: .default, traitCollection: self.traitCollection)
+    private lazy var statusCharts = StatusChartsManager(colors: .primary, settings: .default, traitCollection: self.traitCollection)
     
     override func createChartsManager() -> ChartsManager {
         return statusCharts
