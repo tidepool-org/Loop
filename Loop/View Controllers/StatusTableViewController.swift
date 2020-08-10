@@ -449,11 +449,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             if let predictedGlucoseValues = predictedGlucoseValues {
                 self.statusCharts.setPredictedGlucoseValues(predictedGlucoseValues)
             }
-            if let lastPoint = self.statusCharts.glucose.predictedGlucosePoints.last?.y {
-                self.eventualGlucoseDescription = String(describing: lastPoint)
-            } else {
-                self.eventualGlucoseDescription = nil
-            }
             if currentContext.contains(.targets) {
                 self.statusCharts.targetGlucoseSchedule = self.deviceManager.loopManager.settings.glucoseTargetRangeSchedule
                 self.statusCharts.preMealOverride = self.deviceManager.loopManager.settings.preMealOverride
