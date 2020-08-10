@@ -63,7 +63,8 @@ final class LoopDataManager {
         analyticsServicesManager: AnalyticsServicesManager,
         localCacheDuration: TimeInterval = .days(1),
         doseStorage: DoseStoreProtocol? = nil,
-        glucoseStorage: GlucoseStoreProtocol? = nil
+        glucoseStorage: GlucoseStoreProtocol? = nil,
+        carbStorage: CarbStoreProtocol? = nil
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -80,18 +81,22 @@ final class LoopDataManager {
 
         cacheStore = PersistenceController.controllerInAppGroupDirectory()
 
-        carbStore = CarbStore(
-            healthStore: healthStore,
-            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
-            cacheStore: cacheStore,
-            cacheLength: localCacheDuration,
-            defaultAbsorptionTimes: absorptionTimes,
-            observationInterval: cacheDuration,
-            carbRatioSchedule: carbRatioSchedule,
-            insulinSensitivitySchedule: insulinSensitivitySchedule,
-            overrideHistory: overrideHistory,
-            carbAbsorptionModel: FeatureFlags.nonlinearCarbModelEnabled ? .nonlinear : .linear
-        )
+        if let carbStorage = carbStorage {
+            carbStore = carbStorage
+        } else {
+            carbStore = CarbStore(
+                healthStore: healthStore,
+                observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+                cacheStore: cacheStore,
+                cacheLength: localCacheDuration,
+                defaultAbsorptionTimes: absorptionTimes,
+                observationInterval: cacheDuration,
+                carbRatioSchedule: carbRatioSchedule,
+                insulinSensitivitySchedule: insulinSensitivitySchedule,
+                overrideHistory: overrideHistory,
+                carbAbsorptionModel: FeatureFlags.nonlinearCarbModelEnabled ? .nonlinear : .linear
+            )
+        }
 
         if let doseStorage = doseStorage {
             doseStore = doseStorage
