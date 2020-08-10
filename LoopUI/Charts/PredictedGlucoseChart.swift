@@ -245,8 +245,8 @@ extension PredictedGlucoseChart {
     }
 
     public func setPredictedGlucoseValues(_ glucoseValues: [GlucoseValue]) {
-        let sanitizedPredictedGlucoseValues = sanitizePredictedGlucoseValues(glucoseValues)
-        predictedGlucosePoints = glucosePointsFromValues(sanitizedPredictedGlucoseValues)
+        let clampedPredicatedGlucoseValues = clampPredictedGlucoseValues(glucoseValues)
+        predictedGlucosePoints = glucosePointsFromValues(clampedPredicatedGlucoseValues)
     }
 
     public func setAlternatePredictedGlucoseValues(_ glucoseValues: [GlucoseValue]) {
@@ -255,33 +255,33 @@ extension PredictedGlucoseChart {
 }
 
 
-// MARK: - Clipping the predicted glucose values to a suggested min and max
+// MARK: - Clamping the predicted glucose values to a suggested min and max
 import HealthKit
 
 extension PredictedGlucoseChart {
-    var suggestedPredictedGlucoseMax: HKQuantity {
+    var predictedGlucoseClampMaximum: HKQuantity {
         return HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 400)
     }
     
-    var suggestedPredictedGlucoseMin: HKQuantity {
+    var predictedGlucoseClampMinimum: HKQuantity {
         return HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 0)
     }
     
     var maxChartedGlucoseValue: HKQuantity? {
-        guard let maxChartedGlucosePoint = glucosePoints.max(by: { point1, point2 in point1.y.scalar < point2.y.scalar }) else {
+        guard let maxGlucosePoint = glucosePoints.max(by: { point1, point2 in point1.y.scalar < point2.y.scalar }) else {
             return nil
         }
-        return HKQuantity(unit: glucoseUnit, doubleValue: maxChartedGlucosePoint.y.scalar)
+        return HKQuantity(unit: glucoseUnit, doubleValue: maxGlucosePoint.y.scalar)
     }
     
-    func sanitizePredictedGlucoseValues(_ glucoseValues: [GlucoseValue]) -> [GlucoseValue] {
-        let maxGlucoseValue = maxChartedGlucoseValue != nil ? max(suggestedPredictedGlucoseMax, maxChartedGlucoseValue!) : suggestedPredictedGlucoseMax
+    func clampPredicatedGlucoseValues(_ glucoseValues: [GlucoseValue]) -> [GlucoseValue] {
+        let maxGlucoseValue = maxChartedGlucoseValue != nil ? max(predictedGlucoseClampMaximum, maxChartedGlucoseValue!) : predictedGlucoseClampMaximum
         
         return glucoseValues.map {
             if $0.quantity > maxGlucoseValue {
                 return PredictedGlucoseValue(startDate: $0.startDate, quantity: maxGlucoseValue)
-            } else if $0.quantity < suggestedPredictedGlucoseMin {
-                return PredictedGlucoseValue(startDate: $0.startDate, quantity: suggestedPredictedGlucoseMin)
+            } else if $0.quantity < predictedGlucoseClampMinimum {
+                return PredictedGlucoseValue(startDate: $0.startDate, quantity: predictedGlucoseClampMinimum)
             } else {
                 return $0
             }
