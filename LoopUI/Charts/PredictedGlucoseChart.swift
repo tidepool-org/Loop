@@ -274,7 +274,7 @@ extension PredictedGlucoseChart {
         return HKQuantity(unit: glucoseUnit, doubleValue: maxGlucosePoint.y.scalar)
     }
     
-    func clampPredicatedGlucoseValues(_ glucoseValues: [GlucoseValue]) -> [GlucoseValue] {
+    func clampPredictedGlucoseValues(_ glucoseValues: [GlucoseValue]) -> [GlucoseValue] {
         let maxGlucoseValue = maxChartedGlucoseValue != nil ? max(predictedGlucoseClampMaximum, maxChartedGlucoseValue!) : predictedGlucoseClampMaximum
         
         return glucoseValues.map {
