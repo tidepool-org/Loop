@@ -11,6 +11,74 @@ import LoopKit
 @testable import Loop
 
 class MockCarbStore: CarbStoreProtocol {
+    var sampleType: HKSampleType = HKSampleType.quantityType(forIdentifier: HKQuantityTypeIdentifier.dietaryCarbohydrates)!
+    
+    var preferredUnit: HKUnit! = .gram()
+    
+    var delegate: CarbStoreDelegate?
+    
+    var carbRatioSchedule: CarbRatioSchedule?
+    
+    var insulinSensitivitySchedule: InsulinSensitivitySchedule?
+    
+    var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule?
+    
+    var carbRatioScheduleApplyingOverrideHistory: CarbRatioSchedule?
+    
+    var maximumAbsorptionTimeInterval: TimeInterval {
+        return defaultAbsorptionTimes.slow * 2
+    }
+    
+    var delta: TimeInterval = .minutes(5)
+    
+    var defaultAbsorptionTimes: CarbStore.DefaultAbsorptionTimes = (fast: .minutes(30), medium: .hours(3), slow: .hours(5))
+    
+    var authorizationRequired: Bool = false
+    
+    var sharingDenied: Bool = false
+    
+    var healthStore: HKHealthStore = HKHealthStoreMock()
+    
+    func authorize(toShare: Bool, _ completion: @escaping (HealthKitSampleStoreResult<Bool>) -> Void) {
+        completion(.success(true))
+    }
+    
+    func replaceCarbEntry(_ oldEntry: StoredCarbEntry, withEntry newEntry: NewCarbEntry, completion: @escaping (CarbStoreResult<StoredCarbEntry>) -> Void) {
+        completion(.failure(.notConfigured))
+    }
+    
+    func addCarbEntry(_ entry: NewCarbEntry, completion: @escaping (CarbStoreResult<StoredCarbEntry>) -> Void) {
+        completion(.failure(.notConfigured))
+    }
+    
+    func getCarbStatus(start: Date, end: Date?, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (CarbStoreResult<[CarbStatus<StoredCarbEntry>]>) -> Void) {
+        completion(.failure(.notConfigured))
+    }
+    
+    func generateDiagnosticReport(_ completion: @escaping (String) -> Void) {
+        completion("")
+    }
+    
+    func glucoseEffects<Sample>(of samples: [Sample], startingAt start: Date, endingAt end: Date?, effectVelocities: [GlucoseEffectVelocity]?) throws -> [GlucoseEffect] where Sample : CarbEntry {
+        return []
+    }
+    
+    func getCarbsOnBoardValues(start: Date, end: Date?, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping ([CarbValue]) -> Void) {
+        completion([])
+    }
+    
+    func carbsOnBoard(at date: Date, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (CarbStoreResult<CarbValue>) -> Void) {
+        completion(.failure(.notConfigured))
+    }
+    
+    func getTotalCarbs(since start: Date, completion: @escaping (CarbStoreResult<CarbValue>) -> Void) {
+        completion(.failure(.notConfigured))
+    }
+    
+    func deleteCarbEntry(_ entry: StoredCarbEntry, completion: @escaping (CarbStoreResult<Bool>) -> Void) {
+        completion(.failure(.notConfigured))
+    }
+    
     func getGlucoseEffects(start: Date, end: Date? = nil, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping(_ result: CarbStoreResult<(samples: [StoredCarbEntry], effects: [GlucoseEffect])>) -> Void) {
         let fixture: [JSONDictionary] = loadFixture("dynamic_glucose_effect_partially_observed")
         let dateFormatter = ISO8601DateFormatter.localTimeDate()
