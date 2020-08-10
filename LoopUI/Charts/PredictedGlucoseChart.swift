@@ -67,7 +67,7 @@ public class PredictedGlucoseChart: GlucoseChart, ChartProviding {
 
     public private(set) var endDate: Date?
 
-    private var predictedGlucoseSuggestedBounds: (minimum: HKQuantity, maximum: HKQuantity)? = nil
+    private var predictedGlucoseSuggestedBounds: (minimum: HKQuantity, maximum: HKQuantity)?
 
     private func updateEndDate(_ date: Date) {
         if endDate == nil || date > endDate! {
@@ -75,10 +75,9 @@ public class PredictedGlucoseChart: GlucoseChart, ChartProviding {
         }
     }
     
-    public init(predictedGlucoseBounds: (minimum: HKQuantity, maximum: HKQuantity)? = (HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 40), HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 400))) {
-        if let predictedGlucoseBounds = predictedGlucoseBounds {
-            self.predictedGlucoseSuggestedBounds = predictedGlucoseBounds
-        }
+    public init(predictedGlucoseBounds: (minimum: HKQuantity, maximum: HKQuantity)? = (HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 40), HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 400)))
+    {
+        self.predictedGlucoseSuggestedBounds = predictedGlucoseBounds
         super.init()
     }
 }
