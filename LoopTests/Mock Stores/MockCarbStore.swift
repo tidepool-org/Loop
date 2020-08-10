@@ -11,6 +11,12 @@ import LoopKit
 @testable import Loop
 
 class MockCarbStore: CarbStoreProtocol {
+    init(for test: DataManagerTestType = .flatAndStable) {
+        self.testType = test
+    }
+    
+    var testType: DataManagerTestType
+    
     var sampleType: HKSampleType = HKSampleType.quantityType(forIdentifier: HKQuantityTypeIdentifier.dietaryCarbohydrates)!
     
     var preferredUnit: HKUnit! = .gram()
@@ -21,7 +27,10 @@ class MockCarbStore: CarbStoreProtocol {
     
     var insulinSensitivitySchedule: InsulinSensitivitySchedule?
     
-    var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule?
+    var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule? = InsulinSensitivitySchedule(unit: HKUnit.milligramsPerDeciliter, dailyItems: [
+        RepeatingScheduleValue(startTime: 0.0, value: 45.0),
+        RepeatingScheduleValue(startTime: 32400.0, value: 55.0)
+    ])!
     
     var carbRatioScheduleApplyingOverrideHistory: CarbRatioSchedule?
     
@@ -80,7 +89,8 @@ class MockCarbStore: CarbStoreProtocol {
     }
     
     func getGlucoseEffects(start: Date, end: Date? = nil, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping(_ result: CarbStoreResult<(samples: [StoredCarbEntry], effects: [GlucoseEffect])>) -> Void) {
-        let fixture: [JSONDictionary] = loadFixture("dynamic_glucose_effect_partially_observed")
+        let fixture: [JSONDictionary] = loadFixture(fixtureToLoad)
+
         let dateFormatter = ISO8601DateFormatter.localTimeDate()
 
         return completion(.success(([], fixture.map {
@@ -97,5 +107,14 @@ extension MockCarbStore {
     public func loadFixture<T>(_ resourceName: String) -> T {
         let path = bundle.path(forResource: resourceName, ofType: "json")!
         return try! JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: path)), options: []) as! T
+    }
+    
+    var fixtureToLoad: String {
+        switch testType {
+        case .flatAndStable:
+            return "flat_and_stable_carb_effect"
+        default:
+            return "dynamic_glucose_effect_partially_observed"
+        }
     }
 }

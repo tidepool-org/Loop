@@ -11,7 +11,24 @@ import LoopKit
 @testable import Loop
 
 class MockGlucoseStore: GlucoseStoreProtocol {
-    var latestGlucose: GlucoseSampleValue?
+    init(for test: DataManagerTestType = .flatAndStable) {
+        self.testType = test
+    }
+    
+    let dateFormatter = ISO8601DateFormatter.localTimeDate()
+    
+    var testType: DataManagerTestType
+    
+    var latestGlucose: GlucoseSampleValue? {
+        return StoredGlucoseSample(
+            sample: HKQuantitySample(
+                type: HKQuantityType.quantityType(forIdentifier: .bloodGlucose)!,
+                quantity: HKQuantity(unit: HKUnit.milligramsPerDeciliter, doubleValue: 132.18853344832567),
+                start: glucoseStartDate,
+                end: glucoseStartDate
+            )
+        )
+    }
     
     var preferredUnit: HKUnit?
     
@@ -40,7 +57,7 @@ class MockGlucoseStore: GlucoseStoreProtocol {
     }
     
     func getCachedGlucoseSamples(start: Date, end: Date?, completion: @escaping ([StoredGlucoseSample]) -> Void) {
-        completion([])
+        completion([latestGlucose as! StoredGlucoseSample])
     }
     
     func generateDiagnosticReport(_ completion: @escaping (String) -> Void) {
@@ -60,7 +77,7 @@ class MockGlucoseStore: GlucoseStoreProtocol {
     }
     
     func getRecentMomentumEffect(_ completion: @escaping (_ effects: [GlucoseEffect]) -> Void) {
-        let fixture: [JSONDictionary] = loadFixture("momentum_effect_bouncing")
+        let fixture: [JSONDictionary] = loadFixture(momentumEffectToLoad)
         let dateFormatter = ISO8601DateFormatter.localTimeDate()
 
         return completion(fixture.map {
@@ -70,7 +87,7 @@ class MockGlucoseStore: GlucoseStoreProtocol {
     }
     
     func getCounteractionEffects(start: Date, end: Date? = nil, to effects: [GlucoseEffect], _ completion: @escaping (_ effects: [GlucoseEffectVelocity]) -> Void) {
-        let fixture: [JSONDictionary] = loadFixture("counteraction_effect_falling_glucose")
+        let fixture: [JSONDictionary] = loadFixture(counteractionEffectToLoad)
         let dateFormatter = ISO8601DateFormatter.localTimeDate()
 
         return completion(fixture.map {
@@ -87,6 +104,33 @@ extension MockGlucoseStore {
     public func loadFixture<T>(_ resourceName: String) -> T {
         let path = bundle.path(forResource: resourceName, ofType: "json")!
         return try! JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: path)), options: []) as! T
+    }
+    
+    var counteractionEffectToLoad: String {
+        switch testType {
+        case .flatAndStable:
+            return "flat_and_stable_counteraction_effect"
+        default:
+            return "counteraction_effect_falling_glucose"
+        }
+    }
+    
+    var momentumEffectToLoad: String {
+        switch testType {
+        case .flatAndStable:
+            return "flat_and_stable_momentum_effect"
+        default:
+            return "momentum_effect_bouncing"
+        }
+    }
+    
+    var glucoseStartDate: Date {
+        switch testType {
+        case .flatAndStable:
+            return dateFormatter.date(from: "2020-08-10T23:03:43")!
+        default:
+            return dateFormatter.date(from: "2015-10-25T19:30:00")!
+        }
     }
 }
 

@@ -11,16 +11,26 @@ import LoopKit
 @testable import Loop
 
 class MockDoseStore: DoseStoreProtocol {
+    init(for test: DataManagerTestType = .flatAndStable) {
+        self.testType = test
+        self.insulinDeliveryStore = InsulinDeliveryStore(
+            healthStore: HKHealthStoreMock(),
+            observeHealthKitForCurrentAppOnly: false,
+            cacheStore: PersistenceController(directoryURL: URL.init(fileURLWithPath: "")),
+            observationEnabled: true,
+            test_currentDate: MockDoseStore.currentDate(for: test)
+        )
+        self.pumpEventQueryAfterDate = MockDoseStore.currentDate(for: test)
+        self.lastAddedPumpData = MockDoseStore.currentDate(for: test)
+    }
+    
+    static let dateFormatter = ISO8601DateFormatter.localTimeDate()
+    
+    var testType: DataManagerTestType
+    
     var basalProfileApplyingOverrideHistory: BasalRateSchedule?
     
-    
-    var insulinDeliveryStore: InsulinDeliveryStore = InsulinDeliveryStore(
-        healthStore: HKHealthStoreMock(),
-        observeHealthKitForCurrentAppOnly: false,
-        cacheStore: PersistenceController(directoryURL: URL.init(fileURLWithPath: "")),
-        observationEnabled: true,
-        test_currentDate: Date() // ANNA TODO: fix this
-    )
+    var insulinDeliveryStore: InsulinDeliveryStore
     
     var delegate: DoseStoreDelegate?
     
@@ -28,11 +38,12 @@ class MockDoseStore: DoseStoreProtocol {
     
     var pumpRecordsBasalProfileStartEvents: Bool = false
     
-    var pumpEventQueryAfterDate: Date = Date() // ANNA TODO: fix this
+    var pumpEventQueryAfterDate: Date
     
     var basalProfile: BasalRateSchedule?
     
-    var insulinModel: InsulinModel?
+    // Default to the adult exponential insulin model
+    var insulinModel: InsulinModel? = ExponentialInsulinModelPreset.humalogNovologAdult
     
     var insulinSensitivitySchedule: InsulinSensitivitySchedule?
     
@@ -44,7 +55,7 @@ class MockDoseStore: DoseStoreProtocol {
     
     var lastReservoirValue: ReservoirValue?
     
-    var lastAddedPumpData: Date = Date()
+    var lastAddedPumpData: Date
     
     func addPumpEvents(_ events: [NewPumpEvent], lastReconciliation: Date?, completion: @escaping (DoseStore.DoseStoreError?) -> Void) {
         completion(nil)
@@ -89,7 +100,7 @@ class MockDoseStore: DoseStoreProtocol {
     private let fixtureTimeZone = TimeZone(secondsFromGMT: -0 * 60 * 60)!
     
     func getGlucoseEffects(start: Date, end: Date? = nil, basalDosingEnd: Date? = Date(), completion: @escaping (_ result: DoseStoreResult<[GlucoseEffect]>) -> Void) {
-        let fixture: [JSONDictionary] = loadFixture("insulin_effect")
+        let fixture: [JSONDictionary] = loadFixture(fixtureToLoad)
         let dateFormatter = ISO8601DateFormatter.localTimeDate(timeZone: fixtureTimeZone)
 
         return completion(.success(fixture.map {
@@ -102,6 +113,15 @@ class MockDoseStore: DoseStoreProtocol {
             )
         }))
     }
+    
+    static func currentDate(for testType: DataManagerTestType) -> Date {
+        switch testType {
+        case .flatAndStable:
+            return dateFormatter.date(from: "2020-08-10T23:03:43")!
+        default:
+            return dateFormatter.date(from: "2015-10-25T19:30:00")!
+        }
+    }
 }
 
 extension MockDoseStore {
@@ -112,5 +132,14 @@ extension MockDoseStore {
     public func loadFixture<T>(_ resourceName: String) -> T {
         let path = bundle.path(forResource: resourceName, ofType: "json")!
         return try! JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: path)), options: []) as! T
+    }
+    
+    var fixtureToLoad: String {
+        switch testType {
+        case .flatAndStable:
+            return "flat_and_stable_insulin_effect"
+        default:
+            return "insulin_effect"
+        }
     }
 }
