@@ -26,7 +26,7 @@ class StatusChartsManager: ChartsManager {
     let cob: COBChart
 
     init(colors: ChartColorPalette, settings: ChartSettings, traitCollection: UITraitCollection) {
-        let glucose = PredictedGlucoseChart()
+        let glucose = FeatureFlags.predictedGlucoseChartClampEnabled ? PredictedGlucoseChart(predictedGlucoseBounds: .default) : PredictedGlucoseChart(predictedGlucoseBounds: nil)
         let iob = IOBChart()
         let dose = DoseChart()
         let cob = COBChart()
