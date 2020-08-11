@@ -121,6 +121,10 @@ extension MockCarbStore {
             return "high_and_stable_carb_effect"
         case .highAndRisingWithCOB:
             return "high_and_rising_with_cob_carb_effect"
+        case .lowAndFallingWithCOB:
+            return "low_and_falling_carb_effect"
+        case .lowWithLowTreatment:
+            return "low_with_low_treatment_carb_effect"
         default:
             return "dynamic_glucose_effect_partially_observed"
         }

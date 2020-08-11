@@ -16,12 +16,15 @@ public typealias JSONDictionary = [String: Any]
 
 enum DataManagerTestType {
     case flatAndStable
-    case flatAndRisingWithoutCOB
-    case lowWithLowTreatment
-    case lowAndFallingWithCOB
-    case highAndFalling
     case highAndStable
     case highAndRisingWithCOB
+    case lowAndFallingWithCOB
+    case lowWithLowTreatment
+    
+    case flatAndRisingWithoutCOB
+    case highAndFalling
+    
+    
 }
 
 extension TimeZone {
@@ -126,9 +129,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         var recommendedTempBasal: TempBasalRecommendation?
         self.loopDataManager.updateTheLoop { prediction, tempBasal, _ in
             predictedGlucose = prediction
-            if let tempBasal = tempBasal {
-                recommendedTempBasal = tempBasal.recommendation
-            }
+            recommendedTempBasal = tempBasal?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
@@ -155,9 +156,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         var recommendedBolus: BolusRecommendation?
         self.loopDataManager.updateTheLoop { prediction, _, bolus in
             predictedGlucose = prediction
-            if let bolus = bolus {
-                recommendedBolus = bolus.recommendation
-            }
+            recommendedBolus = bolus?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
@@ -184,9 +183,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         var recommendedBolus: BolusRecommendation?
         self.loopDataManager.updateTheLoop { prediction, _, bolus in
             predictedGlucose = prediction
-            if let bolus = bolus {
-                recommendedBolus = bolus.recommendation
-            }
+            recommendedBolus = bolus?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
@@ -201,6 +198,60 @@ class LoopDataManagerDosingTests: XCTestCase {
         }
 
         XCTAssertEqual(1.6, recommendedBolus!.amount, accuracy: 1.0 / 40.0)
+    }
+    
+    func testLowAndFallingWithCOB() {
+        setUp(for: .lowAndFallingWithCOB)
+        let predictedGlucoseOutput = loadGlucoseEffect("low_and_falling_predicted_glucose")
+
+        let updateGroup = DispatchGroup()
+        updateGroup.enter()
+        var predictedGlucose: [PredictedGlucoseValue]?
+        var recommendedTempBasal: TempBasalRecommendation?
+        self.loopDataManager.updateTheLoop { prediction, tempBasal, _ in
+            predictedGlucose = prediction
+            recommendedTempBasal = tempBasal?.recommendation
+            updateGroup.leave()
+        }
+        // We need to wait until the task completes to get outputs
+        _ = updateGroup.wait(timeout: .distantFuture)
+
+        XCTAssertNotNil(predictedGlucose)
+        XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
+        
+        for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
+            XCTAssertEqual(expected.startDate, calculated.startDate)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+        }
+
+        XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
+    }
+    
+    func testLowWithLowTreatment() {
+        setUp(for: .lowWithLowTreatment)
+        let predictedGlucoseOutput = loadGlucoseEffect("low_with_low_treatment_predicted_glucose")
+
+        let updateGroup = DispatchGroup()
+        updateGroup.enter()
+        var predictedGlucose: [PredictedGlucoseValue]?
+        var recommendedTempBasal: TempBasalRecommendation?
+        self.loopDataManager.updateTheLoop { prediction, tempBasal, _ in
+            predictedGlucose = prediction
+            recommendedTempBasal = tempBasal?.recommendation
+            updateGroup.leave()
+        }
+        // We need to wait until the task completes to get outputs
+        _ = updateGroup.wait(timeout: .distantFuture)
+
+        XCTAssertNotNil(predictedGlucose)
+        XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
+        
+        for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
+            XCTAssertEqual(expected.startDate, calculated.startDate)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+        }
+
+        XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
     }
 }
 

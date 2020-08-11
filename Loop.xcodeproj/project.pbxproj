@@ -463,6 +463,16 @@
 		E90909D324E34AC500F963D2 /* high_and_rising_with_cob_predicted_glucose.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909CE24E34AC500F963D2 /* high_and_rising_with_cob_predicted_glucose.json */; };
 		E90909D424E34AC500F963D2 /* high_and_rising_with_cob_carb_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909CF24E34AC500F963D2 /* high_and_rising_with_cob_carb_effect.json */; };
 		E90909D524E34AC500F963D2 /* high_and_rising_with_cob_counteraction_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909D024E34AC500F963D2 /* high_and_rising_with_cob_counteraction_effect.json */; };
+		E90909DC24E34F1600F963D2 /* low_and_falling_predicted_glucose.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909D724E34F1500F963D2 /* low_and_falling_predicted_glucose.json */; };
+		E90909DD24E34F1600F963D2 /* low_and_falling_carb_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909D824E34F1500F963D2 /* low_and_falling_carb_effect.json */; };
+		E90909DE24E34F1600F963D2 /* low_and_falling_counteraction_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909D924E34F1500F963D2 /* low_and_falling_counteraction_effect.json */; };
+		E90909DF24E34F1600F963D2 /* low_and_falling_insulin_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909DA24E34F1600F963D2 /* low_and_falling_insulin_effect.json */; };
+		E90909E024E34F1600F963D2 /* low_and_falling_momentum_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909DB24E34F1600F963D2 /* low_and_falling_momentum_effect.json */; };
+		E90909E724E3530200F963D2 /* low_with_low_treatment_carb_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909E224E3530200F963D2 /* low_with_low_treatment_carb_effect.json */; };
+		E90909E824E3530200F963D2 /* low_with_low_treatment_insulin_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909E324E3530200F963D2 /* low_with_low_treatment_insulin_effect.json */; };
+		E90909E924E3530200F963D2 /* low_with_low_treatment_predicted_glucose.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909E424E3530200F963D2 /* low_with_low_treatment_predicted_glucose.json */; };
+		E90909EA24E3530200F963D2 /* low_with_low_treatment_momentum_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909E524E3530200F963D2 /* low_with_low_treatment_momentum_effect.json */; };
+		E90909EB24E3530200F963D2 /* low_with_low_treatment_counteraction_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909E624E3530200F963D2 /* low_with_low_treatment_counteraction_effect.json */; };
 		E93E865424DB6CBA00FF40C8 /* retrospective_output.json in Resources */ = {isa = PBXBuildFile; fileRef = E93E865324DB6CBA00FF40C8 /* retrospective_output.json */; };
 		E93E865624DB731900FF40C8 /* predicted_glucose_without_retrospective.json in Resources */ = {isa = PBXBuildFile; fileRef = E93E865524DB731900FF40C8 /* predicted_glucose_without_retrospective.json */; };
 		E93E865824DB75BE00FF40C8 /* predicted_glucose_very_negative.json in Resources */ = {isa = PBXBuildFile; fileRef = E93E865724DB75BD00FF40C8 /* predicted_glucose_very_negative.json */; };
@@ -1218,6 +1228,16 @@
 		E90909CE24E34AC500F963D2 /* high_and_rising_with_cob_predicted_glucose.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_rising_with_cob_predicted_glucose.json; sourceTree = "<group>"; };
 		E90909CF24E34AC500F963D2 /* high_and_rising_with_cob_carb_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_rising_with_cob_carb_effect.json; sourceTree = "<group>"; };
 		E90909D024E34AC500F963D2 /* high_and_rising_with_cob_counteraction_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_rising_with_cob_counteraction_effect.json; sourceTree = "<group>"; };
+		E90909D724E34F1500F963D2 /* low_and_falling_predicted_glucose.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_and_falling_predicted_glucose.json; sourceTree = "<group>"; };
+		E90909D824E34F1500F963D2 /* low_and_falling_carb_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_and_falling_carb_effect.json; sourceTree = "<group>"; };
+		E90909D924E34F1500F963D2 /* low_and_falling_counteraction_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_and_falling_counteraction_effect.json; sourceTree = "<group>"; };
+		E90909DA24E34F1600F963D2 /* low_and_falling_insulin_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_and_falling_insulin_effect.json; sourceTree = "<group>"; };
+		E90909DB24E34F1600F963D2 /* low_and_falling_momentum_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_and_falling_momentum_effect.json; sourceTree = "<group>"; };
+		E90909E224E3530200F963D2 /* low_with_low_treatment_carb_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_with_low_treatment_carb_effect.json; sourceTree = "<group>"; };
+		E90909E324E3530200F963D2 /* low_with_low_treatment_insulin_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_with_low_treatment_insulin_effect.json; sourceTree = "<group>"; };
+		E90909E424E3530200F963D2 /* low_with_low_treatment_predicted_glucose.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_with_low_treatment_predicted_glucose.json; sourceTree = "<group>"; };
+		E90909E524E3530200F963D2 /* low_with_low_treatment_momentum_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_with_low_treatment_momentum_effect.json; sourceTree = "<group>"; };
+		E90909E624E3530200F963D2 /* low_with_low_treatment_counteraction_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_with_low_treatment_counteraction_effect.json; sourceTree = "<group>"; };
 		E93E865324DB6CBA00FF40C8 /* retrospective_output.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = retrospective_output.json; sourceTree = "<group>"; };
 		E93E865524DB731900FF40C8 /* predicted_glucose_without_retrospective.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = predicted_glucose_without_retrospective.json; sourceTree = "<group>"; };
 		E93E865724DB75BD00FF40C8 /* predicted_glucose_very_negative.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = predicted_glucose_very_negative.json; sourceTree = "<group>"; };
@@ -2195,6 +2215,30 @@
 			path = high_and_rising_with_cob;
 			sourceTree = "<group>";
 		};
+		E90909D624E34EC200F963D2 /* low_and_falling */ = {
+			isa = PBXGroup;
+			children = (
+				E90909D824E34F1500F963D2 /* low_and_falling_carb_effect.json */,
+				E90909D924E34F1500F963D2 /* low_and_falling_counteraction_effect.json */,
+				E90909DA24E34F1600F963D2 /* low_and_falling_insulin_effect.json */,
+				E90909DB24E34F1600F963D2 /* low_and_falling_momentum_effect.json */,
+				E90909D724E34F1500F963D2 /* low_and_falling_predicted_glucose.json */,
+			);
+			path = low_and_falling;
+			sourceTree = "<group>";
+		};
+		E90909E124E352C300F963D2 /* low_with_low_treatment */ = {
+			isa = PBXGroup;
+			children = (
+				E90909E224E3530200F963D2 /* low_with_low_treatment_carb_effect.json */,
+				E90909E624E3530200F963D2 /* low_with_low_treatment_counteraction_effect.json */,
+				E90909E324E3530200F963D2 /* low_with_low_treatment_insulin_effect.json */,
+				E90909E524E3530200F963D2 /* low_with_low_treatment_momentum_effect.json */,
+				E90909E424E3530200F963D2 /* low_with_low_treatment_predicted_glucose.json */,
+			);
+			path = low_with_low_treatment;
+			sourceTree = "<group>";
+		};
 		E93E86AC24DDE02C00FF40C8 /* Mock Stores */ = {
 			isa = PBXGroup;
 			children = (
@@ -2233,6 +2277,8 @@
 		E9C58A7624DB510500487A17 /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
+				E90909E124E352C300F963D2 /* low_with_low_treatment */,
+				E90909D624E34EC200F963D2 /* low_and_falling */,
 				E90909CB24E34A7A00F963D2 /* high_and_rising_with_cob */,
 				E93E86C424E2DF6700FF40C8 /* high_and_stable */,
 				E93E86B324E1FD8700FF40C8 /* flat_and_stable */,
@@ -2735,13 +2781,22 @@
 				E93E865624DB731900FF40C8 /* predicted_glucose_without_retrospective.json in Resources */,
 				E90909D424E34AC500F963D2 /* high_and_rising_with_cob_carb_effect.json in Resources */,
 				E93E86CC24E2E02200FF40C8 /* high_and_stable_predicted_glucose.json in Resources */,
+				E90909DC24E34F1600F963D2 /* low_and_falling_predicted_glucose.json in Resources */,
+				E90909DE24E34F1600F963D2 /* low_and_falling_counteraction_effect.json in Resources */,
 				E90909D224E34AC500F963D2 /* high_and_rising_with_cob_insulin_effect.json in Resources */,
+				E90909DD24E34F1600F963D2 /* low_and_falling_carb_effect.json in Resources */,
+				E90909E924E3530200F963D2 /* low_with_low_treatment_predicted_glucose.json in Resources */,
 				E90909D124E34AC500F963D2 /* high_and_rising_with_cob_momentum_effect.json in Resources */,
 				E9C58A8024DB529A00487A17 /* insulin_effect.json in Resources */,
+				E90909DF24E34F1600F963D2 /* low_and_falling_insulin_effect.json in Resources */,
 				E93E86BE24E1FDC400FF40C8 /* flat_and_stable_carb_effect.json in Resources */,
+				E90909E824E3530200F963D2 /* low_with_low_treatment_insulin_effect.json in Resources */,
 				E93E865824DB75BE00FF40C8 /* predicted_glucose_very_negative.json in Resources */,
 				E93E86BC24E1FDC400FF40C8 /* flat_and_stable_predicted_glucose.json in Resources */,
+				E90909EB24E3530200F963D2 /* low_with_low_treatment_counteraction_effect.json in Resources */,
 				E93E86BA24E1FDC400FF40C8 /* flat_and_stable_insulin_effect.json in Resources */,
+				E90909E724E3530200F963D2 /* low_with_low_treatment_carb_effect.json in Resources */,
+				E90909EA24E3530200F963D2 /* low_with_low_treatment_momentum_effect.json in Resources */,
 				E90909D324E34AC500F963D2 /* high_and_rising_with_cob_predicted_glucose.json in Resources */,
 				E90909D524E34AC500F963D2 /* high_and_rising_with_cob_counteraction_effect.json in Resources */,
 				E9C58A7D24DB529A00487A17 /* basal_profile.json in Resources */,
@@ -2753,6 +2808,7 @@
 				E93E86BB24E1FDC400FF40C8 /* flat_and_stable_momentum_effect.json in Resources */,
 				E93E86CB24E2E02200FF40C8 /* high_and_stable_carb_effect.json in Resources */,
 				E9C58A7C24DB529A00487A17 /* momentum_effect_bouncing.json in Resources */,
+				E90909E024E34F1600F963D2 /* low_and_falling_momentum_effect.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

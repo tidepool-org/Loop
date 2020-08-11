@@ -120,6 +120,10 @@ class MockDoseStore: DoseStoreProtocol {
             return dateFormatter.date(from: "2020-08-11T14:13:05")!
         case .highAndRisingWithCOB:
             return dateFormatter.date(from: "2020-08-11T21:48:17")!
+        case .lowAndFallingWithCOB:
+            return dateFormatter.date(from: "2020-08-11T22:06:06")!
+        case .lowWithLowTreatment:
+            return dateFormatter.date(from: "2020-08-11T22:23:55")!
         default:
             return dateFormatter.date(from: "2015-10-25T19:30:00")!
         }
@@ -144,6 +148,10 @@ extension MockDoseStore {
             return "high_and_stable_insulin_effect"
         case .highAndRisingWithCOB:
             return "high_and_rising_with_cob_insulin_effect"
+        case .lowAndFallingWithCOB:
+            return "low_and_falling_insulin_effect"
+        case .lowWithLowTreatment:
+            return "low_with_low_treatment_insulin_effect"
         default:
             return "insulin_effect"
         }

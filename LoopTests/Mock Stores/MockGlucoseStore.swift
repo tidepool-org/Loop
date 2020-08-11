@@ -114,6 +114,10 @@ extension MockGlucoseStore {
             return "high_and_stable_counteraction_effect"
         case .highAndRisingWithCOB:
             return "high_and_rising_with_cob_counteraction_effect"
+        case .lowAndFallingWithCOB:
+            return "low_and_falling_counteraction_effect"
+        case .lowWithLowTreatment:
+            return "low_with_low_treatment_counteraction_effect"
         default:
             return "counteraction_effect_falling_glucose"
         }
@@ -127,6 +131,10 @@ extension MockGlucoseStore {
             return "high_and_stable_momentum_effect"
         case .highAndRisingWithCOB:
             return "high_and_rising_with_cob_momentum_effect"
+        case .lowAndFallingWithCOB:
+            return "low_and_falling_momentum_effect"
+        case .lowWithLowTreatment:
+            return "low_with_low_treatment_momentum_effect"
         default:
             return "momentum_effect_bouncing"
         }
@@ -140,6 +148,10 @@ extension MockGlucoseStore {
             return dateFormatter.date(from: "2020-08-11T14:13:05")!
         case .highAndRisingWithCOB:
             return dateFormatter.date(from: "2020-08-11T21:48:17")!
+        case .lowAndFallingWithCOB:
+            return dateFormatter.date(from: "2020-08-11T22:06:06")!
+        case .lowWithLowTreatment:
+            return dateFormatter.date(from: "2020-08-11T22:23:55")!
         default:
             return dateFormatter.date(from: "2015-10-25T19:30:00")!
         }
@@ -153,6 +165,10 @@ extension MockGlucoseStore {
             return 198.12615242549782
         case .highAndRisingWithCOB:
             return 129.93174411197853
+        case .lowAndFallingWithCOB:
+            return 75.10768374646841
+        case .lowWithLowTreatment:
+            return 81.22399763523448
         default:
             return 80
         }
