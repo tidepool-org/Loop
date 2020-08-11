@@ -1510,6 +1510,16 @@ extension LoopDataManager {
     }
 }
 
+extension LoopDataManager {
+    public func updateTheLoop(completion: @escaping ([PredictedGlucoseValue]?, (recommendation: TempBasalRecommendation, date: Date)?, (recommendation: BolusRecommendation, date: Date)?) -> Void) {
+        self.dataAccessQueue.async {
+            do {
+                try self.update()
+                completion(self.predictedGlucose, self.recommendedTempBasal, self.recommendedBolus)
+            } catch { /* Anna todo: catch error */ }
+        }
+    }
+}
 
 /// Describes a view into the loop state
 protocol LoopState {
