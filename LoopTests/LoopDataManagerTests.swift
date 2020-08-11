@@ -46,14 +46,14 @@ extension ISO8601DateFormatter {
 }
 
 class LoopDataManagerDosingTests: XCTestCase {
-    /// MARK: constants for testing
+    // MARK: Constants for testing
     let retrospectiveCorrectionEffectDuration = TimeInterval(hours: 1)
     let retrospectiveCorrectionGroupingInterval = 1.01
     let retrospectiveCorrectionGroupingIntervalMultiplier = 1.01
     let inputDataRecencyInterval = TimeInterval(minutes: 15)
     let dateFormatter = ISO8601DateFormatter.localTimeDate()
     
-    /// MARK: settings
+    // MARK: Settings
     let maxBasalRate = 5.0
     let maxBolus = 10.0
     
@@ -71,7 +71,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         ], timeZone: .utcTimeZone)!
     }
     
-    /// MARK: mock stores
+    // MARK: Mock stores
     var loopDataManager: LoopDataManager!
     
     func setUp(for test: DataManagerTestType) {
@@ -104,7 +104,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         )
     }
     
-    /// MARK: functions to load fixtures
+    // MARK: Functions to load fixtures
     func loadGlucoseEffect(_ name: String) -> [GlucoseEffect] {
         let fixture: [JSONDictionary] = loadFixture(name)
         let dateFormatter = ISO8601DateFormatter.localTimeDate()
@@ -114,7 +114,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         }
     }
     
-    /// MARK: tests
+    // MARK: Tests
     func testFlatAndStable() {
         setUp(for: .flatAndStable)
         let predictedGlucoseOutput = loadGlucoseEffect("flat_and_stable_predicted_glucose")

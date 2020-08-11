@@ -12,7 +12,7 @@ import LoopKit
 
 class MockDoseStore: DoseStoreProtocol {
     init(for test: DataManagerTestType = .flatAndStable) {
-        self.testType = test
+        self.testType = test // The store returns different effect values based on the test type
         self.insulinDeliveryStore = InsulinDeliveryStore(
             healthStore: HKHealthStoreMock(),
             observeHealthKitForCurrentAppOnly: false,

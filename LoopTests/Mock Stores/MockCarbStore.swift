@@ -12,7 +12,7 @@ import LoopKit
 
 class MockCarbStore: CarbStoreProtocol {
     init(for test: DataManagerTestType = .flatAndStable) {
-        self.testType = test
+        self.testType = test // The store returns different effect values based on the test type
     }
     
     var testType: DataManagerTestType
