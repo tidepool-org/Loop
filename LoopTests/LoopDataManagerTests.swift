@@ -122,14 +122,10 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
-        var recommendedBolus: BolusRecommendation?
-        self.loopDataManager.updateTheLoop { prediction, tempBasal, bolus in
+        self.loopDataManager.updateTheLoop { prediction, tempBasal, _ in
             predictedGlucose = prediction
             if let tempBasal = tempBasal {
                 recommendedTempBasal = tempBasal.recommendation
-            }
-            if let bolus = bolus {
-                recommendedBolus = bolus.recommendation
             }
             updateGroup.leave()
         }
@@ -138,13 +134,13 @@ class LoopDataManagerDosingTests: XCTestCase {
 
         XCTAssertNotNil(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
+        
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
             XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
         }
 
-        // ANNA TODO: assert that dosing is correct
-        XCTAssertEqual(1.75, recommendedTempBasal?.unitsPerHour)
+        XCTAssertEqual(1.40, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
     }
     
     func testHighAndStable() {
@@ -154,13 +150,9 @@ class LoopDataManagerDosingTests: XCTestCase {
         let updateGroup = DispatchGroup()
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
-        var recommendedTempBasal: TempBasalRecommendation?
         var recommendedBolus: BolusRecommendation?
-        self.loopDataManager.updateTheLoop { prediction, tempBasal, bolus in
+        self.loopDataManager.updateTheLoop { prediction, _, bolus in
             predictedGlucose = prediction
-            if let tempBasal = tempBasal {
-                recommendedTempBasal = tempBasal.recommendation
-            }
             if let bolus = bolus {
                 recommendedBolus = bolus.recommendation
             }
@@ -171,13 +163,13 @@ class LoopDataManagerDosingTests: XCTestCase {
 
         XCTAssertNotNil(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
+        
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
             XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
         }
 
-        // ANNA TODO: assert that dosing is correct
-        XCTAssertEqual(2.2, recommendedBolus?.amount)
+        XCTAssertEqual(2.25, recommendedBolus!.amount, accuracy: 1.0 / 40.0)
     }
 }
 
