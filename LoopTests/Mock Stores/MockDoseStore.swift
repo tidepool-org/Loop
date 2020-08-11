@@ -97,8 +97,6 @@ class MockDoseStore: DoseStoreProtocol {
         completion(.failure(.configurationError))
     }
     
-    private let fixtureTimeZone = TimeZone(secondsFromGMT: -0 * 60 * 60)!
-    
     func getGlucoseEffects(start: Date, end: Date? = nil, basalDosingEnd: Date? = Date(), completion: @escaping (_ result: DoseStoreResult<[GlucoseEffect]>) -> Void) {
         let fixture: [JSONDictionary] = loadFixture(fixtureToLoad)
         let dateFormatter = ISO8601DateFormatter.localTimeDate()
@@ -117,7 +115,7 @@ class MockDoseStore: DoseStoreProtocol {
     static func currentDate(for testType: DataManagerTestType) -> Date {
         switch testType {
         case .flatAndStable:
-            return dateFormatter.date(from: "2020-08-10T23:03:43")!
+            return dateFormatter.date(from: "2020-08-11T20:45:02")!
         case .highAndStable:
             return dateFormatter.date(from: "2020-08-11T14:13:05")!
         default:

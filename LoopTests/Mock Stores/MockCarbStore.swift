@@ -27,10 +27,14 @@ class MockCarbStore: CarbStoreProtocol {
     
     var insulinSensitivitySchedule: InsulinSensitivitySchedule?
     
-    var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule? = InsulinSensitivitySchedule(unit: HKUnit.milligramsPerDeciliter, dailyItems: [
-        RepeatingScheduleValue(startTime: 0.0, value: 45.0),
-        RepeatingScheduleValue(startTime: 32400.0, value: 55.0)
-    ])!
+    var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule? = InsulinSensitivitySchedule(
+        unit: HKUnit.milligramsPerDeciliter,
+        dailyItems: [
+            RepeatingScheduleValue(startTime: 0.0, value: 45.0),
+            RepeatingScheduleValue(startTime: 32400.0, value: 55.0)
+        ],
+        timeZone: .utcTimeZone
+    )!
     
     var carbRatioScheduleApplyingOverrideHistory: CarbRatioSchedule?
     

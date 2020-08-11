@@ -131,7 +131,7 @@ extension MockGlucoseStore {
     var glucoseStartDate: Date {
         switch testType {
         case .flatAndStable:
-            return dateFormatter.date(from: "2020-08-10T23:03:43")!
+            return dateFormatter.date(from: "2020-08-11T20:45:02")!
         case .highAndStable:
             return dateFormatter.date(from: "2020-08-11T14:13:05")!
         default:
@@ -142,7 +142,7 @@ extension MockGlucoseStore {
     var latestGlucoseValue: Double {
         switch testType {
         case .flatAndStable:
-            return 132.18853344832567
+            return 123.42849966275706
         case .highAndStable:
             return 198.12615242549782
         default:

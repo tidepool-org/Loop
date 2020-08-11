@@ -24,13 +24,17 @@ enum DataManagerTestType {
 }
 
 extension TimeZone {
-    static var currentFixed: TimeZone {
-        return TimeZone(secondsFromGMT: TimeZone.current.secondsFromGMT())!
+    static var fixtureTimeZone: TimeZone {
+        return TimeZone(secondsFromGMT: 25200)!
+    }
+    
+    static var utcTimeZone: TimeZone {
+        return TimeZone(secondsFromGMT: 0)!
     }
 }
 
 extension ISO8601DateFormatter {
-    static func localTimeDate(timeZone: TimeZone = .currentFixed) -> Self {
+    static func localTimeDate(timeZone: TimeZone = .fixtureTimeZone) -> Self {
         let formatter = self.init()
 
         formatter.formatOptions = .withInternetDateTime
@@ -64,7 +68,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             RepeatingScheduleValue(startTime: TimeInterval(0), value: DoubleRange(minValue: 100, maxValue: 110)),
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
-        ])!
+        ], timeZone: .utcTimeZone)!
     }
     
     /// MARK: mock stores
@@ -140,7 +144,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         }
 
         // ANNA TODO: assert that dosing is correct
-        XCTAssertEqual(2.0, recommendedTempBasal?.unitsPerHour)
+        XCTAssertEqual(1.75, recommendedTempBasal?.unitsPerHour)
     }
     
     func testHighAndStable() {
@@ -173,6 +177,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         }
 
         // ANNA TODO: assert that dosing is correct
+        XCTAssertEqual(2.2, recommendedBolus?.amount)
     }
 }
 
@@ -193,6 +198,6 @@ extension LoopDataManagerDosingTests {
             return RepeatingScheduleValue(startTime: TimeInterval(minutes: $0["minutes"] as! Double), value: $0["rate"] as! Double)
         }
 
-        return BasalRateSchedule(dailyItems: items)!
+        return BasalRateSchedule(dailyItems: items, timeZone: .utcTimeZone)!
     }
 }
