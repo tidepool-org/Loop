@@ -266,14 +266,14 @@ extension PredictedGlucoseChart {
 
 // MARK: - Clamping the predicted glucose values
 extension PredictedGlucoseChart {
-    var glucoseValueMaximum: HKQuantity? {
+    var chartedGlucoseValueMaximum: HKQuantity? {
         guard let glucosePointMaximum = glucosePoints.max(by: { point1, point2 in point1.y.scalar < point2.y.scalar }) else {
             return nil
         }
         return HKQuantity(unit: glucoseUnit, doubleValue: glucosePointMaximum.y.scalar)
     }
     
-    var glucoseValueMinimum: HKQuantity? {
+    var chartedGlucoseValueMinimum: HKQuantity? {
         guard let glucosePointMinimum = glucosePoints.min(by: { point1, point2 in point1.y.scalar < point2.y.scalar }) else {
             return nil
         }
@@ -285,9 +285,9 @@ extension PredictedGlucoseChart {
             return glucoseValues
         }
         
-        let predictedGlucoseValueMaximum = glucoseValueMaximum != nil ? max(predictedGlucoseBounds.maximum, glucoseValueMaximum!) : predictedGlucoseBounds.maximum
+        let predictedGlucoseValueMaximum = chartedGlucoseValueMaximum != nil ? max(predictedGlucoseBounds.maximum, chartedGlucoseValueMaximum!) : predictedGlucoseBounds.maximum
         
-        let predictedGlucoseValueMinimum = glucoseValueMinimum != nil ? min(predictedGlucoseBounds.minimum, glucoseValueMinimum!) : predictedGlucoseBounds.minimum
+        let predictedGlucoseValueMinimum = chartedGlucoseValueMinimum != nil ? min(predictedGlucoseBounds.minimum, chartedGlucoseValueMinimum!) : predictedGlucoseBounds.minimum
         
         return glucoseValues.map {
             if $0.quantity > predictedGlucoseValueMaximum {
