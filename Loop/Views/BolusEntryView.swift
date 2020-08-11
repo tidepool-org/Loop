@@ -34,7 +34,10 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 historySection
                 summarySection
             }
-            .padding(.top, -28) // Bring the top card up closer to the navigation bar
+            // As of iOS 13, we can't programmatically scroll to the Bolus entry text field.  This ugly hack scoots the
+            // list up instead, so the summarySection is visible and the keyboard shows when you tap "Enter Bolus".
+            // TODO: Fix this in Xcode 12 when we're building for iOS 14.
+            .padding(.top, shouldBolusEntryBecomeFirstResponder ? -200 : -28)
             .listStyle(GroupedListStyle())
             .environment(\.horizontalSizeClass, horizontalOverride)
 
