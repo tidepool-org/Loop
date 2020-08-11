@@ -133,11 +133,43 @@ class LoopDataManagerDosingTests: XCTestCase {
         _ = updateGroup.wait(timeout: .distantFuture)
 
         XCTAssertNotNil(predictedGlucose)
+        XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
-            //XCTAssertEqual(expected.startDate, calculated.startDate)
-            print(expected.startDate, calculated.startDate)
-            print(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter))
-            //XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter))
+            XCTAssertEqual(expected.startDate, calculated.startDate)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+        }
+
+        // ANNA TODO: assert that dosing is correct
+        XCTAssertEqual(2.0, recommendedTempBasal?.unitsPerHour)
+    }
+    
+    func testHighAndStable() {
+        setUp(for: .highAndStable)
+        let predictedGlucoseOutput = loadGlucoseEffect("high_and_stable_predicted_glucose")
+
+        let updateGroup = DispatchGroup()
+        updateGroup.enter()
+        var predictedGlucose: [PredictedGlucoseValue]?
+        var recommendedTempBasal: TempBasalRecommendation?
+        var recommendedBolus: BolusRecommendation?
+        self.loopDataManager.updateTheLoop { prediction, tempBasal, bolus in
+            predictedGlucose = prediction
+            if let tempBasal = tempBasal {
+                recommendedTempBasal = tempBasal.recommendation
+            }
+            if let bolus = bolus {
+                recommendedBolus = bolus.recommendation
+            }
+            updateGroup.leave()
+        }
+        // We need to wait until the task completes to get outputs
+        _ = updateGroup.wait(timeout: .distantFuture)
+
+        XCTAssertNotNil(predictedGlucose)
+        XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
+        for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
+            XCTAssertEqual(expected.startDate, calculated.startDate)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
         }
 
         // ANNA TODO: assert that dosing is correct

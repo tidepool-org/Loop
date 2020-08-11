@@ -101,7 +101,7 @@ class MockDoseStore: DoseStoreProtocol {
     
     func getGlucoseEffects(start: Date, end: Date? = nil, basalDosingEnd: Date? = Date(), completion: @escaping (_ result: DoseStoreResult<[GlucoseEffect]>) -> Void) {
         let fixture: [JSONDictionary] = loadFixture(fixtureToLoad)
-        let dateFormatter = ISO8601DateFormatter.localTimeDate(timeZone: fixtureTimeZone)
+        let dateFormatter = ISO8601DateFormatter.localTimeDate()
 
         return completion(.success(fixture.map {
             return GlucoseEffect(
@@ -118,6 +118,8 @@ class MockDoseStore: DoseStoreProtocol {
         switch testType {
         case .flatAndStable:
             return dateFormatter.date(from: "2020-08-10T23:03:43")!
+        case .highAndStable:
+            return dateFormatter.date(from: "2020-08-11T14:13:05")!
         default:
             return dateFormatter.date(from: "2015-10-25T19:30:00")!
         }
@@ -138,6 +140,8 @@ extension MockDoseStore {
         switch testType {
         case .flatAndStable:
             return "flat_and_stable_insulin_effect"
+        case .highAndStable:
+            return "high_and_stable_insulin_effect"
         default:
             return "insulin_effect"
         }

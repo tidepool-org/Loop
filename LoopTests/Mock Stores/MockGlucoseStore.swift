@@ -23,7 +23,7 @@ class MockGlucoseStore: GlucoseStoreProtocol {
         return StoredGlucoseSample(
             sample: HKQuantitySample(
                 type: HKQuantityType.quantityType(forIdentifier: .bloodGlucose)!,
-                quantity: HKQuantity(unit: HKUnit.milligramsPerDeciliter, doubleValue: 132.18853344832567),
+                quantity: HKQuantity(unit: HKUnit.milligramsPerDeciliter, doubleValue: latestGlucoseValue),
                 start: glucoseStartDate,
                 end: glucoseStartDate
             )
@@ -110,6 +110,8 @@ extension MockGlucoseStore {
         switch testType {
         case .flatAndStable:
             return "flat_and_stable_counteraction_effect"
+        case .highAndStable:
+            return "high_and_stable_counteraction_effect"
         default:
             return "counteraction_effect_falling_glucose"
         }
@@ -119,6 +121,8 @@ extension MockGlucoseStore {
         switch testType {
         case .flatAndStable:
             return "flat_and_stable_momentum_effect"
+        case .highAndStable:
+            return "high_and_stable_momentum_effect"
         default:
             return "momentum_effect_bouncing"
         }
@@ -128,8 +132,21 @@ extension MockGlucoseStore {
         switch testType {
         case .flatAndStable:
             return dateFormatter.date(from: "2020-08-10T23:03:43")!
+        case .highAndStable:
+            return dateFormatter.date(from: "2020-08-11T14:13:05")!
         default:
             return dateFormatter.date(from: "2015-10-25T19:30:00")!
+        }
+    }
+    
+    var latestGlucoseValue: Double {
+        switch testType {
+        case .flatAndStable:
+            return 132.18853344832567
+        case .highAndStable:
+            return 198.12615242549782
+        default:
+            return 80
         }
     }
 }

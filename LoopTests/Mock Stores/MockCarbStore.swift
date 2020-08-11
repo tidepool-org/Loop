@@ -113,6 +113,8 @@ extension MockCarbStore {
         switch testType {
         case .flatAndStable:
             return "flat_and_stable_carb_effect"
+        case .highAndStable:
+            return "high_and_stable_carb_effect"
         default:
             return "dynamic_glucose_effect_partially_observed"
         }
