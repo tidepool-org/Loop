@@ -128,7 +128,6 @@ extension RemoteDataServicesManager {
 
             guard let carbStore = self.carbStore as? CarbStore else {
                 self.log.error("Skipping carb upload from mock stores")
-                semaphore.signal() // ANNA TODO: check this is needed
                 return
             }
             

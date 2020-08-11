@@ -49,11 +49,13 @@ class MockGlucoseStore: GlucoseStoreProtocol {
     }
     
     func addGlucose(_ glucose: NewGlucoseSample, completion: @escaping (GlucoseStoreResult<GlucoseValue>) -> Void) {
-        completion(.failure(DoseStore.DoseStoreError.configurationError)) // ANNA TODO: add this error to glucose store?
+        // Using the dose store error because we don't need to create GlucoseStore errors just for the mock store
+        completion(.failure(DoseStore.DoseStoreError.configurationError))
     }
     
     func addGlucose(_ values: [NewGlucoseSample], completion: @escaping (GlucoseStoreResult<[GlucoseValue]>) -> Void) {
-        completion(.failure(DoseStore.DoseStoreError.configurationError)) // ANNA TODO: add this error to glucose store?
+        // Using the dose store error because we don't need to create GlucoseStore errors just for the mock store
+        completion(.failure(DoseStore.DoseStoreError.configurationError))
     }
     
     func getCachedGlucoseSamples(start: Date, end: Date?, completion: @escaping ([StoredGlucoseSample]) -> Void) {
@@ -65,11 +67,13 @@ class MockGlucoseStore: GlucoseStoreProtocol {
     }
     
     func purgeGlucoseSamples(matchingCachePredicate cachePredicate: NSPredicate?, healthKitPredicate: NSPredicate, completion: @escaping (Bool, Int, Error?) -> Void) {
-        completion(false, 0, DoseStore.DoseStoreError.configurationError) // ANNA TODO: add this error to glucose store?
+        // Using the dose store error because we don't need to create GlucoseStore errors just for the mock store
+        completion(false, 0, DoseStore.DoseStoreError.configurationError)
     }
     
     func executeGlucoseQuery(fromQueryAnchor queryAnchor: GlucoseStore.QueryAnchor?, limit: Int, completion: @escaping (GlucoseStore.GlucoseQueryResult) -> Void) {
-        completion(.failure( DoseStore.DoseStoreError.configurationError)) // ANNA TODO: add this error to glucose store?))
+        // Using the dose store error because we don't need to create GlucoseStore errors just for the mock store
+        completion(.failure( DoseStore.DoseStoreError.configurationError))
     }
     
     func counteractionEffects<Sample>(for samples: [Sample], to effects: [GlucoseEffect]) -> [GlucoseEffectVelocity] where Sample : GlucoseSampleValue {

@@ -1516,7 +1516,9 @@ extension LoopDataManager {
             do {
                 try self.update()
                 completion(self.predictedGlucose, self.recommendedTempBasal, self.recommendedBolus)
-            } catch { /* Anna todo: catch error */ }
+            } catch let error {
+                self.logger.error("%{public}@", String(describing: error))
+            }
         }
     }
 }
