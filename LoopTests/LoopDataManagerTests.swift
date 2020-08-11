@@ -20,11 +20,7 @@ enum DataManagerTestType {
     case highAndRisingWithCOB
     case lowAndFallingWithCOB
     case lowWithLowTreatment
-    
-    case flatAndRisingWithoutCOB
     case highAndFalling
-    
-    
 }
 
 extension TimeZone {
@@ -171,6 +167,33 @@ class LoopDataManagerDosingTests: XCTestCase {
         }
 
         XCTAssertEqual(2.25, recommendedBolus!.amount, accuracy: 1.0 / 40.0)
+    }
+    
+    func testHighAndFalling() {
+        setUp(for: .highAndFalling)
+        let predictedGlucoseOutput = loadGlucoseEffect("high_and_falling_predicted_glucose")
+
+        let updateGroup = DispatchGroup()
+        updateGroup.enter()
+        var predictedGlucose: [PredictedGlucoseValue]?
+        var recommendedTempBasal: TempBasalRecommendation?
+        self.loopDataManager.updateTheLoop { prediction, tempBasal, _ in
+            predictedGlucose = prediction
+            recommendedTempBasal = tempBasal?.recommendation
+            updateGroup.leave()
+        }
+        // We need to wait until the task completes to get outputs
+        _ = updateGroup.wait(timeout: .distantFuture)
+
+        XCTAssertNotNil(predictedGlucose)
+        XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
+        
+        for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
+            XCTAssertEqual(expected.startDate, calculated.startDate)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+        }
+
+        XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
     }
     
     func testHighAndRisingWithCOB() {

@@ -473,6 +473,11 @@
 		E90909E924E3530200F963D2 /* low_with_low_treatment_predicted_glucose.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909E424E3530200F963D2 /* low_with_low_treatment_predicted_glucose.json */; };
 		E90909EA24E3530200F963D2 /* low_with_low_treatment_momentum_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909E524E3530200F963D2 /* low_with_low_treatment_momentum_effect.json */; };
 		E90909EB24E3530200F963D2 /* low_with_low_treatment_counteraction_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909E624E3530200F963D2 /* low_with_low_treatment_counteraction_effect.json */; };
+		E90909EE24E35B4000F963D2 /* high_and_falling_predicted_glucose.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909ED24E35B4000F963D2 /* high_and_falling_predicted_glucose.json */; };
+		E90909F224E35B4D00F963D2 /* high_and_falling_counteraction_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909EF24E35B4C00F963D2 /* high_and_falling_counteraction_effect.json */; };
+		E90909F324E35B4D00F963D2 /* high_and_falling_carb_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909F024E35B4C00F963D2 /* high_and_falling_carb_effect.json */; };
+		E90909F424E35B4D00F963D2 /* high_and_falling_insulin_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909F124E35B4C00F963D2 /* high_and_falling_insulin_effect.json */; };
+		E90909F624E35B7C00F963D2 /* high_and_falling_momentum_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E90909F524E35B7C00F963D2 /* high_and_falling_momentum_effect.json */; };
 		E93E865424DB6CBA00FF40C8 /* retrospective_output.json in Resources */ = {isa = PBXBuildFile; fileRef = E93E865324DB6CBA00FF40C8 /* retrospective_output.json */; };
 		E93E865624DB731900FF40C8 /* predicted_glucose_without_retrospective.json in Resources */ = {isa = PBXBuildFile; fileRef = E93E865524DB731900FF40C8 /* predicted_glucose_without_retrospective.json */; };
 		E93E865824DB75BE00FF40C8 /* predicted_glucose_very_negative.json in Resources */ = {isa = PBXBuildFile; fileRef = E93E865724DB75BD00FF40C8 /* predicted_glucose_very_negative.json */; };
@@ -1238,6 +1243,11 @@
 		E90909E424E3530200F963D2 /* low_with_low_treatment_predicted_glucose.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_with_low_treatment_predicted_glucose.json; sourceTree = "<group>"; };
 		E90909E524E3530200F963D2 /* low_with_low_treatment_momentum_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_with_low_treatment_momentum_effect.json; sourceTree = "<group>"; };
 		E90909E624E3530200F963D2 /* low_with_low_treatment_counteraction_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = low_with_low_treatment_counteraction_effect.json; sourceTree = "<group>"; };
+		E90909ED24E35B4000F963D2 /* high_and_falling_predicted_glucose.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_falling_predicted_glucose.json; sourceTree = "<group>"; };
+		E90909EF24E35B4C00F963D2 /* high_and_falling_counteraction_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_falling_counteraction_effect.json; sourceTree = "<group>"; };
+		E90909F024E35B4C00F963D2 /* high_and_falling_carb_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_falling_carb_effect.json; sourceTree = "<group>"; };
+		E90909F124E35B4C00F963D2 /* high_and_falling_insulin_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_falling_insulin_effect.json; sourceTree = "<group>"; };
+		E90909F524E35B7C00F963D2 /* high_and_falling_momentum_effect.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = high_and_falling_momentum_effect.json; sourceTree = "<group>"; };
 		E93E865324DB6CBA00FF40C8 /* retrospective_output.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = retrospective_output.json; sourceTree = "<group>"; };
 		E93E865524DB731900FF40C8 /* predicted_glucose_without_retrospective.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = predicted_glucose_without_retrospective.json; sourceTree = "<group>"; };
 		E93E865724DB75BD00FF40C8 /* predicted_glucose_very_negative.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = predicted_glucose_very_negative.json; sourceTree = "<group>"; };
@@ -2239,6 +2249,18 @@
 			path = low_with_low_treatment;
 			sourceTree = "<group>";
 		};
+		E90909EC24E35B3400F963D2 /* high_and_falling */ = {
+			isa = PBXGroup;
+			children = (
+				E90909F524E35B7C00F963D2 /* high_and_falling_momentum_effect.json */,
+				E90909F024E35B4C00F963D2 /* high_and_falling_carb_effect.json */,
+				E90909EF24E35B4C00F963D2 /* high_and_falling_counteraction_effect.json */,
+				E90909F124E35B4C00F963D2 /* high_and_falling_insulin_effect.json */,
+				E90909ED24E35B4000F963D2 /* high_and_falling_predicted_glucose.json */,
+			);
+			path = high_and_falling;
+			sourceTree = "<group>";
+		};
 		E93E86AC24DDE02C00FF40C8 /* Mock Stores */ = {
 			isa = PBXGroup;
 			children = (
@@ -2277,6 +2299,7 @@
 		E9C58A7624DB510500487A17 /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
+				E90909EC24E35B3400F963D2 /* high_and_falling */,
 				E90909E124E352C300F963D2 /* low_with_low_treatment */,
 				E90909D624E34EC200F963D2 /* low_and_falling */,
 				E90909CB24E34A7A00F963D2 /* high_and_rising_with_cob */,
@@ -2784,6 +2807,8 @@
 				E90909DC24E34F1600F963D2 /* low_and_falling_predicted_glucose.json in Resources */,
 				E90909DE24E34F1600F963D2 /* low_and_falling_counteraction_effect.json in Resources */,
 				E90909D224E34AC500F963D2 /* high_and_rising_with_cob_insulin_effect.json in Resources */,
+				E90909F224E35B4D00F963D2 /* high_and_falling_counteraction_effect.json in Resources */,
+				E90909EE24E35B4000F963D2 /* high_and_falling_predicted_glucose.json in Resources */,
 				E90909DD24E34F1600F963D2 /* low_and_falling_carb_effect.json in Resources */,
 				E90909E924E3530200F963D2 /* low_with_low_treatment_predicted_glucose.json in Resources */,
 				E90909D124E34AC500F963D2 /* high_and_rising_with_cob_momentum_effect.json in Resources */,
@@ -2794,6 +2819,8 @@
 				E93E865824DB75BE00FF40C8 /* predicted_glucose_very_negative.json in Resources */,
 				E93E86BC24E1FDC400FF40C8 /* flat_and_stable_predicted_glucose.json in Resources */,
 				E90909EB24E3530200F963D2 /* low_with_low_treatment_counteraction_effect.json in Resources */,
+				E90909F424E35B4D00F963D2 /* high_and_falling_insulin_effect.json in Resources */,
+				E90909F624E35B7C00F963D2 /* high_and_falling_momentum_effect.json in Resources */,
 				E93E86BA24E1FDC400FF40C8 /* flat_and_stable_insulin_effect.json in Resources */,
 				E90909E724E3530200F963D2 /* low_with_low_treatment_carb_effect.json in Resources */,
 				E90909EA24E3530200F963D2 /* low_with_low_treatment_momentum_effect.json in Resources */,
@@ -2804,6 +2831,7 @@
 				E93E86C324E1FE6100FF40C8 /* flat_and_stable_counteraction_effect.json in Resources */,
 				7D2366E621250E0A0028B67D /* InfoPlist.strings in Resources */,
 				E9C58A7E24DB529A00487A17 /* dynamic_glucose_effect_partially_observed.json in Resources */,
+				E90909F324E35B4D00F963D2 /* high_and_falling_carb_effect.json in Resources */,
 				E93E86CA24E2E02200FF40C8 /* high_and_stable_insulin_effect.json in Resources */,
 				E93E86BB24E1FDC400FF40C8 /* flat_and_stable_momentum_effect.json in Resources */,
 				E93E86CB24E2E02200FF40C8 /* high_and_stable_carb_effect.json in Resources */,
