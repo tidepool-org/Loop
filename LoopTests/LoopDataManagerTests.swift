@@ -94,7 +94,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             lastLoopCompleted: currentDate,
             basalDeliveryState: .active(currentDate),
             settings: settings,
-            lastPumpEventsReconciliation: nil, // this date is only used to init the doseStore if it isn't passed in, so it can be nil
+            lastPumpEventsReconciliation: nil, // this date is only used to init the doseStore if a DoseStoreProtocol isn't passed in, so this date can be nil
             analyticsServicesManager: AnalyticsServicesManager(),
             localCacheDuration: .days(1),
             doseStorage: doseStore,
@@ -123,7 +123,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
-        self.loopDataManager.updateTheLoop { prediction, tempBasal, _ in
+        self.loopDataManager.updateAndGetRecommentations { prediction, tempBasal, _ in
             predictedGlucose = prediction
             recommendedTempBasal = tempBasal?.recommendation
             updateGroup.leave()
@@ -150,7 +150,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedBasal: TempBasalRecommendation?
-        self.loopDataManager.updateTheLoop { prediction, basal, _ in
+        self.loopDataManager.updateAndGetRecommentations { prediction, basal, _ in
             predictedGlucose = prediction
             recommendedBasal = basal?.recommendation
             updateGroup.leave()
@@ -177,7 +177,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
-        self.loopDataManager.updateTheLoop { prediction, tempBasal, _ in
+        self.loopDataManager.updateAndGetRecommentations { prediction, tempBasal, _ in
             predictedGlucose = prediction
             recommendedTempBasal = tempBasal?.recommendation
             updateGroup.leave()
@@ -204,7 +204,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedBolus: BolusRecommendation?
-        self.loopDataManager.updateTheLoop { prediction, _, bolus in
+        self.loopDataManager.updateAndGetRecommentations { prediction, _, bolus in
             predictedGlucose = prediction
             recommendedBolus = bolus?.recommendation
             updateGroup.leave()
@@ -231,7 +231,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
-        self.loopDataManager.updateTheLoop { prediction, tempBasal, _ in
+        self.loopDataManager.updateAndGetRecommentations { prediction, tempBasal, _ in
             predictedGlucose = prediction
             recommendedTempBasal = tempBasal?.recommendation
             updateGroup.leave()
@@ -258,7 +258,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
-        self.loopDataManager.updateTheLoop { prediction, tempBasal, _ in
+        self.loopDataManager.updateAndGetRecommentations { prediction, tempBasal, _ in
             predictedGlucose = prediction
             recommendedTempBasal = tempBasal?.recommendation
             updateGroup.leave()

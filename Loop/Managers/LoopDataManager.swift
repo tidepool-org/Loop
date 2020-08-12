@@ -1511,7 +1511,8 @@ extension LoopDataManager {
 }
 
 extension LoopDataManager {
-    public func updateTheLoop(completion: @escaping ([PredictedGlucoseValue]?, (recommendation: TempBasalRecommendation, date: Date)?, (recommendation: BolusRecommendation, date: Date)?) -> Void) {
+    // This should ONLY be used for testing
+    public func updateAndGetRecommentations(completion: @escaping ([PredictedGlucoseValue]?, (recommendation: TempBasalRecommendation, date: Date)?, (recommendation: BolusRecommendation, date: Date)?) -> Void) {
         self.dataAccessQueue.async {
             do {
                 try self.update()
