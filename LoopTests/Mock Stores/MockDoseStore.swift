@@ -117,7 +117,7 @@ class MockDoseStore: DoseStoreProtocol {
         case .flatAndStable:
             return dateFormatter.date(from: "2020-08-11T20:45:02")!
         case .highAndStable:
-            return dateFormatter.date(from: "2020-08-11T14:13:05")!
+            return dateFormatter.date(from: "2020-08-12T12:39:22")!
         case .highAndRisingWithCOB:
             return dateFormatter.date(from: "2020-08-11T21:48:17")!
         case .lowAndFallingWithCOB:

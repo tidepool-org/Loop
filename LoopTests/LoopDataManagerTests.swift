@@ -149,10 +149,10 @@ class LoopDataManagerDosingTests: XCTestCase {
         let updateGroup = DispatchGroup()
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
-        var recommendedBolus: BolusRecommendation?
-        self.loopDataManager.updateTheLoop { prediction, _, bolus in
+        var recommendedBasal: TempBasalRecommendation?
+        self.loopDataManager.updateTheLoop { prediction, basal, _ in
             predictedGlucose = prediction
-            recommendedBolus = bolus?.recommendation
+            recommendedBasal = basal?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
@@ -166,7 +166,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
         }
 
-        XCTAssertEqual(2.25, recommendedBolus!.amount, accuracy: 1.0 / 40.0)
+        XCTAssertEqual(4.63, recommendedBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
     }
     
     func testHighAndFalling() {
