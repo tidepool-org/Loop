@@ -468,6 +468,10 @@ struct LabeledQuantity: View {
     }
 
     var valueText: Text {
+        guard let quantity = quantity else {
+            return Text("--")
+        }
+        
         let formatter = QuantityFormatter()
         formatter.setPreferredNumberFormatter(for: unit)
 
@@ -475,7 +479,7 @@ struct LabeledQuantity: View {
             formatter.numberFormatter.maximumFractionDigits = maxFractionDigits
         }
 
-        guard let string = formatter.string(from: quantity ?? HKQuantity(unit: unit, doubleValue: 0), for: unit) else {
+        guard let string = formatter.string(from: quantity, for: unit) else {
             assertionFailure("Unable to format \(String(describing: quantity)) \(unit)")
             return Text("")
         }
