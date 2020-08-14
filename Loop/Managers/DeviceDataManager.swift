@@ -365,9 +365,7 @@ extension DeviceDataManager {
         }
 
         self.loopManager.addRequestedBolus(DoseEntry(type: .bolus, startDate: Date(), value: units, unit: .units), completion: nil)
-        pumpManager.enactBolus(units: units, at: startDate, willRequest: { (dose) in
-            // No longer used...
-        }) { (result) in
+        pumpManager.enactBolus(units: units, at: startDate) { (result) in
             switch result {
             case .failure(let error):
                 self.log.error("%{public}@", String(describing: error))
@@ -607,7 +605,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         }
     }
 
-    func pumpManager(_ pumpManager: PumpManager, didReadReservoirValue units: Double, at date: Date, completion: @escaping (_ result: PumpManagerResult<(newValue: ReservoirValue, lastValue: ReservoirValue?, areStoredValuesContinuous: Bool)>) -> Void) {
+    func pumpManager(_ pumpManager: PumpManager, didReadReservoirValue units: Double, at date: Date, completion: @escaping (_ result: Swift.Result<(newValue: ReservoirValue, lastValue: ReservoirValue?, areStoredValuesContinuous: Bool), Error>) -> Void) {
         dispatchPrecondition(condition: .onQueue(queue))
         log.default("PumpManager:%{public}@ did read reservoir value", String(describing: type(of: pumpManager)))
 

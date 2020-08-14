@@ -381,7 +381,6 @@
 		A98556852493F901000FD662 /* AlertStore+SimulatedCoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98556842493F901000FD662 /* AlertStore+SimulatedCoreData.swift */; };
 		A999D40424663CE1004C89D4 /* DoseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A999D40324663CE1004C89D4 /* DoseStore.swift */; };
 		A999D40624663D18004C89D4 /* PumpManagerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A999D40524663D18004C89D4 /* PumpManagerError.swift */; };
-		A999D40824663D6D004C89D4 /* SetBolusError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A999D40724663D6D004C89D4 /* SetBolusError.swift */; };
 		A999D40A24663DC7004C89D4 /* CarbStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A999D40924663DC7004C89D4 /* CarbStore.swift */; };
 		A9A63F8D246B261100588D5B /* DosingDecisionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A63F8C246B261100588D5B /* DosingDecisionStoreTests.swift */; };
 		A9A63F8E246B271600588D5B /* NSTimeInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439897341CD2F7DE00223065 /* NSTimeInterval.swift */; };
@@ -1112,7 +1111,6 @@
 		A98556842493F901000FD662 /* AlertStore+SimulatedCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AlertStore+SimulatedCoreData.swift"; sourceTree = "<group>"; };
 		A999D40324663CE1004C89D4 /* DoseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseStore.swift; sourceTree = "<group>"; };
 		A999D40524663D18004C89D4 /* PumpManagerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpManagerError.swift; sourceTree = "<group>"; };
-		A999D40724663D6D004C89D4 /* SetBolusError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetBolusError.swift; sourceTree = "<group>"; };
 		A999D40924663DC7004C89D4 /* CarbStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbStore.swift; sourceTree = "<group>"; };
 		A9A63F8C246B261100588D5B /* DosingDecisionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DosingDecisionStoreTests.swift; sourceTree = "<group>"; };
 		A9B607AF247F000F00792BE4 /* UserNotifications+Loop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserNotifications+Loop.swift"; sourceTree = "<group>"; };
@@ -1675,7 +1673,6 @@
 				A9F703762489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift */,
 				A999D40524663D18004C89D4 /* PumpManagerError.swift */,
 				892A5D682230C41D008961AB /* RangeReplaceableCollection.swift */,
-				A999D40724663D6D004C89D4 /* SetBolusError.swift */,
 				A9CBE45B248ACC03008E7BA2 /* SettingsStore+SimulatedCoreData.swift */,
 				C1FB428B217806A300FAB378 /* StateColorPalette.swift */,
 				43F89CA222BDFBBC006BB54E /* UIActivityIndicatorView.swift */,
@@ -2960,7 +2957,6 @@
 				439706E622D2E84900C81566 /* PredictionSettingTableViewCell.swift in Sources */,
 				430D85891F44037000AF2D4F /* HUDViewTableViewCell.swift in Sources */,
 				43A51E211EB6DBDD000736CC /* LoopChartsTableViewController.swift in Sources */,
-				A999D40824663D6D004C89D4 /* SetBolusError.swift in Sources */,
 				8968B1122408B3520074BB48 /* UIFont.swift in Sources */,
 				438D42FB1D7D11A4003244B0 /* PredictionInputEffectTableViewCell.swift in Sources */,
 				89A1B66E24ABFDF800117AC2 /* SupportedBolusVolumesUserInfo.swift in Sources */,
