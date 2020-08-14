@@ -31,7 +31,7 @@ final class RemoteDataServicesManager {
 
     private let log = OSLog(category: "RemoteDataServicesManager")
     
-    private var carbStore: CarbStoreProtocol
+    private var carbStore: CarbStore
 
     private var doseStore: DoseStoreProtocol
 
@@ -42,7 +42,7 @@ final class RemoteDataServicesManager {
     private var settingsStore: SettingsStore
 
     init(
-        carbStore: CarbStoreProtocol,
+        carbStore: CarbStore,
         doseStore: DoseStoreProtocol,
         dosingDecisionStore: DosingDecisionStore,
         glucoseStore: GlucoseStoreProtocol,

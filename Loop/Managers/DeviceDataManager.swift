@@ -141,7 +141,7 @@ final class DeviceDataManager {
         watchManager = WatchDataManager(deviceManager: self)
 
         let remoteDataServicesManager = RemoteDataServicesManager(
-            carbStore: loopManager.carbStore,
+            carbStore: loopManager.carbStore as! CarbStore,
             doseStore: loopManager.doseStore,
             dosingDecisionStore: loopManager.dosingDecisionStore,
             glucoseStore: loopManager.glucoseStore,
