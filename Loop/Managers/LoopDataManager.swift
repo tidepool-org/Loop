@@ -41,7 +41,7 @@ final class LoopDataManager {
 
     private let analyticsServicesManager: AnalyticsServicesManager
     
-    private let test_currentDate: Date?
+    private let now: () -> Date
 
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
@@ -67,7 +67,7 @@ final class LoopDataManager {
         doseStorage: DoseStoreProtocol? = nil,
         glucoseStorage: GlucoseStoreProtocol? = nil,
         carbStorage: CarbStoreProtocol? = nil,
-        test_currentDate: Date? = nil // Use this for testing to change the date if needed
+        now: @escaping () -> Date = { Date() }
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -131,7 +131,7 @@ final class LoopDataManager {
             )
         }
         
-        self.test_currentDate = test_currentDate
+        self.now = now
 
         settingsStore = SettingsStore(store: cacheStore, expireAfter: localCacheDuration)
 
@@ -343,9 +343,8 @@ final class LoopDataManager {
         NotificationManager.scheduleLoopNotRunningNotifications()
         analyticsServicesManager.loopDidSucceed(duration)
         // The current date is only set while testing, and we don't want to store the dosing decision while testing
-        if test_currentDate == nil {
-            storeDosingDecision(withDate: date)
-        }
+        // ANNA TODO
+        storeDosingDecision(withDate: date)
         
         NotificationCenter.default.post(name: .LoopCompleted, object: self)
     }
@@ -739,7 +738,7 @@ extension LoopDataManager {
             return
         }
 
-        let settings = StoredSettings(date: test_currentDate ?? Date(),
+        let settings = StoredSettings(date: now(),
                                       dosingEnabled: loopSettings.dosingEnabled,
                                       glucoseTargetRangeSchedule: loopSettings.glucoseTargetRangeSchedule,
                                       preMealTargetRange: loopSettings.preMealTargetRange,
@@ -777,7 +776,7 @@ extension LoopDataManager {
             NotificationCenter.default.post(name: .LoopRunning, object: self)
 
             self.lastLoopError = nil
-            let startDate = self.test_currentDate ?? Date()
+            let startDate = self.now()
 
             do {
                 try self.update()
@@ -785,9 +784,9 @@ extension LoopDataManager {
                 if self.settings.dosingEnabled {
                     self.setRecommendedTempBasal { (error) -> Void in
                         if let error = error {
-                            self.loopDidError(date: self.test_currentDate ?? Date(), error: error, duration: -startDate.timeIntervalSinceNow)
+                            self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSinceNow)
                         } else {
-                            self.loopDidComplete(date: self.test_currentDate ?? Date(), duration: -startDate.timeIntervalSinceNow)
+                            self.loopDidComplete(date: self.now(), duration: -startDate.timeIntervalSinceNow)
                         }
                         self.logger.default("Loop ended")
                         self.notify(forChange: .tempBasal)
@@ -796,10 +795,10 @@ extension LoopDataManager {
                     // Delay the notification until we know the result of the temp basal
                     return
                 } else {
-                    self.loopDidComplete(date: self.test_currentDate ?? Date(), duration: -startDate.timeIntervalSinceNow)
+                    self.loopDidComplete(date: self.now(), duration: -startDate.timeIntervalSinceNow)
                 }
             } catch let error {
-                self.loopDidError(date: self.test_currentDate ?? Date(), error: error, duration: -startDate.timeIntervalSinceNow)
+                self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSinceNow)
             }
 
             self.logger.default("Loop ended")
@@ -831,7 +830,7 @@ extension LoopDataManager {
 
         let retrospectiveStart = lastGlucoseDate.addingTimeInterval(-retrospectiveCorrection.retrospectionInterval)
 
-        let earliestEffectDate = Date(timeInterval: .hours(-24), since: test_currentDate ?? Date())
+        let earliestEffectDate = Date(timeInterval: .hours(-24), since: now())
         let nextEffectDate = insulinCounteractionEffects.last?.endDate ?? earliestEffectDate
 
         if glucoseMomentumEffect == nil {
@@ -845,7 +844,7 @@ extension LoopDataManager {
         if insulinEffect == nil {
             self.logger.debug("Recomputing insulin effects")
             updateGroup.enter()
-            doseStore.getGlucoseEffects(start: nextEffectDate, end: nil, basalDosingEnd: test_currentDate ?? Date()) { (result) -> Void in
+            doseStore.getGlucoseEffects(start: nextEffectDate, end: nil, basalDosingEnd: now()) { (result) -> Void in
                 switch result {
                 case .failure(let error):
                     self.logger.error("%{public}@", String(describing: error))
@@ -910,7 +909,7 @@ extension LoopDataManager {
 
         if carbsOnBoard == nil {
             updateGroup.enter()
-            carbStore.carbsOnBoard(at: test_currentDate ?? Date(), effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil) { (result) in
+            carbStore.carbsOnBoard(at: now(), effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil) { (result) in
                 switch result {
                 case .failure:
                     // Failure is expected when there is no carb data
@@ -970,7 +969,7 @@ extension LoopDataManager {
         }
 
         let pendingTempBasalInsulin: Double
-        let date = test_currentDate ?? Date()
+        let date = now()
 
         if let basalDeliveryState = basalDeliveryState, case .tempBasal(let lastTempBasal) = basalDeliveryState, lastTempBasal.endDate > date {
             let normalBasalRate = basalRates.value(at: date)
@@ -1016,13 +1015,12 @@ extension LoopDataManager {
 
         let pumpStatusDate = doseStore.lastAddedPumpData
         let lastGlucoseDate = glucose.startDate
-        let now = test_currentDate ?? Date()
 
-        guard now.timeIntervalSince(lastGlucoseDate) <= settings.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(lastGlucoseDate) <= settings.inputDataRecencyInterval else {
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
 
-        guard now.timeIntervalSince(pumpStatusDate) <= settings.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(pumpStatusDate) <= settings.inputDataRecencyInterval else {
             throw LoopError.pumpDataTooOld(date: pumpStatusDate)
         }
 
@@ -1137,7 +1135,7 @@ extension LoopDataManager {
         let effectCalculationError = Locked<Error?>(nil)
 
         var insulinEffect: [GlucoseEffect]?
-        let basalDosingEnd = includingPendingInsulin ? nil : test_currentDate ?? Date()
+        let basalDosingEnd = includingPendingInsulin ? nil : now()
         updateGroup.enter()
         doseStore.getGlucoseEffects(start: nextEffectDate, end: nil, basalDosingEnd: basalDosingEnd) { result in
             switch result {
@@ -1251,13 +1249,12 @@ extension LoopDataManager {
 
         let pumpStatusDate = doseStore.lastAddedPumpData
         let lastGlucoseDate = glucose.startDate
-        let now = test_currentDate ?? Date()
 
-        guard now.timeIntervalSince(lastGlucoseDate) <= settings.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(lastGlucoseDate) <= settings.inputDataRecencyInterval else {
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
 
-        guard now.timeIntervalSince(pumpStatusDate) <= settings.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(pumpStatusDate) <= settings.inputDataRecencyInterval else {
             throw LoopError.pumpDataTooOld(date: pumpStatusDate)
         }
 
@@ -1377,7 +1374,7 @@ extension LoopDataManager {
 
         let pumpStatusDate = doseStore.lastAddedPumpData
 
-        let startDate = test_currentDate ?? Date()
+        let startDate = now()
 
         guard startDate.timeIntervalSince(glucose.startDate) <= settings.inputDataRecencyInterval else {
             self.predictedGlucose = nil
@@ -1443,7 +1440,7 @@ extension LoopDataManager {
 
         let tempBasal = predictedGlucose.recommendedTempBasal(
             to: glucoseTargetRange,
-            at: test_currentDate ?? Date(),
+            at: now(),
             suspendThreshold: settings.suspendThreshold?.quantity,
             sensitivity: insulinSensitivity,
             model: model,
@@ -1470,7 +1467,7 @@ extension LoopDataManager {
         let predictionDrivingBolusRecommendation = pendingInsulin > 0 ? predictedGlucoseIncludingPendingInsulin : predictedGlucose
         let recommendation = predictionDrivingBolusRecommendation.recommendedBolus(
             to: glucoseTargetRange,
-            at: test_currentDate ?? Date(),
+            at: now(),
             suspendThreshold: settings.suspendThreshold?.quantity,
             sensitivity: insulinSensitivity,
             model: model,
