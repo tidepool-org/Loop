@@ -31,7 +31,7 @@ public protocol DoseStoreProtocol: AnyObject {
     
     var sampleType: HKSampleType? { get }
     
-    var insulinDeliveryStore: InsulinDeliveryStore { get }
+    var insulinDeliveryStore: InsulinDeliveryStoreProtocol { get }
     
     var delegate: DoseStoreDelegate? { get set }
     

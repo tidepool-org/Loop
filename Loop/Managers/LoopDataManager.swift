@@ -528,7 +528,7 @@ extension LoopDataManager {
             if success {
                 // Call the individual authorization methods to trigger query creation
                 self.carbStore.authorize(toShare: true, { _ in })
-                self.doseStore.insulinDeliveryStore.authorize({ _ in })
+                self.doseStore.insulinDeliveryStore.authorize(toShare: true, { _ in })
                 self.glucoseStore.authorize(toShare: true, { _ in })
             }
 
