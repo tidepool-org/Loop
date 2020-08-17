@@ -160,7 +160,7 @@ final class DeviceDataManager {
         
         self.carbStore = CarbStore(
             healthStore: healthStore,
-            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+            observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitSamplesFromOtherApps,
             cacheStore: cacheStore,
             cacheLength: localCacheDuration,
             defaultAbsorptionTimes: absorptionTimes,
@@ -173,7 +173,7 @@ final class DeviceDataManager {
         
         self.doseStore = DoseStore(
             healthStore: healthStore,
-            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+            observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitSamplesFromOtherApps,
             cacheStore: cacheStore,
             cacheLength: localCacheDuration,
             insulinModel: UserDefaults.appGroup?.insulinModelSettings?.model,
@@ -185,7 +185,7 @@ final class DeviceDataManager {
         
         self.glucoseStore = GlucoseStore(
             healthStore: healthStore,
-            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+            observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitSamplesFromOtherApps,
             cacheStore: cacheStore,
             cacheLength: localCacheDuration,
             observationInterval: .hours(24)
