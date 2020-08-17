@@ -101,20 +101,6 @@ final class DeviceDataManager {
                carbStore.sharingDenied ||
                doseStore.sharingDenied
     }
-
-    func authorize(_ completion: @escaping () -> Void) {
-        // Authorize all types at once for simplicity
-        carbStore.healthStore.requestAuthorization(toShare: sampleTypes, read: sampleTypes) { (success, error) in
-            if success {
-                // Call the individual authorization methods to trigger query creation
-                self.carbStore.authorize(toShare: true, { _ in })
-                self.doseStore.insulinDeliveryStore.authorize(toShare: true, { _ in })
-                self.glucoseStore.authorize(toShare: true, { _ in })
-            }
-
-            completion()
-        }
-    }
     
     // MARK: Services
 
@@ -235,10 +221,10 @@ final class DeviceDataManager {
         watchManager = WatchDataManager(deviceManager: self)
 
         let remoteDataServicesManager = RemoteDataServicesManager(
-            carbStore: loopManager.carbStore as! CarbStore,
-            doseStore: loopManager.doseStore,
+            carbStore: carbStore,
+            doseStore: doseStore,
             dosingDecisionStore: loopManager.dosingDecisionStore,
-            glucoseStore: loopManager.glucoseStore,
+            glucoseStore: glucoseStore,
             settingsStore: loopManager.settingsStore
         )
 
@@ -256,10 +242,10 @@ final class DeviceDataManager {
 
         loopManager.delegate = self
 
-        loopManager.carbStore.delegate = self
-        loopManager.doseStore.delegate = self
+        carbStore.delegate = self
+        doseStore.delegate = self
         loopManager.dosingDecisionStore.delegate = self
-        loopManager.glucoseStore.delegate = self
+        glucoseStore.delegate = self
         loopManager.settingsStore.delegate = self
 
         setupPump()
@@ -350,6 +336,21 @@ final class DeviceDataManager {
 
         return Manager.init(rawState: rawState) as? CGMManagerUI
     }
+    
+    // Get HealthKit authorization for all of the stores
+    func authorize(_ completion: @escaping () -> Void) {
+        // Authorize all types at once for simplicity
+        carbStore.healthStore.requestAuthorization(toShare: sampleTypes, read: sampleTypes) { (success, error) in
+            if success {
+                // Call the individual authorization methods to trigger query creation
+                self.carbStore.authorize(toShare: true, { _ in })
+                self.doseStore.insulinDeliveryStore.authorize(toShare: true, { _ in })
+                self.glucoseStore.authorize(toShare: true, { _ in })
+            }
+
+            completion()
+        }
+    }
 
     func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
         self.loopManager.generateDiagnosticReport { (loopReport) in
@@ -410,7 +411,7 @@ private extension DeviceDataManager {
         cgmManager?.cgmManagerDelegate = self
         cgmManager?.delegateQueue = queue
 
-        loopManager.glucoseStore.managedDataInterval = cgmManager?.managedDataInterval
+        glucoseStore.managedDataInterval = cgmManager?.managedDataInterval
 
         updatePumpManagerBLEHeartbeatPreference()
         if let cgmManager = cgmManager {
@@ -427,12 +428,12 @@ private extension DeviceDataManager {
         pumpManager?.pumpManagerDelegate = self
         pumpManager?.delegateQueue = queue
 
-        loopManager.doseStore.device = pumpManager?.status.device
+        doseStore.device = pumpManager?.status.device
         pumpManagerHUDProvider = pumpManager?.hudProvider(insulinTintColor: .insulinTintColor, guidanceColors: .default)
 
         // Proliferate PumpModel preferences to DoseStore
         if let pumpRecordsBasalProfileStartEvents = pumpManager?.pumpRecordsBasalProfileStartEvents {
-            loopManager?.doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
+            doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
         }
         if let pumpManager = pumpManager {
             alertManager?.addAlertResponder(managerIdentifier: pumpManager.managerIdentifier,
@@ -546,7 +547,7 @@ extension DeviceDataManager: CGMManagerDelegate {
 
     func startDateToFilterNewData(for manager: CGMManager) -> Date? {
         dispatchPrecondition(condition: .onQueue(queue))
-        return loopManager.glucoseStore.latestGlucose?.startDate
+        return glucoseStore.latestGlucose?.startDate
     }
 
     func cgmManagerDidUpdateState(_ manager: CGMManager) {
@@ -635,7 +636,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         dispatchPrecondition(condition: .onQueue(queue))
         log.default("PumpManager:%{public}@ did update status: %{public}@", String(describing: type(of: pumpManager)), String(describing: status))
 
-        loopManager.doseStore.device = status.device
+        doseStore.device = status.device
 
         if let newBatteryValue = status.pumpBatteryChargeRemaining {
             if newBatteryValue == 0 {
@@ -662,7 +663,7 @@ extension DeviceDataManager: PumpManagerDelegate {
 
         log.default("PumpManager:%{public}@ will deactivate", String(describing: type(of: pumpManager)))
 
-        loopManager.doseStore.resetPumpData(completion: nil)
+        doseStore.resetPumpData(completion: nil)
         DispatchQueue.main.async {
             self.pumpManager = nil
         }
@@ -672,7 +673,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         dispatchPrecondition(condition: .onQueue(queue))
         log.default("PumpManager:%{public}@ did update pumpRecordsBasalProfileStartEvents to %{public}@", String(describing: type(of: pumpManager)), String(describing: pumpRecordsBasalProfileStartEvents))
 
-        loopManager.doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
+        doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
     }
 
     func pumpManager(_ pumpManager: PumpManager, didError error: PumpManagerError) {
@@ -746,7 +747,7 @@ extension DeviceDataManager: PumpManagerDelegate {
 
     func startDateToFilterNewPumpEvents(for manager: PumpManager) -> Date {
         dispatchPrecondition(condition: .onQueue(queue))
-        return loopManager.doseStore.pumpEventQueryAfterDate
+        return doseStore.pumpEventQueryAfterDate
     }
 }
 
@@ -814,7 +815,6 @@ extension DeviceDataManager {
         }
 
         let devicePredicate = HKQuery.predicateForObjects(from: [testingPumpManager.testingDevice])
-        let doseStore = loopManager.doseStore
         guard let insulinDeliveryStore = doseStore.insulinDeliveryStore as? InsulinDeliveryStore else {
             fatalError("\(#function) should be invoked only when using InsulinDeliveryStore, not a mock")
         }
@@ -826,7 +826,7 @@ extension DeviceDataManager {
                 return
             }
 
-            healthStore.deleteObjects(of: doseStore.sampleType!, predicate: devicePredicate) { success, deletedObjectCount, error in
+            healthStore.deleteObjects(of: self.doseStore.sampleType!, predicate: devicePredicate) { success, deletedObjectCount, error in
                 if success {
                     insulinDeliveryStore.test_lastBasalEndDate = nil
                 }
@@ -846,7 +846,7 @@ extension DeviceDataManager {
         }
 
         let predicate = HKQuery.predicateForObjects(from: [testingCGMManager.testingDevice])
-        loopManager.glucoseStore.purgeGlucoseSamples(matchingCachePredicate: nil, healthKitPredicate: predicate) { success, count, error in
+        glucoseStore.purgeGlucoseSamples(matchingCachePredicate: nil, healthKitPredicate: predicate) { success, count, error in
             completion?(error)
         }
     }
