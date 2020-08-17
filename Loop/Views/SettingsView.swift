@@ -8,6 +8,7 @@
 
 import LoopKit
 import LoopKitUI
+import MockKit
 import SwiftUI
 
 public struct SettingsView: View, HorizontalSizeClassOverride {
@@ -29,6 +30,9 @@ public struct SettingsView: View, HorizontalSizeClassOverride {
                 }
                 therapySettingsSection
                 deviceSettingsSection
+                if viewModel.servicesViewModel.showServices {
+                    servicesSection
+                }
                 supportSection
             }
             .listStyle(GroupedListStyle())
@@ -130,6 +134,19 @@ extension SettingsView {
         }
     }
     
+    private var servicesSection: some View {
+        Section(header: SectionHeader(label: NSLocalizedString("Services", comment: "The title of the services section in settings"))) {
+            ForEach(viewModel.servicesViewModel.activeServices.indices, id: \.self) { _ in
+                NavigationLink(destination: Text("Services")) {
+                     Text(NSLocalizedString("Services", comment: "The title of the support section in settings"))
+                }
+            }
+            Button(action: { /*self.viewModel.servicesViewModel.addService()*/ }, label: {
+                Text(NSLocalizedString("Add Service", comment: "The title of the support section in settings"))
+            })
+        }
+    }
+    
     private var supportSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Support", comment: "The title of the support section in settings"))) {
             NavigationLink(destination: Text("Support")) {
@@ -193,12 +210,15 @@ fileprivate struct LargeButton: View {
     }
 }
 
+let servicesViewModel = ServicesViewModel(showServices: true, availableServices: [], activeServices: [MockService()])
+
 public struct SettingsView_Previews: PreviewProvider {
     public static var previews: some View {
         let viewModel = SettingsViewModel(appNameAndVersion: "Tidepool Loop v1.2.3.456",
                                           notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel(),
                                           pumpManagerSettingsViewModel: DeviceViewModel(),
                                           cgmManagerSettingsViewModel: DeviceViewModel(),
+                                          servicesViewModel: servicesViewModel,
                                           therapySettings: TherapySettings(),
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: true, walshModelEnabled: true),
                                           pumpSupportedIncrements: nil,

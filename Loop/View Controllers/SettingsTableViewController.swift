@@ -782,10 +782,13 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                     bolusVolumes: $0.supportedBolusVolumes,
                                     maximumBasalScheduleEntryCount: $0.maximumBasalScheduleEntryCount)
         }
+        let servicesViewModel = ServicesViewModel(showServices: true, availableServices: availableServices, activeServices: activeServices)
+        
         let viewModel = SettingsViewModel(appNameAndVersion: Bundle.main.localizedNameAndVersion,
                                           notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,
+                                          servicesViewModel: servicesViewModel,
                                           therapySettings: dataManager.loopManager.therapySettings,
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
                                           pumpSupportedIncrements: pumpSupportedIncrements,

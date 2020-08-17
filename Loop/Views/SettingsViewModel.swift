@@ -49,6 +49,7 @@ public class SettingsViewModel: ObservableObject {
 
     var pumpManagerSettingsViewModel: DeviceViewModel
     var cgmManagerSettingsViewModel: DeviceViewModel
+    var servicesViewModel: ServicesViewModel
     var therapySettings: TherapySettings
     let supportedInsulinModelSettings: SupportedInsulinModelSettings
     let pumpSupportedIncrements: PumpSupportedIncrements?
@@ -62,6 +63,7 @@ public class SettingsViewModel: ObservableObject {
                 notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel,
                 pumpManagerSettingsViewModel: DeviceViewModel,
                 cgmManagerSettingsViewModel: DeviceViewModel,
+                servicesViewModel: ServicesViewModel,
                 therapySettings: TherapySettings,
                 supportedInsulinModelSettings: SupportedInsulinModelSettings,
                 pumpSupportedIncrements: PumpSupportedIncrements?,
@@ -84,6 +86,8 @@ public class SettingsViewModel: ObservableObject {
         self.syncPumpSchedule = syncPumpSchedule
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.didSave = didSave
+        
+        self.servicesViewModel = servicesViewModel
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
         notificationsCriticalAlertPermissionsViewModel.objectWillChange.sink { [weak self] in
