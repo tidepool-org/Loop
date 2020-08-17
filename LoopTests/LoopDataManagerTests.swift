@@ -97,9 +97,9 @@ class LoopDataManagerDosingTests: XCTestCase {
             lastPumpEventsReconciliation: nil, // this date is only used to init the doseStore if a DoseStoreProtocol isn't passed in, so this date can be nil
             analyticsServicesManager: AnalyticsServicesManager(),
             localCacheDuration: .days(1),
-            doseStorage: doseStore,
-            glucoseStorage: glucoseStore,
-            carbStorage: carbStore,
+            doseStore: doseStore,
+            glucoseStore: glucoseStore,
+            carbStore: carbStore,
             now: { currentDate }
         )
     }
