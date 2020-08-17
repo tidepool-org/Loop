@@ -9,7 +9,7 @@
 import LoopKit
 import HealthKit
 
-public protocol CarbStoreProtocol {
+public protocol CarbStoreProtocol: AnyObject {
     
     var sampleType: HKSampleType { get }
     

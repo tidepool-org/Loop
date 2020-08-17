@@ -25,13 +25,13 @@ final class LoopDataManager {
 
     private let cacheStore: PersistenceController
 
-    var carbStore: CarbStoreProtocol
+    let carbStore: CarbStoreProtocol
 
-    var doseStore: DoseStoreProtocol
+    let doseStore: DoseStoreProtocol
 
     let dosingDecisionStore: DosingDecisionStore
 
-    var glucoseStore: GlucoseStoreProtocol
+    let glucoseStore: GlucoseStoreProtocol
 
     let settingsStore: SettingsStore
 
@@ -64,9 +64,9 @@ final class LoopDataManager {
         lastPumpEventsReconciliation: Date?,
         analyticsServicesManager: AnalyticsServicesManager,
         localCacheDuration: TimeInterval = .days(1),
-        doseStorage: DoseStoreProtocol? = nil,
-        glucoseStorage: GlucoseStoreProtocol? = nil,
-        carbStorage: CarbStoreProtocol? = nil,
+        doseStore: DoseStoreProtocol? = nil,
+        glucoseStore: GlucoseStoreProtocol? = nil,
+        carbStore: CarbStoreProtocol? = nil,
         now: @escaping () -> Date = { Date() }
     ) {
         self.analyticsServicesManager = analyticsServicesManager
@@ -84,10 +84,10 @@ final class LoopDataManager {
 
         cacheStore = PersistenceController.controllerInAppGroupDirectory()
 
-        if let carbStorage = carbStorage {
-            carbStore = carbStorage
+        if let carbStore = carbStore {
+            self.carbStore = carbStore
         } else {
-            carbStore = CarbStore(
+            self.carbStore = CarbStore(
                 healthStore: healthStore,
                 observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
                 cacheStore: cacheStore,
@@ -101,10 +101,10 @@ final class LoopDataManager {
             )
         }
 
-        if let doseStorage = doseStorage {
-            doseStore = doseStorage
+        if let doseStore = doseStore {
+            self.doseStore = doseStore
         } else {
-            doseStore = DoseStore(
+            self.doseStore = DoseStore(
                 healthStore: healthStore,
                 observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
                 cacheStore: cacheStore,
@@ -119,10 +119,10 @@ final class LoopDataManager {
 
         dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
 
-        if let glucoseStorage = glucoseStorage {
-            glucoseStore = glucoseStorage
+        if let glucoseStore = glucoseStore {
+            self.glucoseStore = glucoseStore
         } else {
-            glucoseStore = GlucoseStore(
+            self.glucoseStore = GlucoseStore(
                 healthStore: healthStore,
                 observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
                 cacheStore: cacheStore,
@@ -144,7 +144,7 @@ final class LoopDataManager {
         notificationObservers = [
             NotificationCenter.default.addObserver(
                 forName: CarbStore.carbEntriesDidUpdate,
-                object: carbStore,
+                object: self.carbStore,
                 queue: nil
             ) { (note) -> Void in
                 self.dataAccessQueue.async {
@@ -158,7 +158,7 @@ final class LoopDataManager {
             },
             NotificationCenter.default.addObserver(
                 forName: GlucoseStore.glucoseSamplesDidChange,
-                object: glucoseStore,
+                object: self.glucoseStore,
                 queue: nil
             ) { (note) in
                 self.dataAccessQueue.async {
@@ -171,7 +171,7 @@ final class LoopDataManager {
             },
             NotificationCenter.default.addObserver(
                 forName: nil,
-                object: doseStore,
+                object: self.doseStore,
                 queue: OperationQueue.main
             ) { (note) in
                 self.dataAccessQueue.async {

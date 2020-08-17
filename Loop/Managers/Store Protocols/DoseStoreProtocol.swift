@@ -9,7 +9,7 @@
 import LoopKit
 import HealthKit
 
-public protocol DoseStoreProtocol {
+public protocol DoseStoreProtocol: AnyObject {
     // MARK: settings
     var basalProfile: LoopKit.BasalRateSchedule? { get set }
     
