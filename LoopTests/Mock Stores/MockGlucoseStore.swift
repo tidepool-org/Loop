@@ -42,8 +42,6 @@ class MockGlucoseStore: GlucoseStoreProtocol {
     
     var sharingDenied: Bool = false
     
-    var healthStore: HKHealthStore = HKHealthStoreMock()
-    
     func authorize(toShare: Bool, _ completion: @escaping (HealthKitSampleStoreResult<Bool>) -> Void) {
         completion(.success(true))
     }

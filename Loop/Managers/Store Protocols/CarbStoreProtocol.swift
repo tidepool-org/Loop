@@ -37,8 +37,6 @@ public protocol CarbStoreProtocol: AnyObject {
     
     var sharingDenied: Bool { get }
     
-    var healthStore: HKHealthStore { get }
-    
     func authorize(toShare: Bool, _ completion: @escaping (_ result: HealthKitSampleStoreResult<Bool>) -> Void)
     
     // MARK: Data Management

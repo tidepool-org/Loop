@@ -342,8 +342,6 @@ final class LoopDataManager {
         NotificationManager.clearLoopNotRunningNotifications()
         NotificationManager.scheduleLoopNotRunningNotifications()
         analyticsServicesManager.loopDidSucceed(duration)
-        // The current date is only set while testing, and we don't want to store the dosing decision while testing
-        // ANNA TODO
         storeDosingDecision(withDate: date)
         
         NotificationCenter.default.post(name: .LoopCompleted, object: self)

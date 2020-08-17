@@ -49,7 +49,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
                     self?.reloadData(animated: true)
                 }
             },
-            notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.loopManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
+            notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
                     self?.log.debug("[reloadData] for HealthKit unit preference change")
                     self?.unitPreferencesDidChange(to: self?.deviceManager.loopManager.glucoseStore.preferredUnit)

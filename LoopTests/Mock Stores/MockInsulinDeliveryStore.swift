@@ -23,8 +23,6 @@ class MockInsulinDeliveryStore: InsulinDeliveryStoreProtocol {
     func generateDiagnosticReport(_ completion: @escaping (String) -> Void) {
         completion("")
     }
-    
-    
 }
 
 
