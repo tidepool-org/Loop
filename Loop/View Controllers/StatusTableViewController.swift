@@ -1113,7 +1113,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
         case let vc as InsulinDeliveryTableViewController:
             guard let doseStore = deviceManager.loopManager.doseStore as? DoseStore else {
-                fatalError("Mock LoopDataManager should not use UI components")
+                fatalError("InsulinDeliveryTableViewController cannot use mocked DoseStore")
             }
             vc.doseStore = doseStore
             vc.hidesBottomBarWhenPushed = true
