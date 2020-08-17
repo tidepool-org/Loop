@@ -77,7 +77,7 @@ final class DeviceDataManager {
     
     let glucoseStore: GlucoseStore
     
-    private let cacheStore: PersistenceController // ANNA TODO
+    private let cacheStore: PersistenceController
     
     /// All the HealthKit types to be read and shared by stores
     private var sampleTypes: Set<HKSampleType> {
