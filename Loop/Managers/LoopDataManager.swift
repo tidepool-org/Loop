@@ -1507,20 +1507,6 @@ extension LoopDataManager {
     }
 }
 
-extension LoopDataManager {
-    // This should ONLY be used for testing
-    public func updateAndGetRecommentations(completion: @escaping ([PredictedGlucoseValue]?, (recommendation: TempBasalRecommendation, date: Date)?, (recommendation: BolusRecommendation, date: Date)?) -> Void) {
-        self.dataAccessQueue.async {
-            do {
-                try self.update()
-                completion(self.predictedGlucose, self.recommendedTempBasal, self.recommendedBolus)
-            } catch let error {
-                self.logger.error("%{public}@", String(describing: error))
-            }
-        }
-    }
-}
-
 /// Describes a view into the loop state
 protocol LoopState {
     /// The last-calculated carbs on board

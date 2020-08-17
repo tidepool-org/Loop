@@ -123,9 +123,9 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
-        self.loopDataManager.updateAndGetRecommentations { prediction, tempBasal, _ in
-            predictedGlucose = prediction
-            recommendedTempBasal = tempBasal?.recommendation
+        self.loopDataManager.getLoopState { _, state in
+            predictedGlucose = state.predictedGlucose
+            recommendedTempBasal = state.recommendedTempBasal?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
@@ -150,9 +150,9 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedBasal: TempBasalRecommendation?
-        self.loopDataManager.updateAndGetRecommentations { prediction, basal, _ in
-            predictedGlucose = prediction
-            recommendedBasal = basal?.recommendation
+        self.loopDataManager.getLoopState { _, state in
+            predictedGlucose = state.predictedGlucose
+            recommendedBasal = state.recommendedTempBasal?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
@@ -177,9 +177,9 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
-        self.loopDataManager.updateAndGetRecommentations { prediction, tempBasal, _ in
-            predictedGlucose = prediction
-            recommendedTempBasal = tempBasal?.recommendation
+        self.loopDataManager.getLoopState { _, state in
+            predictedGlucose = state.predictedGlucose
+            recommendedTempBasal = state.recommendedTempBasal?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
@@ -204,9 +204,9 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedBolus: BolusRecommendation?
-        self.loopDataManager.updateAndGetRecommentations { prediction, _, bolus in
-            predictedGlucose = prediction
-            recommendedBolus = bolus?.recommendation
+        self.loopDataManager.getLoopState { _, state in
+            predictedGlucose = state.predictedGlucose
+            recommendedBolus = state.recommendedBolus?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
@@ -231,9 +231,9 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
-        self.loopDataManager.updateAndGetRecommentations { prediction, tempBasal, _ in
-            predictedGlucose = prediction
-            recommendedTempBasal = tempBasal?.recommendation
+        self.loopDataManager.getLoopState { _, state in
+            predictedGlucose = state.predictedGlucose
+            recommendedTempBasal = state.recommendedTempBasal?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
@@ -258,9 +258,9 @@ class LoopDataManagerDosingTests: XCTestCase {
         updateGroup.enter()
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
-        self.loopDataManager.updateAndGetRecommentations { prediction, tempBasal, _ in
-            predictedGlucose = prediction
-            recommendedTempBasal = tempBasal?.recommendation
+        self.loopDataManager.getLoopState { _, state in
+            predictedGlucose = state.predictedGlucose
+            recommendedTempBasal = state.recommendedTempBasal?.recommendation
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
