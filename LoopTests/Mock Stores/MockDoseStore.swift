@@ -13,13 +13,7 @@ import LoopKit
 class MockDoseStore: DoseStoreProtocol {
     init(for test: DataManagerTestType = .flatAndStable) {
         self.testType = test // The store returns different effect values based on the test type
-        self.insulinDeliveryStore = InsulinDeliveryStore(
-            healthStore: HKHealthStoreMock(),
-            observeHealthKitForCurrentAppOnly: false,
-            cacheStore: PersistenceController(directoryURL: URL.init(fileURLWithPath: "")),
-            observationEnabled: true,
-            test_currentDate: MockDoseStore.currentDate(for: test)
-        )
+        self.insulinDeliveryStore = MockInsulinDeliveryStore()
         self.pumpEventQueryAfterDate = MockDoseStore.currentDate(for: test)
         self.lastAddedPumpData = MockDoseStore.currentDate(for: test)
     }
@@ -30,7 +24,7 @@ class MockDoseStore: DoseStoreProtocol {
     
     var basalProfileApplyingOverrideHistory: BasalRateSchedule?
     
-    var insulinDeliveryStore: InsulinDeliveryStore
+    var insulinDeliveryStore: InsulinDeliveryStoreProtocol
     
     var delegate: DoseStoreDelegate?
     
