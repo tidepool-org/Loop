@@ -1021,7 +1021,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     self.deviceManager.pumpManager?.resumeDelivery() { (error) in
                         DispatchQueue.main.async {
                             if let error = error {
-                                let alert = UIAlertController(with: error, title: NSLocalizedString("Error Resuming", comment: "The alert title for a resume error"))
+                                let alert = UIAlertController(with: error, title: NSLocalizedString("Failed to Resume Insulin Delivery", comment: "The alert title for a resume error"))
                                 self.present(alert, animated: true, completion: nil)
                                 if case .suspended = self.basalDeliveryState {
                                     self.updateHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: false), newSize: nil, animated: true)
@@ -1533,6 +1533,14 @@ extension StatusTableViewController: PumpManagerStatusObserver {
         
         self.basalDeliveryState = status.basalDeliveryState
         self.bolusState = status.bolusState
+        
+        // refresh display if pump status highlight or lifecycle progress have changed
+        if status.pumpStatusHighlight != oldStatus.pumpStatusHighlight ||
+           status.pumpLifecycleProgress != oldStatus.pumpLifecycleProgress
+        {
+            refreshContext.update(with: .status)
+            self.reloadData(animated: true)
+        }
     }
 }
 
