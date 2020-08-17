@@ -67,6 +67,56 @@ final class DeviceDataManager {
             UserDefaults.appGroup?.pumpManagerRawValue = pumpManager?.rawValue
         }
     }
+    
+    // MARK: Stores
+    let healthStore: HKHealthStore
+    
+    let carbStore: CarbStore
+    
+    let doseStore: DoseStore
+    
+    let glucoseStore: GlucoseStore
+    
+    private let cacheStore: PersistenceController // ANNA TODO
+    
+    /// All the HealthKit types to be read and shared by stores
+    private var sampleTypes: Set<HKSampleType> {
+        return Set([
+            glucoseStore.sampleType,
+            carbStore.sampleType,
+            doseStore.sampleType,
+        ].compactMap { $0 })
+    }
+
+    /// True if any stores require HealthKit authorization
+    var authorizationRequired: Bool {
+        return glucoseStore.authorizationRequired ||
+               carbStore.authorizationRequired ||
+               doseStore.authorizationRequired
+    }
+
+    /// True if the user has explicitly denied access to any stores' HealthKit types
+    private var sharingDenied: Bool {
+        return glucoseStore.sharingDenied ||
+               carbStore.sharingDenied ||
+               doseStore.sharingDenied
+    }
+
+    func authorize(_ completion: @escaping () -> Void) {
+        // Authorize all types at once for simplicity
+        carbStore.healthStore.requestAuthorization(toShare: sampleTypes, read: sampleTypes) { (success, error) in
+            if success {
+                // Call the individual authorization methods to trigger query creation
+                self.carbStore.authorize(toShare: true, { _ in })
+                self.doseStore.insulinDeliveryStore.authorize(toShare: true, { _ in })
+                self.glucoseStore.authorize(toShare: true, { _ in })
+            }
+
+            completion()
+        }
+    }
+    
+    // MARK: Services
 
     private(set) var servicesManager: ServicesManager!
 
@@ -115,6 +165,46 @@ final class DeviceDataManager {
         self.pluginManager = pluginManager
         self.alertManager = alertManager
         
+        self.healthStore = HKHealthStore()
+        self.cacheStore = PersistenceController.controllerInAppGroupDirectory()
+        
+        let absorptionTimes = LoopSettings.defaultCarbAbsorptionTimes
+        let sensitivitySchedule = UserDefaults.appGroup?.insulinSensitivitySchedule
+        let overrideHistory = UserDefaults.appGroup?.overrideHistory ?? TemporaryScheduleOverrideHistory.init()
+        
+        self.carbStore = CarbStore(
+            healthStore: healthStore,
+            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+            cacheStore: cacheStore,
+            cacheLength: localCacheDuration,
+            defaultAbsorptionTimes: absorptionTimes,
+            observationInterval: absorptionTimes.slow * 2,
+            carbRatioSchedule: UserDefaults.appGroup?.carbRatioSchedule,
+            insulinSensitivitySchedule: sensitivitySchedule,
+            overrideHistory: overrideHistory,
+            carbAbsorptionModel: FeatureFlags.nonlinearCarbModelEnabled ? .nonlinear : .linear
+        )
+        
+        self.doseStore = DoseStore(
+            healthStore: healthStore,
+            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+            cacheStore: cacheStore,
+            cacheLength: localCacheDuration,
+            insulinModel: UserDefaults.appGroup?.insulinModelSettings?.model,
+            basalProfile: UserDefaults.appGroup?.basalRateSchedule,
+            insulinSensitivitySchedule: sensitivitySchedule,
+            overrideHistory: overrideHistory,
+            lastPumpEventsReconciliation: pumpManager?.lastReconciliation
+        )
+        
+        self.glucoseStore = GlucoseStore(
+            healthStore: healthStore,
+            observeHealthKitForCurrentAppOnly: FeatureFlags.observeHealthKitForCurrentAppOnly,
+            cacheStore: cacheStore,
+            cacheLength: localCacheDuration,
+            observationInterval: .hours(24)
+        )
+        
         bluetoothStateManager.addBluetoothStateObserver(self)
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
@@ -136,7 +226,11 @@ final class DeviceDataManager {
             basalDeliveryState: pumpManager?.status.basalDeliveryState,
             lastPumpEventsReconciliation: pumpManager?.lastReconciliation,
             analyticsServicesManager: analyticsServicesManager,
-            localCacheDuration: localCacheDuration
+            localCacheDuration: localCacheDuration,
+            doseStore: doseStore,
+            glucoseStore: glucoseStore,
+            carbStore: carbStore,
+            cacheStore: cacheStore
         )
         watchManager = WatchDataManager(deviceManager: self)
 
@@ -155,7 +249,6 @@ final class DeviceDataManager {
             remoteDataServicesManager: remoteDataServicesManager,
             dataManager: loopManager
         )
-
 
         if FeatureFlags.scenariosEnabled {
             testingScenariosManager = LocalTestingScenariosManager(deviceManager: self)

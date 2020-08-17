@@ -146,8 +146,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         if !appearedOnce {
             appearedOnce = true
             
-            if deviceManager.loopManager.authorizationRequired {
-                deviceManager.loopManager.authorize {
+            if deviceManager.authorizationRequired {
+                deviceManager.authorize {
                     DispatchQueue.main.async {
                         self.log.debug("[reloadData] after HealthKit authorization")
                         self.reloadData()
@@ -288,7 +288,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         // This should be kept up to date immediately
         hudView?.loopCompletionHUD.lastLoopCompleted = deviceManager.loopManager.lastLoopCompleted
         
-        guard !reloading && !deviceManager.loopManager.authorizationRequired else {
+        guard !reloading && !deviceManager.authorizationRequired else {
             return
         }
         

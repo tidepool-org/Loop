@@ -67,6 +67,7 @@ final class LoopDataManager {
         doseStore: DoseStoreProtocol? = nil,
         glucoseStore: GlucoseStoreProtocol? = nil,
         carbStore: CarbStoreProtocol? = nil,
+        cacheStore: PersistenceController = PersistenceController.controllerInAppGroupDirectory(),
         now: @escaping () -> Date = { Date() }
     ) {
         self.analyticsServicesManager = analyticsServicesManager
@@ -81,8 +82,7 @@ final class LoopDataManager {
         self.overrideHistory.relevantTimeWindow = cacheDuration
 
         let healthStore = HKHealthStore()
-
-        cacheStore = PersistenceController.controllerInAppGroupDirectory()
+        self.cacheStore = cacheStore
 
         if let carbStore = carbStore {
             self.carbStore = carbStore
@@ -496,43 +496,6 @@ extension LoopDataManager {
 
         if timeZone != settings.glucoseTargetRangeSchedule?.timeZone {
             settings.glucoseTargetRangeSchedule?.timeZone = timeZone
-        }
-    }
-
-    /// All the HealthKit types to be read and shared by stores
-    private var sampleTypes: Set<HKSampleType> {
-        return Set([
-            glucoseStore.sampleType,
-            carbStore.sampleType,
-            doseStore.sampleType,
-        ].compactMap { $0 })
-    }
-
-    /// True if any stores require HealthKit authorization
-    var authorizationRequired: Bool {
-        return glucoseStore.authorizationRequired ||
-               carbStore.authorizationRequired ||
-               doseStore.authorizationRequired
-    }
-
-    /// True if the user has explicitly denied access to any stores' HealthKit types
-    private var sharingDenied: Bool {
-        return glucoseStore.sharingDenied ||
-               carbStore.sharingDenied ||
-               doseStore.sharingDenied
-    }
-
-    func authorize(_ completion: @escaping () -> Void) {
-        // Authorize all types at once for simplicity
-        carbStore.healthStore.requestAuthorization(toShare: sampleTypes, read: sampleTypes) { (success, error) in
-            if success {
-                // Call the individual authorization methods to trigger query creation
-                self.carbStore.authorize(toShare: true, { _ in })
-                self.doseStore.insulinDeliveryStore.authorize(toShare: true, { _ in })
-                self.glucoseStore.authorize(toShare: true, { _ in })
-            }
-
-            completion()
         }
     }
 }
