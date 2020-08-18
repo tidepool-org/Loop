@@ -1112,10 +1112,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 vc.restoreUserActivityState(activity)
             }
         case let vc as InsulinDeliveryTableViewController:
-            guard let doseStore = deviceManager.doseStore as? DoseStore else {
-                fatalError("InsulinDeliveryTableViewController cannot use mocked DoseStore")
-            }
-            vc.doseStore = doseStore
+            vc.doseStore = deviceManager.doseStore
             vc.hidesBottomBarWhenPushed = true
         case let vc as OverrideSelectionViewController:
             if deviceManager.loopManager.settings.futureOverrideEnabled() {
