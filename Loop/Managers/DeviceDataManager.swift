@@ -815,9 +815,7 @@ extension DeviceDataManager {
         }
 
         let devicePredicate = HKQuery.predicateForObjects(from: [testingPumpManager.testingDevice])
-        guard let insulinDeliveryStore = doseStore.insulinDeliveryStore as? InsulinDeliveryStore else {
-            fatalError("\(#function) should be invoked only when using InsulinDeliveryStore, not a mock")
-        }
+        let insulinDeliveryStore = doseStore.insulinDeliveryStore
         
         let healthStore = insulinDeliveryStore.healthStore
         doseStore.resetPumpData { doseStoreError in
