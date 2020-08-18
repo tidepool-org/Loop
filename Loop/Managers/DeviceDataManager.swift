@@ -340,7 +340,7 @@ final class DeviceDataManager {
     // Get HealthKit authorization for all of the stores
     func authorize(_ completion: @escaping () -> Void) {
         // Authorize all types at once for simplicity
-        carbStore.healthStore.requestAuthorization(toShare: sampleTypes, read: sampleTypes) { (success, error) in
+        healthStore.requestAuthorization(toShare: sampleTypes, read: sampleTypes) { (success, error) in
             if success {
                 // Call the individual authorization methods to trigger query creation
                 self.carbStore.authorize(toShare: true, { _ in })
