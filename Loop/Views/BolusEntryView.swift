@@ -350,7 +350,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             },
             label: { Text("Enter Manual BG", comment: "Button text prompting manual glucose entry on bolus screen") }
         )
-            .buttonStyle(ActionButtonStyle(viewModel.primaryButton == .manualGlucoseEntry ? .primary : .secondary))
+        .buttonStyle(ActionButtonStyle(viewModel.primaryButton == .manualGlucoseEntry ? .primary : .secondary))
         .padding([.top, .horizontal])
     }
 
