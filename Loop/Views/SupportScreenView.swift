@@ -1,5 +1,5 @@
 //
-//  SwiftUIView.swift
+//  SupportScreenView.swift
 //  Loop
 //
 //  Created by Rick Pasetto on 8/18/20.
