@@ -25,13 +25,13 @@ final class LoopDataManager {
 
     private let cacheStore: PersistenceController
 
-    let carbStore: CarbStoreProtocol
+    private let carbStore: CarbStoreProtocol
 
-    let doseStore: DoseStoreProtocol
+    private let doseStore: DoseStoreProtocol
 
     let dosingDecisionStore: DosingDecisionStore
 
-    let glucoseStore: GlucoseStoreProtocol
+    private let glucoseStore: GlucoseStoreProtocol
 
     let settingsStore: SettingsStore
 

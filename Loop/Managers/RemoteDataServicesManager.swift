@@ -33,19 +33,19 @@ final class RemoteDataServicesManager {
     
     private var carbStore: CarbStore
 
-    private var doseStore: DoseStoreProtocol
+    private var doseStore: DoseStore
 
     private var dosingDecisionStore: DosingDecisionStore
 
-    private var glucoseStore: GlucoseStoreProtocol
+    private var glucoseStore: GlucoseStore
 
     private var settingsStore: SettingsStore
 
     init(
         carbStore: CarbStore,
-        doseStore: DoseStoreProtocol,
+        doseStore: DoseStore,
         dosingDecisionStore: DosingDecisionStore,
-        glucoseStore: GlucoseStoreProtocol,
+        glucoseStore: GlucoseStore,
         settingsStore: SettingsStore
     ) {
         self.carbStore = carbStore

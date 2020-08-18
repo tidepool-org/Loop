@@ -52,7 +52,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
             notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
                     self?.log.debug("[reloadData] for HealthKit unit preference change")
-                    self?.unitPreferencesDidChange(to: self?.deviceManager.loopManager.glucoseStore.preferredUnit)
+                    self?.unitPreferencesDidChange(to: self?.deviceManager.glucoseStore.preferredUnit)
                     self?.refreshContext = RefreshContext.all
                 }
             }
@@ -120,7 +120,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
 
         if self.refreshContext.remove(.glucose) != nil {
             reloadGroup.enter()
-            self.deviceManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: self.chartStartDate, end: nil) { (values) -> Void in
+            self.deviceManager.glucoseStore.getCachedGlucoseSamples(start: self.chartStartDate, end: nil) { (values) -> Void in
                 glucoseValues = values
                 reloadGroup.leave()
             }
@@ -263,7 +263,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
 
         if input == .retrospection,
             let lastDiscrepancy = retrospectiveGlucoseDiscrepancies?.last,
-            let currentGlucose = self.deviceManager.loopManager.glucoseStore.latestGlucose
+            let currentGlucose = self.deviceManager.glucoseStore.latestGlucose
         {
             let formatter = QuantityFormatter()
             formatter.setPreferredNumberFormatter(for: glucoseChart.glucoseUnit)

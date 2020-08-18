@@ -200,7 +200,7 @@ extension TestingScenariosManagerRequirements {
             }
 
             let instance = scenario.instantiate()
-            guard let carbStore = self.deviceManager.loopManager.carbStore as? CarbStore else {
+            guard let carbStore = self.deviceManager.carbStore as? CarbStore else {
                 fatalError("Scenarios should not be used with mock stores")
             }
             carbStore.addCarbEntries(instance.carbEntries) { result in
@@ -235,7 +235,7 @@ extension TestingScenariosManagerRequirements {
                     return
                 }
                 
-                guard let carbStore = self.deviceManager.loopManager.carbStore as? CarbStore else {
+                guard let carbStore = self.deviceManager.carbStore as? CarbStore else {
                     fatalError("Scenarios should not be used with mock stores")
                 }
 

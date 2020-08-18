@@ -28,7 +28,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     lazy var quantityFormatter: QuantityFormatter = QuantityFormatter()
     
     private var preferredUnit: HKUnit? {
-        return deviceManager.loopManager.glucoseStore.preferredUnit
+        return deviceManager.glucoseStore.preferredUnit
     }
     
     override func viewDidLoad() {
@@ -329,7 +329,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         // TODO: Don't always assume currentContext.contains(.status)
         reloadGroup.enter()
-        self.deviceManager.loopManager.getLoopState { (manager, state) -> Void in
+        self.deviceManager.loopManager.getLoopState { [weak deviceManager] (manager, state) -> Void in
             predictedGlucoseValues = state.predictedGlucoseIncludingPendingInsulin ?? []
             
             // Retry this refresh again if predicted glucose isn't available
@@ -369,7 +369,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             
             if currentContext.contains(.carbs) {
                 reloadGroup.enter()
-                manager.carbStore.getCarbsOnBoardValues(start: startDate, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? state.insulinCounteractionEffects : nil) { (values) in
+                deviceManager?.carbStore.getCarbsOnBoardValues(start: startDate, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? state.insulinCounteractionEffects : nil) { (values) in
                     cobValues = values
                     reloadGroup.leave()
                 }
@@ -380,7 +380,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         if currentContext.contains(.glucose) {
             reloadGroup.enter()
-            self.deviceManager.loopManager.glucoseStore.getCachedGlucoseSamples(start: startDate, end: nil) { (values) -> Void in
+            deviceManager?.glucoseStore.getCachedGlucoseSamples(start: startDate, end: nil) { (values) -> Void in
                 glucoseValues = values
                 reloadGroup.leave()
             }
@@ -388,7 +388,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         if currentContext.contains(.insulin) {
             reloadGroup.enter()
-            deviceManager.loopManager.doseStore.getInsulinOnBoardValues(start: startDate, end: nil, basalDosingEnd: nil) { (result) -> Void in
+            deviceManager?.doseStore.getInsulinOnBoardValues(start: startDate, end: nil, basalDosingEnd: nil) { (result) -> Void in
                 switch result {
                 case .failure(let error):
                     self.log.error("DoseStore failed to get insulin on board values: %{public}@", String(describing: error))
@@ -401,7 +401,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
             
             reloadGroup.enter()
-            deviceManager.loopManager.doseStore.getNormalizedDoseEntries(start: startDate, end: nil) { (result) -> Void in
+            deviceManager.doseStore.getNormalizedDoseEntries(start: startDate, end: nil) { (result) -> Void in
                 switch result {
                 case .failure(let error):
                     self.log.error("DoseStore failed to get normalized dose entries: %{public}@", String(describing: error))
@@ -414,7 +414,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
             
             reloadGroup.enter()
-            deviceManager.loopManager.doseStore.getTotalUnitsDelivered(since: Calendar.current.startOfDay(for: Date())) { (result) in
+            deviceManager.doseStore.getTotalUnitsDelivered(since: Calendar.current.startOfDay(for: Date())) { (result) in
                 switch result {
                 case .failure:
                     retryContext.update(with: .insulin)
@@ -500,7 +500,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             self.tableView.beginUpdates()
             if let hudView = self.hudView {
                 // CGM Status
-                if let glucose = self.deviceManager.loopManager.glucoseStore.latestGlucose {
+                if let glucose = self.deviceManager.glucoseStore.latestGlucose {
                     let unit = self.statusCharts.glucose.glucoseUnit
                     hudView.cgmStatusHUD.setGlucoseQuantity(glucose.quantity.doubleValue(for: unit),
                                                             at: glucose.startDate,
@@ -1105,14 +1105,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
             vc.preferredGlucoseUnit = preferredUnit
         case let vc as CarbEntryViewController:
             vc.deviceManager = deviceManager
-            vc.defaultAbsorptionTimes = deviceManager.loopManager.carbStore.defaultAbsorptionTimes
-            vc.preferredCarbUnit = deviceManager.loopManager.carbStore.preferredUnit
+            vc.defaultAbsorptionTimes = deviceManager.carbStore.defaultAbsorptionTimes
+            vc.preferredCarbUnit = deviceManager.carbStore.preferredUnit
             
             if let activity = sender as? NSUserActivity {
                 vc.restoreUserActivityState(activity)
             }
         case let vc as InsulinDeliveryTableViewController:
-            guard let doseStore = deviceManager.loopManager.doseStore as? DoseStore else {
+            guard let doseStore = deviceManager.doseStore as? DoseStore else {
                 fatalError("InsulinDeliveryTableViewController cannot use mocked DoseStore")
             }
             vc.doseStore = doseStore
