@@ -779,7 +779,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                                     bolusVolumes: $0.supportedBolusVolumes,
                                     maximumBasalScheduleEntryCount: $0.maximumBasalScheduleEntryCount)
         }
-        let servicesViewModel = ServicesViewModel(showServices: !Bundle.main.bundleDisplayName.contains("Tidepool"), // Hack for now, until we get rid of this VC
+        let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
                                                   availableServices: availableServices,
                                                   activeServices: activeServices,
                                                   delegate: self)
