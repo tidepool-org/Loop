@@ -604,9 +604,11 @@ extension BolusEntryViewModel.Alert: Identifiable {
 
 // MARK: Helpers
 extension BolusEntryViewModel {
+    
     var isManualGlucosePromptVisible: Bool {
         activeNotice == .staleGlucoseData && !isManualGlucoseEntryEnabled
     }
+    
     var isNoticeVisible: Bool {
         if activeNotice == nil {
             return false
@@ -618,7 +620,7 @@ extension BolusEntryViewModel {
     }
     
     private var hasBolusEntryReadyToDeliver: Bool {
-        return enteredBolus.doubleValue(for: .internationalUnit()) != 0
+        enteredBolus.doubleValue(for: .internationalUnit()) != 0
     }
 
     private var hasDataToSave: Bool {
