@@ -64,9 +64,9 @@ final class LoopDataManager {
         lastPumpEventsReconciliation: Date?,
         analyticsServicesManager: AnalyticsServicesManager,
         localCacheDuration: TimeInterval = .days(1),
-        doseStore: DoseStoreProtocol? = nil,
-        glucoseStore: GlucoseStoreProtocol? = nil,
-        carbStore: CarbStoreProtocol? = nil,
+        doseStore: DoseStoreProtocol,
+        glucoseStore: GlucoseStoreProtocol,
+        carbStore: CarbStoreProtocol,
         cacheStore: PersistenceController = PersistenceController.controllerInAppGroupDirectory(),
         now: @escaping () -> Date = { Date() }
     ) {
@@ -81,56 +81,13 @@ final class LoopDataManager {
         
         self.overrideHistory.relevantTimeWindow = cacheDuration
 
-        let healthStore = HKHealthStore()
         self.cacheStore = cacheStore
-
-        if let carbStore = carbStore {
-            self.carbStore = carbStore
-        } else {
-            self.carbStore = CarbStore(
-                healthStore: healthStore,
-                observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitSamplesFromOtherApps,
-                cacheStore: cacheStore,
-                cacheLength: localCacheDuration,
-                defaultAbsorptionTimes: absorptionTimes,
-                observationInterval: cacheDuration,
-                carbRatioSchedule: carbRatioSchedule,
-                insulinSensitivitySchedule: insulinSensitivitySchedule,
-                overrideHistory: overrideHistory,
-                carbAbsorptionModel: FeatureFlags.nonlinearCarbModelEnabled ? .nonlinear : .linear
-            )
-        }
-
-        if let doseStore = doseStore {
-            self.doseStore = doseStore
-        } else {
-            self.doseStore = DoseStore(
-                healthStore: healthStore,
-                observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitSamplesFromOtherApps,
-                cacheStore: cacheStore,
-                cacheLength: localCacheDuration,
-                insulinModel: insulinModelSettings?.model,
-                basalProfile: basalRateSchedule,
-                insulinSensitivitySchedule: insulinSensitivitySchedule,
-                overrideHistory: overrideHistory,
-                lastPumpEventsReconciliation: lastPumpEventsReconciliation
-            )
-        }
+        self.carbStore = carbStore
+        self.doseStore = doseStore
+        self.glucoseStore = glucoseStore
 
         dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
 
-        if let glucoseStore = glucoseStore {
-            self.glucoseStore = glucoseStore
-        } else {
-            self.glucoseStore = GlucoseStore(
-                healthStore: healthStore,
-                observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitSamplesFromOtherApps,
-                cacheStore: cacheStore,
-                cacheLength: localCacheDuration,
-                observationInterval: .hours(24)
-            )
-        }
-        
         self.now = now
 
         settingsStore = SettingsStore(store: cacheStore, expireAfter: localCacheDuration)
