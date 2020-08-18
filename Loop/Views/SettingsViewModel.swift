@@ -15,16 +15,22 @@ import SwiftUI
 public class DeviceViewModel: ObservableObject {
     public init(deviceManagerUI: DeviceManagerUI? = nil,
                 isSetUp: Bool = false,
+                deleteData: (() -> Void)? = nil,
                 onTapped: @escaping () -> Void = { }) {
         self.deviceManagerUI = deviceManagerUI
         self.isSetUp = isSetUp
+        self.deleteData = deleteData
         self.onTapped = onTapped
     }
     
     let deviceManagerUI: DeviceManagerUI?
-
-    @Published private(set) var isSetUp: Bool = false
+    let deleteData: (() -> Void)?
     
+    @Published private(set) var isSetUp: Bool = false
+    var isTestingDevice: Bool {
+        return deleteData != nil
+    }
+
     var image: UIImage? { deviceManagerUI?.smallImage }
     var name: String { deviceManagerUI?.localizedTitle ?? "" }
    
@@ -49,6 +55,7 @@ public class SettingsViewModel: ObservableObject {
 
     var pumpManagerSettingsViewModel: DeviceViewModel
     var cgmManagerSettingsViewModel: DeviceViewModel
+    var servicesViewModel: ServicesViewModel
     var therapySettings: TherapySettings
     let supportedInsulinModelSettings: SupportedInsulinModelSettings
     let pumpSupportedIncrements: PumpSupportedIncrements?
@@ -63,6 +70,7 @@ public class SettingsViewModel: ObservableObject {
                 notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel,
                 pumpManagerSettingsViewModel: DeviceViewModel,
                 cgmManagerSettingsViewModel: DeviceViewModel,
+                servicesViewModel: ServicesViewModel,
                 therapySettings: TherapySettings,
                 supportedInsulinModelSettings: SupportedInsulinModelSettings,
                 pumpSupportedIncrements: PumpSupportedIncrements?,
@@ -78,6 +86,7 @@ public class SettingsViewModel: ObservableObject {
         self.appNameAndVersion = appNameAndVersion
         self.pumpManagerSettingsViewModel = pumpManagerSettingsViewModel
         self.cgmManagerSettingsViewModel = cgmManagerSettingsViewModel
+        self.servicesViewModel = servicesViewModel
         self.setDosingEnabled = setDosingEnabled
         self.dosingEnabled = initialDosingEnabled
         self.therapySettings = therapySettings
