@@ -200,10 +200,8 @@ extension TestingScenariosManagerRequirements {
             }
 
             let instance = scenario.instantiate()
-            guard let carbStore = self.deviceManager.carbStore as? CarbStore else {
-                fatalError("Scenarios should not be used with mock stores")
-            }
-            carbStore.addCarbEntries(instance.carbEntries) { result in
+
+            self.deviceManager.carbStore.addCarbEntries(instance.carbEntries) { result in
                 switch result {
                 case .success(_):
                     pumpManager.reservoirFillFraction = 1.0
@@ -234,12 +232,8 @@ extension TestingScenariosManagerRequirements {
                     completion(error!)
                     return
                 }
-                
-                guard let carbStore = self.deviceManager.carbStore as? CarbStore else {
-                    fatalError("Scenarios should not be used with mock stores")
-                }
 
-                carbStore.deleteAllCarbEntries(completion: completion)
+                self.deviceManager.carbStore.deleteAllCarbEntries(completion: completion)
             }
         }
     }

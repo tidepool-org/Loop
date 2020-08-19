@@ -125,13 +125,8 @@ extension RemoteDataServicesManager {
         dispatchQueue(for: remoteDataService, withRemoteDataType: .carb).async {
             let semaphore = DispatchSemaphore(value: 0)
             let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withRemoteDataType: .carb) ?? CarbStore.QueryAnchor()
-
-            guard let carbStore = self.carbStore as? CarbStore else {
-                self.log.error("Skipping carb upload from mock stores")
-                return
-            }
             
-            carbStore.executeCarbQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.carbDataLimit ?? Int.max) { result in
+            self.carbStore.executeCarbQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.carbDataLimit ?? Int.max) { result in
                 switch result {
                 case .failure(let error):
                     self.log.error("Error querying carb data: %{public}@", String(describing: error))
