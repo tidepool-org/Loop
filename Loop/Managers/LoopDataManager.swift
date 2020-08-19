@@ -1838,8 +1838,8 @@ extension LoopDataManager {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
         
-        guard let doseStore = doseStore as? DoseStore else {
-            fatalError("\(#function) should be invoked only when not using mock stores")
+        guard let glucoseStore = glucoseStore as? GlucoseStore, let carbStore = carbStore as? CarbStore, let doseStore = doseStore as? DoseStore else {
+            fatalError("Mock stores should not be used to generate simulated core data")
         }
 
         doseStore.purgeHistoricalPumpEvents() { error in
@@ -1848,7 +1848,7 @@ extension LoopDataManager {
                 return
             }
             self.dosingDecisionStore.purgeHistoricalDosingDecisionObjects() { error in
-                guard error == nil, let carbStore = self.carbStore as? CarbStore else {
+                guard error == nil else {
                     completion(error)
                     return
                 }
@@ -1856,10 +1856,6 @@ extension LoopDataManager {
                     guard error == nil else {
                         completion(error)
                         return
-                    }
-                    
-                    guard let glucoseStore = self.glucoseStore as? GlucoseStore else {
-                        fatalError("\(#function) should be invoked only when not using mock stores")
                     }
                     
                     glucoseStore.purgeHistoricalGlucoseObjects() { error in
