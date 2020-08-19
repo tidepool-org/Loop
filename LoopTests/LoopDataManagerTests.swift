@@ -129,7 +129,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
-        _ = updateGroup.wait(timeout: .distantFuture)
+        updateGroup.wait()
 
         XCTAssertNotNil(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
@@ -156,7 +156,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
-        _ = updateGroup.wait(timeout: .distantFuture)
+        updateGroup.wait()
 
         XCTAssertNotNil(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
@@ -183,7 +183,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
-        _ = updateGroup.wait(timeout: .distantFuture)
+        updateGroup.wait()
 
         XCTAssertNotNil(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
@@ -210,7 +210,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
-        _ = updateGroup.wait(timeout: .distantFuture)
+        updateGroup.wait()
 
         XCTAssertNotNil(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
@@ -237,7 +237,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
-        _ = updateGroup.wait(timeout: .distantFuture)
+        updateGroup.wait()
 
         XCTAssertNotNil(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
@@ -264,7 +264,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             updateGroup.leave()
         }
         // We need to wait until the task completes to get outputs
-        _ = updateGroup.wait(timeout: .distantFuture)
+        updateGroup.wait()
 
         XCTAssertNotNil(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)

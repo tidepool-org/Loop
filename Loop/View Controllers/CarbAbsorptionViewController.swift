@@ -144,13 +144,13 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
 
         // TODO: Don't always assume currentContext.contains(.status)
         reloadGroup.enter()
-        deviceManager.loopManager.getLoopState { [weak deviceManager] (manager, state) in
+        deviceManager.loopManager.getLoopState { (manager, state) in
             if shouldUpdateGlucose || shouldUpdateCarbs {
                 let allInsulinCounteractionEffects = state.insulinCounteractionEffects
                 insulinCounteractionEffects = allInsulinCounteractionEffects.filterDateRange(chartStartDate, nil)
 
                 reloadGroup.enter()
-                deviceManager?.carbStore.getCarbStatus(start: listStart, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? allInsulinCounteractionEffects : nil) { (result) in
+                self.deviceManager.carbStore.getCarbStatus(start: listStart, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? allInsulinCounteractionEffects : nil) { (result) in
                     switch result {
                     case .success(let status):
                         carbStatuses = status
@@ -164,7 +164,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
                 }
 
                 reloadGroup.enter()
-                deviceManager?.carbStore.getGlucoseEffects(start: chartStartDate, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil) { (result) in
+                self.deviceManager.carbStore.getGlucoseEffects(start: chartStartDate, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil) { (result) in
                     switch result {
                     case .success((_, let effects)):
                         carbEffects = effects

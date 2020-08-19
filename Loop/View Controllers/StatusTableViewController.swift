@@ -199,7 +199,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             if oldValue != bolusState {
                 // Bolus starting
                 if case .inProgress = bolusState {
-                    self.bolusProgressReporter = self.deviceManager.pumpManager?.createBolusProgressReporter(reportingOn: DispatchQueue.main)
+                    self.bolusProgressReporter = deviceManager.pumpManager?.createBolusProgressReporter(reportingOn: DispatchQueue.main)
                 }
                 refreshContext.update(with: .status)
                 self.reloadData(animated: true)
@@ -329,7 +329,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         // TODO: Don't always assume currentContext.contains(.status)
         reloadGroup.enter()
-        self.deviceManager.loopManager.getLoopState { [weak deviceManager] (manager, state) -> Void in
+        deviceManager.loopManager.getLoopState { (manager, state) -> Void in
             predictedGlucoseValues = state.predictedGlucoseIncludingPendingInsulin ?? []
             
             // Retry this refresh again if predicted glucose isn't available
@@ -369,7 +369,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             
             if currentContext.contains(.carbs) {
                 reloadGroup.enter()
-                deviceManager?.carbStore.getCarbsOnBoardValues(start: startDate, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? state.insulinCounteractionEffects : nil) { (values) in
+                self.deviceManager.carbStore.getCarbsOnBoardValues(start: startDate, end: nil, effectVelocities: manager.settings.dynamicCarbAbsorptionEnabled ? state.insulinCounteractionEffects : nil) { (values) in
                     cobValues = values
                     reloadGroup.leave()
                 }
@@ -380,7 +380,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         if currentContext.contains(.glucose) {
             reloadGroup.enter()
-            deviceManager?.glucoseStore.getCachedGlucoseSamples(start: startDate, end: nil) { (values) -> Void in
+            deviceManager.glucoseStore.getCachedGlucoseSamples(start: startDate, end: nil) { (values) -> Void in
                 glucoseValues = values
                 reloadGroup.leave()
             }
@@ -388,7 +388,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         if currentContext.contains(.insulin) {
             reloadGroup.enter()
-            deviceManager?.doseStore.getInsulinOnBoardValues(start: startDate, end: nil, basalDosingEnd: nil) { (result) -> Void in
+            deviceManager.doseStore.getInsulinOnBoardValues(start: startDate, end: nil, basalDosingEnd: nil) { (result) -> Void in
                 switch result {
                 case .failure(let error):
                     self.log.error("DoseStore failed to get insulin on board values: %{public}@", String(describing: error))

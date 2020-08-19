@@ -79,6 +79,10 @@ final class DeviceDataManager {
     
     private let cacheStore: PersistenceController
     
+    let dosingDecisionStore: DosingDecisionStore
+    
+    let settingsStore: SettingsStore
+    
     /// All the HealthKit types to be read and shared by stores
     private var sampleTypes: Set<HKSampleType> {
         return Set([
@@ -191,6 +195,9 @@ final class DeviceDataManager {
             observationInterval: .hours(24)
         )
         
+        self.dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
+        self.settingsStore = SettingsStore(store: cacheStore, expireAfter: localCacheDuration)
+        
         bluetoothStateManager.addBluetoothStateObserver(self)
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
@@ -216,8 +223,12 @@ final class DeviceDataManager {
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
-            cacheStore: cacheStore
+//            cacheStore: cacheStore, ANNA TODO
+            dosingDecisionStore: dosingDecisionStore,
+            settingsStore: settingsStore
         )
+        cacheStore.delegate = loopManager
+        
         watchManager = WatchDataManager(deviceManager: self)
 
         let remoteDataServicesManager = RemoteDataServicesManager(
@@ -381,6 +392,8 @@ final class DeviceDataManager {
                         "* launchDate: \(self.launchDate)",
                         "* lastError: \(String(describing: self.lastError))",
                         "* lastBLEDrivenUpdate: \(self.lastBLEDrivenUpdate)",
+                        "",
+                        "cacheStore: \(String(reflecting: self.cacheStore))",
                         "",
                         self.cgmManager != nil ? String(reflecting: self.cgmManager!) : "cgmManager: nil",
                         "",

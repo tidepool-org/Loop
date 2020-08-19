@@ -172,9 +172,9 @@ final class WatchDataManager: NSObject {
         let reservoir =  deviceManager.doseStore.lastReservoirValue
         let basalDeliveryState = deviceManager.pumpManager?.status.basalDeliveryState
 
-        loopManager.getLoopState { [weak deviceManager] (manager, state) in
+        loopManager.getLoopState { (manager, state) in
             let updateGroup = DispatchGroup()
-            let context = WatchContext(glucose: glucose, glucoseUnit: deviceManager?.glucoseStore.preferredUnit)
+            let context = WatchContext(glucose: glucose, glucoseUnit: self.deviceManager.glucoseStore.preferredUnit)
             context.reservoir = reservoir?.unitVolume
             context.loopLastRunDate = manager.lastLoopCompleted
             context.recommendedBolusDose = state.recommendedBolus?.recommendation.amount
@@ -194,7 +194,7 @@ final class WatchDataManager: NSObject {
             
             if let glucose = glucose {
                 updateGroup.enter()
-                deviceManager?.glucoseStore.getCachedGlucoseSamples(start: glucose.startDate, end: nil) { (samples) in
+                self.deviceManager.glucoseStore.getCachedGlucoseSamples(start: glucose.startDate, end: nil) { (samples) in
                     if let sample = samples.last {
                         context.glucose = sample.quantity
                         context.glucoseDate = sample.startDate
@@ -207,7 +207,7 @@ final class WatchDataManager: NSObject {
             }
 
             updateGroup.enter()
-            deviceManager?.doseStore.insulinOnBoard(at: Date()) { (result) in
+            self.deviceManager.doseStore.insulinOnBoard(at: Date()) { (result) in
                 switch result {
                 case .success(let iobValue):
                     context.iob = iobValue.value
@@ -247,7 +247,7 @@ final class WatchDataManager: NSObject {
                 return
             }
 
-            self.deviceManager.enactBolus(units: bolus.value, at: bolus.startDate) { (error) in
+            deviceManager.enactBolus(units: bolus.value, at: bolus.startDate) { (error) in
                 if error == nil {
                     self.deviceManager.analyticsServicesManager.didSetBolusFromWatch(bolus.value)
                 }

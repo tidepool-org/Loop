@@ -23,8 +23,6 @@ final class LoopDataManager {
 
     static let LoopUpdateContextKey = "com.loudnate.Loop.LoopDataManager.LoopUpdateContext"
 
-    private let cacheStore: PersistenceController
-
     private let carbStore: CarbStoreProtocol
 
     private let doseStore: DoseStoreProtocol
@@ -67,7 +65,8 @@ final class LoopDataManager {
         doseStore: DoseStoreProtocol,
         glucoseStore: GlucoseStoreProtocol,
         carbStore: CarbStoreProtocol,
-        cacheStore: PersistenceController = PersistenceController.controllerInAppGroupDirectory(),
+        dosingDecisionStore: DosingDecisionStore,
+        settingsStore: SettingsStore,
         now: @escaping () -> Date = { Date() }
     ) {
         self.analyticsServicesManager = analyticsServicesManager
@@ -81,21 +80,19 @@ final class LoopDataManager {
         
         self.overrideHistory.relevantTimeWindow = cacheDuration
 
-        self.cacheStore = cacheStore
         self.carbStore = carbStore
         self.doseStore = doseStore
         self.glucoseStore = glucoseStore
 
-        dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
+        self.dosingDecisionStore = dosingDecisionStore
 
         self.now = now
 
-        settingsStore = SettingsStore(store: cacheStore, expireAfter: localCacheDuration)
+        self.settingsStore = settingsStore
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
         overrideHistory.delegate = self
-        cacheStore.delegate = self
 
         // Observe changes
         notificationObservers = [
@@ -1689,8 +1686,6 @@ extension LoopDataManager {
                 "basalDeliveryState: \(String(describing: manager.basalDeliveryState))",
                 "carbsOnBoard: \(String(describing: state.carbsOnBoard))",
                 "error: \(String(describing: state.error))",
-                "",
-                "cacheStore: \(String(reflecting: self.cacheStore))",
                 "",
                 String(reflecting: self.retrospectiveCorrection),
                 "",
