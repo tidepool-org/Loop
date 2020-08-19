@@ -611,7 +611,7 @@ extension LoopDataManager {
         }
     }
 
-    func storeDosingDecision(withDate date: Date = Date(), withError error: Error? = nil) {
+    func storeDosingDecision(withDate date: Date, withError error: Error? = nil) {
         getLoopState { (_, state) in
             self.doseStore.insulinOnBoard(at: date) { result in
                 var insulinOnBoardError: Error?
@@ -699,9 +699,9 @@ extension LoopDataManager {
                 if self.settings.dosingEnabled {
                     self.setRecommendedTempBasal { (error) -> Void in
                         if let error = error {
-                            self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSinceNow)
+                            self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSince(self.now()))
                         } else {
-                            self.loopDidComplete(date: self.now(), duration: -startDate.timeIntervalSinceNow)
+                            self.loopDidComplete(date: self.now(), duration: -startDate.timeIntervalSince(self.now()))
                         }
                         self.logger.default("Loop ended")
                         self.notify(forChange: .tempBasal)
@@ -710,10 +710,10 @@ extension LoopDataManager {
                     // Delay the notification until we know the result of the temp basal
                     return
                 } else {
-                    self.loopDidComplete(date: self.now(), duration: -startDate.timeIntervalSinceNow)
+                    self.loopDidComplete(date: self.now(), duration: -startDate.timeIntervalSince(self.now()))
                 }
             } catch let error {
-                self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSinceNow)
+                self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSince(self.now()))
             }
 
             self.logger.default("Loop ended")
@@ -733,7 +733,7 @@ extension LoopDataManager {
         // Fetch glucose effects as far back as we want to make retroactive analysis
         var latestGlucoseDate: Date?
         updateGroup.enter()
-        glucoseStore.getCachedGlucoseSamples(start: Date(timeIntervalSinceNow: -settings.inputDataRecencyInterval), end: nil) { (values) in
+        glucoseStore.getCachedGlucoseSamples(start: Date(timeInterval: -settings.inputDataRecencyInterval, since: now()), end: nil) { (values) in
             latestGlucoseDate = values.last?.startDate
             updateGroup.leave()
         }
@@ -1006,7 +1006,7 @@ extension LoopDataManager {
                     throw LoopError.configurationError(.generalSettings)
                 }
 
-                let earliestEffectDate = Date(timeIntervalSinceNow: .hours(-24))
+                let earliestEffectDate = Date(timeInterval: .hours(-24), since: now())
                 let nextEffectDate = insulinCounteractionEffects.last?.endDate ?? earliestEffectDate
                 let bolusEffect = [potentialBolus]
                     .glucoseEffects(insulinModel: model, insulinSensitivity: sensitivity)
@@ -1043,7 +1043,7 @@ extension LoopDataManager {
         includingPendingInsulin: Bool
     ) throws -> [PredictedGlucoseValue] {
         let retrospectiveStart = glucose.date.addingTimeInterval(-retrospectiveCorrection.retrospectionInterval)
-        let earliestEffectDate = Date(timeIntervalSinceNow: .hours(-24))
+        let earliestEffectDate = Date(timeInterval: .hours(-24), since: now())
         let nextEffectDate = insulinCounteractionEffects.last?.endDate ?? earliestEffectDate
 
         let updateGroup = DispatchGroup()
@@ -1403,7 +1403,7 @@ extension LoopDataManager {
             return
         }
 
-        guard abs(recommendedTempBasal.date.timeIntervalSinceNow) < TimeInterval(minutes: 5) else {
+        guard abs(recommendedTempBasal.date.timeIntervalSince(now())) < TimeInterval(minutes: 5) else {
             completion(LoopError.recommendationExpired(date: recommendedTempBasal.date))
             return
         }

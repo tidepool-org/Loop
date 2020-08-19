@@ -223,7 +223,6 @@ final class DeviceDataManager {
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
-//            cacheStore: cacheStore, ANNA TODO
             dosingDecisionStore: dosingDecisionStore,
             settingsStore: settingsStore
         )
@@ -694,7 +693,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         log.error("PumpManager:%{public}@ did error: %{public}@", String(describing: type(of: pumpManager)), String(describing: error))
 
         setLastError(error: error)
-        loopManager.storeDosingDecision(withError: error)
+        loopManager.storeDosingDecision(withDate: Date(), withError: error)
     }
 
     func pumpManager(_ pumpManager: PumpManager, hasNewPumpEvents events: [NewPumpEvent], lastReconciliation: Date?, completion: @escaping (_ error: Error?) -> Void) {
