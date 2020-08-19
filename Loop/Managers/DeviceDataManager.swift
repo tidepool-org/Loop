@@ -353,7 +353,9 @@ private extension DeviceDataManager {
                                                     soundVendor: pumpManager)
             
             if pumpManager.status.deliveryIsUncertain && uncertainDeliveryAlert == nil {
-                showUncertainDeliveryAlert()
+                DispatchQueue.main.async {
+                    self.showUncertainDeliveryAlert()
+                }
             }
         }
     }
@@ -600,9 +602,7 @@ extension DeviceDataManager: PumpManagerDelegate {
                 dismissalMode: .modalDismiss,
                 isModalInPresentation: true)
             {
-                print("*** onDismiss ***")
-
-                // If delivery still uncertain a
+                // If delivery still uncertain after recovery view dismissal, present modal alert again.
                 if pumpManager.status.deliveryIsUncertain {
                     self.showUncertainDeliveryAlert(animated: false)
                 }
@@ -612,17 +612,17 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
     
     private func showUncertainDeliveryAlert(animated: Bool = true) {
-        let alert = UIAlertController()
-        alert.title = NSLocalizedString("Unable To Reach Pump", comment: "Title for alert shown when delivery status is uncertain")
-        alert.message = String(format: NSLocalizedString("%1$@ is unable to communicate with your insulin pump. The app will continue trying to reach your pump, but insulin delivery information cannot be updated and no automation can continue. You can wait several minutes to see if the issue resolves or tap the button below to learn more about other options.", comment: "Message for alert shown when delivery status is uncertain. (1: app name)"), Bundle.main.bundleDisplayName)
+        let alert = UIAlertController(
+            title: NSLocalizedString("Unable To Reach Pump", comment: "Title for alert shown when delivery status is uncertain"),
+            message: String(format: NSLocalizedString("%1$@ is unable to communicate with your insulin pump. The app will continue trying to reach your pump, but insulin delivery information cannot be updated and no automation can continue.\nYou can wait several minutes to see if the issue resolves or tap the button below to learn more about other options.", comment: "Message for alert shown when delivery status is uncertain. (1: app name)"), Bundle.main.bundleDisplayName),
+            preferredStyle: .alert)
+        
         let actionTitle = NSLocalizedString("Learn More", comment: "OK button title for alert shown when delivery status is uncertain")
         let action = UIAlertAction(title: actionTitle, style: .default) { (_) in
             self.uncertainDeliveryAlert = nil
             self.showUncertainDeliveryRecoveryView()
         }
-        alert.modalPresentationStyle = .formSheet
         alert.addAction(action)
-        print("*** presenting(animated: \(animated)) ***")
         self.rootViewController.present(alert, animated: animated)
         self.uncertainDeliveryAlert = alert
     }
