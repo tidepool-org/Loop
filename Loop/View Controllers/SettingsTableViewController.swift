@@ -671,19 +671,14 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             
             switch pumpManagers.count {
             case 1:
-                if let pumpManager = pumpManagers.first, let PumpManagerType = dataManager.pumpManagerTypeByIdentifier(pumpManager.identifier) {
-                    
-                    let setupViewController = configuredSetupViewController(for: PumpManagerType)
-                    present(setupViewController, animated: true, completion: nil)
+                if let pumpManager = pumpManagers.first {
+                    setupPump(identifier: pumpManager.identifier)
                 }
                 completion?()
             case let x where x > 1:
                 let alert = UIAlertController(pumpManagers: pumpManagers) { [weak self] (identifier) in
-                    if let self = self, let manager = self.dataManager.pumpManagerTypeByIdentifier(identifier) {
-                        let setupViewController = self.configuredSetupViewController(for: manager)
-                        self.present(setupViewController, animated: true, completion: nil)
-                        completion?()
-                    }
+                    self?.setupPump(identifier: identifier)
+                    completion?()
                 }
                 
                 alert.addCancelAction { (_) in
@@ -694,6 +689,13 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             default:
                 break
             }
+        }
+    }
+    
+    private func setupPump(identifier: String) {
+        if let manager = self.dataManager.pumpManagerTypeByIdentifier(identifier) {
+            let setupViewController = self.configuredSetupViewController(for: manager)
+            self.present(setupViewController, animated: true, completion: nil)
         }
     }
     
@@ -722,23 +724,13 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             
             switch cgmManagers.count {
             case 1:
-                if let cgmManager = cgmManagers.first, let CGMManagerType = dataManager.cgmManagerTypeByIdentifier(cgmManager.identifier) {
-                    setupCGMManager(CGMManagerType)
+                if let cgmManager = cgmManagers.first {
+                    setupCGM(identifier: cgmManager.identifier)
                 }
-                
                 completion?()
             case let x where x > 1:
-                let alert = UIAlertController(cgmManagers: cgmManagers, pumpManager: dataManager.pumpManager as? CGMManager) { [weak self] (identifier, pumpManager) in
-                    if let self = self {
-                        if let cgmManagerIdentifier = identifier, let cgmManagerType = self.dataManager.cgmManagerTypeByIdentifier(cgmManagerIdentifier) {
-                            self.setupCGMManager(cgmManagerType)
-                        } else if let pumpManager = pumpManager {
-                            self.completeCGMManagerSetup(pumpManager)
-                        } else {
-                            fatalError("Could not set up CGM")
-                        }
-                    }
-                    
+                let alert = UIAlertController(cgmManagers: cgmManagers) { [weak self] (identifier) in
+                    self?.setupCGM(identifier: identifier)
                     completion?()
                 }
                 
@@ -750,6 +742,17 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             default:
                 break
             }
+        }
+    }
+    
+    private func setupCGM(identifier: String) {
+        if let manager = self.dataManager.cgmManagerTypeByIdentifier(identifier) {
+            self.setupCGMManager(manager)
+        } else if identifier == dataManager.pumpManager?.managerIdentifier,
+            let pumpManagerAsCGMManager = dataManager.pumpManager as? CGMManager {
+            self.completeCGMManagerSetup(pumpManagerAsCGMManager)
+        } else {
+            fatalError("Could not set up CGM")
         }
     }
 
@@ -766,20 +769,31 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
     
     private func presentTemporaryNewSettings(_ tableView: UITableView, _ indexPath: IndexPath) {
         let pumpViewModel = DeviceViewModel(
-            deviceManagerUI: dataManager.pumpManager,
+            image: dataManager.pumpManager?.smallImage,
+            name: dataManager.pumpManager?.localizedTitle ?? "",
             isSetUp: dataManager.pumpManager != nil,
+            availableDevices: dataManager.availablePumpManagers,
             deleteData: (dataManager.pumpManager is TestingPumpManager) ? { [weak self] in self?.dataManager.deleteTestingPumpData()
                 } : nil,
             onTapped: { [weak self] in
-            self?.didSelectPump()
+                self?.didSelectPump()
+            },
+            didTapAddDevice: { [weak self] in
+                self?.setupPump(identifier: $0.identifier)
         })
+        
         let cgmViewModel = DeviceViewModel(
-            deviceManagerUI: dataManager.cgmManager as? DeviceManagerUI,
+            image: (dataManager.cgmManager as? DeviceManagerUI)?.smallImage,
+            name: dataManager.cgmManager?.localizedTitle ?? "",
             isSetUp: dataManager.cgmManager != nil,
+            availableDevices: dataManager.availableCGMManagers,
             deleteData: (dataManager.cgmManager is TestingCGMManager) ? { [weak self] in self?.dataManager.deleteTestingCGMData()
                 } : nil,
             onTapped: { [weak self] in
-            self?.didSelectCGM()
+                self?.didSelectCGM()
+            },
+            didTapAddDevice: { [weak self] in
+                self?.setupCGM(identifier: $0.identifier)
         })
         let pumpSupportedIncrements = dataManager.pumpManager.map {
             PumpSupportedIncrements(basalRates: $0.supportedBasalRates,

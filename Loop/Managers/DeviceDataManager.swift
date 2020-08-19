@@ -233,7 +233,11 @@ final class DeviceDataManager {
 
 
     var availableCGMManagers: [AvailableDevice] {
-        return pluginManager.availableCGMManagers + availableStaticCGMManagers
+        var availableCGMManagers = pluginManager.availableCGMManagers + availableStaticCGMManagers
+        if let pumpManagerAsCGMManager = pumpManager as? CGMManager {
+            availableCGMManagers.append(AvailableDevice(identifier: pumpManagerAsCGMManager.managerIdentifier, localizedTitle: pumpManagerAsCGMManager.localizedTitle))
+        }
+        return availableCGMManagers
     }
 
     public func cgmManagerTypeByIdentifier(_ identifier: String) -> CGMManagerUI.Type? {

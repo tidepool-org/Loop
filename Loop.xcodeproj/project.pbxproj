@@ -38,6 +38,7 @@
 		1DB1065124467E18005542BD /* AlertManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1065024467E18005542BD /* AlertManager.swift */; };
 		1DB1CA4D24A55F0000B3B94C /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1CA4C24A55F0000B3B94C /* Image.swift */; };
 		1DD0B76724EC77AC008A2DC3 /* SupportScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DD0B76624EC77AC008A2DC3 /* SupportScreenView.swift */; };
+		1DD0B76924ED9C8E008A2DC3 /* SettingsUICoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DD0B76824ED9C8E008A2DC3 /* SettingsUICoordinator.swift */; };
 		1DDE273D24AEA4B000796622 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1CA4E24A56D7600B3B94C /* SettingsViewModel.swift */; };
 		1DDE273E24AEA4B000796622 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DE09BA824A3E23F009EE9F9 /* SettingsView.swift */; };
 		1DDE273F24AEA4F200796622 /* NotificationsCriticalAlertPermissionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42C951624A3CAF200857C73 /* NotificationsCriticalAlertPermissionsViewModel.swift */; };
@@ -659,6 +660,7 @@
 		1DB1CA4C24A55F0000B3B94C /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		1DB1CA4E24A56D7600B3B94C /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		1DD0B76624EC77AC008A2DC3 /* SupportScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportScreenView.swift; sourceTree = "<group>"; };
+		1DD0B76824ED9C8E008A2DC3 /* SettingsUICoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUICoordinator.swift; sourceTree = "<group>"; };
 		1DE09BA824A3E23F009EE9F9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		1DFE9E162447B6270082C280 /* UserNotificationAlertPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserNotificationAlertPresenterTests.swift; sourceTree = "<group>"; };
 		4302F4E01D4E9C8900F0FCAF /* TextFieldTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFieldTableViewController.swift; sourceTree = "<group>"; };
@@ -1711,6 +1713,7 @@
 				43E3449E1B9D68E900C85C07 /* StatusTableViewController.swift */,
 				89CA2B31226C18B8004D9350 /* TestingScenariosTableViewController.swift */,
 				4302F4E01D4E9C8900F0FCAF /* TextFieldTableViewController.swift */,
+				1DD0B76824ED9C8E008A2DC3 /* SettingsUICoordinator.swift */,
 			);
 			path = "View Controllers";
 			sourceTree = "<group>";
@@ -2924,6 +2927,7 @@
 				43E93FB61E469A4000EAB8DB /* NumberFormatter.swift in Sources */,
 				C1FB428C217806A400FAB378 /* StateColorPalette.swift in Sources */,
 				4F08DE8F1E7BB871006741EA /* CollectionType+Loop.swift in Sources */,
+				1DD0B76924ED9C8E008A2DC3 /* SettingsUICoordinator.swift in Sources */,
 				A9F703772489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift in Sources */,
 				435400341C9F878D00D5819C /* SetBolusUserInfo.swift in Sources */,
 				1DDE273E24AEA4B000796622 /* SettingsView.swift in Sources */,

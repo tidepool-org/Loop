@@ -1338,14 +1338,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 setupCGMManager(for: cgmManagerType)
             }
         default:
-            let alert = UIAlertController(cgmManagers: cgmManagers, pumpManager: deviceManager.pumpManager as? CGMManager) { [weak self] (identifier, pumpManager) in
+            let alert = UIAlertController(cgmManagers: cgmManagers) { [weak self] identifier in
                 if let strongSelf = self {
-                    if let cgmManagerIdentifier = identifier,
-                        let cgmManagerType = strongSelf.deviceManager.cgmManagerTypeByIdentifier(cgmManagerIdentifier)
+                    if let cgmManagerType = strongSelf.deviceManager.cgmManagerTypeByIdentifier(identifier)
                     {
                         strongSelf.setupCGMManager(for: cgmManagerType)
-                    } else if let pumpManager = pumpManager {
-                        strongSelf.deviceManager.cgmManager = pumpManager
+                    } else if identifier == strongSelf.deviceManager.pumpManager?.managerIdentifier,
+                        let pumpManagerAsCGMManager = strongSelf.deviceManager.pumpManager as? CGMManager {
+                        strongSelf.deviceManager.cgmManager = pumpManagerAsCGMManager
                     }
                 }
             }
