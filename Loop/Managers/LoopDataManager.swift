@@ -875,9 +875,9 @@ extension LoopDataManager {
                     self.logger.error("%{public}@", String(describing: error))
                     self.carbEffect = nil
                     self.recentCarbEntries = nil
-                case .success(let (samples, effects)):
+                case .success(let (entries, effects)):
                     self.carbEffect = effects
-                    self.recentCarbEntries = samples
+                    self.recentCarbEntries = entries
                 }
 
                 updateGroup.leave()
