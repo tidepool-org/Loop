@@ -27,11 +27,11 @@ final class LoopDataManager {
 
     private let doseStore: DoseStoreProtocol
 
-    let dosingDecisionStore: DosingDecisionStore
+    let dosingDecisionStore: DosingDecisionStoreProtocol
 
     private let glucoseStore: GlucoseStoreProtocol
 
-    let settingsStore: SettingsStore
+    let settingsStore: SettingsStoreProtocol
 
     weak var delegate: LoopDataManagerDelegate?
 
@@ -65,8 +65,8 @@ final class LoopDataManager {
         doseStore: DoseStoreProtocol,
         glucoseStore: GlucoseStoreProtocol,
         carbStore: CarbStoreProtocol,
-        dosingDecisionStore: DosingDecisionStore,
-        settingsStore: SettingsStore,
+        dosingDecisionStore: DosingDecisionStoreProtocol,
+        settingsStore: SettingsStoreProtocol,
         now: @escaping () -> Date = { Date() }
     ) {
         self.analyticsServicesManager = analyticsServicesManager
@@ -1802,11 +1802,11 @@ extension LoopDataManager {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
         
-        guard let glucoseStore = glucoseStore as? GlucoseStore, let carbStore = carbStore as? CarbStore, let doseStore = doseStore as? DoseStore else {
+        guard let glucoseStore = glucoseStore as? GlucoseStore, let carbStore = carbStore as? CarbStore, let doseStore = doseStore as? DoseStore, let settingsStore = settingsStore as? SettingsStore, let dosingDecisionStore = dosingDecisionStore as? DosingDecisionStore else {
             fatalError("Mock stores should not be used to generate simulated core data")
         }
 
-        self.settingsStore.generateSimulatedHistoricalSettingsObjects() { error in
+        settingsStore.generateSimulatedHistoricalSettingsObjects() { error in
             guard error == nil else {
                 completion(error)
                 return
@@ -1821,7 +1821,7 @@ extension LoopDataManager {
                         completion(error)
                         return
                     }
-                    self.dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects() { error in
+                    dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects() { error in
                         guard error == nil else {
                             completion(error)
                             return
@@ -1838,7 +1838,7 @@ extension LoopDataManager {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
         
-        guard let glucoseStore = glucoseStore as? GlucoseStore, let carbStore = carbStore as? CarbStore, let doseStore = doseStore as? DoseStore else {
+        guard let glucoseStore = glucoseStore as? GlucoseStore, let carbStore = carbStore as? CarbStore, let doseStore = doseStore as? DoseStore, let settingsStore = settingsStore as? SettingsStore, let dosingDecisionStore = dosingDecisionStore as? DosingDecisionStore else {
             fatalError("Mock stores should not be used to generate simulated core data")
         }
 
@@ -1847,7 +1847,7 @@ extension LoopDataManager {
                 completion(error)
                 return
             }
-            self.dosingDecisionStore.purgeHistoricalDosingDecisionObjects() { error in
+            dosingDecisionStore.purgeHistoricalDosingDecisionObjects() { error in
                 guard error == nil else {
                     completion(error)
                     return
@@ -1863,7 +1863,7 @@ extension LoopDataManager {
                             completion(error)
                             return
                         }
-                        self.settingsStore.purgeHistoricalSettingsObjects(completion: completion)
+                        settingsStore.purgeHistoricalSettingsObjects(completion: completion)
                     }
                 }
             }

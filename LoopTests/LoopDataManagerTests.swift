@@ -100,6 +100,8 @@ class LoopDataManagerDosingTests: XCTestCase {
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
+            dosingDecisionStore: MockDosingDecisionStore(),
+            settingsStore: MockSettingsStore(),
             now: { currentDate }
         )
     }

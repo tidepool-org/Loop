@@ -233,9 +233,9 @@ final class DeviceDataManager {
         let remoteDataServicesManager = RemoteDataServicesManager(
             carbStore: carbStore,
             doseStore: doseStore,
-            dosingDecisionStore: loopManager.dosingDecisionStore,
+            dosingDecisionStore: dosingDecisionStore,
             glucoseStore: glucoseStore,
-            settingsStore: loopManager.settingsStore
+            settingsStore: settingsStore
         )
 
         servicesManager = ServicesManager(
@@ -254,9 +254,9 @@ final class DeviceDataManager {
 
         carbStore.delegate = self
         doseStore.delegate = self
-        loopManager.dosingDecisionStore.delegate = self
+        dosingDecisionStore.delegate = self
         glucoseStore.delegate = self
-        loopManager.settingsStore.delegate = self
+        settingsStore.delegate = self
 
         setupPump()
         setupCGM()

@@ -499,6 +499,10 @@
 		E95D380124EADE7C005E2F50 /* DoseStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E95D380024EADE7C005E2F50 /* DoseStoreProtocol.swift */; };
 		E95D380324EADF36005E2F50 /* CarbStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E95D380224EADF36005E2F50 /* CarbStoreProtocol.swift */; };
 		E95D380524EADF78005E2F50 /* GlucoseStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E95D380424EADF78005E2F50 /* GlucoseStoreProtocol.swift */; };
+		E98A55ED24EDD6380008715D /* SettingsStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55EC24EDD6380008715D /* SettingsStoreProtocol.swift */; };
+		E98A55EF24EDD6E60008715D /* DosingDecisionStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55EE24EDD6E60008715D /* DosingDecisionStoreProtocol.swift */; };
+		E98A55F124EDD85E0008715D /* MockDosingDecisionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55F024EDD85E0008715D /* MockDosingDecisionStore.swift */; };
+		E98A55F324EDD9530008715D /* MockSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55F224EDD9530008715D /* MockSettingsStore.swift */; };
 		E9C00EF224C6221B00628F35 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EEF24C620EF00628F35 /* LoopSettings.swift */; };
 		E9C00EF324C6222400628F35 /* LoopSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EEF24C620EF00628F35 /* LoopSettings.swift */; };
 		E9C00EF524C623EF00628F35 /* LoopSettings+Loop.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C00EF424C623EF00628F35 /* LoopSettings+Loop.swift */; };
@@ -1273,6 +1277,10 @@
 		E95D380024EADE7C005E2F50 /* DoseStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseStoreProtocol.swift; sourceTree = "<group>"; };
 		E95D380224EADF36005E2F50 /* CarbStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbStoreProtocol.swift; sourceTree = "<group>"; };
 		E95D380424EADF78005E2F50 /* GlucoseStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseStoreProtocol.swift; sourceTree = "<group>"; };
+		E98A55EC24EDD6380008715D /* SettingsStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreProtocol.swift; sourceTree = "<group>"; };
+		E98A55EE24EDD6E60008715D /* DosingDecisionStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DosingDecisionStoreProtocol.swift; sourceTree = "<group>"; };
+		E98A55F024EDD85E0008715D /* MockDosingDecisionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDosingDecisionStore.swift; sourceTree = "<group>"; };
+		E98A55F224EDD9530008715D /* MockSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSettingsStore.swift; sourceTree = "<group>"; };
 		E9C00EEF24C620EF00628F35 /* LoopSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopSettings.swift; sourceTree = "<group>"; };
 		E9C00EF424C623EF00628F35 /* LoopSettings+Loop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoopSettings+Loop.swift"; sourceTree = "<group>"; };
 		E9C58A7124DB489100487A17 /* LoopDataManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopDataManagerTests.swift; sourceTree = "<group>"; };
@@ -2278,6 +2286,8 @@
 				E93E86A724DDCC4400FF40C8 /* MockDoseStore.swift */,
 				E93E86AF24DDE1BD00FF40C8 /* MockGlucoseStore.swift */,
 				E93E86B124DDE21D00FF40C8 /* MockCarbStore.swift */,
+				E98A55F024EDD85E0008715D /* MockDosingDecisionStore.swift */,
+				E98A55F224EDD9530008715D /* MockSettingsStore.swift */,
 			);
 			path = "Mock Stores";
 			sourceTree = "<group>";
@@ -2312,6 +2322,8 @@
 				E95D380024EADE7C005E2F50 /* DoseStoreProtocol.swift */,
 				E95D380224EADF36005E2F50 /* CarbStoreProtocol.swift */,
 				E95D380424EADF78005E2F50 /* GlucoseStoreProtocol.swift */,
+				E98A55EC24EDD6380008715D /* SettingsStoreProtocol.swift */,
+				E98A55EE24EDD6E60008715D /* DosingDecisionStoreProtocol.swift */,
 			);
 			path = "Store Protocols";
 			sourceTree = "<group>";
@@ -3093,6 +3105,7 @@
 				4311FB9B1F37FE1B00D4C0A7 /* TitleSubtitleTextFieldTableViewCell.swift in Sources */,
 				B4FEEF7D24B8A71F00A8DF9B /* DeviceDataManager+DeviceStatus.swift in Sources */,
 				E95D380324EADF36005E2F50 /* CarbStoreProtocol.swift in Sources */,
+				E98A55ED24EDD6380008715D /* SettingsStoreProtocol.swift in Sources */,
 				C1FB428F217921D600FAB378 /* PumpManagerUI.swift in Sources */,
 				43C513191E864C4E001547C7 /* GlucoseRangeSchedule.swift in Sources */,
 				43A51E1F1EB6D62A000736CC /* CarbAbsorptionViewController.swift in Sources */,
@@ -3142,6 +3155,7 @@
 				1DDE274024AEA4F200796622 /* NotificationsCriticalAlertPermissionsView.swift in Sources */,
 				434FF1EE1CF27EEF000DB779 /* UITableViewCell.swift in Sources */,
 				439BED2A1E76093C00B0AED5 /* CGMManager.swift in Sources */,
+				E98A55EF24EDD6E60008715D /* DosingDecisionStoreProtocol.swift in Sources */,
 				C165B8CE23302C5D0004112E /* RemoteCommand.swift in Sources */,
 				E9C00EF524C623EF00628F35 /* LoopSettings+Loop.swift in Sources */,
 				438172D91F4E9E37003C3328 /* NewPumpEvent.swift in Sources */,
@@ -3405,9 +3419,11 @@
 				A9E6DFEA246A0448005B1A1C /* PumpManagerErrorTests.swift in Sources */,
 				1DA7A84424477698008257F0 /* InAppModalAlertPresenterTests.swift in Sources */,
 				E93E86A824DDCC4400FF40C8 /* MockDoseStore.swift in Sources */,
+				E98A55F124EDD85E0008715D /* MockDosingDecisionStore.swift in Sources */,
 				8968B114240C55F10074BB48 /* LoopSettingsTests.swift in Sources */,
 				1DA7A84224476EAD008257F0 /* AlertManagerTests.swift in Sources */,
 				E9C58A7324DB4A2700487A17 /* LoopDataManagerTests.swift in Sources */,
+				E98A55F324EDD9530008715D /* MockSettingsStore.swift in Sources */,
 				A9E6DFE6246A042E005B1A1C /* CarbStoreTests.swift in Sources */,
 				A9DAE7D02332D77F006AE942 /* LoopTests.swift in Sources */,
 				E93E86B024DDE1BD00FF40C8 /* MockGlucoseStore.swift in Sources */,
