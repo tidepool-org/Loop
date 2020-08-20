@@ -70,9 +70,8 @@ final class LoopDataManager {
         self.overrideHistory = overrideHistory
         
         let absorptionTimes = LoopSettings.defaultCarbAbsorptionTimes
-        let cacheDuration = absorptionTimes.slow * 2
         
-        self.overrideHistory.relevantTimeWindow = cacheDuration
+        self.overrideHistory.relevantTimeWindow = absorptionTimes.slow * 2
 
         let healthStore = HKHealthStore()
 
@@ -84,7 +83,7 @@ final class LoopDataManager {
             cacheStore: cacheStore,
             cacheLength: localCacheDuration,
             defaultAbsorptionTimes: absorptionTimes,
-            observationInterval: cacheDuration,
+            observationInterval: absorptionTimes.slow * 2,
             carbRatioSchedule: carbRatioSchedule,
             insulinSensitivitySchedule: insulinSensitivitySchedule,
             overrideHistory: overrideHistory,

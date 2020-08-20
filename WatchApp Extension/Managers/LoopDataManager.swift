@@ -68,7 +68,7 @@ class LoopDataManager {
 
         carbStore = CarbStore(
             healthStore: healthStore,
-            observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitSamplesFromOtherApps,
+            observeHealthKitSamplesFromOtherApps: false,
             cacheStore: cacheStore,
             cacheLength: cacheDuration,
             defaultAbsorptionTimes: absorptionTimes,

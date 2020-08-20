@@ -92,11 +92,11 @@ class StatusViewController: UIViewController, NCWidgetProviding {
     
     let absorptionTimes = LoopSettings.defaultCarbAbsorptionTimes
     lazy var carbStore = CarbStore(healthStore: healthStore,
-                                   observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitSamplesFromOtherApps,
+                                   observeHealthKitSamplesFromOtherApps: false,
                                    cacheStore: cacheStore,
-                                   cacheLength: TimeInterval(days: 1),
+                                   cacheLength: .hours(24),
                                    defaultAbsorptionTimes: absorptionTimes,
-                                   observationInterval: absorptionTimes.slow * 2)
+                                   observationInterval: 0)
     
     private var pluginManager: PluginManager = {
         let containingAppFrameworksURL = Bundle.main.privateFrameworksURL?.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Frameworks")
