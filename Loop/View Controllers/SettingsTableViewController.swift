@@ -748,9 +748,6 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
     private func setupCGM(identifier: String) {
         if let manager = self.dataManager.cgmManagerTypeByIdentifier(identifier) {
             self.setupCGMManager(manager)
-        } else if identifier == dataManager.pumpManager?.managerIdentifier,
-            let pumpManagerAsCGMManager = dataManager.pumpManager as? CGMManager {
-            self.completeCGMManagerSetup(pumpManagerAsCGMManager)
         } else {
             fatalError("Could not set up CGM")
         }
@@ -989,7 +986,8 @@ extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
             setupViewController.completionDelegate = self
             present(setupViewController, animated: true, completion: nil)
         } else {
-            completeCGMManagerSetup(CGMManagerType.init(rawState: [:]))
+            let m = CGMManagerType.init(rawState: [:])
+            completeCGMManagerSetup(m)
         }
     }
 

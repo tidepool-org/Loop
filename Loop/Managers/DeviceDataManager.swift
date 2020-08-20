@@ -241,7 +241,9 @@ final class DeviceDataManager {
     }
 
     public func cgmManagerTypeByIdentifier(_ identifier: String) -> CGMManagerUI.Type? {
-        return pluginManager.getCGMManagerTypeByIdentifier(identifier) ?? staticCGMManagersByIdentifier[identifier] as? CGMManagerUI.Type
+        return pluginManager.getCGMManagerTypeByIdentifier(identifier)
+            ?? staticCGMManagersByIdentifier[identifier] as? CGMManagerUI.Type
+            ?? (pumpManager as? CGMManagerUI).map { type(of: $0) }
     }
 
     private func cgmManagerTypeFromRawValue(_ rawValue: [String: Any]) -> CGMManager.Type? {
