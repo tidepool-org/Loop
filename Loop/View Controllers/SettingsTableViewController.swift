@@ -722,9 +722,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             
             switch cgmManagers.count {
             case 1:
-                if let cgmManager = cgmManagers.first {
-                    setupCGMManager(cgmManager.identifier)
-                }
+                setupCGMManager(cgmManagers.first!.identifier)
                 completion?()
             case let x where x > 1:
                 let alert = UIAlertController(cgmManagers: cgmManagers) { [weak self] (identifier) in
