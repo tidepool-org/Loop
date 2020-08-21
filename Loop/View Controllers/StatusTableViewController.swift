@@ -1575,8 +1575,8 @@ extension StatusTableViewController: AddEditOverrideTableViewControllerDelegate 
 extension StatusTableViewController: CGMManagerSetupViewControllerDelegate {
     fileprivate func setupCGMManager(_ identifier: String) {
         
-        switch deviceManager.setupCGMManager(identifier) {
-        case .alreadySetup(let cgmManager):
+        switch deviceManager.checkForCGMManager(identifier) {
+        case .alreadyPresent(let cgmManager):
             completeCGMManagerSetup(cgmManager)
         case .needsSetup(let cgmManagerType):
             if var setupViewController = cgmManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {

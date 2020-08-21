@@ -970,8 +970,8 @@ extension SettingsTableViewController: PumpManagerSetupViewControllerDelegate {
 extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
     fileprivate func setupCGMManager(identifier: String) {
         
-        switch dataManager.setupCGMManager(identifier) {
-        case .alreadySetup(let cgmManager):
+        switch dataManager.checkForCGMManager(identifier) {
+        case .alreadyPresent(let cgmManager):
             completeCGMManagerSetup(cgmManager)
         case .needsSetup(let cgmManagerType):
             if var setupViewController = cgmManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {

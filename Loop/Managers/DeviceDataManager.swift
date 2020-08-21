@@ -244,16 +244,16 @@ final class DeviceDataManager {
         return pluginManager.getCGMManagerTypeByIdentifier(identifier) ?? staticCGMManagersByIdentifier[identifier] as? CGMManagerUI.Type
     }
 
-    enum CGMSetupResult {
-        case alreadySetup(CGMManager)
+    enum CGMPresenceResult {
+        case alreadyPresent(CGMManager)
         case needsSetup(CGMManagerUI.Type)
         case noSuchCGM
     }
     
-    public func setupCGMManager(_ identifier: String) -> CGMSetupResult {
+    public func checkForCGMManager(_ identifier: String) -> CGMPresenceResult {
         if identifier == pumpManager?.managerIdentifier, let cgmManager = pumpManager as? CGMManager {
             // We have a pump that is a CGM!
-            return .alreadySetup(cgmManager)
+            return .alreadyPresent(cgmManager)
         }
         
         if let cgmManagerType = cgmManagerTypeByIdentifier(identifier) {
