@@ -671,13 +671,11 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             
             switch pumpManagers.count {
             case 1:
-                if let pumpManager = pumpManagers.first {
-                    setupPump(identifier: pumpManager.identifier)
-                }
+                setupPumpManager(identifier: pumpManagers.first!.identifier)
                 completion?()
             case let x where x > 1:
                 let alert = UIAlertController(pumpManagers: pumpManagers) { [weak self] (identifier) in
-                    self?.setupPump(identifier: identifier)
+                    self?.setupPumpManager(identifier: identifier)
                     completion?()
                 }
                 
@@ -692,7 +690,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         }
     }
     
-    private func setupPump(identifier: String) {
+    private func setupPumpManager(identifier: String) {
         if let manager = self.dataManager.pumpManagerTypeByIdentifier(identifier) {
             let setupViewController = self.configuredSetupViewController(for: manager)
             self.present(setupViewController, animated: true, completion: nil)
@@ -768,7 +766,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 self?.didSelectPump()
             },
             didTapAddDevice: { [weak self] in
-                self?.setupPump(identifier: $0.identifier)
+                self?.setupPumpManager(identifier: $0.identifier)
         })
         
         let cgmViewModel = DeviceViewModel(

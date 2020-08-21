@@ -241,8 +241,7 @@ final class DeviceDataManager {
     }
 
     public func cgmManagerTypeByIdentifier(_ identifier: String) -> CGMManagerUI.Type? {
-        return pluginManager.getCGMManagerTypeByIdentifier(identifier)
-            ?? staticCGMManagersByIdentifier[identifier] as? CGMManagerUI.Type
+        return pluginManager.getCGMManagerTypeByIdentifier(identifier) ?? staticCGMManagersByIdentifier[identifier] as? CGMManagerUI.Type
     }
 
     enum CGMSetupResult {
@@ -280,7 +279,7 @@ final class DeviceDataManager {
 
         return Manager.init(rawState: rawState) as? CGMManagerUI
     }
-    
+
     func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
         self.loopManager.generateDiagnosticReport { (loopReport) in
 
