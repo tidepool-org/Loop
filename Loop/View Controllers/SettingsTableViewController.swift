@@ -722,11 +722,11 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             
             switch cgmManagers.count {
             case 1:
-                setupCGMManager(cgmManagers.first!.identifier)
+                setupCGMManager(identifier: cgmManagers.first!.identifier)
                 completion?()
             case let x where x > 1:
                 let alert = UIAlertController(cgmManagers: cgmManagers) { [weak self] (identifier) in
-                    self?.setupCGMManager(identifier)
+                    self?.setupCGMManager(identifier: identifier)
                     completion?()
                 }
                 
@@ -778,7 +778,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 self?.didSelectCGM()
             },
             didTapAddDevice: { [weak self] in
-                self?.setupCGMManager($0.identifier)
+                self?.setupCGMManager(identifier: $0.identifier)
         })
         let pumpSupportedIncrements = dataManager.pumpManager.map {
             PumpSupportedIncrements(basalRates: $0.supportedBasalRates,
@@ -968,7 +968,7 @@ extension SettingsTableViewController: PumpManagerSetupViewControllerDelegate {
 
 
 extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
-    fileprivate func setupCGMManager(_ identifier: String) {
+    fileprivate func setupCGMManager(identifier: String) {
         
         switch dataManager.setupCGMManager(identifier) {
         case .alreadySetup(let cgmManager):
