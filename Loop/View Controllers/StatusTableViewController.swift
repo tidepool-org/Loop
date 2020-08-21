@@ -1573,30 +1573,6 @@ extension StatusTableViewController: AddEditOverrideTableViewControllerDelegate 
 }
 
 extension StatusTableViewController: CGMManagerSetupViewControllerDelegate {
-    fileprivate func setupCGMManager(_ identifier: String) {
-        
-        switch deviceManager.checkForCGMManager(identifier) {
-        case .alreadyPresent(let cgmManager):
-            completeCGMManagerSetup(cgmManager)
-        case .needsSetup(let cgmManagerType):
-            if var setupViewController = cgmManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {
-                setupViewController.setupDelegate = self
-                setupViewController.completionDelegate = self
-                present(setupViewController, animated: true, completion: nil)
-            } else {
-                completeCGMManagerSetup(cgmManagerType.init(rawState: [:]))
-            }
-        case .noSuchCGM:
-            // Is this what we want to do?
-            completeCGMManagerSetup(nil)
-            break
-        }
-    }
-
-    fileprivate func completeCGMManagerSetup(_ cgmManager: CGMManager?) {
-        deviceManager.cgmManager = cgmManager
-    }
-    
     func cgmManagerSetupViewController(_ cgmManagerSetupViewController: CGMManagerSetupViewController,
                                        didSetUpCGMManager cgmManager: CGMManagerUI)
     {
@@ -1640,6 +1616,32 @@ extension StatusTableViewController: BluetoothStateManagerObserver {
     {
         refreshContext.update(with: .status)
         reloadData(animated: true)
+    }
+}
+
+extension StatusTableViewController {
+    fileprivate func setupCGMManager(_ identifier: String) {
+        
+        switch deviceManager.checkForCGMManager(identifier) {
+        case .alreadyPresent(let cgmManager):
+            completeCGMManagerSetup(cgmManager)
+        case .needsSetup(let cgmManagerType):
+            if var setupViewController = cgmManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {
+                setupViewController.setupDelegate = self
+                setupViewController.completionDelegate = self
+                present(setupViewController, animated: true, completion: nil)
+            } else {
+                completeCGMManagerSetup(cgmManagerType.init(rawState: [:]))
+            }
+        case .noSuchCGM:
+            // Is this what we want to do?
+            completeCGMManagerSetup(nil)
+            break
+        }
+    }
+
+    fileprivate func completeCGMManagerSetup(_ cgmManager: CGMManager?) {
+        deviceManager.cgmManager = cgmManager
     }
 }
 
