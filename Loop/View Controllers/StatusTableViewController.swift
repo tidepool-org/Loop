@@ -1332,18 +1332,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         switch cgmManagers.count {
         case 1:
-            if let cgmManager = cgmManagers.first,
-                let cgmManagerType = deviceManager.cgmManagerTypeByIdentifier(cgmManager.identifier)
-            {
-                setupCGMManager(for: cgmManagerType)
-            }
+            setupCGMManager(cgmManagers.first!.identifier)
         default:
             let alert = UIAlertController(cgmManagers: cgmManagers) { [weak self] identifier in
-                if let strongSelf = self {
-                    if let cgmManagerType = strongSelf.deviceManager.cgmManagerTypeByIdentifier(identifier) {
-                        strongSelf.setupCGMManager(for: cgmManagerType)
-                    }
-                }
+                self?.setupCGMManager(identifier)
             }
             alert.addCancelAction { _ in }
             present(alert, animated: true, completion: nil)
@@ -1581,15 +1573,28 @@ extension StatusTableViewController: AddEditOverrideTableViewControllerDelegate 
 }
 
 extension StatusTableViewController: CGMManagerSetupViewControllerDelegate {
-    fileprivate func setupCGMManager(for cgmManagerType: CGMManagerUI.Type) {
-        if var setupViewController = cgmManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {
-            setupViewController.setupDelegate = self
-            setupViewController.completionDelegate = self
-            present(setupViewController, animated: true, completion: nil)
-        } else {
-            // adds the CGM simulator
-            deviceManager.cgmManager = cgmManagerType.init(rawState: [:])
+    fileprivate func setupCGMManager(_ identifier: String) {
+        
+        switch deviceManager.setupCGMManager(identifier) {
+        case .alreadySetup(let cgmManager):
+            completeCGMManagerSetup(cgmManager)
+        case .needsSetup(let cgmManagerType):
+            if var setupViewController = cgmManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {
+                setupViewController.setupDelegate = self
+                setupViewController.completionDelegate = self
+                present(setupViewController, animated: true, completion: nil)
+            } else {
+                completeCGMManagerSetup(cgmManagerType.init(rawState: [:]))
+            }
+        case .noSuchCGM:
+            // Is this what we want to do?
+            completeCGMManagerSetup(nil)
+            break
         }
+    }
+
+    fileprivate func completeCGMManagerSetup(_ cgmManager: CGMManager?) {
+        deviceManager.cgmManager = cgmManager
     }
     
     func cgmManagerSetupViewController(_ cgmManagerSetupViewController: CGMManagerSetupViewController,

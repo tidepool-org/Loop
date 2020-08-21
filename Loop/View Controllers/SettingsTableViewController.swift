@@ -725,12 +725,12 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
             switch cgmManagers.count {
             case 1:
                 if let cgmManager = cgmManagers.first {
-                    setupCGM(identifier: cgmManager.identifier)
+                    setupCGMManager(cgmManager.identifier)
                 }
                 completion?()
             case let x where x > 1:
                 let alert = UIAlertController(cgmManagers: cgmManagers) { [weak self] (identifier) in
-                    self?.setupCGM(identifier: identifier)
+                    self?.setupCGMManager(identifier)
                     completion?()
                 }
                 
@@ -745,14 +745,6 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         }
     }
     
-    private func setupCGM(identifier: String) {
-        if let manager = self.dataManager.cgmManagerTypeByIdentifier(identifier) {
-            self.setupCGMManager(manager)
-        } else {
-            fatalError("Could not set up CGM")
-        }
-    }
-
     private func presentAlertPermissionsSettings(_ tableView: UITableView, _ indexPath: IndexPath) {
         let hostingController = DismissibleHostingController(
             rootView: NotificationsCriticalAlertPermissionsView(backButtonText: NSLocalizedString("Settings", comment: "Settings return button"),
@@ -790,7 +782,7 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
                 self?.didSelectCGM()
             },
             didTapAddDevice: { [weak self] in
-                self?.setupCGM(identifier: $0.identifier)
+                self?.setupCGMManager($0.identifier)
         })
         let pumpSupportedIncrements = dataManager.pumpManager.map {
             PumpSupportedIncrements(basalRates: $0.supportedBasalRates,
@@ -980,14 +972,23 @@ extension SettingsTableViewController: PumpManagerSetupViewControllerDelegate {
 
 
 extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
-    fileprivate func setupCGMManager(_ CGMManagerType: CGMManagerUI.Type) {
-        if var setupViewController = CGMManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {
-            setupViewController.setupDelegate = self
-            setupViewController.completionDelegate = self
-            present(setupViewController, animated: true, completion: nil)
-        } else {
-            let m = CGMManagerType.init(rawState: [:])
-            completeCGMManagerSetup(m)
+    fileprivate func setupCGMManager(_ identifier: String) {
+        
+        switch dataManager.setupCGMManager(identifier) {
+        case .alreadySetup(let cgmManager):
+            completeCGMManagerSetup(cgmManager)
+        case .needsSetup(let cgmManagerType):
+            if var setupViewController = cgmManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {
+                setupViewController.setupDelegate = self
+                setupViewController.completionDelegate = self
+                present(setupViewController, animated: true, completion: nil)
+            } else {
+                completeCGMManagerSetup(cgmManagerType.init(rawState: [:]))
+            }
+        case .noSuchCGM:
+            // Is this what we want to do?
+            completeCGMManagerSetup(nil)
+            break
         }
     }
 

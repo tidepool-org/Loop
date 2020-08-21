@@ -243,9 +243,26 @@ final class DeviceDataManager {
     public func cgmManagerTypeByIdentifier(_ identifier: String) -> CGMManagerUI.Type? {
         return pluginManager.getCGMManagerTypeByIdentifier(identifier)
             ?? staticCGMManagersByIdentifier[identifier] as? CGMManagerUI.Type
-            ?? (pumpManager as? CGMManagerUI).map { type(of: $0) }
     }
 
+    enum CGMSetupResult {
+        case alreadySetup(CGMManager)
+        case needsSetup(CGMManagerUI.Type)
+        case noSuchCGM
+    }
+    
+    public func setupCGMManager(_ identifier: String) -> CGMSetupResult {
+        if identifier == pumpManager?.managerIdentifier, let cgmManager = pumpManager as? CGMManager {
+            // We have a pump that is a CGM!
+            return .alreadySetup(cgmManager)
+        }
+        
+        if let cgmManagerType = cgmManagerTypeByIdentifier(identifier) {
+            return .needsSetup(cgmManagerType)
+        }
+        return .noSuchCGM
+    }
+    
     private func cgmManagerTypeFromRawValue(_ rawValue: [String: Any]) -> CGMManager.Type? {
         guard let managerIdentifier = rawValue["managerIdentifier"] as? String else {
             return nil
@@ -263,7 +280,7 @@ final class DeviceDataManager {
 
         return Manager.init(rawState: rawState) as? CGMManagerUI
     }
-
+    
     func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
         self.loopManager.generateDiagnosticReport { (loopReport) in
 
