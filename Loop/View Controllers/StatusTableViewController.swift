@@ -1247,7 +1247,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
                                                   availableServices: deviceManager.servicesManager.availableServices,
                                                   activeServices: deviceManager.servicesManager.activeServices,
-                                                  delegate: nil/*self*/)
+                                                  delegate: self)
         let viewModel = SettingsViewModel(appNameAndVersion: Bundle.main.localizedNameAndVersion,
                                           notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
@@ -1781,4 +1781,52 @@ extension StatusTableViewController: SettingsViewModelDelegate {
         vc.title = title
         show(vc, sender: nil)
     }
+}
+
+// MARK: - Services delegation
+
+extension StatusTableViewController: ServiceSetupDelegate {
+    func serviceSetupNotifying(_ object: ServiceSetupNotifying, didCreateService service: Service) {
+        deviceManager.servicesManager.addActiveService(service)
+    }
+}
+
+extension StatusTableViewController: ServiceSettingsDelegate {
+    func serviceSettingsNotifying(_ object: ServiceSettingsNotifying, didDeleteService service: Service) {
+        deviceManager.servicesManager.removeActiveService(service)
+    }
+}
+
+extension StatusTableViewController: ServicesViewModelDelegate {
+    func addService(identifier: String) {
+        setupService(withIdentifier: identifier)
+    }
+    func gotoService(identifier: String) {
+        guard let serviceUI = deviceManager.servicesManager.activeServices.first(where: { $0.serviceIdentifier == identifier }) as? ServiceUI else {
+            return
+        }
+        didTapService(serviceUI)
+    }
+    
+    fileprivate func didTapService(_ serviceUI: ServiceUI) {
+        var settings = serviceUI.settingsViewController(chartColors: .primary, carbTintColor: .carbTintColor, glucoseTintColor: .glucoseTintColor, guidanceColors: .default, insulinTintColor: .insulinTintColor)
+        settings.serviceSettingsDelegate = self
+        settings.completionDelegate = self
+        present(settings, animated: true)
+    }
+    
+    fileprivate func setupService(withIdentifier identifier: String) {
+        guard let serviceUIType = deviceManager.servicesManager.serviceUITypeByIdentifier(identifier) else {
+            return
+        }
+
+        if var setupViewController = serviceUIType.setupViewController() {
+            setupViewController.serviceSetupDelegate = self
+            setupViewController.completionDelegate = self
+            present(setupViewController, animated: true, completion: nil)
+        } else if let service = serviceUIType.init(rawState: [:]) {
+            deviceManager.servicesManager.addActiveService(service)
+        }
+    }
+
 }
