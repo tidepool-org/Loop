@@ -1619,29 +1619,30 @@ extension StatusTableViewController: BluetoothStateManagerObserver {
     }
 }
 
+private class DelegateShim: CGMManagerSetupViewControllerDelegate {
+    let completion: (CGMManager?) -> Void
+    init(completion: @escaping (CGMManager?) -> Void) {
+        self.completion = completion
+    }
+    func cgmManagerSetupViewController(_ cgmManagerSetupViewController: CGMManagerSetupViewController, didSetUpCGMManager cgmManager: CGMManagerUI) {
+        self.completion(cgmManager)
+    }
+}
+
 extension StatusTableViewController {
     fileprivate func setupCGMManager(_ identifier: String) {
-        
-        switch deviceManager.checkForCGMManager(identifier) {
-        case .alreadyPresent(let cgmManager):
-            completeCGMManagerSetup(cgmManager)
-        case .needsSetup(let cgmManagerType):
+        deviceManager.maybeSetupCGMManager(identifier) { cgmManagerType, setupCompletion in
             if var setupViewController = cgmManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {
-                setupViewController.setupDelegate = self
+                let shim = DelegateShim {
+                    setupCompletion($0)
+                }
+                setupViewController.setupDelegate = shim
                 setupViewController.completionDelegate = self
                 present(setupViewController, animated: true, completion: nil)
             } else {
-                completeCGMManagerSetup(cgmManagerType.init(rawState: [:]))
+                setupCompletion(cgmManagerType.init(rawState: [:]))
             }
-        case .noSuchCGM:
-            // Is this what we want to do?
-            completeCGMManagerSetup(nil)
-            break
         }
-    }
-
-    fileprivate func completeCGMManagerSetup(_ cgmManager: CGMManager?) {
-        deviceManager.cgmManager = cgmManager
     }
 }
 
