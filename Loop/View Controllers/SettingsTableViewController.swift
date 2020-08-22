@@ -973,36 +973,36 @@ extension SettingsTableViewController: PumpManagerSetupViewControllerDelegate {
     }
 }
 
+private class DelegateShim: CGMManagerSetupViewControllerDelegate {
+    let completion: (CGMManager?) -> Void
+    init(completion: @escaping (CGMManager?) -> Void) {
+        self.completion = completion
+    }
+    func cgmManagerSetupViewController(_ cgmManagerSetupViewController: CGMManagerSetupViewController, didSetUpCGMManager cgmManager: CGMManagerUI) {
+        self.completion(cgmManager)
+    }
+}
 
 extension SettingsTableViewController: CGMManagerSetupViewControllerDelegate {
     fileprivate func setupCGMManager(identifier: String) {
-        
-        switch dataManager.checkForCGMManager(identifier) {
-        case .alreadyPresent(let cgmManager):
-            completeCGMManagerSetup(cgmManager)
-        case .needsSetup(let cgmManagerType):
+        dataManager.maybeSetupCGMManager(identifier) { cgmManagerType, setupCompletion in
             if var setupViewController = cgmManagerType.setupViewController(glucoseTintColor: .glucoseTintColor, guidanceColors: .default) {
-                setupViewController.setupDelegate = self
+                let shim = DelegateShim {
+                    setupCompletion($0)
+                    self.updateSelectedDeviceManagerRows()
+                }
+                setupViewController.setupDelegate = shim
                 setupViewController.completionDelegate = self
                 present(setupViewController, animated: true, completion: nil)
             } else {
-                completeCGMManagerSetup(cgmManagerType.init(rawState: [:]))
+                setupCompletion(cgmManagerType.init(rawState: [:]))
             }
-        case .noSuchCGM:
-            // Is this what we want to do?
-            completeCGMManagerSetup(nil)
-            break
         }
-    }
-
-    fileprivate func completeCGMManagerSetup(_ cgmManager: CGMManager?) {
-        dataManager.cgmManager = cgmManager
-
         updateSelectedDeviceManagerRows()
     }
 
     func cgmManagerSetupViewController(_ cgmManagerSetupViewController: CGMManagerSetupViewController, didSetUpCGMManager cgmManager: CGMManagerUI) {
-        completeCGMManagerSetup(cgmManager)
+        updateSelectedDeviceManagerRows()
     }
 }
 
