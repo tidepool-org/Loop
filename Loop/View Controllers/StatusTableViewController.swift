@@ -12,6 +12,7 @@ import Intents
 import LoopCore
 import LoopKit
 import LoopKitUI
+import LoopTestingKit
 import LoopUI
 import SwiftCharts
 import os.log
@@ -1201,6 +1202,91 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
     }
     
+    @IBAction func onSettingsTapped(_ sender: UIBarButtonItem) {
+        presentSettings()
+    }
+    
+    private func presentSettings() {
+        let notificationsCriticalAlertPermissionsViewModel = NotificationsCriticalAlertPermissionsViewModel()
+        let pumpViewModel = DeviceViewModel(
+            image: deviceManager.pumpManager?.smallImage,
+            name: deviceManager.pumpManager?.localizedTitle ?? "",
+            isSetUp: deviceManager.pumpManager != nil,
+            availableDevices: deviceManager.availablePumpManagers,
+            deleteData: (deviceManager.pumpManager is TestingPumpManager) ? {
+                [weak self] in self?.deviceManager.deleteTestingPumpData()
+                } : nil,
+            onTapped: { [weak self] in
+                self?.onPumpTapped()
+            },
+            didTapAddDevice: { [weak self] in
+                if let pumpManagerType = self?.deviceManager.pumpManagerTypeByIdentifier($0.identifier) {
+                    self?.setupPumpManager(for: pumpManagerType)
+                }
+        })
+        
+        let cgmViewModel = DeviceViewModel(
+            image: (deviceManager.cgmManager as? DeviceManagerUI)?.smallImage,
+            name: deviceManager.cgmManager?.localizedTitle ?? "",
+            isSetUp: deviceManager.cgmManager != nil,
+            availableDevices: deviceManager.availableCGMManagers,
+            deleteData: (deviceManager.cgmManager is TestingCGMManager) ? {
+                [weak self] in self?.deviceManager.deleteTestingCGMData()
+                } : nil,
+            onTapped: { [weak self] in
+                self?.onCGMTapped()
+            },
+            didTapAddDevice: { [weak self] in
+                self?.setupCGMManager($0.identifier)
+        })
+        let pumpSupportedIncrements = deviceManager.pumpManager.map {
+            PumpSupportedIncrements(basalRates: $0.supportedBasalRates,
+                                    bolusVolumes: $0.supportedBolusVolumes,
+                                    maximumBasalScheduleEntryCount: $0.maximumBasalScheduleEntryCount)
+        }
+        let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
+                                                  availableServices: deviceManager.servicesManager.availableServices,
+                                                  activeServices: deviceManager.servicesManager.activeServices,
+                                                  delegate: nil/*self*/)
+        let viewModel = SettingsViewModel(appNameAndVersion: Bundle.main.localizedNameAndVersion,
+                                          notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
+                                          pumpManagerSettingsViewModel: pumpViewModel,
+                                          cgmManagerSettingsViewModel: cgmViewModel,
+                                          servicesViewModel: servicesViewModel,
+                                          therapySettings: deviceManager.loopManager.therapySettings,
+                                          supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
+                                          pumpSupportedIncrements: pumpSupportedIncrements,
+                                          syncPumpSchedule: deviceManager.pumpManager?.syncBasalRateSchedule,
+                                          sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
+                                          initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
+                                          delegate: self
+        )
+        let hostingController = DismissibleHostingController(
+            rootView: SettingsView(viewModel: viewModel).environment(\.appName, Bundle.main.bundleDisplayName))
+        present(hostingController, animated: true)
+    }
+    
+    private func onPumpTapped() {
+        guard var settings = deviceManager.pumpManager?.settingsViewController(insulinTintColor: .insulinTintColor, guidanceColors: .default) else {
+            // assert?
+            return
+        }
+        settings.completionDelegate = self
+        present(settings, animated: true)
+    }
+
+    private func onCGMTapped() {
+        guard let unit = deviceManager.loopManager.glucoseStore.preferredUnit,
+            let cgmManager = deviceManager.cgmManager as? CGMManagerUI else {
+            // assert?
+            return
+        }
+        
+        var settings = cgmManager.settingsViewController(for: unit, glucoseTintColor: .glucoseTintColor, guidanceColors: .default)
+        settings.completionDelegate = self
+        present(settings, animated: true)
+    }
+
     // MARK: - HUDs
     
     @IBOutlet var hudView: StatusBarHUDView? {
@@ -1649,5 +1735,50 @@ fileprivate extension UIViewController {
     /// Argumentless wrapper around `dismiss(animated:)` in order to pass as a selector
     @objc func dismissWithAnimation() {
         dismiss(animated: true)
+    }
+}
+
+// MARK: - SettingsViewModel delegation
+extension StatusTableViewController: SettingsViewModelDelegate {
+    func dosingEnabledChanged(_ value: Bool) {
+        DispatchQueue.main.async {
+            self.deviceManager.loopManager.settings.dosingEnabled = value
+        }
+    }
+    
+    func didSave(therapySetting: TherapySetting, therapySettings: TherapySettings) {
+        switch therapySetting {
+        case .glucoseTargetRange:
+            deviceManager?.loopManager.settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule
+        case .preMealCorrectionRangeOverride:
+            deviceManager?.loopManager.settings.preMealTargetRange = therapySettings.preMealTargetRange
+        case .workoutCorrectionRangeOverride:
+            deviceManager?.loopManager.settings.legacyWorkoutTargetRange = therapySettings.workoutTargetRange
+        case .suspendThreshold:
+            deviceManager?.loopManager.settings.suspendThreshold = therapySettings.suspendThreshold
+        case .basalRate:
+            deviceManager?.loopManager.basalRateSchedule = therapySettings.basalRateSchedule
+        case .deliveryLimits:
+            deviceManager?.loopManager.settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour
+            deviceManager?.loopManager.settings.maximumBolus = therapySettings.maximumBolus
+        case .insulinModel:
+            if let insulinModelSettings = therapySettings.insulinModelSettings {
+                deviceManager?.loopManager.insulinModelSettings = insulinModelSettings
+            }
+        case .carbRatio:
+            deviceManager?.loopManager.carbRatioSchedule = therapySettings.carbRatioSchedule
+            deviceManager?.analyticsServicesManager.didChangeCarbRatioSchedule()
+        case .insulinSensitivity:
+            deviceManager?.loopManager.insulinSensitivitySchedule = therapySettings.insulinSensitivitySchedule
+            deviceManager?.analyticsServicesManager.didChangeInsulinSensitivitySchedule()
+        case .none:
+            break // NO-OP
+        }
+    }
+    
+    func createIssueReport(title: String) {
+        let vc = CommandResponseViewController.generateDiagnosticReport(deviceManager: deviceManager)
+        vc.title = title
+        show(vc, sender: nil)
     }
 }

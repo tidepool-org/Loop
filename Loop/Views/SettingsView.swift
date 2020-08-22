@@ -326,7 +326,8 @@ public struct SettingsView_Previews: PreviewProvider {
                                           pumpSupportedIncrements: nil,
                                           syncPumpSchedule: nil,
                                           sensitivityOverridesEnabled: false,
-                                          initialDosingEnabled: true)
+                                          initialDosingEnabled: true,
+                                          delegate: nil)
         return Group {
             SettingsView(viewModel: viewModel)
                 .colorScheme(.light)
