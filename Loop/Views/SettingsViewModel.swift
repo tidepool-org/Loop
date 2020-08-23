@@ -13,8 +13,9 @@ import LoopKitUI
 import SwiftUI
 
 public class DeviceViewModel: ObservableObject {
-    let image: UIImage?
-    let name: String
+    let isSetUp: () -> Bool
+    let image: () -> UIImage?
+    let name: () -> String
     let deleteData: (() -> Void)?
     let onTapped: () -> Void
     let didTapAddDevice: (AvailableDevice) -> Void
@@ -22,12 +23,11 @@ public class DeviceViewModel: ObservableObject {
         return deleteData != nil
     }
 
-    @Published private(set) var isSetUp: Bool = false
     @Published var availableDevices: [AvailableDevice]
 
-    public init(image: UIImage? = nil,
-                name: String = "",
-                isSetUp: Bool = false,
+    public init(image: @escaping () -> UIImage? = { nil },
+                name: @escaping () -> String = { "" },
+                isSetUp: @escaping () -> Bool = { false },
                 availableDevices: [AvailableDevice] = [],
                 deleteData: (() -> Void)? = nil,
                 onTapped: @escaping () -> Void = { },

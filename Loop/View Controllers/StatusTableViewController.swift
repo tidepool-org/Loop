@@ -1209,9 +1209,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private func presentSettings() {
         let notificationsCriticalAlertPermissionsViewModel = NotificationsCriticalAlertPermissionsViewModel()
         let pumpViewModel = DeviceViewModel(
-            image: deviceManager.pumpManager?.smallImage,
-            name: deviceManager.pumpManager?.localizedTitle ?? "",
-            isSetUp: deviceManager.pumpManager != nil,
+            image: { [weak self] in self?.deviceManager.pumpManager?.smallImage },
+            name: { [weak self] in self?.deviceManager.pumpManager?.localizedTitle ?? "" },
+            isSetUp: { [weak self] in self?.deviceManager.pumpManager != nil },
             availableDevices: deviceManager.availablePumpManagers,
             deleteData: (deviceManager.pumpManager is TestingPumpManager) ? {
                 [weak self] in self?.deviceManager.deleteTestingPumpData()
@@ -1226,9 +1226,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
         })
         
         let cgmViewModel = DeviceViewModel(
-            image: (deviceManager.cgmManager as? DeviceManagerUI)?.smallImage,
-            name: deviceManager.cgmManager?.localizedTitle ?? "",
-            isSetUp: deviceManager.cgmManager != nil,
+            image: {[weak self] in (self?.deviceManager.cgmManager as? DeviceManagerUI)?.smallImage },
+            name: {[weak self] in self?.deviceManager.cgmManager?.localizedTitle ?? "" },
+            isSetUp: {[weak self] in self?.deviceManager.cgmManager != nil },
             availableDevices: deviceManager.availableCGMManagers,
             deleteData: (deviceManager.cgmManager is TestingCGMManager) ? {
                 [weak self] in self?.deviceManager.deleteTestingCGMData()
