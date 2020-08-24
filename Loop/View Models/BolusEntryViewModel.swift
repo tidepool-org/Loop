@@ -214,7 +214,7 @@ final class BolusEntryViewModel: ObservableObject {
                     break
                 }
             }
-        } else if let _ = potentialCarbEntry  { // Allow user to save carbs without bolusing
+        } else if potentialCarbEntry != nil  { // Allow user to save carbs without bolusing
             self.continueSaving(onSuccess: completion)
         }
     }
