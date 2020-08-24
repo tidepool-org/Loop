@@ -11,7 +11,6 @@ import SwiftUI
 enum SelectedButton {
     case on
     case off
-    case none
 }
 
 class OnOffSelectionViewModel: ObservableObject {
@@ -27,7 +26,7 @@ class OnOffSelectionViewModel: ObservableObject {
         message: String,
         onSelection: @escaping (Bool) -> Void,
         dismiss: (() -> Void)? = nil,
-        selectedButton: SelectedButton = .none,
+        selectedButton: SelectedButton = .off,
         selectedButtonTint: UIColor = .tintColor
     ) {
         self.title = title
