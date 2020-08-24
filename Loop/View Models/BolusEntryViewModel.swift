@@ -208,8 +208,10 @@ final class BolusEntryViewModel: ObservableObject {
             let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString)
             authenticate(message) {
                 switch $0 {
-                case .success: self.continueSaving(onSuccess: completion)
-                case .failure: break
+                case .success:
+                    self.continueSaving(onSuccess: completion)
+                case .failure:
+                    break
                 }
             }
         }
