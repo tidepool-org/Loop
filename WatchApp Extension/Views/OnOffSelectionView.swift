@@ -7,9 +7,6 @@
 //
 
 import SwiftUI
-import HealthKit
-import LoopKit
-
 
 struct OnOffSelectionView: View {
     // MARK: - Initialization

@@ -6,11 +6,8 @@
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
-import WatchKit
 import SwiftUI
-import HealthKit
 import LoopCore
-import LoopKit
 
 
 final class OnOffSelectionController: WKHostingController<OnOffSelectionView>, IdentifiableClass {
