@@ -14,6 +14,7 @@ import os.log
 import LoopKit
 import LoopKitUI
 import LoopUI
+import SwiftUI
 
 
 final class BolusEntryViewModel: ObservableObject {
@@ -32,6 +33,8 @@ final class BolusEntryViewModel: ObservableObject {
         case predictedGlucoseBelowSuspendThreshold(suspendThreshold: HKQuantity)
         case staleGlucoseData
     }
+
+    @Environment(\.authenticate) var authenticate
 
     // MARK: - State
 
@@ -193,6 +196,19 @@ final class BolusEntryViewModel: ObservableObject {
             return
         }
 
+        // Authenticate the bolus before saving anything
+        if enteredBolus.doubleValue(for: .internationalUnit()) > 0 {
+            let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString)
+            authenticate(message) {
+                switch $0 {
+                case .success: self.continueSaving(onSuccess: completion)
+                case .failure: break
+                }
+            }
+        }
+    }
+    
+    private func continueSaving(onSuccess completion: @escaping () -> Void) {
         if let manualGlucoseSample = manualGlucoseSample {
             guard Self.validManualGlucoseEntryRange.contains(manualGlucoseSample.quantity) else {
                 presentAlert(.manualGlucoseEntryOutOfAcceptableRange)
@@ -219,7 +235,7 @@ final class BolusEntryViewModel: ObservableObject {
 
     private func saveCarbsAndDeliverBolus(onSuccess completion: @escaping () -> Void) {
         guard let carbEntry = potentialCarbEntry else {
-            authenticateAndDeliverBolus(onSuccess: completion)
+            deliverBolus(onSuccess: completion)
             return
         }
 
@@ -237,7 +253,7 @@ final class BolusEntryViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success:
-                    self.authenticateAndDeliverBolus(onSuccess: completion)
+                    self.deliverBolus(onSuccess: completion)
                 case .failure(let error):
                     self.isInitiatingSaveOrBolus = false
                     self.presentAlert(.carbEntryPersistenceFailure)
@@ -247,7 +263,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func authenticateAndDeliverBolus(onSuccess completion: @escaping () -> Void) {
+    private func deliverBolus(onSuccess completion: @escaping () -> Void) {
         let bolusVolume = enteredBolus.doubleValue(for: .internationalUnit())
         guard bolusVolume > 0 else {
             completion()
@@ -255,28 +271,8 @@ final class BolusEntryViewModel: ObservableObject {
         }
 
         isInitiatingSaveOrBolus = true
-
-        let context = LAContext()
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil) else {
-            dataManager.enactBolus(units: bolusVolume)
-            completion()
-            return
-        }
-
-        context.evaluatePolicy(
-            .deviceOwnerAuthentication,
-            localizedReason: String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString),
-            reply: { success, error in
-                DispatchQueue.main.async {
-                    if success {
-                        self.dataManager.enactBolus(units: bolusVolume)
-                        completion()
-                    } else {
-                        self.isInitiatingSaveOrBolus = false
-                    }
-                }
-            }
-        )
+        dataManager.enactBolus(units: bolusVolume)
+        completion()
     }
 
     private func presentAlert(_ alert: Alert) {
