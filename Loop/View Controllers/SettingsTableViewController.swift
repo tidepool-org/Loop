@@ -754,9 +754,9 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
     
     private func presentTemporaryNewSettings(_ tableView: UITableView, _ indexPath: IndexPath) {
         let pumpViewModel = DeviceViewModel(
-            image: dataManager.pumpManager?.smallImage,
-            name: dataManager.pumpManager?.localizedTitle ?? "",
-            isSetUp: dataManager.pumpManager != nil,
+            image: {  [weak self] in self?.dataManager.pumpManager?.smallImage },
+            name: {  [weak self] in self?.dataManager.pumpManager?.localizedTitle ?? "" },
+            isSetUp: {  [weak self] in self?.dataManager.pumpManager != nil },
             availableDevices: dataManager.availablePumpManagers,
             deleteData: (dataManager.pumpManager is TestingPumpManager) ? { [weak self] in self?.dataManager.deleteTestingPumpData()
                 } : nil,
@@ -768,9 +768,9 @@ final class SettingsTableViewController: UITableViewController, IdentifiableClas
         })
         
         let cgmViewModel = DeviceViewModel(
-            image: (dataManager.cgmManager as? DeviceManagerUI)?.smallImage,
-            name: dataManager.cgmManager?.localizedTitle ?? "",
-            isSetUp: dataManager.cgmManager != nil,
+            image: {  [weak self] in (self?.dataManager.cgmManager as? DeviceManagerUI)?.smallImage },
+            name: {  [weak self] in self?.dataManager.cgmManager?.localizedTitle ?? "" },
+            isSetUp: {  [weak self] in self?.dataManager.cgmManager != nil },
             availableDevices: dataManager.availableCGMManagers,
             deleteData: (dataManager.cgmManager is TestingCGMManager) ? { [weak self] in self?.dataManager.deleteTestingCGMData()
                 } : nil,

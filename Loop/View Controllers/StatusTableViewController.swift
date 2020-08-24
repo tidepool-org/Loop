@@ -1276,7 +1276,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func onCGMTapped() {
-        guard let unit = deviceManager.loopManager.glucoseStore.preferredUnit,
+        guard let unit = preferredUnit,
             let cgmManager = deviceManager.cgmManager as? CGMManagerUI else {
             // assert?
             return
