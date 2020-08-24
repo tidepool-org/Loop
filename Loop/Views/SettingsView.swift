@@ -166,6 +166,8 @@ extension SettingsView {
     private var cgmChoices: [ActionSheet.Button] {
         var result = viewModel.cgmManagerSettingsViewModel.availableDevices.map { availableDevice in
             ActionSheet.Button.default(Text(availableDevice.localizedTitle)) {
+                // TODO: this "dismiss then call didTapAddDevice()" here is temporary, until we've completely gotten rid of SettingsTableViewController
+                self.dismiss()
                 self.viewModel.cgmManagerSettingsViewModel.didTapAddDevice(availableDevice)
             }
         }
