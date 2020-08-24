@@ -196,6 +196,13 @@ final class BolusEntryViewModel: ObservableObject {
             return
         }
 
+        if let manualGlucoseSample = manualGlucoseSample {
+            guard Self.validManualGlucoseEntryRange.contains(manualGlucoseSample.quantity) else {
+                presentAlert(.manualGlucoseEntryOutOfAcceptableRange)
+                return
+            }
+        }
+
         // Authenticate the bolus before saving anything
         if enteredBolus.doubleValue(for: .internationalUnit()) > 0 {
             let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString)
@@ -210,11 +217,6 @@ final class BolusEntryViewModel: ObservableObject {
     
     private func continueSaving(onSuccess completion: @escaping () -> Void) {
         if let manualGlucoseSample = manualGlucoseSample {
-            guard Self.validManualGlucoseEntryRange.contains(manualGlucoseSample.quantity) else {
-                presentAlert(.manualGlucoseEntryOutOfAcceptableRange)
-                return
-            }
-
             isInitiatingSaveOrBolus = true
             dataManager.loopManager.addGlucose([manualGlucoseSample]) { result in
                 DispatchQueue.main.async {
