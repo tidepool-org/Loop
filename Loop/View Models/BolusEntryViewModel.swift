@@ -101,8 +101,10 @@ final class BolusEntryViewModel: ObservableObject {
         observeEnteredManualGlucoseChanges()
         observeElapsedTime()
 
+//        print("started updating rec ")
         update {
-            self.setRecommendedBolus()
+//            self.setRecommendedBolus()
+//            print("set rec")
         }
     }
 
@@ -417,6 +419,7 @@ final class BolusEntryViewModel: ObservableObject {
         dispatchPrecondition(condition: .notOnQueue(.main))
 
         let (manualGlucoseSample, enteredBolus) = DispatchQueue.main.sync { (self.manualGlucoseSample, self.enteredBolus) }
+        print("entered dose rec is \(enteredBolus)")
         let enteredBolusDose = DoseEntry(type: .bolus, startDate: Date(), value: enteredBolus.doubleValue(for: .internationalUnit()), unit: .units)
 
         let predictedGlucoseValues: [GlucoseValue]
