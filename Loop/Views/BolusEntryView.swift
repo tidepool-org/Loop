@@ -69,9 +69,9 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     let amount = updatedBolusEntry.doubleValue(for: .internationalUnit())
                     self.enteredBolusAmount = amount == 0 ? "" : Self.doseAmountFormatter.string(from: amount) ?? String(amount)
             }
-            .onReceive(self.viewModel.$recommendedBolus) { _ in
-                self.viewModel.setRecommendedBolus()
-            }
+//            .onReceive(self.viewModel.$recommendedBolus) { _ in
+//                self.viewModel.setRecommendedBolus()
+//            }
             .onReceive(self.viewModel.$isManualGlucoseEntryEnabled) { isManualGlucoseEntryEnabled in
                 // The view model can disable manual glucose entry if CGM data returns.
                 if !isManualGlucoseEntryEnabled {

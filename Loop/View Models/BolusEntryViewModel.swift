@@ -107,6 +107,10 @@ final class BolusEntryViewModel: ObservableObject {
 //            print("set rec")
         }
     }
+    
+    public func updateWithCompletion(_ completion: @escaping () -> Void) {
+        update(completion)
+    }
 
     private func observeLoopUpdates() {
         NotificationCenter.default
@@ -475,8 +479,8 @@ final class BolusEntryViewModel: ObservableObject {
             self.updateRecommendedBolusAndNotice(from: state, isUpdatingFromUserInput: false)
             DispatchQueue.main.async {
                 self.updateSettings()
-                completion()
             }
+            // dispatch group, after wait call completion
         }
     }
 
