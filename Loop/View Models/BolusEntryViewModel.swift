@@ -168,7 +168,7 @@ final class BolusEntryViewModel: ObservableObject {
         return recommendedBolus.doubleValue(for: .internationalUnit()) > 0
     }
 
-    func acceptRecommendedBolus() {
+    func setRecommendedBolus() {
         guard isBolusRecommended else { return }
         enteredBolus = recommendedBolus!
 

@@ -34,7 +34,6 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 List {
                     self.historySection
                     self.summarySection
-                    // Initialize the bolus entry field with the recommended bolus
                 }
                 // As of iOS 13, we can't programmatically scroll to the Bolus entry text field.  This ugly hack scoots the
                 // list up instead, so the summarySection is visible and the keyboard shows when you tap "Enter Bolus".
@@ -70,11 +69,8 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     let amount = updatedBolusEntry.doubleValue(for: .internationalUnit())
                     self.enteredBolusAmount = amount == 0 ? "" : Self.doseAmountFormatter.string(from: amount) ?? String(amount)
             }
-            .onReceive(self.viewModel.$recommendedBolus) { recommendedBolus in
-                self.viewModel.enteredBolus = recommendedBolus ?? HKQuantity(unit: .internationalUnit(), doubleValue: 0)
-                let amount = recommendedBolus?.doubleValue(for: .internationalUnit()) ?? 0
-                self.enteredBolusAmount = amount == 0 ? "" : Self.doseAmountFormatter.string(from: amount) ?? String(amount)
-                print("updated rec bolus amount to \(self.enteredBolusAmount)")
+            .onReceive(self.viewModel.$recommendedBolus) { _ in
+                self.viewModel.setRecommendedBolus()
             }
             .onReceive(self.viewModel.$isManualGlucoseEntryEnabled) { isManualGlucoseEntryEnabled in
                 // The view model can disable manual glucose entry if CGM data returns.
