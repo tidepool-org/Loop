@@ -256,11 +256,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
             HStack(alignment: .firstTextBaseline) {
                 Text(recommendedBolusString)
                     .font(.title)
-                    .foregroundColor(viewModel.enteredBolus.doubleValue(for: .internationalUnit()) == 0 && viewModel.isBolusRecommended ? .accentColor : Color(.label))
-                    .onTapGesture {
-                        self.viewModel.acceptRecommendedBolus()
-                    }
-
+                    .foregroundColor(Color(.label))
                 bolusUnitsLabel
             }
         }
@@ -298,7 +294,13 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var typedBolusEntry: Binding<String> {
         Binding(
-            get: { self.enteredBolusAmount },
+            get: {
+                if self.viewModel.enteredBolus.doubleValue(for: .internationalUnit()) != 0 {
+                    return self.enteredBolusAmount
+                }
+                
+                return self.recommendedBolusString
+            },
             set: { newValue in
                 self.viewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
                 self.enteredBolusAmount = newValue
