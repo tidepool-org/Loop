@@ -34,6 +34,11 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 List {
                     self.historySection
                     self.summarySection
+                    // Initialize the bolus entry field with the recommended bolus
+                    .onAppear {
+                        print("rec string", self.recommendedBolusString)
+                        self.enteredBolusAmount = self.recommendedBolusString
+                    }
                 }
                 // As of iOS 13, we can't programmatically scroll to the Bolus entry text field.  This ugly hack scoots the
                 // list up instead, so the summarySection is visible and the keyboard shows when you tap "Enter Bolus".
@@ -294,12 +299,12 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var typedBolusEntry: Binding<String> {
         Binding(
-            get: {
-                if self.viewModel.enteredBolus.doubleValue(for: .internationalUnit()) != 0 {
-                    return self.enteredBolusAmount
-                }
-                
-                return self.recommendedBolusString
+            get: { self.enteredBolusAmount
+//                if self.viewModel.enteredBolus.doubleValue(for: .internationalUnit()) != 0 {
+//                    return self.enteredBolusAmount
+//                }
+//
+//                return self.recommendedBolusString
             },
             set: { newValue in
                 self.viewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
