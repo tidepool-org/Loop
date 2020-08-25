@@ -637,7 +637,7 @@ extension LoopDataManager {
                                                                   recommendedTempBasal: StoredDosingDecision.TempBasalRecommendationWithDate(state.recommendedTempBasal),
                                                                   recommendedBolus: StoredDosingDecision.BolusRecommendationWithDate(state.recommendedBolus),
                                                                   pumpManagerStatus: self.delegate?.pumpManagerStatus,
-                                                                  notificationSettings: notificationSettings,
+                                                                  notificationSettings: StoredDosingDecision.NotificationSettings(notificationSettings),
                                                                   deviceSettings: UIDevice.current.deviceSettings,
                                                                   errors: [error, state.error, insulinOnBoardError].compactMap { $0 })
                         self.dosingDecisionStore.storeDosingDecision(dosingDecision) {}
@@ -664,7 +664,7 @@ extension LoopDataManager {
                                       maximumBolus: loopSettings.maximumBolus,
                                       suspendThreshold: loopSettings.suspendThreshold,
                                       deviceToken: loopSettings.deviceToken?.hexadecimalString,
-                                      insulinModel: appGroup.insulinModelSettings.map { StoredSettings.InsulinModel($0) },
+                                      insulinModel: appGroup.insulinModelSettings.map { StoredInsulinModel($0) },
                                       basalRateSchedule: appGroup.basalRateSchedule,
                                       insulinSensitivitySchedule: appGroup.insulinSensitivitySchedule,
                                       carbRatioSchedule: appGroup.carbRatioSchedule,
@@ -1790,6 +1790,23 @@ private extension StoredDosingDecision.BolusRecommendationWithDate {
             return nil
         }
         self.init(recommendation: bolusRecommendationDate.recommendation, date: bolusRecommendationDate.date)
+    }
+}
+
+private extension StoredDosingDecision.NotificationSettings {
+    init(_ notificationSettings: UNNotificationSettings) {
+        self.init(authorizationStatus: StoredDosingDecision.NotificationSettings.AuthorizationStatus(notificationSettings.authorizationStatus),
+                  soundSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.soundSetting),
+                  badgeSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.badgeSetting),
+                  alertSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.alertSetting),
+                  notificationCenterSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.notificationCenterSetting),
+                  lockScreenSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.lockScreenSetting),
+                  carPlaySetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.carPlaySetting),
+                  alertStyle: StoredDosingDecision.NotificationSettings.AlertStyle(notificationSettings.alertStyle),
+                  showPreviewsSetting: StoredDosingDecision.NotificationSettings.ShowPreviewsSetting(notificationSettings.showPreviewsSetting),
+                  criticalAlertSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.criticalAlertSetting),
+                  providesAppNotificationSettings: notificationSettings.providesAppNotificationSettings,
+                  announcementSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.announcementSetting))
     }
 }
 
