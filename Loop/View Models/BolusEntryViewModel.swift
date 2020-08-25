@@ -98,7 +98,9 @@ final class BolusEntryViewModel: ObservableObject {
         observeEnteredManualGlucoseChanges()
         observeElapsedTime()
 
-        update()
+        update {
+            self.setRecommendedBolus()
+        }
     }
 
     private func observeLoopUpdates() {
@@ -171,6 +173,7 @@ final class BolusEntryViewModel: ObservableObject {
     func setRecommendedBolus() {
         guard isBolusRecommended else { return }
         enteredBolus = recommendedBolus!
+        print("entered rec \(enteredBolus)")
 
         dataManager.loopManager.getLoopState { [weak self] manager, state in
             self?.updatePredictedGlucoseValues(from: state)
@@ -358,7 +361,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func update() {
+    private func update(_ completion: @escaping () -> Void = { }) {
         dispatchPrecondition(condition: .onQueue(.main))
 
         // Prevent any UI updates after a bolus has been initiated.
@@ -367,7 +370,7 @@ final class BolusEntryViewModel: ObservableObject {
         disableManualGlucoseEntryIfNecessary()
         updateChartDateInterval()
         updateStoredGlucoseValues()
-        updateFromLoopState()
+        updateFromLoopState(completion)
         updateActiveInsulin()
     }
 
@@ -456,7 +459,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func updateFromLoopState() {
+    private func updateFromLoopState(_ completion: @escaping () -> Void = { }) {
         dataManager.loopManager.getLoopState { [weak self] manager, state in
             guard let self = self else { return }
 
@@ -465,6 +468,7 @@ final class BolusEntryViewModel: ObservableObject {
             self.updateRecommendedBolusAndNotice(from: state, isUpdatingFromUserInput: false)
             DispatchQueue.main.async {
                 self.updateSettings()
+                completion()
             }
         }
     }
