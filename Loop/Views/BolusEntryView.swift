@@ -71,8 +71,9 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                     self.enteredBolusAmount = amount == 0 ? "" : Self.doseAmountFormatter.string(from: amount) ?? String(amount)
             }
             .onReceive(self.viewModel.$recommendedBolus) { recommendedBolus in
+                self.viewModel.enteredBolus = recommendedBolus ?? HKQuantity(unit: .internationalUnit(), doubleValue: 0)
                 let amount = recommendedBolus?.doubleValue(for: .internationalUnit()) ?? 0
-                self.enteredBolusAmount = Self.doseAmountFormatter.string(from: amount) ?? String(amount)
+                self.enteredBolusAmount = amount == 0 ? "" : Self.doseAmountFormatter.string(from: amount) ?? String(amount)
                 print("updated rec bolus amount to \(self.enteredBolusAmount)")
             }
             .onReceive(self.viewModel.$isManualGlucoseEntryEnabled) { isManualGlucoseEntryEnabled in
@@ -300,13 +301,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var typedBolusEntry: Binding<String> {
         Binding(
-            get: { self.enteredBolusAmount
-//                if self.viewModel.enteredBolus.doubleValue(for: .internationalUnit()) != 0 {
-//                    return self.enteredBolusAmount
-//                }
-//
-//                return self.recommendedBolusString
-            },
+            get: { self.enteredBolusAmount },
             set: { newValue in
                 self.viewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
                 self.enteredBolusAmount = newValue
