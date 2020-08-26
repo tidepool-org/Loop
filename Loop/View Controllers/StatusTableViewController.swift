@@ -1779,7 +1779,7 @@ extension StatusTableViewController: SettingsViewModelDelegate {
         }
     }
     
-    func createIssueReport(title: String) {
+    func didTapIssueReport(title: String) {
         // TODO: this dismiss here is temporary, until we know exactly where
         // we want this screen to belong in the navigation flow
         dismiss(animated: true) {

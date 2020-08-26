@@ -116,7 +116,7 @@ extension SettingsView {
     @ViewBuilder
     private var pumpSection: some View {
         if viewModel.pumpManagerSettingsViewModel.isSetUp() {
-            LargeButton(action: self.viewModel.pumpManagerSettingsViewModel.onTapped,
+            LargeButton(action: self.viewModel.pumpManagerSettingsViewModel.didTap,
                         imageView: deviceImage(uiImage: viewModel.pumpManagerSettingsViewModel.image()),
                         label: viewModel.pumpManagerSettingsViewModel.name(),
                         descriptiveText: NSLocalizedString("Insulin Pump", comment: "Descriptive text for Insulin Pump"))
@@ -134,7 +134,7 @@ extension SettingsView {
     private var pumpChoices: [ActionSheet.Button] {
         var result = viewModel.pumpManagerSettingsViewModel.availableDevices.map { availableDevice in
             ActionSheet.Button.default(Text(availableDevice.localizedTitle)) {
-                self.viewModel.pumpManagerSettingsViewModel.didTapAddDevice(availableDevice)
+                self.viewModel.pumpManagerSettingsViewModel.didTapAdd(availableDevice)
             }
         }
         result.append(.cancel())
@@ -144,7 +144,7 @@ extension SettingsView {
     @ViewBuilder
     private var cgmSection: some View {
         if viewModel.cgmManagerSettingsViewModel.isSetUp() {
-            LargeButton(action: self.viewModel.cgmManagerSettingsViewModel.onTapped,
+            LargeButton(action: self.viewModel.cgmManagerSettingsViewModel.didTap,
                         imageView: deviceImage(uiImage: viewModel.cgmManagerSettingsViewModel.image()),
                         label: viewModel.cgmManagerSettingsViewModel.name(),
                         descriptiveText: NSLocalizedString("Continuous Glucose Monitor", comment: "Descriptive text for Continuous Glucose Monitor"))
@@ -162,7 +162,7 @@ extension SettingsView {
     private var cgmChoices: [ActionSheet.Button] {
         var result = viewModel.cgmManagerSettingsViewModel.availableDevices.map { availableDevice in
             ActionSheet.Button.default(Text(availableDevice.localizedTitle)) {
-                self.viewModel.cgmManagerSettingsViewModel.didTapAddDevice(availableDevice)
+                self.viewModel.cgmManagerSettingsViewModel.didTapAdd(availableDevice)
             }
         }
         result.append(.cancel())
@@ -222,7 +222,7 @@ extension SettingsView {
     
     private var supportSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Support", comment: "The title of the support section in settings"))) {
-            NavigationLink(destination: SupportScreenView(issueReport: viewModel.issueReport)) {
+            NavigationLink(destination: SupportScreenView(didTapIssueReport: viewModel.didTapIssueReport)) {
                 Text(NSLocalizedString("Support", comment: "The title of the support item in settings"))
             }
         }

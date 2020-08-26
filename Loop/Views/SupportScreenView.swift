@@ -12,13 +12,13 @@ import SwiftUI
 struct SupportScreenView: View, HorizontalSizeClassOverride {
     @Environment(\.dismiss) private var dismiss
     
-    var issueReport: ((_ title: String) -> Void)?
+    var didTapIssueReport: ((_ title: String) -> Void)?
     
     var body: some View {
         List {
             Section {
                 Button(action: {
-                    self.issueReport?(NSLocalizedString("Issue Report", comment: "The title text for the issue report menu item"))
+                    self.didTapIssueReport?(NSLocalizedString("Issue Report", comment: "The title text for the issue report menu item"))
                 }) {
                     Text("Issue Report", comment: "The title text for the issue report menu item")
                 }
