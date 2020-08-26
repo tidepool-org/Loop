@@ -104,10 +104,6 @@ final class BolusEntryViewModel: ObservableObject {
 
         update()
     }
-    
-    public func updateWithCompletion(_ completion: @escaping () -> Void) {
-        update(completion)
-    }
 
     private func observeLoopUpdates() {
         NotificationCenter.default
@@ -366,7 +362,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func update(_ completion: @escaping () -> Void = { }) {
+    private func update() {
         dispatchPrecondition(condition: .onQueue(.main))
 
         // Prevent any UI updates after a bolus has been initiated.
@@ -375,7 +371,7 @@ final class BolusEntryViewModel: ObservableObject {
         disableManualGlucoseEntryIfNecessary()
         updateChartDateInterval()
         updateStoredGlucoseValues()
-        updateFromLoopState(completion)
+        updateFromLoopState()
         updateActiveInsulin()
     }
 
@@ -474,7 +470,6 @@ final class BolusEntryViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self.updateSettings()
             }
-            // dispatch group, after wait call completion
         }
     }
 
