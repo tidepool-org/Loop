@@ -578,17 +578,15 @@ extension DeviceDataManager: PumpManagerDelegate {
         // Update the pump-schedule based settings
         loopManager.setScheduleTimeZone(status.timeZone)
         
-        if status.deliveryIsUncertain != oldStatus.deliveryIsUncertain {
-            DispatchQueue.main.async {
-                if status.deliveryIsUncertain {
-                    // Entered uncertain delivery status; show modal
-                    self.showUncertainDeliveryAlert()
-                } else {
-                    // delivery status resolved. Clear modal
-                    if let alert = self.uncertainDeliveryAlert {
-                        alert.dismiss(animated: true, completion: nil)
-                        self.uncertainDeliveryAlert = nil
-                    }
+        DispatchQueue.main.async {
+            if status.deliveryIsUncertain && self.uncertainDeliveryAlert == nil {
+                // Entered uncertain delivery status; show modal
+                self.showUncertainDeliveryAlert()
+            } else if !status.deliveryIsUncertain && self.uncertainDeliveryAlert != nil {
+                // delivery status resolved. Clear modal
+                if let alert = self.uncertainDeliveryAlert {
+                    alert.dismiss(animated: true, completion: nil)
+                    self.uncertainDeliveryAlert = nil
                 }
             }
         }
@@ -596,17 +594,8 @@ extension DeviceDataManager: PumpManagerDelegate {
     
     private func showUncertainDeliveryRecoveryView() {
         if let pumpManager = self.pumpManager {
-            let deliveryUncertaintyRecoveryView = pumpManager.deliveryUncertaintyRecoveryView()
-            let controller = DismissibleHostingController(
-                rootView: deliveryUncertaintyRecoveryView,
-                dismissalMode: .modalDismiss,
-                isModalInPresentation: true)
-            {
-                // If delivery still uncertain after recovery view dismissal, present modal alert again.
-                if pumpManager.status.deliveryIsUncertain {
-                    self.showUncertainDeliveryAlert(animated: false)
-                }
-            }
+            var controller = pumpManager.deliveryUncertaintyRecoveryViewController(insulinTintColor: .insulinTintColor, guidanceColors: .default)
+            controller.completionDelegate = self
             self.rootViewController.present(controller, animated: true)
         }
     }
@@ -623,6 +612,7 @@ extension DeviceDataManager: PumpManagerDelegate {
             self.showUncertainDeliveryRecoveryView()
         }
         alert.addAction(action)
+        self.rootViewController.dismiss(animated: true)
         self.rootViewController.present(alert, animated: animated)
         self.uncertainDeliveryAlert = alert
     }
@@ -946,5 +936,20 @@ extension DeviceDataManager: BluetoothStateManagerObserver {
                                bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
     {
         self.bluetoothState = bluetoothState
+    }
+}
+
+//MARK: - Completion delegate for delivery uncertainty
+
+extension DeviceDataManager: CompletionDelegate {
+    func completionNotifyingDidComplete(_ object: CompletionNotifying) {
+        // If delivery still uncertain after recovery view dismissal, present modal alert again.
+        if let vc = object as? UIViewController {
+            vc.dismiss(animated: true) {
+                if let pumpManager = self.pumpManager, pumpManager.status.deliveryIsUncertain {
+                    self.showUncertainDeliveryAlert(animated: false)
+                }
+            }
+        }
     }
 }
