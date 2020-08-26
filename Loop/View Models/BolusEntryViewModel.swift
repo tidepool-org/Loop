@@ -470,7 +470,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func updateFromLoopState(_ completion: @escaping () -> Void = { }) {
+    private func updateFromLoopState() {
         dataManager.loopManager.getLoopState { [weak self] manager, state in
             guard let self = self else { return }
 
