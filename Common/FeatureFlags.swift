@@ -92,7 +92,7 @@ struct FeatureFlagConfiguration: Decodable {
         #endif
         
         // Swift compiler config is inverse, since the default state is enabled.
-        #if MOCK_THERAPY_SETTINGS_DISABLED
+        #if MOCK_THERAPY_SETTINGS_ENABLED
         self.mockTherapySettingsEnabled = false
         #else
         self.mockTherapySettingsEnabled = true
