@@ -116,8 +116,7 @@ extension SettingsView {
     @ViewBuilder
     private var pumpSection: some View {
         if viewModel.pumpManagerSettingsViewModel.isSetUp() {
-            // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
-            LargeButton(action: { self.dismiss(); self.viewModel.pumpManagerSettingsViewModel.onTapped() },
+            LargeButton(action: self.viewModel.pumpManagerSettingsViewModel.onTapped,
                         imageView: deviceImage(uiImage: viewModel.pumpManagerSettingsViewModel.image()),
                         label: viewModel.pumpManagerSettingsViewModel.name(),
                         descriptiveText: NSLocalizedString("Insulin Pump", comment: "Descriptive text for Insulin Pump"))
@@ -135,8 +134,6 @@ extension SettingsView {
     private var pumpChoices: [ActionSheet.Button] {
         var result = viewModel.pumpManagerSettingsViewModel.availableDevices.map { availableDevice in
             ActionSheet.Button.default(Text(availableDevice.localizedTitle)) {
-                // TODO: this "dismiss then call didTapAddDevice()" here is temporary, until we've completely gotten rid of SettingsTableViewController
-                self.dismiss()
                 self.viewModel.pumpManagerSettingsViewModel.didTapAddDevice(availableDevice)
             }
         }
@@ -147,8 +144,7 @@ extension SettingsView {
     @ViewBuilder
     private var cgmSection: some View {
         if viewModel.cgmManagerSettingsViewModel.isSetUp() {
-            // TODO: this "dismiss then call onTapped()" here is temporary, until we've completely gotten rid of SettingsTableViewController
-            LargeButton(action: { self.dismiss(); self.viewModel.cgmManagerSettingsViewModel.onTapped() },
+            LargeButton(action: self.viewModel.cgmManagerSettingsViewModel.onTapped,
                         imageView: deviceImage(uiImage: viewModel.cgmManagerSettingsViewModel.image()),
                         label: viewModel.cgmManagerSettingsViewModel.name(),
                         descriptiveText: NSLocalizedString("Continuous Glucose Monitor", comment: "Descriptive text for Continuous Glucose Monitor"))
@@ -166,8 +162,6 @@ extension SettingsView {
     private var cgmChoices: [ActionSheet.Button] {
         var result = viewModel.cgmManagerSettingsViewModel.availableDevices.map { availableDevice in
             ActionSheet.Button.default(Text(availableDevice.localizedTitle)) {
-                // TODO: this "dismiss then call didTapAddDevice()" here is temporary, until we've completely gotten rid of SettingsTableViewController
-                self.dismiss()
                 self.viewModel.cgmManagerSettingsViewModel.didTapAddDevice(availableDevice)
             }
         }
@@ -178,8 +172,7 @@ extension SettingsView {
     private var servicesSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Services", comment: "The title of the services section in settings"))) {
             ForEach(viewModel.servicesViewModel.activeServices.indices, id: \.self) { index in
-                // TODO: this "dismiss then call didTapService()" here is temporary, until we've completely gotten rid of SettingsTableViewController
-                Button(action: { self.dismiss(); self.viewModel.servicesViewModel.didTapService(index) }, label: {
+                Button(action: { self.viewModel.servicesViewModel.didTapService(index) }, label: {
                     Text(self.viewModel.servicesViewModel.activeServices[index].localizedTitle)
                 })
                     .accentColor(.primary)
@@ -196,8 +189,6 @@ extension SettingsView {
     private var serviceChoices: [ActionSheet.Button] {
         var result = viewModel.servicesViewModel.inactiveServices.map { availableService in
             ActionSheet.Button.default(Text(availableService.localizedTitle)) {
-                // TODO: this "dismiss then call didTapAddService()" here is temporary, until we've completely gotten rid of SettingsTableViewController
-                self.dismiss()
                 self.viewModel.servicesViewModel.didTapAddService(availableService)
             }
         }

@@ -18,8 +18,6 @@ struct SupportScreenView: View, HorizontalSizeClassOverride {
         List {
             Section {
                 Button(action: {
-                    // TODO: this "dismiss then call issueReport()" here is temporary, until we've completely gotten rid of SettingsTableViewController
-                    self.dismiss()
                     self.issueReport?(NSLocalizedString("Issue Report", comment: "The title text for the issue report menu item"))
                 }) {
                     Text("Issue Report", comment: "The title text for the issue report menu item")
