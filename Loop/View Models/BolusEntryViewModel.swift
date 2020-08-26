@@ -100,12 +100,9 @@ final class BolusEntryViewModel: ObservableObject {
         observeEnteredBolusChanges()
         observeEnteredManualGlucoseChanges()
         observeElapsedTime()
+        observeRecommendedBolusChanges()
 
-//        print("started updating rec ")
-        update {
-//            self.setRecommendedBolus()
-//            print("set rec")
-        }
+        update()
     }
     
     public func updateWithCompletion(_ completion: @escaping () -> Void) {
@@ -182,8 +179,6 @@ final class BolusEntryViewModel: ObservableObject {
     func setRecommendedBolus() {
         guard isBolusRecommended else { return }
         enteredBolus = recommendedBolus!
-        print("entered rec \(enteredBolus)")
-
         dataManager.loopManager.getLoopState { [weak self] manager, state in
             self?.updatePredictedGlucoseValues(from: state)
         }
@@ -423,7 +418,6 @@ final class BolusEntryViewModel: ObservableObject {
         dispatchPrecondition(condition: .notOnQueue(.main))
 
         let (manualGlucoseSample, enteredBolus) = DispatchQueue.main.sync { (self.manualGlucoseSample, self.enteredBolus) }
-        print("entered dose rec is \(enteredBolus)")
         let enteredBolusDose = DoseEntry(type: .bolus, startDate: Date(), value: enteredBolus.doubleValue(for: .internationalUnit()), unit: .units)
 
         let predictedGlucoseValues: [GlucoseValue]
