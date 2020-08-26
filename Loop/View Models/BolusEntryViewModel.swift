@@ -125,6 +125,16 @@ final class BolusEntryViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
+    private func observeRecommendedBolusChanges() {
+        $recommendedBolus
+            .removeDuplicates()
+            .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.setRecommendedBolus()
+            }
+            .store(in: &cancellables)
+    }
+
     private func observeEnteredManualGlucoseChanges() {
         $enteredManualGlucose
             .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
