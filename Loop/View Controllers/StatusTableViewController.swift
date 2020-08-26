@@ -1125,8 +1125,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case let vc as PredictionTableViewController:
             vc.deviceManager = deviceManager
             vc.preferredGlucoseUnit = preferredUnit
-        case let vc as SettingsTableViewController:
-            vc.dataManager = deviceManager
         default:
             break
         }
