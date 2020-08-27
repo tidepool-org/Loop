@@ -98,6 +98,7 @@ struct FeatureFlagConfiguration: Decodable {
         self.mockTherapySettingsEnabled = false
         #endif
         
+        // Swift compiler config is inverse, since the default state is enabled.
         #if DELETE_ALL_BUTTON_DISABLED
         self.deleteAllButtonEnabled = false
         #else
