@@ -20,6 +20,7 @@ public struct SettingsView: View, HorizontalSizeClassOverride {
     @State var showPumpChooser: Bool = false
     @State var showCGMChooser: Bool = false
     @State var showServiceChooser: Bool = false
+    @State var showTherapySettings: Bool = false
 
     public init(viewModel: SettingsViewModel) {
         self.viewModel = viewModel
@@ -57,7 +58,7 @@ public struct SettingsView: View, HorizontalSizeClassOverride {
 extension SettingsView {
         
     private var dismissButton: some View {
-        Button(action: { self.dismiss() }) {
+        Button(action: dismiss) {
             Text("Done").bold()
         }
     }
@@ -89,19 +90,22 @@ extension SettingsView {
         
     private var therapySettingsSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Configuration", comment: "The title of the Configuration section in settings"))) {
-            return NavigationLink(destination: TherapySettingsView(
-                viewModel: TherapySettingsViewModel(mode: .settings,
-                                                    therapySettings: viewModel.therapySettings,
-                                                    supportedInsulinModelSettings: viewModel.supportedInsulinModelSettings,
-                                                    pumpSupportedIncrements: viewModel.pumpSupportedIncrements,
-                                                    syncPumpSchedule: viewModel.syncPumpSchedule,
-                                                    chartColors: .primary,
-                                                    didSave: viewModel.didSave))) {
-                LargeButton(action: { },
+            LargeButton(action: { self.showTherapySettings = true },
                             includeArrow: false,
                             imageView: AnyView(Image("Therapy Icon")),
                             label: NSLocalizedString("Therapy Settings", comment: "Title text for button to Therapy Settings"),
                             descriptiveText: NSLocalizedString("Diabetes Treatment", comment: "Descriptive text for Therapy Settings"))
+                .sheet(isPresented: $showTherapySettings) {
+                    TherapySettingsView(
+                        viewModel: TherapySettingsViewModel(mode: .settings,
+                                                            therapySettings: self.viewModel.therapySettings,
+                                                            supportedInsulinModelSettings: self.viewModel.supportedInsulinModelSettings,
+                                                            pumpSupportedIncrements: self.viewModel.pumpSupportedIncrements,
+                                                            syncPumpSchedule: self.viewModel.syncPumpSchedule,
+                                                            chartColors: .primary,
+                                                            didSave: self.viewModel.didSave)
+                    )
+                    .environment(\.dismiss, self.dismiss)
             }
         }
     }
@@ -117,11 +121,13 @@ extension SettingsView {
     private var pumpSection: some View {
         if viewModel.pumpManagerSettingsViewModel.isSetUp() {
             LargeButton(action: self.viewModel.pumpManagerSettingsViewModel.didTap,
+                        includeArrow: false,
                         imageView: deviceImage(uiImage: viewModel.pumpManagerSettingsViewModel.image()),
                         label: viewModel.pumpManagerSettingsViewModel.name(),
                         descriptiveText: NSLocalizedString("Insulin Pump", comment: "Descriptive text for Insulin Pump"))
         } else {
             LargeButton(action: { self.showPumpChooser = true },
+                        includeArrow: false,
                         imageView: AnyView(plusImage),
                         label: NSLocalizedString("Add Pump", comment: "Title text for button to add pump device"),
                         descriptiveText: NSLocalizedString("Tap here to set up a pump", comment: "Descriptive text for button to add pump device"))
@@ -145,11 +151,13 @@ extension SettingsView {
     private var cgmSection: some View {
         if viewModel.cgmManagerSettingsViewModel.isSetUp() {
             LargeButton(action: self.viewModel.cgmManagerSettingsViewModel.didTap,
+                        includeArrow: false,
                         imageView: deviceImage(uiImage: viewModel.cgmManagerSettingsViewModel.image()),
                         label: viewModel.cgmManagerSettingsViewModel.name(),
                         descriptiveText: NSLocalizedString("Continuous Glucose Monitor", comment: "Descriptive text for Continuous Glucose Monitor"))
         } else {
             LargeButton(action: { self.showCGMChooser = true },
+                        includeArrow: false,
                         imageView: AnyView(plusImage),
                         label: NSLocalizedString("Add CGM", comment: "Title text for button to add CGM device"),
                         descriptiveText: NSLocalizedString("Tap here to set up a CGM", comment: "Descriptive text for button to add CGM device"))
