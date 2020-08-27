@@ -98,10 +98,10 @@ struct FeatureFlagConfiguration: Decodable {
         self.mockTherapySettingsEnabled = false
         #endif
         
-        #if DELETE_ALL_BUTTON_ENABLED
-        self.deleteAllButtonEnabled = true
-        #else
+        #if DELETE_ALL_BUTTON_DISABLED
         self.deleteAllButtonEnabled = false
+        #else
+        self.deleteAllButtonEnabled = true
         #endif
     }
 }
