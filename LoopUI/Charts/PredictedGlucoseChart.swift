@@ -305,8 +305,8 @@ extension PredictedGlucoseChart {
         var maximum: HKQuantity
         
         public static var `default`: PredictedGlucoseBounds {
-            return PredictedGlucoseBounds(minimum: HKQuantity(unit: .millimolesPerLiter, doubleValue: 40),
-                                          maximum: HKQuantity(unit: .millimolesPerLiter, doubleValue: 400))
+            return PredictedGlucoseBounds(minimum: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 40),
+                                          maximum: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 400))
         }
     }
 }
