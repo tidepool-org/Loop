@@ -179,23 +179,25 @@ extension SettingsView {
     
     private var servicesSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Services", comment: "The title of the services section in settings"))) {
-            ForEach(viewModel.servicesViewModel.activeServices.indices, id: \.self) { index in
+            ForEach(viewModel.servicesViewModel.activeServices().indices, id: \.self) { index in
                 Button(action: { self.viewModel.servicesViewModel.didTapService(index) }, label: {
-                    Text(self.viewModel.servicesViewModel.activeServices[index].localizedTitle)
+                    Text(self.viewModel.servicesViewModel.activeServices()[index].localizedTitle)
                 })
                     .accentColor(.primary)
             }
-            Button(action: { self.showServiceChooser = true }, label: {
-                Text("Add Service", comment: "The title of the services section in settings")
-            })
-                .actionSheet(isPresented: $showServiceChooser) {
-                    ActionSheet(title: Text("Add Service", comment: "The title of the services action sheet in settings"), buttons: serviceChoices)
+            if viewModel.servicesViewModel.inactiveServices().count > 0 {
+                Button(action: { self.showServiceChooser = true }, label: {
+                    Text("Add Service", comment: "The title of the services section in settings")
+                })
+                    .actionSheet(isPresented: $showServiceChooser) {
+                        ActionSheet(title: Text("Add Service", comment: "The title of the services action sheet in settings"), buttons: serviceChoices)
                 }
+            }
         }
     }
     
     private var serviceChoices: [ActionSheet.Button] {
-        var result = viewModel.servicesViewModel.inactiveServices.map { availableService in
+        var result = viewModel.servicesViewModel.inactiveServices().map { availableService in
             ActionSheet.Button.default(Text(availableService.localizedTitle)) {
                 self.viewModel.servicesViewModel.didTapAddService(availableService)
             }
@@ -311,8 +313,8 @@ fileprivate class FakeService2: Service {
     var available: AvailableService { AvailableService(identifier: serviceIdentifier, localizedTitle: localizedTitle) }
 }
 fileprivate let servicesViewModel = ServicesViewModel(showServices: true,
-                                                      availableServices: [FakeService1().available, FakeService2().available],
-                                                      activeServices: [FakeService1()])
+                                                      availableServices: { [FakeService1().available, FakeService2().available] },
+                                                      activeServices: { [FakeService1()] })
 public struct SettingsView_Previews: PreviewProvider {
     public static var previews: some View {
         let viewModel = SettingsViewModel(appNameAndVersion: "Tidepool Loop v1.2.3.456",

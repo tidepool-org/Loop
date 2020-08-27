@@ -1243,8 +1243,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                     maximumBasalScheduleEntryCount: $0.maximumBasalScheduleEntryCount)
         }
         let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
-                                                  availableServices: deviceManager.servicesManager.availableServices,
-                                                  activeServices: deviceManager.servicesManager.activeServices,
+                                                  availableServices: { [weak self] in self?.deviceManager.servicesManager.availableServices ?? [] },
+                                                  activeServices: { [weak self] in self?.deviceManager.servicesManager.activeServices ?? [] },
                                                   delegate: self)
         let viewModel = SettingsViewModel(appNameAndVersion: Bundle.main.localizedNameAndVersion,
                                           notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
