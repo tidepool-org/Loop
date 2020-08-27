@@ -13,8 +13,10 @@ let FeatureFlags = FeatureFlagConfiguration()
 struct FeatureFlagConfiguration: Decodable {
     let criticalAlertsEnabled: Bool
     let fiaspInsulinModelEnabled: Bool
+    let includeServicesInSettingsEnabled: Bool
+    let mockTherapySettingsEnabled: Bool
     let nonlinearCarbModelEnabled: Bool
-    let observeHealthKitForCurrentAppOnly: Bool
+    let observeHealthKitSamplesFromOtherApps: Bool
     let remoteOverridesEnabled: Bool
     let predictedGlucoseChartClampEnabled: Bool
     let scenariosEnabled: Bool
@@ -44,16 +46,31 @@ struct FeatureFlagConfiguration: Decodable {
         #endif
         
         // Swift compiler config is inverse, since the default state is enabled.
+        #if INCLUDE_SERVICES_IN_SETTINGS_DISABLED
+        self.includeServicesInSettingsEnabled = false
+        #else
+        self.includeServicesInSettingsEnabled = true
+        #endif
+        
+        // Swift compiler config is inverse, since the default state is enabled.
+        #if MOCK_THERAPY_SETTINGS_ENABLED
+        self.mockTherapySettingsEnabled = true
+        #else
+        self.mockTherapySettingsEnabled = false
+        #endif
+        
+        // Swift compiler config is inverse, since the default state is enabled.
         #if NONLINEAR_CARB_MODEL_DISABLED
         self.nonlinearCarbModelEnabled = false
         #else
         self.nonlinearCarbModelEnabled = true
         #endif
         
-        #if OBSERVE_HEALTHKIT_FOR_CURRENT_APP_ONLY
-        self.observeHealthKitForCurrentAppOnly = true
+        // Swift compiler config is inverse, since the default state is enabled.
+        #if OBSERVE_HEALTH_KIT_SAMPLES_FROM_OTHER_APPS_DISABLED
+        self.observeHealthKitSamplesFromOtherApps = false
         #else
-        self.observeHealthKitForCurrentAppOnly = false
+        self.observeHealthKitSamplesFromOtherApps = true
         #endif
 
         #if PREDICTED_GLUCOSE_CHART_CLAMP_ENABLED
@@ -94,14 +111,18 @@ struct FeatureFlagConfiguration: Decodable {
 extension FeatureFlagConfiguration : CustomDebugStringConvertible {
     var debugDescription: String {
         return [
-            "* sensitivityOverridesEnabled: \(sensitivityOverridesEnabled)",
-            "* nonlinearCarbModelEnabled: \(nonlinearCarbModelEnabled)",
-            "* remoteOverridesEnabled: \(remoteOverridesEnabled)",
             "* criticalAlertsEnabled: \(criticalAlertsEnabled)",
-            "* scenariosEnabled: \(scenariosEnabled)",
-            "* simulatedCoreDataEnabled: \(simulatedCoreDataEnabled)",
-            "* walshInsulinModelEnabled: \(walshInsulinModelEnabled)",
             "* fiaspInsulinModelEnabled: \(fiaspInsulinModelEnabled)",
+            "* includeServicesInSettingsEnabled: \(includeServicesInSettingsEnabled)",
+            "* mockTherapySettingsEnabled: \(mockTherapySettingsEnabled)",
+            "* nonlinearCarbModelEnabled: \(nonlinearCarbModelEnabled)",
+            "* observeHealthKitSamplesFromOtherApps: \(observeHealthKitSamplesFromOtherApps)",
+            "* predictedGlucoseChartClampEnabled: \(predictedGlucoseChartClampEnabled)",
+            "* remoteOverridesEnabled: \(remoteOverridesEnabled)",
+            "* scenariosEnabled: \(scenariosEnabled)",
+            "* sensitivityOverridesEnabled: \(sensitivityOverridesEnabled)",
+            "* simulatedCoreDataEnabled: \(simulatedCoreDataEnabled)",
+            "* walshInsulinModelEnabled: \(walshInsulinModelEnabled)"
         ].joined(separator: "\n")
     }
 }
