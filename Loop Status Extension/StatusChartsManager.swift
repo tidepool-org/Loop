@@ -12,7 +12,7 @@ import SwiftCharts
 import UIKit
 
 class StatusChartsManager: ChartsManager {
-    let predictedGlucose = FeatureFlags.predictedGlucoseChartClampEnabled ? PredictedGlucoseChart(predictedGlucoseBounds: .default) : PredictedGlucoseChart(predictedGlucoseBounds: nil)
+    let predictedGlucose = PredictedGlucoseChart(predictedGlucoseBounds: FeatureFlags.predictedGlucoseChartClampEnabled ? .default : nil)
 
     init(colors: ChartColorPalette, settings: ChartSettings, traitCollection: UITraitCollection) {
         super.init(colors: colors, settings: settings, charts: [predictedGlucose], traitCollection: traitCollection)
