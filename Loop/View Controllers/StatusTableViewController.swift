@@ -451,7 +451,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self.statusCharts.setPredictedGlucoseValues(predictedGlucoseValues)
             }
             if !FeatureFlags.predictedGlucoseChartClampEnabled,
-                let lastPoint = self.statusCharts.glucose.predictedGlucosePoints.last?.y {
+                let lastPoint = self.statusCharts.glucose.predictedGlucosePoints.last?.y
+            {
+                // if the predicted glucose values are clamped, the eventually glucose description should not be displayed, since it may not align with what is being charted.
                 self.eventualGlucoseDescription = String(describing: lastPoint)
             } else {
                 self.eventualGlucoseDescription = nil

@@ -67,7 +67,7 @@ public class PredictedGlucoseChart: GlucoseChart, ChartProviding {
 
     public private(set) var endDate: Date?
 
-    private var predictedGlucoseSuggestedBounds: PredictedGlucoseBounds?
+    private var predictedGlucoseSoftBounds: PredictedGlucoseBounds?
 
     private func updateEndDate(_ date: Date) {
         if endDate == nil || date > endDate! {
@@ -75,9 +75,8 @@ public class PredictedGlucoseChart: GlucoseChart, ChartProviding {
         }
     }
     
-    public init(predictedGlucoseBounds: PredictedGlucoseBounds?)
-    {
-        self.predictedGlucoseSuggestedBounds = predictedGlucoseBounds
+    public init(predictedGlucoseBounds: PredictedGlucoseBounds?) {
+        self.predictedGlucoseSoftBounds = predictedGlucoseBounds
         super.init()
     }
 }
@@ -281,7 +280,7 @@ extension PredictedGlucoseChart {
     }
     
     func clampPredictedGlucoseValues(_ glucoseValues: [GlucoseValue]) -> [GlucoseValue] {
-        guard let predictedGlucoseBounds = predictedGlucoseSuggestedBounds else {
+        guard let predictedGlucoseBounds = predictedGlucoseSoftBounds else {
             return glucoseValues
         }
         
