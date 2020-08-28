@@ -12,6 +12,7 @@ let FeatureFlags = FeatureFlagConfiguration()
 
 struct FeatureFlagConfiguration: Decodable {
     let criticalAlertsEnabled: Bool
+    let deleteAllButtonEnabled: Bool
     let fiaspInsulinModelEnabled: Bool
     let includeServicesInSettingsEnabled: Bool
     let mockTherapySettingsEnabled: Bool
@@ -31,6 +32,13 @@ struct FeatureFlagConfiguration: Decodable {
         self.criticalAlertsEnabled = false
         #endif
         
+        // Swift compiler config is inverse, since the default state is enabled.
+        #if DELETE_ALL_BUTTON_DISABLED
+        self.deleteAllButtonEnabled = false
+        #else
+        self.deleteAllButtonEnabled = true
+        #endif
+
         // Swift compiler config is inverse, since the default state is enabled.
         #if FEATURE_OVERRIDES_DISABLED
         self.sensitivityOverridesEnabled = false
@@ -112,6 +120,7 @@ extension FeatureFlagConfiguration : CustomDebugStringConvertible {
     var debugDescription: String {
         return [
             "* criticalAlertsEnabled: \(criticalAlertsEnabled)",
+            "* deleteAllButtonEnabled: \(deleteAllButtonEnabled)",
             "* fiaspInsulinModelEnabled: \(fiaspInsulinModelEnabled)",
             "* includeServicesInSettingsEnabled: \(includeServicesInSettingsEnabled)",
             "* mockTherapySettingsEnabled: \(mockTherapySettingsEnabled)",
