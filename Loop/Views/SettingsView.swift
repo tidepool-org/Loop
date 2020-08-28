@@ -184,7 +184,7 @@ extension SettingsView {
                             includeArrow: false,
                             imageView: self.serviceImage(uiImage: (self.viewModel.servicesViewModel.activeServices()[index] as! ServiceUI).image),
                             label: self.viewModel.servicesViewModel.activeServices()[index].localizedTitle,
-                            descriptiveText: "Cloud Service")
+                            descriptiveText: NSLocalizedString("Cloud Service", comment: "The descriptive text for a services section item"))
             }
             if viewModel.servicesViewModel.inactiveServices().count > 0 {
                 LargeButton(action: { self.showServiceChooser = true },
