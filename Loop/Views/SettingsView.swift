@@ -21,6 +21,8 @@ public struct SettingsView: View, HorizontalSizeClassOverride {
     @State var showCGMChooser: Bool = false
     @State var showServiceChooser: Bool = false
     @State var showTherapySettings: Bool = false
+    @State var showDeletePumpDataAlert = false
+    @State var showDeleteCGMDataAlert = false
 
     public init(viewModel: SettingsViewModel) {
         self.viewModel = viewModel
@@ -211,26 +213,39 @@ extension SettingsView {
     
     private var deletePumpDataSection: some View {
         Section {
-            Button(action: { self.viewModel.pumpManagerSettingsViewModel.deleteData?() }) {
+            Button(action: { self.showDeletePumpDataAlert.toggle() }) {
                 HStack {
                     Spacer()
                     Text("Delete Pump Data").accentColor(.destructive)
                     Spacer()
                 }
             }
+            .alert(isPresented: $showDeletePumpDataAlert) {
+                makeDeleteAlert(for: self.viewModel.pumpManagerSettingsViewModel)
+            }
         }
     }
     
     private var deleteCgmDataSection: some View {
         Section {
-            Button(action: { self.viewModel.cgmManagerSettingsViewModel.deleteData?() }) {
+            Button(action: { self.showDeleteCGMDataAlert.toggle() }) {
                 HStack {
                     Spacer()
                     Text("Delete CGM Data").accentColor(.destructive)
                     Spacer()
                 }
             }
+            .alert(isPresented: $showDeleteCGMDataAlert) {
+                makeDeleteAlert(for: self.viewModel.cgmManagerSettingsViewModel)
+            }
         }
+    }
+    
+    private func makeDeleteAlert(for model: DeviceViewModel) -> SwiftUI.Alert {
+        return SwiftUI.Alert(title: Text("Delete \(model.name()) Data"),
+                             message: Text("Are you sure you want to delete all your \(model.name()) Data?\n(This action is not reversible)"),
+                             primaryButton: .cancel(),
+                             secondaryButton: .destructive(Text("Delete"), action: model.deleteData))
     }
     
     private var supportSection: some View {
