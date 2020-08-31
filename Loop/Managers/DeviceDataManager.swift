@@ -132,7 +132,7 @@ final class DeviceDataManager {
     
     private var rootViewController: UIViewController
     
-    private var uncertainDeliveryAlert: UIAlertController?
+    private var deliveryUncertaintyAlertManager: DeliveryUncertaintyAlertManager?
 
     // MARK: - WatchKit
 
@@ -474,9 +474,11 @@ private extension DeviceDataManager {
             alertManager?.addAlertSoundVendor(managerIdentifier: pumpManager.managerIdentifier,
                                                     soundVendor: pumpManager)
             
-            if pumpManager.status.deliveryIsUncertain && uncertainDeliveryAlert == nil {
+            deliveryUncertaintyAlertManager = DeliveryUncertaintyAlertManager(pumpManager: pumpManager, rootViewController: rootViewController)
+            
+            if pumpManager.status.deliveryIsUncertain {
                 DispatchQueue.main.async {
-                    self.showUncertainDeliveryAlert()
+                    self.deliveryUncertaintyAlertManager!.showAlert()
                 }
             }
         }
@@ -701,44 +703,14 @@ extension DeviceDataManager: PumpManagerDelegate {
         loopManager.setScheduleTimeZone(status.timeZone)
         
         DispatchQueue.main.async {
-            if status.deliveryIsUncertain && self.uncertainDeliveryAlert == nil {
-                // Entered uncertain delivery status; show modal
-                self.showUncertainDeliveryAlert()
-            } else if !status.deliveryIsUncertain && self.uncertainDeliveryAlert != nil {
-                // delivery status resolved. Clear modal
-                if let alert = self.uncertainDeliveryAlert {
-                    alert.dismiss(animated: true, completion: nil)
-                    self.uncertainDeliveryAlert = nil
-                }
+            if status.deliveryIsUncertain {
+                self.deliveryUncertaintyAlertManager?.showAlert()
+            } else {
+                self.deliveryUncertaintyAlertManager?.clearAlert()
             }
         }
     }
     
-    private func showUncertainDeliveryRecoveryView() {
-        if let pumpManager = self.pumpManager {
-            var controller = pumpManager.deliveryUncertaintyRecoveryViewController(insulinTintColor: .insulinTintColor, guidanceColors: .default)
-            controller.completionDelegate = self
-            self.rootViewController.present(controller, animated: true)
-        }
-    }
-    
-    private func showUncertainDeliveryAlert(animated: Bool = true) {
-        let alert = UIAlertController(
-            title: NSLocalizedString("Unable To Reach Pump", comment: "Title for alert shown when delivery status is uncertain"),
-            message: String(format: NSLocalizedString("%1$@ is unable to communicate with your insulin pump. The app will continue trying to reach your pump, but insulin delivery information cannot be updated and no automation can continue.\nYou can wait several minutes to see if the issue resolves or tap the button below to learn more about other options.", comment: "Message for alert shown when delivery status is uncertain. (1: app name)"), Bundle.main.bundleDisplayName),
-            preferredStyle: .alert)
-        
-        let actionTitle = NSLocalizedString("Learn More", comment: "OK button title for alert shown when delivery status is uncertain")
-        let action = UIAlertAction(title: actionTitle, style: .default) { (_) in
-            self.uncertainDeliveryAlert = nil
-            self.showUncertainDeliveryRecoveryView()
-        }
-        alert.addAction(action)
-        self.rootViewController.dismiss(animated: true)
-        self.rootViewController.present(alert, animated: animated)
-        self.uncertainDeliveryAlert = alert
-    }
-
     func pumpManagerWillDeactivate(_ pumpManager: PumpManager) {
         dispatchPrecondition(condition: .onQueue(queue))
 
@@ -1061,17 +1033,3 @@ extension DeviceDataManager: BluetoothStateManagerObserver {
     }
 }
 
-//MARK: - Completion delegate for delivery uncertainty
-
-extension DeviceDataManager: CompletionDelegate {
-    func completionNotifyingDidComplete(_ object: CompletionNotifying) {
-        // If delivery still uncertain after recovery view dismissal, present modal alert again.
-        if let vc = object as? UIViewController {
-            vc.dismiss(animated: true) {
-                if let pumpManager = self.pumpManager, pumpManager.status.deliveryIsUncertain {
-                    self.showUncertainDeliveryAlert(animated: false)
-                }
-            }
-        }
-    }
-}
