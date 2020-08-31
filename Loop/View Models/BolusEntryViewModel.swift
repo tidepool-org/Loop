@@ -32,6 +32,7 @@ final class BolusEntryViewModel: ObservableObject {
     enum Notice: Equatable {
         case predictedGlucoseBelowSuspendThreshold(suspendThreshold: HKQuantity)
         case staleGlucoseData
+        case stalePumpData
     }
 
     @Environment(\.authenticate) var authenticate
@@ -499,7 +500,7 @@ final class BolusEntryViewModel: ObservableObject {
     private func updateRecommendedBolusAndNotice(from state: LoopState, isUpdatingFromUserInput: Bool) {
         dispatchPrecondition(condition: .notOnQueue(.main))
 
-        let recommendedBolus: HKQuantity
+        let recommendedBolus: HKQuantity?
         let notice: Notice?
         do {
             if let recommendation = try computeBolusRecommendation(from: state) {
@@ -517,11 +518,13 @@ final class BolusEntryViewModel: ObservableObject {
                 notice = nil
             }
         } catch {
-            recommendedBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
+            recommendedBolus = nil
 
             switch error {
             case LoopError.missingDataError(.glucose), LoopError.glucoseTooOld:
                 notice = .staleGlucoseData
+            case LoopError.pumpDataTooOld:
+                notice = .stalePumpData
             default:
                 notice = nil
             }
