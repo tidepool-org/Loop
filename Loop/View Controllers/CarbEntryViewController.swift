@@ -346,11 +346,15 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
                 cell.titleLabel.text = NSLocalizedString("Date", comment: "Title of the carb entry date picker cell")
                 cell.datePicker.isEnabled = isSampleEditable
                 cell.datePicker.datePickerMode = .dateAndTime
-                cell.datePicker.maximumDate = Date(timeIntervalSinceNow: maximumDateFutureInterval)
+                cell.datePicker.maximumDate = Date(timeIntervalSinceNow: .hours(1))
+                cell.datePicker.minimumDate = Date(timeIntervalSinceNow: .hours(-8))
                 cell.datePicker.minuteInterval = 1
                 cell.date = date
                 cell.delegate = self
-                
+
+                // TESTING
+                cell.dateLabel.backgroundColor = .systemGray6
+
                 return cell
             case .foodType:
                 if usesCustomFoodType {
