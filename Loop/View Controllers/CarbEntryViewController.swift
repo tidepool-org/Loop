@@ -91,6 +91,16 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     private var shouldBeginEditingQuantity = true
 
     private var shouldBeginEditingFoodType = false
+    
+    private var shouldDisplayAccurateCarbEntryWarning = false {
+        didSet {
+            if shouldDisplayAccurateCarbEntryWarning != oldValue {
+                DispatchQueue.main.async {
+                    self.updateFooterMessage()
+                }
+            }
+        }
+    }
 
     var updatedCarbEntry: NewCarbEntry? {
         if  let quantity = quantity,
@@ -153,6 +163,15 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
 
         // Sets text for back button on bolus screen
         navigationItem.backBarButtonItem = UIBarButtonItem(title: NSLocalizedString("Carb Entry", comment: "Back button text for bolus screen to return to carb entry screen"), style: .plain, target: nil, action: nil)
+        
+        // monitor loop updates
+        notificationObservers += [
+             NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] _ in
+                self?.updateDisplayAccurateCarbEntryWarning()
+            }
+        ]
+        
+        updateDisplayAccurateCarbEntryWarning()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -179,6 +198,23 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     }
 
     private var foodKeyboard: EmojiInputController!
+    
+    private func updateDisplayAccurateCarbEntryWarning() {
+        deviceManager.loopManager.getLoopState { [weak self] (_, state) in
+            self?.shouldDisplayAccurateCarbEntryWarning = state.didInsulinCounteractionEffectsReachThreshold(HKQuantity(unit: GlucoseEffectVelocity.unit, doubleValue: 3), startDate: Date().addingTimeInterval(.minutes(-20)), endDate: Date())
+        }
+    }
+    
+    private func updateFooterMessage() {
+        self.tableView.beginUpdates()
+
+        if let footerView = self.tableView.footerView(forSection: 0) {
+            footerView.textLabel?.text = self.tableView(self.tableView, titleForFooterInSection: 0)
+            footerView.sizeToFit()
+        }
+
+        self.tableView.endUpdates()
+    }
 
     // MARK: - Table view data source
 
@@ -285,9 +321,13 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
             break
         }
     }
-
+    
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        return NSLocalizedString("Choose a longer absorption time for larger meals, or those containing fats and proteins. This is only guidance to the algorithm and need not be exact.", comment: "Carb entry section footer text explaining absorption time")
+        if shouldDisplayAccurateCarbEntryWarning {
+            return NSLocalizedString("Your Blood Glucose is rising. Please make sure  your carb entry is aligned with the time you eat.\n\nChoose a longer absorption time for larger meals, or those containing fats and proteins. This is only guidance to the algorithm and need not be exact.", comment: "Carb entry section footer text explaining absorption time with a warning about entering accurate time.")
+        } else {
+            return NSLocalizedString("Choose a longer absorption time for larger meals, or those containing fats and proteins. This is only guidance to the algorithm and need not be exact.", comment: "Carb entry section footer text explaining absorption time")
+        }
     }
 
     // MARK: - UITableViewDelegate
