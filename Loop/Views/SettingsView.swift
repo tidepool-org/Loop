@@ -216,7 +216,7 @@ extension SettingsView {
             Button(action: { self.deletePumpDataAlertIsPresented.toggle() }) {
                 HStack {
                     Spacer()
-                    Text("Delete Pump Data").accentColor(.destructive)
+                    Text("Delete Testing Pump Data").accentColor(.destructive)
                     Spacer()
                 }
             }
@@ -231,7 +231,7 @@ extension SettingsView {
             Button(action: { self.deleteCGMDataAlertIsPresented.toggle() }) {
                 HStack {
                     Spacer()
-                    Text("Delete CGM Data").accentColor(.destructive)
+                    Text("Delete Testing CGM Data").accentColor(.destructive)
                     Spacer()
                 }
             }
@@ -242,7 +242,7 @@ extension SettingsView {
     }
     
     private func makeDeleteAlert(for model: DeviceViewModel) -> SwiftUI.Alert {
-        return SwiftUI.Alert(title: Text("Delete \(model.name()) Data"),
+        return SwiftUI.Alert(title: Text("Delete Testing Data"),
                              message: Text("Are you sure you want to delete all your \(model.name()) Data?\n(This action is not reversible)"),
                              primaryButton: .cancel(),
                              secondaryButton: .destructive(Text("Delete"), action: model.deleteData))
