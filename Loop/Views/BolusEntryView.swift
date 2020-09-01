@@ -264,7 +264,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
 
     private var recommendedBolusString: String {
         guard let amount = viewModel.recommendedBolus?.doubleValue(for: .internationalUnit()) else {
-            return "--"
+            return "-"
         }
         return Self.doseAmountFormatter.string(from: amount) ?? String(amount)
     }
@@ -339,7 +339,8 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
         case .stalePumpData:
             return WarningView(
                 title: Text("No Recent Pump Data", comment: "Title for bolus screen notice when pump data is missing or stale"),
-                caption: Text("Your pump data is stale. Loop cannot recommend a bolus amount.", comment: "Caption for bolus screen notice when pump data is missing or stale")
+                caption: Text("Your pump data is stale. Loop cannot recommend a bolus amount.", comment: "Caption for bolus screen notice when pump data is missing or stale"),
+                severity: .critical
             )
         }
     }
