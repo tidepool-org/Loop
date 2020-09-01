@@ -323,11 +323,13 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        var footerMessage = ""
         if shouldDisplayAccurateCarbEntryWarning {
-            return NSLocalizedString("Your Blood Glucose is rising. Please make sure  your carb entry is aligned with the time you eat.\n\nChoose a longer absorption time for larger meals, or those containing fats and proteins. This is only guidance to the algorithm and need not be exact.", comment: "Carb entry section footer text explaining absorption time with a warning about entering accurate time.")
-        } else {
-            return NSLocalizedString("Choose a longer absorption time for larger meals, or those containing fats and proteins. This is only guidance to the algorithm and need not be exact.", comment: "Carb entry section footer text explaining absorption time")
+            footerMessage.append(NSLocalizedString("Your Blood Glucose is rising. Please make sure your carb entry is aligned with the time you eat.\n\n", comment: "Warning to ensure the carb entry is accurate"))
         }
+        footerMessage.append(NSLocalizedString("Choose a longer absorption time for larger meals, or those containing fats and proteins. This is only guidance to the algorithm and need not be exact.", comment: "Carb entry section footer text explaining absorption time"))
+
+        return footerMessage
     }
 
     // MARK: - UITableViewDelegate

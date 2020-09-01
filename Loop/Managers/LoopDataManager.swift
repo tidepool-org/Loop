@@ -1508,7 +1508,7 @@ extension LoopState {
         try predictGlucose(using: inputs, potentialBolus: nil, potentialCarbEntry: nil, replacingCarbEntry: nil, includingPendingInsulin: includingPendingInsulin)
     }
     
-    /// Indicates if the provided the insulin counteraction effects threshold was surpassed by an average insulin counteraction effect calculated over the provided time frame.
+    /// Indicates if the provided the insulin counteraction effects threshold was reached by an average insulin counteraction effect calculated over the provided time frame.
     /// - Parameter threshold: The insulin counteraction effects threshold
     /// - Parameter startDate: The earliest date to filter the insulin counteraction effects
     /// - Parameter endDate: The latest date to filter the insulin counteraction effects
