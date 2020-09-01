@@ -73,7 +73,8 @@ class LoopDataManager {
             cacheLength: cacheDuration,
             defaultAbsorptionTimes: absorptionTimes,
             observationInterval: cacheDuration,
-            syncVersion: 0
+            syncVersion: 0,
+            provenanceIdentifier: HKSource.default().bundleIdentifier
         )
         glucoseStore = GlucoseStore(
             healthStore: healthStore,

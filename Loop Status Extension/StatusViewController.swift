@@ -96,7 +96,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                                    cacheStore: cacheStore,
                                    cacheLength: .hours(24),
                                    defaultAbsorptionTimes: absorptionTimes,
-                                   observationInterval: 0)
+                                   observationInterval: 0,
+                                   provenanceIdentifier: HKSource.default().bundleIdentifier)
     
     private var pluginManager: PluginManager = {
         let containingAppFrameworksURL = Bundle.main.privateFrameworksURL?.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Frameworks")
