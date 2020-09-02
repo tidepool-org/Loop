@@ -421,6 +421,8 @@ extension CarbEntryViewController: TextFieldTableViewCellDelegate {
             } else {
                 quantity = nil
             }
+        case .foodType?:
+            foodType = cell.textField.text
         default:
             break
         }
@@ -493,11 +495,13 @@ extension CarbEntryViewController: EmojiInputControllerDelegate {
             return
         }
 
-        let lastAbsorptionTime = self.absorptionTime
-        self.absorptionTime = orderedAbsorptionTimes[section]
-
-        if let cell = tableView.cellForRow(at: IndexPath(row: Row.absorptionTime.rawValue, section: 0)) as? DateAndDurationTableViewCell {
-            cell.duration = max(lastAbsorptionTime ?? 0, orderedAbsorptionTimes[section])
+        if foodType == nil || foodType!.isEmpty {
+            // only the first food type entered adjusts the absorption time
+            absorptionTime = orderedAbsorptionTimes[section]
+            
+            if let cell = tableView.cellForRow(at: IndexPath(row: Row.absorptionTime.rawValue, section: 0)) as? DateAndDurationTableViewCell {
+                cell.duration = orderedAbsorptionTimes[section]
+            }
         }
     }
 }
