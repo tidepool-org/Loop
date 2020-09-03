@@ -27,7 +27,7 @@ class ButtonGroup {
             let backgroundColor: UIColor
             switch state {
             case .on:
-                imageTintColor = offBackgroundColor
+                imageTintColor = .black
                 backgroundColor = onBackgroundColor
             case .off:
                 imageTintColor = onBackgroundColor
