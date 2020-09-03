@@ -96,7 +96,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
         didSet {
             if shouldDisplayAccurateCarbEntryWarning != oldValue {
                 DispatchQueue.main.async {
-                    self.updateFooterMessage()
+                    self.displayAccuracyWarning()
                 }
             }
         }
@@ -163,15 +163,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
 
         // Sets text for back button on bolus screen
         navigationItem.backBarButtonItem = UIBarButtonItem(title: NSLocalizedString("Carb Entry", comment: "Back button text for bolus screen to return to carb entry screen"), style: .plain, target: nil, action: nil)
-        
-        // monitor loop updates
-        notificationObservers += [
-             NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] _ in
-                self?.updateDisplayAccurateCarbEntryWarning()
-            }
-        ]
-        
-        updateDisplayAccurateCarbEntryWarning()
+
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -181,6 +173,14 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
             shouldBeginEditingQuantity = false
             cell.textField.becomeFirstResponder()
         }
+        
+        // monitor loop updates
+        notificationObservers += [
+            NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] _ in
+                self?.updateDisplayAccurateCarbEntryWarning()
+            }
+        ]
+        updateDisplayAccurateCarbEntryWarning()
     }
 
     override func viewDidLayoutSubviews() {
@@ -205,26 +205,25 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
         }
     }
     
-    private func updateFooterMessage() {
-        self.tableView.beginUpdates()
+    private func displayAccuracyWarning() {
+        tableView.beginUpdates()
 
-        if let footerView = self.tableView.footerView(forSection: 0) {
-            footerView.textLabel?.text = self.tableView(self.tableView, titleForFooterInSection: 0)
-            footerView.sizeToFit()
+        if shouldDisplayAccurateCarbEntryWarning {
+            tableView.insertRows(at: [IndexPath(row: Row.accuracyWarning.rawValue, section: 0)], with: .automatic)
+        } else {
+            tableView.deleteRows(at: [IndexPath(row: Row.accuracyWarning.rawValue, section: 0)], with: .automatic)
         }
-
-        self.tableView.endUpdates()
+        
+        tableView.endUpdates()
     }
 
     // MARK: - Table view data source
-
-    fileprivate enum Row: Int {
+    fileprivate enum Row: Int, CaseIterable {
         case value
         case date
         case foodType
         case absorptionTime
-
-        static let count = 4
+        case accuracyWarning
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -232,7 +231,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return Row.count
+        return shouldDisplayAccurateCarbEntryWarning ? Row.allCases.count : Row.allCases.count-1
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -305,12 +304,28 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
             cell.delegate = self
 
             return cell
+        case .accuracyWarning:
+            let cell: UITableViewCell
+            if let existingCell = tableView.dequeueReusableCell(withIdentifier: "CarbEntryAccuracyWarningCell") {
+                cell = existingCell
+            } else {
+                cell = UITableViewCell(style: .default, reuseIdentifier: "CarbEntryAccuracyWarningCell")
+            }
+            
+            cell.imageView?.image = UIImage(systemName: "exclamationmark.triangle.fill")
+            cell.imageView?.tintColor = .destructive
+            cell.textLabel?.numberOfLines = 0
+            cell.textLabel?.text = NSLocalizedString("Your Blood Glucose is rising. Please make sure your carb entry is aligned with the time you eat.", comment: "Warning to ensure the carb entry is accurate")
+            cell.textLabel?.font = UIFont.preferredFont(forTextStyle: .caption1)
+            cell.textLabel?.textColor = .secondaryLabel
+            cell.isUserInteractionEnabled = false
+            return cell
         }
     }
 
     override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         switch Row(rawValue: indexPath.row)! {
-        case .value, .date:
+        case .value, .date, .accuracyWarning:
             break
         case .foodType:
             if usesCustomFoodType, shouldBeginEditingFoodType, let cell = cell as? TextFieldTableViewCell {
@@ -323,13 +338,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        var footerMessage = ""
-        if shouldDisplayAccurateCarbEntryWarning {
-            footerMessage.append(NSLocalizedString("Your Blood Glucose is rising. Please make sure your carb entry is aligned with the time you eat.\n\n", comment: "Warning to ensure the carb entry is accurate"))
-        }
-        footerMessage.append(NSLocalizedString("Choose a longer absorption time for larger meals, or those containing fats and proteins. This is only guidance to the algorithm and need not be exact.", comment: "Carb entry section footer text explaining absorption time"))
-
-        return footerMessage
+        return NSLocalizedString("Choose a longer absorption time for larger meals, or those containing fats and proteins. This is only guidance to the algorithm and need not be exact.", comment: "Carb entry section footer text explaining absorption time")
     }
 
     // MARK: - UITableViewDelegate
