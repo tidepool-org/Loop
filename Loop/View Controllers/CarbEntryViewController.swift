@@ -421,8 +421,6 @@ extension CarbEntryViewController: TextFieldTableViewCellDelegate {
             } else {
                 quantity = nil
             }
-        case .foodType?:
-            foodType = cell.textField.text
         default:
             break
         }
