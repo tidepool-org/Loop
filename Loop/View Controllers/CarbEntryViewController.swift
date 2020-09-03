@@ -495,8 +495,8 @@ extension CarbEntryViewController: EmojiInputControllerDelegate {
             return
         }
 
-        if foodType == nil || foodType!.isEmpty {
-            // only the first food type entered adjusts the absorption time
+        if absorptionTime == nil {
+            // only adjust the absorption time if it wasn't already set.
             absorptionTime = orderedAbsorptionTimes[section]
             
             if let cell = tableView.cellForRow(at: IndexPath(row: Row.absorptionTime.rawValue, section: 0)) as? DateAndDurationTableViewCell {
