@@ -72,11 +72,18 @@ final class BolusEntryViewModel: ObservableObject {
     private let log = OSLog(category: "BolusEntryViewModel")
     private var cancellables: Set<AnyCancellable> = []
 
-    private var pumpManagerRefreshCompletion: (() -> Void)?
+    private var pumpManagerRefreshCompletion: (() -> Void)? {
+        didSet {
+            DispatchQueue.main.async {
+                self.isRefreshingPump = self.pumpManagerRefreshCompletion != nil
+            }
+        }
+    }
     private var isPumpDataStale: Bool {
         // "borrowed" from LoopDataManager
         Date().timeIntervalSince(dataManager.doseStore.lastAddedPumpData) <= dataManager.loopManager.settings.inputDataRecencyInterval
     }
+    @Published var isRefreshingPump: Bool = false
     
     let chartManager: ChartsManager = {
         let predictedGlucoseChart = PredictedGlucoseChart(predictedGlucoseBounds: FeatureFlags.predictedGlucoseChartClampEnabled ? .default : nil)
@@ -122,7 +129,10 @@ final class BolusEntryViewModel: ObservableObject {
         // Look for Loop starting, and assume that if it started after assertCurrentPumpData that we want to call pumpManagerRefreshCompletion
         NotificationCenter.default
             .publisher(for: .LoopRunning, object: dataManager.loopManager)
-            .sink { [weak self] _ in self?.pumpManagerRefreshCompletion?(); self?.pumpManagerRefreshCompletion = nil }
+            .sink { [weak self] _ in
+                self?.pumpManagerRefreshCompletion?()
+                self?.pumpManagerRefreshCompletion = nil
+            }
             .store(in: &cancellables)
     }
 
@@ -200,6 +210,7 @@ final class BolusEntryViewModel: ObservableObject {
     func setRecommendedBolus() {
         guard isBolusRecommended else { return }
         enteredBolus = recommendedBolus!
+        isRefreshingPump = false
         dataManager.loopManager.getLoopState { [weak self] manager, state in
             self?.updatePredictedGlucoseValues(from: state)
         }
