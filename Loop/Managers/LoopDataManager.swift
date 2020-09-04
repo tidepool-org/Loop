@@ -1493,6 +1493,13 @@ protocol LoopState {
     /// - Returns: A bolus recommendation, or `nil` if not applicable
     /// - Throws: LoopError.configurationError if recommendation cannot be computed
     func recommendBolusForManualGlucose(_ glucose: NewGlucoseSample, consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?) throws -> BolusRecommendation?
+    
+    /// Indicates if the provided the insulin counteraction effects threshold was reached by an average insulin counteraction effect calculated over the provided time frame.
+    /// - Parameter threshold: The insulin counteraction effects threshold
+    /// - Parameter startDate: The earliest date to filter the insulin counteraction effects
+    /// - Parameter endDate: The latest date to filter the insulin counteraction effects
+    /// - Returns: a boolean indicating if the threshold was surpassed
+    func didInsulinCounteractionEffectsReachThreshold(_ threshold: HKQuantity, startDate: Date, endDate: Date) -> Bool
 }
 
 extension LoopState {
@@ -1506,24 +1513,6 @@ extension LoopState {
     /// - Throws: LoopError.missingDataError if prediction cannot be computed
     func predictGlucose(using inputs: PredictionInputEffect, includingPendingInsulin: Bool = false) throws -> [GlucoseValue] {
         try predictGlucose(using: inputs, potentialBolus: nil, potentialCarbEntry: nil, replacingCarbEntry: nil, includingPendingInsulin: includingPendingInsulin)
-    }
-    
-    /// Indicates if the provided the insulin counteraction effects threshold was reached by an average insulin counteraction effect calculated over the provided time frame.
-    /// - Parameter threshold: The insulin counteraction effects threshold
-    /// - Parameter startDate: The earliest date to filter the insulin counteraction effects
-    /// - Parameter endDate: The latest date to filter the insulin counteraction effects
-    /// - Returns: a boolean indicating if the threshold was surpassed
-    func didInsulinCounteractionEffectsReachThreshold(_ threshold: HKQuantity, startDate: Date, endDate: Date) -> Bool {
-        let filteredInsulinCounteractionEffects = insulinCounteractionEffects.filterDateRange(startDate, endDate)
-        
-        // at least 3 insulin counteraction effects are required to calculate the average
-        guard filteredInsulinCounteractionEffects.count >= 3,
-            let averageInsulinCounteractionEffect = filteredInsulinCounteractionEffects.average(unit: GlucoseEffectVelocity.unit) else
-        {
-            return false
-        }
-        
-        return averageInsulinCounteractionEffect >= threshold
     }
 }
 
@@ -1613,6 +1602,21 @@ extension LoopDataManager {
         func recommendBolusForManualGlucose(_ glucose: NewGlucoseSample, consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?) throws -> BolusRecommendation? {
             dispatchPrecondition(condition: .onQueue(loopDataManager.dataAccessQueue))
             return try loopDataManager.recommendBolusForManualGlucose(glucose, consideringPotentialCarbEntry: potentialCarbEntry, replacingCarbEntry: replacedCarbEntry)
+        }
+        
+        func didInsulinCounteractionEffectsReachThreshold(_ threshold: HKQuantity, startDate: Date, endDate: Date) -> Bool {
+            dispatchPrecondition(condition: .onQueue(loopDataManager.dataAccessQueue))
+            let filteredInsulinCounteractionEffects = insulinCounteractionEffects.filterDateRange(startDate, endDate)
+            
+            // at least 3 insulin counteraction effects are required to calculate the average
+            guard filteredInsulinCounteractionEffects.count >= 3,
+                let averageInsulinCounteractionEffect = filteredInsulinCounteractionEffects.average(unit: GlucoseEffectVelocity.unit) else
+            {
+                return false
+            }
+            
+            print("!!!!!averageInsulinCounteractionEffect: \(averageInsulinCounteractionEffect)")
+            return averageInsulinCounteractionEffect >= threshold
         }
     }
 
