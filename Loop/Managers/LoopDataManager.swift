@@ -1498,7 +1498,7 @@ protocol LoopState {
     /// - Parameter threshold: The insulin counteraction effects threshold
     /// - Parameter startDate: The earliest date to filter the insulin counteraction effects
     /// - Parameter endDate: The latest date to filter the insulin counteraction effects
-    /// - Returns: a boolean indicating if the threshold was surpassed
+    /// - Returns: a boolean indicating if the threshold was reached
     func didInsulinCounteractionEffectsReachThreshold(_ threshold: HKQuantity, startDate: Date, endDate: Date) -> Bool
 }
 
@@ -1615,6 +1615,7 @@ extension LoopDataManager {
                 return false
             }
             
+            print("!!!!!averageInsulinCounteractionEffect: \(averageInsulinCounteractionEffect)")
             return averageInsulinCounteractionEffect >= threshold
         }
     }
