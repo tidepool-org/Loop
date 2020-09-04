@@ -1440,11 +1440,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
     // MARK: - Debug Scenarios and Simulated Core Data
     
     override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+        #if targetEnvironment(simulator) || DEBUG
         if FeatureFlags.scenariosEnabled || FeatureFlags.simulatedCoreDataEnabled || FeatureFlags.mockTherapySettingsEnabled {
             if motion == .motionShake {
                 presentDebugMenu()
             }
         }
+        #endif
     }
     
     private func presentDebugMenu() {
