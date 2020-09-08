@@ -178,8 +178,12 @@ extension AlertManager {
 // MARK: Alert storage access
 extension AlertManager {
     private static func ensureAlertStoreDirectoryExists(_ fileManager: FileManager, _ documentsDirectory: URL?, _ log: DiagnosticLog) {
+        guard let documentsDirectory = documentsDirectory else {
+            // No documents directory means this is running in a unit tests, and store will be in-memory
+            return
+        }
         do {
-            try fileManager.createDirectory(at: documentsDirectory!.appendingPathComponent(AlertStore.storageDirectoryPathComponent),
+            try fileManager.createDirectory(at: documentsDirectory.appendingPathComponent(AlertStore.storageDirectoryPathComponent),
                                             withIntermediateDirectories: true,
                                             attributes: [FileAttributeKey.protectionKey: FileProtectionType.none])
             log.debug("%@ directory created", AlertStore.storageDirectoryPathComponent)
