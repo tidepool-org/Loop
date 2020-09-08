@@ -53,7 +53,7 @@ extension ChartAxisValuesStaticGenerator {
             
             /// If the number of segments is greater than desired, make each segment wider
             while segmentCount > maxSegmentCount {
-                // This is the only difference from SwiftCharts (i.e., currentMultiple *= multiple)
+                // This is the only difference from SwiftCharts (i.e., currentMultiple *= 2)
                 currentMultiple += multiple
                 segmentCount = distance / currentMultiple
             }
