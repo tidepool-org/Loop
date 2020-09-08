@@ -44,7 +44,7 @@ public final class AlertManager {
     private let fileManager: FileManager
 
     let alertStore: AlertStore
-
+    
     public init(rootViewController: UIViewController,
                 handlers: [AlertPresenter]? = nil,
                 userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
@@ -54,6 +54,7 @@ public final class AlertManager {
         self.userNotificationCenter = userNotificationCenter
         self.fileManager = fileManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
+        AlertManager.ensureAlertStoreDirectoryExists(fileManager, documentsDirectory, log)
         self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: documentsDirectory, expireAfter: expireAfter)
         self.handlers = handlers ??
             [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
@@ -176,6 +177,16 @@ extension AlertManager {
 
 // MARK: Alert storage access
 extension AlertManager {
+    private static func ensureAlertStoreDirectoryExists(_ fileManager: FileManager, _ documentsDirectory: URL?, _ log: DiagnosticLog) {
+        do {
+            try fileManager.createDirectory(at: documentsDirectory!.appendingPathComponent(AlertStore.storageDirectoryPathComponent),
+                                            withIntermediateDirectories: true,
+                                            attributes: [FileAttributeKey.protectionKey: FileProtectionType.none])
+            log.debug("%@ directory created", AlertStore.storageDirectoryPathComponent)
+        } catch {
+            log.error("Could not create directory for %@: %@", AlertStore.storageDirectoryPathComponent, error.localizedDescription)
+        }
+    }
 
     func getStoredEntries(startDate: Date, completion: @escaping (_ report: String) -> Void) {
         alertStore.executeQuery(since: startDate, limit: 100) { result in
