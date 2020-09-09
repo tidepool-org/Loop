@@ -10,7 +10,6 @@ import CoreData
 import LoopKit
 
 public class AlertStore {
-    static let storageDirectoryPathComponent = "AlertStore"
 
     public enum AlertStoreError: Error {
         case notFound
@@ -44,7 +43,6 @@ public class AlertStore {
         let storeDescription = NSPersistentStoreDescription()
         if let storageDirectoryURL = storageDirectoryURL {
             let storageFileURL = storageDirectoryURL
-                .appendingPathComponent(AlertStore.storageDirectoryPathComponent)
                 .appendingPathComponent("AlertStore.sqlite")
             storeDescription.url = storageFileURL
             predicateExpressionNotYetExpired = predicateExpressionNotYetExpiredSQLite

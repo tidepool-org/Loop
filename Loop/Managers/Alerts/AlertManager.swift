@@ -54,8 +54,9 @@ public final class AlertManager {
         self.userNotificationCenter = userNotificationCenter
         self.fileManager = fileManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
-        AlertManager.ensureAlertStoreDirectoryExists(fileManager, documentsDirectory, log)
-        self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: documentsDirectory, expireAfter: expireAfter)
+        let alertStoreDirectory = documentsDirectory?.appendingPathComponent("AlertStore")
+        fileManager.ensureDirectoryExists(alertStoreDirectory, log: log)
+        self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: alertStoreDirectory, expireAfter: expireAfter)
         self.handlers = handlers ??
             [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
             InAppModalAlertPresenter(rootViewController: rootViewController, alertManagerResponder: self)]
@@ -177,20 +178,6 @@ extension AlertManager {
 
 // MARK: Alert storage access
 extension AlertManager {
-    private static func ensureAlertStoreDirectoryExists(_ fileManager: FileManager, _ documentsDirectory: URL?, _ log: DiagnosticLog) {
-        guard let documentsDirectory = documentsDirectory else {
-            // No documents directory means this is running in a unit tests, and store will be in-memory
-            return
-        }
-        do {
-            try fileManager.createDirectory(at: documentsDirectory.appendingPathComponent(AlertStore.storageDirectoryPathComponent),
-                                            withIntermediateDirectories: true,
-                                            attributes: [FileAttributeKey.protectionKey: FileProtectionType.none])
-            log.debug("%@ directory created", AlertStore.storageDirectoryPathComponent)
-        } catch {
-            log.error("Could not create directory for %@: %@", AlertStore.storageDirectoryPathComponent, error.localizedDescription)
-        }
-    }
 
     func getStoredEntries(startDate: Date, completion: @escaping (_ report: String) -> Void) {
         alertStore.executeQuery(since: startDate, limit: 100) { result in
@@ -224,6 +211,23 @@ extension AlertManager {
 // MARK: Extensions
 
 extension FileManager {
+    
+    fileprivate func ensureDirectoryExists(_ directory: URL?, log: DiagnosticLog) {
+        guard let directory = directory else {
+            return
+        }
+        do {
+            var isDirectory: ObjCBool = false
+            let exists = fileExists(atPath: directory.absoluteString, isDirectory: &isDirectory)
+            if !(exists && isDirectory.boolValue) {
+                try createDirectory(at: directory, withIntermediateDirectories: true, attributes: nil)
+                log.debug("%@ directory created", directory.absoluteString)
+            }
+        } catch {
+            log.error("Could not create directory for %@: %@", directory.absoluteString, error.localizedDescription)
+        }
+    }
+    
     func copyIfNewer(from fromURL: URL, to toURL: URL) throws {
         if fileExists(atPath: toURL.path) {
             // If the source file is newer, remove the old one, otherwise skip it.
