@@ -1,8 +1,8 @@
 {
   "images" : [
     {
-      "filename" : "Meal.pdf",
-      "idiom" : "watch"
+      "idiom" : "watch",
+      "filename" : "Carb Icon 42mm.pdf"
     },
     {
       "idiom" : "watch",
@@ -19,14 +19,39 @@
     {
       "idiom" : "watch",
       "screen-width" : ">183"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "watch",
+      "filename" : "Carbs icon 38mm.png",
+      "screen-width" : "<=145",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "screen-width" : ">161"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "screen-width" : ">145"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "screen-width" : ">183"
     }
   ],
   "info" : {
-    "author" : "xcode",
-    "version" : 1
+    "version" : 1,
+    "author" : "xcode"
   },
   "properties" : {
-    "auto-scaling" : "auto",
-    "template-rendering-intent" : "template"
+    "template-rendering-intent" : "template",
+    "auto-scaling" : "auto"
   }
 }
