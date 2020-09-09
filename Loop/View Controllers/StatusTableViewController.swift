@@ -111,7 +111,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
         toolbarItems![4].tintColor = UIColor.insulinTintColor
 
         if #available(iOS 13.0, *) {
-            toolbarItems![8].image = UIImage(systemName: "gear")
+            if toolbarItems![8].image == nil {
+                toolbarItems![8].image = UIImage(systemName: "gear")
+            }
         }
         toolbarItems![8].accessibilityLabel = NSLocalizedString("Settings", comment: "The label of the settings button")
         toolbarItems![8].tintColor = UIColor.secondaryLabel
