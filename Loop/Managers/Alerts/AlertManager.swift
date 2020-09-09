@@ -55,7 +55,14 @@ public final class AlertManager {
         self.fileManager = fileManager
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
         let alertStoreDirectory = documentsDirectory?.appendingPathComponent("AlertStore")
-        fileManager.ensureDirectoryExists(alertStoreDirectory, log: log)
+        if let alertStoreDirectory = alertStoreDirectory {
+            do {
+                try fileManager.ensureDirectoryExists(at: alertStoreDirectory, with: FileProtectionType.completeUntilFirstUserAuthentication)
+                log.debug("AlertStore directory ensured")
+            } catch {
+                log.error("Could not create AlertStore directory: %@", error.localizedDescription)
+            }
+        }
         self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: alertStoreDirectory, expireAfter: expireAfter)
         self.handlers = handlers ??
             [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
@@ -205,47 +212,5 @@ extension AlertManager {
                 completion(report)
             }
         }
-    }
-}
-
-// MARK: Extensions
-
-extension FileManager {
-    
-    fileprivate func ensureDirectoryExists(_ directory: URL?, log: DiagnosticLog) {
-        guard let directory = directory else {
-            return
-        }
-        do {
-            var isDirectory: ObjCBool = false
-            let exists = fileExists(atPath: directory.absoluteString, isDirectory: &isDirectory)
-            if !(exists && isDirectory.boolValue) {
-                try createDirectory(at: directory, withIntermediateDirectories: true, attributes: nil)
-                log.debug("%@ directory created", directory.absoluteString)
-            }
-        } catch {
-            log.error("Could not create directory for %@: %@", directory.absoluteString, error.localizedDescription)
-        }
-    }
-    
-    func copyIfNewer(from fromURL: URL, to toURL: URL) throws {
-        if fileExists(atPath: toURL.path) {
-            // If the source file is newer, remove the old one, otherwise skip it.
-            let toCreationDate = try toURL.fileCreationDate(self)
-            let fromCreationDate = try fromURL.fileCreationDate(self)
-            if fromCreationDate > toCreationDate {
-                try removeItem(at: toURL)
-            } else {
-                return
-            }
-        }
-        try copyItem(at: fromURL, to: toURL)
-    }
-}
-
-extension URL {
-
-    func fileCreationDate(_ fileManager: FileManager) throws -> Date {
-        return try fileManager.attributesOfItem(atPath: self.path)[.creationDate] as! Date
     }
 }
