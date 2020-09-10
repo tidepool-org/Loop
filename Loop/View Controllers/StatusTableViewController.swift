@@ -22,7 +22,7 @@ private extension RefreshContext {
     static let all: Set<RefreshContext> = [.status, .glucose, .insulin, .carbs, .targets]
 }
 
-final class StatusTableViewController: LoopChartsTableViewController {
+final class StatusTableViewController: LoopChartsTableViewController, HorizontalSizeClassOverride {
 
     private let log = OSLog(category: "StatusTableViewController")
 
@@ -1324,6 +1324,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
             hudView.cgmStatusHUD.tintColor = .label
             hudView.pumpStatusHUD.stateColors = .pumpStatus
             hudView.pumpStatusHUD.tintColor = .insulinTintColor
+            if self.isDisplayNarrow {
+                hudView.adjustViewsForNarrowDisplay = true
+            }
 
             refreshContext.update(with: .status)
             self.log.debug("[reloadData] after hudView loaded")

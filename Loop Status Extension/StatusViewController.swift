@@ -16,7 +16,7 @@ import NotificationCenter
 import UIKit
 import SwiftCharts
 
-class StatusViewController: UIViewController, NCWidgetProviding {
+class StatusViewController: UIViewController, NCWidgetProviding, HorizontalSizeClassOverride {
 
     @IBOutlet weak var hudView: StatusBarHUDView! {
         didSet {
@@ -26,6 +26,10 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             hudView.pumpStatusHUD.tintColor = .insulinTintColor
             hudView.backgroundColor = .clear
 
+            if self.isDisplayNarrow {
+                hudView.adjustViewsForNarrowDisplay = true
+            }
+            
             // given the reduced width of the widget, allow for tighter spacing
             hudView.containerView.spacing = 6.0
         }
