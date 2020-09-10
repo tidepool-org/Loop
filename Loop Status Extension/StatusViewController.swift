@@ -58,7 +58,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             traitCollection: traitCollection
         )
 
-        charts.predictedGlucose.glucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 40)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 160)
+        charts.predictedGlucose.glucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 80)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 240)
 
         return charts
     }()

@@ -35,7 +35,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        statusCharts.glucose.glucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 40)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 160)
+        statusCharts.glucose.glucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 80)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 240)
 
         registerPumpManager()
 
