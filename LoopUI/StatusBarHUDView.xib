@@ -165,7 +165,7 @@
                         <stackView opaque="NO" contentMode="scaleToFill" horizontalCompressionResistancePriority="250" distribution="fillProportionally" alignment="center" spacing="1" translatesAutoresizingMaskIntoConstraints="NO" id="L6g-Dz-wXm">
                             <rect key="frame" x="10" y="10" width="122" height="44"/>
                             <subviews>
-                                <view contentMode="scaleToFill" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" placeholderIntrinsicWidth="78" placeholderIntrinsicHeight="44" translatesAutoresizingMaskIntoConstraints="NO" id="Xc6-TW-EU5" customClass="BasalRateHUDView" customModule="LoopUI">
+                                <view contentMode="scaleToFill" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" placeholderIntrinsicWidth="68" placeholderIntrinsicHeight="44" translatesAutoresizingMaskIntoConstraints="NO" id="Xc6-TW-EU5" customClass="BasalRateHUDView" customModule="LoopUI">
                                     <rect key="frame" x="0.0" y="0.0" width="67" height="44"/>
                                     <subviews>
                                         <view contentMode="scaleToFill" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="TKp-ot-mqw" customClass="BasalStateView" customModule="LoopUI">
@@ -198,7 +198,7 @@
                                         <outlet property="basalStateView" destination="TKp-ot-mqw" id="vLE-F3-FtD"/>
                                     </connections>
                                 </view>
-                                <view contentMode="scaleToFill" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" placeholderIntrinsicWidth="48" placeholderIntrinsicHeight="44" translatesAutoresizingMaskIntoConstraints="NO" id="mME-iU-5yj" customClass="LevelHUDView" customModule="LoopKitUI">
+                                <view contentMode="scaleToFill" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" placeholderIntrinsicWidth="52.5" placeholderIntrinsicHeight="44" translatesAutoresizingMaskIntoConstraints="NO" id="mME-iU-5yj" customClass="LevelHUDView" customModule="LoopKitUI">
                                     <rect key="frame" x="68" y="0.0" width="54" height="44"/>
                                     <subviews>
                                         <view clipsSubviews="YES" contentMode="scaleToFill" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="eDE-01-spK">
@@ -246,7 +246,7 @@
                                         <constraint firstItem="eDE-01-spK" firstAttribute="centerX" secondItem="mME-iU-5yj" secondAttribute="centerX" id="LeK-09-bY7"/>
                                         <constraint firstItem="eDE-01-spK" firstAttribute="centerY" secondItem="mME-iU-5yj" secondAttribute="centerY" id="jMb-FX-cJb"/>
                                         <constraint firstItem="G1b-Pr-JmQ" firstAttribute="centerY" secondItem="eDE-01-spK" secondAttribute="centerY" constant="-2" id="rTt-Dm-05Y"/>
-                                        <constraint firstAttribute="width" constant="48" id="xX3-6f-WoP"/>
+                                        <constraint firstAttribute="width" constant="54" id="xX3-6f-WoP"/>
                                     </constraints>
                                     <connections>
                                         <outlet property="levelMaskView" destination="3a7-4p-o3K" id="8AT-IU-dsM"/>
