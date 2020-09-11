@@ -22,7 +22,7 @@ private extension RefreshContext {
     static let all: Set<RefreshContext> = [.status, .glucose, .insulin, .carbs, .targets]
 }
 
-final class StatusTableViewController: LoopChartsTableViewController, HorizontalSizeClassOverride {
+final class StatusTableViewController: LoopChartsTableViewController {
 
     private let log = OSLog(category: "StatusTableViewController")
 

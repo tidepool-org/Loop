@@ -16,7 +16,7 @@ import NotificationCenter
 import UIKit
 import SwiftCharts
 
-class StatusViewController: UIViewController, NCWidgetProviding, HorizontalSizeClassOverride {
+class StatusViewController: UIViewController, NCWidgetProviding {
 
     @IBOutlet weak var hudView: StatusBarHUDView! {
         didSet {
