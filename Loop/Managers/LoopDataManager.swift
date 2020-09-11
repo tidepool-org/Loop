@@ -38,7 +38,7 @@ final class LoopDataManager {
     private let logger = DiagnosticLog(category: "LoopDataManager")
 
     private let analyticsServicesManager: AnalyticsServicesManager
-    
+
     private let now: () -> Date
 
     // References to registered notification center observers
@@ -74,11 +74,10 @@ final class LoopDataManager {
         self.lockedBasalDeliveryState = Locked(basalDeliveryState)
         self.settings = settings
         self.overrideHistory = overrideHistory
-        
+
         let absorptionTimes = LoopSettings.defaultCarbAbsorptionTimes
-        let cacheDuration = absorptionTimes.slow * 2
-        
-        self.overrideHistory.relevantTimeWindow = cacheDuration
+
+        self.overrideHistory.relevantTimeWindow = absorptionTimes.slow * 2
 
         self.carbStore = carbStore
         self.doseStore = doseStore
@@ -248,7 +247,7 @@ final class LoopDataManager {
     private let lockedBasalDeliveryState: Locked<PumpManagerStatus.BasalDeliveryState?>
 
     fileprivate var lastRequestedBolus: DoseEntry?
-    
+
     /// The last date at which a loop completed, from prediction to dose (if dosing is enabled)
     var lastLoopCompleted: Date? {
         get {
@@ -290,14 +289,14 @@ final class LoopDataManager {
             backgroundTask = .invalid
         }
     }
-    
+
     private func loopDidComplete(date: Date, duration: TimeInterval) {
         lastLoopCompleted = date
         NotificationManager.clearLoopNotRunningNotifications()
         NotificationManager.scheduleLoopNotRunningNotifications()
         analyticsServicesManager.loopDidSucceed(duration)
         storeDosingDecision(withDate: date)
-        
+
         NotificationCenter.default.post(name: .LoopCompleted, object: self)
     }
 
@@ -777,7 +776,7 @@ extension LoopDataManager {
             doseStore.getGlucoseEffects(start: nextEffectDate, end: nil, basalDosingEnd: nil) { (result) -> Void in
                 switch result {
                 case .failure(let error):
-                    self.logger.error("%{public}@", String(describing: error))
+                    self.logger.error("Could not fetch insulin effects: %{public}@", String(describing: error))
                     self.insulinEffectIncludingPendingInsulin = nil
                 case .success(let effects):
                     self.insulinEffectIncludingPendingInsulin = effects
@@ -813,9 +812,9 @@ extension LoopDataManager {
                     self.logger.error("%{public}@", String(describing: error))
                     self.carbEffect = nil
                     self.recentCarbEntries = nil
-                case .success(let (samples, effects)):
+                case .success(let (entries, effects)):
                     self.carbEffect = effects
-                    self.recentCarbEntries = samples
+                    self.recentCarbEntries = entries
                 }
 
                 updateGroup.leave()
@@ -1355,7 +1354,7 @@ extension LoopDataManager {
 
         let tempBasal = predictedGlucose.recommendedTempBasal(
             to: glucoseTargetRange,
-            at: now(),
+            at: predictedGlucose[0].startDate,
             suspendThreshold: settings.suspendThreshold?.quantity,
             sensitivity: insulinSensitivity,
             model: model,
@@ -1382,7 +1381,7 @@ extension LoopDataManager {
         let predictionDrivingBolusRecommendation = pendingInsulin > 0 ? predictedGlucoseIncludingPendingInsulin : predictedGlucose
         let recommendation = predictionDrivingBolusRecommendation.recommendedBolus(
             to: glucoseTargetRange,
-            at: now(),
+            at: predictedGlucose[0].startDate,
             suspendThreshold: settings.suspendThreshold?.quantity,
             sensitivity: insulinSensitivity,
             model: model,
@@ -1680,7 +1679,7 @@ extension LoopDataManager {
 
                 "predictedGlucose: [",
                 "* PredictedGlucoseValue(start, mg/dL)",
-                (state.predictedGlucose ?? []).reduce(into: "", { (entries, entry) in
+                (state.predictedGlucoseIncludingPendingInsulin ?? []).reduce(into: "", { (entries, entry) in
                     entries.append("* \(entry.startDate), \(entry.quantity.doubleValue(for: .milligramsPerDeciliter))\n")
                 }),
                 "]",
@@ -1823,7 +1822,7 @@ extension LoopDataManager {
         guard FeatureFlags.simulatedCoreDataEnabled else {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
-        
+
         guard let glucoseStore = glucoseStore as? GlucoseStore, let carbStore = carbStore as? CarbStore, let doseStore = doseStore as? DoseStore, let settingsStore = settingsStore as? SettingsStore, let dosingDecisionStore = dosingDecisionStore as? DosingDecisionStore else {
             fatalError("Mock stores should not be used to generate simulated core data")
         }
@@ -1854,12 +1853,12 @@ extension LoopDataManager {
             }
         }
     }
-    
+
     func purgeHistoricalCoreData(completion: @escaping (Error?) -> Void) {
         guard FeatureFlags.simulatedCoreDataEnabled else {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
-        
+
         guard let glucoseStore = glucoseStore as? GlucoseStore, let carbStore = carbStore as? CarbStore, let doseStore = doseStore as? DoseStore, let settingsStore = settingsStore as? SettingsStore, let dosingDecisionStore = dosingDecisionStore as? DosingDecisionStore else {
             fatalError("Mock stores should not be used to generate simulated core data")
         }
@@ -1879,7 +1878,7 @@ extension LoopDataManager {
                         completion(error)
                         return
                     }
-                    
+
                     glucoseStore.purgeHistoricalGlucoseObjects() { error in
                         guard error == nil else {
                             completion(error)

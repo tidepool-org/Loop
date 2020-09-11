@@ -58,26 +58,42 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
         }
     }
 
+    fileprivate var lastEntryDate: Date?
+
+    fileprivate func updateLastEntryDate() { lastEntryDate = Date() }
+
     fileprivate var quantity: HKQuantity? {
         didSet {
+            if quantity != oldValue {
+                updateLastEntryDate()
+            }
             updateContinueButtonEnabled()
         }
     }
 
     fileprivate var date = Date() {
         didSet {
+            if date != oldValue {
+                updateLastEntryDate()
+            }
             updateContinueButtonEnabled()
         }
     }
 
     fileprivate var foodType: String? {
         didSet {
+            if foodType != oldValue {
+                updateLastEntryDate()
+            }
             updateContinueButtonEnabled()
         }
     }
 
     fileprivate var absorptionTime: TimeInterval? {
         didSet {
+            if absorptionTime != oldValue {
+                updateLastEntryDate()
+            }
             updateContinueButtonEnabled()
         }
     }
@@ -103,7 +119,8 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     }
 
     var updatedCarbEntry: NewCarbEntry? {
-        if  let quantity = quantity,
+        if  let lastEntryDate = lastEntryDate,
+            let quantity = quantity,
             let absorptionTime = absorptionTime ?? defaultAbsorptionTimes?.medium
         {
             if let o = originalCarbEntry, o.quantity == quantity && o.startDate == date && o.foodType == foodType && o.absorptionTime == absorptionTime {
@@ -111,6 +128,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
             }
 
             return NewCarbEntry(
+                date: lastEntryDate,
                 quantity: quantity,
                 startDate: date,
                 foodType: foodType,
@@ -368,6 +386,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
 
     override func restoreUserActivityState(_ activity: NSUserActivity) {
         if let entry = activity.newCarbEntry {
+            lastEntryDate = entry.date
             quantity = entry.quantity
             date = entry.startDate
 
@@ -445,7 +464,7 @@ extension CarbEntryViewController: TextFieldTableViewCellDelegate {
         tableView.endUpdates()
     }
 
-    func textFieldTableViewCellDidEndEditing(_ cell: TextFieldTableViewCell) {
+    func textFieldTableViewCellDidChangeEditing(_ cell: TextFieldTableViewCell) {
         guard let row = tableView.indexPath(for: cell)?.row else { return }
 
         switch Row(rawValue: row) {
@@ -462,19 +481,8 @@ extension CarbEntryViewController: TextFieldTableViewCellDelegate {
         }
     }
 
-    func textFieldTableViewCellDidChangeEditing(_ cell: TextFieldTableViewCell) {
-        guard let row = tableView.indexPath(for: cell)?.row else { return }
-
-        switch Row(rawValue: row) {
-        case .value?:
-            if let cell = cell as? DecimalTextFieldTableViewCell, let number = cell.number {
-                quantity = HKQuantity(unit: preferredCarbUnit, doubleValue: number.doubleValue)
-            } else {
-                quantity = nil
-            }
-        default:
-            break
-        }
+    func textFieldTableViewCellDidEndEditing(_ cell: TextFieldTableViewCell) {
+        textFieldTableViewCellDidChangeEditing(cell)
     }
 }
 
@@ -544,11 +552,13 @@ extension CarbEntryViewController: EmojiInputControllerDelegate {
             return
         }
 
-        let lastAbsorptionTime = self.absorptionTime
-        self.absorptionTime = orderedAbsorptionTimes[section]
-
-        if let cell = tableView.cellForRow(at: IndexPath(row: Row.absorptionTime.rawValue, section: 0)) as? DateAndDurationTableViewCell {
-            cell.duration = max(lastAbsorptionTime ?? 0, orderedAbsorptionTimes[section])
+        if absorptionTime == nil {
+            // only adjust the absorption time if it wasn't already set.
+            absorptionTime = orderedAbsorptionTimes[section]
+            
+            if let cell = tableView.cellForRow(at: IndexPath(row: Row.absorptionTime.rawValue, section: 0)) as? DateAndDurationTableViewCell {
+                cell.duration = orderedAbsorptionTimes[section]
+            }
         }
     }
 }
