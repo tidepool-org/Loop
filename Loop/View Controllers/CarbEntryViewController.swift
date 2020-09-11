@@ -179,13 +179,6 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
 
         // Sets text for back button on bolus screen
         navigationItem.backBarButtonItem = UIBarButtonItem(title: NSLocalizedString("Carb Entry", comment: "Back button text for bolus screen to return to carb entry screen"), style: .plain, target: nil, action: nil)
-
-        // monitor loop updates
-        notificationObservers += [
-            NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] _ in
-                self?.updateDisplayAccurateCarbEntryWarning()
-            }
-        ]
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -198,6 +191,13 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
 
         // check if the warning should be displayed
         updateDisplayAccurateCarbEntryWarning()
+        
+        // monitor loop updates
+        notificationObservers += [
+            NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] _ in
+                self?.updateDisplayAccurateCarbEntryWarning()
+            }
+        ]
     }
 
     override func viewDidLayoutSubviews() {
@@ -218,9 +218,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     
     private func updateDisplayAccurateCarbEntryWarning() {
         deviceManager.loopManager.getLoopState { [weak self] (_, state) in
-//            guard let strongSelf = self else { return }
             self?.shouldDisplayAccurateCarbEntryWarning = state.didInsulinCounteractionEffectsReachThreshold(HKQuantity(unit: GlucoseEffectVelocity.unit, doubleValue: 3), startDate: Date().addingTimeInterval(.minutes(-20)), endDate: Date())
-//            strongSelf.shouldDisplayAccurateCarbEntryWarning = !strongSelf.shouldDisplayAccurateCarbEntryWarning
         }
     }
     

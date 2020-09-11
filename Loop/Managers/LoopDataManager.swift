@@ -1614,7 +1614,6 @@ extension LoopDataManager {
                 return false
             }
             
-            print("!!!!!averageInsulinCounteractionEffect: \(averageInsulinCounteractionEffect)")
             return averageInsulinCounteractionEffect >= threshold
         }
     }
