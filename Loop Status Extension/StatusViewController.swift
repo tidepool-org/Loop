@@ -26,7 +26,8 @@ class StatusViewController: UIViewController, NCWidgetProviding, HorizontalSizeC
             hudView.pumpStatusHUD.tintColor = .insulinTintColor
             hudView.backgroundColor = .clear
 
-            if self.isDisplayNarrow {
+            if UIScreen.main.bounds.width < 375 {
+                // These screens are considered narrow for this view
                 hudView.adjustViewsForNarrowDisplay = true
             }
             
