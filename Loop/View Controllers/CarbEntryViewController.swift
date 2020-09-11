@@ -218,7 +218,21 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     
     private func updateDisplayAccurateCarbEntryWarning() {
         deviceManager.loopManager.getLoopState { [weak self] (_, state) in
-            self?.shouldDisplayAccurateCarbEntryWarning = state.didInsulinCounteractionEffectsReachThreshold(HKQuantity(unit: GlucoseEffectVelocity.unit, doubleValue: 3), startDate: Date().addingTimeInterval(.minutes(-20)), endDate: Date())
+            let endDate = Date()
+            let startDate = endDate.addingTimeInterval(.minutes(-20))
+            let threshold = HKQuantity(unit: GlucoseEffectVelocity.unit, doubleValue: 3)
+
+            let filteredInsulinCounteractionEffects = state.insulinCounteractionEffects.filterDateRange(startDate, endDate)
+
+            // at least 3 insulin counteraction effects are required to calculate the average
+            guard filteredInsulinCounteractionEffects.count >= 3,
+                let averageInsulinCounteractionEffect = filteredInsulinCounteractionEffects.average(unit: GlucoseEffectVelocity.unit) else
+            {
+                self?.shouldDisplayAccurateCarbEntryWarning = false
+                return
+            }
+
+            self?.shouldDisplayAccurateCarbEntryWarning = averageInsulinCounteractionEffect >= threshold
         }
     }
     
