@@ -1324,8 +1324,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             hudView.cgmStatusHUD.tintColor = .label
             hudView.pumpStatusHUD.stateColors = .pumpStatus
             hudView.pumpStatusHUD.tintColor = .insulinTintColor
-            if UIScreen.main.bounds.width < 375 {
-                // These screens are considered narrow for this view
+            if view.bounds.width < 375 {
+                // need to adjust for narrow display
                 hudView.adjustViewsForNarrowDisplay = true
             }
 
