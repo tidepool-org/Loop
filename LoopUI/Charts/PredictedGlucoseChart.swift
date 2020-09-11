@@ -69,6 +69,8 @@ public class PredictedGlucoseChart: GlucoseChart, ChartProviding {
 
     private var predictedGlucoseSoftBounds: PredictedGlucoseBounds?
     
+    private let yAxisStepSizeMGDLOverride: Double?
+    
     private var maxYAxisValue: ChartAxisValue?
     
     private var minYAxisValue: ChartAxisValue?
@@ -84,8 +86,10 @@ public class PredictedGlucoseChart: GlucoseChart, ChartProviding {
         }
     }
     
-    public init(predictedGlucoseBounds: PredictedGlucoseBounds?) {
+    public init(predictedGlucoseBounds: PredictedGlucoseBounds? = nil,
+                yAxisStepSizeMGDLOverride: Double? = nil) {
         self.predictedGlucoseSoftBounds = predictedGlucoseBounds
+        self.yAxisStepSizeMGDLOverride = yAxisStepSizeMGDLOverride
         super.init()
     }
 }
@@ -143,7 +147,7 @@ extension PredictedGlucoseChart {
         let yAxisValues = ChartAxisValuesStaticGenerator.generateYAxisValuesUsingLinearSegmentStep(chartPoints: points,
             minSegmentCount: 2,
             maxSegmentCount: maxYAxisSegmentCount,
-            multiple: glucoseUnit == .milligramsPerDeciliter ? 40 : 1,
+            multiple: glucoseUnit == .milligramsPerDeciliter ? (yAxisStepSizeMGDLOverride ?? 25) : 1,
             axisValueGenerator: {
                 ChartAxisValueDouble($0, labelSettings: axisLabelSettings)
             },
