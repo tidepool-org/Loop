@@ -11,6 +11,15 @@ import LoopKitUI
 
 extension DeviceDataManager {
     var cgmStatusHighlight: DeviceStatusHighlight? {
+        if let latestGlucose = glucoseStore.latestGlucose {
+            guard !latestGlucose.wasUserEntered ||
+                (latestGlucose.wasUserEntered && Date().timeIntervalSince(latestGlucose.startDate) > loopManager.settings.inputDataRecencyInterval) else
+            {
+                // do not override display of relevant manual glucose entry
+                return nil
+            }
+        }
+        
         if bluetoothState == .poweredOff {
             return BluetoothStateManager.bluetoothOffHighlight
         } else if bluetoothState == .denied ||

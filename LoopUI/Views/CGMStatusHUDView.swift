@@ -90,13 +90,15 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
                                    at glucoseStartDate: Date,
                                    unit: HKUnit,
                                    staleGlucoseAge: TimeInterval,
-                                   sensor: SensorDisplayable?)
+                                   sensor: SensorDisplayable?,
+                                   wasUserEntered: Bool)
     {
         viewModel.setGlucoseQuantity(glucoseQuantity,
                                      at: glucoseStartDate,
                                      unit: unit,
                                      staleGlucoseAge: staleGlucoseAge,
-                                     sensor: sensor)
+                                     sensor: sensor,
+                                     isManualGlucose: wasUserEntered)
         
         glucoseValueHUD.glucoseLabel.text = viewModel.glucoseValueString
         glucoseValueHUD.unitLabel.text = viewModel.unitsString
@@ -104,6 +106,7 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         
         glucoseTrendHUD.setTrend(viewModel.trend)
         glucoseTrendHUD.tintColor = viewModel.glucoseTrendTintColor
+        glucoseTrendHUD.setManualGlucoseIcon(viewModel.isManualGlucose)
         
         accessibilityValue = viewModel.accessibilityString
     }

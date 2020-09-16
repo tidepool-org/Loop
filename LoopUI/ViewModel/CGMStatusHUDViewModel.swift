@@ -25,6 +25,8 @@ public class CGMStatusHUDViewModel {
     
     var glucoseTrendTintColor: UIColor = .glucoseTintColor
     
+    var isManualGlucose: Bool = false
+    
     var staleGlucoseValueHandler: (String) -> Void
     
     var isVisible: Bool = true {
@@ -73,7 +75,8 @@ public class CGMStatusHUDViewModel {
                             at glucoseStartDate: Date,
                             unit: HKUnit,
                             staleGlucoseAge: TimeInterval,
-                            sensor: SensorDisplayable?)
+                            sensor: SensorDisplayable?,
+                            isManualGlucose: Bool)
     {
         var accessibilityStrings = [String]()
         
@@ -109,6 +112,8 @@ public class CGMStatusHUDViewModel {
         
         glucoseValueTintColor = sensor?.glucoseValueType?.glucoseColor ?? .label
         glucoseTrendTintColor = sensor?.glucoseValueType?.trendColor ?? .glucoseTintColor
+        
+        self.isManualGlucose = isManualGlucose
         
         unitsString = unit.localizedShortUnitString
         accessibilityString = accessibilityStrings.joined(separator: ", ")
