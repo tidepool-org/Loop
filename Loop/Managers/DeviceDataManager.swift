@@ -317,18 +317,18 @@ final class DeviceDataManager {
 
             loopManager.addGlucose(values) { result in
                 self.log.default("Asserting current pump data")
-                self.pumpManager?.fetchCurrentPumpData(completion: nil)
+                self.pumpManager?.ensureCurrentPumpData(completion: nil)
             }
         case .noData:
             log.default("CGMManager:%{public}@ did update with no data", String(describing: type(of: manager)))
 
-            pumpManager?.fetchCurrentPumpData(completion: nil)
+            pumpManager?.ensureCurrentPumpData(completion: nil)
         case .error(let error):
             log.default("CGMManager:%{public}@ did update with error: %{public}@", String(describing: type(of: manager)), String(describing: error))
 
             self.setLastError(error: error)
             log.default("Asserting current pump data")
-            pumpManager?.fetchCurrentPumpData(completion: nil)
+            pumpManager?.ensureCurrentPumpData(completion: nil)
         }
 
         updatePumpManagerBLEHeartbeatPreference()

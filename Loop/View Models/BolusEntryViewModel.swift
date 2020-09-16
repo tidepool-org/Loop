@@ -529,7 +529,7 @@ final class BolusEntryViewModel: ObservableObject {
                     }
                 }
             }
-            pumpManager.fetchCurrentPumpData(completion: wrappedCompletion)
+            pumpManager.ensureCurrentPumpData(completion: wrappedCompletion)
         }
     }
     
