@@ -87,18 +87,18 @@ public class AlertStore {
     
     public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date(),
                                       completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier,
-                             addingPredicate: NSPredicate(format: "acknowledgedDate == nil"),
-                             with: {
-                                $0.acknowledgedDate = date
-                                return .save
-                             },
-                             completion: completion)
+        recordUpdateOfAll(identifier: identifier,
+                          addingPredicate: NSPredicate(format: "acknowledgedDate == nil"),
+                          with: {
+                              $0.acknowledgedDate = date
+                              return .save
+                          },
+                          completion: completion)
     }
     
     public func recordRetraction(of identifier: Alert.Identifier, at date: Date = Date(),
                                  completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(of: identifier,
+        recordUpdateOfLatest(identifier: identifier,
                              addingPredicate: NSPredicate(format: "retractedDate == nil"),
                              with: {
                                 // if the alert was retracted before it was ever shown, delete it.
@@ -135,17 +135,44 @@ public class AlertStore {
 // MARK: Private functions
 
 extension AlertStore {
-
-    private func recordUpdateOfLatest(of identifier: Alert.Identifier,
+    
+    private func recordUpdateOfAll(identifier: Alert.Identifier,
+                                   addingPredicate predicate: NSPredicate,
+                                   with updateBlock: @escaping ManagedObjectUpdateBlock,
+                                   completion: ((Result<Void, Error>) -> Void)?) {
+        managedObjectContext.perform {
+            do {
+                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                    identifier.equalsPredicate,
+                    predicate
+                ])
+                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: false) ]
+                fetchRequest.fetchLimit = 500 // ?? Reasonable?
+                let result = try self.managedObjectContext.fetch(fetchRequest)
+                result.forEach { alert in
+                    let shouldDelete = updateBlock(alert) == .delete
+                    if shouldDelete {
+                        self.managedObjectContext.delete(alert)
+                    }
+                }
+                try self.managedObjectContext.save()
+            } catch {
+                completion?(.failure(error))
+            }
+        }
+    }
+    
+    private func recordUpdateOfLatest(identifier: Alert.Identifier,
                                       addingPredicate predicate: NSPredicate,
-                                      with block: @escaping ManagedObjectUpdateBlock,
+                                      with updateBlock: @escaping ManagedObjectUpdateBlock,
                                       completion: ((Result<Void, Error>) -> Void)?) {
-        self.managedObjectContext.perform {
+        managedObjectContext.perform {
             self.lookupLatest(identifier: identifier, predicate: predicate) {
                 switch $0 {
                 case .success(let object):
                     if let object = object {
-                        let shouldDelete = block(object) == .delete
+                        let shouldDelete = updateBlock(object) == .delete
                         do {
                             if shouldDelete {
                                 self.managedObjectContext.delete(object)
