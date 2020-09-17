@@ -202,8 +202,9 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 }
             }
             .onAppear {
-                // After the row is first made visible, make the text field the first responder
-                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(10)) {
+                // After the row is first made visible, make the text field the first responder.
+                // Long delay is needed here to allow the view to scroll after the keyboard is presented
+                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
                     self.isManualGlucoseEntryRowVisible = true
                 }
             }
