@@ -1022,15 +1022,16 @@ extension DeviceDataManager {
         }
 
         DispatchQueue.global(qos: .background).async {
-            let error = exporter.export()
-            if let error = error {
-                self.log.error("Critical event log historical export errored: %{public}@", String(describing: error))
+            exporter.export() { error in
+                if let error = error {
+                    self.log.error("Critical event log historical export errored: %{public}@", String(describing: error))
+                }
+
+                self.scheduleCriticalEventLogHistoricalExportBackgroundTask(isRetry: error != nil)
+                task.setTaskCompleted(success: error == nil)
+
+                self.log.default("Completed critical event log historical export background task")
             }
-
-            self.scheduleCriticalEventLogHistoricalExportBackgroundTask(isRetry: error != nil)
-            task.setTaskCompleted(success: error == nil)
-
-            self.log.default("Completed critical event log historical export background task")
         }
     }
 

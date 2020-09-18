@@ -18,7 +18,7 @@ struct CriticalEventLogExportView: View {
     var body: some View {
         Group {
             Spacer()
-            if viewModel.url == nil {
+            if !viewModel.showingSuccess {
                 exportingView
             } else {
                 exportedView
@@ -42,7 +42,7 @@ struct CriticalEventLogExportView: View {
             ProgressView(progress: CGFloat(viewModel.progress))
                 .accentColor(.loopAccent)
                 .padding()
-            Text(viewModel.remainingDurationString ?? " ")  // Vertical alignment hack
+            Text(viewModel.remainingDuration ?? " ")  // Vertical alignment hack
         }
     }
 
@@ -57,11 +57,11 @@ struct CriticalEventLogExportView: View {
             Text("Critical Event Log Ready", comment: "Critical event log ready text")
                 .bold()
         }
-        .sheet(isPresented: Binding.constant(true), onDismiss: {
+        .sheet(isPresented: $viewModel.showingShare, onDismiss: {
             self.viewModel.cancel()
             self.dismiss()
         }) {
-            ActivityViewController(activityItems: [CriticalEventLogExportActivityItemSource(url: self.viewModel.url!)], applicationActivities: nil)
+            ActivityViewController(activityItems: self.viewModel.activityItems, applicationActivities: nil)
         }
     }
 
@@ -74,6 +74,7 @@ struct CriticalEventLogExportView: View {
 
     private var errorAlertPrimaryButton: SwiftUI.Alert.Button {
         .cancel() {
+            self.viewModel.cancel()
             self.dismiss()
         }
     }
@@ -100,9 +101,9 @@ public struct CriticalEventLogExportView_Previews: PreviewProvider {
     public static var previews: some View {
         let exportingViewModel = CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory())
         exportingViewModel.progress = 0.5
-        exportingViewModel.remainingDurationString = "About 3 minutes remaining"
+        exportingViewModel.remainingDuration = "About 3 minutes remaining"
         let exportedViewModel = CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory())
-        exportedViewModel.url = URL(string: "file:///mock.txt")!
+        exportedViewModel.showingSuccess = true
         return Group {
             CriticalEventLogExportView(viewModel: exportingViewModel)
                 .colorScheme(.light)
@@ -125,10 +126,7 @@ class MockCriticalEventLogExporterFactory: CriticalEventLogExporterFactory {
 }
 
 class MockCriticalEventLogExporter: CriticalEventLogExporter {
-    weak var delegate: CriticalEventLogExporterDelegate?
-
-    var isCancelled: Bool = false
-    func cancel() { isCancelled = true }
-
-    func export(now: Date) -> Error? { isCancelled ? CriticalEventLogError.cancelled : nil }
+    var delegate: CriticalEventLogExporterDelegate?
+    var progress: Progress = Progress.discreteProgress(totalUnitCount: 0)
+    func export(now: Date, completion: @escaping (Error?) -> Void) { completion(nil) }
 }

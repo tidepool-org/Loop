@@ -18,18 +18,19 @@ protocol CriticalEventLogExporterFactory {
 extension CriticalEventLogExportManager: CriticalEventLogExporterFactory {}
 
 public class CriticalEventLogExportViewModel: ObservableObject, Identifiable, CriticalEventLogExporterDelegate {
-    @Published var progress: Double = 0
-    @Published var remainingDurationString: String?
-    @Published var url: URL? = nil
+    @Published var showingSuccess: Bool = false
+    @Published var showingShare: Bool = false
     @Published var showingError: Bool = false
+    @Published var progress: Double = 0
+    @Published var remainingDuration: String?
+
+    var progressStartDate: Date?
+    var progressLatestDate: Date?
+    var progressDuration: TimeInterval = 0
+    var activityItems: [UIActivityItemSource] = []
 
     private let exporterFactory: CriticalEventLogExporterFactory
     private var exporter: CriticalEventLogExporter?
-    private var progressStartDate: Date?
-    private var progressLatestDate: Date?
-    private var progressDuration: TimeInterval = 0
-    private var remainingDuration: TimeInterval?
-    private var backgroundTaskIdentifier: UIBackgroundTaskIdentifier?
 
     private let log = OSLog(category: "CriticalEventLogExportManager")
 
@@ -40,32 +41,37 @@ public class CriticalEventLogExportViewModel: ObservableObject, Identifiable, Cr
     func export() {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        reset()
+        self.showingSuccess = false
+        self.showingShare = false
+        self.showingError = false
+        self.progress = 0
+        self.remainingDuration = nil
 
-        NotificationCenter.default.addObserver(self, selector: #selector(willEnterForegroundNotificationReceived(_:)), name: UIApplication.willEnterForegroundNotification, object: nil)
+        self.progressStartDate =  nil
+        self.progressLatestDate = nil
+        self.progressDuration = 0
+        self.activityItems = []
 
         let filename = String(format: NSLocalizedString("Export-%1$@", comment: "The export file name formatted string (1: timestamp)"), self.timestampFormatter.string(from: Date()))
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename).appendingPathExtension("zip")
 
         var exporter = exporterFactory.createExporter(to: url)
         exporter.delegate = self
+
         self.exporter = exporter
 
-        beginBackgroundTask()
-
-        DispatchQueue.global(qos: .utility).async {
-            let error = exporter.export()
-            if let error = error {
-                self.log.error("Failure during critical event log export: %{public}@", String(describing: error))
-            }
-
+        exporter.export() { error in
             DispatchQueue.main.async {
-                self.endBackgroundTask()
-                if !exporter.isCancelled {
-                    if error != nil {
+                if let error = error {
+                    self.log.error("Failure during critical event log export: %{public}@", String(describing: error))
+                    if !exporter.isCancelled {
                         self.showingError = true
-                    } else {
-                        self.url = url
+                    }
+                } else {
+                    self.activityItems = [CriticalEventLogExportActivityItemSource(url: url)]
+                    self.showingSuccess = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+                        self.showingShare = true
                     }
                 }
             }
@@ -75,72 +81,18 @@ public class CriticalEventLogExportViewModel: ObservableObject, Identifiable, Cr
     func cancel() {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        exporter?.cancel()
-
-        reset()
-    }
-
-    private func beginBackgroundTask() {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        endBackgroundTask()
-
-        self.backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask {
-            self.log.default("Invoked critical event log full export background task expiration handler")
-            self.endBackgroundTask()
-        }
-
-        self.log.default("Begin critical event log full export background task")
-    }
-
-    private func endBackgroundTask() {
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        if let backgroundTaskIdentifier = self.backgroundTaskIdentifier {
-            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
-            self.backgroundTaskIdentifier = nil
-            self.log.default("End critical event log full export background task")
-        }
-    }
-
-    @objc private func willEnterForegroundNotificationReceived(_ notification: Notification) {
-        beginBackgroundTask()
-    }
-
-    // Required due to the current design which creates all settings-related view models at once when the settings view is
-    // about to be displayed. Since it is possible to invoke the export view multiple times from with the same settings view and
-    // this view model contains view-specific state information it is therefore necessary to re-use the same view model each time
-    // the export view thus necessitating the reset functionality.
-    private func reset() {
-        if let url = self.url {
-            try? FileManager.default.removeItem(at: url)
-        }
-
-        self.progress = 0
-        self.remainingDurationString = nil
-        self.url = nil
-        self.showingError = false
-
+        self.exporter?.cancel()
         self.exporter = nil
-        self.progressStartDate =  nil
-        self.progressDuration = 0
-        self.remainingDuration = nil
-
-        NotificationCenter.default.removeObserver(self)
+        self.activityItems = []
     }
 
     // MARK: - CriticalEventLogExporterDelegate
 
     private let progressBackgroundDuration: TimeInterval = .seconds(5)
     private let durationMinimum: TimeInterval = .seconds(5)
-    private let remainingDurationDeltaMinimum: TimeInterval = .seconds(2)
 
     public func exportDidProgress(_ progress: Double) {
         DispatchQueue.main.async {
-            guard let exporter = self.exporter, !exporter.isCancelled else {
-                return
-            }
-
             let now = Date()
             if self.progressStartDate == nil {
                 self.progressStartDate = now
@@ -156,9 +108,8 @@ public class CriticalEventLogExportViewModel: ObservableObject, Identifiable, Cr
             self.progressLatestDate = now
 
             // If no progress, then we have no idea when we will finish and bail (prevents divide by zero)
-            guard progress > 0 else {
+            guard self.progress > 0 else {
                 self.remainingDuration = nil
-                self.remainingDurationString = nil
                 return
             }
 
@@ -168,18 +119,7 @@ public class CriticalEventLogExportViewModel: ObservableObject, Identifiable, Cr
                 return
             }
 
-            // If remaining duration hasn't changed much, then bail
-            let remainingDuration = duration / progress - duration
-            guard self.remainingDuration == nil || (remainingDuration - self.remainingDuration!).magnitude > self.remainingDurationDeltaMinimum else {
-                return
-            }
-
-            self.remainingDuration = remainingDuration
-
-            let remainingDurationString = self.remainingDurationToString(remainingDuration)
-            if remainingDurationString != self.remainingDurationString {
-                self.remainingDurationString = remainingDurationString
-            }
+            self.remainingDuration = self.remainingDurationAsString(duration / self.progress - duration)
         }
     }
 
@@ -188,7 +128,7 @@ public class CriticalEventLogExportViewModel: ObservableObject, Identifiable, Cr
     // X minutes and 29 seconds to address misleading messages when duration is two minutes down to complete.
     private let remainingDurationApproximationOffset: TimeInterval = 30
 
-    private func remainingDurationToString(_ remainingDuration: TimeInterval) -> String? {
+    private func remainingDurationAsString(_ remainingDuration: TimeInterval) -> String? {
         switch remainingDuration {
         case 0..<15:
             return NSLocalizedString("A few seconds remaining", comment: "Estimated remaining duration with a few seconds")
@@ -228,12 +168,16 @@ public class CriticalEventLogExportViewModel: ObservableObject, Identifiable, Cr
     }()
 }
 
-class CriticalEventLogExportActivityItemSource: NSObject, UIActivityItemSource {
+fileprivate class CriticalEventLogExportActivityItemSource: NSObject, UIActivityItemSource {
     private let url: URL
 
     init(url: URL) {
         self.url = url
         super.init()
+    }
+
+    deinit {
+        try? FileManager.default.removeItem(at: url)
     }
 
     // MARK: - UIActivityItemSource

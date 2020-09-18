@@ -643,8 +643,8 @@ class AlertStoreTests: XCTestCase {
 class AlertStoreLogCriticalEventLogTests: XCTestCase {
     var alertStore: AlertStore!
     var outputStream: MockOutputStream!
-    var progressor: MockEstimatedDurationProgressor!
-
+    var progress: Progress!
+    
     override func setUp() {
         super.setUp()
 
@@ -658,7 +658,7 @@ class AlertStoreLogCriticalEventLogTests: XCTestCase {
         XCTAssertNil(alertStore.addAlerts(alerts: alerts))
 
         outputStream = MockOutputStream()
-        progressor = MockEstimatedDurationProgressor()
+        progress = Progress()
     }
 
     override func tearDown() {
@@ -666,24 +666,24 @@ class AlertStoreLogCriticalEventLogTests: XCTestCase {
 
         super.tearDown()
     }
-
-    func testExportEstimatedDuration() {
-        switch alertStore.exportEstimatedDuration(startDate: dateFormatter.date(from: "2100-01-02T03:03:00Z")!,
-                                                  endDate: dateFormatter.date(from: "2100-01-02T03:09:00Z")!) {
+    
+    func testExportProgressTotalUnitCount() {
+        switch alertStore.exportProgressTotalUnitCount(startDate: dateFormatter.date(from: "2100-01-02T03:03:00Z")!,
+                                                       endDate: dateFormatter.date(from: "2100-01-02T03:09:00Z")!) {
         case .failure(let error):
             XCTFail("Unexpected failure: \(error)")
-        case .success(let estimatedDuration):
-            XCTAssertEqual(estimatedDuration, 3 * 0.0011, accuracy: 0.0001)
+        case .success(let progressTotalUnitCount):
+            XCTAssertEqual(progressTotalUnitCount, 3 * 1)
         }
     }
-
-    func testExportEstimatedDurationEmpty() {
-        switch alertStore.exportEstimatedDuration(startDate: dateFormatter.date(from: "2100-01-02T03:00:00Z")!,
-                                                  endDate: dateFormatter.date(from: "2100-01-02T03:01:00Z")!) {
+    
+    func testExportProgressTotalUnitCountEmpty() {
+        switch alertStore.exportProgressTotalUnitCount(startDate: dateFormatter.date(from: "2100-01-02T03:00:00Z")!,
+                                                       endDate: dateFormatter.date(from: "2100-01-02T03:01:00Z")!) {
         case .failure(let error):
             XCTFail("Unexpected failure: \(error)")
-        case .success(let estimatedDuration):
-            XCTAssertEqual(estimatedDuration, 0)
+        case .success(let progressTotalUnitCount):
+            XCTAssertEqual(progressTotalUnitCount, 0)
         }
     }
 
@@ -691,7 +691,7 @@ class AlertStoreLogCriticalEventLogTests: XCTestCase {
         XCTAssertNil(alertStore.export(startDate: dateFormatter.date(from: "2100-01-02T03:03:00Z")!,
                                        endDate: dateFormatter.date(from: "2100-01-02T03:09:00Z")!,
                                        to: outputStream,
-                                       progressor: progressor))
+                                       progress: progress))
         XCTAssertEqual(outputStream.string, """
 [
 {"acknowledgedDate":"2100-01-02T03:08:00.000Z","alertIdentifier":"a1","isCritical":false,"issuedDate":"2100-01-02T03:08:00.000Z","managerIdentifier":"m1","modificationCounter":1,"triggerType":0},
@@ -700,24 +700,24 @@ class AlertStoreLogCriticalEventLogTests: XCTestCase {
 ]
 """
         )
-        XCTAssertEqual(progressor.estimatedDuration, 3 * 0.0011, accuracy: 0.0001)
+        XCTAssertEqual(progress.completedUnitCount, 3 * 1)
     }
 
     func testExportEmpty() {
         XCTAssertNil(alertStore.export(startDate: dateFormatter.date(from: "2100-01-02T03:00:00Z")!,
                                        endDate: dateFormatter.date(from: "2100-01-02T03:01:00Z")!,
                                        to: outputStream,
-                                       progressor: progressor))
+                                       progress: progress))
         XCTAssertEqual(outputStream.string, "[]")
-        XCTAssertEqual(progressor.estimatedDuration, 0)
+        XCTAssertEqual(progress.completedUnitCount, 0)
     }
 
     func testExportCancelled() {
-        progressor.isCancelled = true
+        progress.cancel()
         XCTAssertEqual(alertStore.export(startDate: dateFormatter.date(from: "2100-01-02T03:03:00Z")!,
                                          endDate: dateFormatter.date(from: "2100-01-02T03:09:00Z")!,
                                          to: outputStream,
-                                         progressor: progressor) as? CriticalEventLogError, CriticalEventLogError.cancelled)
+                                         progress: progress) as? CriticalEventLogError, CriticalEventLogError.cancelled)
     }
 
     private let dateFormatter = ISO8601DateFormatter()

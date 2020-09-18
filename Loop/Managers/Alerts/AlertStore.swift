@@ -352,13 +352,13 @@ extension Result where Success == Void {
 // MARK: - Critical Event Log Export
 
 extension AlertStore: CriticalEventLog {
-    private var exportEstimatedDurationPerObject: TimeInterval { 0.0011 }   // Estimated during development on iPhone 8, absolute duration is less important than relative to other critical event logs
-    private var exportFetchLimit: Int { Int(criticalEventLogExportMinimumProgressDuration / exportEstimatedDurationPerObject) }
+    private var exportProgressUnitCountPerObject: Int64 { 1 }
+    private var exportFetchLimit: Int { Int(criticalEventLogExportProgressUnitCountPerFetch / exportProgressUnitCountPerObject) }
 
     public var exportName: String { "Alerts.json" }
 
-    public func exportEstimatedDuration(startDate: Date, endDate: Date? = nil) -> Result<TimeInterval, Error> {
-        var result: Result<TimeInterval, Error>?
+    public func exportProgressTotalUnitCount(startDate: Date, endDate: Date? = nil) -> Result<Int64, Error> {
+        var result: Result<Int64, Error>?
 
         self.managedObjectContext.performAndWait {
             do {
@@ -366,7 +366,7 @@ extension AlertStore: CriticalEventLog {
                 request.predicate = self.exportDatePredicate(startDate: startDate, endDate: endDate)
 
                 let objectCount = try self.managedObjectContext.count(for: request)
-                result = .success(Double(objectCount) * exportEstimatedDurationPerObject)
+                result = .success(Int64(objectCount) * exportProgressUnitCountPerObject)
             } catch let error {
                 result = .failure(error)
             }
@@ -375,7 +375,7 @@ extension AlertStore: CriticalEventLog {
         return result!
     }
 
-    public func export(startDate: Date, endDate: Date, to stream: OutputStream, progressor: EstimatedDurationProgressor) -> Error? {
+    public func export(startDate: Date, endDate: Date, to stream: OutputStream, progress: Progress) -> Error? {
         let encoder = JSONStreamEncoder(stream: stream)
         var modificationCounter: Int64 = 0
         var fetching = true
@@ -384,7 +384,7 @@ extension AlertStore: CriticalEventLog {
         while fetching && error == nil {
             self.managedObjectContext.performAndWait {
                 do {
-                    guard !progressor.isCancelled else {
+                    guard !progress.isCancelled else {
                         throw CriticalEventLogError.cancelled
                     }
 
@@ -404,7 +404,7 @@ extension AlertStore: CriticalEventLog {
 
                     modificationCounter = objects.last!.modificationCounter
 
-                    progressor.didProgress(for: Double(objects.count) * exportEstimatedDurationPerObject)
+                    progress.completedUnitCount += Int64(objects.count) * exportProgressUnitCountPerObject
                 } catch let fetchError {
                     error = fetchError
                 }

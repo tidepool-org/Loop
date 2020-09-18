@@ -24,12 +24,3 @@ class MockOutputStream: OutputStream {
 
     var string: String { String(data: data, encoding: .utf8)! }
 }
-
-class MockEstimatedDurationProgressor: EstimatedDurationProgressor {
-    var isCancelled: Bool = false
-    var estimatedDuration: TimeInterval = 0
-
-    func didProgress(for estimatedDuration: TimeInterval) {
-        self.estimatedDuration += estimatedDuration
-    }
-}

@@ -261,10 +261,10 @@ fileprivate struct EncodableDosingDecisionObject: Encodable {
 extension DosingDecisionStore: CriticalEventLog {
     public var exportName: String { "DosingDecisions.json" }
 
-    public func export(startDate: Date, endDate: Date, to stream: OutputStream, progressor: EstimatedDurationProgressor) -> Error? {
+    public func export(startDate: Date, endDate: Date, to stream: OutputStream, progress: Progress) -> Error? {
         let encoder = JSONStreamEncoder(stream: stream)
 
-        var error = export(startDate: startDate, endDate: endDate, using: encoder.encode, progressor: progressor)
+        var error = export(startDate: startDate, endDate: endDate, using: encoder.encode, progress: progress)
 
         if let closeError = encoder.close(), error == nil {
             error = closeError

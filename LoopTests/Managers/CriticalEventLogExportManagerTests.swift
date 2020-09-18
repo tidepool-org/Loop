@@ -26,9 +26,9 @@ class CriticalEventLogExportManagerTests: XCTestCase {
         super.setUp()
 
         fileManager = FileManager.default
-        logs = [MockCriticalEventLog(name: "One", estimatedDuration: 1),
-                MockCriticalEventLog(name: "Two", estimatedDuration: 2),
-                MockCriticalEventLog(name: "Three", estimatedDuration: 3)]
+        logs = [MockCriticalEventLog(name: "One", progressUnitCount: 1),
+                MockCriticalEventLog(name: "Two", progressUnitCount: 2),
+                MockCriticalEventLog(name: "Three", progressUnitCount: 3)]
         directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         historicalDuration = .days(5)
         manager = CriticalEventLogExportManager(logs: logs, directory: directory, historicalDuration: historicalDuration, fileManager: fileManager)
@@ -70,27 +70,36 @@ class CriticalEventLogExportManagerTests: XCTestCase {
     }
 
     func testExport() {
+        let completionExpectation = expectation(description: "Export completion")
+
         logs.forEach { $0.exportExpectation = self.expectation(description: $0.name, expectedFulfillmentCount: 5) }
 
         var exporter = manager.createExporter(to: url)
         exporter.delegate = delegate
 
-        XCTAssertNil(exporter.export(now: now))
+        exporter.export(now: now) { error in
+            XCTAssertNil(error)
+            XCTAssertFalse(exporter.isCancelled)
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.url.path))
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200306T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200307T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200308T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200309T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200310T000000Z.zip").path))
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200311T000000Z.zip").path))
+            XCTAssertEqual(exporter.progress.fractionCompleted, 1.0)
+            XCTAssertTrue(exporter.progress.isFinished)
+            XCTAssertEqual(self.delegate.progress!, 1.0)
 
-        XCTAssertFalse(exporter.isCancelled)
-        XCTAssertTrue(fileManager.isReadableFile(atPath: url.path))
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200306T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200307T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200308T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200309T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200310T000000Z.zip").path))
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200311T000000Z.zip").path))
-        XCTAssertEqual(delegate.progress!, 1.0, accuracy: 0.0001)
+            completionExpectation.fulfill()
+        }
 
-        wait(for: logs.map { $0.exportExpectation! }, timeout: 0)
+        wait(for: [completionExpectation] + logs.map { $0.exportExpectation! }, timeout: 10)
     }
 
     func testExportPartial() {
+        let completionExpectation = expectation(description: "Export completion")
+
         logs.forEach { $0.exportExpectation = self.expectation(description: $0.name, expectedFulfillmentCount: 3) }
 
         XCTAssertNoThrow(try fileManager.createDirectory(at: directory, withIntermediateDirectories: true))
@@ -100,49 +109,71 @@ class CriticalEventLogExportManagerTests: XCTestCase {
         var exporter = manager.createExporter(to: url)
         exporter.delegate = delegate
 
-        XCTAssertNil(exporter.export(now: now))
+        exporter.export(now: now) { error in
+            XCTAssertNil(error)
+            XCTAssertFalse(exporter.isCancelled)
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.url.path))
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200306T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200309T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200310T000000Z.zip").path))
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200311T000000Z.zip").path))
+            XCTAssertEqual(exporter.progress.fractionCompleted, 1.0)
+            XCTAssertTrue(exporter.progress.isFinished)
+            XCTAssertEqual(self.delegate.progress!, 1.0)
 
-        XCTAssertFalse(exporter.isCancelled)
-        XCTAssertTrue(fileManager.isReadableFile(atPath: url.path))
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200306T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200309T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200310T000000Z.zip").path))
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200311T000000Z.zip").path))
-        XCTAssertEqual(delegate.progress!, 1.0, accuracy: 0.0001)
+            completionExpectation.fulfill()
+        }
 
-        wait(for: logs.map { $0.exportExpectation! }, timeout: 0)
+        wait(for: [completionExpectation] + logs.map { $0.exportExpectation! }, timeout: 10)
     }
 
     func testExportCancelled() {
+        let completionExpectation = expectation(description: "Export completion")
+
         let exporter = manager.createExporter(to: url)
         exporter.cancel()
 
-        XCTAssertEqual(exporter.export(now: now) as? CriticalEventLogError, CriticalEventLogError.cancelled)
+        exporter.export(now: now) { error in
+            XCTAssertEqual(error as? CriticalEventLogError, CriticalEventLogError.cancelled)
+            XCTAssertTrue(exporter.isCancelled)
+            XCTAssertFalse(self.fileManager.fileExists(atPath: self.url.path))
 
-        XCTAssertTrue(exporter.isCancelled)
+            completionExpectation.fulfill()
+        }
+
+        wait(for: [completionExpectation], timeout: 10)
     }
 
     func testExportHistorical() {
+        let completionExpectation = expectation(description: "Export completion")
+
         logs.forEach { $0.exportExpectation = self.expectation(description: $0.name, expectedFulfillmentCount: 4) }
 
         var exporter = manager.createHistoricalExporter()
         exporter.delegate = delegate
 
-        XCTAssertNil(exporter.export(now: now))
+        exporter.export(now: now) { error in
+            XCTAssertNil(error)
+            XCTAssertFalse(exporter.isCancelled)
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200306T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200307T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200308T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200309T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200310T000000Z.zip").path))
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200311T000000Z.zip").path))
+            XCTAssertEqual(exporter.progress.fractionCompleted, 1.0)
+            XCTAssertTrue(exporter.progress.isFinished)
+            XCTAssertEqual(self.delegate.progress!, 1.0)
 
-        XCTAssertFalse(exporter.isCancelled)
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200306T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200307T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200308T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200309T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200310T000000Z.zip").path))
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200311T000000Z.zip").path))
-        XCTAssertEqual(delegate.progress!, 1.0, accuracy: 0.0001)
+            completionExpectation.fulfill()
+        }
 
-        wait(for: logs.map { $0.exportExpectation! }, timeout: 0)
+        wait(for: [completionExpectation] + logs.map { $0.exportExpectation! }, timeout: 10)
     }
 
     func testExportHistoricalPartial() {
+        let completionExpectation = expectation(description: "Export completion")
+
         logs.forEach { $0.exportExpectation = self.expectation(description: $0.name, expectedFulfillmentCount: 2) }
 
         XCTAssertNoThrow(try fileManager.createDirectory(at: directory, withIntermediateDirectories: true))
@@ -152,71 +183,92 @@ class CriticalEventLogExportManagerTests: XCTestCase {
         var exporter = manager.createHistoricalExporter()
         exporter.delegate = delegate
 
-        XCTAssertNil(exporter.export(now: now))
+        exporter.export(now: now) { error in
+            XCTAssertNil(error)
+            XCTAssertFalse(exporter.isCancelled)
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200306T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200309T000000Z.zip").path))
+            XCTAssertTrue(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200310T000000Z.zip").path))
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200311T000000Z.zip").path))
+            XCTAssertEqual(exporter.progress.fractionCompleted, 1.0)
+            XCTAssertTrue(exporter.progress.isFinished)
+            XCTAssertEqual(self.delegate.progress!, 1.0)
 
-        XCTAssertFalse(exporter.isCancelled)
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200306T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200309T000000Z.zip").path))
-        XCTAssertTrue(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200310T000000Z.zip").path))
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200311T000000Z.zip").path))
-        XCTAssertEqual(delegate.progress!, 1.0, accuracy: 0.0001)
+            completionExpectation.fulfill()
+        }
 
-        wait(for: logs.map { $0.exportExpectation! }, timeout: 0)
+        wait(for: [completionExpectation] + logs.map { $0.exportExpectation! }, timeout: 10)
     }
 
     func testExportHistoricalPurge() {
+        let completionExpectation = expectation(description: "Export completion")
+
         XCTAssertNoThrow(try fileManager.createDirectory(at: directory, withIntermediateDirectories: true))
         XCTAssertTrue(fileManager.createFile(atPath: directory.appendingPathComponent("20200305T000000Z.zip").path, contents: nil))
         XCTAssertTrue(fileManager.createFile(atPath: directory.appendingPathComponent("20200306T000000Z.zip").path, contents: nil))
 
-        let exporter = manager.createHistoricalExporter()
+        var exporter = manager.createHistoricalExporter()
+        exporter.delegate = delegate
 
-        XCTAssertNil(exporter.export(now: now))
+        exporter.export(now: now) { error in
+            XCTAssertNil(error)
+            XCTAssertFalse(exporter.isCancelled)
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200305T000000Z.zip").path))
+            XCTAssertFalse(self.fileManager.isReadableFile(atPath: self.directory.appendingPathComponent("20200306T000000Z.zip").path))
+            XCTAssertEqual(self.delegate.progress!, 1.0)
 
-        XCTAssertFalse(exporter.isCancelled)
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200305T000000Z.zip").path))
-        XCTAssertFalse(fileManager.isReadableFile(atPath: directory.appendingPathComponent("20200306T000000Z.zip").path))
+            completionExpectation.fulfill()
+        }
+
+        wait(for: [completionExpectation], timeout: 10)
     }
 
     func testExportHistoricalCancelled() {
+        let completionExpectation = expectation(description: "Export completion")
+
         let exporter = manager.createHistoricalExporter()
         exporter.cancel()
 
-        XCTAssertEqual(exporter.export(now: now) as? CriticalEventLogError, CriticalEventLogError.cancelled)
+        exporter.export(now: now) { error in
+            XCTAssertEqual(error as? CriticalEventLogError, CriticalEventLogError.cancelled)
+            XCTAssertTrue(exporter.isCancelled)
 
-        XCTAssertTrue(exporter.isCancelled)
+            completionExpectation.fulfill()
+        }
+
+        wait(for: [completionExpectation], timeout: 10)
     }
 }
 
 class MockCriticalEventLog: CriticalEventLog {
     var name: String
-    var estimatedDuration: TimeInterval
+    var progressUnitCount: Int64
     var error: Error?
-    var exportEstimatedDurationExpectation: XCTestExpectation?
+    var exportProgressTotalUnitCountExpectation: XCTestExpectation?
     var exportExpectation: XCTestExpectation?
 
-    init(name: String, estimatedDuration: TimeInterval) {
+    init(name: String, progressUnitCount: Int64) {
         self.name = name
-        self.estimatedDuration = estimatedDuration
+        self.progressUnitCount = progressUnitCount
     }
 
     var exportName: String { name }
 
-    func exportEstimatedDuration(startDate: Date, endDate: Date?) -> Result<TimeInterval, Error> {
-        exportEstimatedDurationExpectation?.fulfill()
+    func exportProgressTotalUnitCount(startDate: Date, endDate: Date?) -> Result<Int64, Error> {
+        exportProgressTotalUnitCountExpectation?.fulfill()
 
         if let error = error {
             return .failure(error)
         }
 
         let days = (endDate ?? now).timeIntervalSince(startDate).days.rounded(.down)
-        return .success(estimatedDuration * days)
+        return .success(Int64(days) * progressUnitCount)
     }
 
-    func export(startDate: Date, endDate: Date, to stream: OutputStream, progressor: EstimatedDurationProgressor) -> Error? {
+    func export(startDate: Date, endDate: Date, to stream: OutputStream, progress: Progress) -> Error? {
         exportExpectation?.fulfill()
 
-        guard !progressor.isCancelled else {
+        guard !progress.isCancelled else {
             return CriticalEventLogError.cancelled
         }
 
@@ -230,7 +282,7 @@ class MockCriticalEventLog: CriticalEventLog {
             return error
         }
 
-        progressor.didProgress(for: estimatedDuration)
+        progress.completedUnitCount += progressUnitCount
         return nil
     }
 }

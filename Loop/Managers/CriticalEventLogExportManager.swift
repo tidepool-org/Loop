@@ -20,25 +20,26 @@ public protocol CriticalEventLogExporter {
     /// The delegate for the exporter to send progress updates.
     var delegate: CriticalEventLogExporterDelegate? { get set }
 
-    /// Has the export been cancelled?
-    var isCancelled: Bool { get }
-
-    /// Cancel the export progress.
-    func cancel()
+    /// The export progress.
+    var progress: Progress { get }
 
     /// Export
-    /// - Parameter now: - The current time.
-    /// - Returns: Any error that occurred during export, including cancelled.
-    func export(now: Date) -> Error?
+    /// - Parameter now: The current time.
+    /// - Parameter completion: Competion handler returning any error.
+    func export(now: Date, completion: @escaping (Error?) -> Void)
 }
 
-extension CriticalEventLogExporter {
+public extension CriticalEventLogExporter {
 
-    /// Export
-    /// - Returns: Any error that occurred during export, including cancelled.
-    func export() -> Error? {
-        return export(now: Date())
-    }
+    /// Has the export been cancelled?
+    var isCancelled: Bool { progress.isCancelled }
+
+    /// Cancel the export progress.
+    func cancel() { progress.cancel() }
+
+    /// Export using the current date.
+    /// - Parameter completion: Competion handler returning any error.
+    func export(completion: @escaping (Error?) -> Void) { export(now: Date(), completion: completion) }
 }
 
 public protocol CriticalEventLogExporterDelegate: AnyObject {
@@ -142,7 +143,6 @@ public class CriticalEventLogExportManager {
     private func obtainSynchronizeSemaphore(waiting timeInterval: TimeInterval = 0) -> Bool {
         switch synchronizeSemaphore.wait(timeout: .now() + timeInterval) {
         case .timedOut:
-            synchronizeSemaphore.signal()
             return false
         case .success:
             return true
@@ -201,82 +201,57 @@ public class CriticalEventLogExportManager {
 
 // MARK: - CriticalEventLogBaseExporter
 
-public class CriticalEventLogBaseExporter: CriticalEventLogSynchronizedExporter, EstimatedDurationProgressor {
+public class CriticalEventLogBaseExporter {
     public weak var delegate: CriticalEventLogExporterDelegate?
+
+    public let progress: Progress
 
     fileprivate let manager: CriticalEventLogExportManager
 
-    private var cancellingActive: Bool
-    private var totalEstimatedDuration: TimeInterval
-    private var currentEstimatedDuration: TimeInterval
-
-    fileprivate init(manager: CriticalEventLogExportManager, cancellingActive: Bool) {
+    fileprivate init(manager: CriticalEventLogExportManager) {
+        self.progress = Progress.discreteProgress(totalUnitCount: 0)
         self.manager = manager
-        self.cancellingActive = cancellingActive
-        self.totalEstimatedDuration = 0
-        self.currentEstimatedDuration = 0
-    }
-
-    public var isCancelled: Bool { lockedIsCancelled.value }
-    private let lockedIsCancelled = Locked<Bool>(false)
-
-    public func cancel() { lockedIsCancelled.value = true }
-
-    public func didProgress(for estimatedDuration: TimeInterval) {
-        self.currentEstimatedDuration += estimatedDuration
-
-        guard totalEstimatedDuration != 0 else {
-            return
-        }
-
-        delegate?.exportDidProgress((currentEstimatedDuration / totalEstimatedDuration).clamped(to: 0...1))
-    }
-
-    public func export(now: Date) -> Error? {
-        return manager.synchronizeExport(for: self, cancellingActive: cancellingActive, now: now)
     }
 
     fileprivate func exportSynchronized(now: Date) -> Error? {
-        guard !isCancelled else {
+        guard !progress.isCancelled else {
             return CriticalEventLogError.cancelled
         }
 
-        switch exportEstimatedDuration(now: now) {
+        switch exportProgressTotalUnitCount(now: now) {
         case .failure(let error):
             return error
-        case .success(let estimatedDuration):
-            self.totalEstimatedDuration = estimatedDuration
+        case .success(let progressTotalUnitCount):
+            progress.totalUnitCount = progressTotalUnitCount
+            return nil
         }
-
-        delegate?.exportDidProgress(0)
-        return nil
     }
 
-    fileprivate func exportEstimatedDuration(now: Date) -> Result<TimeInterval, Error> {
-        return exportEstimatedDuration(through: nil, now: now)
+    fileprivate func exportProgressTotalUnitCount(now: Date) -> Result<Int64, Error> {
+        return exportProgressTotalUnitCount(through: nil, now: now)
     }
 
-    fileprivate func exportEstimatedDuration(through endDate: Date?, now: Date) -> Result<TimeInterval, Error> {
+    fileprivate func exportProgressTotalUnitCount(through endDate: Date?, now: Date) -> Result<Int64, Error> {
         switch manager.latestExportDate() {
         case .failure(let error):
             return .failure(error)
         case .success(let latestExportDate):
             let startDate = max(historicalDate(from: now), latestExportDate)
-            var estimatedDuration: TimeInterval = 0
+            var progressTotalUnitCount: Int64 = 0
             for log in manager.logs {
-                switch log.exportEstimatedDuration(startDate: startDate, endDate: endDate) {
+                switch log.exportProgressTotalUnitCount(startDate: startDate, endDate: endDate) {
                 case .failure(let error):
                     return .failure(error)
-                case .success(let logEstimatedDuration):
-                    estimatedDuration += logEstimatedDuration
+                case .success(let logProgressTotalUnitCount):
+                    progressTotalUnitCount += logProgressTotalUnitCount
                 }
             }
-            return .success(estimatedDuration)
+            return .success(progressTotalUnitCount)
         }
     }
 
-    fileprivate func export(startDate: Date, endDate: Date, to url: URL, compression: ZipArchive.Compression, progressor: EstimatedDurationProgressor) -> Error? {
-        guard !isCancelled else {
+    fileprivate func export(startDate: Date, endDate: Date, to url: URL, compression: ZipArchive.Compression, progress: Progress) -> Error? {
+        guard !progress.isCancelled else {
             return CriticalEventLogError.cancelled
         }
 
@@ -286,7 +261,7 @@ public class CriticalEventLogBaseExporter: CriticalEventLogSynchronizedExporter,
         defer { archive.close() }
 
         for log in manager.logs {
-            if let error = export(startDate: startDate, endDate: endDate, from: log, to: archive, compression: compression, progressor: progressor) {
+            if let error = export(startDate: startDate, endDate: endDate, from: log, to: archive, compression: compression, progress: progress) {
                 return error
             }
         }
@@ -294,8 +269,8 @@ public class CriticalEventLogBaseExporter: CriticalEventLogSynchronizedExporter,
         return archive.close()
     }
 
-    private func export(startDate: Date, endDate: Date, from log: CriticalEventLog, to archive: ZipArchive, compression: ZipArchive.Compression, progressor: EstimatedDurationProgressor) -> Error? {
-        guard !isCancelled else {
+    private func export(startDate: Date, endDate: Date, from log: CriticalEventLog, to archive: ZipArchive, compression: ZipArchive.Compression, progress: Progress) -> Error? {
+        guard !progress.isCancelled else {
             return CriticalEventLogError.cancelled
         }
 
@@ -303,7 +278,7 @@ public class CriticalEventLogBaseExporter: CriticalEventLogSynchronizedExporter,
         stream.open()
         defer { stream.close() }
 
-        return log.export(startDate: startDate, endDate: endDate, to: stream, progressor: progressor)
+        return log.export(startDate: startDate, endDate: endDate, to: stream, progress: progress)
     }
 
     fileprivate func historicalDate(from now: Date) -> Date { manager.exportDate(for: manager.date(byAddingDays: -Int(manager.historicalDuration.days), to: now)) }
@@ -315,21 +290,27 @@ public class CriticalEventLogBaseExporter: CriticalEventLogSynchronizedExporter,
 
 // MARK: - CriticalEventLogHistoricalExporter
 
-public class CriticalEventLogHistoricalExporter: CriticalEventLogBaseExporter {
+public class CriticalEventLogHistoricalExporter: CriticalEventLogBaseExporter, CriticalEventLogSynchronizedExporter {
     private let log = OSLog(category: "CriticalEventLogHistoricalExporter")
 
-    fileprivate init(manager: CriticalEventLogExportManager) {
-        super.init(manager: manager, cancellingActive: false)
+    public func export(now: Date, completion: @escaping (Error?) -> Void) {
+        completion(manager.synchronizeExport(for: self, cancellingActive: false, now: now))
     }
 
     fileprivate override func exportSynchronized(now: Date) -> Error? {
         if let error = super.exportSynchronized(now: now) {
             return error
         }
-        return exportSynchronized(progressor: self, now: now)
+
+        let observation = progress.observe(\.fractionCompleted, options: []) { [weak self] object, _ in
+            self?.delegate?.exportDidProgress(object.fractionCompleted)
+        }
+        defer { observation.invalidate() }
+
+        return exportSynchronized(progress: progress, now: now)
     }
 
-    fileprivate func exportSynchronized(progressor: EstimatedDurationProgressor, now: Date) -> Error? {
+    fileprivate func exportSynchronized(progress: Progress, now: Date) -> Error? {
         guard !isCancelled else {
             return CriticalEventLogError.cancelled
         }
@@ -353,7 +334,7 @@ public class CriticalEventLogHistoricalExporter: CriticalEventLogBaseExporter {
                     let temporaryFileURL = manager.fileManager.temporaryFileURL
                     defer { try? manager.fileManager.removeItem(at: temporaryFileURL) }
 
-                    if let error = export(startDate: startDate, endDate: endDate, to: temporaryFileURL, compression: .bestCompression, progressor: progressor) {
+                    if let error = export(startDate: startDate, endDate: endDate, to: temporaryFileURL, compression: .bestCompression, progress: progress) {
                         return error
                     }
 
@@ -370,8 +351,8 @@ public class CriticalEventLogHistoricalExporter: CriticalEventLogBaseExporter {
         }
     }
 
-    fileprivate override func exportEstimatedDuration(now: Date) -> Result<TimeInterval, Error> {
-        return exportEstimatedDuration(through: manager.recentDate(from: now), now: now)
+    fileprivate override func exportProgressTotalUnitCount(now: Date) -> Result<Int64, Error> {
+        return exportProgressTotalUnitCount(through: manager.recentDate(from: now), now: now)
     }
 
     private func purge(now: Date) {
@@ -394,24 +375,49 @@ public class CriticalEventLogHistoricalExporter: CriticalEventLogBaseExporter {
 
 // MARK: - CriticalEventLogFullExporter
 
-public class CriticalEventLogFullExporter: CriticalEventLogBaseExporter {
+public class CriticalEventLogFullExporter: CriticalEventLogBaseExporter, CriticalEventLogSynchronizedExporter {
     private let historicalExporter: CriticalEventLogHistoricalExporter
     private let url: URL
+    private var backgroundTaskIdentifier: UIBackgroundTaskIdentifier?
 
     private let log = OSLog(category: "CriticalEventLogFullExporter")
 
-    public init(manager: CriticalEventLogExportManager, to url: URL) {
+    fileprivate init(manager: CriticalEventLogExportManager, to url: URL) {
         self.historicalExporter = CriticalEventLogHistoricalExporter(manager: manager)
         self.url = url
-        super.init(manager: manager, cancellingActive: true)
+        super.init(manager: manager)
     }
+
+    public func export(now: Date, completion: @escaping (Error?) -> Void) {
+        DispatchQueue.main.async {
+            NotificationCenter.default.addObserver(self, selector: #selector(self.willEnterForegroundNotificationReceived(_:)), name: UIApplication.willEnterForegroundNotification, object: nil)
+            self.beginBackgroundTask()
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+            completion(self.manager.synchronizeExport(for: self, cancellingActive: true, now: now))
+
+            DispatchQueue.main.async {
+                self.endBackgroundTask()
+                NotificationCenter.default.removeObserver(self)
+            }
+        }
+    }
+
+    private let progressUnitCountArchivePerDay: Int64 = 10
+    private let progressUnitCountMove: Int64 = 10
 
     fileprivate override func exportSynchronized(now: Date) -> Error? {
         if let error = super.exportSynchronized(now: now) {
             return error
         }
 
-        if let error = historicalExporter.exportSynchronized(progressor: self, now: now) {
+        let observation = progress.observe(\.fractionCompleted, options: []) { [weak self] object, _ in
+            self?.delegate?.exportDidProgress(object.fractionCompleted)
+        }
+        defer { observation.invalidate() }
+
+        if let error = historicalExporter.exportSynchronized(progress: progress, now: now) {
             return error
         }
 
@@ -425,7 +431,7 @@ public class CriticalEventLogFullExporter: CriticalEventLogBaseExporter {
 
         log.default("Exporting %{public}@...", recentFileURL.lastPathComponent)
 
-        if let error = export(startDate: manager.recentDate(from: now), endDate: now, to: recentTemporaryFileURL, compression: .bestSpeed, progressor: self) {
+        if let error = export(startDate: manager.recentDate(from: now), endDate: now, to: recentTemporaryFileURL, compression: .bestSpeed, progress: progress) {
             return error
         }
 
@@ -458,7 +464,7 @@ public class CriticalEventLogFullExporter: CriticalEventLogBaseExporter {
                 return error
             }
 
-            didProgress(for: estimatedDurationForArchive)
+            progress.completedUnitCount += progressUnitCountArchivePerDay
         }
 
         guard !isCancelled else {
@@ -469,7 +475,7 @@ public class CriticalEventLogFullExporter: CriticalEventLogBaseExporter {
             return error
         }
 
-        didProgress(for: estimatedDurationForArchive)
+        progress.completedUnitCount += progressUnitCountArchivePerDay
 
         if let error = archive.close() {
             return error
@@ -485,23 +491,47 @@ public class CriticalEventLogFullExporter: CriticalEventLogBaseExporter {
             return error
         }
 
-        didProgress(for: estimatedDurationForMove)
+        progress.completedUnitCount += progressUnitCountMove
 
         log.default("Exported final archive %{public}@", url.lastPathComponent)
         return nil
     }
 
-    fileprivate override func exportEstimatedDuration(now: Date) -> Result<TimeInterval, Error> {
-        switch super.exportEstimatedDuration(now: now) {
+    fileprivate override func exportProgressTotalUnitCount(now: Date) -> Result<Int64, Error> {
+        switch super.exportProgressTotalUnitCount(now: now) {
         case .failure(let error):
             return .failure(error)
-        case .success(let estimatedDuration):
-            return .success(estimatedDuration + manager.historicalDuration.days * estimatedDurationForArchive + estimatedDurationForMove)
+        case .success(let progressTotalUnitCount):
+            return .success(progressTotalUnitCount + Int64(manager.historicalDuration.days) * progressUnitCountArchivePerDay + progressUnitCountMove)
         }
     }
 
-    private let estimatedDurationForArchive: TimeInterval = .seconds(0.01)
-    private let estimatedDurationForMove: TimeInterval = .seconds(0.01)
+    private func beginBackgroundTask() {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        self.endBackgroundTask()
+
+        self.backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask {
+            self.log.default("Invoked critical event log full export background task expiration handler")
+            self.endBackgroundTask()
+        }
+
+        self.log.default("Begin critical event log full export background task")
+    }
+
+    private func endBackgroundTask() {
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        if let backgroundTaskIdentifier = self.backgroundTaskIdentifier {
+            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
+            self.backgroundTaskIdentifier = nil
+            self.log.default("End critical event log full export background task")
+        }
+    }
+
+    @objc private func willEnterForegroundNotificationReceived(_ notification: Notification) {
+        beginBackgroundTask()
+    }
 }
 
 // MARK: - FileManager
