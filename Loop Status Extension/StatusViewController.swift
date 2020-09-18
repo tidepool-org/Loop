@@ -25,11 +25,6 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             hudView.cgmStatusHUD.tintColor = .label
             hudView.pumpStatusHUD.tintColor = .insulinTintColor
             hudView.backgroundColor = .clear
-
-            if view.bounds.width < 375 {
-                // need to adjust for narrow display
-                hudView.adjustViewsForNarrowDisplay = true
-            }
             
             // given the reduced width of the widget, allow for tighter spacing
             hudView.containerView.spacing = 6.0
@@ -142,6 +137,11 @@ class StatusViewController: UIViewController, NCWidgetProviding {
         observers = [
             // TODO: Observe cross-process notifications of Loop status updating
         ]
+        
+        if view.bounds.width < 375 {
+            // need to adjust for narrow display
+            hudView.adjustViewsForNarrowDisplay = true
+        }
     }
 
     deinit {

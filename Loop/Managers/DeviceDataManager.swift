@@ -536,8 +536,14 @@ extension DeviceDataManager {
         return pumpManager?.status
     }
 
-    var sensorState: SensorDisplayable? {
-        return cgmManager?.sensorState
+    func sensorState(for glucose: GlucoseSampleValue?) -> SensorDisplayable? {
+        if let glucose = glucose, glucose.wasUserEntered {
+            // the CGM manager needs to determine the glucoseValueType for a manual glucose based on its managed glucose thresholds
+            let glucoseValueType = (cgmManager as? CGMManagerUI)?.glucoseValueType(for: glucose)
+            return ManualGlucoseState(glucoseValueType: glucoseValueType)
+        } else {
+            return cgmManager?.sensorState
+        }
     }
 
     func updatePumpManagerBLEHeartbeatPreference() {
