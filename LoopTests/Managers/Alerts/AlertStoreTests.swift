@@ -526,6 +526,30 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: 1)
     }
     
+    func testAcknowledgeMultiple() {
+        let expect = self.expectation(description: #function)
+        let now = Date()
+        fillWith(startDate: Self.historicDate, data: [
+            (alert1, false, false),
+            (alert2, false, false),
+            (alert1, false, false)
+        ]) {
+            self.alertStore.recordAcknowledgement(of: self.alert1.identifier, at: now, completion: self.expectSuccess {
+                self.alertStore.fetch(completion: self.expectSuccess { storedAlerts in
+                    XCTAssertEqual(3, storedAlerts.count)
+                    for alert in [storedAlerts[0], storedAlerts[2]] {
+                        XCTAssertEqual(Self.identifier1, alert.identifier)
+                        XCTAssertEqual(Self.historicDate, alert.issuedDate)
+                        XCTAssertEqual(now, alert.acknowledgedDate)
+                        XCTAssertNil(alert.retractedDate)
+                    }
+                    expect.fulfill()
+                })
+            })
+        }
+        wait(for: [expect], timeout: 1)
+    }
+    
     func testLookupAllUnacknowledgedEmpty() {
         let expect = self.expectation(description: #function)
         alertStore.lookupAllUnacknowledged(completion: expectSuccess { alerts in
