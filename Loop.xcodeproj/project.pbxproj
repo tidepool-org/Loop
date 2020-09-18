@@ -381,6 +381,7 @@
 		A966152B23EA5A37005D8B29 /* DerivedAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A966152923EA5A37005D8B29 /* DerivedAssets.xcassets */; };
 		A967D94C24F99B9300CDDF8A /* OutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = A967D94B24F99B9300CDDF8A /* OutputStream.swift */; };
 		A977A2F424ACFECF0059C207 /* CriticalEventLogExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A977A2F324ACFECF0059C207 /* CriticalEventLogExportManager.swift */; };
+		A985464D251448300099C1A6 /* OutputStreamTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A985464C251448300099C1A6 /* OutputStreamTests.swift */; };
 		A98556852493F901000FD662 /* AlertStore+SimulatedCoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98556842493F901000FD662 /* AlertStore+SimulatedCoreData.swift */; };
 		A987CD4924A58A0100439ADC /* ZipArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = A987CD4824A58A0100439ADC /* ZipArchive.swift */; };
 		A999D40424663CE1004C89D4 /* DoseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A999D40324663CE1004C89D4 /* DoseStore.swift */; };
@@ -1234,6 +1235,7 @@
 		A966152923EA5A37005D8B29 /* DerivedAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DerivedAssets.xcassets; sourceTree = "<group>"; };
 		A967D94B24F99B9300CDDF8A /* OutputStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputStream.swift; sourceTree = "<group>"; };
 		A977A2F324ACFECF0059C207 /* CriticalEventLogExportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CriticalEventLogExportManager.swift; sourceTree = "<group>"; };
+		A985464C251448300099C1A6 /* OutputStreamTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputStreamTests.swift; sourceTree = "<group>"; };
 		A98556842493F901000FD662 /* AlertStore+SimulatedCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AlertStore+SimulatedCoreData.swift"; sourceTree = "<group>"; };
 		A987CD4824A58A0100439ADC /* ZipArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipArchive.swift; sourceTree = "<group>"; };
 		A999D40324663CE1004C89D4 /* DoseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseStore.swift; sourceTree = "<group>"; };
@@ -1595,6 +1597,7 @@
 				4328E0311CFC068900E199AA /* WatchContext+LoopKit.swift */,
 				C165B8CD23302C5D0004112E /* RemoteCommand.swift */,
 				E9C00EF424C623EF00628F35 /* LoopSettings+Loop.swift */,
+				A987CD4824A58A0100439ADC /* ZipArchive.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1908,7 +1911,6 @@
 				43B260481ED248FB008CAA77 /* CarbEntryTableViewCell.swift */,
 				431A8C3F1EC6E8AB00823B9C /* CircleMaskView.swift */,
 				A9A056B224B93C62007CF06D /* CriticalEventLogExportView.swift */,
-				A9A056B424B94123007CF06D /* CriticalEventLogExportViewModel.swift */,
 				43D381611EBD9759007F8C8F /* HeaderValuesTableViewCell.swift */,
 				430D85881F44037000AF2D4F /* HUDViewTableViewCell.swift */,
 				1DA46B5F2492E2E300D71A63 /* NotificationsCriticalAlertPermissionsView.swift */,
@@ -1937,6 +1939,7 @@
 				439897361CD2F80600223065 /* AnalyticsServicesManager.swift */,
 				B4F3D25024AF890C0095CE44 /* BluetoothStateManager.swift */,
 				439BED291E76093C00B0AED5 /* CGMManager.swift */,
+				A977A2F324ACFECF0059C207 /* CriticalEventLogExportManager.swift */,
 				43DBF0521C93EC8200B3C386 /* DeviceDataManager.swift */,
 				43F78D251C8FC000002152D1 /* DoseMath.swift */,
 				89CA2B3C226E6B13004D9350 /* LocalTestingScenariosManager.swift */,
@@ -1953,8 +1956,6 @@
 				4328E0341CFC0AE100E199AA /* WatchDataManager.swift */,
 				E9BB27AA23B85C3500FB4987 /* SleepStore.swift */,
 				C148CEE624FD91BD00711B3B /* DeliveryUncertaintyAlertManager.swift */,
-				A987CD4824A58A0100439ADC /* ZipArchive.swift */,
-				A977A2F324ACFECF0059C207 /* CriticalEventLogExportManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -2223,6 +2224,7 @@
 			isa = PBXGroup;
 			children = (
 				897A5A9824C22DE800C4E71D /* BolusEntryViewModel.swift */,
+				A9A056B424B94123007CF06D /* CriticalEventLogExportViewModel.swift */,
 			);
 			path = "View Models";
 			sourceTree = "<group>";
@@ -2288,6 +2290,7 @@
 				A9E6DFE5246A042E005B1A1C /* CarbStoreTests.swift */,
 				A9E6DFE7246A043C005B1A1C /* DoseStoreTests.swift */,
 				A9A63F8C246B261100588D5B /* DosingDecisionStoreTests.swift */,
+				A985464C251448300099C1A6 /* OutputStreamTests.swift */,
 				A9E6DFE9246A0448005B1A1C /* PumpManagerErrorTests.swift */,
 			);
 			path = Extensions;
@@ -3533,6 +3536,7 @@
 				1D80313D24746274002810DF /* AlertStoreTests.swift in Sources */,
 				A9A63F8E246B271600588D5B /* NSTimeInterval.swift in Sources */,
 				A9DFAFB324F0415E00950D1E /* CarbBackfillRequestUserInfoTests.swift in Sources */,
+				A985464D251448300099C1A6 /* OutputStreamTests.swift in Sources */,
 				A9A63F8D246B261100588D5B /* DosingDecisionStoreTests.swift in Sources */,
 				A9E6DFEF246A0474005B1A1C /* LoopErrorTests.swift in Sources */,
 				A9DFAFB524F048A000950D1E /* WatchHistoricalCarbsTests.swift in Sources */,

@@ -637,7 +637,7 @@ extension LoopDataManager {
                                                                   recommendedTempBasal: StoredDosingDecision.TempBasalRecommendationWithDate(state.recommendedTempBasal),
                                                                   recommendedBolus: StoredDosingDecision.BolusRecommendationWithDate(state.recommendedBolus),
                                                                   pumpManagerStatus: self.delegate?.pumpManagerStatus,
-                                                                  notificationSettings: StoredDosingDecision.NotificationSettings(notificationSettings),
+                                                                  notificationSettings: NotificationSettings(notificationSettings),
                                                                   deviceSettings: UIDevice.current.deviceSettings,
                                                                   errors: [error, state.error, insulinOnBoardError].compactMap { $0 })
                         self.dosingDecisionStore.storeDosingDecision(dosingDecision) {}
@@ -1793,20 +1793,20 @@ private extension StoredDosingDecision.BolusRecommendationWithDate {
     }
 }
 
-private extension StoredDosingDecision.NotificationSettings {
+private extension NotificationSettings {
     init(_ notificationSettings: UNNotificationSettings) {
-        self.init(authorizationStatus: StoredDosingDecision.NotificationSettings.AuthorizationStatus(notificationSettings.authorizationStatus),
-                  soundSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.soundSetting),
-                  badgeSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.badgeSetting),
-                  alertSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.alertSetting),
-                  notificationCenterSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.notificationCenterSetting),
-                  lockScreenSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.lockScreenSetting),
-                  carPlaySetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.carPlaySetting),
-                  alertStyle: StoredDosingDecision.NotificationSettings.AlertStyle(notificationSettings.alertStyle),
-                  showPreviewsSetting: StoredDosingDecision.NotificationSettings.ShowPreviewsSetting(notificationSettings.showPreviewsSetting),
-                  criticalAlertSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.criticalAlertSetting),
+        self.init(authorizationStatus: NotificationSettings.AuthorizationStatus(notificationSettings.authorizationStatus),
+                  soundSetting: NotificationSettings.NotificationSetting(notificationSettings.soundSetting),
+                  badgeSetting: NotificationSettings.NotificationSetting(notificationSettings.badgeSetting),
+                  alertSetting: NotificationSettings.NotificationSetting(notificationSettings.alertSetting),
+                  notificationCenterSetting: NotificationSettings.NotificationSetting(notificationSettings.notificationCenterSetting),
+                  lockScreenSetting: NotificationSettings.NotificationSetting(notificationSettings.lockScreenSetting),
+                  carPlaySetting: NotificationSettings.NotificationSetting(notificationSettings.carPlaySetting),
+                  alertStyle: NotificationSettings.AlertStyle(notificationSettings.alertStyle),
+                  showPreviewsSetting: NotificationSettings.ShowPreviewsSetting(notificationSettings.showPreviewsSetting),
+                  criticalAlertSetting: NotificationSettings.NotificationSetting(notificationSettings.criticalAlertSetting),
                   providesAppNotificationSettings: notificationSettings.providesAppNotificationSettings,
-                  announcementSetting: StoredDosingDecision.NotificationSettings.NotificationSetting(notificationSettings.announcementSetting))
+                  announcementSetting: NotificationSettings.NotificationSetting(notificationSettings.announcementSetting))
     }
 }
 

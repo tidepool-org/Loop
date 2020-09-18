@@ -40,7 +40,7 @@ struct CriticalEventLogExportView: View {
             Text("Preparing Critical Event Logs", comment: "Preparing critical event log text")
                 .bold()
             ProgressView(progress: CGFloat(viewModel.progress))
-                .accentColor(Color.loopAccent)
+                .accentColor(.loopAccent)
                 .padding()
             Text(viewModel.remainingDurationString ?? " ")  // Vertical alignment hack
         }
@@ -49,8 +49,10 @@ struct CriticalEventLogExportView: View {
     @ViewBuilder
     private var exportedView: some View {
         VStack {
-            Image("Checkmark")
-                .foregroundColor(Color.loopAccent)
+            Image(systemName: "checkmark.circle.fill")
+                .resizable()
+                .frame(width: 50, height: 50)
+                .foregroundColor(.loopAccent)
                 .padding()
             Text("Critical Event Log Ready", comment: "Critical event log ready text")
                 .bold()

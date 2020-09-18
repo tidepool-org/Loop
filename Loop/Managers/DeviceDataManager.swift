@@ -35,7 +35,7 @@ final class DeviceDataManager {
     /// The last time a BLE heartbeat was received and acted upon.
     private var lastBLEDrivenUpdate = Date.distantPast
 
-    var deviceLog: PersistentDeviceLog
+    private var deviceLog: PersistentDeviceLog
 
     var bluetoothState: BluetoothStateManager.BluetoothState = .other
 

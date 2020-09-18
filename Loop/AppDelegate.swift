@@ -198,16 +198,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
     // MARK: - Background Tasks
 
     private func registerBackgroundTasks() {
-        registerCriticalEventLogHistoricalExportBackgroundTask()
-    }
-
-    private func scheduleBackgroundTasks() {
-        scheduleCriticalEventLogHistoricalExportBackgroundTask()
-    }
-
-    // MARK: - Critical Event Log Historical Export Background Task
-
-    private func registerCriticalEventLogHistoricalExportBackgroundTask() {
         if DeviceDataManager.registerCriticalEventLogHistoricalExportBackgroundTask({ self.deviceDataManager.handleCriticalEventLogHistoricalExportBackgroundTask($0) }) {
             log.debug("Critical event log export background task registered")
         } else {
@@ -215,7 +205,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
         }
     }
 
-    private func scheduleCriticalEventLogHistoricalExportBackgroundTask() {
+    private func scheduleBackgroundTasks() {
         deviceDataManager.scheduleCriticalEventLogHistoricalExportBackgroundTask()
     }
 }

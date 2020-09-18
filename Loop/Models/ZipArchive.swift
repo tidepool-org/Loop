@@ -66,11 +66,12 @@ public class ZipArchive {
                 }
 
                 var zipFileInfo = zip_fileinfo(tmz_date: Date().zip, dosDate: 0, internal_fa: 0, external_fa: 0)
-                guard checkZipError(zipOpenNewFileInZip(archive.file, path, &zipFileInfo, nil, 0, nil, 0, nil, Z_DEFLATED, compression.zCompression)) == nil else {
+                setErrorIfZipFailure(zipOpenNewFileInZip(archive.file, path, &zipFileInfo, nil, 0, nil, 0, nil, Z_DEFLATED, compression.zCompression))
+                guard error == nil else {
                     return
                 }
 
-                transitionStatus(from: .opening, to: .open)
+                _ = transitionStatus(from: .opening, to: .open)
             }
         }
 
@@ -105,11 +106,19 @@ public class ZipArchive {
 
         public override func write(_ buffer: UnsafePointer<UInt8>, maxLength len: Int) -> Int {
             return lock.withLock {
-                guard transitionStatus(from: .open, to: .writing),
-                    checkZipError(zipWriteInFileInZip(archive.file, buffer, UInt32(len))) == nil,
-                    transitionStatus(from: .writing, to: .open) else {
-                        return -1
+                guard transitionStatus(from: .open, to: .writing) else {
+                    return -1
                 }
+
+                setErrorIfZipFailure(zipWriteInFileInZip(archive.file, buffer, UInt32(len)))
+                guard error == nil else {
+                    return -1
+                }
+
+                guard transitionStatus(from: .writing, to: .open) else {
+                    return -1
+                }
+
                 return len
             }
         }
@@ -119,12 +128,11 @@ public class ZipArchive {
         // MARK: - Internal
 
         fileprivate func unlockedClose() {
-            transitionStatus(from: .open, to: .closed)
-            checkZipError(zipCloseFileInZip(archive.file))
+            _ = transitionStatus(from: .open, to: .closed)
+            setErrorIfZipFailure(zipCloseFileInZip(archive.file))
             archive.stream = nil
         }
 
-        @discardableResult
         private func transitionStatus(from: Status, to: Status) -> Bool {
             guard status == from else {
                 setError(ZipArchiveError.unexpectedStatus(status))
@@ -134,18 +142,16 @@ public class ZipArchive {
             return true
         }
 
-        @discardableResult
-        private func checkZipError(_ err: Int32) -> Error? {
-            if err != ZIP_OK {
-                setError(ZipArchiveError.internalFailure(err))
+        private func setErrorIfZipFailure(_ err: Int32) {
+            guard err != ZIP_OK else {
+                return
             }
-            return error
+            setError(ZipArchiveError.internalFailure(err))
         }
 
-        @discardableResult
-        private func setError(_ err: Error) -> Error? {
+        private func setError(_ err: Error) {
             status = .error
-            return archive.setError(err)
+            archive.setError(err)
         }
 
         private var error: Error? { archive.error }
@@ -201,24 +207,23 @@ public class ZipArchive {
             }
             defer { closed = true }
             stream?.unlockedClose()
-            return checkZipError(zipClose(file, nil))
+            setErrorIfZipFailure(zipClose(file, nil))
+            return error
         }
     }
 
-    @discardableResult
-    private func checkZipError(_ err: Int32) -> Error? {
-        if err != ZIP_OK {
-            setError(ZipArchiveError.internalFailure(err))
+    private func setErrorIfZipFailure(_ err: Int32) {
+        guard err != ZIP_OK else {
+            return
         }
-        return error
+        setError(ZipArchiveError.internalFailure(err))
     }
 
-    @discardableResult
-    private func setError(_ err: Error) -> Error? {
-        if error == nil {
-            error = err
+    private func setError(_ err: Error) {
+        guard error == nil else {
+            return
         }
-        return error
+        error = err
     }
 }
 
