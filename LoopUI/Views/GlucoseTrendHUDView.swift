@@ -35,7 +35,9 @@ public final class GlucoseTrendHUDView: BaseHUDView {
     }
     
     public func setManualGlucoseIcon(_ isManualGlucose: Bool) {
-        trendIcon.image = UIImage(systemName: "exclamationmark.circle.fill")
-        trendIcon.tintColor = .destructive
+        if isManualGlucose {
+            trendIcon.image = UIImage(systemName: "exclamationmark.circle.fill")
+            trendIcon.tintColor = .destructive
+        }
     }
 }

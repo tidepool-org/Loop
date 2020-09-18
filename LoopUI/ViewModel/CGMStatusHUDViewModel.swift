@@ -111,7 +111,7 @@ public class CGMStatusHUDViewModel {
         }
         
         glucoseValueTintColor = sensor?.glucoseValueType?.glucoseColor ?? .label
-        glucoseTrendTintColor = sensor?.glucoseValueType?.trendColor ?? .glucoseTintColor
+        glucoseTrendTintColor = isManualGlucose ? .destructive : sensor?.glucoseValueType?.trendColor ?? .glucoseTintColor
         
         self.isManualGlucose = isManualGlucose
         
