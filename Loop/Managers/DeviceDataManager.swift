@@ -1027,7 +1027,7 @@ extension DeviceDataManager {
                     self.log.error("Critical event log historical export errored: %{public}@", String(describing: error))
                 }
 
-                self.scheduleCriticalEventLogHistoricalExportBackgroundTask(isRetry: error != nil)
+                self.scheduleCriticalEventLogHistoricalExportBackgroundTask(isRetry: error != nil && !exporter.isCancelled)
                 task.setTaskCompleted(success: error == nil)
 
                 self.log.default("Completed critical event log historical export background task")
