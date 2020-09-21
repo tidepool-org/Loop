@@ -536,13 +536,13 @@ extension DeviceDataManager {
         return pumpManager?.status
     }
 
-    func sensorState(for glucose: GlucoseSampleValue?) -> SensorDisplayable? {
+    func glucoseDisplay(for glucose: GlucoseSampleValue?) -> GlucoseDisplayable? {
         if let glucose = glucose, glucose.wasUserEntered {
-            // the CGM manager needs to determine the glucoseValueType for a manual glucose based on its managed glucose thresholds
-            let glucoseValueType = (cgmManager as? CGMManagerUI)?.glucoseValueType(for: glucose)
-            return ManualGlucoseState(glucoseValueType: glucoseValueType)
+            // the CGM manager needs to determine the glucose range category for a manual glucose based on its managed glucose thresholds
+            let glucoseRangeCategory = (cgmManager as? CGMManagerUI)?.glucoseRangeCategory(for: glucose)
+            return ManualGlucoseDisplayable(glucoseRangeCategory: glucoseRangeCategory)
         } else {
-            return cgmManager?.sensorState
+            return cgmManager?.glucoseDisplay
         }
     }
 

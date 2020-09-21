@@ -1,5 +1,5 @@
 //
-//  ManualGlucoseState.swift
+//  ManualGlucoseDisplayable.swift
 //  Loop
 //
 //  Created by Nathaniel Hamming on 2020-09-18.
@@ -9,16 +9,16 @@
 import Foundation
 import LoopKit
 
-struct ManualGlucoseState: SensorDisplayable {
+struct ManualGlucoseDisplayable: GlucoseDisplayable {
     let isStateValid: Bool
     let trendType: GlucoseTrend?
     let isLocal: Bool
-    let glucoseValueType: GlucoseValueType?
+    let glucoseRangeCategory: GlucoseRangeCategory?
     
-    init(glucoseValueType: GlucoseValueType?) {
+    init(glucoseRangeCategory: GlucoseRangeCategory?) {
         isStateValid = true
         trendType = nil
         isLocal = true
-        self.glucoseValueType = glucoseValueType
+        self.glucoseRangeCategory = glucoseRangeCategory
     }
 }
