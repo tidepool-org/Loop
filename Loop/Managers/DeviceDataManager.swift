@@ -546,6 +546,24 @@ extension DeviceDataManager {
 
     func glucoseDisplay(for glucose: GlucoseSampleValue?) -> GlucoseDisplayable? {
         if let glucose = glucose, glucose.wasUserEntered {
+            guard FeatureFlags.cgmManagerCategorizeManualGlucoseRangeEnabled else {
+                // Using Dexcom default glucose thresholds to categories a manual glucose entry
+                let urgentLowGlucoseThreshold = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 55)
+                let lowGlucoseThreshold = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 80)
+                let highGlucoseThreshold = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 200)
+                
+                switch glucose.quantity {
+                case ...urgentLowGlucoseThreshold:
+                    return ManualGlucoseDisplayable(glucoseRangeCategory: .urgentLow)
+                case urgentLowGlucoseThreshold..<lowGlucoseThreshold:
+                    return ManualGlucoseDisplayable(glucoseRangeCategory: .low)
+                case lowGlucoseThreshold..<highGlucoseThreshold:
+                    return ManualGlucoseDisplayable(glucoseRangeCategory: .normal)
+                default:
+                    return ManualGlucoseDisplayable(glucoseRangeCategory: .high)
+                }
+            }
+
             // the CGM manager needs to determine the glucose range category for a manual glucose based on its managed glucose thresholds
             let glucoseRangeCategory = (cgmManager as? CGMManagerUI)?.glucoseRangeCategory(for: glucose)
             return ManualGlucoseDisplayable(glucoseRangeCategory: glucoseRangeCategory)
