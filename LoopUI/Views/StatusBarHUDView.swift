@@ -24,11 +24,7 @@ public class StatusBarHUDView: UIView, NibLoadable {
             if adjustViewsForNarrowDisplay != oldValue {
                 cgmStatusHUD.adjustViewsForNarrowDisplay = adjustViewsForNarrowDisplay
                 pumpStatusHUD.adjustViewsForNarrowDisplay = adjustViewsForNarrowDisplay
-                if adjustViewsForNarrowDisplay {
-                    containerView.spacing = 8.0
-                } else {
-                    containerView.spacing = 16.0
-                }
+                containerView.spacing = adjustViewsForNarrowDisplay ? 8.0 : 16.0
             }
         }
     }
