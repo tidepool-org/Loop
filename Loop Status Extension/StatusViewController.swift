@@ -137,11 +137,6 @@ class StatusViewController: UIViewController, NCWidgetProviding {
         observers = [
             // TODO: Observe cross-process notifications of Loop status updating
         ]
-        
-        if view.bounds.width < 375 {
-            // need to adjust for narrow display
-            hudView.adjustViewsForNarrowDisplay = true
-        }
     }
 
     deinit {

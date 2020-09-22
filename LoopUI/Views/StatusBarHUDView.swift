@@ -33,7 +33,14 @@ public class StatusBarHUDView: UIView, NibLoadable {
         }
     }
 
-    public override init(frame: CGRect) {
+    override public var bounds: CGRect {
+        didSet {
+            // need to adjust for narrow display. The labels in the status bar need more space when the bounds width is less than 350 points.
+            adjustViewsForNarrowDisplay = bounds.width < 350
+        }
+    }
+    
+    override public init(frame: CGRect) {
         super.init(frame: frame)
         setup()
     }
