@@ -33,7 +33,7 @@ class CGMStatusHUDViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.accessibilityString.isEmpty)
         XCTAssertEqual(viewModel.glucoseValueTintColor, .label)
         XCTAssertEqual(viewModel.glucoseTrendTintColor, .glucoseTintColor)
-        XCTAssertNil(viewModel.manualGlucoseIconOverride)
+        XCTAssertNil(viewModel.manualGlucoseTrendIconOverride)
         XCTAssertNil(viewModel.statusHighlight)
     }
 
@@ -51,7 +51,7 @@ class CGMStatusHUDViewModelTests: XCTestCase {
                                      glucoseDisplay: glucoseDisplay,
                                      isManualGlucose: false)
         
-        XCTAssertNil(viewModel.manualGlucoseIconOverride)
+        XCTAssertNil(viewModel.manualGlucoseTrendIconOverride)
         XCTAssertNil(viewModel.statusHighlight)
         XCTAssertEqual(viewModel.glucoseValueString, "90")
         XCTAssertEqual(viewModel.trend, .down)
@@ -74,7 +74,7 @@ class CGMStatusHUDViewModelTests: XCTestCase {
                                      glucoseDisplay: glucoseDisplay,
                                      isManualGlucose: false)
         
-        XCTAssertNil(viewModel.manualGlucoseIconOverride)
+        XCTAssertNil(viewModel.manualGlucoseTrendIconOverride)
         XCTAssertNil(viewModel.statusHighlight)
         XCTAssertEqual(viewModel.glucoseValueString, "---")
         XCTAssertNil(viewModel.trend)
@@ -101,7 +101,7 @@ class CGMStatusHUDViewModelTests: XCTestCase {
                                      isManualGlucose: false)
         wait(for: [testExpect], timeout: 1.0)
         XCTAssertTrue(staleGlucoseValueHandlerWasCalled)
-        XCTAssertNil(viewModel.manualGlucoseIconOverride)
+        XCTAssertNil(viewModel.manualGlucoseTrendIconOverride)
         XCTAssertNil(viewModel.statusHighlight)
         XCTAssertEqual(viewModel.glucoseValueString, "---")
         XCTAssertNil(viewModel.trend)
@@ -126,7 +126,7 @@ class CGMStatusHUDViewModelTests: XCTestCase {
                                      glucoseDisplay: glucoseDisplay,
                                      isManualGlucose: true)
         
-        XCTAssertEqual(viewModel.manualGlucoseIconOverride, UIImage(systemName: "questionmark.circle"))
+        XCTAssertEqual(viewModel.manualGlucoseTrendIconOverride, UIImage(systemName: "questionmark.circle"))
         XCTAssertNil(viewModel.statusHighlight)
         XCTAssertEqual(viewModel.glucoseValueString, "90")
         XCTAssertNil(viewModel.trend)
@@ -146,21 +146,21 @@ class CGMStatusHUDViewModelTests: XCTestCase {
                                                    state: .critical)
         
         // set status highlight
-        XCTAssertNil(viewModel.manualGlucoseIconOverride)
+        XCTAssertNil(viewModel.manualGlucoseTrendIconOverride)
         viewModel.statusHighlight = statusHighlight1
         XCTAssertEqual(viewModel.statusHighlight as! TestStatusHighlight, statusHighlight1)
         
         // ensure status highlight icon is set to the manual glucose override icon
         // when there is a manual glucose override icon, the status highlight isn't returned to be presented
-        viewModel.setManualGlucoseIconOverride()
+        viewModel.setManualGlucoseTrendIconOverride()
         XCTAssertNil(viewModel.statusHighlight)
-        XCTAssertEqual(viewModel.manualGlucoseIconOverride, statusHighlight1.image)
+        XCTAssertEqual(viewModel.manualGlucoseTrendIconOverride, statusHighlight1.image)
         XCTAssertEqual(viewModel.glucoseTrendTintColor, statusHighlight1.color)
 
         // ensure updating the status highlight icon also updates the manual glucose override icon
         viewModel.statusHighlight = statusHighlight2
         XCTAssertNil(viewModel.statusHighlight)
-        XCTAssertEqual(viewModel.manualGlucoseIconOverride, statusHighlight2.image)
+        XCTAssertEqual(viewModel.manualGlucoseTrendIconOverride, statusHighlight2.image)
         XCTAssertEqual(viewModel.glucoseTrendTintColor, statusHighlight2.color)
     }
 
