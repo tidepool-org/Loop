@@ -926,10 +926,28 @@ extension LoopDataManager {
         guard let glucose = startingGlucoseOverride ?? self.glucoseStore.latestGlucose else {
             throw LoopError.missingDataError(.glucose)
         }
-
+        let insulinCounteractionEffects = insulinCounteractionEffectsOverride ?? self.insulinCounteractionEffects
         let pumpStatusDate = doseStore.lastAddedPumpData
+        let effectInterval = carbStore.delta
         let lastGlucoseDate = glucose.startDate
 
+        return try ForecastGenerator.predictGlucose(startingFrom: now(),
+                                                    using: inputs,
+                                                    model: model,
+                                                    startingAt: glucose,
+                                                    pumpStatusDate: pumpStatusDate,
+                                                    insulinCounteractionEffects: insulinCounteractionEffects,
+                                                    retrospectiveCorrection: self.retrospectiveCorrection,
+                                                    retrospectiveGlucoseEffect: retrospectiveGlucoseEffect,
+                                                    effectInterval: effectInterval,
+                                                    recentCarbEntries: recentCarbEntries,
+                                                    insulinSensitivitySchedule: insulinSensitivitySchedule,
+                                                    basalRateSchedule: basalRateSchedule,
+                                                    glucoseCorrectionRangeSchedule: settings.glucoseTargetRangeSchedule,
+                                                    glucoseMomentumEffect: glucoseMomentumEffect,
+                                                    generateGlucoseEffects: carbStore.glucoseEffects)
+        
+/*
         guard now().timeIntervalSince(lastGlucoseDate) <= settings.inputDataRecencyInterval else {
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
@@ -942,7 +960,6 @@ extension LoopDataManager {
         var retrospectiveGlucoseEffect = self.retrospectiveGlucoseEffect
         var effects: [[GlucoseEffect]] = []
 
-        let insulinCounteractionEffects = insulinCounteractionEffectsOverride ?? self.insulinCounteractionEffects
         if inputs.contains(.carbs) {
             if let potentialCarbEntry = potentialCarbEntry {
                 let retrospectiveStart = lastGlucoseDate.addingTimeInterval(-retrospectiveCorrection.retrospectionInterval)
@@ -1032,6 +1049,7 @@ extension LoopDataManager {
         }
 
         return prediction
+ */
     }
 
     fileprivate func predictGlucoseFromManualGlucose(

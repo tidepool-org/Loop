@@ -30,6 +30,7 @@
 		1D4990E824A25931005CC357 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E267FB2292456700A3F2AF /* FeatureFlags.swift */; };
 		1D4A3E2D2478628500FD601B /* StoredAlert+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4A3E2B2478628500FD601B /* StoredAlert+CoreDataClass.swift */; };
 		1D4A3E2E2478628500FD601B /* StoredAlert+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4A3E2C2478628500FD601B /* StoredAlert+CoreDataProperties.swift */; };
+		1D53293B251AB684007D8E13 /* ForecastGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D53293A251AB684007D8E13 /* ForecastGenerator.swift */; };
 		1D80313D24746274002810DF /* AlertStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D80313C24746274002810DF /* AlertStoreTests.swift */; };
 		1DA649A7244126CD00F61E75 /* UserNotificationAlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA649A6244126CD00F61E75 /* UserNotificationAlertPresenter.swift */; };
 		1DA649A9244126DA00F61E75 /* InAppModalAlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA649A8244126DA00F61E75 /* InAppModalAlertPresenter.swift */; };
@@ -716,6 +717,7 @@
 		1D49795724E7289700948F05 /* ServicesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesViewModel.swift; sourceTree = "<group>"; };
 		1D4A3E2B2478628500FD601B /* StoredAlert+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1D4A3E2C2478628500FD601B /* StoredAlert+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1D53293A251AB684007D8E13 /* ForecastGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastGenerator.swift; sourceTree = "<group>"; };
 		1D80313C24746274002810DF /* AlertStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStoreTests.swift; sourceTree = "<group>"; };
 		1DA46B5F2492E2E300D71A63 /* NotificationsCriticalAlertPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsCriticalAlertPermissionsView.swift; sourceTree = "<group>"; };
 		1DA649A6244126CD00F61E75 /* UserNotificationAlertPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserNotificationAlertPresenter.swift; sourceTree = "<group>"; };
@@ -1493,6 +1495,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1D532939251AB669007D8E13 /* Stateless */ = {
+			isa = PBXGroup;
+			children = (
+				1D53293A251AB684007D8E13 /* ForecastGenerator.swift */,
+			);
+			path = Stateless;
+			sourceTree = "<group>";
+		};
 		1DA6499D2441266400F61E75 /* Alerts */ = {
 			isa = PBXGroup;
 			children = (
@@ -1662,6 +1672,7 @@
 				43E344A01B9E144300C85C07 /* Extensions */,
 				43F5C2E41B93C5D4003EB13D /* Managers */,
 				43757D131C06F26C00910CB9 /* Models */,
+				1D532939251AB669007D8E13 /* Stateless */,
 				43F5C2CE1B92A2A0003EB13D /* View Controllers */,
 				43F5C2CF1B92A2ED003EB13D /* Views */,
 				897A5A9724C22DCE00C4E71D /* View Models */,
@@ -2714,7 +2725,7 @@
 					43776F8B1B8022E90074EA36 = {
 						CreatedOnToolsVersion = 7.0;
 						LastSwiftMigration = 1020;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -2736,7 +2747,7 @@
 					43A943711B926B7B0051FA24 = {
 						CreatedOnToolsVersion = 7.0;
 						LastSwiftMigration = 0800;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 0;
@@ -2749,7 +2760,7 @@
 					43A9437D1B926B7B0051FA24 = {
 						CreatedOnToolsVersion = 7.0;
 						LastSwiftMigration = 1020;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 0;
@@ -2804,7 +2815,7 @@
 					4F70C1DB1DE8DCA7006380B7 = {
 						CreatedOnToolsVersion = 8.1;
 						LastSwiftMigration = 1020;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -3336,6 +3347,7 @@
 				439A7944211FE22F0041B75F /* NSUserActivity.swift in Sources */,
 				4328E0331CFC091100E199AA /* WatchContext+LoopKit.swift in Sources */,
 				4F526D611DF8D9A900A04910 /* NetBasal.swift in Sources */,
+				1D53293B251AB684007D8E13 /* ForecastGenerator.swift in Sources */,
 				A92E557E2464DFFD00DB93BB /* DosingDecisionStore.swift in Sources */,
 				89ADE13B226BFA0F0067222B /* TestingScenariosManager.swift in Sources */,
 				4F7E8ACB20E2ACB500AEA65E /* WatchPredictedGlucose.swift in Sources */,
