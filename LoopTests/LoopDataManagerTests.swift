@@ -117,23 +117,21 @@ class LoopDataManagerDosingTests: XCTestCase {
     }
     
     // MARK: Tests
-    func testFlatAndStable() {
+    func testFlatAndStable() throws {
         setUp(for: .flatAndStable)
         let predictedGlucoseOutput = loadGlucoseEffect("flat_and_stable_predicted_glucose")
 
-        let updateGroup = DispatchGroup()
-        updateGroup.enter()
+        let exp = expectation(description: #function)
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
         self.loopDataManager.getLoopState { _, state in
             predictedGlucose = state.predictedGlucose
             recommendedTempBasal = state.recommendedTempBasal?.recommendation
-            updateGroup.leave()
+            exp.fulfill()
         }
-        // We need to wait until the task completes to get outputs
-        updateGroup.wait()
+        wait(for: [exp], timeout: 1)
 
-        XCTAssertNotNil(predictedGlucose)
+        predictedGlucose = try XCTUnwrap(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
@@ -144,23 +142,21 @@ class LoopDataManagerDosingTests: XCTestCase {
         XCTAssertEqual(1.40, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
     }
     
-    func testHighAndStable() {
+    func testHighAndStable() throws {
         setUp(for: .highAndStable)
         let predictedGlucoseOutput = loadGlucoseEffect("high_and_stable_predicted_glucose")
 
-        let updateGroup = DispatchGroup()
-        updateGroup.enter()
+        let exp = expectation(description: #function)
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedBasal: TempBasalRecommendation?
         self.loopDataManager.getLoopState { _, state in
             predictedGlucose = state.predictedGlucose
             recommendedBasal = state.recommendedTempBasal?.recommendation
-            updateGroup.leave()
+            exp.fulfill()
         }
-        // We need to wait until the task completes to get outputs
-        updateGroup.wait()
+        wait(for: [exp], timeout: 1)
 
-        XCTAssertNotNil(predictedGlucose)
+        predictedGlucose = try XCTUnwrap(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
@@ -171,23 +167,21 @@ class LoopDataManagerDosingTests: XCTestCase {
         XCTAssertEqual(4.63, recommendedBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
     }
     
-    func testHighAndFalling() {
+    func testHighAndFalling() throws {
         setUp(for: .highAndFalling)
         let predictedGlucoseOutput = loadGlucoseEffect("high_and_falling_predicted_glucose")
 
-        let updateGroup = DispatchGroup()
-        updateGroup.enter()
+        let exp = expectation(description: #function)
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
         self.loopDataManager.getLoopState { _, state in
             predictedGlucose = state.predictedGlucose
             recommendedTempBasal = state.recommendedTempBasal?.recommendation
-            updateGroup.leave()
+            exp.fulfill()
         }
-        // We need to wait until the task completes to get outputs
-        updateGroup.wait()
+        wait(for: [exp], timeout: 1)
 
-        XCTAssertNotNil(predictedGlucose)
+        predictedGlucose = try XCTUnwrap(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
@@ -195,26 +189,25 @@ class LoopDataManagerDosingTests: XCTestCase {
             XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
         }
 
+        recommendedTempBasal = try XCTUnwrap(recommendedTempBasal)
         XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
     }
     
-    func testHighAndRisingWithCOB() {
+    func testHighAndRisingWithCOB() throws {
         setUp(for: .highAndRisingWithCOB)
         let predictedGlucoseOutput = loadGlucoseEffect("high_and_rising_with_cob_predicted_glucose")
 
-        let updateGroup = DispatchGroup()
-        updateGroup.enter()
+        let exp = expectation(description: #function)
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedBolus: BolusRecommendation?
         self.loopDataManager.getLoopState { _, state in
             predictedGlucose = state.predictedGlucose
             recommendedBolus = state.recommendedBolus?.recommendation
-            updateGroup.leave()
+            exp.fulfill()
         }
-        // We need to wait until the task completes to get outputs
-        updateGroup.wait()
+        wait(for: [exp], timeout: 1)
 
-        XCTAssertNotNil(predictedGlucose)
+        predictedGlucose = try XCTUnwrap(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
@@ -222,26 +215,25 @@ class LoopDataManagerDosingTests: XCTestCase {
             XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
         }
 
+        recommendedBolus = try XCTUnwrap(recommendedBolus)
         XCTAssertEqual(1.6, recommendedBolus!.amount, accuracy: 1.0 / 40.0)
     }
     
-    func testLowAndFallingWithCOB() {
+    func testLowAndFallingWithCOB() throws {
         setUp(for: .lowAndFallingWithCOB)
         let predictedGlucoseOutput = loadGlucoseEffect("low_and_falling_predicted_glucose")
 
-        let updateGroup = DispatchGroup()
-        updateGroup.enter()
+        let exp = expectation(description: #function)
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
         self.loopDataManager.getLoopState { _, state in
             predictedGlucose = state.predictedGlucose
             recommendedTempBasal = state.recommendedTempBasal?.recommendation
-            updateGroup.leave()
+            exp.fulfill()
         }
-        // We need to wait until the task completes to get outputs
-        updateGroup.wait()
+        wait(for: [exp], timeout: 1)
 
-        XCTAssertNotNil(predictedGlucose)
+        predictedGlucose = try XCTUnwrap(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
@@ -249,26 +241,25 @@ class LoopDataManagerDosingTests: XCTestCase {
             XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
         }
 
+        recommendedTempBasal = try XCTUnwrap(recommendedTempBasal)
         XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
     }
     
-    func testLowWithLowTreatment() {
+    func testLowWithLowTreatment() throws {
         setUp(for: .lowWithLowTreatment)
         let predictedGlucoseOutput = loadGlucoseEffect("low_with_low_treatment_predicted_glucose")
 
-        let updateGroup = DispatchGroup()
-        updateGroup.enter()
+        let exp = expectation(description: #function)
         var predictedGlucose: [PredictedGlucoseValue]?
         var recommendedTempBasal: TempBasalRecommendation?
         self.loopDataManager.getLoopState { _, state in
             predictedGlucose = state.predictedGlucose
             recommendedTempBasal = state.recommendedTempBasal?.recommendation
-            updateGroup.leave()
+            exp.fulfill()
         }
-        // We need to wait until the task completes to get outputs
-        updateGroup.wait()
+        wait(for: [exp], timeout: 1)
 
-        XCTAssertNotNil(predictedGlucose)
+        predictedGlucose = try XCTUnwrap(predictedGlucose)
         XCTAssertEqual(predictedGlucoseOutput.count, predictedGlucose!.count)
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
@@ -276,6 +267,7 @@ class LoopDataManagerDosingTests: XCTestCase {
             XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
         }
 
+        recommendedTempBasal = try XCTUnwrap(recommendedTempBasal)
         XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
     }
 }
