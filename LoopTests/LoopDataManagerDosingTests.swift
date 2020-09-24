@@ -71,10 +71,10 @@ class LoopDataManagerDosingTests: XCTestCase {
         ], timeZone: .utcTimeZone)!
     }
     
-    // MARK: Mock stores
     var loopDataManager: LoopDataManager!
     
     func setUp(for test: DataManagerTestType) {
+                
         let settings = LoopSettings(
             dosingEnabled: false,
             glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,

@@ -11,6 +11,7 @@ import HealthKit
 import LoopKit
 import LoopCore
 
+public var new_predictGlucose: Bool = true
 
 final class LoopDataManager {
     enum LoopUpdateContext: Int {
@@ -915,7 +916,8 @@ extension LoopDataManager {
         potentialBolus: DoseEntry? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
         replacingCarbEntry replacedCarbEntry: StoredCarbEntry? = nil,
-        includingPendingInsulin: Bool = false
+        includingPendingInsulin: Bool = false,
+        defaultAbsorptionTime: TimeInterval? = nil
     ) throws -> [PredictedGlucoseValue] {
         dispatchPrecondition(condition: .onQueue(dataAccessQueue))
 
@@ -930,126 +932,146 @@ extension LoopDataManager {
         let pumpStatusDate = doseStore.lastAddedPumpData
         let effectInterval = carbStore.delta
         let lastGlucoseDate = glucose.startDate
-
-        return try ForecastGenerator.predictGlucose(startingFrom: now(),
-                                                    using: inputs,
-                                                    model: model,
-                                                    startingAt: glucose,
-                                                    pumpStatusDate: pumpStatusDate,
-                                                    insulinCounteractionEffects: insulinCounteractionEffects,
-                                                    retrospectiveCorrection: self.retrospectiveCorrection,
-                                                    retrospectiveGlucoseEffect: retrospectiveGlucoseEffect,
-                                                    effectInterval: effectInterval,
-                                                    recentCarbEntries: recentCarbEntries,
-                                                    insulinSensitivitySchedule: insulinSensitivitySchedule,
-                                                    basalRateSchedule: basalRateSchedule,
-                                                    glucoseCorrectionRangeSchedule: settings.glucoseTargetRangeSchedule,
-                                                    glucoseMomentumEffect: glucoseMomentumEffect,
-                                                    generateGlucoseEffects: carbStore.glucoseEffects)
         
-/*
-        guard now().timeIntervalSince(lastGlucoseDate) <= settings.inputDataRecencyInterval else {
-            throw LoopError.glucoseTooOld(date: glucose.startDate)
-        }
-
-        guard now().timeIntervalSince(pumpStatusDate) <= settings.inputDataRecencyInterval else {
-            throw LoopError.pumpDataTooOld(date: pumpStatusDate)
-        }
-
-        var momentum: [GlucoseEffect] = []
-        var retrospectiveGlucoseEffect = self.retrospectiveGlucoseEffect
-        var effects: [[GlucoseEffect]] = []
-
-        if inputs.contains(.carbs) {
-            if let potentialCarbEntry = potentialCarbEntry {
-                let retrospectiveStart = lastGlucoseDate.addingTimeInterval(-retrospectiveCorrection.retrospectionInterval)
-
-                if potentialCarbEntry.startDate > lastGlucoseDate || recentCarbEntries?.isEmpty != false, replacedCarbEntry == nil {
-                    // The potential carb effect is independent and can be summed with the existing effect
-                    if let carbEffect = carbEffectOverride ?? self.carbEffect {
-                        effects.append(carbEffect)
+        if new_predictGlucose {
+            return try ForecastGenerator.predictGlucose(startingFrom: now(),
+                                                        using: inputs,
+                                                        model: model,
+                                                        startingAt: glucose,
+                                                        pumpStatusDate: pumpStatusDate,
+                                                        insulinCounteractionEffects: insulinCounteractionEffects,
+                                                        retrospectiveCorrection: retrospectiveCorrection,
+                                                        retrospectiveCorrectionGroupingInterval: settings.retrospectiveCorrectionGroupingInterval,
+                                                        retrospectiveGlucoseEffect: retrospectiveGlucoseEffect,
+                                                        effectInterval: effectInterval,
+                                                        recentCarbEntries: recentCarbEntries,
+                                                        inputDataRecencyInterval: settings.inputDataRecencyInterval,
+                                                        insulinEffect: insulinEffect,
+                                                        insulinEffectOverride: insulinEffectOverride,
+                                                        carbEffect: carbEffect,
+                                                        carbEffectOverride: carbEffectOverride,
+                                                        potentialBolus: potentialBolus,
+                                                        potentialCarbEntry: potentialCarbEntry,
+                                                        replacingCarbEntry: replacedCarbEntry,
+                                                        includingPendingInsulin: includingPendingInsulin,
+                                                        insulinEffectIncludingPendingInsulin: insulinEffectIncludingPendingInsulin,
+                                                        insulinSensitivitySchedule: insulinSensitivitySchedule,
+                                                        insulinSensitivityScheduleApplyingOverrideHistory: insulinSensitivityScheduleApplyingOverrideHistory,
+                                                        carbRatioSchedule: carbRatioSchedule,
+                                                        basalRateSchedule: basalRateSchedule,
+                                                        glucoseCorrectionRangeSchedule: settings.glucoseTargetRangeSchedule,
+                                                        glucoseMomentumEffect: glucoseMomentumEffect,
+                                                        absorptionTimeOverrun: carbStore.absorptionTimeOverrun,
+                                                        defaultAbsorptionTime: defaultAbsorptionTime ?? carbStore.defaultAbsorptionTimes.medium, // ??? Is this right?
+                                                        delay: carbStore.delay,
+                                                        delta: carbStore.delta,
+                                                        initialAbsorptionTimeOverrun: carbStore.initialAbsorptionTimeOverrun,
+                                                        absorptionModel: carbStore.absorptionModel,
+                                                        adaptiveAbsorptionRateEnabled: carbStore.adaptiveAbsorptionRateEnabled,
+                                                        adaptiveRateStandbyIntervalFraction: carbStore.adaptiveRateStandbyIntervalFraction)
+        } else {
+            guard now().timeIntervalSince(lastGlucoseDate) <= settings.inputDataRecencyInterval else {
+                throw LoopError.glucoseTooOld(date: glucose.startDate)
+            }
+            
+            guard now().timeIntervalSince(pumpStatusDate) <= settings.inputDataRecencyInterval else {
+                throw LoopError.pumpDataTooOld(date: pumpStatusDate)
+            }
+            
+            var momentum: [GlucoseEffect] = []
+            var retrospectiveGlucoseEffect = self.retrospectiveGlucoseEffect
+            var effects: [[GlucoseEffect]] = []
+            
+            if inputs.contains(.carbs) {
+                if let potentialCarbEntry = potentialCarbEntry {
+                    let retrospectiveStart = lastGlucoseDate.addingTimeInterval(-retrospectiveCorrection.retrospectionInterval)
+                    
+                    if potentialCarbEntry.startDate > lastGlucoseDate || recentCarbEntries?.isEmpty != false, replacedCarbEntry == nil {
+                        // The potential carb effect is independent and can be summed with the existing effect
+                        if let carbEffect = carbEffectOverride ?? self.carbEffect {
+                            effects.append(carbEffect)
+                        }
+                        
+                        let potentialCarbEffect = try carbStore.glucoseEffects(
+                            of: [potentialCarbEntry],
+                            startingAt: retrospectiveStart,
+                            endingAt: nil,
+                            effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil
+                        )
+                        
+                        effects.append(potentialCarbEffect)
+                    } else {
+                        var recentEntries = self.recentCarbEntries ?? []
+                        if let replacedCarbEntry = replacedCarbEntry, let index = recentEntries.firstIndex(of: replacedCarbEntry) {
+                            recentEntries.remove(at: index)
+                        }
+                        
+                        // If the entry is in the past or an entry is replaced, DCA and RC effects must be recomputed
+                        var entries = recentEntries.map { NewCarbEntry(quantity: $0.quantity, startDate: $0.startDate, foodType: nil, absorptionTime: $0.absorptionTime) }
+                        entries.append(potentialCarbEntry)
+                        entries.sort(by: { $0.startDate > $1.startDate })
+                        
+                        let potentialCarbEffect = try carbStore.glucoseEffects(
+                            of: entries,
+                            startingAt: retrospectiveStart,
+                            endingAt: nil,
+                            effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil
+                        )
+                        
+                        effects.append(potentialCarbEffect)
+                        
+                        retrospectiveGlucoseEffect = computeRetrospectiveGlucoseEffect(startingAt: glucose, carbEffects: potentialCarbEffect)
                     }
-
-                    let potentialCarbEffect = try carbStore.glucoseEffects(
-                        of: [potentialCarbEntry],
-                        startingAt: retrospectiveStart,
-                        endingAt: nil,
-                        effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil
-                    )
-
-                    effects.append(potentialCarbEffect)
+                } else if let carbEffect = carbEffectOverride ?? self.carbEffect {
+                    effects.append(carbEffect)
+                }
+            }
+            
+            if inputs.contains(.insulin) {
+                let computationInsulinEffect: [GlucoseEffect]?
+                if insulinEffectOverride != nil {
+                    computationInsulinEffect = insulinEffectOverride
                 } else {
-                    var recentEntries = self.recentCarbEntries ?? []
-                    if let replacedCarbEntry = replacedCarbEntry, let index = recentEntries.firstIndex(of: replacedCarbEntry) {
-                        recentEntries.remove(at: index)
+                    computationInsulinEffect = includingPendingInsulin ? self.insulinEffectIncludingPendingInsulin : self.insulinEffect
+                }
+                
+                if let insulinEffect = computationInsulinEffect {
+                    effects.append(insulinEffect)
+                }
+                
+                if let potentialBolus = potentialBolus {
+                    guard let sensitivity = insulinSensitivityScheduleApplyingOverrideHistory else {
+                        throw LoopError.configurationError(.generalSettings)
                     }
-
-                    // If the entry is in the past or an entry is replaced, DCA and RC effects must be recomputed
-                    var entries = recentEntries.map { NewCarbEntry(quantity: $0.quantity, startDate: $0.startDate, foodType: nil, absorptionTime: $0.absorptionTime) }
-                    entries.append(potentialCarbEntry)
-                    entries.sort(by: { $0.startDate > $1.startDate })
-
-                    let potentialCarbEffect = try carbStore.glucoseEffects(
-                        of: entries,
-                        startingAt: retrospectiveStart,
-                        endingAt: nil,
-                        effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil
-                    )
-
-                    effects.append(potentialCarbEffect)
-
-                    retrospectiveGlucoseEffect = computeRetrospectiveGlucoseEffect(startingAt: glucose, carbEffects: potentialCarbEffect)
+                    
+                    let earliestEffectDate = Date(timeInterval: .hours(-24), since: now())
+                    let nextEffectDate = insulinCounteractionEffects.last?.endDate ?? earliestEffectDate
+                    let bolusEffect = [potentialBolus]
+                        .glucoseEffects(insulinModel: model, insulinSensitivity: sensitivity)
+                        .filterDateRange(nextEffectDate, nil)
+                    effects.append(bolusEffect)
                 }
-            } else if let carbEffect = carbEffectOverride ?? self.carbEffect {
-                effects.append(carbEffect)
             }
-        }
-
-        if inputs.contains(.insulin) {
-            let computationInsulinEffect: [GlucoseEffect]?
-            if insulinEffectOverride != nil {
-                computationInsulinEffect = insulinEffectOverride
-            } else {
-                computationInsulinEffect = includingPendingInsulin ? self.insulinEffectIncludingPendingInsulin : self.insulinEffect
+            
+            if inputs.contains(.momentum), let momentumEffect = self.glucoseMomentumEffect {
+                momentum = momentumEffect
             }
-
-            if let insulinEffect = computationInsulinEffect {
-                effects.append(insulinEffect)
+            
+            if inputs.contains(.retrospection) {
+                effects.append(retrospectiveGlucoseEffect)
             }
-
-            if let potentialBolus = potentialBolus {
-                guard let sensitivity = insulinSensitivityScheduleApplyingOverrideHistory else {
-                    throw LoopError.configurationError(.generalSettings)
-                }
-
-                let earliestEffectDate = Date(timeInterval: .hours(-24), since: now())
-                let nextEffectDate = insulinCounteractionEffects.last?.endDate ?? earliestEffectDate
-                let bolusEffect = [potentialBolus]
-                    .glucoseEffects(insulinModel: model, insulinSensitivity: sensitivity)
-                    .filterDateRange(nextEffectDate, nil)
-                effects.append(bolusEffect)
+            
+            var prediction = LoopMath.predictGlucose(startingAt: glucose, momentum: momentum, effects: effects)
+            
+            // Dosing requires prediction entries at least as long as the insulin model duration.
+            // If our prediction is shorter than that, then extend it here.
+            let finalDate = glucose.startDate.addingTimeInterval(model.effectDuration)
+            if let last = prediction.last, last.startDate < finalDate {
+                prediction.append(PredictedGlucoseValue(startDate: finalDate, quantity: last.quantity))
             }
+            
+            return prediction
         }
-
-        if inputs.contains(.momentum), let momentumEffect = self.glucoseMomentumEffect {
-            momentum = momentumEffect
-        }
-
-        if inputs.contains(.retrospection) {
-            effects.append(retrospectiveGlucoseEffect)
-        }
-
-        var prediction = LoopMath.predictGlucose(startingAt: glucose, momentum: momentum, effects: effects)
-
-        // Dosing requires prediction entries at least as long as the insulin model duration.
-        // If our prediction is shorter than that, then extend it here.
-        let finalDate = glucose.startDate.addingTimeInterval(model.effectDuration)
-        if let last = prediction.last, last.startDate < finalDate {
-            prediction.append(PredictedGlucoseValue(startDate: finalDate, quantity: last.quantity))
-        }
-
-        return prediction
- */
     }
 
     fileprivate func predictGlucoseFromManualGlucose(

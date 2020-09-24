@@ -27,21 +27,23 @@ extension ForecastGenerator {
         pumpStatusDate: Date,
         insulinCounteractionEffects: [GlucoseEffectVelocity],
         retrospectiveCorrection: RetrospectiveCorrection,
-        retrospectiveCorrectionGroupingInterval: TimeInterval = TimeInterval(minutes: 30),
+        retrospectiveCorrectionGroupingInterval: TimeInterval,
         retrospectiveGlucoseEffect: [GlucoseEffect],
         effectInterval: TimeInterval,
         recentCarbEntries: [StoredCarbEntry]?,
-        inputDataRecencyInterval: TimeInterval = TimeInterval(minutes: 15),
-        insulinEffect: [GlucoseEffect]? = nil,
-        carbEffect: [GlucoseEffect]? = nil,
-        potentialBolus: DoseEntry? = nil,
-        potentialCarbEntry: NewCarbEntry? = nil,
-        replacingCarbEntry replacedCarbEntry: StoredCarbEntry? = nil,
-        includingPendingInsulin: Bool = false,
-        insulinEffectIncludingPendingInsulin: [GlucoseEffect]? = nil,
-        insulinSensitivitySchedule: InsulinSensitivitySchedule,
-        insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule? = nil,
-        carbRatioSchedule: CarbRatioSchedule,
+        inputDataRecencyInterval: TimeInterval,
+        insulinEffect: [GlucoseEffect]?,
+        insulinEffectOverride: [GlucoseEffect]?,
+        carbEffect: [GlucoseEffect]?,
+        carbEffectOverride: [GlucoseEffect]?,
+        potentialBolus: DoseEntry?,
+        potentialCarbEntry: NewCarbEntry?,
+        replacingCarbEntry replacedCarbEntry: StoredCarbEntry?,
+        includingPendingInsulin: Bool,
+        insulinEffectIncludingPendingInsulin: [GlucoseEffect]?,
+        insulinSensitivitySchedule: InsulinSensitivitySchedule?,
+        insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule?,
+        carbRatioSchedule: CarbRatioSchedule?,
         basalRateSchedule: BasalRateSchedule?,
         glucoseCorrectionRangeSchedule: GlucoseRangeSchedule?,
         glucoseMomentumEffect: [GlucoseEffect]?,
@@ -74,6 +76,7 @@ extension ForecastGenerator {
                                                           recentCarbEntries: recentCarbEntries,
                                                           replacedCarbEntry: replacedCarbEntry,
                                                           carbEffect: carbEffect,
+                                                          carbEffectOverride: carbEffectOverride,
                                                           insulinCounteractionEffects: insulinCounteractionEffects,
                                                           retrospectiveCorrection: retrospectiveCorrection,
                                                           glucose: glucose,
@@ -99,6 +102,7 @@ extension ForecastGenerator {
         
         if inputs.contains(.insulin) {
             try ForecastGenerator.generateEffectsForInsulin(insulinEffect: insulinEffect,
+                                                            insulinEffectOverride: insulinEffectOverride,
                                                             includingPendingInsulin: includingPendingInsulin,
                                                             insulinEffectIncludingPendingInsulin: insulinEffectIncludingPendingInsulin,
                                                             potentialBolus: potentialBolus,
@@ -135,14 +139,15 @@ extension ForecastGenerator {
                                                 recentCarbEntries: [StoredCarbEntry]?,
                                                 replacedCarbEntry: StoredCarbEntry?,
                                                 carbEffect: [GlucoseEffect]?,
+                                                carbEffectOverride: [GlucoseEffect]?,
                                                 insulinCounteractionEffects: [GlucoseEffectVelocity],
                                                 retrospectiveCorrection: RetrospectiveCorrection,
                                                 glucose: GlucoseValue,
                                                 effectInterval: TimeInterval,
                                                 inputDataRecencyInterval: TimeInterval,
                                                 retrospectiveCorrectionGroupingInterval: TimeInterval,
-                                                carbRatioSchedule: CarbRatioSchedule,
-                                                insulinSensitivitySchedule: InsulinSensitivitySchedule,
+                                                carbRatioSchedule: CarbRatioSchedule?,
+                                                insulinSensitivitySchedule: InsulinSensitivitySchedule?,
                                                 basalRateSchedule: BasalRateSchedule?,
                                                 glucoseCorrectionRangeSchedule: GlucoseRangeSchedule?,
                                                 absorptionTimeOverrun: Double,
@@ -162,17 +167,24 @@ extension ForecastGenerator {
             
             if potentialCarbEntry.startDate > lastGlucoseDate || recentCarbEntries?.isEmpty != false, replacedCarbEntry == nil {
                 // The potential carb effect is independent and can be summed with the existing effect
-                if let carbEffect = carbEffect {
+                if let carbEffect = carbEffectOverride ?? carbEffect {
                     effects.append(carbEffect)
                 }
                 
-//                let potentialCarbEffect = try generateGlucoseEffects(
-//                    [potentialCarbEntry],
-//                    retrospectiveStart,
-//                    nil,
-//                    insulinCounteractionEffects
-//                )
-                let potentialCarbEffect = try generateGlucoseEffects(carbRatioSchedule: carbRatioSchedule, insulinSensitivitySchedule: insulinSensitivitySchedule, of: [potentialCarbEntry], startingAt: retrospectiveStart, endingAt: nil, effectVelocities: insulinCounteractionEffects, absorptionTimeOverrun: absorptionTimeOverrun, defaultAbsorptionTime: defaultAbsorptionTime, delay: delay, delta: delta, initialAbsorptionTimeOverrun: initialAbsorptionTimeOverrun, absorptionModel: absorptionModel, adaptiveAbsorptionRateEnabled: adaptiveAbsorptionRateEnabled, adaptiveRateStandbyIntervalFraction: adaptiveRateStandbyIntervalFraction)
+                let potentialCarbEffect = try generateGlucoseEffects(carbRatioSchedule: carbRatioSchedule,
+                                                                     insulinSensitivitySchedule: insulinSensitivitySchedule,
+                                                                     of: [potentialCarbEntry],
+                                                                     startingAt: retrospectiveStart,
+                                                                     endingAt: nil,
+                                                                     effectVelocities: insulinCounteractionEffects,
+                                                                     absorptionTimeOverrun: absorptionTimeOverrun,
+                                                                     defaultAbsorptionTime: defaultAbsorptionTime,
+                                                                     delay: delay,
+                                                                     delta: delta,
+                                                                     initialAbsorptionTimeOverrun: initialAbsorptionTimeOverrun,
+                                                                     absorptionModel: absorptionModel,
+                                                                     adaptiveAbsorptionRateEnabled: adaptiveAbsorptionRateEnabled,
+                                                                     adaptiveRateStandbyIntervalFraction: adaptiveRateStandbyIntervalFraction)
                 
                 effects.append(potentialCarbEffect)
             } else {
@@ -186,13 +198,20 @@ extension ForecastGenerator {
                 entries.append(potentialCarbEntry)
                 entries.sort(by: { $0.startDate > $1.startDate })
                 
-//                let potentialCarbEffect = try generateGlucoseEffects(
-//                    entries,
-//                    retrospectiveStart,
-//                    nil,
-//                    insulinCounteractionEffects
-//                )
-                let potentialCarbEffect = try generateGlucoseEffects(carbRatioSchedule: carbRatioSchedule, insulinSensitivitySchedule: insulinSensitivitySchedule, of: entries, startingAt: retrospectiveStart, endingAt: nil, effectVelocities: insulinCounteractionEffects, absorptionTimeOverrun: absorptionTimeOverrun, defaultAbsorptionTime: defaultAbsorptionTime, delay: delay, delta: delta, initialAbsorptionTimeOverrun: initialAbsorptionTimeOverrun, absorptionModel: absorptionModel, adaptiveAbsorptionRateEnabled: adaptiveAbsorptionRateEnabled, adaptiveRateStandbyIntervalFraction: adaptiveRateStandbyIntervalFraction)
+                let potentialCarbEffect = try generateGlucoseEffects(carbRatioSchedule: carbRatioSchedule,
+                                                                     insulinSensitivitySchedule: insulinSensitivitySchedule,
+                                                                     of: entries,
+                                                                     startingAt: retrospectiveStart,
+                                                                     endingAt: nil,
+                                                                     effectVelocities: insulinCounteractionEffects,
+                                                                     absorptionTimeOverrun: absorptionTimeOverrun,
+                                                                     defaultAbsorptionTime: defaultAbsorptionTime,
+                                                                     delay: delay,
+                                                                     delta: delta,
+                                                                     initialAbsorptionTimeOverrun: initialAbsorptionTimeOverrun,
+                                                                     absorptionModel: absorptionModel,
+                                                                     adaptiveAbsorptionRateEnabled: adaptiveAbsorptionRateEnabled,
+                                                                     adaptiveRateStandbyIntervalFraction: adaptiveRateStandbyIntervalFraction)
 
                 effects.append(potentialCarbEffect)
                 
@@ -214,6 +233,7 @@ extension ForecastGenerator {
     }
 
     private static func generateEffectsForInsulin(insulinEffect: [GlucoseEffect]?,
+                                                  insulinEffectOverride: [GlucoseEffect]?,
                                                   includingPendingInsulin: Bool,
                                                   insulinEffectIncludingPendingInsulin: [GlucoseEffect]?,
                                                   potentialBolus: DoseEntry?,
@@ -225,8 +245,8 @@ extension ForecastGenerator {
     ) throws {
         
         let computationInsulinEffect: [GlucoseEffect]?
-        if insulinEffect != nil {
-            computationInsulinEffect = insulinEffect
+        if insulinEffectOverride != nil {
+            computationInsulinEffect = insulinEffectOverride
         } else {
             computationInsulinEffect = includingPendingInsulin ? insulinEffectIncludingPendingInsulin : insulinEffect
         }
@@ -280,8 +300,8 @@ extension ForecastGenerator {
     ///   - end: The latest date of effects to retrieve, if provided
     ///   - effectVelocities: A timeline of glucose effect velocities, ordered by start date
     private static func generateGlucoseEffects<Sample: CarbEntry>(
-        carbRatioSchedule: CarbRatioSchedule,
-        insulinSensitivitySchedule: InsulinSensitivitySchedule,
+        carbRatioSchedule: CarbRatioSchedule?,
+        insulinSensitivitySchedule: InsulinSensitivitySchedule?,
         of samples: [Sample],
         startingAt start: Date,
         endingAt end: Date? = nil,
@@ -295,7 +315,12 @@ extension ForecastGenerator {
         adaptiveAbsorptionRateEnabled: Bool,
         adaptiveRateStandbyIntervalFraction: Double
     ) throws -> [GlucoseEffect] {
-
+        
+        guard let carbRatioSchedule = carbRatioSchedule, let insulinSensitivitySchedule = insulinSensitivitySchedule else {
+            // TODO: Flesh out
+            throw LoopError.configurationError(.generalSettings)
+        }
+        
         if let effectVelocities = effectVelocities {
             return samples.map(
                 to: effectVelocities,
