@@ -1,5 +1,5 @@
 //
-//  LoopDataManagerTests.swift
+//  LoopDataManagerDosingTests.swift
 //  LoopTests
 //
 //  Created by Anna Quinlan on 8/4/20.
