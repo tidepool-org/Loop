@@ -38,6 +38,17 @@ final class DeviceDataManager {
     private var deviceLog: PersistentDeviceLog
 
     var bluetoothState: BluetoothStateManager.BluetoothState = .other
+    
+    // MARK: - App-level responsibilities
+
+    private var rootViewController: UIViewController
+    
+    private var deliveryUncertaintyAlertManager: DeliveryUncertaintyAlertManager?
+    
+    // TODO: This should also be false when CGM is not expected to produce values for the foreseeable future.
+    public var isClosedLoop: Bool {
+        return loopManager.settings.dosingEnabled
+    }
 
     // MARK: - CGM
 
@@ -133,10 +144,6 @@ final class DeviceDataManager {
         }
     }
     
-    private var rootViewController: UIViewController
-    
-    private var deliveryUncertaintyAlertManager: DeliveryUncertaintyAlertManager?
-
     // MARK: - WatchKit
 
     private var watchManager: WatchDataManager!

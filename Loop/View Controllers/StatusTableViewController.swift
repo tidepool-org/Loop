@@ -8,6 +8,7 @@
 
 import UIKit
 import HealthKit
+import SwiftUI
 import Intents
 import LoopCore
 import LoopKit
@@ -1145,9 +1146,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
     @IBAction func unwindFromSettings(_ segue: UIStoryboardSegue) {}
 
     @IBAction func presentBolusScreen() {
-        let viewModel = BolusEntryViewModel(dataManager: deviceManager)
-        let bolusEntryView = BolusEntryView(viewModel: viewModel)
-        let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
+        let hostingController: DismissibleHostingController
+        if deviceManager.isClosedLoop {
+            let viewModel = BolusEntryViewModel(dataManager: deviceManager)
+            let bolusEntryView = BolusEntryView(viewModel: viewModel)
+            hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
+        } else {
+            let bolusEntryView = SimpleBolusCalculatorView()
+            hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
+        }
         let navigationWrapper = UINavigationController(rootViewController: hostingController)
         hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
         self.present(navigationWrapper, animated: true)

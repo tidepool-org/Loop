@@ -22,8 +22,7 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                List {
-                    self.infoSection
+                List() {
                     self.summarySection
                 }
                 // As of iOS 13, we can't programmatically scroll to the Bolus entry text field.  This ugly hack scoots the
@@ -39,6 +38,7 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
                     .frame(height: self.isKeyboardVisible ? 0 : nil)
                     .opacity(self.isKeyboardVisible ? 0 : 1)
             }
+            .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
         }
     }
     
@@ -48,20 +48,19 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
         shouldBolusEntryBecomeFirstResponder && geometry.size.height < 640
     }
     
-    private var infoSection: some View {
-        Section {
-            HStack {
-                Image("OpenLoop")
-                Text("When out of Closed Loop mode, the app uses a simplified bolus calculator like a typical pump.")
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-                Image(systemName: "info.circle").foregroundColor(.accentColor)
-            }
+    private var info: some View {
+        HStack {
+            Image("Open Loop")
+            Text("When out of Closed Loop mode, the app uses a simplified bolus calculator like a typical pump.")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+            Image(systemName: "info.circle").foregroundColor(.accentColor)
         }
+        .padding([.top, .bottom])
     }
     
     private var summarySection: some View {
-        Section {
+        Section(header: info) {
             carbEntryRow
             glucoseEntryRow
             recommendedBolusRow
@@ -91,7 +90,7 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
                     text: typedBolusEntry,
                     placeholder: Self.carbAmountFormatter.string(from: 0.0)!,
                     font: .preferredFont(forTextStyle: .title1),
-                    textColor: /* .carbs */ .systemGreen ,
+                    textColor: .carbTintColor,
                     textAlignment: .right,
                     keyboardType: .decimalPad,
                     shouldBecomeFirstResponder: shouldBolusEntryBecomeFirstResponder
@@ -111,7 +110,7 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
                     text: typedGlucose,
                     placeholder: "--",
                     font: .preferredFont(forTextStyle: .title1),
-                    textColor: /* .loopAccent */ .systemBlue ,
+                    textColor: .loopAccent,
                     textAlignment: .right,
                     keyboardType: .decimalPad,
                     shouldBecomeFirstResponder: shouldBolusEntryBecomeFirstResponder
@@ -144,7 +143,7 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
                     text: typedBolusEntry,
                     placeholder: Self.doseAmountFormatter.string(from: 0.0)!,
                     font: .preferredFont(forTextStyle: .title1),
-                    textColor: /* .loopAccent */ .systemBlue ,
+                    textColor: .loopAccent,
                     textAlignment: .right,
                     keyboardType: .decimalPad,
                     shouldBecomeFirstResponder: shouldBolusEntryBecomeFirstResponder
@@ -209,10 +208,8 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
     
     private var actionArea: some View {
         VStack(spacing: 0) {
-
             actionButton
         }
-        .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
         .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
     }
     
@@ -228,9 +225,6 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
         .buttonStyle(ActionButtonStyle(.primary))
         .padding()
     }
-
-
-
 }
 
 struct SimpleBolusCalculatorView_Previews: PreviewProvider {
