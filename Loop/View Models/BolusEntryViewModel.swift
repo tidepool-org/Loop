@@ -31,8 +31,8 @@ protocol BolusEntryViewModelDelegate: class {
                       completion: @escaping (_ result: Result<Void>) -> Void)
     
     ///
-    func enactBolus(units: Double)
-    
+    func enactBolus(units: Double, at startDate: Date, completion: @escaping (_ error: Error?) -> Void)
+
     ///
     func getCachedGlucoseSamples(start: Date, end: Date?, completion: @escaping (_ samples: [StoredGlucoseSample]) -> Void)
 
@@ -90,7 +90,7 @@ final class BolusEntryViewModel: ObservableObject {
     private var storedGlucoseValues: [GlucoseValue] = []
     @Published var predictedGlucoseValues: [GlucoseValue] = []
     @Published var glucoseUnit: HKUnit = .milligramsPerDeciliter
-    @Published var chartDateInterval = DateInterval(start: Date(timeIntervalSinceNow: .hours(-1)), duration: .hours(7))
+    @Published var chartDateInterval: DateInterval
 
     @Published var activeCarbs: HKQuantity?
     @Published var activeInsulin: HKQuantity?
@@ -130,7 +130,8 @@ final class BolusEntryViewModel: ObservableObject {
 
     private weak var delegate: BolusEntryViewModelDelegate?
 
-
+    var now: () -> Date
+    
     // MARK: - Constants
 
     static let defaultGlucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 60)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 200)
@@ -141,15 +142,19 @@ final class BolusEntryViewModel: ObservableObject {
 
     init(
         delegate: BolusEntryViewModelDelegate,
+        now: @escaping () -> Date = { Date() },
         originalCarbEntry: StoredCarbEntry? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
         selectedCarbAbsorptionTimeEmoji: String? = nil
     ) {
         self.delegate = delegate
+        self.now = now
         self.originalCarbEntry = originalCarbEntry
         self.potentialCarbEntry = potentialCarbEntry
         self.selectedCarbAbsorptionTimeEmoji = selectedCarbAbsorptionTimeEmoji
 
+        self.chartDateInterval = DateInterval(start: Date(timeInterval: .hours(-1), since: now()), duration: .hours(7))
+        
         observeLoopUpdates()
         observeEnteredBolusChanges()
         observeEnteredManualGlucoseChanges()
@@ -193,12 +198,14 @@ final class BolusEntryViewModel: ObservableObject {
         $enteredManualGlucose
             .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
             .sink { [weak self] enteredManualGlucose in
-                self?.updateManualGlucoseSample()
+                guard let self = self else { return }
+
+                self.updateManualGlucoseSample(enteredAt: self.now())
 
                 // Clear out any entered bolus whenever the manual entry changes
-                self?.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
+                self.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
 
-                self?.delegate?.withLoopState { [weak self] state in
+                self.delegate?.withLoopState { [weak self] state in
                     self?.updatePredictedGlucoseValues(from: state, completion: {
                         // Ensure the manual glucose entry appears on the chart at the same time as the updated prediction
                         self?.updateGlucoseChartValues()
@@ -219,11 +226,13 @@ final class BolusEntryViewModel: ObservableObject {
             .autoconnect()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.log.default("5 minutes elapsed on bolus screen; refreshing UI")
+                guard let self = self else { return }
+                
+                self.log.default("5 minutes elapsed on bolus screen; refreshing UI")
 
                 // Update the manual glucose sample's timestamp, which should always be "now"
-                self?.updateManualGlucoseSample()
-                self?.update()
+                self.updateManualGlucoseSample(enteredAt: self.now())
+                self.update()
             }
             .store(in: &cancellables)
     }
@@ -348,7 +357,8 @@ final class BolusEntryViewModel: ObservableObject {
         }
 
         isInitiatingSaveOrBolus = true
-        delegate?.enactBolus(units: bolusVolume)
+        // TODO: should we pass along completion or not???
+        delegate?.enactBolus(units: bolusVolume, at: now(), completion: { _ in })
         completion()
     }
 
@@ -417,7 +427,7 @@ final class BolusEntryViewModel: ObservableObject {
 
     // MARK: - Data upkeep
 
-    private func updateManualGlucoseSample(enteredAt entryDate: Date = Date()) {
+    private func updateManualGlucoseSample(enteredAt entryDate: Date) {
         dispatchPrecondition(condition: .onQueue(.main))
 
         manualGlucoseSample = enteredManualGlucose.map { quantity in
@@ -686,7 +696,7 @@ final class BolusEntryViewModel: ObservableObject {
         let futureHours = ceil((delegate?.insulinModel?.effectDuration ?? .hours(4)).hours)
         let historyHours = max(settings.statusChartMinimumHistoryDisplay.hours, totalHours - futureHours)
 
-        let date = Date(timeIntervalSinceNow: -TimeInterval(hours: historyHours))
+        let date = Date(timeInterval: -TimeInterval(hours: historyHours), since: now())
         let chartStartDate = Calendar.current.nextDate(
             after: date,
             matching: DateComponents(minute: 0),
@@ -765,9 +775,8 @@ extension DeviceDataManager: BolusEntryViewModelDelegate {
         loopManager.addCarbEntry(carbEntry, replacing: replacingEntry, completion: completion)
     }
 
-    func enactBolus(units: Double) {
-        self.enactBolus(units: units)
-    }
+    /// func enactBolus(units: Double, at startDate: Date, completion: @escaping (_ error: Error?) -> Void)
+    /// is already implemented in DeviceDataManager
     
     func getCachedGlucoseSamples(start: Date, end: Date?, completion: @escaping ([StoredGlucoseSample]) -> Void) {
         glucoseStore.getCachedGlucoseSamples(start: start, end: end, completion: completion)
