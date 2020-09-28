@@ -11,11 +11,58 @@ import HealthKit
 import LocalAuthentication
 import Intents
 import os.log
+import LoopCore
 import LoopKit
 import LoopKitUI
 import LoopUI
 import SwiftUI
 
+protocol BolusEntryViewModelDelegate: class {
+    
+    ///
+    func withLoopState(do block: @escaping (LoopState) -> Void)
+
+    ///
+    func addGlucose(_ samples: [NewGlucoseSample],
+                    completion: ((_ result: Result<[GlucoseValue]>) -> Void)?)
+    
+    ///
+    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry? ,
+                      completion: @escaping (_ result: Result<Void>) -> Void)
+    
+    ///
+    func enactBolus(units: Double)
+    
+    ///
+    func getCachedGlucoseSamples(start: Date, end: Date?, completion: @escaping (_ samples: [StoredGlucoseSample]) -> Void)
+
+    ///
+    func insulinOnBoard(at date: Date, completion: @escaping (_ result: DoseStoreResult<InsulinValue>) -> Void)
+    
+    ///
+    func carbsOnBoard(at date: Date, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (_ result: CarbStoreResult<CarbValue>) -> Void)
+    
+    ///
+    func ensureCurrentPumpData(completion: @escaping () -> Void)
+    
+    ///
+    var isGlucoseDataStale: Bool { get }
+    
+    ///
+    var isPumpDataStale: Bool { get }
+    
+    ///
+    var isPumpConfigured: Bool { get }
+    
+    ///
+    var preferredGlucoseUnit: HKUnit? { get }
+    
+    ///
+    var insulinModel: InsulinModel? { get }
+    
+    ///  TODO: is this the best seam?
+    var settings: LoopSettings { get }
+}
 
 final class BolusEntryViewModel: ObservableObject {
     enum Alert: Int {
@@ -68,14 +115,9 @@ final class BolusEntryViewModel: ObservableObject {
     @Published var activeAlert: Alert?
     @Published var activeNotice: Notice?
 
-    private let dataManager: DeviceDataManager
     private let log = OSLog(category: "BolusEntryViewModel")
     private var cancellables: Set<AnyCancellable> = []
 
-    private var isPumpDataStale: Bool {
-        // "borrowed" from LoopDataManager
-        Date().timeIntervalSince(dataManager.doseStore.lastAddedPumpData) <= dataManager.loopManager.settings.inputDataRecencyInterval
-    }
     @Published var isRefreshingPump: Bool = false
     
     let chartManager: ChartsManager = {
@@ -84,6 +126,10 @@ final class BolusEntryViewModel: ObservableObject {
         predictedGlucoseChart.glucoseDisplayRange = BolusEntryViewModel.defaultGlucoseDisplayRange
         return ChartsManager(colors: .primary, settings: .default, charts: [predictedGlucoseChart], traitCollection: .current)
     }()
+
+
+    private weak var delegate: BolusEntryViewModelDelegate?
+
 
     // MARK: - Constants
 
@@ -94,12 +140,12 @@ final class BolusEntryViewModel: ObservableObject {
     // MARK: - Initialization
 
     init(
-        dataManager: DeviceDataManager,
+        delegate: BolusEntryViewModelDelegate,
         originalCarbEntry: StoredCarbEntry? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
         selectedCarbAbsorptionTimeEmoji: String? = nil
     ) {
-        self.dataManager = dataManager
+        self.delegate = delegate
         self.originalCarbEntry = originalCarbEntry
         self.potentialCarbEntry = potentialCarbEntry
         self.selectedCarbAbsorptionTimeEmoji = selectedCarbAbsorptionTimeEmoji
@@ -115,7 +161,7 @@ final class BolusEntryViewModel: ObservableObject {
     
     private func observeLoopUpdates() {
         NotificationCenter.default
-            .publisher(for: .LoopDataUpdated, object: dataManager.loopManager)
+            .publisher(for: .LoopDataUpdated, object: nil)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.update() }
             .store(in: &cancellables)
@@ -126,7 +172,7 @@ final class BolusEntryViewModel: ObservableObject {
             .removeDuplicates()
             .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
             .sink { [weak self] _ in
-                self?.dataManager.loopManager.getLoopState { manager, state in
+                self?.delegate?.withLoopState { [weak self] state in
                     self?.updatePredictedGlucoseValues(from: state)
                 }
             }
@@ -152,7 +198,7 @@ final class BolusEntryViewModel: ObservableObject {
                 // Clear out any entered bolus whenever the manual entry changes
                 self?.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
 
-                self?.dataManager.loopManager.getLoopState { manager, state in
+                self?.delegate?.withLoopState { [weak self] state in
                     self?.updatePredictedGlucoseValues(from: state, completion: {
                         // Ensure the manual glucose entry appears on the chart at the same time as the updated prediction
                         self?.updateGlucoseChartValues()
@@ -196,13 +242,13 @@ final class BolusEntryViewModel: ObservableObject {
         guard isBolusRecommended else { return }
         enteredBolus = recommendedBolus!
         isRefreshingPump = false
-        dataManager.loopManager.getLoopState { [weak self] manager, state in
+        delegate?.withLoopState { [weak self] state in
             self?.updatePredictedGlucoseValues(from: state)
         }
     }
 
     func saveAndDeliver(onSuccess completion: @escaping () -> Void) {
-        guard dataManager.pumpManager != nil else {
+        guard delegate?.isPumpConfigured ?? false else {
             presentAlert(.noPumpManagerConfigured)
             return
         }
@@ -247,7 +293,7 @@ final class BolusEntryViewModel: ObservableObject {
     private func continueSaving(onSuccess completion: @escaping () -> Void) {
         if let manualGlucoseSample = manualGlucoseSample {
             isInitiatingSaveOrBolus = true
-            dataManager.loopManager.addGlucose([manualGlucoseSample]) { result in
+            delegate?.addGlucose([manualGlucoseSample]) { result in
                 DispatchQueue.main.async {
                     switch result {
                     case .success:
@@ -280,7 +326,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
 
         isInitiatingSaveOrBolus = true
-        dataManager.loopManager.addCarbEntry(carbEntry, replacing: originalCarbEntry) { result in
+        delegate?.addCarbEntry(carbEntry, replacing: originalCarbEntry) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success:
@@ -302,7 +348,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
 
         isInitiatingSaveOrBolus = true
-        dataManager.enactBolus(units: bolusVolume)
+        delegate?.enactBolus(units: bolusVolume)
         completion()
     }
 
@@ -401,10 +447,7 @@ final class BolusEntryViewModel: ObservableObject {
     private func disableManualGlucoseEntryIfNecessary() {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        if isManualGlucoseEntryEnabled,
-            let latestGlucose = dataManager.glucoseStore.latestGlucose,
-            Date().timeIntervalSince(latestGlucose.startDate) <= dataManager.loopManager.settings.inputDataRecencyInterval
-        {
+        if isManualGlucoseEntryEnabled, !(delegate?.isGlucoseDataStale ?? true) {
             isManualGlucoseEntryEnabled = false
             enteredManualGlucose = nil
             manualGlucoseSample = nil
@@ -413,7 +456,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func updateStoredGlucoseValues() {
-        dataManager.glucoseStore.getCachedGlucoseSamples(start: chartDateInterval.start, end: nil) { [weak self] values in
+        delegate?.getCachedGlucoseSamples(start: chartDateInterval.start, end: nil) { [weak self] values in
             DispatchQueue.main.async {
                 self?.storedGlucoseValues = values
                 self?.updateGlucoseChartValues()
@@ -469,7 +512,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func updateActiveInsulin() {
-        dataManager.doseStore.insulinOnBoard(at: Date()) { [weak self] result in
+        delegate?.insulinOnBoard(at: Date()) { [weak self] result in
             guard let self = self else { return }
 
             DispatchQueue.main.async {
@@ -484,7 +527,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func updateFromLoopState() {
-        dataManager.loopManager.getLoopState { [weak self] manager, state in
+        delegate?.withLoopState { [weak self] state in
             self?.updatePredictedGlucoseValues(from: state)
             self?.updateCarbsOnBoard(from: state)
             self?.ensurePumpDataIsFresh { [weak self] in
@@ -497,7 +540,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func updateCarbsOnBoard(from state: LoopState) {
-        dataManager.carbStore.carbsOnBoard(at: Date(), effectVelocities: state.insulinCounteractionEffects) { result in
+        delegate?.carbsOnBoard(at: Date(), effectVelocities: state.insulinCounteractionEffects) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let carbValue):
@@ -510,7 +553,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func ensurePumpDataIsFresh(then completion: @escaping () -> Void) {
-        guard let pumpManager = dataManager.pumpManager, !isPumpDataStale else {
+        guard !(delegate?.isPumpDataStale ?? true) else {
             completion()
             return
         }
@@ -519,7 +562,7 @@ final class BolusEntryViewModel: ObservableObject {
             // v-- This needs to happen on the main queue
             self.isRefreshingPump = true
             let wrappedCompletion: () -> Void = { [weak self] in
-                self?.dataManager.loopManager.getLoopState { [weak self] _, _ in
+                self?.delegate?.withLoopState { [weak self] _ in
                     // v-- This needs to happen in LoopDataManager's dataQueue
                     completion()
                     // ^v-- Unfortunately, these two things might happen concurrently, so in theory the
@@ -531,7 +574,7 @@ final class BolusEntryViewModel: ObservableObject {
                     }
                 }
             }
-            pumpManager.ensureCurrentPumpData(completion: wrappedCompletion)
+            self.delegate?.ensureCurrentPumpData(completion: wrappedCompletion)
         }
     }
     
@@ -546,8 +589,11 @@ final class BolusEntryViewModel: ObservableObject {
 
                 switch recommendation.notice {
                 case .glucoseBelowSuspendThreshold:
-                    let suspendThreshold = dataManager.loopManager.settings.suspendThreshold
-                    notice = .predictedGlucoseBelowSuspendThreshold(suspendThreshold: suspendThreshold!.quantity)
+                    if let suspendThreshold = delegate?.settings.suspendThreshold {
+                        notice = .predictedGlucoseBelowSuspendThreshold(suspendThreshold: suspendThreshold.quantity)
+                    } else {
+                        notice = nil
+                    }
                 default:
                     notice = nil
                 }
@@ -607,12 +653,11 @@ final class BolusEntryViewModel: ObservableObject {
     private func updateSettings() {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        let settings = dataManager.loopManager.settings
-        glucoseUnit = settings.glucoseUnit ?? dataManager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
+        glucoseUnit = delegate?.settings.glucoseUnit ?? delegate?.preferredGlucoseUnit ?? .milligramsPerDeciliter
 
-        targetGlucoseSchedule = settings.glucoseTargetRangeSchedule
-        preMealOverride = settings.preMealOverride
-        scheduleOverride = settings.scheduleOverride
+        targetGlucoseSchedule = delegate?.settings.glucoseTargetRangeSchedule
+        preMealOverride = delegate?.settings.preMealOverride
+        scheduleOverride = delegate?.settings.scheduleOverride
 
         if preMealOverride?.hasFinished() == true {
             preMealOverride = nil
@@ -622,7 +667,7 @@ final class BolusEntryViewModel: ObservableObject {
             scheduleOverride = nil
         }
 
-        maximumBolus = settings.maximumBolus.map { maxBolusAmount in
+        maximumBolus = delegate?.settings.maximumBolus.map { maxBolusAmount in
             HKQuantity(unit: .internationalUnit(), doubleValue: maxBolusAmount)
         }
     }
@@ -630,7 +675,7 @@ final class BolusEntryViewModel: ObservableObject {
     private func updateChartDateInterval() {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        let settings = dataManager.loopManager.settings
+        guard let settings = delegate?.settings else { return }
 
         // How far back should we show data? Use the screen size as a guide.
         let screenWidth = UIScreen.main.bounds.width
@@ -638,7 +683,7 @@ final class BolusEntryViewModel: ObservableObject {
         let availableWidth = screenWidth - chartManager.fixedHorizontalMargin - 2 * viewMarginInset
 
         let totalHours = floor(Double(availableWidth / settings.minimumChartWidthPerHour))
-        let futureHours = ceil((dataManager.loopManager.insulinModelSettings?.model.effectDuration ?? .hours(4)).hours)
+        let futureHours = ceil((delegate?.insulinModel?.effectDuration ?? .hours(4)).hours)
         let historyHours = max(settings.statusChartMinimumHistoryDisplay.hours, totalHours - futureHours)
 
         let date = Date(timeIntervalSinceNow: -TimeInterval(hours: historyHours))
@@ -706,3 +751,63 @@ extension BolusEntryViewModel {
     }
 }
 
+extension DeviceDataManager: BolusEntryViewModelDelegate {
+
+    func withLoopState(do block: @escaping (LoopState) -> Void) {
+        loopManager.getLoopState { block($1) }
+    }
+    
+    func addGlucose(_ samples: [NewGlucoseSample], completion: ((Result<[GlucoseValue]>) -> Void)?) {
+        loopManager.addGlucose(samples, completion: completion)
+    }
+    
+    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<Void>) -> Void) {
+        loopManager.addCarbEntry(carbEntry, replacing: replacingEntry, completion: completion)
+    }
+
+    func enactBolus(units: Double) {
+        self.enactBolus(units: units)
+    }
+    
+    func getCachedGlucoseSamples(start: Date, end: Date?, completion: @escaping ([StoredGlucoseSample]) -> Void) {
+        glucoseStore.getCachedGlucoseSamples(start: start, end: end, completion: completion)
+    }
+    
+    func insulinOnBoard(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
+        doseStore.insulinOnBoard(at: date, completion: completion)
+    }
+    
+    func carbsOnBoard(at date: Date, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (CarbStoreResult<CarbValue>) -> Void) {
+        carbStore.carbsOnBoard(at: date, effectVelocities: effectVelocities, completion: completion)
+    }
+    
+    func ensureCurrentPumpData(completion: @escaping () -> Void) {
+        pumpManager?.ensureCurrentPumpData(completion: completion)
+    }
+    
+    var isGlucoseDataStale: Bool {
+        guard let latestGlucose = glucoseStore.latestGlucose else { return true }
+        return Date().timeIntervalSince(latestGlucose.startDate) <= loopManager.settings.inputDataRecencyInterval
+    }
+    
+    var isPumpDataStale: Bool {
+        return Date().timeIntervalSince(doseStore.lastAddedPumpData) <= loopManager.settings.inputDataRecencyInterval
+    }
+    
+    var isPumpConfigured: Bool {
+        return pumpManager != nil
+    }
+    
+    var preferredGlucoseUnit: HKUnit? {
+        return glucoseStore.preferredUnit
+    }
+    
+    var insulinModel: InsulinModel? {
+        return loopManager.insulinModelSettings?.model
+    }
+    
+    var settings: LoopSettings {
+        return loopManager.settings
+    }
+    
+}
