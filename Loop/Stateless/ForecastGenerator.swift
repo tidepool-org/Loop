@@ -71,7 +71,7 @@ extension ForecastGenerator {
         var effects: [[GlucoseEffect]] = []
         var retrospectiveGlucoseEffect = retrospectiveGlucoseEffect
         if inputs.contains(.carbs) {
-            try ForecastGenerator.generateEffectsForCarbs(potentialCarbEntry: potentialCarbEntry,
+            try generateEffectsForCarbs(potentialCarbEntry: potentialCarbEntry,
                                                           lastGlucoseDate: lastGlucoseDate,
                                                           recentCarbEntries: recentCarbEntries,
                                                           replacedCarbEntry: replacedCarbEntry,
@@ -101,7 +101,7 @@ extension ForecastGenerator {
         }
         
         if inputs.contains(.insulin) {
-            try ForecastGenerator.generateEffectsForInsulin(insulinEffect: insulinEffect,
+            try generateEffectsForInsulin(insulinEffect: insulinEffect,
                                                             insulinEffectOverride: insulinEffectOverride,
                                                             includingPendingInsulin: includingPendingInsulin,
                                                             insulinEffectIncludingPendingInsulin: insulinEffectIncludingPendingInsulin,
@@ -215,7 +215,7 @@ extension ForecastGenerator {
 
                 effects.append(potentialCarbEffect)
                 
-                retrospectiveGlucoseEffect = ForecastGenerator.computeRetrospectiveGlucoseEffect(
+                retrospectiveGlucoseEffect = computeRetrospectiveGlucoseEffect(
                     retrospectiveCorrection: retrospectiveCorrection,
                     startingAt: glucose,
                     carbEffects: potentialCarbEffect,
