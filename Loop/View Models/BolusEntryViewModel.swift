@@ -127,10 +127,10 @@ final class BolusEntryViewModel: ObservableObject {
         return ChartsManager(colors: .primary, settings: .default, charts: [predictedGlucoseChart], traitCollection: .current)
     }()
 
-
+    // MARK: - Seams
     private weak var delegate: BolusEntryViewModelDelegate?
-
-    var now: () -> Date
+    let now: () -> Date
+    let screenWidth: CGFloat
     
     // MARK: - Constants
 
@@ -143,12 +143,14 @@ final class BolusEntryViewModel: ObservableObject {
     init(
         delegate: BolusEntryViewModelDelegate,
         now: @escaping () -> Date = { Date() },
+        screenWidth: CGFloat = UIScreen.main.bounds.width,
         originalCarbEntry: StoredCarbEntry? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
         selectedCarbAbsorptionTimeEmoji: String? = nil
     ) {
         self.delegate = delegate
         self.now = now
+        self.screenWidth = screenWidth
         self.originalCarbEntry = originalCarbEntry
         self.potentialCarbEntry = potentialCarbEntry
         self.selectedCarbAbsorptionTimeEmoji = selectedCarbAbsorptionTimeEmoji
@@ -688,7 +690,6 @@ final class BolusEntryViewModel: ObservableObject {
         guard let settings = delegate?.settings else { return }
 
         // How far back should we show data? Use the screen size as a guide.
-        let screenWidth = UIScreen.main.bounds.width
         let viewMarginInset: CGFloat = 14
         let availableWidth = screenWidth - chartManager.fixedHorizontalMargin - 2 * viewMarginInset
 
