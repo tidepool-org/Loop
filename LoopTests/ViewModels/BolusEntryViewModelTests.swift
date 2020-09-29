@@ -12,129 +12,11 @@ import LoopKit
 import XCTest
 @testable import Loop
 
-class MockLoopState: LoopState {
-    
-    var carbsOnBoard: CarbValue?
-    
-    var error: Error?
-    
-    var insulinCounteractionEffects: [GlucoseEffectVelocity] = []
-    
-    var predictedGlucose: [PredictedGlucoseValue]?
-    
-    var predictedGlucoseIncludingPendingInsulin: [PredictedGlucoseValue]?
-    
-    var recommendedTempBasal: (recommendation: TempBasalRecommendation, date: Date)?
-    
-    var recommendedBolus: (recommendation: BolusRecommendation, date: Date)?
-    
-    var retrospectiveGlucoseDiscrepancies: [GlucoseChange]?
-    
-    var totalRetrospectiveCorrection: HKQuantity?
-    
-    var predictGlucoseValueResult: [PredictedGlucoseValue] = []
-    func predictGlucose(using inputs: PredictionInputEffect, potentialBolus: DoseEntry?, potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?, includingPendingInsulin: Bool) throws -> [PredictedGlucoseValue] {
-        return predictGlucoseValueResult
-    }
-
-    func predictGlucoseFromManualGlucose(_ glucose: NewGlucoseSample, potentialBolus: DoseEntry?, potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?, includingPendingInsulin: Bool) throws -> [PredictedGlucoseValue] {
-        return predictGlucoseValueResult
-    }
-    
-    var bolusRecommendationResult: BolusRecommendation?
-    var bolusRecommendationError: Error?
-    var consideringPotentialCarbEntryPassed: NewCarbEntry??
-    var replacingCarbEntryPassed: StoredCarbEntry??
-    func recommendBolus(consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?) throws -> BolusRecommendation? {
-        consideringPotentialCarbEntryPassed = potentialCarbEntry
-        replacingCarbEntryPassed = replacedCarbEntry
-        if let error = bolusRecommendationError { throw error }
-        return bolusRecommendationResult
-    }
-    
-    func recommendBolusForManualGlucose(_ glucose: NewGlucoseSample, consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?) throws -> BolusRecommendation? {
-        consideringPotentialCarbEntryPassed = potentialCarbEntry
-        replacingCarbEntryPassed = replacedCarbEntry
-        if let error = bolusRecommendationError { throw error }
-        return bolusRecommendationResult
-    }
-}
-
-struct MockInsulinModel: InsulinModel {
-    func percentEffectRemaining(at time: TimeInterval) -> Double {
-        0
-    }
-    
-    var effectDuration: TimeInterval = 0
-
-    var delay: TimeInterval = 0
-    
-    var debugDescription: String = ""
-}
-
-struct MockGlucoseValue: GlucoseValue {
-    var quantity: HKQuantity
-    var startDate: Date
-}
-
 class BolusEntryViewModelTests: XCTestCase {
-    
-    class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
-        var loopStateCallBlock: ((LoopState) -> Void)?
-        func withLoopState(do block: @escaping (LoopState) -> Void) {
-            loopStateCallBlock = block
-        }
-        
-        func addGlucose(_ samples: [NewGlucoseSample], completion: ((Result<[GlucoseValue]>) -> Void)?) {
-            
-        }
-        
-        func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<Void>) -> Void) {
-            
-        }
-        
-        func enactBolus(units: Double, at startDate: Date, completion: @escaping (Error?) -> Void) {
-            
-        }
-        
-        var cachedGlucoseSamplesResponse: [StoredGlucoseSample] = []
-        func getCachedGlucoseSamples(start: Date, end: Date?, completion: @escaping ([StoredGlucoseSample]) -> Void) {
-            completion(cachedGlucoseSamplesResponse)
-        }
-        
-        func insulinOnBoard(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
-            
-        }
-        
-        var carbsOnBoardResult: CarbStoreResult<CarbValue>?
-        func carbsOnBoard(at date: Date, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (CarbStoreResult<CarbValue>) -> Void) {
-            if let carbsOnBoardResult = carbsOnBoardResult {
-                completion(carbsOnBoardResult)
-            }
-        }
-        
-        var ensureCurrentPumpDataCompletion: (() -> Void)?
-        func ensureCurrentPumpData(completion: @escaping () -> Void) {
-            ensureCurrentPumpDataCompletion = completion
-        }
-        
-        var isGlucoseDataStale: Bool = false
-        
-        var isPumpDataStale: Bool = false
-        
-        var isPumpConfigured: Bool = true
-        
-        var preferredGlucoseUnit: HKUnit? = .milligramsPerDeciliter
-        
-        var insulinModel: InsulinModel? = MockInsulinModel()
-        
-        var settings: LoopSettings = LoopSettings()
-    }
-    
     static let now = Date.distantFuture
     static let exampleStartDate = Date.distantFuture - .hours(2)
     static let exampleEndDate = Date.distantFuture - .hours(1)
-    static let exampleGlucoseValue = MockGlucoseValue(quantity: exampleManualGlucoseQuantity, startDate: exampleStartDate)
+    static fileprivate let exampleGlucoseValue = MockGlucoseValue(quantity: exampleManualGlucoseQuantity, startDate: exampleStartDate)
     static let exampleManualGlucoseQuantity = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 123.4)
     static let exampleManualGlucoseSample =
         HKQuantitySample(type: HKQuantityType.quantityType(forIdentifier: .bloodGlucose)!,
@@ -152,7 +34,7 @@ class BolusEntryViewModelTests: XCTestCase {
     static let exampleCarbQuantity = HKQuantity(unit: .gram(), doubleValue: 234.5)
     
     var bolusEntryViewModel: BolusEntryViewModel!
-    var delegate: MockBolusEntryViewModelDelegate!
+    fileprivate var delegate: MockBolusEntryViewModelDelegate!
     var now: Date = BolusEntryViewModelTests.now
     
     let mockOriginalCarbEntry = StoredCarbEntry(uuid: UUID(), provenanceIdentifier: "provenanceIdentifier", syncIdentifier: "syncIdentifier", syncVersion: 0, startDate: Date(), quantity: BolusEntryViewModelTests.exampleCarbQuantity, foodType: "foodType", absorptionTime: 1, createdByCurrentApp: true, userCreatedDate: Date(), userUpdatedDate: Date())
@@ -170,6 +52,7 @@ class BolusEntryViewModelTests: XCTestCase {
                                                   originalCarbEntry: mockOriginalCarbEntry,
                                                   potentialCarbEntry: mockPotentialCarbEntry,
                                                   selectedCarbAbsorptionTimeEmoji: nil)
+        bolusEntryViewModel.maximumBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 10)
     }
 
     override func tearDownWithError() throws {
@@ -369,7 +252,8 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 1.0)
         let mockState = MockLoopState()
         mockState.bolusRecommendationResult = BolusRecommendation(amount: 1.234, pendingInsulin: 4.321)
-        try triggerLoopStateUpdatedWithDataAndWait(with: mockState)
+        delegate.cachedGlucoseSamplesResponse = [StoredGlucoseSample(sample: Self.exampleCGMGlucoseSample)]
+        try triggerLoopStateUpdated(with: mockState)
         XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 0.0), bolusEntryViewModel.enteredBolus)
         // Now, through the magic of `observeRecommendedBolusChanges` and the recommendedBolus publisher it should update to 1.234
         waitOnMain()
@@ -397,13 +281,17 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertFalse(bolusEntryViewModel.isRefreshingPump)
     }
     
-    func testSaveAndDeliver() throws {
-        
+    func testDeliverBolusOnly() throws {
+        delegate.isPumpConfigured = true
+        bolusEntryViewModel.saveAndDeliver {
+            
+        }
     }
+}
 
-    // MARK: utilities
-    
-    let timeout = 1.0
+// MARK: utilities
+
+extension BolusEntryViewModelTests {
     
     func triggerLoopStateUpdatedWithDataAndWait(with state: LoopState = MockLoopState(), function: String = #function) throws {
         delegate.cachedGlucoseSamplesResponse = [StoredGlucoseSample(sample: Self.exampleCGMGlucoseSample)]
@@ -423,19 +311,130 @@ class BolusEntryViewModelTests: XCTestCase {
             block(state)
             exp.fulfill()
         }
-        wait(for: [exp], timeout: timeout)
-    }
-    
-    func waitOnMain(for interval: TimeInterval, function: String = #function) {
-        let exp = expectation(description: function)
-        DispatchQueue.main.asyncAfter(deadline: .now() + interval) {
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: timeout)
+        wait(for: [exp], timeout: 1.0)
     }
 }
 
-extension TimeInterval {
+
+fileprivate class MockLoopState: LoopState {
+    
+    var carbsOnBoard: CarbValue?
+    
+    var error: Error?
+    
+    var insulinCounteractionEffects: [GlucoseEffectVelocity] = []
+    
+    var predictedGlucose: [PredictedGlucoseValue]?
+    
+    var predictedGlucoseIncludingPendingInsulin: [PredictedGlucoseValue]?
+    
+    var recommendedTempBasal: (recommendation: TempBasalRecommendation, date: Date)?
+    
+    var recommendedBolus: (recommendation: BolusRecommendation, date: Date)?
+    
+    var retrospectiveGlucoseDiscrepancies: [GlucoseChange]?
+    
+    var totalRetrospectiveCorrection: HKQuantity?
+    
+    var predictGlucoseValueResult: [PredictedGlucoseValue] = []
+    func predictGlucose(using inputs: PredictionInputEffect, potentialBolus: DoseEntry?, potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?, includingPendingInsulin: Bool) throws -> [PredictedGlucoseValue] {
+        return predictGlucoseValueResult
+    }
+
+    func predictGlucoseFromManualGlucose(_ glucose: NewGlucoseSample, potentialBolus: DoseEntry?, potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?, includingPendingInsulin: Bool) throws -> [PredictedGlucoseValue] {
+        return predictGlucoseValueResult
+    }
+    
+    var bolusRecommendationResult: BolusRecommendation?
+    var bolusRecommendationError: Error?
+    var consideringPotentialCarbEntryPassed: NewCarbEntry??
+    var replacingCarbEntryPassed: StoredCarbEntry??
+    func recommendBolus(consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?) throws -> BolusRecommendation? {
+        consideringPotentialCarbEntryPassed = potentialCarbEntry
+        replacingCarbEntryPassed = replacedCarbEntry
+        if let error = bolusRecommendationError { throw error }
+        return bolusRecommendationResult
+    }
+    
+    func recommendBolusForManualGlucose(_ glucose: NewGlucoseSample, consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?) throws -> BolusRecommendation? {
+        consideringPotentialCarbEntryPassed = potentialCarbEntry
+        replacingCarbEntryPassed = replacedCarbEntry
+        if let error = bolusRecommendationError { throw error }
+        return bolusRecommendationResult
+    }
+}
+
+fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
+    var loopStateCallBlock: ((LoopState) -> Void)?
+    func withLoopState(do block: @escaping (LoopState) -> Void) {
+        loopStateCallBlock = block
+    }
+    
+    func addGlucose(_ samples: [NewGlucoseSample], completion: ((Result<[GlucoseValue]>) -> Void)?) {
+        
+    }
+    
+    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<Void>) -> Void) {
+        
+    }
+    
+    func enactBolus(units: Double, at startDate: Date, completion: @escaping (Error?) -> Void) {
+        
+    }
+    
+    var cachedGlucoseSamplesResponse: [StoredGlucoseSample] = []
+    func getCachedGlucoseSamples(start: Date, end: Date?, completion: @escaping ([StoredGlucoseSample]) -> Void) {
+        completion(cachedGlucoseSamplesResponse)
+    }
+    
+    func insulinOnBoard(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
+        
+    }
+    
+    var carbsOnBoardResult: CarbStoreResult<CarbValue>?
+    func carbsOnBoard(at date: Date, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (CarbStoreResult<CarbValue>) -> Void) {
+        if let carbsOnBoardResult = carbsOnBoardResult {
+            completion(carbsOnBoardResult)
+        }
+    }
+    
+    var ensureCurrentPumpDataCompletion: (() -> Void)?
+    func ensureCurrentPumpData(completion: @escaping () -> Void) {
+        ensureCurrentPumpDataCompletion = completion
+    }
+    
+    var isGlucoseDataStale: Bool = false
+    
+    var isPumpDataStale: Bool = false
+    
+    var isPumpConfigured: Bool = true
+    
+    var preferredGlucoseUnit: HKUnit? = .milligramsPerDeciliter
+    
+    var insulinModel: InsulinModel? = MockInsulinModel()
+    
+    var settings: LoopSettings = LoopSettings()
+}
+
+
+fileprivate struct MockInsulinModel: InsulinModel {
+    func percentEffectRemaining(at time: TimeInterval) -> Double {
+        0
+    }
+    
+    var effectDuration: TimeInterval = 0
+    
+    var delay: TimeInterval = 0
+    
+    var debugDescription: String = ""
+}
+
+fileprivate struct MockGlucoseValue: GlucoseValue {
+    var quantity: HKQuantity
+    var startDate: Date
+}
+
+fileprivate extension TimeInterval {
     static func milliseconds(_ milliseconds: Double) -> TimeInterval {
         return milliseconds / 1000
     }
