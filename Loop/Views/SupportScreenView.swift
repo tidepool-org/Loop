@@ -24,6 +24,9 @@ struct SupportScreenView: View, HorizontalSizeClassOverride {
                 }) {
                     Text("Issue Report", comment: "The title text for the issue report menu item")
                 }
+                
+                adverseEventReport
+                
                 NavigationLink(destination: CriticalEventLogExportView(viewModel: self.criticalEventLogExportViewModel)) {
                     Text(NSLocalizedString("Export Critical Event Logs", comment: "The title of the export critical event logs in support"))
                 }
@@ -32,6 +35,20 @@ struct SupportScreenView: View, HorizontalSizeClassOverride {
         .listStyle(GroupedListStyle())
         .navigationBarTitle(Text("Support", comment: "Support screen title"))
         .environment(\.horizontalSizeClass, horizontalOverride)
+    }
+    
+    private var adverseEventReport: some View {
+        Button(action: {
+            var urlString = "https://support.tidepool.org/hc/en-us/requests/new?ticket_form_id=360000551951"
+            urlString.append("&request_custom_fields_360035401592=\(Bundle.main.localizedNameAndVersion)")
+            if let urlString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                let url = URL(string: urlString)
+            {
+                UIApplication.shared.open(url)
+            }
+        }) {
+            Text("Report an Adverse Event", comment: "The title text for the reporting of an adverse event menu item")
+        }
     }
 }
 
