@@ -11,18 +11,18 @@ import LoopKit
 import LoopKitUI
 import HealthKit
 
+
 struct SimpleBolusView: View, HorizontalSizeClassOverride {
     
-    @State private var enteredCarbAmount = ""
-    @State private var enteredGlucose = ""
-    @State private var enteredBolusAmount = ""
     @State private var shouldBolusEntryBecomeFirstResponder = false
     @State private var isKeyboardVisible = false
     
     var displayMealEntry: Bool
+    @ObservedObject var viewModel: SimpleBolusViewModel
     
-    init(displayMealEntry: Bool) {
+    init(displayMealEntry: Bool, viewModel: SimpleBolusViewModel) {
         self.displayMealEntry = displayMealEntry
+        self.viewModel = viewModel
     }
     
     var title: String {
@@ -84,29 +84,15 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
         }
     }
     
-    private static let doseAmountFormatter: NumberFormatter = {
-        let quantityFormatter = QuantityFormatter()
-        quantityFormatter.setPreferredNumberFormatter(for: .internationalUnit())
-        return quantityFormatter.numberFormatter
-    }()
-    
-    private static let carbAmountFormatter: NumberFormatter = {
-        let quantityFormatter = QuantityFormatter()
-        quantityFormatter.setPreferredNumberFormatter(for: .gram())
-        return quantityFormatter.numberFormatter
-    }()
-
-
     private var carbEntryRow: some View {
         HStack {
             Text("Carbohydrates", comment: "Label for carbohydrates entry row on simple bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
                 DismissibleKeyboardTextField(
-                    text: typedBolusEntry,
-                    placeholder: Self.carbAmountFormatter.string(from: 0.0)!,
+                    text: $viewModel.enteredCarbAmount,
+                    placeholder: viewModel.carbPlaceholder,
                     font: .preferredFont(forTextStyle: .title1),
-                    textColor: .carbTintColor,
                     textAlignment: .right,
                     keyboardType: .decimalPad,
                     shouldBecomeFirstResponder: shouldBolusEntryBecomeFirstResponder
@@ -123,10 +109,9 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             Spacer()
             HStack(alignment: .firstTextBaseline) {
                 DismissibleKeyboardTextField(
-                    text: typedGlucose,
+                    text: $viewModel.enteredGlucoseAmount,
                     placeholder: "--",
                     font: .preferredFont(forTextStyle: .title1),
-                    textColor: .loopAccent,
                     textAlignment: .right,
                     keyboardType: .decimalPad,
                     shouldBecomeFirstResponder: shouldBolusEntryBecomeFirstResponder
@@ -136,13 +121,13 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             }
         }
     }
-
+    
     private var recommendedBolusRow: some View {
         HStack {
             Text("Recommended Bolus", comment: "Label for recommended bolus row on simple bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
-                Text("3.0")
+                Text(viewModel.recommendedBolus)
                     .font(.title)
                     .foregroundColor(Color(.label))
                 bolusUnitsLabel
@@ -156,8 +141,8 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             Spacer()
             HStack(alignment: .firstTextBaseline) {
                 DismissibleKeyboardTextField(
-                    text: typedBolusEntry,
-                    placeholder: Self.doseAmountFormatter.string(from: 0.0)!,
+                    text: $viewModel.enteredBolusAmount,
+                    placeholder: "",
                     font: .preferredFont(forTextStyle: .title1),
                     textColor: .loopAccent,
                     textAlignment: .right,
@@ -172,13 +157,10 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
 
     private var carbUnitsLabel: some View {
         Text(QuantityFormatter().string(from: .gram()))
-            .foregroundColor(Color(.systemGreen))
     }
     
-    private var glucoseUnit = HKUnit.gramUnit(with: .milli).unitDivided(by: .literUnit(with: .deci))
-
     private var glucoseUnitsLabel: some View {
-        Text(QuantityFormatter().string(from: glucoseUnit))
+        Text(QuantityFormatter().string(from: viewModel.glucoseUnit))
             .foregroundColor(Color(.secondaryLabel))
     }
 
@@ -187,41 +169,6 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             .foregroundColor(Color(.secondaryLabel))
     }
 
-
-
-    private var typedCarbEntry: Binding<String> {
-        Binding(
-            get: { self.enteredCarbAmount },
-            set: { newValue in
-                print("New value = \(newValue)")
-//                self.viewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
-//                self.enteredBolusAmount = newValue
-            }
-        )
-    }
-
-    private var typedGlucose: Binding<String> {
-        Binding(
-            get: { self.enteredGlucose },
-            set: { newValue in
-                print("New value = \(newValue)")
-//                self.viewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
-//                self.enteredBolusAmount = newValue
-            }
-        )
-    }
-
-    private var typedBolusEntry: Binding<String> {
-        Binding(
-            get: { self.enteredBolusAmount },
-            set: { newValue in
-                print("New value = \(newValue)")
-//                self.viewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
-//                self.enteredBolusAmount = newValue
-            }
-        )
-    }
-    
     private var actionArea: some View {
         VStack(spacing: 0) {
             actionButton
@@ -244,9 +191,21 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
 }
 
 struct SimpleBolusCalculatorView_Previews: PreviewProvider {
+    static var viewModel: SimpleBolusViewModel = SimpleBolusViewModel(glucoseUnit: .milligramsPerDeciliter) { (input) in
+            let (carbs, glucose) = input
+            var recommendation: Double = 0
+            if let carbs = carbs {
+                recommendation += carbs.doubleValue(for: .gram()) / 10
+            }
+            if let glucose = glucose {
+                recommendation = glucose.doubleValue(for: .milligramsPerDeciliter) - 105 / 80
+            }
+            return HKQuantity(unit: .internationalUnit(), doubleValue: max(0, recommendation))
+        }
+    
     static var previews: some View {
         NavigationView {
-            SimpleBolusView(displayMealEntry: true)
+            SimpleBolusView(displayMealEntry: true, viewModel: viewModel)
         }
         .previewDevice("iPhone 11 Pro")
         //.colorScheme(.dark)

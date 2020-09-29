@@ -1155,7 +1155,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             carbEntryViewController.preferredCarbUnit = deviceManager.carbStore.preferredUnit
             navigationWrapper = UINavigationController(rootViewController: carbEntryViewController)
         } else {
-            let bolusEntryView = SimpleBolusView(displayMealEntry: true)
+            let viewModel = SimpleBolusViewModel(glucoseUnit: deviceManager.glucoseStore.preferredUnit!) { (input) -> HKQuantity? in
+                let (carbs, glucose) = input
+                return self.deviceManager.loopManager.generateSimpleBolusRecommendation(carbs: carbs, glucose: glucose)
+            }
+            let bolusEntryView = SimpleBolusView(displayMealEntry: true, viewModel: viewModel)
             let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
             navigationWrapper = UINavigationController(rootViewController: hostingController)
             hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
@@ -1170,7 +1174,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let bolusEntryView = BolusEntryView(viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         } else {
-            let bolusEntryView = SimpleBolusView(displayMealEntry: false)
+            let viewModel = SimpleBolusViewModel(glucoseUnit: deviceManager.glucoseStore.preferredUnit!) { (input) -> HKQuantity? in
+                let (carbs, glucose) = input
+                return self.deviceManager.loopManager.generateSimpleBolusRecommendation(carbs: carbs, glucose: glucose)
+            }
+            let bolusEntryView = SimpleBolusView(displayMealEntry: false, viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         }
         let navigationWrapper = UINavigationController(rootViewController: hostingController)

@@ -58,7 +58,7 @@ final class LoopDataManager {
         insulinModelSettings: InsulinModelSettings? = UserDefaults.appGroup?.insulinModelSettings,
         insulinSensitivitySchedule: InsulinSensitivitySchedule? = UserDefaults.appGroup?.insulinSensitivitySchedule,
         settings: LoopSettings = UserDefaults.appGroup?.loopSettings ?? LoopSettings(),
-        overrideHistory: TemporaryScheduleOverrideHistory = UserDefaults.appGroup?.overrideHistory ?? .init(),
+        overrideHistory: TemporaryScheduleOverrideHistory,
         lastPumpEventsReconciliation: Date?,
         analyticsServicesManager: AnalyticsServicesManager,
         localCacheDuration: TimeInterval = .days(1),
@@ -1617,6 +1617,34 @@ extension LoopDataManager {
 
             handler(self, LoopStateView(loopDataManager: self, updateError: updateError))
         }
+    }
+    
+    func generateSimpleBolusRecommendation(carbs: HKQuantity?, glucose: HKQuantity?) -> HKQuantity? {
+        var activeInsulin: Double? = nil
+        let semaphore = DispatchSemaphore(value: 0)
+        doseStore.insulinOnBoard(at: Date()) { (result) in
+            if case .success(let iobValue) = result {
+                activeInsulin = iobValue.value
+            }
+            semaphore.signal()
+        }
+        semaphore.wait()
+        
+        guard let iob = activeInsulin,
+            let carbRatios = carbStore.carbRatioScheduleApplyingOverrideHistory,
+            let correctionRanges = settings.glucoseTargetRangeScheduleApplyingOverrideIfActive,
+            let sensitivitySchedule = insulinSensitivityScheduleApplyingOverrideHistory
+        else {
+            return nil
+        }
+        
+        return SimpleBolusCalculator.recommendedInsulin(
+            mealCarbs: carbs,
+            manualGlucose: glucose,
+            activeInsulin: HKQuantity.init(unit: .internationalUnit(), doubleValue: iob),
+            carbRatioSchedule: carbRatios,
+            correctionRangeSchedule: correctionRanges,
+            sensitivitySchedule: sensitivitySchedule)
     }
 }
 

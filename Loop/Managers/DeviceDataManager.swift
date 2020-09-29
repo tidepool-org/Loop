@@ -241,6 +241,7 @@ final class DeviceDataManager {
         loopManager = LoopDataManager(
             lastLoopCompleted: statusExtensionManager.context?.lastLoopCompleted,
             basalDeliveryState: pumpManager?.status.basalDeliveryState,
+            overrideHistory: overrideHistory,
             lastPumpEventsReconciliation: pumpManager?.lastReconciliation,
             analyticsServicesManager: analyticsServicesManager,
             localCacheDuration: localCacheDuration,
