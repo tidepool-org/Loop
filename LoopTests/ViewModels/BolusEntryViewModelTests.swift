@@ -232,6 +232,14 @@ class BolusEntryViewModelTests: XCTestCase {
         })
     }
     
+    func testManualEntryClearsEnteredBolus() throws {
+        bolusEntryViewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 1.0)
+        bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
+        XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 1.0), bolusEntryViewModel.enteredBolus)
+        waitOnMain()
+        XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 0), bolusEntryViewModel.enteredBolus)
+    }
+    
     func testUpdatePredictedGlucoseValues() throws {
         //TODO
     }
@@ -356,12 +364,16 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertNil(bolusEntryViewModel.activeNotice)
     }
 
-    func testRecommendedBolusClearsEnteredBolus() throws {
+    func testRecommendedBolusClearsEnteredBolusThenSetsIt() throws {
+        XCTAssertNil(bolusEntryViewModel.recommendedBolus)
         bolusEntryViewModel.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 1.0)
         let mockState = MockLoopState()
         mockState.bolusRecommendationResult = BolusRecommendation(amount: 1.234, pendingInsulin: 4.321)
         try triggerLoopStateUpdatedWithDataAndWait(with: mockState)
         XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 0.0), bolusEntryViewModel.enteredBolus)
+        // Now, through the magic of `observeRecommendedBolusChanges` and the recommendedBolus publisher it should update to 1.234
+        waitOnMain()
+        XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 1.234), bolusEntryViewModel.enteredBolus)
     }
 
     func testUpdateDoesNotRefreshPumpIfDataIsFresh() throws {
@@ -383,6 +395,10 @@ class BolusEntryViewModelTests: XCTestCase {
         // then wait on main again (sigh)
         waitOnMain()
         XCTAssertFalse(bolusEntryViewModel.isRefreshingPump)
+    }
+    
+    func testSaveAndDeliver() throws {
+        
     }
 
     // MARK: utilities
