@@ -15,18 +15,40 @@ class SimpleBolusViewModel: ObservableObject {
     
     @Published var enteredCarbAmount: String = "" {
         didSet {
+            if let enteredCarbs = Self.carbAmountFormatter.number(from: enteredCarbAmount)?.doubleValue, enteredCarbs > 0 {
+                carbs = HKQuantity(unit: .gram(), doubleValue: enteredCarbs)
+            } else {
+                carbs = nil
+            }
             updateRecommendation()
         }
     }
 
     @Published var enteredGlucoseAmount: String = "" {
         didSet {
+            if let enteredGlucose = glucoseAmountFormatter.number(from: enteredGlucoseAmount)?.doubleValue {
+                glucose = HKQuantity(unit: glucoseUnit, doubleValue: enteredGlucose)
+            } else {
+                glucose = nil
+            }
             updateRecommendation()
         }
     }
 
-    @Published var enteredBolusAmount: String
+    @Published var enteredBolusAmount: String {
+        didSet {
+            if let enteredBolusAmount = Self.doseAmountFormatter.number(from: enteredBolusAmount)?.doubleValue, enteredBolusAmount > 0 {
+                bolus = HKQuantity(unit: .internationalUnit(), doubleValue: enteredBolusAmount)
+            } else {
+                bolus = nil
+            }
+        }
+    }
     
+    private var carbs: HKQuantity? = nil
+    private var glucose: HKQuantity? = nil
+    private var bolus: HKQuantity? = nil
+
     private var recommendation: Double? = nil {
         didSet {
             if let recommendation = recommendation, let recommendationString = Self.doseAmountFormatter.string(from: recommendation) {
@@ -52,20 +74,27 @@ class SimpleBolusViewModel: ObservableObject {
         return quantityFormatter.numberFormatter
     }()
 
-    func updateRecommendation() {
-        var carbs: HKQuantity?
-        var glucose: HKQuantity?
-        if let enteredCarbAmount = Self.carbAmountFormatter.number(from: enteredCarbAmount)?.doubleValue {
-            carbs = HKQuantity(unit: .gram(), doubleValue: enteredCarbAmount)
-        }
-        if let enteredGlucoseAmount = glucoseAmountFormatter.number(from: enteredGlucoseAmount)?.doubleValue {
-            glucose = HKQuantity(unit: glucoseUnit, doubleValue: enteredGlucoseAmount)
-        }
-        
-        if carbs != nil || glucose != nil {
-            recommendation = recommendationProvider((carbs: carbs, glucose: glucose))?.doubleValue(for: .internationalUnit())
-        } else {
-            recommendation = nil
+    enum ActionButtonAction {
+        case saveWithoutBolusing
+        case saveAndDeliver
+        case enterBolus
+        case deliver
+    }
+    
+    var hasDataToSave: Bool {
+        return glucose != nil || carbs != nil
+    }
+    
+    var hasBolusEntryReadyToDeliver: Bool {
+        return bolus != nil
+    }
+    
+    var actionButtonAction: ActionButtonAction {
+        switch (hasDataToSave, hasBolusEntryReadyToDeliver) {
+        case (true, true): return .saveAndDeliver
+        case (true, false): return .saveWithoutBolusing
+        case (false, true): return .deliver
+        case (false, false): return .enterBolus
         }
     }
     
@@ -87,4 +116,14 @@ class SimpleBolusViewModel: ObservableObject {
         enteredBolusAmount = Self.doseAmountFormatter.string(from: 0.0)!
         updateRecommendation()
     }
+    
+    func updateRecommendation() {
+        if carbs != nil || glucose != nil {
+            recommendation = recommendationProvider((carbs: carbs, glucose: glucose))?.doubleValue(for: .internationalUnit())
+        } else {
+            recommendation = nil
+        }
+    }
+    
+
 }

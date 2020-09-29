@@ -182,7 +182,16 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 print("Action tapped")
             },
             label: {
-                return Text("Save without Bolusing", comment: "Button text to save carbs and/or manual glucose entry without a bolus")
+                switch viewModel.actionButtonAction {
+                case .saveWithoutBolusing:
+                    return Text("Save without Bolusing", comment: "Button text to save carbs and/or manual glucose entry without a bolus")
+                case .saveAndDeliver:
+                    return Text("Save and Deliver", comment: "Button text to save carbs and/or manual glucose entry and deliver a bolus")
+                case .enterBolus:
+                    return Text("Enter Bolus", comment: "Button text to begin entering a bolus")
+                case .deliver:
+                    return Text("Deliver", comment: "Button text to deliver a bolus")
+                }
             }
         )
         .buttonStyle(ActionButtonStyle(.primary))
