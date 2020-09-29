@@ -85,21 +85,20 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
     }
     
     private var carbEntryRow: some View {
-        HStack {
+        HStack(alignment: .center) {
             Text("Carbohydrates", comment: "Label for carbohydrates entry row on simple bolus screen")
             Spacer()
-            HStack(alignment: .firstTextBaseline) {
+            HStack {
                 DismissibleKeyboardTextField(
                     text: $viewModel.enteredCarbAmount,
                     placeholder: viewModel.carbPlaceholder,
-                    font: .preferredFont(forTextStyle: .title1),
                     textAlignment: .right,
-                    keyboardType: .decimalPad,
-                    shouldBecomeFirstResponder: shouldBolusEntryBecomeFirstResponder
+                    keyboardType: .decimalPad
                 )
-                
                 carbUnitsLabel
             }
+            .fixedSize()
+            .modifier(LabelBackground())
         }
     }
 
@@ -110,15 +109,17 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             HStack(alignment: .firstTextBaseline) {
                 DismissibleKeyboardTextField(
                     text: $viewModel.enteredGlucoseAmount,
-                    placeholder: "--",
-                    font: .preferredFont(forTextStyle: .title1),
+                    placeholder: "---",
+                    // The heavy title is ending up clipped due to a bug that is fixed in iOS 14.
+                    font: .preferredFont(forTextStyle: .title1), // viewModel.enteredGlucoseAmount == "" ? .preferredFont(forTextStyle: .title1) : .heavy(.title1),
                     textAlignment: .right,
-                    keyboardType: .decimalPad,
-                    shouldBecomeFirstResponder: shouldBolusEntryBecomeFirstResponder
+                    keyboardType: .decimalPad
                 )
-                
+
                 glucoseUnitsLabel
             }
+            .fixedSize()
+            .modifier(LabelBackground())
         }
     }
     
@@ -152,6 +153,8 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 
                 bolusUnitsLabel
             }
+            .fixedSize()
+            .modifier(LabelBackground())
         }
     }
 
@@ -161,6 +164,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
     
     private var glucoseUnitsLabel: some View {
         Text(QuantityFormatter().string(from: viewModel.glucoseUnit))
+            .fixedSize()
             .foregroundColor(Color(.secondaryLabel))
     }
 
