@@ -15,6 +15,12 @@ import MKRingProgressView
 
 public class BolusProgressTableViewCell: UITableViewCell {
     @IBOutlet weak var progressLabel: UILabel!
+    
+    @IBOutlet weak var tapToStopLabel: UILabel! {
+        didSet {
+            tapToStopLabel.text = NSLocalizedString("Tap to Stop", comment: "Message presented in the status row instructing the user to tap this row to stop a bolus")
+        }
+    }
 
     @IBOutlet weak var stopSquare: UIView! {
         didSet {
