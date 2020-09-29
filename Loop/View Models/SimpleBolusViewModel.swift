@@ -40,9 +40,10 @@ class SimpleBolusViewModel: ObservableObject {
     }
 
     private static let doseAmountFormatter: NumberFormatter = {
-        let quantityFormatter = QuantityFormatter()
-        quantityFormatter.setPreferredNumberFormatter(for: .internationalUnit())
-        return quantityFormatter.numberFormatter
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 1
+        return formatter
     }()
     
     private static let carbAmountFormatter: NumberFormatter = {
