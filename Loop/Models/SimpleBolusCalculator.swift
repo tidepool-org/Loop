@@ -13,12 +13,6 @@ import LoopKit
 
 struct SimpleBolusCalculator {
     
-    enum BolusInput {
-        case meal(carbs: HKQuantity)
-        case correction(glucose: GlucoseValue)
-        case mealAndCorrection(carbs: HKQuantity, glucose: GlucoseValue)
-    }
-    
     public static func recommendedInsulin(mealCarbs: HKQuantity?, manualGlucose: HKQuantity?, activeInsulin: HKQuantity, carbRatioSchedule: CarbRatioSchedule, correctionRangeSchedule: GlucoseRangeSchedule, sensitivitySchedule: InsulinSensitivitySchedule, at date: Date = Date()) -> HKQuantity {
         var recommendedBolus: Double = 0
         

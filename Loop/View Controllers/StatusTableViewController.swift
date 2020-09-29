@@ -1144,6 +1144,24 @@ final class StatusTableViewController: LoopChartsTableViewController {
     @IBAction func unwindFromEditing(_ segue: UIStoryboardSegue) {}
 
     @IBAction func unwindFromSettings(_ segue: UIStoryboardSegue) {}
+    
+    @IBAction func presentCarbEntryScreen() {
+        let navigationWrapper: UINavigationController
+        if deviceManager.isClosedLoop {
+            let carbEntryViewController = UIStoryboard(name: "Main", bundle: Bundle(for: AppDelegate.self)).instantiateViewController(withIdentifier: "CarbEntryViewController") as! CarbEntryViewController
+            
+            carbEntryViewController.deviceManager = deviceManager
+            carbEntryViewController.defaultAbsorptionTimes = deviceManager.carbStore.defaultAbsorptionTimes
+            carbEntryViewController.preferredCarbUnit = deviceManager.carbStore.preferredUnit
+            navigationWrapper = UINavigationController(rootViewController: carbEntryViewController)
+        } else {
+            let bolusEntryView = SimpleBolusView(displayMealEntry: true)
+            let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
+            navigationWrapper = UINavigationController(rootViewController: hostingController)
+            hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
+        }
+        self.present(navigationWrapper, animated: true)
+    }
 
     @IBAction func presentBolusScreen() {
         let hostingController: DismissibleHostingController
@@ -1152,7 +1170,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let bolusEntryView = BolusEntryView(viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         } else {
-            let bolusEntryView = SimpleBolusCalculatorView()
+            let bolusEntryView = SimpleBolusView(displayMealEntry: false)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         }
         let navigationWrapper = UINavigationController(rootViewController: hostingController)

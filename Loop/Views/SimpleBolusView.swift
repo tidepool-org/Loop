@@ -1,5 +1,5 @@
 //
-//  SimpleBolusCalculatorView.swift
+//  SimpleBolusView.swift
 //  LoopUITestApp
 //
 //  Created by Pete Schwamb on 9/23/20.
@@ -11,13 +11,27 @@ import LoopKit
 import LoopKitUI
 import HealthKit
 
-struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
+struct SimpleBolusView: View, HorizontalSizeClassOverride {
     
     @State private var enteredCarbAmount = ""
     @State private var enteredGlucose = ""
     @State private var enteredBolusAmount = ""
     @State private var shouldBolusEntryBecomeFirstResponder = false
     @State private var isKeyboardVisible = false
+    
+    var displayMealEntry: Bool
+    
+    init(displayMealEntry: Bool) {
+        self.displayMealEntry = displayMealEntry
+    }
+    
+    var title: String {
+        if displayMealEntry {
+            return NSLocalizedString("Simple Meal Calculator", comment: "Title of simple bolus view when displaying meal entry")
+        } else {
+            return NSLocalizedString("Simple Bolus Calculator", comment: "Title of simple bolus view when not displaying meal entry")
+        }
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -32,7 +46,7 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
                 .padding(.top, self.shouldAutoScroll(basedOn: geometry) ? -200 : 0)
                 .listStyle(GroupedListStyle())
                 .environment(\.horizontalSizeClass, .regular)
-                .navigationBarTitle("Simple Bolus Calculator", displayMode: .inline)
+                .navigationBarTitle(Text(self.title), displayMode: .inline)
                 
                 self.actionArea
                     .frame(height: self.isKeyboardVisible ? 0 : nil)
@@ -61,7 +75,9 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
     
     private var summarySection: some View {
         Section(header: info) {
-            carbEntryRow
+            if displayMealEntry {
+                carbEntryRow
+            }
             glucoseEntryRow
             recommendedBolusRow
             bolusEntryRow
@@ -230,7 +246,7 @@ struct SimpleBolusCalculatorView: View, HorizontalSizeClassOverride {
 struct SimpleBolusCalculatorView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            SimpleBolusCalculatorView()
+            SimpleBolusView(displayMealEntry: true)
         }
         .previewDevice("iPhone 11 Pro")
         //.colorScheme(.dark)
