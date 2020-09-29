@@ -131,6 +131,7 @@ final class BolusEntryViewModel: ObservableObject {
     private weak var delegate: BolusEntryViewModelDelegate?
     let now: () -> Date
     let screenWidth: CGFloat
+    let debounceIntervalMilliseconds: Int
     
     // MARK: - Constants
 
@@ -144,6 +145,7 @@ final class BolusEntryViewModel: ObservableObject {
         delegate: BolusEntryViewModelDelegate,
         now: @escaping () -> Date = { Date() },
         screenWidth: CGFloat = UIScreen.main.bounds.width,
+        debounceIntervalMilliseconds: Int = 400,
         originalCarbEntry: StoredCarbEntry? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
         selectedCarbAbsorptionTimeEmoji: String? = nil
@@ -151,6 +153,7 @@ final class BolusEntryViewModel: ObservableObject {
         self.delegate = delegate
         self.now = now
         self.screenWidth = screenWidth
+        self.debounceIntervalMilliseconds = debounceIntervalMilliseconds
         self.originalCarbEntry = originalCarbEntry
         self.potentialCarbEntry = potentialCarbEntry
         self.selectedCarbAbsorptionTimeEmoji = selectedCarbAbsorptionTimeEmoji
@@ -168,7 +171,7 @@ final class BolusEntryViewModel: ObservableObject {
     
     private func observeLoopUpdates() {
         NotificationCenter.default
-            .publisher(for: .LoopDataUpdated, object: nil)
+            .publisher(for: .LoopDataUpdated)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.update() }
             .store(in: &cancellables)
@@ -177,7 +180,7 @@ final class BolusEntryViewModel: ObservableObject {
     private func observeEnteredBolusChanges() {
         $enteredBolus
             .removeDuplicates()
-            .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
+            .debounce(for: .milliseconds(debounceIntervalMilliseconds), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.delegate?.withLoopState { [weak self] state in
                     self?.updatePredictedGlucoseValues(from: state)
@@ -189,7 +192,7 @@ final class BolusEntryViewModel: ObservableObject {
     private func observeRecommendedBolusChanges() {
         $recommendedBolus
             .removeDuplicates()
-            .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
+            .debounce(for: .milliseconds(debounceIntervalMilliseconds), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.setRecommendedBolus()
             }
@@ -198,7 +201,7 @@ final class BolusEntryViewModel: ObservableObject {
 
     private func observeEnteredManualGlucoseChanges() {
         $enteredManualGlucose
-            .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
+            .debounce(for: .milliseconds(debounceIntervalMilliseconds), scheduler: RunLoop.main)
             .sink { [weak self] enteredManualGlucose in
                 guard let self = self else { return }
 
@@ -565,7 +568,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func ensurePumpDataIsFresh(then completion: @escaping () -> Void) {
-        guard !(delegate?.isPumpDataStale ?? true) else {
+        guard delegate?.isPumpDataStale ?? true else {
             completion()
             return
         }
