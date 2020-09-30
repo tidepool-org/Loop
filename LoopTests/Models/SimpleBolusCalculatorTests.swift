@@ -96,6 +96,4 @@ class SimpleBolusCalculatorTests: XCTestCase {
         
         XCTAssertEqual(2, recommendation.doubleValue(for: .internationalUnit()), accuracy: 0.01)
     }
-
-
 }

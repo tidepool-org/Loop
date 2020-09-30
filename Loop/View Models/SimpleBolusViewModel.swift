@@ -44,6 +44,7 @@ class SimpleBolusViewModel: ObservableObject {
     enum Alert: Int {
         case maxBolusExceeded
         case carbEntryPersistenceFailure
+        case carbEntrySizeTooLarge
         case manualGlucoseEntryOutOfAcceptableRange
         case manualGlucoseEntryPersistenceFailure
     }
@@ -146,9 +147,16 @@ class SimpleBolusViewModel: ObservableObject {
     private let glucoseAmountFormatter: NumberFormatter
     private let delegate: SimpleBolusViewModelDelegate
     private let log = OSLog(category: "SimpleBolusViewModel")
-
     
+    private lazy var bolusVolumeFormatter = QuantityFormatter(for: .internationalUnit())
+
+    var maximumBolusAmountString: String? {
+        return bolusVolumeFormatter.numberFormatter.string(from: delegate.maximumBolus) ?? String(delegate.maximumBolus)
+    }
+
     static let validManualGlucoseEntryRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 10)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 600)
+    
+    var maxCarbQuantity = HKQuantity(unit: .gram(), doubleValue: 250)
 
     init(delegate: SimpleBolusViewModelDelegate) {
         self.delegate = delegate
@@ -178,6 +186,13 @@ class SimpleBolusViewModel: ObservableObject {
         if let glucose = glucose {
             guard Self.validManualGlucoseEntryRange.contains(glucose) else {
                 presentAlert(.manualGlucoseEntryOutOfAcceptableRange)
+                return
+            }
+        }
+        
+        if let carbs = carbs {
+            guard carbs <= maxCarbQuantity else {
+                presentAlert(.carbEntrySizeTooLarge)
                 return
             }
         }
@@ -263,6 +278,8 @@ class SimpleBolusViewModel: ObservableObject {
 
         activeAlert = alert
     }
+}
 
-
+extension SimpleBolusViewModel.Alert: Identifiable {
+    var id: Self { self }
 }

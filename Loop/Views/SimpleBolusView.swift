@@ -55,6 +55,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                     .opacity(self.isKeyboardVisible ? 0 : 1)
             }
             .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
+            .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
         }
     }
     
@@ -177,6 +178,11 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
 
     private var actionArea: some View {
         VStack(spacing: 0) {
+//            if viewModel.isNoticeVisible {
+//                warning(for: viewModel.activeNotice!)
+//                    .padding([.top, .horizontal])
+//                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
+//            }
             actionButton
         }
         .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
@@ -206,6 +212,46 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
         )
         .buttonStyle(ActionButtonStyle(.primary))
         .padding()
+    }
+    
+    private func alert(for alert: SimpleBolusViewModel.Alert) -> SwiftUI.Alert {
+        switch alert {
+        case .maxBolusExceeded:
+            guard let maximumBolusAmountString = viewModel.maximumBolusAmountString else {
+                fatalError("Impossible to exceed max bolus without a configured max bolus")
+            }
+            return SwiftUI.Alert(
+                title: Text("Exceeds Maximum Bolus", comment: "Alert title for a maximum bolus validation error"),
+                message: Text("The maximum bolus amount is \(maximumBolusAmountString) U.", comment: "Alert message for a maximum bolus validation error (1: max bolus value)")
+            )
+        case .carbEntryPersistenceFailure:
+            return SwiftUI.Alert(
+                title: Text("Unable to Save Carb Entry", comment: "Alert title for a carb entry persistence error"),
+                message: Text("An error occurred while trying to save your carb entry.", comment: "Alert message for a carb entry persistence error")
+            )
+        case .carbEntrySizeTooLarge:
+            let message = String(
+                format: NSLocalizedString("The maximum allowed amount is %@ grams", comment: "Alert body displayed for quantity greater than max (1: maximum quantity in grams)"),
+                NumberFormatter.localizedString(from: NSNumber(value: viewModel.maxCarbQuantity.doubleValue(for: .gram())), number: .none)
+            )
+            return SwiftUI.Alert(
+                title: Text("Carb Entry Too Large", comment: "Alert title for a carb entry too large error"),
+                message: Text(message)
+            )
+        case .manualGlucoseEntryOutOfAcceptableRange:
+            let formatter = QuantityFormatter(for: viewModel.glucoseUnit)
+            let acceptableLowerBound = formatter.string(from: BolusEntryViewModel.validManualGlucoseEntryRange.lowerBound, for: viewModel.glucoseUnit) ?? String(describing: BolusEntryViewModel.validManualGlucoseEntryRange.lowerBound)
+            let acceptableUpperBound = formatter.string(from: BolusEntryViewModel.validManualGlucoseEntryRange.upperBound, for: viewModel.glucoseUnit) ?? String(describing: BolusEntryViewModel.validManualGlucoseEntryRange.upperBound)
+            return SwiftUI.Alert(
+                title: Text("Glucose Entry Out of Range", comment: "Alert title for a manual glucose entry out of range error"),
+                message: Text("A manual glucose entry must be between \(acceptableLowerBound) and \(acceptableUpperBound)", comment: "Alert message for a manual glucose entry out of range error")
+            )
+        case .manualGlucoseEntryPersistenceFailure:
+            return SwiftUI.Alert(
+                title: Text("Unable to Save Manual Glucose Entry", comment: "Alert title for a manual glucose entry persistence error"),
+                message: Text("An error occurred while trying to save your manual glucose entry.", comment: "Alert message for a manual glucose entry persistence error")
+            )
+        }
     }
 }
 
