@@ -10,7 +10,6 @@ import SwiftUI
 import LoopKit
 import LoopKitUI
 import HealthKit
-import LoopCore
 
 struct SimpleBolusView: View, HorizontalSizeClassOverride {
 
@@ -34,11 +33,12 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             return NSLocalizedString("Simple Bolus Calculator", comment: "Title of simple bolus view when not displaying meal entry")
         }
     }
-
+        
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
                 List() {
+                    self.infoSection
                     self.summarySection
                 }
                 // As of iOS 13, we can't programmatically scroll to the Bolus entry text field.  This ugly hack scoots the
@@ -46,7 +46,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 // Unfortunately, after entry, the field scoots back down and remains hidden.  So this is not a great solution.
                 // TODO: Fix this in Xcode 12 when we're building for iOS 14.
                 .padding(.top, self.shouldAutoScroll(basedOn: geometry) ? -200 : 0)
-                .listStyle(GroupedListStyle())
+                .listStyle(GroupedListStyle()) // In iOS 14, this should be InsetGroupedListStyle()
                 .environment(\.horizontalSizeClass, .regular)
                 .navigationBarTitle(Text(self.title), displayMode: .inline)
                 
@@ -74,7 +74,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
         shouldBolusEntryBecomeFirstResponder && geometry.size.height < 640
     }
     
-    private var info: some View {
+    private var infoSection: some View {
         HStack {
             Image("Open Loop")
             Text("When out of Closed Loop mode, the app uses a simplified bolus calculator like a typical pump.")
@@ -82,11 +82,10 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 .foregroundColor(.secondary)
             Image(systemName: "info.circle").foregroundColor(.accentColor)
         }
-        .padding([.top, .bottom])
     }
     
     private var summarySection: some View {
-        Section(header: info) {
+        Section {
             if displayMealEntry {
                 carbEntryRow
             }
@@ -109,6 +108,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 )
                 carbUnitsLabel
             }
+            .padding([.top, .bottom], 5)
             .fixedSize()
             .modifier(LabelBackground())
         }
@@ -143,9 +143,11 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 Text(viewModel.recommendedBolus)
                     .font(.title)
                     .foregroundColor(Color(.label))
+                    .padding([.top, .bottom], 4)
                 bolusUnitsLabel
             }
         }
+        .padding(.trailing, 8)
     }
     
     private var bolusEntryRow: some View {
@@ -249,8 +251,8 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             )
         case .manualGlucoseEntryOutOfAcceptableRange:
             let formatter = QuantityFormatter(for: viewModel.glucoseUnit)
-            let acceptableLowerBound = formatter.string(from: BolusEntryViewModel.validManualGlucoseEntryRange.lowerBound, for: viewModel.glucoseUnit) ?? String(describing: BolusEntryViewModel.validManualGlucoseEntryRange.lowerBound)
-            let acceptableUpperBound = formatter.string(from: BolusEntryViewModel.validManualGlucoseEntryRange.upperBound, for: viewModel.glucoseUnit) ?? String(describing: BolusEntryViewModel.validManualGlucoseEntryRange.upperBound)
+            let acceptableLowerBound = formatter.string(from: SimpleBolusViewModel.validManualGlucoseEntryRange.lowerBound, for: viewModel.glucoseUnit) ?? String(describing: SimpleBolusViewModel.validManualGlucoseEntryRange.lowerBound)
+            let acceptableUpperBound = formatter.string(from: SimpleBolusViewModel.validManualGlucoseEntryRange.upperBound, for: viewModel.glucoseUnit) ?? String(describing: SimpleBolusViewModel.validManualGlucoseEntryRange.upperBound)
             return SwiftUI.Alert(
                 title: Text("Glucose Entry Out of Range", comment: "Alert title for a manual glucose entry out of range error"),
                 message: Text("A manual glucose entry must be between \(acceptableLowerBound) and \(acceptableUpperBound)", comment: "Alert message for a manual glucose entry out of range error")
@@ -317,7 +319,7 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
         NavigationView {
             SimpleBolusView(displayMealEntry: true, viewModel: viewModel)
         }
-        .previewDevice("iPhone 11 Pro")
+        .previewDevice("iPod touch (7th generation)")
         //.colorScheme(.dark)
     }
 }
