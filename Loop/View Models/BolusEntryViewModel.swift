@@ -133,6 +133,7 @@ final class BolusEntryViewModel: ObservableObject {
     private let screenWidth: CGFloat
     private let debounceIntervalMilliseconds: Int
     private let authenticateOverride: AuthenticationChallenge?
+    private let uuidProvider: () -> String
     
     // MARK: - Constants
 
@@ -148,6 +149,7 @@ final class BolusEntryViewModel: ObservableObject {
         screenWidth: CGFloat = UIScreen.main.bounds.width,
         debounceIntervalMilliseconds: Int = 400,
         authenticateOverride: AuthenticationChallenge? = nil,
+        uuidProvider: @escaping () -> String = { UUID().uuidString },
         originalCarbEntry: StoredCarbEntry? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
         selectedCarbAbsorptionTimeEmoji: String? = nil
@@ -157,6 +159,7 @@ final class BolusEntryViewModel: ObservableObject {
         self.screenWidth = screenWidth
         self.debounceIntervalMilliseconds = debounceIntervalMilliseconds
         self.authenticateOverride = authenticateOverride
+        self.uuidProvider = uuidProvider
         
         self.originalCarbEntry = originalCarbEntry
         self.potentialCarbEntry = potentialCarbEntry
@@ -453,7 +456,7 @@ final class BolusEntryViewModel: ObservableObject {
                 quantity: quantity,
                 isDisplayOnly: false,
                 wasUserEntered: true,
-                syncIdentifier: UUID().uuidString
+                syncIdentifier: uuidProvider()
             )
         }
     }
