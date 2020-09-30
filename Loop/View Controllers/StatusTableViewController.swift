@@ -1167,12 +1167,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
     @IBAction func presentBolusScreen() {
         let hostingController: DismissibleHostingController
         if deviceManager.isClosedLoop {
-            let viewModel = BolusEntryViewModel(dataManager: deviceManager)
+            let viewModel = BolusEntryViewModel(delegate: deviceManager)
             let bolusEntryView = BolusEntryView(viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         } else {
-            let viewModel = BolusEntryViewModel(delegate: deviceManager)
-            let bolusEntryView = BolusEntryView(viewModel: viewModel)
+            let viewModel = SimpleBolusViewModel(delegate: deviceManager)
+            let bolusEntryView = SimpleBolusView(displayMealEntry: false, viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         }
         let navigationWrapper = UINavigationController(rootViewController: hostingController)

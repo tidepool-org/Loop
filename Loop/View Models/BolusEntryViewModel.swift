@@ -55,7 +55,7 @@ protocol BolusEntryViewModelDelegate: class {
     var isPumpConfigured: Bool { get }
     
     ///
-    var preferredGlucoseUnit: HKUnit? { get }
+    var preferredGlucoseUnit: HKUnit { get }
     
     ///
     var insulinModel: InsulinModel? { get }

@@ -56,8 +56,8 @@ extension DeviceDataManager: BolusEntryViewModelDelegate {
         return pumpManager != nil
     }
     
-    var preferredGlucoseUnit: HKUnit? {
-        return glucoseStore.preferredUnit
+    var preferredGlucoseUnit: HKUnit {
+        return glucoseStore.preferredUnit!
     }
     
     var insulinModel: InsulinModel? {

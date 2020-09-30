@@ -37,16 +37,8 @@ extension DeviceDataManager: SimpleBolusViewModelDelegate {
         enactBolus(units: units, at: startDate) { (_) in }
     }
     
-    func insulinOnBoard(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
-        doseStore.insulinOnBoard(at: date, completion: completion)
-    }
-    
     func computeSimpleBolusRecommendation(carbs: HKQuantity?, glucose: HKQuantity?) -> HKQuantity? {
         return loopManager.generateSimpleBolusRecommendation(carbs: carbs, glucose: glucose)
-    }
-    
-    var preferredGlucoseUnit: HKUnit {
-        return glucoseStore.preferredUnit!
     }
     
     var maximumBolus: Double {

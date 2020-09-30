@@ -747,7 +747,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     
     var isPumpConfigured: Bool = true
     
-    var preferredGlucoseUnit: HKUnit? = .milligramsPerDeciliter
+    var preferredGlucoseUnit: HKUnit = .milligramsPerDeciliter
     
     var insulinModel: InsulinModel? = MockInsulinModel()
     
