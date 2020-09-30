@@ -52,4 +52,8 @@ extension DeviceDataManager: SimpleBolusViewModelDelegate {
     var maximumBolus: Double {
         return loopManager.settings.maximumBolus!
     }
+    
+    var suspendThreshold: HKQuantity {
+        return loopManager.settings.suspendThreshold!.quantity
+    }
 }

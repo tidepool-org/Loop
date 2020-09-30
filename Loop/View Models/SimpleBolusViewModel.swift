@@ -35,6 +35,9 @@ protocol SimpleBolusViewModelDelegate: class {
     
     ///
     var maximumBolus: Double { get }
+
+    ///
+    var suspendThreshold: HKQuantity { get }
 }
 
 class SimpleBolusViewModel: ObservableObject {
@@ -51,6 +54,14 @@ class SimpleBolusViewModel: ObservableObject {
     
     @Published var activeAlert: Alert?
     
+    enum Notice: Int {
+        case glucoseBelowSuspendThreshold
+    }
+
+    @Published var activeNotice: Notice?
+
+    var isNoticeVisible: Bool { return activeNotice != nil }    
+
     @Published var recommendedBolus: String = "0"
     
     @Published var enteredCarbAmount: String = "" {
@@ -68,6 +79,11 @@ class SimpleBolusViewModel: ObservableObject {
         didSet {
             if let enteredGlucose = glucoseAmountFormatter.number(from: enteredGlucoseAmount)?.doubleValue {
                 glucose = HKQuantity(unit: delegate.preferredGlucoseUnit, doubleValue: enteredGlucose)
+                if let glucose = glucose, glucose < suspendThreshold {
+                    activeNotice = .glucoseBelowSuspendThreshold
+                } else {
+                    activeNotice = nil
+                }
             } else {
                 glucose = nil
             }
@@ -90,6 +106,8 @@ class SimpleBolusViewModel: ObservableObject {
     private var bolus: HKQuantity? = nil
     
     var glucoseUnit: HKUnit { return delegate.preferredGlucoseUnit }
+    
+    var suspendThreshold: HKQuantity { return delegate.suspendThreshold }
 
     private var recommendation: Double? = nil {
         didSet {

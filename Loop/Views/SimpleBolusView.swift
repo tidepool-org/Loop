@@ -54,6 +54,15 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                     .frame(height: self.isKeyboardVisible ? 0 : nil)
                     .opacity(self.isKeyboardVisible ? 0 : 1)
             }
+            .onKeyboardStateChange { state in
+                self.isKeyboardVisible = state.height > 0
+                
+                if state.height == 0 {
+                    // Ensure tapping 'Enter Bolus' can make the text field the first responder again
+                    self.shouldBolusEntryBecomeFirstResponder = false
+                }
+            }
+            .keyboardAware()
             .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
             .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
         }
@@ -178,11 +187,11 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
 
     private var actionArea: some View {
         VStack(spacing: 0) {
-//            if viewModel.isNoticeVisible {
-//                warning(for: viewModel.activeNotice!)
-//                    .padding([.top, .horizontal])
-//                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
-//            }
+            if viewModel.isNoticeVisible {
+                warning(for: viewModel.activeNotice!)
+                    .padding([.top, .horizontal])
+                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
+            }
             actionButton
         }
         .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
@@ -253,6 +262,18 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             )
         }
     }
+    
+    private func warning(for notice: SimpleBolusViewModel.Notice) -> some View {
+        switch notice {
+        case .glucoseBelowSuspendThreshold:
+            let suspendThresholdString = QuantityFormatter().string(from: viewModel.suspendThreshold, for: viewModel.glucoseUnit) ?? String(describing: viewModel.suspendThreshold)
+            return WarningView(
+                title: Text("No Bolus Recommended", comment: "Title for bolus screen notice when no bolus is recommended"),
+                caption: Text("Your glucose is below your suspend threshold, \(suspendThresholdString).", comment: "Caption for bolus screen notice when no bolus is recommended due input value below suspend threshold")
+            )
+        }
+    }
+
 }
 
 
@@ -283,6 +304,10 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
         
         var maximumBolus: Double {
             return 6
+        }
+        
+        var suspendThreshold: HKQuantity {
+            return HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 75)
         }
     }
 
