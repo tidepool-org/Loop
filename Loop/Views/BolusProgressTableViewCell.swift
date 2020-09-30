@@ -101,7 +101,7 @@ public class BolusProgressTableViewCell: UITableViewCell {
 
         if let deliveredUnits = deliveredUnits {
             let deliveredUnitsQuantity = HKQuantity(unit: unit, doubleValue: deliveredUnits)
-            let deliveredUnitsString = quantityFormatter.string(from: deliveredUnitsQuantity, for: unit) ?? ""
+            let deliveredUnitsString = quantityFormatter.string(from: deliveredUnitsQuantity, for: unit, includeUnits: false) ?? ""
 
             progressLabel.text = String(format: NSLocalizedString("Bolused %1$@ of %2$@", comment: "The format string for bolus progress. (1: delivered volume)(2: total volume)"), deliveredUnitsString, totalUnitsString)
 
