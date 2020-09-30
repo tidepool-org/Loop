@@ -167,6 +167,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 44
         tableView.register(DateAndDurationTableViewCell.nib(), forCellReuseIdentifier: DateAndDurationTableViewCell.className)
+        tableView.register(DateAndDurationSteppableTableViewCell.nib(), forCellReuseIdentifier: DateAndDurationSteppableTableViewCell.className)
 
         if originalCarbEntry != nil {
             title = NSLocalizedString("carb-entry-title-edit", value: "Edit Carb Entry", comment: "The title of the view controller to edit an existing carb entry")
@@ -341,16 +342,17 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
                 
                 return cell
             case .date:
-                let cell = tableView.dequeueReusableCell(withIdentifier: DateAndDurationTableViewCell.className) as! DateAndDurationTableViewCell
-                
+                let cell = tableView.dequeueReusableCell(withIdentifier: DateAndDurationSteppableTableViewCell.className) as! DateAndDurationSteppableTableViewCell
+            
                 cell.titleLabel.text = NSLocalizedString("Date", comment: "Title of the carb entry date picker cell")
                 cell.datePicker.isEnabled = isSampleEditable
                 cell.datePicker.datePickerMode = .dateAndTime
-                cell.datePicker.maximumDate = Date(timeIntervalSinceNow: maximumDateFutureInterval)
+                cell.datePicker.maximumDate = date.addingTimeInterval(.hours(1))
+                cell.datePicker.minimumDate = date.addingTimeInterval(.hours(-12))
                 cell.datePicker.minuteInterval = 1
                 cell.date = date
                 cell.delegate = self
-                
+
                 return cell
             case .foodType:
                 if usesCustomFoodType {
@@ -482,7 +484,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
         }
 
         let viewModel = BolusEntryViewModel(
-            dataManager: deviceManager,
+            delegate: deviceManager,
             originalCarbEntry: originalCarbEntry,
             potentialCarbEntry: updatedEntry,
             selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji
@@ -558,7 +560,6 @@ extension CarbEntryViewController: TextFieldTableViewCellDelegate {
         textFieldTableViewCellDidChangeEditing(cell)
     }
 }
-
 
 extension CarbEntryViewController: DatePickerTableViewCellDelegate {
     func datePickerTableViewCellDidUpdateDate(_ cell: DatePickerTableViewCell) {
@@ -637,3 +638,5 @@ extension CarbEntryViewController: EmojiInputControllerDelegate {
 }
 
 extension DateAndDurationTableViewCell: NibLoadable {}
+
+extension DateAndDurationSteppableTableViewCell: NibLoadable {}
