@@ -16,17 +16,20 @@ import LoopKit
 
 class SimpleBolusCalculatorTests: XCTestCase {
     
+    let correctionRangeSchedule = GlucoseRangeSchedule(
+        unit: .milligramsPerDeciliter,
+        dailyItems: [
+            RepeatingScheduleValue(startTime: 0, value: DoubleRange(minValue: 100.0, maxValue: 110.0))
+    ])!
+
+    let carbRatioSchedule = CarbRatioSchedule(unit: .gram(), dailyItems: [RepeatingScheduleValue(startTime: 0, value: 10)])!
+    let sensitivitySchedule = InsulinSensitivitySchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: .hours(0), value: 80)])!
+
     func testMealRecommendation() {
-        let carbs = HKQuantity(unit: .gram(), doubleValue: 40)
-        let activeInsulin = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
-        let carbRatioSchedule = CarbRatioSchedule(unit: .gram(), dailyItems: [RepeatingScheduleValue(startTime: 0, value: 10)])!
-        let correctionRange = DoubleRange(minValue: 100.0, maxValue: 110.0)
-        let correctionRangeSchedule = GlucoseRangeSchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: 0, value: correctionRange)])!
-        let sensitivitySchedule = InsulinSensitivitySchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: .hours(0), value: 80)])!
         let recommendation = SimpleBolusCalculator.recommendedInsulin(
-            mealCarbs: carbs,
+            mealCarbs: HKQuantity(unit: .gram(), doubleValue: 40),
             manualGlucose: nil,
-            activeInsulin: activeInsulin,
+            activeInsulin: HKQuantity(unit: .internationalUnit(), doubleValue: 0),
             carbRatioSchedule: carbRatioSchedule,
             correctionRangeSchedule: correctionRangeSchedule,
             sensitivitySchedule: sensitivitySchedule)
@@ -35,16 +38,10 @@ class SimpleBolusCalculatorTests: XCTestCase {
     }
     
     func testCorrectionRecommendation() {
-        let activeInsulin = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
-        let carbRatioSchedule = CarbRatioSchedule(unit: .gram(), dailyItems: [RepeatingScheduleValue(startTime: 0, value: 10)])!
-        let correctionRange = DoubleRange(minValue: 100.0, maxValue: 110.0)
-        let correctionRangeSchedule = GlucoseRangeSchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: 0, value: correctionRange)])!
-        let sensitivitySchedule = InsulinSensitivitySchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: .hours(0), value: 80)])!
-        let glucose = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 180)
         let recommendation = SimpleBolusCalculator.recommendedInsulin(
             mealCarbs: nil,
-            manualGlucose: glucose,
-            activeInsulin: activeInsulin,
+            manualGlucose: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 180),
+            activeInsulin: HKQuantity(unit: .internationalUnit(), doubleValue: 0),
             carbRatioSchedule: carbRatioSchedule,
             correctionRangeSchedule: correctionRangeSchedule,
             sensitivitySchedule: sensitivitySchedule)
@@ -53,16 +50,10 @@ class SimpleBolusCalculatorTests: XCTestCase {
     }
     
     func testCorrectionRecommendationWithIOB() {
-        let activeInsulin = HKQuantity(unit: .internationalUnit(), doubleValue: 10)
-        let carbRatioSchedule = CarbRatioSchedule(unit: .gram(), dailyItems: [RepeatingScheduleValue(startTime: 0, value: 10)])!
-        let correctionRange = DoubleRange(minValue: 100.0, maxValue: 110.0)
-        let correctionRangeSchedule = GlucoseRangeSchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: 0, value: correctionRange)])!
-        let sensitivitySchedule = InsulinSensitivitySchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: .hours(0), value: 80)])!
-        let glucose = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 180)
         let recommendation = SimpleBolusCalculator.recommendedInsulin(
             mealCarbs: nil,
-            manualGlucose: glucose,
-            activeInsulin: activeInsulin,
+            manualGlucose: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 180),
+            activeInsulin: HKQuantity(unit: .internationalUnit(), doubleValue: 10),
             carbRatioSchedule: carbRatioSchedule,
             correctionRangeSchedule: correctionRangeSchedule,
             sensitivitySchedule: sensitivitySchedule)
@@ -71,16 +62,10 @@ class SimpleBolusCalculatorTests: XCTestCase {
     }
 
     func testCorrectionRecommendationWhenInRange() {
-        let activeInsulin = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
-        let carbRatioSchedule = CarbRatioSchedule(unit: .gram(), dailyItems: [RepeatingScheduleValue(startTime: 0, value: 10)])!
-        let correctionRange = DoubleRange(minValue: 100.0, maxValue: 110.0)
-        let correctionRangeSchedule = GlucoseRangeSchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: 0, value: correctionRange)])!
-        let sensitivitySchedule = InsulinSensitivitySchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: .hours(0), value: 80)])!
-        let glucose = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 110)
         let recommendation = SimpleBolusCalculator.recommendedInsulin(
             mealCarbs: nil,
-            manualGlucose: glucose,
-            activeInsulin: activeInsulin,
+            manualGlucose: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 110),
+            activeInsulin: HKQuantity(unit: .internationalUnit(), doubleValue: 0),
             carbRatioSchedule: carbRatioSchedule,
             correctionRangeSchedule: correctionRangeSchedule,
             sensitivitySchedule: sensitivitySchedule)
@@ -89,22 +74,27 @@ class SimpleBolusCalculatorTests: XCTestCase {
     }
 
     func testCorrectionAndCarbsRecommendationWhenBelowRange() {
-        let carbs = HKQuantity(unit: .gram(), doubleValue: 40)
-        let activeInsulin = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
-        let carbRatioSchedule = CarbRatioSchedule(unit: .gram(), dailyItems: [RepeatingScheduleValue(startTime: 0, value: 10)])!
-        let correctionRange = DoubleRange(minValue: 100.0, maxValue: 110.0)
-        let correctionRangeSchedule = GlucoseRangeSchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: 0, value: correctionRange)])!
-        let sensitivitySchedule = InsulinSensitivitySchedule(unit: .milligramsPerDeciliter, dailyItems: [RepeatingScheduleValue(startTime: .hours(0), value: 80)])!
-        let glucose = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 70)
         let recommendation = SimpleBolusCalculator.recommendedInsulin(
-            mealCarbs: carbs,
-            manualGlucose: glucose,
-            activeInsulin: activeInsulin,
+            mealCarbs: HKQuantity(unit: .gram(), doubleValue: 40),
+            manualGlucose: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 70),
+            activeInsulin: HKQuantity(unit: .internationalUnit(), doubleValue: 0),
             carbRatioSchedule: carbRatioSchedule,
             correctionRangeSchedule: correctionRangeSchedule,
             sensitivitySchedule: sensitivitySchedule)
         
         XCTAssertEqual(3.56, recommendation.doubleValue(for: .internationalUnit()), accuracy: 0.01)
+    }
+
+    func testCarbsEntryWithActiveInsulinAndNoGlucose() {
+        let recommendation = SimpleBolusCalculator.recommendedInsulin(
+            mealCarbs: HKQuantity(unit: .gram(), doubleValue: 20),
+            manualGlucose: nil,
+            activeInsulin: HKQuantity(unit: .internationalUnit(), doubleValue: 4),
+            carbRatioSchedule: carbRatioSchedule,
+            correctionRangeSchedule: correctionRangeSchedule,
+            sensitivitySchedule: sensitivitySchedule)
+        
+        XCTAssertEqual(2, recommendation.doubleValue(for: .internationalUnit()), accuracy: 0.01)
     }
 
 

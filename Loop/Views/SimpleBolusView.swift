@@ -10,9 +10,11 @@ import SwiftUI
 import LoopKit
 import LoopKitUI
 import HealthKit
-
+import LoopCore
 
 struct SimpleBolusView: View, HorizontalSizeClassOverride {
+
+    @Environment(\.dismiss) var dismiss
     
     @State private var shouldBolusEntryBecomeFirstResponder = false
     @State private var isKeyboardVisible = false
@@ -183,7 +185,11 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
     private var actionButton: some View {
         Button<Text>(
             action: {
-                print("Action tapped")
+                if self.viewModel.actionButtonAction == .enterBolus {
+                    self.shouldBolusEntryBecomeFirstResponder = true
+                } else {
+                    self.viewModel.saveAndDeliver(onSuccess: self.dismiss)
+                }
             },
             label: {
                 switch viewModel.actionButtonAction {
@@ -203,18 +209,38 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
     }
 }
 
+
 struct SimpleBolusCalculatorView_Previews: PreviewProvider {
-    static var viewModel: SimpleBolusViewModel = SimpleBolusViewModel(glucoseUnit: .milligramsPerDeciliter) { (input) in
-            let (carbs, glucose) = input
-            var recommendation: Double = 0
-            if let carbs = carbs {
-                recommendation += carbs.doubleValue(for: .gram()) / 10
-            }
-            if let glucose = glucose {
-                recommendation = glucose.doubleValue(for: .milligramsPerDeciliter) - 105 / 80
-            }
-            return HKQuantity(unit: .internationalUnit(), doubleValue: max(0, recommendation))
+    class MockSimpleBolusViewDelegate: SimpleBolusViewModelDelegate {
+        func addGlucose(_ samples: [NewGlucoseSample], completion: (Error?) -> Void) {
+            completion(nil)
         }
+        
+        func addCarbEntry(_ carbEntry: NewCarbEntry, completion: @escaping (Error?) -> Void) {
+            completion(nil)
+        }
+        
+        func enactBolus(units: Double, at startDate: Date) {
+        }
+        
+        func insulinOnBoard(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
+            completion(.success(InsulinValue(startDate: date, value: 2.0)))
+        }
+        
+        func computeSimpleBolusRecommendation(carbs: HKQuantity?, glucose: HKQuantity?) -> HKQuantity? {
+            return HKQuantity(unit: .internationalUnit(), doubleValue: 3)
+        }
+        
+        var preferredGlucoseUnit: HKUnit {
+            return .milligramsPerDeciliter
+        }
+        
+        var maximumBolus: Double {
+            return 6
+        }
+    }
+
+    static var viewModel: SimpleBolusViewModel = SimpleBolusViewModel(delegate: MockSimpleBolusViewDelegate())
     
     static var previews: some View {
         NavigationView {

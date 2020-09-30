@@ -1155,10 +1155,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             carbEntryViewController.preferredCarbUnit = deviceManager.carbStore.preferredUnit
             navigationWrapper = UINavigationController(rootViewController: carbEntryViewController)
         } else {
-            let viewModel = SimpleBolusViewModel(glucoseUnit: deviceManager.glucoseStore.preferredUnit!) { (input) -> HKQuantity? in
-                let (carbs, glucose) = input
-                return self.deviceManager.loopManager.generateSimpleBolusRecommendation(carbs: carbs, glucose: glucose)
-            }
+            let viewModel = SimpleBolusViewModel(delegate: deviceManager)
             let bolusEntryView = SimpleBolusView(displayMealEntry: true, viewModel: viewModel)
             let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
             navigationWrapper = UINavigationController(rootViewController: hostingController)
@@ -1174,10 +1171,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let bolusEntryView = BolusEntryView(viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         } else {
-            let viewModel = SimpleBolusViewModel(glucoseUnit: deviceManager.glucoseStore.preferredUnit!) { (input) -> HKQuantity? in
-                let (carbs, glucose) = input
-                return self.deviceManager.loopManager.generateSimpleBolusRecommendation(carbs: carbs, glucose: glucose)
-            }
+            let viewModel = SimpleBolusViewModel(delegate: deviceManager)
             let bolusEntryView = SimpleBolusView(displayMealEntry: false, viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         }

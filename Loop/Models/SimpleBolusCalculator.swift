@@ -26,11 +26,11 @@ struct SimpleBolusCalculator {
             let correctionRange = correctionRangeSchedule.quantityRange(at: date)
             if (!correctionRange.contains(manualGlucose)) {
                 let correctionTarget = correctionRange.averageValue(for: .milligramsPerDeciliter)
-                recommendedBolus +=  (manualGlucose.doubleValue(for: .milligramsPerDeciliter) - correctionTarget) / sensitivity
+                let correctionBolus = (manualGlucose.doubleValue(for: .milligramsPerDeciliter) - correctionTarget) / sensitivity
+                let correctionBolusMinusActiveInsulin = correctionBolus - activeInsulin.doubleValue(for: .internationalUnit())
+                recommendedBolus += correctionBolusMinusActiveInsulin
             }
         }
-        
-        recommendedBolus -= activeInsulin.doubleValue(for: .internationalUnit())
         
         // No negative recommendation
         recommendedBolus = max(0, recommendedBolus)
