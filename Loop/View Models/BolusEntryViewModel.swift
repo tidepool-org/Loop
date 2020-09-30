@@ -686,7 +686,8 @@ final class BolusEntryViewModel: ObservableObject {
         glucoseUnit = delegate?.settings.glucoseUnit ?? delegate?.preferredGlucoseUnit ?? .milligramsPerDeciliter
 
         targetGlucoseSchedule = delegate?.settings.glucoseTargetRangeSchedule
-        preMealOverride = delegate?.settings.preMealOverride
+        // Pre-meal override should be ignored if we have carbs (LOOP-1964)
+        preMealOverride = potentialCarbEntry == nil ? delegate?.settings.preMealOverride : nil
         scheduleOverride = delegate?.settings.scheduleOverride
 
         if preMealOverride?.hasFinished() == true {
