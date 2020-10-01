@@ -10,7 +10,53 @@ import HealthKit
 import LoopKit
 @testable import Loop
 
+// TODO: Copy of Linear Absorption (???)
+struct MockCarbAbsorptionComputable: CarbAbsorptionComputable {
+    func percentAbsorptionAtPercentTime(_ percentTime: Double) -> Double {
+        switch percentTime {
+        case let t where t <= 0.0:
+            return 0.0
+        case let t where t < 1.0:
+            return t
+        default:
+            return 1.0
+        }
+    }
+
+    func percentTimeAtPercentAbsorption(_ percentAbsorption: Double) -> Double {
+        switch percentAbsorption {
+        case let a where a <= 0.0:
+            return 0.0
+        case let a where a < 1.0:
+            return a
+        default:
+            return 1.0
+        }
+    }
+    
+    func percentRateAtPercentTime(_ percentTime: Double) -> Double {
+        switch percentTime {
+        case let t where t > 0.0 && t <= 1.0:
+            return 1.0
+        default:
+            return 0.0
+        }
+    }
+}
+
 class MockCarbStore: CarbStoreProtocol {
+    var delay: TimeInterval = 0
+    
+    var absorptionModel: CarbAbsorptionComputable = MockCarbAbsorptionComputable()
+    
+    var initialAbsorptionTimeOverrun: Double = 0
+    
+    var adaptiveAbsorptionRateEnabled: Bool = false
+    
+    var adaptiveRateStandbyIntervalFraction: Double = 0
+    
+    var absorptionTimeOverrun: Double = 0
+    
     init(for test: DataManagerTestType = .flatAndStable) {
         self.testType = test // The store returns different effect values based on the test type
     }

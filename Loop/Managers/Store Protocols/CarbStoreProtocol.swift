@@ -28,10 +28,23 @@ protocol CarbStoreProtocol: AnyObject {
     
     var maximumAbsorptionTimeInterval: TimeInterval { get }
     
+    var delay: TimeInterval { get }
+    
     var delta: TimeInterval { get }
-    
+
+    var absorptionModel: CarbAbsorptionComputable { get }
+
     var defaultAbsorptionTimes: CarbStore.DefaultAbsorptionTimes { get }
+
+    var initialAbsorptionTimeOverrun: Double { get }
     
+    var adaptiveAbsorptionRateEnabled: Bool { get }
+    
+    var adaptiveRateStandbyIntervalFraction: Double { get }
+    
+    /// The factor by which the entered absorption time can be extended to accomodate slower-than-expected absorption
+    var absorptionTimeOverrun: Double { get }
+
     // MARK: HealthKit
     var authorizationRequired: Bool { get }
     
