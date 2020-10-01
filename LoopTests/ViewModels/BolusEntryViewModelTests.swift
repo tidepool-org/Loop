@@ -16,8 +16,8 @@ import XCTest
 
 class BolusEntryViewModelTests: XCTestCase {
     static let now = Date.distantFuture
-    static let exampleStartDate = Date.distantFuture - .hours(2)
-    static let exampleEndDate = Date.distantFuture - .hours(1)
+    static let exampleStartDate = now - .hours(2)
+    static let exampleEndDate = now - .hours(1)
     static fileprivate let exampleGlucoseValue = MockGlucoseValue(quantity: exampleManualGlucoseQuantity, startDate: exampleStartDate)
     static let exampleManualGlucoseQuantity = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 123.4)
     static let exampleManualGlucoseSample =
@@ -55,7 +55,7 @@ class BolusEntryViewModelTests: XCTestCase {
     var saveAndDeliverSuccess = false
     
     override func setUpWithError() throws {
-        now = Date.distantFuture
+        now = Self.now
         delegate = MockBolusEntryViewModelDelegate()
         saveAndDeliverSuccess = false
         setUpViewModel()
@@ -596,6 +596,10 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual("10", bolusEntryViewModel.maximumBolusAmountString)
     }
     
+    func testCarbEntryAmountAndEmojiStringNil() throws {
+        XCTAssertNil(bolusEntryViewModel.carbEntryAmountAndEmojiString)
+    }
+    
     func testCarbEntryAmountAndEmojiString() throws {
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
 
@@ -607,6 +611,10 @@ class BolusEntryViewModelTests: XCTestCase {
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: potentialCarbEntry)
 
         XCTAssertEqual("234 g", bolusEntryViewModel.carbEntryAmountAndEmojiString)
+    }
+    
+    func testCarbEntryDateAndAbsorptionTimeStringNil() throws {
+        XCTAssertNil(bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
     }
     
     func testCarbEntryDateAndAbsorptionTimeString() throws {
