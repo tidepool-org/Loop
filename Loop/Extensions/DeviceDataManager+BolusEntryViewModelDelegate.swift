@@ -67,5 +67,9 @@ extension DeviceDataManager: BolusEntryViewModelDelegate {
     var settings: LoopSettings {
         return loopManager.settings
     }
+
+    func setPreMealOverride(_ preMealOverride: TemporaryScheduleOverride?) {
+        loopManager.settings.preMealOverride = preMealOverride
+    }
     
 }

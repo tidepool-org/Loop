@@ -60,8 +60,11 @@ protocol BolusEntryViewModelDelegate: class {
     ///
     var insulinModel: InsulinModel? { get }
     
-    ///  TODO: is this the best seam?
+    ///
     var settings: LoopSettings { get }
+    
+    ///
+    func setPreMealOverride(_ preMealOverride: TemporaryScheduleOverride?)
 }
 
 final class BolusEntryViewModel: ObservableObject {
@@ -97,6 +100,7 @@ final class BolusEntryViewModel: ObservableObject {
 
     @Published var targetGlucoseSchedule: GlucoseRangeSchedule?
     @Published var preMealOverride: TemporaryScheduleOverride?
+    private var savedPreMealOverride: TemporaryScheduleOverride?
     @Published var scheduleOverride: TemporaryScheduleOverride?
     var maximumBolus: HKQuantity?
 
@@ -174,6 +178,12 @@ final class BolusEntryViewModel: ObservableObject {
         observeRecommendedBolusChanges()
 
         update()
+    }
+    
+    deinit {
+        if let savedPreMealOverride = savedPreMealOverride {
+            delegate?.setPreMealOverride(savedPreMealOverride)
+        }
     }
     
     private func observeLoopUpdates() {
@@ -294,18 +304,18 @@ final class BolusEntryViewModel: ObservableObject {
         // Authenticate the bolus before saving anything
         if enteredBolus.doubleValue(for: .internationalUnit()) > 0 {
             let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString)
-            authenticationChallenge(message) {
+            authenticationChallenge(message) { [weak self] in
                 switch $0 {
                 case .success:
-                    self.continueSaving(onSuccess: completion)
+                    self?.continueSaving(onSuccess: completion)
                 case .failure:
                     break
                 }
             }
         } else if potentialCarbEntry != nil  { // Allow user to save carbs without bolusing
-            self.continueSaving(onSuccess: completion)
+            continueSaving(onSuccess: completion)
         } else if manualGlucoseSample != nil { // Allow user to save the manual glucose sample without bolusing
-            self.continueSaving(onSuccess: completion)
+            continueSaving(onSuccess: completion)
         } else {
             completion()
         }
@@ -377,6 +387,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
 
         isInitiatingSaveOrBolus = true
+        savedPreMealOverride = nil
         // TODO: should we pass along completion or not???
         delegate?.enactBolus(units: bolusVolume, at: now(), completion: { _ in })
         completion()
@@ -687,7 +698,15 @@ final class BolusEntryViewModel: ObservableObject {
 
         targetGlucoseSchedule = delegate?.settings.glucoseTargetRangeSchedule
         // Pre-meal override should be ignored if we have carbs (LOOP-1964)
-        preMealOverride = potentialCarbEntry == nil ? delegate?.settings.preMealOverride : nil
+        if potentialCarbEntry != nil {
+            if let preMealOverrideSettings = delegate?.settings.preMealOverride {
+                savedPreMealOverride = preMealOverrideSettings
+            }
+            delegate?.setPreMealOverride(nil)
+            preMealOverride = nil
+        } else {
+            preMealOverride = delegate?.settings.preMealOverride
+        }
         scheduleOverride = delegate?.settings.scheduleOverride
 
         if preMealOverride?.hasFinished() == true {
