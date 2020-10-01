@@ -850,7 +850,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     
     var preMealOverride : TemporaryScheduleOverride?
     func setPreMealOverride(_ preMealOverride: TemporaryScheduleOverride?) {
-        preMealOverride = preMealOverride
+        self.preMealOverride = preMealOverride
     }
 
 }
