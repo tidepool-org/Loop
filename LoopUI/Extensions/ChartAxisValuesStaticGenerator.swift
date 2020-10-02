@@ -40,7 +40,10 @@ extension ChartAxisValuesStaticGenerator {
             
             /// If there should be a padding segment added when a scalar value falls on the first or last axis value, adjust the first and last axis values
             if firstValue =~ first && addPaddingSegmentIfEdge {
-                firstValue = firstValue - segmentSize
+                // do not allow a value of -0 on the axis
+                repeat {
+                    firstValue = firstValue - segmentSize
+                } while firstValue < 0 && firstValue.rounded() == -0
             }
             if lastValue =~ last && addPaddingSegmentIfEdge {
                 lastValue = lastValue + segmentSize
