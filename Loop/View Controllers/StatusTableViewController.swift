@@ -1306,6 +1306,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           syncPumpSchedule: syncBasalRateSchedule,
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
+                                          isClosedLoopAllowed: deviceManager.isClosedLoopAllowed,
                                           delegate: self
         )
         let hostingController = DismissibleHostingController(

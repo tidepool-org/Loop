@@ -44,11 +44,8 @@ final class DeviceDataManager {
     private var rootViewController: UIViewController
     
     private var deliveryUncertaintyAlertManager: DeliveryUncertaintyAlertManager?
-    
-    public var isClosedLoop: Bool {
-        guard loopManager.settings.dosingEnabled else {
-            return false
-        }
+
+    public var isClosedLoopAllowed: Bool {
         if let glucose = glucoseStore.latestGlucose, !glucose.wasUserEntered, glucose.startDate.timeIntervalSinceNow < settings.inputDataRecencyInterval {
             // We have recent CGM data
             return true
@@ -56,6 +53,13 @@ final class DeviceDataManager {
             return true
         }
         return false
+    }
+
+    public var isClosedLoop: Bool {
+        guard loopManager.settings.dosingEnabled else {
+            return false
+        }
+        return isClosedLoopAllowed
     }
 
     // MARK: - CGM

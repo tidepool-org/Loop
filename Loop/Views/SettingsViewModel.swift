@@ -85,6 +85,7 @@ public class SettingsViewModel: ObservableObject {
     let pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?
     let syncPumpSchedule: (() -> PumpManager.SyncSchedule?)?
     let sensitivityOverridesEnabled: Bool
+    let isClosedLoopAllowed: Bool
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -100,6 +101,7 @@ public class SettingsViewModel: ObservableObject {
                 syncPumpSchedule: (() -> PumpManager.SyncSchedule?)?,
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
+                isClosedLoopAllowed: Bool,
                 delegate: SettingsViewModelDelegate?
     ) {
         self.notificationsCriticalAlertPermissionsViewModel = notificationsCriticalAlertPermissionsViewModel
@@ -113,7 +115,8 @@ public class SettingsViewModel: ObservableObject {
         self.pumpSupportedIncrements = pumpSupportedIncrements
         self.syncPumpSchedule = syncPumpSchedule
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
-        self.dosingEnabled = initialDosingEnabled
+        self.dosingEnabled = initialDosingEnabled && isClosedLoopAllowed
+        self.isClosedLoopAllowed = isClosedLoopAllowed
         self.delegate = delegate
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)

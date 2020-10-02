@@ -69,8 +69,14 @@ extension SettingsView {
     private var loopSection: some View {
         Section(header: SectionHeader(label: viewModel.appNameAndVersion)) {
             Toggle(isOn: $viewModel.dosingEnabled) {
-                Text(NSLocalizedString("Closed Loop", comment: "The title text for the looping enabled switch cell"))
+                VStack(alignment: .leading) {
+                    Text(NSLocalizedString("Closed Loop", comment: "The title text for the looping enabled switch cell"))
+                    if !viewModel.isClosedLoopAllowed {
+                        DescriptiveText(label: NSLocalizedString("Closed Loop requires an active CGM Sensor Session", comment: "The description text for the looping enabled switch cell when closed loop is not allowed"))
+                    }
+                }
             }
+            .disabled(!viewModel.isClosedLoopAllowed)
         }
     }
     
@@ -357,6 +363,7 @@ public struct SettingsView_Previews: PreviewProvider {
                                           syncPumpSchedule: nil,
                                           sensitivityOverridesEnabled: false,
                                           initialDosingEnabled: true,
+                                          isClosedLoopAllowed: false,
                                           delegate: nil)
         return Group {
             SettingsView(viewModel: viewModel)
