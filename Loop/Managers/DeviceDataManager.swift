@@ -45,9 +45,17 @@ final class DeviceDataManager {
     
     private var deliveryUncertaintyAlertManager: DeliveryUncertaintyAlertManager?
     
-    // TODO: This should also be false when CGM is not expected to produce values for the foreseeable future.
     public var isClosedLoop: Bool {
-        return loopManager.settings.dosingEnabled
+        guard loopManager.settings.dosingEnabled else {
+            return false
+        }
+        if let glucose = glucoseStore.latestGlucose, !glucose.wasUserEntered, glucose.startDate.timeIntervalSinceNow < settings.inputDataRecencyInterval {
+            // We have recent CGM data
+            return true
+        } else if let cgmManager = cgmManager, cgmManager.hasValidSensorSession {
+            return true
+        }
+        return false
     }
 
     // MARK: - CGM
