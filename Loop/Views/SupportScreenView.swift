@@ -15,7 +15,10 @@ struct SupportScreenView: View, HorizontalSizeClassOverride {
     
     var didTapIssueReport: ((_ title: String) -> Void)?
     var criticalEventLogExportViewModel: CriticalEventLogExportViewModel
+    let adverseEventReportViewModel: AdverseEventReportViewModel
     
+    @State private var adverseEventReportURLInvalid = false
+
     var body: some View {
         List {
             Section {
@@ -39,21 +42,30 @@ struct SupportScreenView: View, HorizontalSizeClassOverride {
     
     private var adverseEventReport: some View {
         Button(action: {
-            var urlString = "https://support.tidepool.org/hc/en-us/requests/new?ticket_form_id=360000551951"
-            urlString.append("&request_custom_fields_360035401592=\(Bundle.main.localizedNameAndVersion)")
-            if let urlString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-                let url = URL(string: urlString)
-            {
-                UIApplication.shared.open(url)
+            guard let url = self.adverseEventReportViewModel.reportURL else {
+                self.adverseEventReportURLInvalid = true
+                return
             }
+            
+            UIApplication.shared.open(url)
         }) {
             Text("Report an Adverse Event", comment: "The title text for the reporting of an adverse event menu item")
         }
+        .alert(isPresented: $adverseEventReportURLInvalid) {
+            invalidAdverseEventReportURLAlert
+        }
+    }
+    
+    private var invalidAdverseEventReportURLAlert: SwiftUI.Alert {
+        Alert(title: Text("Invalid Adverse Event Report URL", comment: "Alert title when the adverse event report URL cannot be constructed properly."),
+              message: Text("The adverse event report URL could not be constructed properly.", comment: "Alert message when the adverse event report URL cannot be constructed properly."),
+              dismissButton: .default(Text("Dismiss", comment: "Dismiss button for the invalid adverse event report URL alert.")))
     }
 }
 
 struct SupportScreenView_Previews: PreviewProvider {
     static var previews: some View {
-        SupportScreenView(criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory()))
+        SupportScreenView(criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory()),
+                          adverseEventReportViewModel: AdverseEventReportViewModel())
     }
 }
