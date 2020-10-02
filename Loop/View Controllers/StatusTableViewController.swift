@@ -1310,7 +1310,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           delegate: self
         )
         let hostingController = DismissibleHostingController(
-            rootView: SettingsView(viewModel: viewModel).environment(\.appName, Bundle.main.bundleDisplayName))
+            rootView: SettingsView(viewModel: viewModel).environment(\.appName, Bundle.main.bundleDisplayName),
+            isModalInPresentation: false)
         present(hostingController, animated: true)
     }
 
