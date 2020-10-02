@@ -138,6 +138,7 @@ final class BolusEntryViewModel: ObservableObject {
     private let debounceIntervalMilliseconds: Int
     private let authenticateOverride: AuthenticationChallenge?
     private let uuidProvider: () -> String
+    private let carbEntryDateFormatter: DateFormatter
     
     // MARK: - Constants
 
@@ -154,6 +155,7 @@ final class BolusEntryViewModel: ObservableObject {
         debounceIntervalMilliseconds: Int = 400,
         authenticateOverride: AuthenticationChallenge? = nil,
         uuidProvider: @escaping () -> String = { UUID().uuidString },
+        timeZone: TimeZone? = nil,
         originalCarbEntry: StoredCarbEntry? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
         selectedCarbAbsorptionTimeEmoji: String? = nil
@@ -164,6 +166,12 @@ final class BolusEntryViewModel: ObservableObject {
         self.debounceIntervalMilliseconds = debounceIntervalMilliseconds
         self.authenticateOverride = authenticateOverride
         self.uuidProvider = uuidProvider
+        self.carbEntryDateFormatter = DateFormatter()
+        self.carbEntryDateFormatter.dateStyle = .none
+        self.carbEntryDateFormatter.timeStyle = .short
+        if let timeZone = timeZone {
+            self.carbEntryDateFormatter.timeZone = timeZone
+        }
         
         self.originalCarbEntry = originalCarbEntry
         self.potentialCarbEntry = potentialCarbEntry
@@ -447,7 +455,7 @@ final class BolusEntryViewModel: ObservableObject {
             return nil
         }
 
-        let entryTimeString = DateFormatter.localizedString(from: potentialCarbEntry.startDate, dateStyle: .none, timeStyle: .short)
+        let entryTimeString = carbEntryDateFormatter.string(from: potentialCarbEntry.startDate)
 
         if let absorptionTime = potentialCarbEntry.absorptionTime, let absorptionTimeString = absorptionTimeFormatter.string(from: absorptionTime) {
             return String(format: NSLocalizedString("%1$@ + %2$@", comment: "Format string combining carb entry time and absorption time"), entryTimeString, absorptionTimeString)

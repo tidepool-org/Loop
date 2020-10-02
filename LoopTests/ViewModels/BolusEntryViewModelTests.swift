@@ -15,13 +15,7 @@ import XCTest
 @testable import Loop
 
 class BolusEntryViewModelTests: XCTestCase {
-    override static func setUp() {
-        TimeZone.ReferenceType.default = TimeZone(abbreviation: "GMT")!
-    }
-    override static func tearDown() {
-        TimeZone.ReferenceType.default = TimeZone.current
-    }
-    
+   
     static let now = Date.distantFuture
     static let exampleStartDate = now - .hours(2)
     static let exampleEndDate = now - .hours(1)
@@ -68,16 +62,17 @@ class BolusEntryViewModelTests: XCTestCase {
         setUpViewModel()
     }
     
-    func setUpViewModel(originalCarbEntry: StoredCarbEntry? = nil, potentialCarbEntry: NewCarbEntry? = nil) {
+    func setUpViewModel(originalCarbEntry: StoredCarbEntry? = nil, potentialCarbEntry: NewCarbEntry? = nil, selectedCarbAbsorptionTimeEmoji: String? = nil) {
         bolusEntryViewModel = BolusEntryViewModel(delegate: delegate,
                                                   now: { self.now },
                                                   screenWidth: 512,
                                                   debounceIntervalMilliseconds: 0,
                                                   authenticateOverride: authenticateOverride,
                                                   uuidProvider: { self.mockUUID },
+                                                  timeZone: TimeZone(abbreviation: "GMT")!,
                                                   originalCarbEntry: originalCarbEntry,
                                                   potentialCarbEntry: potentialCarbEntry,
-                                                  selectedCarbAbsorptionTimeEmoji: nil)
+                                                  selectedCarbAbsorptionTimeEmoji: selectedCarbAbsorptionTimeEmoji)
         bolusEntryViewModel.maximumBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 10)
     }
 
@@ -610,11 +605,18 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual("234 g foodType", bolusEntryViewModel.carbEntryAmountAndEmojiString)
     }
     
-    func testCarbEntryAmountAndEmojiString2() throws {
+    func testCarbEntryAmountAndEmojiStringNoFoodType() throws {
         let potentialCarbEntry = NewCarbEntry(quantity: BolusEntryViewModelTests.exampleCarbQuantity, startDate: Self.exampleStartDate, foodType: nil, absorptionTime: 1)
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: potentialCarbEntry)
 
         XCTAssertEqual("234 g", bolusEntryViewModel.carbEntryAmountAndEmojiString)
+    }
+    
+    func testCarbEntryAmountAndEmojiStringWithEmoji() throws {
+        let potentialCarbEntry = NewCarbEntry(quantity: BolusEntryViewModelTests.exampleCarbQuantity, startDate: Self.exampleStartDate, foodType: nil, absorptionTime: 1)
+        setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: potentialCarbEntry, selectedCarbAbsorptionTimeEmoji: "😀")
+
+        XCTAssertEqual("234 g 😀", bolusEntryViewModel.carbEntryAmountAndEmojiString)
     }
     
     func testCarbEntryDateAndAbsorptionTimeStringNil() throws {
