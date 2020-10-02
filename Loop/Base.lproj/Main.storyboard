@@ -434,6 +434,7 @@
                                 <connections>
                                     <outlet property="clampedProgressView" destination="HkK-Uz-ji1" id="yIZ-Gx-qHl"/>
                                     <outlet property="dateLabel" destination="aCb-Qs-bpu" id="ev3-8q-aDB"/>
+                                    <outlet property="disclosureImage" destination="Qpe-RL-FEi" id="Wb5-9q-6Rf"/>
                                     <outlet property="observedDateLabel" destination="J7x-W5-gwo" id="WQf-bR-yv7"/>
                                     <outlet property="observedProgressView" destination="Mxi-br-Hti" id="s2h-xc-g1R"/>
                                     <outlet property="observedValueLabel" destination="Krd-Aa-ret" id="EPT-7Q-6O8"/>
@@ -450,7 +451,7 @@
                     <navigationItem key="navigationItem" title="Carbohydrates" id="Vpi-5b-bY5">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="VBt-zR-6uw">
                             <connections>
-                                <segue destination="YJ1-01-QoA" kind="presentation" identifier="CarbEntryViewController" id="UnO-ql-F0K"/>
+                                <action selector="presentCarbEntryScreen" destination="hZZ-2S-lrd" id="DZq-7I-0OW"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -674,24 +675,6 @@
             <point key="canvasLocation" x="14" y="324"/>
         </scene>
         <!--Navigation Controller-->
-        <scene sceneID="NT7-CC-bRN">
-            <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="YJ1-01-QoA" sceneMemberID="viewController">
-                    <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="G1F-Va-gO2">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="56"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                    </navigationBar>
-                    <nil name="viewControllers"/>
-                    <connections>
-                        <segue destination="uaV-yr-cIp" kind="relationship" relationship="rootViewController" id="gBt-AH-FnE"/>
-                    </connections>
-                </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="3Ql-YC-B6I" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="839" y="446"/>
-        </scene>
-        <!--Navigation Controller-->
         <scene sceneID="vZz-u1-Q2B">
             <objects>
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="Fr0-ut-OuL" sceneMemberID="viewController">
@@ -719,7 +702,7 @@
             <objects>
                 <tableViewController storyboardIdentifier="CarbEntryViewController" id="uaV-yr-cIp" customClass="CarbEntryViewController" customModule="Loop" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" keyboardDismissMode="onDrag" dataMode="prototypes" style="insetGrouped" separatorStyle="default" rowHeight="44" sectionHeaderHeight="18" sectionFooterHeight="18" id="jax-JK-7ji">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="647"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <prototypes>
                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="DecimalTextFieldTableViewCell" id="zy0-gK-nts" customClass="DecimalTextFieldTableViewCell" customModule="LoopKitUI">
@@ -911,9 +894,6 @@
             <point key="canvasLocation" x="2458" y="733"/>
         </scene>
     </scenes>
-    <inferredMetricsTieBreakers>
-        <segue reference="gBt-AH-FnE"/>
-    </inferredMetricsTieBreakers>
     <resources>
         <image name="Oval Selection" width="21" height="21"/>
         <image name="Pre-Meal" width="32" height="32"/>
