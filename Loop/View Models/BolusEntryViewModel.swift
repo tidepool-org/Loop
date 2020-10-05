@@ -46,10 +46,10 @@ protocol BolusEntryViewModelDelegate: class {
     func ensureCurrentPumpData(completion: @escaping () -> Void)
     
     ///
-    var isGlucoseDataStale: Bool { get }
+    var mostRecentGlucoseDataDate: Date? { get }
     
     ///
-    var isPumpDataStale: Bool { get }
+    var mostRecentPumpDataDate: Date? { get }
     
     ///
     var isPumpConfigured: Bool { get }
@@ -496,7 +496,7 @@ final class BolusEntryViewModel: ObservableObject {
     private func disableManualGlucoseEntryIfNecessary() {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        if isManualGlucoseEntryEnabled, !(delegate?.isGlucoseDataStale ?? true) {
+        if isManualGlucoseEntryEnabled, !isGlucoseDataStale {
             isManualGlucoseEntryEnabled = false
             enteredManualGlucose = nil
             manualGlucoseSample = nil
@@ -602,7 +602,7 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func ensurePumpDataIsFresh(then completion: @escaping () -> Void) {
-        guard delegate?.isPumpDataStale ?? true else {
+        if !isPumpDataStale {
             completion()
             return
         }
@@ -762,6 +762,18 @@ extension BolusEntryViewModel.Alert: Identifiable {
 // MARK: Helpers
 extension BolusEntryViewModel {
     
+    var isGlucoseDataStale: Bool {
+        guard let settings = delegate?.settings,
+            let latestGlucoseDataDate = delegate?.mostRecentGlucoseDataDate else { return true }
+        return now().timeIntervalSince(latestGlucoseDataDate) > settings.inputDataRecencyInterval
+    }
+    
+    var isPumpDataStale: Bool {
+        guard let settings = delegate?.settings,
+            let latestPumpDataDate = delegate?.mostRecentPumpDataDate else { return true }
+        return now().timeIntervalSince(latestPumpDataDate) > settings.inputDataRecencyInterval
+    }
+
     var isManualGlucosePromptVisible: Bool {
         activeNotice == .staleGlucoseData && !isManualGlucoseEntryEnabled
     }

@@ -58,6 +58,8 @@ class BolusEntryViewModelTests: XCTestCase {
     override func setUpWithError() throws {
         now = Self.now
         delegate = MockBolusEntryViewModelDelegate()
+        delegate.mostRecentGlucoseDataDate = now
+        delegate.mostRecentPumpDataDate = now
         saveAndDeliverSuccess = false
         setUpViewModel()
     }
@@ -112,7 +114,7 @@ class BolusEntryViewModelTests: XCTestCase {
     }
 
     // MARK: updating state
-
+    
     func testUpdateDisableManualGlucoseEntryIfNecessary() throws {
         bolusEntryViewModel.isManualGlucoseEntryEnabled = true
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
@@ -122,6 +124,16 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual(.glucoseNoLongerStale, bolusEntryViewModel.activeAlert)
     }
     
+    func testUpdateDisableManualGlucoseEntryIfNecessaryStaleGlucose() throws {
+        delegate.mostRecentGlucoseDataDate = Date.distantPast
+        bolusEntryViewModel.isManualGlucoseEntryEnabled = true
+        bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
+        try triggerLoopStateUpdated(with: MockLoopState())
+        XCTAssertTrue(bolusEntryViewModel.isManualGlucoseEntryEnabled)
+        XCTAssertEqual(Self.exampleManualGlucoseQuantity, bolusEntryViewModel.enteredManualGlucose)
+        XCTAssertNil(bolusEntryViewModel.activeAlert)
+    }
+
     func testUpdateGlucoseValues() throws {
         XCTAssertEqual(0, bolusEntryViewModel.glucoseValues.count)
         try triggerLoopStateUpdatedWithDataAndWait()
@@ -381,7 +393,7 @@ class BolusEntryViewModelTests: XCTestCase {
     }
 
     func testUpdateIsRefreshingPump() throws {
-        delegate.isPumpDataStale = true
+        delegate.mostRecentPumpDataDate = Date.distantPast
         XCTAssertFalse(bolusEntryViewModel.isRefreshingPump)
         try triggerLoopStateUpdatedWithDataAndWait()
         XCTAssertTrue(bolusEntryViewModel.isRefreshingPump)
@@ -800,6 +812,7 @@ fileprivate class MockLoopState: LoopState {
 }
 
 fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
+
     var loopStateCallBlock: ((LoopState) -> Void)?
     func withLoopState(do block: @escaping (LoopState) -> Void) {
         loopStateCallBlock = block
@@ -850,9 +863,9 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         ensureCurrentPumpDataCompletion = completion
     }
     
-    var isGlucoseDataStale: Bool = false
+    var mostRecentGlucoseDataDate: Date?
     
-    var isPumpDataStale: Bool = false
+    var mostRecentPumpDataDate: Date?
     
     var isPumpConfigured: Bool = true
     
