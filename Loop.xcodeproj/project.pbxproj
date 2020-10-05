@@ -26,6 +26,11 @@
 		1D05219D2469F1F5000EBBDE /* AlertStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D05219C2469F1F5000EBBDE /* AlertStore.swift */; };
 		1D080CBD2473214A00356610 /* AlertStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1D080CBB2473214A00356610 /* AlertStore.xcdatamodeld */; };
 		1D2609AD248EEB9900A6F258 /* LoopAlertsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D2609AC248EEB9900A6F258 /* LoopAlertsManager.swift */; };
+		1D33DAAA252B9D43009DC86F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1D33DAA9252B9D43009DC86F /* GoogleService-Info.plist */; };
+		1D33DAB3252BA726009DC86F /* GoogleAppMeasurement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D33DAB0252BA726009DC86F /* GoogleAppMeasurement.framework */; };
+		1D33DAB4252BA726009DC86F /* GoogleDataTransport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D33DAB1252BA726009DC86F /* GoogleDataTransport.framework */; };
+		1D33DAB5252BA726009DC86F /* GoogleUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D33DAB2252BA726009DC86F /* GoogleUtilities.framework */; };
+		1D33DAB7252BAA9F009DC86F /* PromisesObjC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D33DAB6252BAA9F009DC86F /* PromisesObjC.framework */; };
 		1D49795824E7289700948F05 /* ServicesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D49795724E7289700948F05 /* ServicesViewModel.swift */; };
 		1D4990E824A25931005CC357 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E267FB2292456700A3F2AF /* FeatureFlags.swift */; };
 		1D4A3E2D2478628500FD601B /* StoredAlert+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4A3E2B2478628500FD601B /* StoredAlert+CoreDataClass.swift */; };
@@ -725,6 +730,11 @@
 		1D05219C2469F1F5000EBBDE /* AlertStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStore.swift; sourceTree = "<group>"; };
 		1D080CBC2473214A00356610 /* AlertStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = AlertStore.xcdatamodel; sourceTree = "<group>"; };
 		1D2609AC248EEB9900A6F258 /* LoopAlertsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopAlertsManager.swift; sourceTree = "<group>"; };
+		1D33DAA9252B9D43009DC86F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../GoogleService-Info.plist"; sourceTree = "<group>"; };
+		1D33DAB0252BA726009DC86F /* GoogleAppMeasurement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleAppMeasurement.framework; path = Carthage/Build/iOS/GoogleAppMeasurement.framework; sourceTree = "<group>"; };
+		1D33DAB1252BA726009DC86F /* GoogleDataTransport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleDataTransport.framework; path = Carthage/Build/iOS/GoogleDataTransport.framework; sourceTree = "<group>"; };
+		1D33DAB2252BA726009DC86F /* GoogleUtilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleUtilities.framework; path = Carthage/Build/iOS/GoogleUtilities.framework; sourceTree = "<group>"; };
+		1D33DAB6252BAA9F009DC86F /* PromisesObjC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PromisesObjC.framework; path = Carthage/Build/iOS/PromisesObjC.framework; sourceTree = "<group>"; };
 		1D49795724E7289700948F05 /* ServicesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesViewModel.swift; sourceTree = "<group>"; };
 		1D4A3E2B2478628500FD601B /* StoredAlert+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1D4A3E2C2478628500FD601B /* StoredAlert+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -1420,10 +1430,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D33DAB5252BA726009DC86F /* GoogleUtilities.framework in Frameworks */,
 				43F5C2C91B929C09003EB13D /* HealthKit.framework in Frameworks */,
 				43D9FFD621EAE05D00AF44BF /* LoopCore.framework in Frameworks */,
 				43F78D4F1C914197002152D1 /* LoopKit.framework in Frameworks */,
+				1D33DAB7252BAA9F009DC86F /* PromisesObjC.framework in Frameworks */,
 				1D7213662527D3B0009CFEA3 /* FIRAnalyticsConnector.framework in Frameworks */,
+				1D33DAB4252BA726009DC86F /* GoogleDataTransport.framework in Frameworks */,
 				1D72136A2527D3B0009CFEA3 /* FirebaseCore.framework in Frameworks */,
 				892A5D5B222F0D7C008961AB /* LoopTestingKit.framework in Frameworks */,
 				1D7213682527D3B0009CFEA3 /* FirebaseInstallations.framework in Frameworks */,
@@ -1434,6 +1447,7 @@
 				1D7213672527D3B0009CFEA3 /* FirebaseAnalytics.framework in Frameworks */,
 				1D72136C2527D3B0009CFEA3 /* FirebaseCoreDiagnostics.framework in Frameworks */,
 				892A5D2C222EF60A008961AB /* MockKitUI.framework in Frameworks */,
+				1D33DAB3252BA726009DC86F /* GoogleAppMeasurement.framework in Frameworks */,
 				4F08DE9B1E7BC4ED006741EA /* SwiftCharts.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1684,6 +1698,7 @@
 				7D7076511FE06EE1004AC8EA /* InfoPlist.strings */,
 				43EDEE6B1CF2E12A00393BE3 /* Loop.entitlements */,
 				43F5C2D41B92A4A6003EB13D /* Info.plist */,
+				1D33DAA9252B9D43009DC86F /* GoogleService-Info.plist */,
 				43776F8F1B8022E90074EA36 /* AppDelegate.swift */,
 				43776F9A1B8022E90074EA36 /* LaunchScreen.storyboard */,
 				43776F951B8022E90074EA36 /* Main.storyboard */,
@@ -2313,6 +2328,9 @@
 				1D7213622527D3AF009CFEA3 /* FirebaseCrashlytics.framework */,
 				1D7213612527D3AF009CFEA3 /* FirebaseInstallations.framework */,
 				4D3B40021D4A9DFE00BC6334 /* G4ShareSpy.framework */,
+				1D33DAB0252BA726009DC86F /* GoogleAppMeasurement.framework */,
+				1D33DAB1252BA726009DC86F /* GoogleDataTransport.framework */,
+				1D33DAB2252BA726009DC86F /* GoogleUtilities.framework */,
 				43D9002C21EB225D00AF44BF /* HealthKit.framework */,
 				43F5C2C81B929C09003EB13D /* HealthKit.framework */,
 				4344628320A7A3BE00C4BE6F /* LoopKit.framework */,
@@ -2322,6 +2340,7 @@
 				892A5D29222EF60A008961AB /* MockKit.framework */,
 				892A5D2B222EF60A008961AB /* MockKitUI.framework */,
 				4F70C1DD1DE8DCA7006380B7 /* NotificationCenter.framework */,
+				1D33DAB6252BAA9F009DC86F /* PromisesObjC.framework */,
 				43B371871CE597D10013C5A6 /* ShareClient.framework */,
 				4379CFEF21112CF700AADC79 /* ShareClientUI.framework */,
 				4346D1EF1C781BEA00ABAFE3 /* SwiftCharts.framework */,
@@ -2920,6 +2939,7 @@
 			files = (
 				C13255D6223E7BE2008AF50C /* BolusProgressTableViewCell.xib in Resources */,
 				43FCBBC21E51710B00343C1B /* LaunchScreen.storyboard in Resources */,
+				1D33DAAA252B9D43009DC86F /* GoogleService-Info.plist in Resources */,
 				B405E35A24D2B1A400DD058D /* HUDAssets.xcassets in Resources */,
 				A966152623EA5A26005D8B29 /* DefaultAssets.xcassets in Resources */,
 				A966152723EA5A26005D8B29 /* DerivedAssets.xcassets in Resources */,
@@ -3091,7 +3111,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PROJECT_DIR}/scripts/run\"\n";
+			shellScript = "if [[ -x \"${PROJECT_DIR}/scripts/run\" ]]\nthen\n  \"${PROJECT_DIR}/scripts/run\"\nfi\n";
 		};
 		432CF87B20D8B8490066B889 /* Build Carthage Dependencies */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -4422,6 +4442,7 @@
 				CODE_SIGN_ENTITLEMENTS = "$(LOOP_ENTITLEMENTS)";
 				CODE_SIGN_IDENTITY = "$(LOOP_CODE_SIGN_IDENTITY_DEBUG)";
 				CODE_SIGN_STYLE = "$(LOOP_CODE_SIGN_STYLE)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				INFOPLIST_FILE = Loop/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
