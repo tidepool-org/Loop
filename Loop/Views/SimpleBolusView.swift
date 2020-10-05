@@ -17,7 +17,8 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
     
     @State private var shouldBolusEntryBecomeFirstResponder = false
     @State private var isKeyboardVisible = false
-    
+    @State private var isClosedLoopOffInformationalModalVisible = false
+
     var displayMealEntry: Bool
     @ObservedObject var viewModel: SimpleBolusViewModel
     
@@ -65,6 +66,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             .keyboardAware()
             .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
             .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
+            .alert(isPresented: self.$isClosedLoopOffInformationalModalVisible, content: self.closedLoopOffInformationalModal)
         }
     }
     
@@ -80,8 +82,21 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             Text("When out of Closed Loop mode, the app uses a simplified bolus calculator like a typical pump.")
                 .font(.footnote)
                 .foregroundColor(.secondary)
-            Image(systemName: "info.circle").foregroundColor(.accentColor)
+            infoButton
         }
+    }
+    
+    private var infoButton: some View {
+        Button(
+            action: {
+                self.isClosedLoopOffInformationalModalVisible = true
+            },
+            label: {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 25))
+                    .foregroundColor(.accentColor)
+            }
+        )
     }
     
     private var summarySection: some View {
@@ -233,7 +248,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             }
             return SwiftUI.Alert(
                 title: Text("Exceeds Maximum Bolus", comment: "Alert title for a maximum bolus validation error"),
-                message: Text("The maximum bolus amount is \(maximumBolusAmountString) U.", comment: "Alert message for a maximum bolus validation error (1: max bolus value)")
+                message: Text(String(format: NSLocalizedString("The maximum bolus amount is %1$@ U.", comment: "Format string for maximum bolus exceeded alert (1: maximumBolusAmount)"), maximumBolusAmountString))
             )
         case .carbEntryPersistenceFailure:
             return SwiftUI.Alert(
@@ -242,7 +257,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             )
         case .carbEntrySizeTooLarge:
             let message = String(
-                format: NSLocalizedString("The maximum allowed amount is %@ grams", comment: "Alert body displayed for quantity greater than max (1: maximum quantity in grams)"),
+                format: NSLocalizedString("The maximum allowed amount is %1$@ grams", comment: "Alert body displayed for quantity greater than max (1: maximum quantity in grams)"),
                 NumberFormatter.localizedString(from: NSNumber(value: viewModel.maxCarbQuantity.doubleValue(for: .gram())), number: .none)
             )
             return SwiftUI.Alert(
@@ -255,7 +270,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             let acceptableUpperBound = formatter.string(from: SimpleBolusViewModel.validManualGlucoseEntryRange.upperBound, for: viewModel.glucoseUnit) ?? String(describing: SimpleBolusViewModel.validManualGlucoseEntryRange.upperBound)
             return SwiftUI.Alert(
                 title: Text("Glucose Entry Out of Range", comment: "Alert title for a manual glucose entry out of range error"),
-                message: Text("A manual glucose entry must be between \(acceptableLowerBound) and \(acceptableUpperBound)", comment: "Alert message for a manual glucose entry out of range error")
+                message: Text(String(format: NSLocalizedString("A manual glucose entry must be between %1$@ and %1$@", comment: "Alert message for a manual glucose entry out of range error. (1: acceptable lower bound) (2: acceptable upper bound)"), acceptableLowerBound, acceptableUpperBound))
             )
         case .manualGlucoseEntryPersistenceFailure:
             return SwiftUI.Alert(
@@ -274,6 +289,13 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 caption: Text("Your glucose is below your suspend threshold, \(suspendThresholdString).", comment: "Caption for bolus screen notice when no bolus is recommended due input value below suspend threshold")
             )
         }
+    }
+    
+    private func closedLoopOffInformationalModal() -> SwiftUI.Alert {
+        return SwiftUI.Alert(
+            title: Text("Closed Loop OFF", comment: "Alert title for closed loop off informational modal"),
+            message: Text("Tidepool Loop is operating with Closed Loop in the OFF position. Your pump and CGM will continue operating, but your basal insulin will not adjust automatically.\n\n", comment: "Alert message for closed loop off informational modal.")
+        )
     }
 
 }
