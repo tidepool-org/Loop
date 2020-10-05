@@ -26,7 +26,6 @@
 		1D05219D2469F1F5000EBBDE /* AlertStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D05219C2469F1F5000EBBDE /* AlertStore.swift */; };
 		1D080CBD2473214A00356610 /* AlertStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1D080CBB2473214A00356610 /* AlertStore.xcdatamodeld */; };
 		1D2609AD248EEB9900A6F258 /* LoopAlertsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D2609AC248EEB9900A6F258 /* LoopAlertsManager.swift */; };
-		1D33DAAA252B9D43009DC86F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1D33DAA9252B9D43009DC86F /* GoogleService-Info.plist */; };
 		1D33DAB3252BA726009DC86F /* GoogleAppMeasurement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D33DAB0252BA726009DC86F /* GoogleAppMeasurement.framework */; };
 		1D33DAB4252BA726009DC86F /* GoogleDataTransport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D33DAB1252BA726009DC86F /* GoogleDataTransport.framework */; };
 		1D33DAB5252BA726009DC86F /* GoogleUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D33DAB2252BA726009DC86F /* GoogleUtilities.framework */; };
@@ -730,7 +729,6 @@
 		1D05219C2469F1F5000EBBDE /* AlertStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStore.swift; sourceTree = "<group>"; };
 		1D080CBC2473214A00356610 /* AlertStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = AlertStore.xcdatamodel; sourceTree = "<group>"; };
 		1D2609AC248EEB9900A6F258 /* LoopAlertsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopAlertsManager.swift; sourceTree = "<group>"; };
-		1D33DAA9252B9D43009DC86F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1D33DAB0252BA726009DC86F /* GoogleAppMeasurement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleAppMeasurement.framework; path = Carthage/Build/iOS/GoogleAppMeasurement.framework; sourceTree = "<group>"; };
 		1D33DAB1252BA726009DC86F /* GoogleDataTransport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleDataTransport.framework; path = Carthage/Build/iOS/GoogleDataTransport.framework; sourceTree = "<group>"; };
 		1D33DAB2252BA726009DC86F /* GoogleUtilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleUtilities.framework; path = Carthage/Build/iOS/GoogleUtilities.framework; sourceTree = "<group>"; };
@@ -1698,7 +1696,6 @@
 				7D7076511FE06EE1004AC8EA /* InfoPlist.strings */,
 				43EDEE6B1CF2E12A00393BE3 /* Loop.entitlements */,
 				43F5C2D41B92A4A6003EB13D /* Info.plist */,
-				1D33DAA9252B9D43009DC86F /* GoogleService-Info.plist */,
 				43776F8F1B8022E90074EA36 /* AppDelegate.swift */,
 				43776F9A1B8022E90074EA36 /* LaunchScreen.storyboard */,
 				43776F951B8022E90074EA36 /* Main.storyboard */,
@@ -2939,7 +2936,6 @@
 			files = (
 				C13255D6223E7BE2008AF50C /* BolusProgressTableViewCell.xib in Resources */,
 				43FCBBC21E51710B00343C1B /* LaunchScreen.storyboard in Resources */,
-				1D33DAAA252B9D43009DC86F /* GoogleService-Info.plist in Resources */,
 				B405E35A24D2B1A400DD058D /* HUDAssets.xcassets in Resources */,
 				A966152623EA5A26005D8B29 /* DefaultAssets.xcassets in Resources */,
 				A966152723EA5A26005D8B29 /* DerivedAssets.xcassets in Resources */,
