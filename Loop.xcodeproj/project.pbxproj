@@ -30,6 +30,12 @@
 		1D4990E824A25931005CC357 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E267FB2292456700A3F2AF /* FeatureFlags.swift */; };
 		1D4A3E2D2478628500FD601B /* StoredAlert+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4A3E2B2478628500FD601B /* StoredAlert+CoreDataClass.swift */; };
 		1D4A3E2E2478628500FD601B /* StoredAlert+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4A3E2C2478628500FD601B /* StoredAlert+CoreDataProperties.swift */; };
+		1D7213662527D3B0009CFEA3 /* FIRAnalyticsConnector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D72135F2527D3AF009CFEA3 /* FIRAnalyticsConnector.framework */; };
+		1D7213672527D3B0009CFEA3 /* FirebaseAnalytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D7213602527D3AF009CFEA3 /* FirebaseAnalytics.framework */; };
+		1D7213682527D3B0009CFEA3 /* FirebaseInstallations.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D7213612527D3AF009CFEA3 /* FirebaseInstallations.framework */; };
+		1D7213692527D3B0009CFEA3 /* FirebaseCrashlytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D7213622527D3AF009CFEA3 /* FirebaseCrashlytics.framework */; };
+		1D72136A2527D3B0009CFEA3 /* FirebaseCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D7213632527D3B0009CFEA3 /* FirebaseCore.framework */; };
+		1D72136C2527D3B0009CFEA3 /* FirebaseCoreDiagnostics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D7213652527D3B0009CFEA3 /* FirebaseCoreDiagnostics.framework */; };
 		1D80313D24746274002810DF /* AlertStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D80313C24746274002810DF /* AlertStoreTests.swift */; };
 		1D8D55BC252274650044DBB6 /* BolusEntryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8D55BB252274650044DBB6 /* BolusEntryViewModelTests.swift */; };
 		1D9650C82523FBA100A1370B /* DeviceDataManager+BolusEntryViewModelDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D9650C72523FBA100A1370B /* DeviceDataManager+BolusEntryViewModelDelegate.swift */; };
@@ -722,6 +728,13 @@
 		1D49795724E7289700948F05 /* ServicesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesViewModel.swift; sourceTree = "<group>"; };
 		1D4A3E2B2478628500FD601B /* StoredAlert+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1D4A3E2C2478628500FD601B /* StoredAlert+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1D72135F2527D3AF009CFEA3 /* FIRAnalyticsConnector.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FIRAnalyticsConnector.framework; path = Carthage/Build/iOS/FIRAnalyticsConnector.framework; sourceTree = "<group>"; };
+		1D7213602527D3AF009CFEA3 /* FirebaseAnalytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FirebaseAnalytics.framework; path = Carthage/Build/iOS/FirebaseAnalytics.framework; sourceTree = "<group>"; };
+		1D7213612527D3AF009CFEA3 /* FirebaseInstallations.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FirebaseInstallations.framework; path = Carthage/Build/iOS/FirebaseInstallations.framework; sourceTree = "<group>"; };
+		1D7213622527D3AF009CFEA3 /* FirebaseCrashlytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FirebaseCrashlytics.framework; path = Carthage/Build/iOS/FirebaseCrashlytics.framework; sourceTree = "<group>"; };
+		1D7213632527D3B0009CFEA3 /* FirebaseCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FirebaseCore.framework; path = Carthage/Build/iOS/FirebaseCore.framework; sourceTree = "<group>"; };
+		1D7213642527D3B0009CFEA3 /* Firebase.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Firebase.framework; path = Carthage/Build/iOS/Firebase.framework; sourceTree = "<group>"; };
+		1D7213652527D3B0009CFEA3 /* FirebaseCoreDiagnostics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FirebaseCoreDiagnostics.framework; path = Carthage/Build/iOS/FirebaseCoreDiagnostics.framework; sourceTree = "<group>"; };
 		1D80313C24746274002810DF /* AlertStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStoreTests.swift; sourceTree = "<group>"; };
 		1D8D55BB252274650044DBB6 /* BolusEntryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusEntryViewModelTests.swift; sourceTree = "<group>"; };
 		1D9650C72523FBA100A1370B /* DeviceDataManager+BolusEntryViewModelDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DeviceDataManager+BolusEntryViewModelDelegate.swift"; sourceTree = "<group>"; };
@@ -1410,10 +1423,16 @@
 				43F5C2C91B929C09003EB13D /* HealthKit.framework in Frameworks */,
 				43D9FFD621EAE05D00AF44BF /* LoopCore.framework in Frameworks */,
 				43F78D4F1C914197002152D1 /* LoopKit.framework in Frameworks */,
+				1D7213662527D3B0009CFEA3 /* FIRAnalyticsConnector.framework in Frameworks */,
+				1D72136A2527D3B0009CFEA3 /* FirebaseCore.framework in Frameworks */,
 				892A5D5B222F0D7C008961AB /* LoopTestingKit.framework in Frameworks */,
+				1D7213682527D3B0009CFEA3 /* FirebaseInstallations.framework in Frameworks */,
 				4F7528941DFE1E9500C322D6 /* LoopUI.framework in Frameworks */,
 				C1E2774822433D7A00354103 /* MKRingProgressView.framework in Frameworks */,
+				1D7213692527D3B0009CFEA3 /* FirebaseCrashlytics.framework in Frameworks */,
 				892A5D2A222EF60A008961AB /* MockKit.framework in Frameworks */,
+				1D7213672527D3B0009CFEA3 /* FirebaseAnalytics.framework in Frameworks */,
+				1D72136C2527D3B0009CFEA3 /* FirebaseCoreDiagnostics.framework in Frameworks */,
 				892A5D2C222EF60A008961AB /* MockKitUI.framework in Frameworks */,
 				4F08DE9B1E7BC4ED006741EA /* SwiftCharts.framework in Frameworks */,
 			);
@@ -2286,6 +2305,13 @@
 				C1E2773D224177C000354103 /* ClockKit.framework */,
 				4344628120A7A37E00C4BE6F /* CoreBluetooth.framework */,
 				43C246A71D89990F0031F8D1 /* Crypto.framework */,
+				1D72135F2527D3AF009CFEA3 /* FIRAnalyticsConnector.framework */,
+				1D7213642527D3B0009CFEA3 /* Firebase.framework */,
+				1D7213602527D3AF009CFEA3 /* FirebaseAnalytics.framework */,
+				1D7213632527D3B0009CFEA3 /* FirebaseCore.framework */,
+				1D7213652527D3B0009CFEA3 /* FirebaseCoreDiagnostics.framework */,
+				1D7213622527D3AF009CFEA3 /* FirebaseCrashlytics.framework */,
+				1D7213612527D3AF009CFEA3 /* FirebaseInstallations.framework */,
 				4D3B40021D4A9DFE00BC6334 /* G4ShareSpy.framework */,
 				43D9002C21EB225D00AF44BF /* HealthKit.framework */,
 				43F5C2C81B929C09003EB13D /* HealthKit.framework */,
@@ -2535,6 +2561,7 @@
 				C16DA84322E8E5FF008624C2 /* Install Plugins */,
 				C1D19800232CFA2A0096D646 /* Capture Build Details */,
 				4F70C1EC1DE8DCA8006380B7 /* Embed App Extensions */,
+				1D72136D2527D4AA009CFEA3 /* Upload symbols to Crashlytics */,
 			);
 			buildRules = (
 			);
@@ -3046,6 +3073,26 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		1D72136D2527D4AA009CFEA3 /* Upload symbols to Crashlytics */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+				"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}",
+			);
+			name = "Upload symbols to Crashlytics";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/scripts/run\"\n";
+		};
 		432CF87B20D8B8490066B889 /* Build Carthage Dependencies */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -4378,6 +4425,10 @@
 				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				INFOPLIST_FILE = Loop/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS)",
+					"-ObjC",
+				);
 				"OTHER_SWIFT_FLAGS[arch=*]" = "-DDEBUG";
 				"OTHER_SWIFT_FLAGS[sdk=iphonesimulator*]" = "-D IOS_SIMULATOR -D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(MAIN_APP_BUNDLE_IDENTIFIER)";
@@ -4398,6 +4449,10 @@
 				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				INFOPLIST_FILE = Loop/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(MAIN_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "$(LOOP_PROVISIONING_PROFILE_SPECIFIER_RELEASE)";
