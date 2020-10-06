@@ -2580,7 +2580,6 @@
 				C16DA84322E8E5FF008624C2 /* Install Plugins */,
 				C1D19800232CFA2A0096D646 /* Capture Build Details */,
 				4F70C1EC1DE8DCA8006380B7 /* Embed App Extensions */,
-				1D72136D2527D4AA009CFEA3 /* Upload symbols to Crashlytics */,
 			);
 			buildRules = (
 			);
@@ -3093,26 +3092,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1D72136D2527D4AA009CFEA3 /* Upload symbols to Crashlytics */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
-				"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}",
-			);
-			name = "Upload symbols to Crashlytics";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [[ -x \"${PROJECT_DIR}/scripts/run\" ]]\nthen\n  \"${PROJECT_DIR}/scripts/run\"\nfi\n";
-		};
 		432CF87B20D8B8490066B889 /* Build Carthage Dependencies */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
