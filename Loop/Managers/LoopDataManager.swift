@@ -141,7 +141,7 @@ final class LoopDataManager {
     /// Loop-related settings
     ///
     /// These are not thread-safe.
-    var settings: LoopSettings {
+    @Published var settings: LoopSettings {
         didSet {
             guard settings != oldValue else {
                 return

@@ -434,6 +434,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 reloadGroup.leave()
             }
         }
+        
+        updatePreMealModeAvailability()
 
         if deviceManager.loopManager.settings.preMealTargetRange == nil {
             preMealMode = nil
@@ -737,12 +739,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
             guard oldValue != preMealMode else {
                 return
             }
-
-            if let preMealMode = preMealMode {
-                toolbarItems![2] = createPreMealButtonItem(selected: preMealMode)
-            } else {
-                toolbarItems![2].isEnabled = false
-            }
+            updatePreMealModeAvailability()
+        }
+    }
+    
+    private func updatePreMealModeAvailability() {
+        if let preMealMode = preMealMode, deviceManager.isClosedLoop {
+            toolbarItems![2] = createPreMealButtonItem(selected: preMealMode)
+        } else {
+            toolbarItems![2].isEnabled = false
         }
     }
 

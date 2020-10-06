@@ -13,6 +13,7 @@ import LoopKitUI
 import LoopCore
 import LoopTestingKit
 import UserNotifications
+import Combine
 
 final class DeviceDataManager {
 
@@ -44,23 +45,19 @@ final class DeviceDataManager {
     private var rootViewController: UIViewController
     
     private var deliveryUncertaintyAlertManager: DeliveryUncertaintyAlertManager?
+    
+    @Published var cgmHasValidSensorSession: Bool
 
-    public var isClosedLoopAllowed: Bool {
-        if let glucose = glucoseStore.latestGlucose, !glucose.wasUserEntered, glucose.startDate.timeIntervalSinceNow < settings.inputDataRecencyInterval {
-            // We have recent CGM data
-            return true
-        } else if let cgmManager = cgmManager, cgmManager.hasValidSensorSession {
-            return true
-        }
-        return false
-    }
+    @Published var cgmDataIsStale: Bool
 
-    public var isClosedLoop: Bool {
-        guard loopManager.settings.dosingEnabled else {
-            return false
-        }
-        return isClosedLoopAllowed
-    }
+    private var cgmStalenessTimer: Timer?
+
+    @Published public var isClosedLoopAllowed: Bool
+    
+    @Published public var isClosedLoop: Bool
+    
+    lazy private var cancellables = Set<AnyCancellable>()
+
 
     // MARK: - CGM
 
@@ -234,6 +231,11 @@ final class DeviceDataManager {
         self.dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
         self.settingsStore = SettingsStore(store: cacheStore, expireAfter: localCacheDuration)
         
+        self.cgmHasValidSensorSession = false
+        self.cgmDataIsStale = true
+        self.isClosedLoop = false
+        self.isClosedLoopAllowed = false
+        
         bluetoothStateManager.addBluetoothStateObserver(self)
 
         if let pumpManagerRawValue = UserDefaults.appGroup?.pumpManagerRawValue {
@@ -302,6 +304,54 @@ final class DeviceDataManager {
 
         setupPump()
         setupCGM()
+        
+        $cgmDataIsStale
+            .combineLatest($cgmHasValidSensorSession)
+            .map { $0 == false || $1 }
+            .assign(to: \.isClosedLoopAllowed, on: self)
+            .store(in: &cancellables)
+
+        $isClosedLoopAllowed
+            .combineLatest(loopManager.$settings)
+            .map { $0 && $1.dosingEnabled }
+            .assign(to: \.isClosedLoop, on: self)
+            .store(in: &cancellables)
+        
+        $cgmHasValidSensorSession
+            .sink { print("***** $cgmHasValidSensorSession: \($0).") }
+            .store(in: &cancellables)
+
+        $cgmDataIsStale
+            .sink { print("***** $cgmDataIsStale: \($0).") }
+            .store(in: &cancellables)
+
+        $isClosedLoopAllowed
+            .sink { print("***** $isClosedLoopAllowed: \($0).") }
+            .store(in: &cancellables)
+
+        $isClosedLoop
+            .sink { print("***** $isClosedLoop: \($0).") }
+            .store(in: &cancellables)
+
+        updateCGMStalenessTimer()
+    }
+
+    private func updateCGMStalenessTimer() {
+        guard let glucose = glucoseStore.latestGlucose, !glucose.wasUserEntered else {
+            cgmDataIsStale = true
+            return
+        }
+
+        let age = -glucose.startDate.timeIntervalSinceNow
+        
+        if age > loopManager.settings.inputDataRecencyInterval {
+            cgmDataIsStale = true
+        } else {
+            cgmStalenessTimer?.invalidate()
+            cgmStalenessTimer = Timer(timeInterval: loopManager.settings.inputDataRecencyInterval - age, repeats: false) { _ in
+                self.updateCGMStalenessTimer()
+            }
+        }
     }
 
     var isCGMManagerValidPumpManager: Bool {
@@ -495,8 +545,10 @@ private extension DeviceDataManager {
             alertManager?.addAlertResponder(managerIdentifier: cgmManager.managerIdentifier,
                                             alertResponder: cgmManager)
             alertManager?.addAlertSoundVendor(managerIdentifier: cgmManager.managerIdentifier,
-                                              soundVendor: cgmManager)
+                                              soundVendor: cgmManager)            
+            cgmHasValidSensorSession = cgmManager.status.hasValidSensorSession
         }
+        
     }
 
     func setupPump() {
@@ -680,7 +732,12 @@ extension DeviceDataManager: CGMManagerDelegate {
         // return string unique to this instance of the CGMManager
         return UUID().uuidString
     }
-
+    
+    func cgmManager(_ manager: CGMManager, didUpdate status: CGMManagerStatus) {
+        if self.cgmHasValidSensorSession != status.hasValidSensorSession {
+            self.cgmHasValidSensorSession = status.hasValidSensorSession
+        }
+    }
 }
 
 
