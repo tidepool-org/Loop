@@ -40,7 +40,7 @@ public struct LoopSettings: Equatable {
             if let newValue = preMealOverride, newValue.context != .preMeal || newValue.settings.insulinNeedsScaleFactor != nil {
                 preconditionFailure("The `preMealOverride` field should be used only for a pre-meal target range override")
             }
-
+            
             if preMealOverride != nil, scheduleOverride?.context == .legacyWorkout {
                 scheduleOverride = nil
             }

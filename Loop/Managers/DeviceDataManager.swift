@@ -317,20 +317,12 @@ final class DeviceDataManager {
             .assign(to: \.isClosedLoop, on: self)
             .store(in: &cancellables)
         
-        $cgmHasValidSensorSession
-            .sink { print("***** $cgmHasValidSensorSession: \($0).") }
-            .store(in: &cancellables)
-
-        $cgmDataIsStale
-            .sink { print("***** $cgmDataIsStale: \($0).") }
-            .store(in: &cancellables)
-
-        $isClosedLoopAllowed
-            .sink { print("***** $isClosedLoopAllowed: \($0).") }
-            .store(in: &cancellables)
-
+        // Turn off preMeal when going into closed loop off mode
+        // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
         $isClosedLoop
-            .sink { print("***** $isClosedLoop: \($0).") }
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { if !$0 { self.loopManager.settings.clearOverride(matching: .preMeal) } }
             .store(in: &cancellables)
 
         updateCGMStalenessTimer()

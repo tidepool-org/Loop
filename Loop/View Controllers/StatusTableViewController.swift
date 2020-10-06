@@ -744,11 +744,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
     
     private func updatePreMealModeAvailability() {
-        if let preMealMode = preMealMode, deviceManager.isClosedLoop {
-            toolbarItems![2] = createPreMealButtonItem(selected: preMealMode)
-        } else {
-            toolbarItems![2].isEnabled = false
-        }
+        toolbarItems![2] = createPreMealButtonItem(selected: preMealMode ?? false && deviceManager.isClosedLoop, isEnabled: deviceManager.isClosedLoop)
     }
 
     private var workoutMode: Bool? = nil {
@@ -1185,7 +1181,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         self.present(navigationWrapper, animated: true)
     }
 
-    private func createPreMealButtonItem(selected: Bool) -> UIBarButtonItem {
+    private func createPreMealButtonItem(selected: Bool, isEnabled: Bool) -> UIBarButtonItem {
         let item = UIBarButtonItem(image: UIImage.preMealImage(selected: selected), style: .plain, target: self, action: #selector(togglePreMealMode(_:)))
         item.accessibilityLabel = NSLocalizedString("Pre-Meal Targets", comment: "The label of the pre-meal mode toggle button")
 
@@ -1197,6 +1193,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         item.tintColor = UIColor.carbTintColor
+        item.isEnabled = isEnabled
 
         return item
     }
@@ -1821,9 +1818,7 @@ fileprivate extension UIViewController {
 // MARK: - SettingsViewModel delegation
 extension StatusTableViewController: SettingsViewModelDelegate {
     func dosingEnabledChanged(_ value: Bool) {
-        DispatchQueue.main.async {
-            self.deviceManager.loopManager.settings.dosingEnabled = value
-        }
+        self.deviceManager.loopManager.settings.dosingEnabled = value
     }
 
     func didSave(therapySetting: TherapySetting, therapySettings: TherapySettings) {
