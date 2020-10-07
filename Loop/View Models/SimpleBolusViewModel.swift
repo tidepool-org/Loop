@@ -12,6 +12,7 @@ import LoopKit
 import os.log
 import SwiftUI
 import LoopCore
+import Intents
 
 protocol SimpleBolusViewModelDelegate: class {
     
@@ -254,6 +255,14 @@ class SimpleBolusViewModel: ObservableObject {
         
         func saveCarbs(_ completion: @escaping () -> Void) {
             if let carbs = carbs {
+                
+                let interaction = INInteraction(intent: NewCarbEntryIntent(), response: nil)
+                interaction.donate { [weak self] (error) in
+                    if let error = error {
+                        self?.log.error("Failed to donate intent: %{public}@", String(describing: error))
+                    }
+                }
+
                 let carbEntry = NewCarbEntry(date: saveDate, quantity: carbs, startDate: saveDate, foodType: nil, absorptionTime: nil)
                 delegate.addCarbEntry(carbEntry) { error in
                     DispatchQueue.main.async {
@@ -295,6 +304,12 @@ class SimpleBolusViewModel: ObservableObject {
         }
 
         activeAlert = alert
+    }
+    
+    func restoreUserActivityState(_ activity: NSUserActivity) {
+        if let entry = activity.newCarbEntry {
+            carbs = entry.quantity
+        }
     }
 }
 

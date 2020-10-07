@@ -1102,7 +1102,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func restoreUserActivityState(_ activity: NSUserActivity) {
         switch activity.activityType {
         case NSUserActivity.newCarbEntryActivityType:
-            performSegue(withIdentifier: CarbEntryViewController.className, sender: activity)
+            presentCarbEntryScreen(activity)
         default:
             break
         }
@@ -1122,14 +1122,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             vc.deviceManager = deviceManager
             vc.hidesBottomBarWhenPushed = true
             vc.preferredGlucoseUnit = preferredUnit
-        case let vc as CarbEntryViewController:
-            vc.deviceManager = deviceManager
-            vc.defaultAbsorptionTimes = deviceManager.carbStore.defaultAbsorptionTimes
-            vc.preferredCarbUnit = deviceManager.carbStore.preferredUnit
-
-            if let activity = sender as? NSUserActivity {
-                vc.restoreUserActivityState(activity)
-            }
         case let vc as InsulinDeliveryTableViewController:
             vc.doseStore = deviceManager.doseStore
             vc.hidesBottomBarWhenPushed = true
@@ -1153,7 +1145,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     @IBAction func unwindFromSettings(_ segue: UIStoryboardSegue) {}
     
-    @IBAction func presentCarbEntryScreen() {
+    @IBAction func presentCarbEntryScreen(_ activity: NSUserActivity?) {
         let navigationWrapper: UINavigationController
         if deviceManager.isClosedLoop {
             let carbEntryViewController = UIStoryboard(name: "Main", bundle: Bundle(for: AppDelegate.self)).instantiateViewController(withIdentifier: "CarbEntryViewController") as! CarbEntryViewController
@@ -1161,9 +1153,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
             carbEntryViewController.deviceManager = deviceManager
             carbEntryViewController.defaultAbsorptionTimes = deviceManager.carbStore.defaultAbsorptionTimes
             carbEntryViewController.preferredCarbUnit = deviceManager.carbStore.preferredUnit
+            if let activity = activity {
+                carbEntryViewController.restoreUserActivityState(activity)
+            }
             navigationWrapper = UINavigationController(rootViewController: carbEntryViewController)
         } else {
             let viewModel = SimpleBolusViewModel(delegate: deviceManager)
+            if let activity = activity {
+                viewModel.restoreUserActivityState(activity)
+            }
             let bolusEntryView = SimpleBolusView(displayMealEntry: true, viewModel: viewModel)
             let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
             navigationWrapper = UINavigationController(rootViewController: hostingController)
