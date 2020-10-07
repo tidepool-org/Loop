@@ -230,7 +230,7 @@ final class WatchDataManager: NSObject {
         let glucose = deviceManager.glucoseStore.latestGlucose
         let reservoir =  deviceManager.doseStore.lastReservoirValue
         let basalDeliveryState = deviceManager.pumpManager?.status.basalDeliveryState
-
+        
         loopManager.getLoopState { (manager, state) in
             let updateGroup = DispatchGroup()
 
@@ -253,13 +253,16 @@ final class WatchDataManager: NSObject {
                 context.glucoseTrendRawValue = trend.rawValue
             }
             
+            var savedPreMealOverride: TemporaryScheduleOverride?
             if let potentialCarbEntry = potentialCarbEntry {
+                savedPreMealOverride = loopManager.settings.preMealOverride
+                loopManager.settings.preMealOverride = nil
+
                 context.potentialCarbEntry = potentialCarbEntry
                 if let recommendedBolusDoseConsideringPotentialCarbEntry = try? state.recommendBolus(consideringPotentialCarbEntry: potentialCarbEntry, replacingCarbEntry: nil) {
                     context.recommendedBolusDoseConsideringPotentialCarbEntry = recommendedBolusDoseConsideringPotentialCarbEntry.amount
                     dosingDecision.recommendedBolus = recommendedBolusDoseConsideringPotentialCarbEntry
                 }
-
             }
             
             if let glucose = glucose {
@@ -332,6 +335,10 @@ final class WatchDataManager: NSObject {
             self.contextDosingDecisions = self.contextDosingDecisions.filter { (date, _) in date.timeIntervalSinceNow > self.contextDosingDecisionExpirationDuration }
             self.contextDosingDecisions[context.creationDate] = dosingDecision
 
+            if let savedPreMealOverride = savedPreMealOverride {
+                loopManager.settings.preMealOverride = savedPreMealOverride
+            }
+            
             completion(context)
         }
     }
