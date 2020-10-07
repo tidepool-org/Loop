@@ -13,8 +13,6 @@ public struct LoopSettings: Equatable {
 
     public let dynamicCarbAbsorptionEnabled = true
 
-    public static let defaultCarbAbsorptionTimes: CarbStore.DefaultAbsorptionTimes = (fast: .minutes(30), medium: .hours(3), slow: .hours(5))
-
     public var glucoseTargetRangeSchedule: GlucoseRangeSchedule?
 
     public var preMealTargetRange: DoubleRange?
@@ -53,31 +51,6 @@ public struct LoopSettings: Equatable {
 
     public var suspendThreshold: GlucoseThreshold? = nil
 
-    public let retrospectiveCorrectionEnabled = true
-
-    /// The interval over which to aggregate changes in glucose for retrospective correction
-    public let retrospectiveCorrectionGroupingInterval = TimeInterval(minutes: 30)
-
-    /// The amount of time since a given date that input data should be considered valid
-    public let inputDataRecencyInterval = TimeInterval(minutes: 15)
-    
-    /// Loop completion aging category limits
-    public let completionFreshLimit = TimeInterval(minutes: 6)
-    public let completionAgingLimit = TimeInterval(minutes: 16)
-    public let completionStaleLimit = TimeInterval(hours: 12)
-
-    public let batteryReplacementDetectionThreshold = 0.5
-
-    public let defaultWatchCarbPickerValue = 15 // grams
-
-    public let defaultWatchBolusPickerValue = 1.0 // %
-
-    // MARK - Display settings
-
-    public let minimumChartWidthPerHour: CGFloat = 50
-
-    public let statusChartMinimumHistoryDisplay: TimeInterval = .hours(1)
-    
     public var glucoseUnit: HKUnit? {
         return glucoseTargetRangeSchedule?.unit
     }

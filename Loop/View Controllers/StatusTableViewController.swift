@@ -274,14 +274,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func updateChartDateRange() {
-        let settings = deviceManager.loopManager.settings
-
         // How far back should we show data? Use the screen size as a guide.
         let availableWidth = (refreshContext.newSize ?? self.tableView.bounds.size).width - self.charts.fixedHorizontalMargin
 
-        let totalHours = floor(Double(availableWidth / settings.minimumChartWidthPerHour))
+        let totalHours = floor(Double(availableWidth / LoopConstants.minimumChartWidthPerHour))
         let futureHours = ceil((deviceManager.loopManager.insulinModelSettings?.model.effectDuration ?? .hours(4)).hours)
-        let historyHours = max(settings.statusChartMinimumHistoryDisplay.hours, totalHours - futureHours)
+        let historyHours = max(LoopConstants.statusChartMinimumHistoryDisplay.hours, totalHours - futureHours)
 
         let date = Date(timeIntervalSinceNow: -TimeInterval(hours: historyHours))
         let chartStartDate = Calendar.current.nextDate(after: date, matching: DateComponents(minute: 0), matchingPolicy: .strict, direction: .backward) ?? date
@@ -525,7 +523,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     hudView.cgmStatusHUD.setGlucoseQuantity(glucose.quantity.doubleValue(for: unit),
                                                             at: glucose.startDate,
                                                             unit: unit,
-                                                            staleGlucoseAge: self.deviceManager.loopManager.settings.inputDataRecencyInterval,
+                                                            staleGlucoseAge: LoopConstants.inputDataRecencyInterval,
                                                             glucoseDisplay: self.deviceManager.glucoseDisplay(for: glucose),
                                                             wasUserEntered: glucose.wasUserEntered)
                 }

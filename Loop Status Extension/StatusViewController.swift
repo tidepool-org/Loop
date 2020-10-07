@@ -91,7 +91,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
         insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule
     )
     
-    let absorptionTimes = LoopSettings.defaultCarbAbsorptionTimes
+    let absorptionTimes = LoopConstants.defaultCarbAbsorptionTimes
     lazy var carbStore = CarbStore(healthStore: healthStore,
                                    observeHealthKitSamplesFromOtherApps: false,
                                    cacheStore: cacheStore,
@@ -296,12 +296,12 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 return
             }
 
-            if let lastGlucose = glucose.last, let recencyInterval = defaults.loopSettings?.inputDataRecencyInterval {
+            if let lastGlucose = glucose.last {
                 self.hudView.cgmStatusHUD.setGlucoseQuantity(
                     lastGlucose.quantity.doubleValue(for: unit),
                     at: lastGlucose.startDate,
                     unit: unit,
-                    staleGlucoseAge: recencyInterval,
+                    staleGlucoseAge: LoopConstants.inputDataRecencyInterval,
                     glucoseDisplay: context.glucoseDisplay,
                     wasUserEntered: lastGlucose.wasUserEntered
                 )

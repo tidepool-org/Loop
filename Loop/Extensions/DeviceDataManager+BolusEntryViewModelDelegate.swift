@@ -45,11 +45,11 @@ extension DeviceDataManager: BolusEntryViewModelDelegate {
     
     var isGlucoseDataStale: Bool {
         guard let latestGlucose = glucoseStore.latestGlucose else { return true }
-        return Date().timeIntervalSince(latestGlucose.startDate) <= loopManager.settings.inputDataRecencyInterval
+        return Date().timeIntervalSince(latestGlucose.startDate) <= LoopConstants.inputDataRecencyInterval
     }
     
     var isPumpDataStale: Bool {
-        return Date().timeIntervalSince(doseStore.lastAddedPumpData) <= loopManager.settings.inputDataRecencyInterval
+        return Date().timeIntervalSince(doseStore.lastAddedPumpData) <= LoopConstants.inputDataRecencyInterval
     }
     
     var isPumpConfigured: Bool {

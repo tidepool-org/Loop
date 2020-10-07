@@ -258,7 +258,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
         case .carbEntrySizeTooLarge:
             let message = String(
                 format: NSLocalizedString("The maximum allowed amount is %1$@ grams", comment: "Alert body displayed for quantity greater than max (1: maximum quantity in grams)"),
-                NumberFormatter.localizedString(from: NSNumber(value: viewModel.maxCarbQuantity.doubleValue(for: .gram())), number: .none)
+                NumberFormatter.localizedString(from: NSNumber(value: LoopConstants.maxCarbEntryQuantity.doubleValue(for: .gram())), number: .none)
             )
             return SwiftUI.Alert(
                 title: Text("Carb Entry Too Large", comment: "Alert title for a carb entry too large error"),
@@ -266,8 +266,8 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             )
         case .manualGlucoseEntryOutOfAcceptableRange:
             let formatter = QuantityFormatter(for: viewModel.glucoseUnit)
-            let acceptableLowerBound = formatter.string(from: SimpleBolusViewModel.validManualGlucoseEntryRange.lowerBound, for: viewModel.glucoseUnit) ?? String(describing: SimpleBolusViewModel.validManualGlucoseEntryRange.lowerBound)
-            let acceptableUpperBound = formatter.string(from: SimpleBolusViewModel.validManualGlucoseEntryRange.upperBound, for: viewModel.glucoseUnit) ?? String(describing: SimpleBolusViewModel.validManualGlucoseEntryRange.upperBound)
+            let acceptableLowerBound = formatter.string(from: LoopConstants.validManualGlucoseEntryRange.lowerBound, for: viewModel.glucoseUnit) ?? String(describing: LoopConstants.validManualGlucoseEntryRange.lowerBound)
+            let acceptableUpperBound = formatter.string(from: LoopConstants.validManualGlucoseEntryRange.upperBound, for: viewModel.glucoseUnit) ?? String(describing: LoopConstants.validManualGlucoseEntryRange.upperBound)
             return SwiftUI.Alert(
                 title: Text("Glucose Entry Out of Range", comment: "Alert title for a manual glucose entry out of range error"),
                 message: Text(String(format: NSLocalizedString("A manual glucose entry must be between %1$@ and %1$@", comment: "Alert message for a manual glucose entry out of range error. (1: acceptable lower bound) (2: acceptable upper bound)"), acceptableLowerBound, acceptableUpperBound))

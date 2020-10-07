@@ -123,7 +123,7 @@ final class BolusEntryViewModel: ObservableObject {
     let chartManager: ChartsManager = {
         let predictedGlucoseChart = PredictedGlucoseChart(predictedGlucoseBounds: FeatureFlags.predictedGlucoseChartClampEnabled ? .default : nil,
                                                           yAxisStepSizeMGDLOverride: FeatureFlags.predictedGlucoseChartClampEnabled ? 40 : nil)
-        predictedGlucoseChart.glucoseDisplayRange = BolusEntryViewModel.defaultGlucoseDisplayRange
+        predictedGlucoseChart.glucoseDisplayRange = LoopConstants.defaultGlucoseDisplayRange
         return ChartsManager(colors: .primary, settings: .default, charts: [predictedGlucoseChart], traitCollection: .current)
     }()
 
@@ -135,12 +135,6 @@ final class BolusEntryViewModel: ObservableObject {
     private let authenticateOverride: AuthenticationChallenge?
     private let uuidProvider: () -> String
     
-    // MARK: - Constants
-
-    static let defaultGlucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 60)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 200)
-
-    static let validManualGlucoseEntryRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 10)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 600)
-
     // MARK: - Initialization
 
     init(
@@ -285,7 +279,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
 
         if let manualGlucoseSample = manualGlucoseSample {
-            guard Self.validManualGlucoseEntryRange.contains(manualGlucoseSample.quantity) else {
+            guard LoopConstants.validManualGlucoseEntryRange.contains(manualGlucoseSample.quantity) else {
                 presentAlert(.manualGlucoseEntryOutOfAcceptableRange)
                 return
             }
@@ -705,15 +699,13 @@ final class BolusEntryViewModel: ObservableObject {
     private func updateChartDateInterval() {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        guard let settings = delegate?.settings else { return }
-
         // How far back should we show data? Use the screen size as a guide.
         let viewMarginInset: CGFloat = 14
         let availableWidth = screenWidth - chartManager.fixedHorizontalMargin - 2 * viewMarginInset
 
-        let totalHours = floor(Double(availableWidth / settings.minimumChartWidthPerHour))
+        let totalHours = floor(Double(availableWidth / LoopConstants.minimumChartWidthPerHour))
         let futureHours = ceil((delegate?.insulinModel?.effectDuration ?? .hours(4)).hours)
-        let historyHours = max(settings.statusChartMinimumHistoryDisplay.hours, totalHours - futureHours)
+        let historyHours = max(LoopConstants.statusChartMinimumHistoryDisplay.hours, totalHours - futureHours)
 
         let date = Date(timeInterval: -TimeInterval(hours: historyHours), since: now())
         let chartStartDate = Calendar.current.nextDate(

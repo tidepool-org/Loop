@@ -173,10 +173,6 @@ class SimpleBolusViewModel: ObservableObject {
         return bolusVolumeFormatter.numberFormatter.string(from: delegate.maximumBolus) ?? String(delegate.maximumBolus)
     }
 
-    static let validManualGlucoseEntryRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 10)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 600)
-    
-    var maxCarbQuantity = HKQuantity(unit: .gram(), doubleValue: 250)
-
     init(delegate: SimpleBolusViewModelDelegate) {
         self.delegate = delegate
         let glucoseQuantityFormatter = QuantityFormatter()
@@ -203,14 +199,14 @@ class SimpleBolusViewModel: ObservableObject {
         }
 
         if let glucose = glucose {
-            guard Self.validManualGlucoseEntryRange.contains(glucose) else {
+            guard LoopConstants.validManualGlucoseEntryRange.contains(glucose) else {
                 presentAlert(.manualGlucoseEntryOutOfAcceptableRange)
                 return
             }
         }
         
         if let carbs = carbs {
-            guard carbs <= maxCarbQuantity else {
+            guard carbs <= LoopConstants.maxCarbEntryQuantity else {
                 presentAlert(.carbEntrySizeTooLarge)
                 return
             }

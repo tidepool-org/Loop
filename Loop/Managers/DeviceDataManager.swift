@@ -190,7 +190,7 @@ final class DeviceDataManager {
         self.healthStore = HKHealthStore()
         self.cacheStore = PersistenceController.controllerInAppGroupDirectory()
         
-        let absorptionTimes = LoopSettings.defaultCarbAbsorptionTimes
+        let absorptionTimes = LoopConstants.defaultCarbAbsorptionTimes
         let sensitivitySchedule = UserDefaults.appGroup?.insulinSensitivitySchedule
         let overrideHistory = UserDefaults.appGroup?.overrideHistory ?? TemporaryScheduleOverrideHistory.init()
         
@@ -336,11 +336,11 @@ final class DeviceDataManager {
 
         let age = -glucose.startDate.timeIntervalSinceNow
         
-        if age > loopManager.settings.inputDataRecencyInterval {
+        if age > LoopConstants.inputDataRecencyInterval {
             cgmDataIsStale = true
         } else {
             cgmStalenessTimer?.invalidate()
-            cgmStalenessTimer = Timer(timeInterval: loopManager.settings.inputDataRecencyInterval - age, repeats: false) { _ in
+            cgmStalenessTimer = Timer(timeInterval: LoopConstants.inputDataRecencyInterval - age, repeats: false) { _ in
                 self.updateCGMStalenessTimer()
             }
         }
@@ -817,7 +817,7 @@ extension DeviceDataManager: PumpManagerDelegate {
                 NotificationManager.clearPumpBatteryLowNotification()
             }
 
-            if let oldBatteryValue = oldStatus.pumpBatteryChargeRemaining, newBatteryValue - oldBatteryValue >= loopManager.settings.batteryReplacementDetectionThreshold {
+            if let oldBatteryValue = oldStatus.pumpBatteryChargeRemaining, newBatteryValue - oldBatteryValue >= LoopConstants.batteryReplacementDetectionThreshold {
                 analyticsServicesManager.pumpBatteryWasReplaced()
             }
         }
