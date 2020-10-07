@@ -6,7 +6,6 @@
 //  Copyright © 2015 Nathan Racklyeft. All rights reserved.
 //
 
-import Firebase
 import HealthKit
 import Intents
 import LoopCore
@@ -93,8 +92,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-
-        FirebaseApp.configure()
 
         self.launchOptions = launchOptions
         
