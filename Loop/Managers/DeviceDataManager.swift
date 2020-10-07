@@ -726,8 +726,10 @@ extension DeviceDataManager: CGMManagerDelegate {
     }
     
     func cgmManager(_ manager: CGMManager, didUpdate status: CGMManagerStatus) {
-        if self.cgmHasValidSensorSession != status.hasValidSensorSession {
-            self.cgmHasValidSensorSession = status.hasValidSensorSession
+        DispatchQueue.main.async {
+            if self.cgmHasValidSensorSession != status.hasValidSensorSession {
+                self.cgmHasValidSensorSession = status.hasValidSensorSession
+            }
         }
     }
 }
@@ -1077,6 +1079,10 @@ extension DeviceDataManager: LoopDataManagerDelegate {
                 }
             }
         )
+    }
+    
+    var automaticDosingEnabled: Bool {
+        return isClosedLoop
     }
 }
 

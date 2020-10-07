@@ -247,10 +247,12 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 self.hudView.pumpStatusHUD.basalRateHUD.setNetBasalRate(netBasal.rate, percent: netBasal.percentage, at: netBasal.start)
             }
 
-            self.hudView.loopCompletionHUD.dosingEnabled = defaults.loopSettings?.dosingEnabled ?? false
-
             if let lastCompleted = context.lastLoopCompleted {
                 self.hudView.loopCompletionHUD.lastLoopCompleted = lastCompleted
+            }
+            
+            if let isClosedLoop = context.isClosedLoop {
+                self.hudView.loopCompletionHUD.loopIconClosed = isClosedLoop
             }
 
             let insulinFormatter: NumberFormatter = {

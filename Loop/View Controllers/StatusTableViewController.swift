@@ -17,6 +17,7 @@ import LoopTestingKit
 import LoopUI
 import SwiftCharts
 import os.log
+import Combine
 
 
 private extension RefreshContext {
@@ -28,6 +29,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private let log = OSLog(category: "StatusTableViewController")
 
     lazy var quantityFormatter: QuantityFormatter = QuantityFormatter()
+    
+    lazy private var cancellables = Set<AnyCancellable>()
 
     private var preferredUnit: HKUnit? {
         return deviceManager.glucoseStore.preferredUnit
@@ -96,6 +99,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 }
             }
         ]
+        
+        deviceManager.$isClosedLoop
+            .receive(on: DispatchQueue.main)
+            .sink { self.closedLoopStatusChanged($0) }
+            .store(in: &cancellables)
 
         if let gestureRecognizer = charts.gestureRecognizer {
             tableView.addGestureRecognizer(gestureRecognizer)
@@ -352,7 +360,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             self.log.debug("Update net basal to %{public}@", String(describing: netBasal))
 
             DispatchQueue.main.async {
-                self.hudView?.loopCompletionHUD.dosingEnabled = manager.settings.dosingEnabled
                 self.lastLoopError = lastLoopError
 
                 if let netBasal = netBasal {
@@ -435,7 +442,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
         }
         
-        updatePreMealModeAvailability()
+        updatePreMealModeAvailability(allowed: deviceManager.isClosedLoop)
 
         if deviceManager.loopManager.settings.preMealTargetRange == nil {
             preMealMode = nil
@@ -739,12 +746,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
             guard oldValue != preMealMode else {
                 return
             }
-            updatePreMealModeAvailability()
+            updatePreMealModeAvailability(allowed: deviceManager.isClosedLoop)
         }
     }
     
-    private func updatePreMealModeAvailability() {
-        toolbarItems![2] = createPreMealButtonItem(selected: preMealMode ?? false && deviceManager.isClosedLoop, isEnabled: deviceManager.isClosedLoop)
+    private func updatePreMealModeAvailability(allowed: Bool) {
+        toolbarItems![2] = createPreMealButtonItem(selected: preMealMode ?? false && allowed, isEnabled: allowed)
     }
 
     private var workoutMode: Bool? = nil {
@@ -1308,7 +1315,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           syncPumpSchedule: syncBasalRateSchedule,
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
-                                          isClosedLoopAllowed: deviceManager.isClosedLoopAllowed,
+                                          isClosedLoopAllowed: deviceManager.$isClosedLoopAllowed,
                                           delegate: self
         )
         let hostingController = DismissibleHostingController(
@@ -1336,6 +1343,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
         var settings = cgmManager.settingsViewController(for: unit, glucoseTintColor: .glucoseTintColor, guidanceColors: .default)
         settings.completionDelegate = self
         show(settings, sender: self)
+    }
+    
+    private func closedLoopStatusChanged(_ isClosedLoop: Bool) {
+        self.updatePreMealModeAvailability(allowed: isClosedLoop)
+        self.hudView?.loopCompletionHUD.loopIconClosed = isClosedLoop
+
     }
 
     // MARK: - HUDs

@@ -695,7 +695,7 @@ extension LoopDataManager {
             do {
                 try self.update()
 
-                if self.settings.dosingEnabled {
+                if self.delegate?.automaticDosingEnabled == true {
                     self.setRecommendedTempBasal { (error) -> Void in
                         if let error = error {
                             self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSince(self.now()))
@@ -1782,7 +1782,9 @@ protocol LoopDataManagerDelegate: class {
 
     /// The pump manager status, if one exists.
     var pumpManagerStatus: PumpManagerStatus? { get }
-
+    
+    /// The pump manager status, if one exists.
+    var automaticDosingEnabled: Bool { get }
 }
 
 private extension TemporaryScheduleOverride {
