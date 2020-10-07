@@ -538,7 +538,7 @@ private extension DeviceDataManager {
                                             alertResponder: cgmManager)
             alertManager?.addAlertSoundVendor(managerIdentifier: cgmManager.managerIdentifier,
                                               soundVendor: cgmManager)            
-            cgmHasValidSensorSession = cgmManager.status.hasValidSensorSession
+            cgmHasValidSensorSession = cgmManager.cgmStatus.hasValidSensorSession
         }
         
     }
