@@ -43,8 +43,8 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                 .listStyle(GroupedListStyle())
                 .environment(\.horizontalSizeClass, self.horizontalOverride)
                 self.actionArea
-                    .frame(height: self.viewModel.isManualGlucoseEntryEnabled || self.isKeyboardVisible ? 0 : nil)
-                    .opacity(self.viewModel.isManualGlucoseEntryEnabled || self.isKeyboardVisible ? 0 : 1)
+                    .frame(height: self.isKeyboardVisible ? 0 : nil)
+                    .opacity(self.isKeyboardVisible ? 0 : 1)
             }
             .onKeyboardStateChange { state in
                 self.isKeyboardVisible = state.height > 0
