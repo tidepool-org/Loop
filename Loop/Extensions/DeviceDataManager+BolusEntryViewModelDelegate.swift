@@ -20,8 +20,12 @@ extension DeviceDataManager: BolusEntryViewModelDelegate {
         loopManager.addGlucose(samples, completion: completion)
     }
     
-    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<Void>) -> Void) {
+    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<StoredCarbEntry>) -> Void) {
         loopManager.addCarbEntry(carbEntry, replacing: replacingEntry, completion: completion)
+    }
+
+    func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
+        loopManager.storeBolusDosingDecision(bolusDosingDecision, withDate: date)
     }
 
     /// func enactBolus(units: Double, at startDate: Date, completion: @escaping (_ error: Error?) -> Void)
@@ -43,15 +47,14 @@ extension DeviceDataManager: BolusEntryViewModelDelegate {
         pumpManager?.ensureCurrentPumpData(completion: completion)
     }
     
-    var isGlucoseDataStale: Bool {
-        guard let latestGlucose = glucoseStore.latestGlucose else { return true }
-        return Date().timeIntervalSince(latestGlucose.startDate) <= LoopConstants.inputDataRecencyInterval
+    var mostRecentGlucoseDataDate: Date? {
+        return glucoseStore.latestGlucose?.startDate
     }
     
-    var isPumpDataStale: Bool {
-        return Date().timeIntervalSince(doseStore.lastAddedPumpData) <= LoopConstants.inputDataRecencyInterval
+    var mostRecentPumpDataDate: Date? {
+        return doseStore.lastAddedPumpData
     }
-    
+
     var isPumpConfigured: Bool {
         return pumpManager != nil
     }
@@ -66,6 +69,10 @@ extension DeviceDataManager: BolusEntryViewModelDelegate {
     
     var settings: LoopSettings {
         return loopManager.settings
+    }
+
+    func setPreMealOverride(_ preMealOverride: TemporaryScheduleOverride?) {
+        loopManager.settings.preMealOverride = preMealOverride
     }
     
 }
