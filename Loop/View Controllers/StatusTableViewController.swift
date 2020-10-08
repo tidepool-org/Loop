@@ -1142,8 +1142,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
     @IBAction func unwindFromEditing(_ segue: UIStoryboardSegue) {}
 
     @IBAction func unwindFromSettings(_ segue: UIStoryboardSegue) {}
-    
-    @IBAction func presentCarbEntryScreen(_ activity: NSUserActivity?) {
+
+    @IBAction func userTappedAddCarbs() {
+        presentCarbEntryScreen(nil)
+    }
+
+    func presentCarbEntryScreen(_ activity: NSUserActivity?) {
         let navigationWrapper: UINavigationController
         if deviceManager.isClosedLoop {
             let carbEntryViewController = UIStoryboard(name: "Main", bundle: Bundle(for: AppDelegate.self)).instantiateViewController(withIdentifier: "CarbEntryViewController") as! CarbEntryViewController
