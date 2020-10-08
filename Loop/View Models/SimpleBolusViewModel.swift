@@ -51,6 +51,7 @@ class SimpleBolusViewModel: ObservableObject {
         case carbEntrySizeTooLarge
         case manualGlucoseEntryOutOfAcceptableRange
         case manualGlucoseEntryPersistenceFailure
+        case infoPopup
     }
     
     @Published var activeAlert: Alert?

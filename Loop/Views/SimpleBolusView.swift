@@ -66,7 +66,6 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             .keyboardAware()
             .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
             .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
-            .alert(isPresented: self.$isClosedLoopOffInformationalModalVisible, content: self.closedLoopOffInformationalModal)
         }
     }
     
@@ -89,7 +88,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
     private var infoButton: some View {
         Button(
             action: {
-                self.isClosedLoopOffInformationalModalVisible = true
+                self.viewModel.activeAlert = .infoPopup
             },
             label: {
                 Image(systemName: "info.circle")
@@ -277,7 +276,10 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 title: Text("Unable to Save Manual Glucose Entry", comment: "Alert title for a manual glucose entry persistence error"),
                 message: Text("An error occurred while trying to save your manual glucose entry.", comment: "Alert message for a manual glucose entry persistence error")
             )
+        case .infoPopup:
+            return closedLoopOffInformationalModal()
         }
+        
     }
     
     private func warning(for notice: SimpleBolusViewModel.Notice) -> some View {
