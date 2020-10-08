@@ -219,7 +219,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         deviceManager.pumpManagerHUDProvider?.visible = active && onscreen
     }
 
-    public var basalDeliveryState: PumpManagerStatus.BasalDeliveryState = .active(Date()) {
+    public var basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil {
         didSet {
             if oldValue != basalDeliveryState {
                 log.debug("New basalDeliveryState: %@", String(describing: basalDeliveryState))
@@ -251,11 +251,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func registerPumpManager() {
-        if let pumpManager = deviceManager.pumpManager {
-            self.basalDeliveryState = pumpManager.status.basalDeliveryState
-            pumpManager.removeStatusObserver(self)
-            pumpManager.addStatusObserver(self, queue: .main)
+        guard let pumpManager = deviceManager.pumpManager else {
+            self.basalDeliveryState = nil
+            return
         }
+
+        self.basalDeliveryState = pumpManager.status.basalDeliveryState
+        pumpManager.removeStatusObserver(self)
+        pumpManager.addStatusObserver(self, queue: .main)
     }
 
     private lazy var statusCharts = StatusChartsManager(colors: .primary, settings: .default, traitCollection: self.traitCollection)
@@ -344,7 +347,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             // Net basal rate HUD
             let netBasal: NetBasal?
             if let basalSchedule = manager.basalRateScheduleApplyingOverrideHistory {
-                netBasal = basalDeliveryState.getNetBasal(basalSchedule: basalSchedule, settings: manager.settings)
+                netBasal = basalDeliveryState?.getNetBasal(basalSchedule: basalSchedule, settings: manager.settings)
             } else {
                 netBasal = nil
             }
