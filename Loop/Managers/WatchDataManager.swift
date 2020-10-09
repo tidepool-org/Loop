@@ -259,7 +259,6 @@ final class WatchDataManager: NSObject {
                     context.recommendedBolusDoseConsideringPotentialCarbEntry = recommendedBolusDoseConsideringPotentialCarbEntry.amount
                     dosingDecision.recommendedBolus = recommendedBolusDoseConsideringPotentialCarbEntry
                 }
-
             }
             
             if let glucose = glucose {

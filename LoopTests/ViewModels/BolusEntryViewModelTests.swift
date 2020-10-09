@@ -910,12 +910,6 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     var insulinModel: InsulinModel? = MockInsulinModel()
     
     var settings: LoopSettings = LoopSettings()
-    
-    var preMealOverride : TemporaryScheduleOverride?
-    func setPreMealOverride(_ preMealOverride: TemporaryScheduleOverride?) {
-        self.preMealOverride = preMealOverride
-    }
-
 }
 
 fileprivate struct MockInsulinModel: InsulinModel {

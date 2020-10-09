@@ -148,6 +148,14 @@ extension LoopSettings {
             return glucoseTargetRangeSchedule
         }
     }
+    
+    public var glucoseTargetRangeScheduleApplyingNonPreMealOverrideIfActive: GlucoseRangeSchedule? {
+        if let effectiveOverride = scheduleOverride {
+            return glucoseTargetRangeSchedule?.applyingOverride(effectiveOverride)
+        } else {
+            return glucoseTargetRangeSchedule
+        }
+    }
 
     public func scheduleOverrideEnabled(at date: Date = Date()) -> Bool {
         return scheduleOverride?.isActive(at: date) == true
