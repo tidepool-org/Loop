@@ -721,11 +721,7 @@ final class BolusEntryViewModel: ObservableObject {
 
         targetGlucoseSchedule = delegate?.settings.glucoseTargetRangeSchedule
         // Pre-meal override should be ignored if we have carbs (LOOP-1964)
-        if potentialCarbEntry != nil {
-            preMealOverride = nil
-        } else {
-            preMealOverride = delegate?.settings.preMealOverride
-        }
+        preMealOverride = potentialCarbEntry == nil ? delegate?.settings.preMealOverride : nil
         scheduleOverride = delegate?.settings.scheduleOverride
 
         if preMealOverride?.hasFinished() == true {
@@ -743,9 +739,7 @@ final class BolusEntryViewModel: ObservableObject {
         dosingDecision.scheduleOverride = preMealOverride ?? scheduleOverride
         dosingDecision.glucoseTargetRangeSchedule = targetGlucoseSchedule
         if scheduleOverride != nil || preMealOverride != nil {
-            dosingDecision.glucoseTargetRangeScheduleApplyingOverrideIfActive = potentialCarbEntry != nil ?
-                delegate?.settings.glucoseTargetRangeScheduleApplyingNonPreMealOverrideIfActive :
-                delegate?.settings.glucoseTargetRangeScheduleApplyingOverrideIfActive
+            dosingDecision.glucoseTargetRangeScheduleApplyingOverrideIfActive = delegate?.settings.glucoseTargetRangeScheduleMaybeApplyingOverride(consideringPotentialCarbEntry: potentialCarbEntry)
         } else {
             dosingDecision.glucoseTargetRangeScheduleApplyingOverrideIfActive = nil
         }

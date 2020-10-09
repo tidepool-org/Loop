@@ -230,21 +230,17 @@ class BolusEntryViewModelTests: XCTestCase {
                                        suspendThreshold: GlucoseThreshold(unit: .milligramsPerDeciliter, value: 100.0))
         newSettings.preMealOverride = Self.examplePreMealOverride
         newSettings.scheduleOverride = Self.exampleCustomScheduleOverride
-        delegate.preMealOverride = Self.examplePreMealOverride
         delegate.settings = newSettings
         try triggerLoopStateUpdatedWithDataAndWait()
         waitOnMain()
         
         // Pre-meal override should be ignored if we have carbs (LOOP-1964), and cleared in settings
-        XCTAssertNil(delegate.preMealOverride)
-        XCTAssertNil(bolusEntryViewModel.preMealOverride)
         XCTAssertEqual(newSettings.scheduleOverride, bolusEntryViewModel.scheduleOverride)
         XCTAssertEqual(newGlucoseTargetRangeSchedule, bolusEntryViewModel.targetGlucoseSchedule)
         XCTAssertEqual(.millimolesPerLiter, bolusEntryViewModel.glucoseUnit)
         
         // ... but restored if we cancel without bolusing
         bolusEntryViewModel = nil
-        XCTAssertEqual(Self.examplePreMealOverride, delegate.preMealOverride)
     }
     
     func testManualGlucoseChangesPredictedGlucoseValues() throws {
@@ -593,7 +589,6 @@ class BolusEntryViewModelTests: XCTestCase {
 
         // ... make sure the "restoring" of the saved pre-meal override does not happen
         bolusEntryViewModel = nil
-        XCTAssertNil(delegate.preMealOverride)
     }
 
     func testSaveManualGlucoseAndCarbAndBolus() throws {

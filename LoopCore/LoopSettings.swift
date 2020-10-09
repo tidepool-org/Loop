@@ -127,7 +127,10 @@ public struct LoopSettings: Equatable {
 }
 
 extension LoopSettings {
-    public var glucoseTargetRangeScheduleApplyingOverrideIfActive: GlucoseRangeSchedule? {
+    public func glucoseTargetRangeScheduleMaybeApplyingOverride(consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry? = nil) -> GlucoseRangeSchedule?  {
+        
+        let preMealOverride = potentialCarbEntry == nil ? self.preMealOverride : nil
+        
         let currentEffectiveOverride: TemporaryScheduleOverride?
         switch (preMealOverride, scheduleOverride) {
         case (let preMealOverride?, nil):
@@ -143,14 +146,6 @@ extension LoopSettings {
         }
 
         if let effectiveOverride = currentEffectiveOverride {
-            return glucoseTargetRangeSchedule?.applyingOverride(effectiveOverride)
-        } else {
-            return glucoseTargetRangeSchedule
-        }
-    }
-    
-    public var glucoseTargetRangeScheduleApplyingNonPreMealOverrideIfActive: GlucoseRangeSchedule? {
-        if let effectiveOverride = scheduleOverride {
             return glucoseTargetRangeSchedule?.applyingOverride(effectiveOverride)
         } else {
             return glucoseTargetRangeSchedule
