@@ -380,8 +380,8 @@ final class DeviceDataManager {
         return Manager.init(rawState: rawState) as? PumpManagerUI
     }
 
-    private func processCGMResult(_ manager: CGMManager, result: CGMResult) {
-        switch result {
+    private func processCGMReadingResult(_ manager: CGMManager, readingResult: CGMReadingResult) {
+        switch readingResult {
         case .newData(let values):
             log.default("CGMManager:%{public}@ did update with %d values", String(describing: type(of: manager)), values.count)
 
@@ -704,10 +704,10 @@ extension DeviceDataManager: CGMManagerDelegate {
         }
     }
 
-    func cgmManager(_ manager: CGMManager, didUpdateWith result: CGMResult) {
+    func cgmManager(_ manager: CGMManager, hasNew readingResult: CGMReadingResult) {
         dispatchPrecondition(condition: .onQueue(queue))
         lastBLEDrivenUpdate = Date()
-        processCGMResult(manager, result: result);
+        processCGMReadingResult(manager, readingResult: readingResult);
     }
 
     func startDateToFilterNewData(for manager: CGMManager) -> Date? {
@@ -785,7 +785,7 @@ extension DeviceDataManager: PumpManagerDelegate {
 
             if let manager = self.cgmManager {
                 self.queue.async {
-                    self.processCGMResult(manager, result: result)
+                    self.processCGMReadingResult(manager, readingResult: result)
                 }
             }
         }
