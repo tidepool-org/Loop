@@ -320,7 +320,7 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
             completion(.success(InsulinValue(startDate: date, value: 2.0)))
         }
         
-        func computeSimpleBolusRecommendation(carbs: HKQuantity?, glucose: HKQuantity?) -> HKQuantity? {
+        func computeSimpleBolusRecommendation(mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> HKQuantity? {
             return HKQuantity(unit: .internationalUnit(), doubleValue: 3)
         }
         

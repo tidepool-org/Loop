@@ -37,8 +37,8 @@ extension DeviceDataManager: SimpleBolusViewModelDelegate {
         enactBolus(units: units, at: startDate) { (_) in }
     }
     
-    func computeSimpleBolusRecommendation(carbs: HKQuantity?, glucose: HKQuantity?) -> HKQuantity? {
-        return loopManager.generateSimpleBolusRecommendation(carbs: carbs, glucose: glucose)
+    func computeSimpleBolusRecommendation(mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> HKQuantity? {
+        return loopManager.generateSimpleBolusRecommendation(mealCarbs: mealCarbs, manualGlucose: manualGlucose)
     }
     
     var maximumBolus: Double {

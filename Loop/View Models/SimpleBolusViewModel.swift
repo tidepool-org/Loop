@@ -29,7 +29,7 @@ protocol SimpleBolusViewModelDelegate: class {
     func insulinOnBoard(at date: Date, completion: @escaping (_ result: DoseStoreResult<InsulinValue>) -> Void)
 
     ///
-    func computeSimpleBolusRecommendation(carbs: HKQuantity?, glucose: HKQuantity?) -> HKQuantity?
+    func computeSimpleBolusRecommendation(mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> HKQuantity?
 
     ///
     var preferredGlucoseUnit: HKUnit { get }
@@ -185,7 +185,7 @@ class SimpleBolusViewModel: ObservableObject {
     
     func updateRecommendation() {
         if carbs != nil || glucose != nil {
-            recommendation = delegate.computeSimpleBolusRecommendation(carbs: carbs, glucose: glucose)?.doubleValue(for: .internationalUnit())
+            recommendation = delegate.computeSimpleBolusRecommendation(mealCarbs: carbs, manualGlucose: glucose)?.doubleValue(for: .internationalUnit())
         } else {
             recommendation = nil
         }

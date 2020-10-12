@@ -57,9 +57,12 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             }(),
             traitCollection: traitCollection
         )
-
-        let glucoseMGDLDisplayBound: (lower: Double, upper: Double) = FeatureFlags.predictedGlucoseChartClampEnabled ? (80, 240) : (100, 175)
-        charts.predictedGlucose.glucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: glucoseMGDLDisplayBound.lower)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: glucoseMGDLDisplayBound.upper)
+        
+        if FeatureFlags.predictedGlucoseChartClampEnabled {
+            charts.predictedGlucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBoundClamped
+        } else {
+            charts.predictedGlucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBound
+        }
 
         return charts
     }()

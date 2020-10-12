@@ -39,8 +39,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let glucoseMGDLDisplayBound: (lower: Double, upper: Double) = FeatureFlags.predictedGlucoseChartClampEnabled ? (80, 240) : (100, 175)
-        statusCharts.glucose.glucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: glucoseMGDLDisplayBound.lower)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: glucoseMGDLDisplayBound.upper)
+        if FeatureFlags.predictedGlucoseChartClampEnabled {
+            statusCharts.glucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBoundClamped
+        } else {
+            statusCharts.glucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBound
+        }
 
         registerPumpManager()
 

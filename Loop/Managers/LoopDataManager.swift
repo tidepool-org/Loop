@@ -1635,7 +1635,7 @@ extension LoopDataManager {
         }
     }
     
-    func generateSimpleBolusRecommendation(carbs: HKQuantity?, glucose: HKQuantity?) -> HKQuantity? {
+    func generateSimpleBolusRecommendation(mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> HKQuantity? {
         var activeInsulin: Double? = nil
         let semaphore = DispatchSemaphore(value: 0)
         doseStore.insulinOnBoard(at: Date()) { (result) in
@@ -1647,19 +1647,19 @@ extension LoopDataManager {
         semaphore.wait()
         
         guard let iob = activeInsulin,
-            let carbRatios = carbStore.carbRatioScheduleApplyingOverrideHistory,
-            let correctionRanges = settings.glucoseTargetRangeScheduleApplyingOverrideIfActive,
+            let carbRatioSchedule = carbStore.carbRatioScheduleApplyingOverrideHistory,
+            let correctionRangeSchedule = settings.glucoseTargetRangeScheduleApplyingOverrideIfActive,
             let sensitivitySchedule = insulinSensitivityScheduleApplyingOverrideHistory
         else {
             return nil
         }
         
         return SimpleBolusCalculator.recommendedInsulin(
-            mealCarbs: carbs,
-            manualGlucose: glucose,
+            mealCarbs: mealCarbs,
+            manualGlucose: manualGlucose,
             activeInsulin: HKQuantity.init(unit: .internationalUnit(), doubleValue: iob),
-            carbRatioSchedule: carbRatios,
-            correctionRangeSchedule: correctionRanges,
+            carbRatioSchedule: carbRatioSchedule,
+            correctionRangeSchedule: correctionRangeSchedule,
             sensitivitySchedule: sensitivitySchedule)
     }
 }

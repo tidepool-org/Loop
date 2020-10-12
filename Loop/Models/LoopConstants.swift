@@ -25,8 +25,14 @@ struct LoopConstants {
 
     static let statusChartMinimumHistoryDisplay: TimeInterval = .hours(1)
 
-    static let defaultGlucoseDisplayRange = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 60)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 200)
-    
+    static let glucoseChartDefaultDisplayBound =
+        HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 100)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 175)
+
+    static let glucoseChartDefaultDisplayRangeWide =
+        HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 60)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 200)
+
+    static let glucoseChartDefaultDisplayBoundClamped =
+        HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 80)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 240)
     
     // Compile time configuration
    
