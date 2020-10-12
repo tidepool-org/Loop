@@ -719,21 +719,25 @@ final class BolusEntryViewModel: ObservableObject {
 
     private func updateSettings() {
         dispatchPrecondition(condition: .onQueue(.main))
+        
+        guard let delegate = delegate else {
+            return
+        }
 
-        glucoseUnit = delegate?.settings.glucoseUnit ?? delegate?.preferredGlucoseUnit ?? .milligramsPerDeciliter
+        glucoseUnit = delegate.preferredGlucoseUnit
 
-        targetGlucoseSchedule = delegate?.settings.glucoseTargetRangeSchedule
+        targetGlucoseSchedule = delegate.settings.glucoseTargetRangeSchedule
         // Pre-meal override should be ignored if we have carbs (LOOP-1964)
         if potentialCarbEntry != nil {
-            if let preMealOverrideSettings = delegate?.settings.preMealOverride {
+            if let preMealOverrideSettings = delegate.settings.preMealOverride {
                 savedPreMealOverride = preMealOverrideSettings
             }
-            delegate?.setPreMealOverride(nil)
+            delegate.setPreMealOverride(nil)
             preMealOverride = nil
         } else {
-            preMealOverride = delegate?.settings.preMealOverride
+            preMealOverride = delegate.settings.preMealOverride
         }
-        scheduleOverride = delegate?.settings.scheduleOverride
+        scheduleOverride = delegate.settings.scheduleOverride
 
         if preMealOverride?.hasFinished() == true {
             preMealOverride = nil
@@ -743,14 +747,14 @@ final class BolusEntryViewModel: ObservableObject {
             scheduleOverride = nil
         }
 
-        maximumBolus = delegate?.settings.maximumBolus.map { maxBolusAmount in
+        maximumBolus = delegate.settings.maximumBolus.map { maxBolusAmount in
             HKQuantity(unit: .internationalUnit(), doubleValue: maxBolusAmount)
         }
 
         dosingDecision.scheduleOverride = preMealOverride ?? scheduleOverride
         dosingDecision.glucoseTargetRangeSchedule = targetGlucoseSchedule
         if scheduleOverride != nil || preMealOverride != nil {
-            dosingDecision.glucoseTargetRangeScheduleApplyingOverrideIfActive = delegate?.settings.glucoseTargetRangeScheduleApplyingOverrideIfActive
+            dosingDecision.glucoseTargetRangeScheduleApplyingOverrideIfActive = delegate.settings.glucoseTargetRangeScheduleApplyingOverrideIfActive
         } else {
             dosingDecision.glucoseTargetRangeScheduleApplyingOverrideIfActive = nil
         }
