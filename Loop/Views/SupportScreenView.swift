@@ -33,6 +33,11 @@ struct SupportScreenView: View, HorizontalSizeClassOverride {
                 NavigationLink(destination: CriticalEventLogExportView(viewModel: self.criticalEventLogExportViewModel)) {
                     Text(NSLocalizedString("Export Critical Event Logs", comment: "The title of the export critical event logs in support"))
                 }
+                
+                Button(action: { fatalError("Test Crash") }) {
+                    Text("Crash the App")
+                }
+                .accentColor(.red)
             }
         }
         .listStyle(GroupedListStyle())
