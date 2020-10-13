@@ -626,8 +626,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             statusRowMode = .pumpSuspended(resuming: true)
         } else if case .inProgress(let dose) = bolusState, dose.endDate.timeIntervalSinceNow > 0 {
             statusRowMode = .bolusing(dose: dose)
-        } else if let loopError = lastLoopError as? LoopError,
-            case LoopError.missingDataError(.glucose) = loopError {
+        } else if deviceManager.isGlucoseValueStale {
             statusRowMode = .recommendManualGlucoseEntry
         } else if let (recommendation: tempBasal, date: date) = recommendedTempBasal {
             statusRowMode = .recommendedTempBasal(tempBasal: tempBasal, at: date, enacting: false)
