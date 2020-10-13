@@ -200,38 +200,34 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
     fileprivate func startCheckingTrustedTime() {
         ntpClient = TrueTimeClient.sharedInstance
         ntpClient.start()
-        checker()
-    }
-    
-    let trustedTimerCheckTimerQueue = DispatchQueue(label: "CheckTrustedTime", qos: .default)
-    var lastTimeCheck: Date?
-    fileprivate func checker() {
-        trustedTimerCheckTimerQueue.asyncAfter(deadline: .now() + .seconds(1)) {
-            if let delta = self.lastTimeCheck?.timeIntervalSinceNow, abs(abs(delta) - .seconds(1)) > 0.1 {
-                self.checkTrustedTime()
-            }
-            self.lastTimeCheck = Date()
-            self.checker()
+        
+        NotificationCenter.default.addObserver(forName: .LoopRunning, object: nil, queue: nil) {
+            [weak self] _ in self?.checkTrustedTime()
         }
     }
     
+    var lastTrustedTimeDelta: TimeInterval?
+    let acceptableTimeDelta = TimeInterval.seconds(120)
     fileprivate func checkTrustedTime() {
         ntpClient.fetchIfNeeded { [weak self] result in
+            guard let self = self else { return }
             switch result {
             case let .success(referenceTime):
                 let deviceNow = Date()
                 let ntpNow = referenceTime.now()
-                if abs(ntpNow.timeIntervalSince(deviceNow)) > .seconds(120) {
+                let timeDelta = abs(ntpNow.timeIntervalSince(deviceNow))
+                if (self.lastTrustedTimeDelta == nil || abs(timeDelta - self.lastTrustedTimeDelta!) > 0.1), timeDelta > self.acceptableTimeDelta {
                     let alertIdentifier = Alert.Identifier(managerIdentifier: "Loop", alertIdentifier: "significantTimeChange")
                     let alertTitle = NSLocalizedString("Time Change Detected", comment: "Time change alert title")
                     // TODO: remove Tidepool-isms
                     let alertBody = NSLocalizedString("Your phone’s time has been changed. Tidepool Loop needs accurate time records to make predictions about your glucose and adjust your insulin accordingly.\n\nCheck in your iPhone Settings (General / Date & Time) and verify that Set Automatically is enabled. Failure to resolve could lead to serious under-delivery or over-delivery of insulin. If you did not change the time, contact Tidepool Support.", comment: "Time change alert body")
                     let content = Alert.Content(title: alertTitle, body: alertBody, acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Alert acknowledgment OK button"))
-                    self?.log.info("applicationSignificantTimeChange: ntpNow = %@, deviceNow = %@", ntpNow.debugDescription, deviceNow.debugDescription)
-                    self?.alertManager.issueAlert(Alert(identifier: alertIdentifier, foregroundContent: content, backgroundContent: content, trigger: .immediate))
+                    self.log.info("applicationSignificantTimeChange: ntpNow = %@, deviceNow = %@", ntpNow.debugDescription, deviceNow.debugDescription)
+                    self.alertManager.issueAlert(Alert(identifier: alertIdentifier, foregroundContent: content, backgroundContent: content, trigger: .immediate))
+                    self.lastTrustedTimeDelta = timeDelta
                 }
             case let .failure(error):
-                self?.log.error("Error getting NTP time: %@", error.localizedDescription)
+                self.log.error("Error getting NTP time: %@", error.localizedDescription)
             }
         }
     }
