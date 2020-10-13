@@ -194,7 +194,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
     }
 
-    private var bolusState = PumpManagerStatus.BolusState.none {
+    private var bolusState: PumpManagerStatus.BolusState? = PumpManagerStatus.BolusState.none {
         didSet {
             if oldValue != bolusState {
                 // Bolus starting
@@ -252,7 +252,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     private func registerPumpManager() {
         self.basalDeliveryState = deviceManager.pumpManager?.status.basalDeliveryState
-        self.bolusState = deviceManager.pumpManager?.status.bolusState ?? .none
+        self.bolusState = deviceManager.pumpManager?.status.bolusState
         deviceManager.pumpManager?.removeStatusObserver(self)
         deviceManager.pumpManager?.addStatusObserver(self, queue: .main)
     }
@@ -1672,7 +1672,7 @@ extension StatusTableViewController: DoseProgressObserver {
             // Bolus ended
             self.bolusProgressReporter = nil
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-                self.bolusState = .none
+                self.bolusState = PumpManagerStatus.BolusState.none
                 self.reloadData(animated: true)
             })
         }
