@@ -240,7 +240,7 @@ class DosingDecisionStorePersistenceTests: PersistenceControllerTestCase {
     ],
     "pumpManagerStatus" : {
       "basalDeliveryState" : "initiatingTempBasal",
-      "bolusState" : "none",
+      "bolusState" : "inactive",
       "deliveryIsUncertain" : false,
       "device" : {
         "firmwareVersion" : "Device Firmware Version",
@@ -648,7 +648,7 @@ class StoredDosingDecisionCodableTests: XCTestCase {
   ],
   "pumpManagerStatus" : {
     "basalDeliveryState" : "initiatingTempBasal",
-    "bolusState" : "none",
+    "bolusState" : "inactive",
     "deliveryIsUncertain" : false,
     "device" : {
       "firmwareVersion" : "Device Firmware Version",
@@ -908,7 +908,7 @@ fileprivate extension StoredDosingDecision {
                                                                    udiDeviceIdentifier: "Device UDI Device Identifier"),
                                                   pumpBatteryChargeRemaining: 3.5,
                                                   basalDeliveryState: .initiatingTempBasal,
-                                                  bolusState: PumpManagerStatus.BolusState.none,
+                                                  bolusState: .inactive,
                                                   pumpStatusHighlight: PumpManagerStatus.PumpStatusHighlight(localizedMessage: "Test message",
                                                                                                              imageName: "test.image",
                                                                                                              state: .normalPump),
