@@ -251,14 +251,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func registerPumpManager() {
-        guard let pumpManager = deviceManager.pumpManager else {
-            self.basalDeliveryState = nil
-            return
-        }
-
-        self.basalDeliveryState = pumpManager.status.basalDeliveryState
-        pumpManager.removeStatusObserver(self)
-        pumpManager.addStatusObserver(self, queue: .main)
+        self.basalDeliveryState = deviceManager.pumpManager?.status.basalDeliveryState
+        self.bolusState = deviceManager.pumpManager?.status.bolusState ?? .none
+        deviceManager.pumpManager?.removeStatusObserver(self)
+        deviceManager.pumpManager?.addStatusObserver(self, queue: .main)
     }
 
     private lazy var statusCharts = StatusChartsManager(colors: .primary, settings: .default, traitCollection: self.traitCollection)
