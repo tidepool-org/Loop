@@ -908,7 +908,7 @@ fileprivate extension StoredDosingDecision {
                                                                    udiDeviceIdentifier: "Device UDI Device Identifier"),
                                                   pumpBatteryChargeRemaining: 3.5,
                                                   basalDeliveryState: .initiatingTempBasal,
-                                                  bolusState: .none,
+                                                  bolusState: PumpManagerStatus.BolusState.none,
                                                   pumpStatusHighlight: PumpManagerStatus.PumpStatusHighlight(localizedMessage: "Test message",
                                                                                                              imageName: "test.image",
                                                                                                              state: .normalPump),
