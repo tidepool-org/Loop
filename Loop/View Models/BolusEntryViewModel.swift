@@ -88,7 +88,7 @@ final class BolusEntryViewModel: ObservableObject {
         case stalePumpData
     }
 
-    @Environment(\.authenticate) var authenticate
+    var authenticate: AuthenticationChallenge = LocalAuthentication.deviceOwnerCheck
 
     // MARK: - State
 
@@ -141,7 +141,6 @@ final class BolusEntryViewModel: ObservableObject {
     private let now: () -> Date
     private let screenWidth: CGFloat
     private let debounceIntervalMilliseconds: Int
-    private let authenticateOverride: AuthenticationChallenge?
     private let uuidProvider: () -> String
     private let carbEntryDateFormatter: DateFormatter
     
@@ -152,7 +151,6 @@ final class BolusEntryViewModel: ObservableObject {
         now: @escaping () -> Date = { Date() },
         screenWidth: CGFloat = UIScreen.main.bounds.width,
         debounceIntervalMilliseconds: Int = 400,
-        authenticateOverride: AuthenticationChallenge? = nil,
         uuidProvider: @escaping () -> String = { UUID().uuidString },
         timeZone: TimeZone? = nil,
         originalCarbEntry: StoredCarbEntry? = nil,
@@ -163,7 +161,6 @@ final class BolusEntryViewModel: ObservableObject {
         self.now = now
         self.screenWidth = screenWidth
         self.debounceIntervalMilliseconds = debounceIntervalMilliseconds
-        self.authenticateOverride = authenticateOverride
         self.uuidProvider = uuidProvider
         self.carbEntryDateFormatter = DateFormatter()
         self.carbEntryDateFormatter.dateStyle = .none
@@ -313,7 +310,7 @@ final class BolusEntryViewModel: ObservableObject {
         // Authenticate the bolus before saving anything
         if enteredBolus.doubleValue(for: .internationalUnit()) > 0 {
             let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString)
-            authenticationChallenge(message) { [weak self] in
+            authenticate(message) { [weak self] in
                 switch $0 {
                 case .success:
                     self?.continueSaving(onSuccess: completion)
@@ -327,14 +324,6 @@ final class BolusEntryViewModel: ObservableObject {
             continueSaving(onSuccess: completion)
         } else {
             completion()
-        }
-    }
-    
-    private func authenticationChallenge(_ message: String, _ completion: @escaping (Swift.Result<Void, Error>) -> Void) {
-        if let authenticateOverride = authenticateOverride {
-            authenticateOverride(message, completion)
-        } else {
-            authenticate(message, completion)
         }
     }
     

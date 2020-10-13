@@ -136,7 +136,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 DismissibleKeyboardTextField(
                     text: $viewModel.enteredGlucoseAmount,
                     placeholder: "---",
-                    // The heavy title is ending up clipped due to a bug that is fixed in iOS 14.
+                    // The heavy title is ending up clipped due to a bug that is fixed in iOS 14.  Uncomment the following when we can build for iOS 14.
                     font: .preferredFont(forTextStyle: .title1), // viewModel.enteredGlucoseAmount == "" ? .preferredFont(forTextStyle: .title1) : .heavy(.title1),
                     textAlignment: .right,
                     keyboardType: .decimalPad
@@ -219,7 +219,12 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
                 if self.viewModel.actionButtonAction == .enterBolus {
                     self.shouldBolusEntryBecomeFirstResponder = true
                 } else {
-                    self.viewModel.saveAndDeliver(onSuccess: self.dismiss)
+                    self.viewModel.saveAndDeliver { (success) in
+                        if success {
+                            self.dismiss()
+                        }
+                    }
+    
                 }
             },
             label: {
@@ -344,6 +349,5 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
             SimpleBolusView(displayMealEntry: true, viewModel: viewModel)
         }
         .previewDevice("iPod touch (7th generation)")
-        //.colorScheme(.dark)
     }
 }

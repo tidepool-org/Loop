@@ -70,12 +70,12 @@ class BolusEntryViewModelTests: XCTestCase {
                                                   now: { self.now },
                                                   screenWidth: 512,
                                                   debounceIntervalMilliseconds: 0,
-                                                  authenticateOverride: authenticateOverride,
                                                   uuidProvider: { self.mockUUID },
                                                   timeZone: TimeZone(abbreviation: "GMT")!,
                                                   originalCarbEntry: originalCarbEntry,
                                                   potentialCarbEntry: potentialCarbEntry,
                                                   selectedCarbAbsorptionTimeEmoji: selectedCarbAbsorptionTimeEmoji)
+        bolusEntryViewModel.authenticate = authenticateOverride
         bolusEntryViewModel.maximumBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 10)
     }
 
@@ -209,7 +209,7 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual(newSettings.preMealOverride, bolusEntryViewModel.preMealOverride)
         XCTAssertEqual(newSettings.scheduleOverride, bolusEntryViewModel.scheduleOverride)
         XCTAssertEqual(newGlucoseTargetRangeSchedule, bolusEntryViewModel.targetGlucoseSchedule)
-        XCTAssertEqual(.millimolesPerLiter, bolusEntryViewModel.glucoseUnit)
+        XCTAssertEqual(.milligramsPerDeciliter, bolusEntryViewModel.glucoseUnit)
     }
 
     func testUpdateSettingsWithCarbs() throws {
@@ -240,7 +240,7 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertNil(bolusEntryViewModel.preMealOverride)
         XCTAssertEqual(newSettings.scheduleOverride, bolusEntryViewModel.scheduleOverride)
         XCTAssertEqual(newGlucoseTargetRangeSchedule, bolusEntryViewModel.targetGlucoseSchedule)
-        XCTAssertEqual(.millimolesPerLiter, bolusEntryViewModel.glucoseUnit)
+        XCTAssertEqual(.milligramsPerDeciliter, bolusEntryViewModel.glucoseUnit)
         
         // ... but restored if we cancel without bolusing
         bolusEntryViewModel = nil

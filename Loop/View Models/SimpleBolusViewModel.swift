@@ -9,10 +9,12 @@
 import Foundation
 import HealthKit
 import LoopKit
+import LoopKitUI
 import os.log
 import SwiftUI
 import LoopCore
 import Intents
+import LocalAuthentication
 
 protocol SimpleBolusViewModelDelegate: class {
     
@@ -43,7 +45,7 @@ protocol SimpleBolusViewModelDelegate: class {
 
 class SimpleBolusViewModel: ObservableObject {
     
-    @Environment(\.authenticate) var authenticate
+    var authenticate: AuthenticationChallenge = LocalAuthentication.deviceOwnerCheck
 
     enum Alert: Int {
         case maxBolusExceeded
@@ -191,10 +193,11 @@ class SimpleBolusViewModel: ObservableObject {
         }
     }
     
-    func saveAndDeliver(onSuccess didSave: @escaping () -> Void) {
+    func saveAndDeliver(completion: @escaping (Bool) -> Void) {
         if let bolus = bolus {
             guard bolus.doubleValue(for: .internationalUnit()) <= delegate.maximumBolus else {
                 presentAlert(.maxBolusExceeded)
+                completion(false)
                 return
             }
         }
@@ -202,6 +205,7 @@ class SimpleBolusViewModel: ObservableObject {
         if let glucose = glucose {
             guard LoopConstants.validManualGlucoseEntryRange.contains(glucose) else {
                 presentAlert(.manualGlucoseEntryOutOfAcceptableRange)
+                completion(false)
                 return
             }
         }
@@ -209,6 +213,7 @@ class SimpleBolusViewModel: ObservableObject {
         if let carbs = carbs {
             guard carbs <= LoopConstants.maxCarbEntryQuantity else {
                 presentAlert(.carbEntrySizeTooLarge)
+                completion(false)
                 return
             }
         }
@@ -216,23 +221,23 @@ class SimpleBolusViewModel: ObservableObject {
         let saveDate = Date()
 
         // Authenticate the bolus before saving anything
-        func authenticateIfNeeded(_ completion: @escaping () -> Void) {
+        func authenticateIfNeeded(_ completion: @escaping (Bool) -> Void) {
             if let bolus = bolus, bolus.doubleValue(for: .internationalUnit()) > 0 {
                 let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmount)
                 authenticate(message) {
                     switch $0 {
                     case .success:
-                        completion()
+                        completion(true)
                     case .failure:
-                        break
+                        completion(false)
                     }
                 }
             } else {
-                completion()
+                completion(true)
             }
         }
         
-        func saveManualGlucose(_ completion: @escaping () -> Void) {
+        func saveManualGlucose(_ completion: @escaping (Bool) -> Void) {
             if let glucose = glucose {
                 let manualGlucoseSample = NewGlucoseSample(date: saveDate, quantity: glucose, isDisplayOnly: false, wasUserEntered: true, syncIdentifier: UUID().uuidString)
                 delegate.addGlucose([manualGlucoseSample]) { error in
@@ -240,17 +245,18 @@ class SimpleBolusViewModel: ObservableObject {
                         if let error = error {
                             self.presentAlert(.manualGlucoseEntryPersistenceFailure)
                             self.log.error("Failed to add manual glucose entry: %{public}@", String(describing: error))
+                            completion(false)
                         } else {
-                            completion()
+                            completion(true)
                         }
                     }
                 }
             } else {
-                completion()
+                completion(true)
             }
         }
         
-        func saveCarbs(_ completion: @escaping () -> Void) {
+        func saveCarbs(_ completion: @escaping (Bool) -> Void) {
             if let carbs = carbs {
                 
                 let interaction = INInteraction(intent: NewCarbEntryIntent(), response: nil)
@@ -266,13 +272,14 @@ class SimpleBolusViewModel: ObservableObject {
                         if let error = error {
                             self.presentAlert(.carbEntryPersistenceFailure)
                             self.log.error("Failed to add carb entry: %{public}@", String(describing: error))
+                            completion(false)
                         } else {
-                            completion()
+                            completion(true)
                         }
                     }
                 }
             } else {
-                completion()
+                completion(true)
             }
         }
         
@@ -280,14 +287,24 @@ class SimpleBolusViewModel: ObservableObject {
             if let bolusVolume = bolus?.doubleValue(for: .internationalUnit()), bolusVolume > 0 {
                 delegate.enactBolus(units: bolusVolume, at: saveDate)
             }
-            didSave()
         }
         
-        authenticateIfNeeded {
-            saveManualGlucose {
-                saveCarbs {
-                    enactBolus()
+        authenticateIfNeeded { (success) in
+            if success {
+                saveManualGlucose { (success) in
+                    if success {
+                        saveCarbs { (success) in
+                            if success {
+                                enactBolus()
+                            }
+                            completion(success)
+                        }
+                    } else {
+                        completion(false)
+                    }
                 }
+            } else {
+                completion(false)
             }
         }
     }
