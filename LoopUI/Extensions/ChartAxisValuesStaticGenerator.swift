@@ -78,7 +78,14 @@ extension ChartAxisValuesStaticGenerator {
             /// Generate axis values from the first value, segment size and number of segments
             let offset = firstValue
             return (0...Int(segmentCount)).map {segment in
-                let scalar = offset + (Double(segment) * segmentSize)
+                var scalar = offset + (Double(segment) * segmentSize)
+                // a value that could be displayed as 0 should truly be 0 to have the zero-line drawn correctly.
+                if scalar != 0,
+                    (scalar < 1 && scalar > -1),
+                    scalar.rounded() == 0
+                {
+                    scalar = 0
+                }
                 return axisValueGenerator(scalar)
             }
         } else {
