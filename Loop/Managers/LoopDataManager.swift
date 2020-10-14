@@ -630,7 +630,7 @@ extension LoopDataManager {
                                                                   carbsOnBoard: state.carbsOnBoard,
                                                                   scheduleOverride: self.settings.scheduleOverride,
                                                                   glucoseTargetRangeSchedule: self.settings.glucoseTargetRangeSchedule,
-                                                                  glucoseTargetRangeScheduleApplyingOverrideIfActive: self.settings.glucoseTargetRangeScheduleMaybeApplyingOverride(),
+                                                                  glucoseTargetRangeScheduleApplyingOverrideIfActive: self.settings.effectiveGlucoseTargetRangeSchedule(),
                                                                   predictedGlucose: state.predictedGlucose,
                                                                   predictedGlucoseIncludingPendingInsulin: state.predictedGlucoseIncludingPendingInsulin,
                                                                   lastReservoirValue: StoredDosingDecision.LastReservoirValue(self.doseStore.lastReservoirValue),
@@ -1208,7 +1208,7 @@ extension LoopDataManager {
     private func recommendBolus<Sample: GlucoseValue>(forPrediction predictedGlucose: [Sample],
                                                       consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?) throws -> BolusRecommendation? {
         guard
-            let glucoseTargetRange = settings.glucoseTargetRangeScheduleMaybeApplyingOverride(consideringPotentialCarbEntry: potentialCarbEntry),
+            let glucoseTargetRange = settings.effectiveGlucoseTargetRangeSchedule(consideringPotentialCarbEntry: potentialCarbEntry),
             let insulinSensitivity = insulinSensitivityScheduleApplyingOverrideHistory,
             let maxBolus = settings.maximumBolus,
             let model = insulinModelSettings?.model
@@ -1340,7 +1340,7 @@ extension LoopDataManager {
 
         guard
             let maxBasal = settings.maximumBasalRatePerHour,
-            let glucoseTargetRange = settings.glucoseTargetRangeScheduleMaybeApplyingOverride(),
+            let glucoseTargetRange = settings.effectiveGlucoseTargetRangeSchedule(),
             let insulinSensitivity = insulinSensitivityScheduleApplyingOverrideHistory,
             let basalRates = basalRateScheduleApplyingOverrideHistory,
             let maxBolus = settings.maximumBolus,
