@@ -197,18 +197,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
         checkTrustedTime()
     }
     
-    fileprivate func startCheckingTrustedTime() {
+    private func startCheckingTrustedTime() {
         ntpClient = TrueTimeClient.sharedInstance
         ntpClient.start()
-        
-        NotificationCenter.default.addObserver(forName: .LoopRunning, object: nil, queue: nil) {
-            [weak self] _ in self?.checkTrustedTime()
-        }
     }
     
-    var lastTrustedTimeDelta: TimeInterval?
     let acceptableTimeDelta = TimeInterval.seconds(120)
-    fileprivate func checkTrustedTime() {
+    private func checkTrustedTime() {
         ntpClient.fetchIfNeeded { [weak self] result in
             guard let self = self else { return }
             switch result {
@@ -216,7 +211,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
                 let deviceNow = Date()
                 let ntpNow = referenceTime.now()
                 let timeDelta = abs(ntpNow.timeIntervalSince(deviceNow))
-                if (self.lastTrustedTimeDelta == nil || abs(timeDelta - self.lastTrustedTimeDelta!) > 0.1), timeDelta > self.acceptableTimeDelta {
+                if timeDelta > self.acceptableTimeDelta {
                     let alertIdentifier = Alert.Identifier(managerIdentifier: "Loop", alertIdentifier: "significantTimeChange")
                     let alertTitle = NSLocalizedString("Time Change Detected", comment: "Time change alert title")
                     // TODO: remove Tidepool-isms
@@ -224,7 +219,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
                     let content = Alert.Content(title: alertTitle, body: alertBody, acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Alert acknowledgment OK button"))
                     self.log.info("applicationSignificantTimeChange: ntpNow = %@, deviceNow = %@", ntpNow.debugDescription, deviceNow.debugDescription)
                     self.alertManager.issueAlert(Alert(identifier: alertIdentifier, foregroundContent: content, backgroundContent: content, trigger: .immediate))
-                    self.lastTrustedTimeDelta = timeDelta
                 }
             case let .failure(error):
                 self.log.error("Error getting NTP time: %@", error.localizedDescription)
