@@ -939,7 +939,7 @@ extension BolusDosingDecision: Equatable {
             lhs.carbsOnBoard == rhs.carbsOnBoard &&
             lhs.scheduleOverride == rhs.scheduleOverride &&
             lhs.glucoseTargetRangeSchedule == rhs.glucoseTargetRangeSchedule &&
-            lhs.glucoseTargetRangeScheduleApplyingOverrideIfActive == rhs.glucoseTargetRangeScheduleApplyingOverrideIfActive &&
+            lhs.effectiveGlucoseTargetRangeSchedule == rhs.effectiveGlucoseTargetRangeSchedule &&
             lhs.predictedGlucoseIncludingPendingInsulin == rhs.predictedGlucoseIncludingPendingInsulin &&
             lhs.manualGlucose?.startDate == rhs.manualGlucose?.startDate &&
             lhs.manualGlucose?.endDate == rhs.manualGlucose?.endDate &&
