@@ -6,6 +6,7 @@
 //  Copyright © 2015 Nathan Racklyeft. All rights reserved.
 //
 
+import BackgroundTasks
 import HealthKit
 import LoopKit
 import LoopKitUI
@@ -35,7 +36,7 @@ final class DeviceDataManager {
     private var lastBLEDrivenUpdate = Date.distantPast
 
     private var deviceLog: PersistentDeviceLog
-    
+
     var bluetoothState: BluetoothStateManager.BluetoothState = .other
 
     // MARK: - CGM
@@ -116,6 +117,8 @@ final class DeviceDataManager {
 
     var remoteDataServicesManager: RemoteDataServicesManager { return servicesManager.remoteDataServicesManager }
 
+    var criticalEventLogExportManager: CriticalEventLogExportManager!
+
     private(set) var pumpManagerHUDProvider: HUDProvider?
 
     var maximumBasalRatePerHour: Double? {
@@ -147,7 +150,7 @@ final class DeviceDataManager {
     private(set) var loopManager: LoopDataManager!
 
     init(pluginManager: PluginManager, alertManager: AlertManager, bluetoothStateManager: BluetoothStateManager, rootViewController: UIViewController) {
-        let localCacheDuration = Bundle.main.localCacheDuration ?? .days(1)
+        let localCacheDuration = Bundle.main.localCacheDuration
 
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -260,6 +263,11 @@ final class DeviceDataManager {
             dataManager: loopManager
         )
 
+        let criticalEventLogs: [CriticalEventLog] = [settingsStore, glucoseStore, carbStore, dosingDecisionStore, doseStore, deviceLog, alertManager.alertStore]
+        criticalEventLogExportManager = CriticalEventLogExportManager(logs: criticalEventLogs,
+                                                                      directory: FileManager.default.exportsDirectoryURL,
+                                                                      historicalDuration: Bundle.main.localCacheDuration)
+
         if FeatureFlags.scenariosEnabled {
             testingScenariosManager = LocalTestingScenariosManager(deviceManager: self)
         }
@@ -317,18 +325,18 @@ final class DeviceDataManager {
 
             loopManager.addGlucose(values) { result in
                 self.log.default("Asserting current pump data")
-                self.pumpManager?.assertCurrentPumpData()
+                self.pumpManager?.ensureCurrentPumpData(completion: nil)
             }
         case .noData:
             log.default("CGMManager:%{public}@ did update with no data", String(describing: type(of: manager)))
 
-            pumpManager?.assertCurrentPumpData()
+            pumpManager?.ensureCurrentPumpData(completion: nil)
         case .error(let error):
             log.default("CGMManager:%{public}@ did update with error: %{public}@", String(describing: type(of: manager)), String(describing: error))
 
             self.setLastError(error: error)
             log.default("Asserting current pump data")
-            pumpManager?.assertCurrentPumpData()
+            pumpManager?.ensureCurrentPumpData(completion: nil)
         }
 
         updatePumpManagerBLEHeartbeatPreference()
@@ -536,8 +544,45 @@ extension DeviceDataManager {
         return pumpManager?.status
     }
 
-    var sensorState: SensorDisplayable? {
-        return cgmManager?.sensorState
+    func glucoseDisplay(for glucose: GlucoseSampleValue?) -> GlucoseDisplayable? {
+        guard let glucose = glucose else {
+            return cgmManager?.glucoseDisplay
+        }
+        
+        guard FeatureFlags.cgmManagerCategorizeManualGlucoseRangeEnabled else {
+            // Using Dexcom default glucose thresholds to categorize a glucose range
+            let urgentLowGlucoseThreshold = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 55)
+            let lowGlucoseThreshold = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 80)
+            let highGlucoseThreshold = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 200)
+            
+            let glucoseRangeCategory: GlucoseRangeCategory
+            switch glucose.quantity {
+            case ...urgentLowGlucoseThreshold:
+                glucoseRangeCategory = .urgentLow
+            case urgentLowGlucoseThreshold..<lowGlucoseThreshold:
+                glucoseRangeCategory = .low
+            case lowGlucoseThreshold..<highGlucoseThreshold:
+                glucoseRangeCategory = .normal
+            default:
+                glucoseRangeCategory = .high
+            }
+            
+            if glucose.wasUserEntered {
+                return ManualGlucoseDisplay(glucoseRangeCategory: glucoseRangeCategory)
+            } else {
+                var glucoseDisplay = GlucoseDisplay(cgmManager?.glucoseDisplay)
+                glucoseDisplay?.glucoseRangeCategory = glucoseRangeCategory
+                return glucoseDisplay
+            }
+        }
+        
+        if glucose.wasUserEntered {
+            // the CGM manager needs to determine the glucose range category for a manual glucose based on its managed glucose thresholds
+            let glucoseRangeCategory = (cgmManager as? CGMManagerUI)?.glucoseRangeCategory(for: glucose)
+            return ManualGlucoseDisplay(glucoseRangeCategory: glucoseRangeCategory)
+        } else {
+            return cgmManager?.glucoseDisplay
+        }
     }
 
     func updatePumpManagerBLEHeartbeatPreference() {
@@ -992,6 +1037,78 @@ extension DeviceDataManager {
     }
 }
 
+// MARK: - Critical Event Log Export
+
+extension DeviceDataManager {
+    private static var criticalEventLogHistoricalExportBackgroundTaskIdentifer: String { "com.loopkit.background-task.critical-event-log.historical-export" }
+
+    public static func registerCriticalEventLogHistoricalExportBackgroundTask(_ handler: @escaping (BGProcessingTask) -> Void) -> Bool {
+        return BGTaskScheduler.shared.register(forTaskWithIdentifier: criticalEventLogHistoricalExportBackgroundTaskIdentifer, using: nil) { handler($0 as! BGProcessingTask) }
+    }
+
+    public func handleCriticalEventLogHistoricalExportBackgroundTask(_ task: BGProcessingTask) {
+        dispatchPrecondition(condition: .notOnQueue(.main))
+
+        scheduleCriticalEventLogHistoricalExportBackgroundTask(isRetry: true)
+
+        let exporter = criticalEventLogExportManager.createHistoricalExporter()
+
+        task.expirationHandler = {
+            self.log.default("Invoked critical event log historical export background task expiration handler - cancelling exporter")
+            exporter.cancel()
+        }
+
+        DispatchQueue.global(qos: .background).async {
+            exporter.export() { error in
+                if let error = error {
+                    self.log.error("Critical event log historical export errored: %{public}@", String(describing: error))
+                }
+
+                self.scheduleCriticalEventLogHistoricalExportBackgroundTask(isRetry: error != nil && !exporter.isCancelled)
+                task.setTaskCompleted(success: error == nil)
+
+                self.log.default("Completed critical event log historical export background task")
+            }
+        }
+    }
+
+    public func scheduleCriticalEventLogHistoricalExportBackgroundTask(isRetry: Bool = false) {
+        do {
+            let earliestBeginDate = isRetry ? criticalEventLogExportManager.retryExportHistoricalDate() : criticalEventLogExportManager.nextExportHistoricalDate()
+            let request = BGProcessingTaskRequest(identifier: Self.criticalEventLogHistoricalExportBackgroundTaskIdentifer)
+            request.earliestBeginDate = earliestBeginDate
+            request.requiresExternalPower = true
+
+            try BGTaskScheduler.shared.submit(request)
+
+            log.default("Scheduled critical event log historical export background task: %{public}@", ISO8601DateFormatter().string(from: earliestBeginDate))
+        } catch let error {
+            #if IOS_SIMULATOR
+            log.debug("Failed to schedule critical event log export background task due to running on simulator")
+            #else
+            log.error("Failed to schedule critical event log export background task: %{public}@", String(describing: error))
+            #endif
+        }
+    }
+
+    public func removeExportsDirectory() -> Error? {
+        let fileManager = FileManager.default
+        let exportsDirectoryURL = fileManager.exportsDirectoryURL
+
+        guard fileManager.fileExists(atPath: exportsDirectoryURL.path) else {
+            return nil
+        }
+
+        do {
+            try fileManager.removeItem(at: exportsDirectoryURL)
+        } catch let error {
+            return error
+        }
+
+        return nil
+    }
+}
+
 // MARK: - Simulated Core Data
 
 extension DeviceDataManager {
@@ -1036,7 +1153,7 @@ extension DeviceDataManager {
     }
 }
 
-//MARK: - Bluetooth State Manager Obversation
+//MARK: - Bluetooth State Manager Observation
 
 extension DeviceDataManager: BluetoothStateManagerObserver {
     func bluetoothStateManager(_ bluetoothStateManager: BluetoothStateManager,
@@ -1046,3 +1163,9 @@ extension DeviceDataManager: BluetoothStateManagerObserver {
     }
 }
 
+fileprivate extension FileManager {
+    var exportsDirectoryURL: URL {
+        let applicationSupportDirectory = try! url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        return applicationSupportDirectory.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("Exports")
+    }
+}

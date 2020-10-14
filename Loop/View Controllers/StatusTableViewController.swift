@@ -516,9 +516,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                                             at: glucose.startDate,
                                                             unit: unit,
                                                             staleGlucoseAge: self.deviceManager.loopManager.settings.inputDataRecencyInterval,
-                                                            sensor: self.deviceManager.sensorState)
+                                                            glucoseDisplay: self.deviceManager.glucoseDisplay(for: glucose),
+                                                            wasUserEntered: glucose.wasUserEntered)
                 }
-
                 hudView.cgmStatusHUD.presentStatusHighlight(self.deviceManager.cgmStatusHighlight)
                 hudView.cgmStatusHUD.lifecycleProgress = self.deviceManager.cgmLifecycleProgress
 
@@ -599,6 +599,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case bolusing(dose: DoseEntry)
         case cancelingBolus
         case pumpSuspended(resuming: Bool)
+        case recommendManualGlucoseEntry
 
         var hasRow: Bool {
             switch self {
@@ -625,6 +626,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             statusRowMode = .pumpSuspended(resuming: true)
         } else if case .inProgress(let dose) = bolusState, dose.endDate.timeIntervalSinceNow > 0 {
             statusRowMode = .bolusing(dose: dose)
+        } else if deviceManager.isGlucoseValueStale {
+            statusRowMode = .recommendManualGlucoseEntry
         } else if let (recommendation: tempBasal, date: date) = recommendedTempBasal {
             statusRowMode = .recommendedTempBasal(tempBasal: tempBasal, at: date, enacting: false)
         } else if let scheduleOverride = deviceManager.loopManager.settings.scheduleOverride,
@@ -921,6 +924,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     }
                     cell.selectionStyle = .default
                     return cell
+                case .recommendManualGlucoseEntry:
+                    let cell = getTitleSubtitleCell()
+                    cell.titleLabel.text = NSLocalizedString("No Recent Glucose", comment: "The title of the cell indicating that there is no recent glucose")
+                    cell.subtitleLabel.text = NSLocalizedString("Tap to Add", comment: "The subtitle of the cell displaying an action to add a manually measurement glucose value")
+                    cell.selectionStyle = .default
+                    let imageView = UIImageView(image: UIImage(named: "drop.circle"))
+                    imageView.tintColor = .glucoseTintColor
+                    cell.accessoryView = imageView
+                    return cell
                 }
             }
         }
@@ -1067,7 +1079,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                             }
                         }
                     }
-
+                case .recommendManualGlucoseEntry:
+                    presentBolusEntryView(enableManualGlucoseEntry: true)
                 default:
                     break
                 }
@@ -1145,7 +1158,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
     @IBAction func unwindFromSettings(_ segue: UIStoryboardSegue) {}
 
     @IBAction func presentBolusScreen() {
-        let viewModel = BolusEntryViewModel(dataManager: deviceManager)
+        presentBolusEntryView()
+    }
+    
+    func presentBolusEntryView(enableManualGlucoseEntry: Bool = false) {
+        let viewModel = BolusEntryViewModel(delegate: deviceManager, isManualGlucoseEntryEnabled: enableManualGlucoseEntry)
         let bolusEntryView = BolusEntryView(viewModel: viewModel)
         let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         let navigationWrapper = UINavigationController(rootViewController: hostingController)
@@ -1272,6 +1289,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,
                                           servicesViewModel: servicesViewModel,
+                                          criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: deviceManager.criticalEventLogExportManager),
+                                          adverseEventReportViewModel: AdverseEventReportViewModel(pumpStatus: deviceManager.pumpManager?.status, cgmDevice: deviceManager.cgmManager?.device),
                                           therapySettings: deviceManager.loopManager.therapySettings,
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
                                           pumpSupportedIncrements: pumpSupportedIncrements,
@@ -1332,10 +1351,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             hudView.cgmStatusHUD.tintColor = .label
             hudView.pumpStatusHUD.stateColors = .pumpStatus
             hudView.pumpStatusHUD.tintColor = .insulinTintColor
-            if view.bounds.width < 375 {
-                // need to adjust for narrow display
-                hudView.adjustViewsForNarrowDisplay = true
-            }
 
             refreshContext.update(with: .status)
             self.log.debug("[reloadData] after hudView loaded")
@@ -1480,6 +1495,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self.presentSimulatedCoreDataMenu()
             })
         }
+        actionSheet.addAction(UIAlertAction(title: "Remove Exports Directory", style: .default) { _ in
+            if let error = self.deviceManager.removeExportsDirectory() {
+                self.presentError(error)
+            }
+        })
         if FeatureFlags.mockTherapySettingsEnabled {
             actionSheet.addAction(UIAlertAction(title: "Mock Therapy Settings", style: .default) { _ in
                 let settings = TherapySettings.mockTherapySettings
@@ -1495,6 +1515,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self.deviceManager.loopManager.insulinModelSettings = settings.insulinModelSettings
             })
         }
+        actionSheet.addAction(UIAlertAction(title: "Crash the App", style: .destructive) { _ in
+            fatalError("Test Crash")
+        })
 
         actionSheet.addCancelAction()
         present(actionSheet, animated: true)

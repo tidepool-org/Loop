@@ -64,10 +64,6 @@ extension DosingDecisionStore {
 extension StoredDosingDecision: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        var notificationSettings: UNNotificationSettings?
-        if let notificationSettingsData = try container.decodeIfPresent(Data.self, forKey: .notificationSettings) {
-            notificationSettings = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(notificationSettingsData) as? UNNotificationSettings
-        }
         let storedDosingDecisionError = try container.decodeIfPresent([StoredDosingDecisionError].self, forKey: .errors)
         self.init(date: try container.decode(Date.self, forKey: .date),
                   insulinOnBoard: try container.decodeIfPresent(InsulinValue.self, forKey: .insulinOnBoard),
@@ -78,10 +74,14 @@ extension StoredDosingDecision: Codable {
                   predictedGlucose: try container.decodeIfPresent([PredictedGlucoseValue].self, forKey: .predictedGlucose),
                   predictedGlucoseIncludingPendingInsulin: try container.decodeIfPresent([PredictedGlucoseValue].self, forKey: .predictedGlucoseIncludingPendingInsulin),
                   lastReservoirValue: try container.decodeIfPresent(LastReservoirValue.self, forKey: .lastReservoirValue),
+                  manualGlucose: try container.decodeIfPresent(SimpleGlucoseValue.self, forKey: .manualGlucose),
+                  originalCarbEntry: try container.decodeIfPresent(StoredCarbEntry.self, forKey: .originalCarbEntry),
+                  carbEntry: try container.decodeIfPresent(StoredCarbEntry.self, forKey: .carbEntry),
                   recommendedTempBasal: try container.decodeIfPresent(TempBasalRecommendationWithDate.self, forKey: .recommendedTempBasal),
                   recommendedBolus: try container.decodeIfPresent(BolusRecommendationWithDate.self, forKey: .recommendedBolus),
+                  requestedBolus: try container.decodeIfPresent(Double.self, forKey: .requestedBolus),
                   pumpManagerStatus: try container.decodeIfPresent(PumpManagerStatus.self, forKey: .pumpManagerStatus),
-                  notificationSettings: notificationSettings,
+                  notificationSettings: try container.decodeIfPresent(NotificationSettings.self, forKey: .notificationSettings),
                   deviceSettings: try container.decodeIfPresent(DeviceSettings.self, forKey: .deviceSettings),
                   errors: storedDosingDecisionError?.map { $0.error },
                   syncIdentifier: try container.decode(String.self, forKey: .syncIdentifier))
@@ -98,13 +98,14 @@ extension StoredDosingDecision: Codable {
         try container.encodeIfPresent(predictedGlucose, forKey: .predictedGlucose)
         try container.encodeIfPresent(predictedGlucoseIncludingPendingInsulin, forKey: .predictedGlucoseIncludingPendingInsulin)
         try container.encodeIfPresent(lastReservoirValue, forKey: .lastReservoirValue)
+        try container.encodeIfPresent(manualGlucose, forKey: .manualGlucose)
+        try container.encodeIfPresent(originalCarbEntry, forKey: .originalCarbEntry)
+        try container.encodeIfPresent(carbEntry, forKey: .carbEntry)
         try container.encodeIfPresent(recommendedTempBasal, forKey: .recommendedTempBasal)
         try container.encodeIfPresent(recommendedBolus, forKey: .recommendedBolus)
+        try container.encodeIfPresent(requestedBolus, forKey: .requestedBolus)
         try container.encodeIfPresent(pumpManagerStatus, forKey: .pumpManagerStatus)
-        if let notificationSettings = notificationSettings {
-            let notificationSettingsData = try NSKeyedArchiver.archivedData(withRootObject: notificationSettings, requiringSecureCoding: false)
-            try container.encode(notificationSettingsData, forKey: .notificationSettings)
-        }
+        try container.encodeIfPresent(notificationSettings, forKey: .notificationSettings)
         try container.encodeIfPresent(deviceSettings, forKey: .deviceSettings)
         try container.encodeIfPresent(errors?.map { StoredDosingDecisionError(error: $0) }, forKey: .errors)
         try container.encode(syncIdentifier, forKey: .syncIdentifier)
@@ -199,8 +200,12 @@ extension StoredDosingDecision: Codable {
         case predictedGlucose
         case predictedGlucoseIncludingPendingInsulin
         case lastReservoirValue
+        case manualGlucose
+        case originalCarbEntry
+        case carbEntry
         case recommendedTempBasal
         case recommendedBolus
+        case requestedBolus
         case pumpManagerStatus
         case notificationSettings
         case deviceSettings
@@ -242,6 +247,42 @@ public struct CodableLocalizedError: LocalizedError, Codable {
             return nil
         }
         self.init(localizedError)
+    }
+}
+
+extension DosingDecisionObject: Encodable {
+    public func encode(to encoder: Encoder) throws {
+        try EncodableDosingDecisionObject(self).encode(to: encoder)
+    }
+}
+
+fileprivate struct EncodableDosingDecisionObject: Encodable {
+    var data: StoredDosingDecision
+    var date: Date
+    var modificationCounter: Int64
+
+    init(_ object: DosingDecisionObject) throws {
+        self.data = try PropertyListDecoder().decode(StoredDosingDecision.self, from: object.data)
+        self.date = object.date
+        self.modificationCounter = object.modificationCounter
+    }
+}
+
+// MARK: - Critical Event Log Export
+
+extension DosingDecisionStore: CriticalEventLog {
+    public var exportName: String { "DosingDecisions.json" }
+
+    public func export(startDate: Date, endDate: Date, to stream: OutputStream, progress: Progress) -> Error? {
+        let encoder = JSONStreamEncoder(stream: stream)
+
+        var error = export(startDate: startDate, endDate: endDate, using: encoder.encode, progress: progress)
+
+        if let closeError = encoder.close(), error == nil {
+            error = closeError
+        }
+
+        return error
     }
 }
 

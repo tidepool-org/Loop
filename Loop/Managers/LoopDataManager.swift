@@ -487,17 +487,17 @@ extension LoopDataManager {
     ///   - carbEntry: The new carb value
     ///   - completion: A closure called once upon completion
     ///   - result: The bolus recommendation
-    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry? = nil, completion: @escaping (_ result: Result<Void>) -> Void) {
+    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry? = nil, completion: @escaping (_ result: Result<StoredCarbEntry>) -> Void) {
         let addCompletion: (CarbStoreResult<StoredCarbEntry>) -> Void = { (result) in
             self.dataAccessQueue.async {
                 switch result {
-                case .success:
+                case .success(let storedCarbEntry):
                     // Remove the active pre-meal target override
                     self.settings.clearOverride(matching: .preMeal)
 
                     self.carbEffect = nil
                     self.carbsOnBoard = nil
-                    completion(.success(()))
+                    completion(.success(storedCarbEntry))
                 case .failure(let error):
                     completion(.failure(error))
                 }
@@ -637,7 +637,7 @@ extension LoopDataManager {
                                                                   recommendedTempBasal: StoredDosingDecision.TempBasalRecommendationWithDate(state.recommendedTempBasal),
                                                                   recommendedBolus: StoredDosingDecision.BolusRecommendationWithDate(state.recommendedBolus),
                                                                   pumpManagerStatus: self.delegate?.pumpManagerStatus,
-                                                                  notificationSettings: notificationSettings,
+                                                                  notificationSettings: NotificationSettings(notificationSettings),
                                                                   deviceSettings: UIDevice.current.deviceSettings,
                                                                   errors: [error, state.error, insulinOnBoardError].compactMap { $0 })
                         self.dosingDecisionStore.storeDosingDecision(dosingDecision) {}
@@ -645,6 +645,22 @@ extension LoopDataManager {
                 }
             }
         }
+    }
+
+    func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
+        let dosingDecision = StoredDosingDecision(date: date,
+                                                  insulinOnBoard: bolusDosingDecision.insulinOnBoard,
+                                                  carbsOnBoard: bolusDosingDecision.carbsOnBoard,
+                                                  scheduleOverride: bolusDosingDecision.scheduleOverride,
+                                                  glucoseTargetRangeSchedule: bolusDosingDecision.glucoseTargetRangeSchedule,
+                                                  glucoseTargetRangeScheduleApplyingOverrideIfActive: bolusDosingDecision.glucoseTargetRangeScheduleApplyingOverrideIfActive,
+                                                  predictedGlucoseIncludingPendingInsulin: bolusDosingDecision.predictedGlucoseIncludingPendingInsulin,
+                                                  manualGlucose: bolusDosingDecision.manualGlucose.map { SimpleGlucoseValue($0) },
+                                                  originalCarbEntry: bolusDosingDecision.originalCarbEntry,
+                                                  carbEntry: bolusDosingDecision.carbEntry,
+                                                  recommendedBolus: bolusDosingDecision.recommendedBolus.map { StoredDosingDecision.BolusRecommendationWithDate(recommendation: $0, date: date) },
+                                                  requestedBolus: bolusDosingDecision.requestedBolus)
+        self.dosingDecisionStore.storeDosingDecision(dosingDecision) {}
     }
 
     func storeSettings() {
@@ -664,7 +680,7 @@ extension LoopDataManager {
                                       maximumBolus: loopSettings.maximumBolus,
                                       suspendThreshold: loopSettings.suspendThreshold,
                                       deviceToken: loopSettings.deviceToken?.hexadecimalString,
-                                      insulinModel: appGroup.insulinModelSettings.map { StoredSettings.InsulinModel($0) },
+                                      insulinModel: appGroup.insulinModelSettings.map { StoredInsulinModel($0) },
                                       basalRateSchedule: appGroup.basalRateSchedule,
                                       insulinSensitivitySchedule: appGroup.insulinSensitivitySchedule,
                                       carbRatioSchedule: appGroup.carbRatioSchedule,
@@ -1790,6 +1806,23 @@ private extension StoredDosingDecision.BolusRecommendationWithDate {
             return nil
         }
         self.init(recommendation: bolusRecommendationDate.recommendation, date: bolusRecommendationDate.date)
+    }
+}
+
+private extension NotificationSettings {
+    init(_ notificationSettings: UNNotificationSettings) {
+        self.init(authorizationStatus: NotificationSettings.AuthorizationStatus(notificationSettings.authorizationStatus),
+                  soundSetting: NotificationSettings.NotificationSetting(notificationSettings.soundSetting),
+                  badgeSetting: NotificationSettings.NotificationSetting(notificationSettings.badgeSetting),
+                  alertSetting: NotificationSettings.NotificationSetting(notificationSettings.alertSetting),
+                  notificationCenterSetting: NotificationSettings.NotificationSetting(notificationSettings.notificationCenterSetting),
+                  lockScreenSetting: NotificationSettings.NotificationSetting(notificationSettings.lockScreenSetting),
+                  carPlaySetting: NotificationSettings.NotificationSetting(notificationSettings.carPlaySetting),
+                  alertStyle: NotificationSettings.AlertStyle(notificationSettings.alertStyle),
+                  showPreviewsSetting: NotificationSettings.ShowPreviewsSetting(notificationSettings.showPreviewsSetting),
+                  criticalAlertSetting: NotificationSettings.NotificationSetting(notificationSettings.criticalAlertSetting),
+                  providesAppNotificationSettings: notificationSettings.providesAppNotificationSettings,
+                  announcementSetting: NotificationSettings.NotificationSetting(notificationSettings.announcementSetting))
     }
 }
 
