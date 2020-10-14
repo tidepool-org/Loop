@@ -43,7 +43,7 @@ extension ChartAxisValuesStaticGenerator {
                firstValue = firstValue - segmentSize
             }
             
-            // do not allow a value of -0 on the axis
+            // do not allow the first axis label to be -0
             while firstValue < 0 && firstValue.rounded() == -0 {
                 firstValue = firstValue - segmentSize
             }
@@ -55,14 +55,17 @@ extension ChartAxisValuesStaticGenerator {
             let distance = lastValue - firstValue
             var currentMultiple = multiple
             var segmentCount = distance / currentMultiple
-            
+            var potentialSegmentValues = stride(from: firstValue, to: lastValue, by: currentMultiple)
+
             /// Find the optimal number of segments and segment width
-            
             /// If the number of segments is greater than desired, make each segment wider
-            while segmentCount > maxSegmentCount {
-                // This is the only difference from SwiftCharts (i.e., currentMultiple *= 2)
+            /// ensure no label of -0 is display on the axis
+            while segmentCount > maxSegmentCount ||
+                !potentialSegmentValues.filter({ $0 < 0 && $0.rounded() == -0 }).isEmpty
+            {
                 currentMultiple += multiple
                 segmentCount = distance / currentMultiple
+                potentialSegmentValues = stride(from: firstValue, to: lastValue, by: currentMultiple)
             }
             segmentCount = ceil(segmentCount)
             
@@ -71,7 +74,7 @@ extension ChartAxisValuesStaticGenerator {
                 segmentCount += 1
             }
             segmentSize = currentMultiple
-            
+                        
             /// Generate axis values from the first value, segment size and number of segments
             let offset = firstValue
             return (0...Int(segmentCount)).map {segment in
