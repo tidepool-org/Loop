@@ -43,7 +43,7 @@ extension ChartAxisValuesStaticGenerator {
                firstValue = firstValue - segmentSize
             }
             
-            // do not allow the first axis label to be -0
+            // do not allow the first label to be displayed as -0
             while firstValue < 0 && firstValue.rounded() == -0 {
                 firstValue = firstValue - segmentSize
             }
@@ -59,7 +59,7 @@ extension ChartAxisValuesStaticGenerator {
 
             /// Find the optimal number of segments and segment width
             /// If the number of segments is greater than desired, make each segment wider
-            /// ensure no label of -0 is display on the axis
+            /// ensure no label of -0 will be displayed on the axis
             while segmentCount > maxSegmentCount ||
                 !potentialSegmentValues.filter({ $0 < 0 && $0.rounded() == -0 }).isEmpty
             {
@@ -74,7 +74,7 @@ extension ChartAxisValuesStaticGenerator {
                 segmentCount += 1
             }
             segmentSize = currentMultiple
-                        
+            
             /// Generate axis values from the first value, segment size and number of segments
             let offset = firstValue
             return (0...Int(segmentCount)).map {segment in
