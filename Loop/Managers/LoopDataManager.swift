@@ -43,7 +43,7 @@ final class LoopDataManager {
 
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
-    
+
     deinit {
         for observer in notificationObservers {
             NotificationCenter.default.removeObserver(observer)
@@ -89,7 +89,7 @@ final class LoopDataManager {
         self.now = now
 
         self.settingsStore = settingsStore
-        
+
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
         overrideHistory.delegate = self

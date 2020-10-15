@@ -87,7 +87,7 @@ public struct LoopSettings {
     // MARK - Push Notifications
     
     public var deviceToken: Data?
-        
+    
     // MARK - Guardrails
 
     public func allowedSensitivityValues(for unit: HKUnit) -> [Double] {
@@ -202,7 +202,7 @@ extension LoopSettings {
         }
         
         if duration.isInfinite {
-            // schedule workout reminder
+            // schedule workout override reminder
             alertManager?.issueAlert(workoutOverrideReminderAlert)
         }
             
@@ -227,7 +227,7 @@ extension LoopSettings {
         if override.context == .legacyWorkout,
             override.duration.isInfinite
         {
-            // retract workout reminder
+            // retract workout override reminder
             alertManager?.retractAlert(identifier: workoutOverrideReminderAlertIdentifier)
         }
 
@@ -354,6 +354,6 @@ extension LoopSettings {
         return Alert(identifier: workoutOverrideReminderAlertIdentifier,
                      foregroundContent: content,
                      backgroundContent: content,
-                     trigger: .repeating(repeatInterval: TimeInterval.minutes(1)))// TimeInterval.hours(24)))
+                     trigger: .repeating(repeatInterval: TimeInterval.minutes(1)))// Just for Dev testing. should be TimeInterval.hours(24)))
     }
 }
