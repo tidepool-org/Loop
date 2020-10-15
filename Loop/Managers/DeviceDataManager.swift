@@ -48,16 +48,13 @@ final class DeviceDataManager {
     
     @Published var cgmHasValidSensorSession: Bool
 
-    @Published var cgmDataIsStale: Bool
-
-    private var cgmStalenessTimer: Timer?
-
     @Published public var isClosedLoopAllowed: Bool
     
     @Published public var isClosedLoop: Bool
     
     lazy private var cancellables = Set<AnyCancellable>()
 
+    private var cgmStalenessMonitor: CGMStalenessMonitor
 
     // MARK: - CGM
 
@@ -228,11 +225,13 @@ final class DeviceDataManager {
             observationInterval: .hours(24)
         )
         
+        cgmStalenessMonitor = CGMStalenessMonitor()
+        cgmStalenessMonitor.delegate = glucoseStore
+        
         self.dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
         self.settingsStore = SettingsStore(store: cacheStore, expireAfter: localCacheDuration)
         
         self.cgmHasValidSensorSession = false
-        self.cgmDataIsStale = true
         self.isClosedLoop = false
         self.isClosedLoopAllowed = false
         
@@ -304,8 +303,8 @@ final class DeviceDataManager {
 
         setupPump()
         setupCGM()
-        
-        $cgmDataIsStale
+                
+        cgmStalenessMonitor.$cgmDataIsStale
             .combineLatest($cgmHasValidSensorSession)
             .map { $0 == false || $1 }
             .assign(to: \.isClosedLoopAllowed, on: self)
@@ -324,28 +323,8 @@ final class DeviceDataManager {
             .receive(on: DispatchQueue.main)
             .sink { if !$0 { self.loopManager.settings.clearOverride(matching: .preMeal) } }
             .store(in: &cancellables)
-
-        updateCGMStalenessTimer()
     }
-
-    private func updateCGMStalenessTimer() {
-        guard let glucose = glucoseStore.latestGlucose, !glucose.wasUserEntered else {
-            cgmDataIsStale = true
-            return
-        }
-
-        let age = -glucose.startDate.timeIntervalSinceNow
-        
-        if age > LoopConstants.inputDataRecencyInterval {
-            cgmDataIsStale = true
-        } else {
-            cgmStalenessTimer?.invalidate()
-            cgmStalenessTimer = Timer(timeInterval: LoopConstants.inputDataRecencyInterval - age, repeats: false) { _ in
-                self.updateCGMStalenessTimer()
-            }
-        }
-    }
-
+    
     var isCGMManagerValidPumpManager: Bool {
         guard let rawValue = UserDefaults.appGroup?.cgmManagerState else {
             return false
@@ -388,6 +367,11 @@ final class DeviceDataManager {
             loopManager.addGlucose(values) { result in
                 self.log.default("Asserting current pump data")
                 self.pumpManager?.ensureCurrentPumpData(completion: nil)
+                if !values.isEmpty {
+                    DispatchQueue.main.async {
+                        self.cgmStalenessMonitor.cgmGlucoseSamplesAvailable(values)
+                    }
+                }
             }
         case .noData:
             log.default("CGMManager:%{public}@ did update with no data", String(describing: type(of: manager)))
@@ -1244,3 +1228,7 @@ fileprivate extension FileManager {
         return applicationSupportDirectory.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("Exports")
     }
 }
+
+//MARK: - CGMStalenessMonitorDelegate protocol conformance
+
+extension GlucoseStore : CGMStalenessMonitorDelegate { }

@@ -463,6 +463,8 @@
 		C13DA2B024F6C7690098BB29 /* UIViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13DA2AF24F6C7690098BB29 /* UIViewController.swift */; };
 		C148CEE724FD91BD00711B3B /* DeliveryUncertaintyAlertManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C148CEE624FD91BD00711B3B /* DeliveryUncertaintyAlertManager.swift */; };
 		C165756F2534C468004AE16E /* SimpleBolusViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C165756E2534C468004AE16E /* SimpleBolusViewModelTests.swift */; };
+		C16575712538A36B004AE16E /* CGMStalenessMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16575702538A36B004AE16E /* CGMStalenessMonitor.swift */; };
+		C16575732538AFF6004AE16E /* CGMStalenessMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16575722538AFF6004AE16E /* CGMStalenessMonitorTests.swift */; };
 		C165B8CE23302C5D0004112E /* RemoteCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C165B8CD23302C5D0004112E /* RemoteCommand.swift */; };
 		C16DA84222E8E112008624C2 /* LoopPlugins.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16DA84122E8E112008624C2 /* LoopPlugins.swift */; };
 		C178249A1E1999FA00D9D25C /* CaseCountable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17824991E1999FA00D9D25C /* CaseCountable.swift */; };
@@ -1332,6 +1334,8 @@
 		C13DA2AF24F6C7690098BB29 /* UIViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewController.swift; sourceTree = "<group>"; };
 		C148CEE624FD91BD00711B3B /* DeliveryUncertaintyAlertManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryUncertaintyAlertManager.swift; sourceTree = "<group>"; };
 		C165756E2534C468004AE16E /* SimpleBolusViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBolusViewModelTests.swift; sourceTree = "<group>"; };
+		C16575702538A36B004AE16E /* CGMStalenessMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMStalenessMonitor.swift; sourceTree = "<group>"; };
+		C16575722538AFF6004AE16E /* CGMStalenessMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMStalenessMonitorTests.swift; sourceTree = "<group>"; };
 		C165B8CD23302C5D0004112E /* RemoteCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteCommand.swift; sourceTree = "<group>"; };
 		C16DA84122E8E112008624C2 /* LoopPlugins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopPlugins.swift; sourceTree = "<group>"; };
 		C17824991E1999FA00D9D25C /* CaseCountable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CaseCountable.swift; sourceTree = "<group>"; };
@@ -1546,6 +1550,7 @@
 				1DA7A84024476E98008257F0 /* Alerts */,
 				A91E4C2224F86F1000BE9213 /* CriticalEventLogExportManagerTests.swift */,
 				A9F5F1F4251050EC00E7C8A4 /* ZipArchiveTests.swift */,
+				C16575722538AFF6004AE16E /* CGMStalenessMonitorTests.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -1996,6 +2001,7 @@
 				4328E0341CFC0AE100E199AA /* WatchDataManager.swift */,
 				E9BB27AA23B85C3500FB4987 /* SleepStore.swift */,
 				C148CEE624FD91BD00711B3B /* DeliveryUncertaintyAlertManager.swift */,
+				C16575702538A36B004AE16E /* CGMStalenessMonitor.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -3293,6 +3299,7 @@
 				430B29932041F5B300BA9F93 /* UserDefaults+Loop.swift in Sources */,
 				43CE7CDE1CA8B63E003CC1B0 /* Data.swift in Sources */,
 				E9BB27AB23B85C3500FB4987 /* SleepStore.swift in Sources */,
+				C16575712538A36B004AE16E /* CGMStalenessMonitor.swift in Sources */,
 				1D080CBD2473214A00356610 /* AlertStore.xcdatamodeld in Sources */,
 				C11BD0552523CFED00236B08 /* SimpleBolusViewModel.swift in Sources */,
 				C19008FE25225D3900721625 /* SimpleBolusCalculator.swift in Sources */,
@@ -3622,6 +3629,7 @@
 				A9E6DFEF246A0474005B1A1C /* LoopErrorTests.swift in Sources */,
 				B44251B62523578300605937 /* PredictedGlucoseChartTests.swift in Sources */,
 				A9DFAFB524F048A000950D1E /* WatchHistoricalCarbsTests.swift in Sources */,
+				C16575732538AFF6004AE16E /* CGMStalenessMonitorTests.swift in Sources */,
 				A9E6DFEA246A0448005B1A1C /* PumpManagerErrorTests.swift in Sources */,
 				A9DF02CD24F72BC800B7C988 /* PersistenceControllerTestCase.swift in Sources */,
 				1DA7A84424477698008257F0 /* InAppModalAlertPresenterTests.swift in Sources */,
