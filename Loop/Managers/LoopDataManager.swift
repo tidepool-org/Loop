@@ -43,7 +43,7 @@ final class LoopDataManager {
 
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
-
+    
     deinit {
         for observer in notificationObservers {
             NotificationCenter.default.removeObserver(observer)
@@ -67,7 +67,8 @@ final class LoopDataManager {
         carbStore: CarbStoreProtocol,
         dosingDecisionStore: DosingDecisionStoreProtocol,
         settingsStore: SettingsStoreProtocol,
-        now: @escaping () -> Date = { Date() }
+        now: @escaping () -> Date = { Date() },
+        alertManager: AlertManager? = nil
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -88,10 +89,11 @@ final class LoopDataManager {
         self.now = now
 
         self.settingsStore = settingsStore
-
+        
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
         overrideHistory.delegate = self
+        self.settings.alertManager = alertManager
 
         // Observe changes
         notificationObservers = [

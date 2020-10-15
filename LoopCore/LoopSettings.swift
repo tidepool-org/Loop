@@ -5,10 +5,12 @@
 //  Copyright © 2017 LoopKit Authors. All rights reserved.
 //
 
-import LoopKit
 import HealthKit
+import LoopKit
 
-public struct LoopSettings: Equatable {
+public struct LoopSettings {
+    public weak var alertManager: AlertPresenter?
+    
     public var dosingEnabled = false
 
     public let dynamicCarbAbsorptionEnabled = true
@@ -85,7 +87,7 @@ public struct LoopSettings: Equatable {
     // MARK - Push Notifications
     
     public var deviceToken: Data?
-    
+        
     // MARK - Guardrails
 
     public func allowedSensitivityValues(for unit: HKUnit) -> [Double] {
@@ -116,13 +118,15 @@ public struct LoopSettings: Equatable {
         glucoseTargetRangeSchedule: GlucoseRangeSchedule? = nil,
         maximumBasalRatePerHour: Double? = nil,
         maximumBolus: Double? = nil,
-        suspendThreshold: GlucoseThreshold? = nil
+        suspendThreshold: GlucoseThreshold? = nil,
+        alertManager: AlertPresenter? = nil
     ) {
         self.dosingEnabled = dosingEnabled
         self.glucoseTargetRangeSchedule = glucoseTargetRangeSchedule
         self.maximumBasalRatePerHour = maximumBasalRatePerHour
         self.maximumBolus = maximumBolus
         self.suspendThreshold = suspendThreshold
+        self.alertManager = alertManager
     }
 }
 
@@ -196,6 +200,12 @@ extension LoopSettings {
         guard let legacyWorkoutTargetRange = legacyWorkoutTargetRange, let unit = glucoseUnit else {
             return nil
         }
+        
+        if duration.isInfinite {
+            // schedule workout reminder
+            alertManager?.issueAlert(workoutOverrideReminderAlert)
+        }
+            
         return TemporaryScheduleOverride(
             context: .legacyWorkout,
             settings: TemporaryScheduleOverrideSettings(unit: unit, targetRange: legacyWorkoutTargetRange),
@@ -213,6 +223,14 @@ extension LoopSettings {
         }
 
         guard let override = scheduleOverride else { return }
+        
+        if override.context == .legacyWorkout,
+            override.duration.isInfinite
+        {
+            // retract workout reminder
+            alertManager?.retractAlert(identifier: workoutOverrideReminderAlertIdentifier)
+        }
+
         if let context = context {
             if override.context == context {
                 scheduleOverride = nil
@@ -299,5 +317,43 @@ extension LoopSettings: RawRepresentable {
         raw["minimumBGGuard"] = suspendThreshold?.rawValue
 
         return raw
+    }
+}
+
+extension LoopSettings: Equatable {
+    public static func == (lhs: LoopSettings, rhs: LoopSettings) -> Bool {
+        return lhs.dosingEnabled == rhs.dosingEnabled &&
+            lhs.glucoseTargetRangeSchedule == rhs.glucoseTargetRangeSchedule &&
+            lhs.preMealTargetRange == rhs.preMealTargetRange &&
+            lhs.legacyWorkoutTargetRange == rhs.legacyWorkoutTargetRange &&
+            lhs.overridePresets == rhs.overridePresets &&
+            lhs.scheduleOverride == rhs.scheduleOverride &&
+            lhs.preMealOverride == rhs.preMealOverride &&
+            lhs.maximumBasalRatePerHour == rhs.maximumBasalRatePerHour &&
+            lhs.maximumBolus == rhs.maximumBolus &&
+            lhs.suspendThreshold == rhs.suspendThreshold &&
+            lhs.deviceToken == rhs.deviceToken
+    }
+}
+
+// MARK: - Alerts
+
+extension LoopSettings {
+    static var managerIdentifier = "LoopSettings"
+    
+    public var workoutOverrideReminderAlertIdentifier: Alert.Identifier {
+        return Alert.Identifier(managerIdentifier: LoopSettings.managerIdentifier, alertIdentifier: "WorkoutOverrideReminder")
+    }
+    
+    public var workoutOverrideReminderAlert: Alert {
+        let title = NSLocalizedString("Workout Temp Adjust Still On", comment: "Workout override still on reminder alert title")
+        let body = NSLocalizedString("Workout Temp Adjust has been turned on for more than 24 hours. Make sure you still want it enabled, or turn it off in the app.", comment: "Workout override still on reminder alert body.")
+        let content = Alert.Content(title: title,
+                                    body: body,
+                                    acknowledgeActionButtonLabel: NSLocalizedString("Dismiss", comment: "Default alert dismissal"))
+        return Alert(identifier: workoutOverrideReminderAlertIdentifier,
+                     foregroundContent: content,
+                     backgroundContent: content,
+                     trigger: .repeating(repeatInterval: TimeInterval.minutes(1)))// TimeInterval.hours(24)))
     }
 }
