@@ -9,7 +9,19 @@ import HealthKit
 import LoopKit
 
 public struct LoopSettings {
-    public weak var alertManager: AlertPresenter?
+    public weak var alertManager: AlertPresenter? {
+        didSet {
+            if isScheduleOverrideInfiniteWorkout {
+                // schedule workout override reminder
+                alertManager?.issueAlert(workoutOverrideReminderAlert)
+            }
+        }
+    }
+    
+    var isScheduleOverrideInfiniteWorkout: Bool {
+        guard let scheduleOverride = scheduleOverride else { return false }
+        return scheduleOverride.context == .legacyWorkout && scheduleOverride.duration.isInfinite
+    }
     
     public var dosingEnabled = false
 
@@ -169,8 +181,8 @@ extension LoopSettings {
     }
 
     public func futureOverrideEnabled(relativeTo date: Date = Date()) -> Bool {
-        guard let override = scheduleOverride else { return false }
-        return override.startDate > date
+        guard let scheduleOverride = scheduleOverride else { return false }
+        return scheduleOverride.startDate > date
     }
 
     public mutating func enablePreMealOverride(at date: Date = Date(), for duration: TimeInterval) {
@@ -222,21 +234,19 @@ extension LoopSettings {
             return
         }
 
-        guard let override = scheduleOverride else { return }
+        guard let scheduleOverride = scheduleOverride else { return }
         
-        if override.context == .legacyWorkout,
-            override.duration.isInfinite
-        {
+        if isScheduleOverrideInfiniteWorkout {
             // retract workout override reminder
-            alertManager?.retractAlert(identifier: workoutOverrideReminderAlertIdentifier)
+            alertManager?.retractAlert(identifier: LoopSettings.workoutOverrideReminderAlertIdentifier)
         }
 
         if let context = context {
-            if override.context == context {
-                scheduleOverride = nil
+            if scheduleOverride.context == context {
+                self.scheduleOverride = nil
             }
         } else {
-            scheduleOverride = nil
+            self.scheduleOverride = nil
         }
     }
 }
@@ -341,8 +351,8 @@ extension LoopSettings: Equatable {
 extension LoopSettings {
     static var managerIdentifier = "LoopSettings"
     
-    public var workoutOverrideReminderAlertIdentifier: Alert.Identifier {
-        return Alert.Identifier(managerIdentifier: LoopSettings.managerIdentifier, alertIdentifier: "WorkoutOverrideReminder")
+    public static var workoutOverrideReminderAlertIdentifier: Alert.Identifier {
+        return Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "WorkoutOverrideReminder")
     }
     
     public var workoutOverrideReminderAlert: Alert {
@@ -351,7 +361,7 @@ extension LoopSettings {
         let content = Alert.Content(title: title,
                                     body: body,
                                     acknowledgeActionButtonLabel: NSLocalizedString("Dismiss", comment: "Default alert dismissal"))
-        return Alert(identifier: workoutOverrideReminderAlertIdentifier,
+        return Alert(identifier: LoopSettings.workoutOverrideReminderAlertIdentifier,
                      foregroundContent: content,
                      backgroundContent: content,
                      trigger: .repeating(repeatInterval: TimeInterval.minutes(1)))// Just for Dev testing. should be TimeInterval.hours(24)))

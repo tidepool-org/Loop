@@ -172,7 +172,21 @@ extension AlertManager {
             case .success(let alerts):
                 alerts.forEach { alert in
                     do {
-                        self.replayAlert(try Alert(from: alert, adjustedForStorageTime: true))
+                        self.replayAlert(try Alert.init(from: alert, adjustedForStorageTime: true))
+                    } catch {
+                        self.log.error("Error decoding alert from persistent storage: %@", error.localizedDescription)
+                    }
+                }
+            }
+        }
+        alertStore.lookupAllAcknowledgedUnretractedRepeatingAlerts {
+            switch $0 {
+            case .failure(let error):
+                self.log.error("Could not fetch acknowledged unretracted repeating alerts: %@", error.localizedDescription)
+            case .success(let alerts):
+                alerts.forEach { alert in
+                    do {
+                        self.replayAlert(try Alert.init(from: alert, adjustedForStorageTime: true))
                     } catch {
                         self.log.error("Error decoding alert from persistent storage: %@", error.localizedDescription)
                     }

@@ -38,10 +38,8 @@ class UserNotificationAlertPresenter: AlertPresenter {
     }
     
     func retractAlert(identifier: Alert.Identifier) {
-        DispatchQueue.main.async {
-            self.userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier.value])
-            self.userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
-        }
+        self.userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier.value])
+        self.userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
     }
 }
 

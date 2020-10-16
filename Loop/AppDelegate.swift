@@ -129,6 +129,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
 
     func applicationWillTerminate(_ application: UIApplication) {
         log.default(#function)
+        
+        // if the app is being terminated, remove any workout override reminders
+        alertManager.retractAlert(identifier: LoopSettings.workoutOverrideReminderAlertIdentifier)
     }
 
     // MARK: - Continuity
