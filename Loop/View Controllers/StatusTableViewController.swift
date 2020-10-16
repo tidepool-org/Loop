@@ -206,7 +206,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
     }
 
-    private var bolusState = PumpManagerStatus.BolusState.none {
+    private var bolusState: PumpManagerStatus.BolusState = .noBolus {
         didSet {
             if oldValue != bolusState {
                 // Bolus starting
@@ -231,7 +231,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         deviceManager.pumpManagerHUDProvider?.visible = active && onscreen
     }
 
-    public var basalDeliveryState: PumpManagerStatus.BasalDeliveryState = .active(Date()) {
+    public var basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil {
         didSet {
             if oldValue != basalDeliveryState {
                 log.debug("New basalDeliveryState: %@", String(describing: basalDeliveryState))
@@ -263,11 +263,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func registerPumpManager() {
-        if let pumpManager = deviceManager.pumpManager {
-            self.basalDeliveryState = pumpManager.status.basalDeliveryState
-            pumpManager.removeStatusObserver(self)
-            pumpManager.addStatusObserver(self, queue: .main)
-        }
+        self.basalDeliveryState = deviceManager.pumpManager?.status.basalDeliveryState
+        self.bolusState = deviceManager.pumpManager?.status.bolusState ?? .noBolus
+        deviceManager.pumpManager?.removeStatusObserver(self)
+        deviceManager.pumpManager?.addStatusObserver(self, queue: .main)
     }
 
     private lazy var statusCharts = StatusChartsManager(colors: .primary, settings: .default, traitCollection: self.traitCollection)
@@ -354,7 +353,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             // Net basal rate HUD
             let netBasal: NetBasal?
             if let basalSchedule = manager.basalRateScheduleApplyingOverrideHistory {
-                netBasal = basalDeliveryState.getNetBasal(basalSchedule: basalSchedule, settings: manager.settings)
+                netBasal = basalDeliveryState?.getNetBasal(basalSchedule: basalSchedule, settings: manager.settings)
             } else {
                 netBasal = nil
             }
@@ -610,6 +609,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case bolusing(dose: DoseEntry)
         case cancelingBolus
         case pumpSuspended(resuming: Bool)
+        case recommendManualGlucoseEntry
 
         var hasRow: Bool {
             switch self {
@@ -636,6 +636,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             statusRowMode = .pumpSuspended(resuming: true)
         } else if case .inProgress(let dose) = bolusState, dose.endDate.timeIntervalSinceNow > 0 {
             statusRowMode = .bolusing(dose: dose)
+        } else if deviceManager.isGlucoseValueStale {
+            statusRowMode = .recommendManualGlucoseEntry
         } else if let (recommendation: tempBasal, date: date) = recommendedTempBasal {
             statusRowMode = .recommendedTempBasal(tempBasal: tempBasal, at: date, enacting: false)
         } else if let scheduleOverride = deviceManager.loopManager.settings.scheduleOverride,
@@ -931,6 +933,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     }
                     cell.selectionStyle = .default
                     return cell
+                case .recommendManualGlucoseEntry:
+                    let cell = getTitleSubtitleCell()
+                    cell.titleLabel.text = NSLocalizedString("No Recent Glucose", comment: "The title of the cell indicating that there is no recent glucose")
+                    cell.subtitleLabel.text = NSLocalizedString("Tap to Add", comment: "The subtitle of the cell displaying an action to add a manually measurement glucose value")
+                    cell.selectionStyle = .default
+                    let imageView = UIImageView(image: UIImage(named: "drop.circle"))
+                    imageView.tintColor = .glucoseTintColor
+                    cell.accessoryView = imageView
+                    return cell
                 }
             }
         }
@@ -1077,7 +1088,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                             }
                         }
                     }
-
+                case .recommendManualGlucoseEntry:
+                    presentBolusEntryView(enableManualGlucoseEntry: true)
                 default:
                     break
                 }
@@ -1176,9 +1188,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     @IBAction func presentBolusScreen() {
+        presentBolusEntryView()
+    }
+
+    func presentBolusEntryView(enableManualGlucoseEntry: Bool = false) {
         let hostingController: DismissibleHostingController
         if deviceManager.isClosedLoop {
-            let viewModel = BolusEntryViewModel(delegate: deviceManager)
+            let viewModel = BolusEntryViewModel(delegate: deviceManager, isManualGlucoseEntryEnabled: enableManualGlucoseEntry)
             let bolusEntryView = BolusEntryView(viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         } else {
@@ -1186,11 +1202,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let bolusEntryView = SimpleBolusView(displayMealEntry: false, viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         }
-        let navigationWrapper = UINavigationController(rootViewController: hostingController)
         hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
+        let navigationWrapper = UINavigationController(rootViewController: hostingController)
         self.present(navigationWrapper, animated: true)
     }
-
+    
     private func createPreMealButtonItem(selected: Bool, isEnabled: Bool) -> UIBarButtonItem {
         let item = UIBarButtonItem(image: UIImage.preMealImage(selected: selected), style: .plain, target: self, action: #selector(togglePreMealMode(_:)))
         item.accessibilityLabel = NSLocalizedString("Pre-Meal Targets", comment: "The label of the pre-meal mode toggle button")
@@ -1545,6 +1561,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self.deviceManager.loopManager.insulinModelSettings = settings.insulinModelSettings
             })
         }
+        actionSheet.addAction(UIAlertAction(title: "Crash the App", style: .destructive) { _ in
+            fatalError("Test Crash")
+        })
 
         actionSheet.addCancelAction()
         present(actionSheet, animated: true)
@@ -1720,7 +1739,7 @@ extension StatusTableViewController: DoseProgressObserver {
             // Bolus ended
             self.bolusProgressReporter = nil
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-                self.bolusState = .none
+                self.bolusState = .noBolus
                 self.reloadData(animated: true)
             })
         }
