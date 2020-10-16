@@ -364,6 +364,6 @@ extension LoopSettings {
         return Alert(identifier: LoopSettings.workoutOverrideReminderAlertIdentifier,
                      foregroundContent: content,
                      backgroundContent: content,
-                     trigger: .repeating(repeatInterval: TimeInterval.minutes(1)))// Just for Dev testing. should be TimeInterval.hours(24)))
+                     trigger: .repeating(repeatInterval: TimeInterval.hours(24)))
     }
 }
