@@ -62,13 +62,16 @@ class HUDInterfaceController: WKInterfaceController {
         }
 
         loopHUDImage.setLoopImage({
+            guard let closedLoop = activeContext.dosingEnabled else {
+                return .unknown
+            }
             switch date.timeIntervalSinceNow {
             case let t where t > .minutes(-6):
-                return .fresh
+                return closedLoop ? .fresh_closed : .fresh_open
             case let t where t > .minutes(-20):
-                return .aging
+                return closedLoop ? .aging_closed : .aging_open
             default:
-                return .stale
+                return closedLoop ? .stale_closed : .stale_open
             }
         }())
     }

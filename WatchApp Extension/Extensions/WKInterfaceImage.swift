@@ -9,9 +9,12 @@
 import WatchKit
 
 enum LoopImage: String {
-    case fresh
-    case aging
-    case stale
+    case fresh_open
+    case aging_open
+    case stale_open
+    case fresh_closed
+    case aging_closed
+    case stale_closed
     case unknown
 
     var imageName: String {

@@ -248,7 +248,11 @@ final class WatchDataManager: NSObject {
             dosingDecision.recommendedBolus = recommendedBolus?.recommendation
 
             context.cgmManagerState = self.deviceManager.cgmManager?.rawValue
+        
+            let settings = self.deviceManager.loopManager.settings
 
+            context.dosingEnabled = settings.dosingEnabled
+            
             if let trend = self.deviceManager.cgmManager?.glucoseDisplay?.trendType {
                 context.glucoseTrendRawValue = trend.rawValue
             }
@@ -304,8 +308,6 @@ final class WatchDataManager: NSObject {
                     context.predictedGlucose = WatchPredictedGlucose(values: Array(filteredPredictedGlucose))
                 }
             }
-
-            let settings = self.deviceManager.loopManager.settings
 
             var preMealOverride = settings.preMealOverride
             if preMealOverride?.hasFinished() == true {
