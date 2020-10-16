@@ -8,6 +8,7 @@
 
 import Foundation
 import LoopKit
+import LoopCore
 
 protocol CGMStalenessMonitorDelegate: class {
     func getLatestCGMGlucose(since: Date, completion: @escaping (_ result: GlucoseStoreResult<StoredGlucoseSample?>) -> Void)
@@ -38,9 +39,9 @@ class CGMStalenessMonitor {
     public func cgmGlucoseSamplesAvailable(_ samples: [NewGlucoseSample]) {
         let mostRecentGlucose = samples.map { $0.date }.max()!
         let cgmDataAge = -mostRecentGlucose.timeIntervalSinceNow
-        if cgmDataAge < LoopConstants.inputDataRecencyInterval {
+        if cgmDataAge < LoopCoreConstants.inputDataRecencyInterval {
             self.cgmDataIsStale = false
-            self.updateCGMStalenessTimer(expiration: mostRecentGlucose.addingTimeInterval(LoopConstants.inputDataRecencyInterval))
+            self.updateCGMStalenessTimer(expiration: mostRecentGlucose.addingTimeInterval(LoopCoreConstants.inputDataRecencyInterval))
         } else {
             self.cgmDataIsStale = true
         }
@@ -57,14 +58,14 @@ class CGMStalenessMonitor {
     }
     
     private func checkCGMStaleness() {
-        delegate?.getLatestCGMGlucose(since: Date(timeIntervalSinceNow: -LoopConstants.inputDataRecencyInterval)) { (result) in
+        delegate?.getLatestCGMGlucose(since: Date(timeIntervalSinceNow: -LoopCoreConstants.inputDataRecencyInterval)) { (result) in
             DispatchQueue.main.async {
                 self.log.debug("Fetched latest CGM Glucose for checkCGMStaleness: %{public}@", String(describing: result))
                 switch result {
                 case .success(let sample):
                     if let sample = sample {
                         self.cgmDataIsStale = false
-                        self.updateCGMStalenessTimer(expiration: sample.startDate.addingTimeInterval(LoopConstants.inputDataRecencyInterval + CGMStalenessMonitor.cgmStalenessTimerTolerance))
+                        self.updateCGMStalenessTimer(expiration: sample.startDate.addingTimeInterval(LoopCoreConstants.inputDataRecencyInterval + CGMStalenessMonitor.cgmStalenessTimerTolerance))
                     } else {
                         self.cgmDataIsStale = true
                     }

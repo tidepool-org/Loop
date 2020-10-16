@@ -59,9 +59,9 @@ class StatusViewController: UIViewController, NCWidgetProviding {
         )
         
         if FeatureFlags.predictedGlucoseChartClampEnabled {
-            charts.predictedGlucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBoundClamped
+            charts.predictedGlucose.glucoseDisplayRange = ChartConstants.glucoseChartDefaultDisplayBoundClamped
         } else {
-            charts.predictedGlucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBound
+            charts.predictedGlucose.glucoseDisplayRange = ChartConstants.glucoseChartDefaultDisplayBound
         }
 
         return charts
@@ -94,7 +94,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
         insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule
     )
     
-    let absorptionTimes = LoopConstants.defaultCarbAbsorptionTimes
+    let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
     lazy var carbStore = CarbStore(healthStore: healthStore,
                                    observeHealthKitSamplesFromOtherApps: false,
                                    cacheStore: cacheStore,
@@ -304,7 +304,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                     lastGlucose.quantity.doubleValue(for: unit),
                     at: lastGlucose.startDate,
                     unit: unit,
-                    staleGlucoseAge: LoopConstants.inputDataRecencyInterval,
+                    staleGlucoseAge: LoopCoreConstants.inputDataRecencyInterval,
                     glucoseDisplay: context.glucoseDisplay,
                     wasUserEntered: lastGlucose.wasUserEntered
                 )

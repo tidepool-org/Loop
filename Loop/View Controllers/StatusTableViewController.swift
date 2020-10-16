@@ -526,7 +526,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     hudView.cgmStatusHUD.setGlucoseQuantity(glucose.quantity.doubleValue(for: unit),
                                                             at: glucose.startDate,
                                                             unit: unit,
-                                                            staleGlucoseAge: LoopConstants.inputDataRecencyInterval,
+                                                            staleGlucoseAge: LoopCoreConstants.inputDataRecencyInterval,
                                                             glucoseDisplay: self.deviceManager.glucoseDisplay(for: glucose),
                                                             wasUserEntered: glucose.wasUserEntered)
                 }

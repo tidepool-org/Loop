@@ -10,7 +10,7 @@ import Foundation
 import HealthKit
 import LoopKit
 
-struct LoopConstants {
+enum LoopConstants {
     
     // Input field bounds
     
@@ -34,18 +34,14 @@ struct LoopConstants {
     static let glucoseChartDefaultDisplayBoundClamped =
         HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 80)...HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 240)
     
+    
     // Compile time configuration
    
-    static let defaultCarbAbsorptionTimes: CarbStore.DefaultAbsorptionTimes = (fast: .minutes(30), medium: .hours(3), slow: .hours(5))
-    
     static let retrospectiveCorrectionEnabled = true
 
     /// The interval over which to aggregate changes in glucose for retrospective correction
     static let retrospectiveCorrectionGroupingInterval = TimeInterval(minutes: 30)
 
-    /// The amount of time since a given date that input data should be considered valid
-    static let inputDataRecencyInterval = TimeInterval(minutes: 15)
-    
     /// Loop completion aging category limits
     static let completionFreshLimit = TimeInterval(minutes: 6)
     static let completionAgingLimit = TimeInterval(minutes: 16)

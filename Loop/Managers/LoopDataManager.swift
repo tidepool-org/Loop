@@ -75,7 +75,7 @@ final class LoopDataManager {
         self.settings = settings
         self.overrideHistory = overrideHistory
 
-        let absorptionTimes = LoopConstants.defaultCarbAbsorptionTimes
+        let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
 
         self.overrideHistory.relevantTimeWindow = absorptionTimes.slow * 2
 
@@ -748,7 +748,7 @@ extension LoopDataManager {
         // Fetch glucose effects as far back as we want to make retroactive analysis
         var latestGlucoseDate: Date?
         updateGroup.enter()
-        glucoseStore.getCachedGlucoseSamples(start: Date(timeInterval: -LoopConstants.inputDataRecencyInterval, since: now()), end: nil) { (values) in
+        glucoseStore.getCachedGlucoseSamples(start: Date(timeInterval: -LoopCoreConstants.inputDataRecencyInterval, since: now()), end: nil) { (values) in
             latestGlucoseDate = values.last?.startDate
             updateGroup.leave()
         }
@@ -946,11 +946,11 @@ extension LoopDataManager {
         let pumpStatusDate = doseStore.lastAddedPumpData
         let lastGlucoseDate = glucose.startDate
 
-        guard now().timeIntervalSince(lastGlucoseDate) <= LoopConstants.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(lastGlucoseDate) <= LoopCoreConstants.inputDataRecencyInterval else {
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
 
-        guard now().timeIntervalSince(pumpStatusDate) <= LoopConstants.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(pumpStatusDate) <= LoopCoreConstants.inputDataRecencyInterval else {
             throw LoopError.pumpDataTooOld(date: pumpStatusDate)
         }
 
@@ -1180,11 +1180,11 @@ extension LoopDataManager {
         let pumpStatusDate = doseStore.lastAddedPumpData
         let lastGlucoseDate = glucose.startDate
 
-        guard now().timeIntervalSince(lastGlucoseDate) <= LoopConstants.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(lastGlucoseDate) <= LoopCoreConstants.inputDataRecencyInterval else {
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
 
-        guard now().timeIntervalSince(pumpStatusDate) <= LoopConstants.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(pumpStatusDate) <= LoopCoreConstants.inputDataRecencyInterval else {
             throw LoopError.pumpDataTooOld(date: pumpStatusDate)
         }
 
@@ -1263,7 +1263,7 @@ extension LoopDataManager {
         retrospectiveGlucoseEffect = retrospectiveCorrection.computeEffect(
             startingAt: glucose,
             retrospectiveGlucoseDiscrepanciesSummed: retrospectiveGlucoseDiscrepanciesSummed,
-            recencyInterval: LoopConstants.inputDataRecencyInterval,
+            recencyInterval: LoopCoreConstants.inputDataRecencyInterval,
             insulinSensitivitySchedule: insulinSensitivitySchedule,
             basalRateSchedule: basalRateSchedule,
             glucoseCorrectionRangeSchedule: settings.glucoseTargetRangeSchedule,
@@ -1277,7 +1277,7 @@ extension LoopDataManager {
         return retrospectiveCorrection.computeEffect(
             startingAt: glucose,
             retrospectiveGlucoseDiscrepanciesSummed: retrospectiveGlucoseDiscrepanciesSummed,
-            recencyInterval: LoopConstants.inputDataRecencyInterval,
+            recencyInterval: LoopCoreConstants.inputDataRecencyInterval,
             insulinSensitivitySchedule: insulinSensitivitySchedule,
             basalRateSchedule: basalRateSchedule,
             glucoseCorrectionRangeSchedule: settings.glucoseTargetRangeSchedule,
@@ -1306,12 +1306,12 @@ extension LoopDataManager {
 
         let startDate = now()
 
-        guard startDate.timeIntervalSince(glucose.startDate) <= LoopConstants.inputDataRecencyInterval else {
+        guard startDate.timeIntervalSince(glucose.startDate) <= LoopCoreConstants.inputDataRecencyInterval else {
             self.predictedGlucose = nil
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
 
-        guard startDate.timeIntervalSince(pumpStatusDate) <= LoopConstants.inputDataRecencyInterval else {
+        guard startDate.timeIntervalSince(pumpStatusDate) <= LoopCoreConstants.inputDataRecencyInterval else {
             self.predictedGlucose = nil
             throw LoopError.pumpDataTooOld(date: pumpStatusDate)
         }

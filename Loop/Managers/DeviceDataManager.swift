@@ -187,7 +187,7 @@ final class DeviceDataManager {
         self.healthStore = HKHealthStore()
         self.cacheStore = PersistenceController.controllerInAppGroupDirectory()
         
-        let absorptionTimes = LoopConstants.defaultCarbAbsorptionTimes
+        let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
         let sensitivitySchedule = UserDefaults.appGroup?.insulinSensitivitySchedule
         let overrideHistory = UserDefaults.appGroup?.overrideHistory ?? TemporaryScheduleOverrideHistory.init()
         

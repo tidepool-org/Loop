@@ -1,6 +1,6 @@
 //
 //  SimpleBolusView.swift
-//  LoopUITestApp
+//  Loop
 //
 //  Created by Pete Schwamb on 9/23/20.
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
@@ -293,7 +293,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             let suspendThresholdString = QuantityFormatter().string(from: viewModel.suspendThreshold, for: viewModel.glucoseUnit) ?? String(describing: viewModel.suspendThreshold)
             return WarningView(
                 title: Text("No Bolus Recommended", comment: "Title for bolus screen notice when no bolus is recommended"),
-                caption: Text("Your glucose is below your suspend threshold, \(suspendThresholdString).", comment: "Caption for bolus screen notice when no bolus is recommended due input value below suspend threshold")
+                caption: Text(String(format: NSLocalizedString("Your glucose is below your suspend threshold, %1$@.", comment: "Format string for bolus screen notice when no bolus is recommended due input value below suspend threshold. (1: suspendThreshold)"), suspendThresholdString))
             )
         }
     }
