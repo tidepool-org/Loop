@@ -353,7 +353,7 @@ public struct SettingsView_Previews: PreviewProvider {
                                           servicesViewModel: servicesViewModel,
                                           criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory()),
                                           adverseEventReportViewModel: AdverseEventReportViewModel(),
-                                          therapySettings: TherapySettings(),
+                                          therapySettings: { TherapySettings() },
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: true, walshModelEnabled: true),
                                           pumpSupportedIncrements: nil,
                                           syncPumpSchedule: nil,
