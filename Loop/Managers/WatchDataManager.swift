@@ -251,7 +251,7 @@ final class WatchDataManager: NSObject {
         
             let settings = self.deviceManager.loopManager.settings
 
-            context.dosingEnabled = settings.dosingEnabled
+            context.isClosedLoop = settings.dosingEnabled
             
             if let trend = self.deviceManager.cgmManager?.glucoseDisplay?.trendType {
                 context.glucoseTrendRawValue = trend.rawValue

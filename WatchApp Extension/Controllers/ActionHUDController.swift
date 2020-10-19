@@ -69,9 +69,9 @@ final class ActionHUDController: HUDInterfaceController {
         updateForPreMeal(enabled: loopManager.settings.preMealOverride?.isActive() == true)
         updateForOverrideContext(activeOverrideContext)
 
-        let dosingEnabled = loopManager.activeContext?.dosingEnabled ?? false
+        let isClosedLoop = loopManager.activeContext?.isClosedLoop ?? false
         
-        if !dosingEnabled {
+        if !isClosedLoop {
             preMealButtonGroup.state = .disabled
             overrideButtonGroup.state = .disabled
             carbsButtonGroup.state = .disabled
