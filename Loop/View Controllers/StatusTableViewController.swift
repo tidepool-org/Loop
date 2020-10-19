@@ -1202,8 +1202,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let bolusEntryView = SimpleBolusView(displayMealEntry: false, viewModel: viewModel)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         }
-        hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
         let navigationWrapper = UINavigationController(rootViewController: hostingController)
+        hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
         self.present(navigationWrapper, animated: true)
     }
     

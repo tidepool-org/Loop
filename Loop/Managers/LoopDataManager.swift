@@ -1650,7 +1650,7 @@ extension LoopDataManager {
         
         guard let iob = activeInsulin,
             let carbRatioSchedule = carbStore.carbRatioScheduleApplyingOverrideHistory,
-            let correctionRangeSchedule = settings.glucoseTargetRangeScheduleApplyingOverrideIfActive,
+            let correctionRangeSchedule = settings.effectiveGlucoseTargetRangeSchedule(),
             let sensitivitySchedule = insulinSensitivityScheduleApplyingOverrideHistory
         else {
             return nil
