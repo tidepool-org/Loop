@@ -100,9 +100,9 @@ public struct LoopSettings: Equatable {
 }
 
 extension LoopSettings {
-    public func effectiveGlucoseTargetRangeSchedule(consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry? = nil) -> GlucoseRangeSchedule?  {
+    public func effectiveGlucoseTargetRangeSchedule(presumingMealEntry: Bool = false) -> GlucoseRangeSchedule?  {
         
-        let preMealOverride = potentialCarbEntry == nil ? self.preMealOverride : nil
+        let preMealOverride = presumingMealEntry ? nil : self.preMealOverride
         
         let currentEffectiveOverride: TemporaryScheduleOverride?
         switch (preMealOverride, scheduleOverride) {

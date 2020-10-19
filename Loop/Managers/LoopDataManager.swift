@@ -1208,7 +1208,7 @@ extension LoopDataManager {
     private func recommendBolus<Sample: GlucoseValue>(forPrediction predictedGlucose: [Sample],
                                                       consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?) throws -> BolusRecommendation? {
         guard
-            let glucoseTargetRange = settings.effectiveGlucoseTargetRangeSchedule(consideringPotentialCarbEntry: potentialCarbEntry),
+            let glucoseTargetRange = settings.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: potentialCarbEntry != nil),
             let insulinSensitivity = insulinSensitivityScheduleApplyingOverrideHistory,
             let maxBolus = settings.maximumBolus,
             let model = insulinModelSettings?.model
@@ -1650,7 +1650,7 @@ extension LoopDataManager {
         
         guard let iob = activeInsulin,
             let carbRatioSchedule = carbStore.carbRatioScheduleApplyingOverrideHistory,
-            let correctionRangeSchedule = settings.effectiveGlucoseTargetRangeSchedule(),
+            let correctionRangeSchedule = settings.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: mealCarbs != nil),
             let sensitivitySchedule = insulinSensitivityScheduleApplyingOverrideHistory
         else {
             return nil

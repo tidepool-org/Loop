@@ -729,7 +729,7 @@ final class BolusEntryViewModel: ObservableObject {
         dosingDecision.scheduleOverride = preMealOverride ?? scheduleOverride
         dosingDecision.glucoseTargetRangeSchedule = targetGlucoseSchedule
         if scheduleOverride != nil || preMealOverride != nil {
-            dosingDecision.effectiveGlucoseTargetRangeSchedule = delegate.settings.effectiveGlucoseTargetRangeSchedule(consideringPotentialCarbEntry: potentialCarbEntry)
+            dosingDecision.effectiveGlucoseTargetRangeSchedule = delegate.settings.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: potentialCarbEntry != nil)
         } else {
             dosingDecision.effectiveGlucoseTargetRangeSchedule = nil
         }
