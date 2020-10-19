@@ -443,13 +443,13 @@ extension WatchDataManager: WCSessionDelegate {
             }
         case GlucoseBackfillRequestUserInfo.name?:
             if let userInfo = GlucoseBackfillRequestUserInfo(rawValue: message) {
-                deviceManager.glucoseStore.getSyncGlucoseObjects(start: userInfo.startDate.addingTimeInterval(1)) { (result) in
+                deviceManager.glucoseStore.getSyncGlucoseSamples(start: userInfo.startDate.addingTimeInterval(1)) { (result) in
                     switch result {
                     case .failure(let error):
                         self.log.error("Failure getting sync glucose objects: %{public}@", String(describing: error))
                         replyHandler([:])
-                    case .success(let objects):
-                        replyHandler(WatchHistoricalGlucose(objects: objects).rawValue)
+                    case .success(let samples):
+                        replyHandler(WatchHistoricalGlucose(samples: samples).rawValue)
                     }
                 }
             } else {

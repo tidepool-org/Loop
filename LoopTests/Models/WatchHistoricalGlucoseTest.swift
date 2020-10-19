@@ -7,77 +7,61 @@
 //
 
 import XCTest
+import HealthKit
 import LoopKit
 
 @testable import Loop
 
 class WatchHistoricalGlucoseTests: XCTestCase {
-    private lazy var objects: [SyncGlucoseObject] = {
-        return [SyncGlucoseObject(uuid: UUID(),
-                                  provenanceIdentifier: UUID().uuidString,
-                                  syncIdentifier: UUID().uuidString,
-                                  syncVersion: 4,
-                                  value: 123.45,
-                                  unitString: "mg/dL",
-                                  startDate: Date(timeIntervalSinceReferenceDate: .hours(100)),
-                                  isDisplayOnly: false,
-                                  wasUserEntered: true),
-                SyncGlucoseObject(uuid: UUID(),
-                                  provenanceIdentifier: UUID().uuidString,
-                                  syncIdentifier: UUID().uuidString,
-                                  syncVersion: 2,
-                                  value: 7.2,
-                                  unitString: "mmol/L",
-                                  startDate: Date(timeIntervalSinceReferenceDate: .hours(99)),
-                                  isDisplayOnly: true,
-                                  wasUserEntered: false),
-                SyncGlucoseObject(uuid: UUID(),
-                                  provenanceIdentifier: UUID().uuidString,
-                                  syncIdentifier: UUID().uuidString,
-                                  syncVersion: 7,
-                                  value: 187.65,
-                                  unitString: "mg/dL",
-                                  startDate: Date(timeIntervalSinceReferenceDate: .hours(98)),
-                                  isDisplayOnly: false,
-                                  wasUserEntered: false),
-        ]
-    }()
-    private lazy var objectsEncoded: Data = {
-        let encoder = PropertyListEncoder()
-        encoder.outputFormat = .binary
-        return try! encoder.encode(self.objects)
-    }()
-    private lazy var rawValue: WatchHistoricalGlucose.RawValue = {
-        return [
-            "o": objectsEncoded
+    private lazy var samples: [StoredGlucoseSample] = {
+        return [StoredGlucoseSample(uuid: UUID(),
+                                    provenanceIdentifier: UUID().uuidString,
+                                    syncIdentifier: UUID().uuidString,
+                                    syncVersion: 4,
+                                    startDate: Date(timeIntervalSinceReferenceDate: .hours(100)),
+                                    quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 123.45),
+                                    isDisplayOnly: false,
+                                    wasUserEntered: true),
+                StoredGlucoseSample(uuid: UUID(),
+                                    provenanceIdentifier: UUID().uuidString,
+                                    syncIdentifier: UUID().uuidString,
+                                    syncVersion: 2,
+                                    startDate: Date(timeIntervalSinceReferenceDate: .hours(99)),
+                                    quantity: HKQuantity(unit: .millimolesPerLiter, doubleValue: 7.2),
+                                    isDisplayOnly: true,
+                                    wasUserEntered: false),
+                StoredGlucoseSample(uuid: nil,
+                                    provenanceIdentifier: UUID().uuidString,
+                                    syncIdentifier: nil,
+                                    syncVersion: nil,
+                                    startDate: Date(timeIntervalSinceReferenceDate: .hours(98)),
+                                    quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 187.65),
+                                    isDisplayOnly: false,
+                                    wasUserEntered: false),
         ]
     }()
 
     func testDefaultInitializer() {
-        let glucose = WatchHistoricalGlucose(objects: self.objects)
-        XCTAssertEqual(glucose.objects, self.objects)
+        let glucose = WatchHistoricalGlucose(samples: self.samples)
+        XCTAssertEqual(glucose.samples, self.samples)
     }
 
-    func testRawValueInitializer() {
-        let glucose = WatchHistoricalGlucose(rawValue: self.rawValue)
-        XCTAssertEqual(glucose?.objects, self.objects)
-    }
-
-    func testRawValueInitializerMissingObjects() {
-        var rawValue = self.rawValue
-        rawValue["o"] = nil
+    func testRawValueInitializerMissingSamples() {
+        let rawValue: WatchHistoricalGlucose.RawValue = [:]
         XCTAssertNil(WatchHistoricalGlucose(rawValue: rawValue))
     }
 
-    func testRawValueInitializerInvalidObjects() {
-        var rawValue = self.rawValue
-        rawValue["o"] = Data()
+    func testRawValueInitializerInvalidSamples() {
+        let rawValue: WatchHistoricalGlucose.RawValue = [
+            "sample": Data()
+        ]
         XCTAssertNil(WatchHistoricalGlucose(rawValue: rawValue))
     }
 
     func testRawValue() {
-        let rawValue = WatchHistoricalGlucose(objects: self.objects).rawValue
+        let rawValue = WatchHistoricalGlucose(samples: self.samples).rawValue
         XCTAssertEqual(rawValue.count, 1)
-        XCTAssertEqual(rawValue["o"] as? Data, self.objectsEncoded)
+        XCTAssertNotNil(rawValue["samples"] as? Data)
+        XCTAssertEqual(WatchHistoricalGlucose(rawValue: rawValue)?.samples, self.samples)
     }
 }

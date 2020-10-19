@@ -144,7 +144,7 @@ extension WCSession {
         sendMessage(userInfo.rawValue,
             replyHandler: { reply in
                 if let context = WatchHistoricalGlucose(rawValue: reply as WatchHistoricalGlucose.RawValue) {
-                    log.default("sendGlucoseBackfillRequestMessage succeeded with %d objects", context.objects.count)
+                    log.default("sendGlucoseBackfillRequestMessage succeeded with %d samples", context.samples.count)
                     completionHandler(.success(context))
                 } else {
                     log.error("sendGlucoseBackfillRequestMessage failed: could not decode reply %{public}@", reply)

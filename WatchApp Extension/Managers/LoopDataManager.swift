@@ -149,9 +149,9 @@ extension LoopDataManager {
         WCSession.default.sendGlucoseBackfillRequestMessage(userInfo) { (result) in
             switch result {
             case .success(let context):
-                self.glucoseStore.setSyncGlucoseObjects(context.objects) { (error) in
+                self.glucoseStore.setSyncGlucoseSamples(context.samples) { (error) in
                     if let error = error {
-                        self.log.error("Failure setting sync glucose objects: %{public}@", String(describing: error))
+                        self.log.error("Failure setting sync glucose samples: %{public}@", String(describing: error))
                     }
                 }
             case .failure:
