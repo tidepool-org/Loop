@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "loop-fresh@42mm.png",
+      "filename" : "loop-fresh-open@42mm.png",
       "idiom" : "watch",
       "scale" : "2x"
     },
     {
-      "filename" : "loop-fresh@38mm.png",
+      "filename" : "loop-fresh-open@38mm.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : "<=145"

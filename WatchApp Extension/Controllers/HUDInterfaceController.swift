@@ -43,37 +43,42 @@ class HUDInterfaceController: WKInterfaceController {
     }
 
     func update() {
-        guard let activeContext = loopManager.activeContext,
-            let date = activeContext.loopLastRunDate
-        else {
-            loopHUDImage.setLoopImage(.unknown)
+        guard let activeContext = loopManager.activeContext else {
+            loopHUDImage.setHidden(true)
             return
         }
+        loopHUDImage.setHidden(false)
 
-        glucoseLabel.setText("---")
-        glucoseLabel.setHidden(false)
-        if let glucose = activeContext.glucose, let glucoseDate = activeContext.glucoseDate, let unit = activeContext.preferredGlucoseUnit, glucoseDate.timeIntervalSinceNow > -loopManager.settings.inputDataRecencyInterval {
-            let formatter = NumberFormatter.glucoseFormatter(for: unit)
+        let date = activeContext.loopLastRunDate
+        loopHUDImage.setLoopImage({
+            let closedLoop = activeContext.dosingEnabled ?? false
+            if let date = date {
+                switch date.timeIntervalSinceNow {
+                case let t where t > .minutes(-6):
+                    return closedLoop ? .fresh_closed : .fresh_open
+                case let t where t > .minutes(-20):
+                    return closedLoop ? .aging_closed : .aging_open
+                default:
+                    return closedLoop ? .stale_closed : .stale_open
+                }
+            } else {
+                return closedLoop ? .unknown_closed : .unknown_open
+            }
+        }())
 
-            if let glucoseValue = formatter.string(from: glucose.doubleValue(for: unit)) {
-                let trend = activeContext.glucoseTrend?.symbol ?? ""
-                glucoseLabel.setText(glucoseValue + trend)
+        if date != nil {
+            glucoseLabel.setText("---")
+            glucoseLabel.setHidden(false)
+            if let glucose = activeContext.glucose, let glucoseDate = activeContext.glucoseDate, let unit = activeContext.preferredGlucoseUnit, glucoseDate.timeIntervalSinceNow > -loopManager.settings.inputDataRecencyInterval {
+                let formatter = NumberFormatter.glucoseFormatter(for: unit)
+                
+                if let glucoseValue = formatter.string(from: glucose.doubleValue(for: unit)) {
+                    let trend = activeContext.glucoseTrend?.symbol ?? ""
+                    glucoseLabel.setText(glucoseValue + trend)
+                }
             }
         }
 
-        loopHUDImage.setLoopImage({
-            guard let closedLoop = activeContext.dosingEnabled else {
-                return .unknown
-            }
-            switch date.timeIntervalSinceNow {
-            case let t where t > .minutes(-6):
-                return closedLoop ? .fresh_closed : .fresh_open
-            case let t where t > .minutes(-20):
-                return closedLoop ? .aging_closed : .aging_open
-            default:
-                return closedLoop ? .stale_closed : .stale_open
-            }
-        }())
     }
 
     @IBAction func addCarbs() {

@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "loop-aging@42mm.png",
+      "filename" : "loop-aging-open@42mm.png",
       "idiom" : "watch",
       "scale" : "2x"
     },
     {
-      "filename" : "loop-aging@38mm.png",
+      "filename" : "loop-aging-open@38mm.png",
       "idiom" : "watch",
       "scale" : "2x",
       "screen-width" : "<=145"
