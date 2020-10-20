@@ -9,23 +9,20 @@
 import WatchKit
 
 enum LoopImage: String {
-    case fresh_open
-    case aging_open
-    case stale_open
-    case unknown_open
-    case fresh_closed
-    case aging_closed
-    case stale_closed
-    case unknown_closed
+    case fresh
+    case aging
+    case stale
+    case unknown
 
-    var imageName: String {
-        return "loop_\(rawValue)"
+    func imageName(isClosedLoop: Bool) -> String {
+        let suffix = isClosedLoop ? "closed" : "open"
+        return "loop_\(rawValue)_\(suffix)"
     }
 }
 
 
 extension WKInterfaceImage {
-    func setLoopImage(_ loopImage: LoopImage) {
-        setImageNamed(loopImage.imageName)
+    func setLoopImage(isClosedLoop: Bool, _ loopImage: LoopImage) {
+        setImageNamed(loopImage.imageName(isClosedLoop: isClosedLoop))
     }
 }
