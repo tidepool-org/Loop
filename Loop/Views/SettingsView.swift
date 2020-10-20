@@ -101,7 +101,7 @@ extension SettingsView {
                 .sheet(isPresented: $therapySettingsIsPresented) {
                     TherapySettingsView(
                         viewModel: TherapySettingsViewModel(mode: .settings,
-                                                            therapySettings: self.viewModel.therapySettings,
+                                                            therapySettings: self.viewModel.therapySettings(),
                                                             supportedInsulinModelSettings: self.viewModel.supportedInsulinModelSettings,
                                                             pumpSupportedIncrements: self.viewModel.pumpSupportedIncrements,
                                                             syncPumpSchedule: self.viewModel.syncPumpSchedule,
