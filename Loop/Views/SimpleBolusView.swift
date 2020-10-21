@@ -274,7 +274,7 @@ struct SimpleBolusView: View, HorizontalSizeClassOverride {
             let acceptableUpperBound = formatter.string(from: LoopConstants.validManualGlucoseEntryRange.upperBound, for: viewModel.glucoseUnit) ?? String(describing: LoopConstants.validManualGlucoseEntryRange.upperBound)
             return SwiftUI.Alert(
                 title: Text("Glucose Entry Out of Range", comment: "Alert title for a manual glucose entry out of range error"),
-                message: Text(String(format: NSLocalizedString("A manual glucose entry must be between %1$@ and %1$@", comment: "Alert message for a manual glucose entry out of range error. (1: acceptable lower bound) (2: acceptable upper bound)"), acceptableLowerBound, acceptableUpperBound))
+                message: Text(String(format: NSLocalizedString("A manual glucose entry must be between %1$@ and %2$@", comment: "Alert message for a manual glucose entry out of range error. (1: acceptable lower bound) (2: acceptable upper bound)"), acceptableLowerBound, acceptableUpperBound))
             )
         case .manualGlucoseEntryPersistenceFailure:
             return SwiftUI.Alert(
