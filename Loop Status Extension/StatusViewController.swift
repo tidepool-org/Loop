@@ -263,8 +263,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             let carbsFormatter = QuantityFormatter()
             carbsFormatter.setPreferredNumberFormatter(for: carbUnit)
 
-            if  let carbsOnBoardValue = context.carbsOnBoardValue,
-                let activeCarbsNumberString = carbsFormatter.string(from: HKQuantity(unit: carbUnit, doubleValue: carbsOnBoardValue), for: carbUnit)
+            if let carbsOnBoardValue = context.carbsOnBoardValue,
+               let activeCarbsNumberString = carbsFormatter.string(from: HKQuantity(unit: carbUnit, doubleValue: carbsOnBoardValue), for: carbUnit)
             {
                 self.activeCarbsAmountLabel.text = String(format: NSLocalizedString("%1$@", comment: "The subtitle format describing the grams of active carbs.  (1: localized carb value description)"), activeCarbsNumberString)
             } else {
