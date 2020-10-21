@@ -1335,15 +1335,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           servicesViewModel: servicesViewModel,
                                           criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: deviceManager.criticalEventLogExportManager),
                                           adverseEventReportViewModel: AdverseEventReportViewModel(pumpStatus: deviceManager.pumpManager?.status, cgmDevice: deviceManager.cgmManager?.device),
-                                          therapySettings: deviceManager.loopManager.therapySettings,
+                                          therapySettings: { [weak self] in self?.deviceManager.loopManager.therapySettings ?? TherapySettings() },
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
                                           pumpSupportedIncrements: pumpSupportedIncrements,
                                           syncPumpSchedule: syncBasalRateSchedule,
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
                                           isClosedLoopAllowed: deviceManager.$isClosedLoopAllowed,
-                                          delegate: self
-        )
+                                          delegate: self)
         let hostingController = DismissibleHostingController(
             rootView: SettingsView(viewModel: viewModel).environment(\.appName, Bundle.main.bundleDisplayName),
             isModalInPresentation: false)
