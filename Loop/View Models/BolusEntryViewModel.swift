@@ -19,50 +19,35 @@ import SwiftUI
 
 protocol BolusEntryViewModelDelegate: class {
     
-    ///
     func withLoopState(do block: @escaping (LoopState) -> Void)
 
-    ///
     func addGlucoseSamples(_ samples: [NewGlucoseSample], completion: ((_ result: Swift.Result<[StoredGlucoseSample], Error>) -> Void)?)
     
-    ///
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry? ,
                       completion: @escaping (_ result: Result<StoredCarbEntry>) -> Void)
 
-    ///
     func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
     
-    ///
     func enactBolus(units: Double, at startDate: Date, completion: @escaping (_ error: Error?) -> Void)
 
-    ///
     func getGlucoseSamples(start: Date?, end: Date?, completion: @escaping (_ samples: Swift.Result<[StoredGlucoseSample], Error>) -> Void)
 
-    ///
     func insulinOnBoard(at date: Date, completion: @escaping (_ result: DoseStoreResult<InsulinValue>) -> Void)
     
-    ///
     func carbsOnBoard(at date: Date, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (_ result: CarbStoreResult<CarbValue>) -> Void)
     
-    ///
     func ensureCurrentPumpData(completion: @escaping () -> Void)
     
-    ///
     var mostRecentGlucoseDataDate: Date? { get }
     
-    ///
     var mostRecentPumpDataDate: Date? { get }
     
-    ///
     var isPumpConfigured: Bool { get }
     
-    ///
     var preferredGlucoseUnit: HKUnit { get }
     
-    ///
     var insulinModel: InsulinModel? { get }
     
-    ///
     var settings: LoopSettings { get }
 }
 

@@ -37,6 +37,10 @@ class CGMStalenessMonitor {
     private static var cgmStalenessTimerTolerance: TimeInterval = .seconds(10)
     
     public func cgmGlucoseSamplesAvailable(_ samples: [NewGlucoseSample]) {
+        guard samples.count > 0 else {
+            return
+        }
+        
         let mostRecentGlucose = samples.map { $0.date }.max()!
         let cgmDataAge = -mostRecentGlucose.timeIntervalSinceNow
         if cgmDataAge < LoopCoreConstants.inputDataRecencyInterval {

@@ -18,28 +18,20 @@ import LocalAuthentication
 
 protocol SimpleBolusViewModelDelegate: class {
     
-    ///
     func addGlucose(_ samples: [NewGlucoseSample], completion: @escaping (Error?) -> Void)
     
-    ///
     func addCarbEntry(_ carbEntry: NewCarbEntry, completion: @escaping (Error?) -> Void)
     
-    ///
     func enactBolus(units: Double, at startDate: Date)
 
-    ///
     func insulinOnBoard(at date: Date, completion: @escaping (_ result: DoseStoreResult<InsulinValue>) -> Void)
 
-    ///
     func computeSimpleBolusRecommendation(mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> HKQuantity?
 
-    ///
     var preferredGlucoseUnit: HKUnit { get }
     
-    ///
     var maximumBolus: Double { get }
 
-    ///
     var suspendThreshold: HKQuantity { get }
 }
 
