@@ -327,7 +327,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         let reloadGroup = DispatchGroup()
         var newRecommendedTempBasal: (recommendation: TempBasalRecommendation, date: Date)?
-        var glucoseValues: [StoredGlucoseSample]?
+        var glucoseSamples: [StoredGlucoseSample]?
         var predictedGlucoseValues: [GlucoseValue]?
         var iobValues: [InsulinValue]?
         var doseEntries: [DoseEntry]?
@@ -395,8 +395,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         if currentContext.contains(.glucose) {
             reloadGroup.enter()
-            deviceManager.glucoseStore.getCachedGlucoseSamples(start: startDate, end: nil) { (values) -> Void in
-                glucoseValues = values
+            deviceManager.glucoseStore.getGlucoseSamples(start: startDate, end: nil) { (result) -> Void in
+                switch result {
+                case .failure(let error):
+                    self.log.error("Failure getting glucose samples: %{public}@", String(describing: error))
+                    glucoseSamples = nil
+                case .success(let samples):
+                    glucoseSamples = samples
+                }
                 reloadGroup.leave()
             }
         }
@@ -460,8 +466,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             /// Update the chart data
 
             // Glucose
-            if let glucoseValues = glucoseValues {
-                self.statusCharts.setGlucoseValues(glucoseValues)
+            if let glucoseSamples = glucoseSamples {
+                self.statusCharts.setGlucoseValues(glucoseSamples)
             }
             if let predictedGlucoseValues = predictedGlucoseValues {
                 self.statusCharts.setPredictedGlucoseValues(predictedGlucoseValues)
