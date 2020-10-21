@@ -750,7 +750,7 @@ extension LoopDataManager {
         // Fetch glucose effects as far back as we want to make retroactive analysis
         var latestGlucoseDate: Date?
         updateGroup.enter()
-        glucoseStore.getGlucoseSamples(start: Date(timeInterval: -settings.inputDataRecencyInterval, since: now()), end: nil) { (result) in
+        glucoseStore.getGlucoseSamples(start: Date(timeInterval: -LoopCoreConstants.inputDataRecencyInterval, since: now()), end: nil) { (result) in
             switch result {
             case .failure(let error):
                 self.logger.error("Failure getting glucose samples: %{public}@", String(describing: error))

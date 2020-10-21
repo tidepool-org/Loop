@@ -18,7 +18,7 @@ class CGMStalenessMonitorTests: XCTestCase {
     private var fetchExpectation: XCTestExpectation?
     
     private var storedGlucoseSample: StoredGlucoseSample {
-        return StoredGlucoseSample(sampleUUID: UUID(), syncIdentifier: "syncIdentifier", syncVersion: 1, startDate: Date().addingTimeInterval(-.minutes(5)), quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 120), isDisplayOnly: false, wasUserEntered: false, provenanceIdentifier: "Testing")
+        return StoredGlucoseSample(uuid: UUID(), provenanceIdentifier: UUID().uuidString, syncIdentifier: "syncIdentifier", syncVersion: 1, startDate: Date().addingTimeInterval(-.minutes(5)), quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 120), isDisplayOnly: false, wasUserEntered: false)
     }
     
     private var newGlucoseSample: NewGlucoseSample {
@@ -101,7 +101,7 @@ class CGMStalenessMonitorTests: XCTestCase {
 }
 
 extension CGMStalenessMonitorTests: CGMStalenessMonitorDelegate {
-    func getLatestCGMGlucose(since: Date, completion: @escaping (GlucoseStoreResult<StoredGlucoseSample?>) -> Void) {
+    func getLatestCGMGlucose(since: Date, completion: @escaping (Result<StoredGlucoseSample?, Error>) -> Void) {
         completion(.success(latestCGMGlucose))
         fetchExpectation?.fulfill()
     }

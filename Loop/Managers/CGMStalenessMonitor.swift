@@ -11,7 +11,7 @@ import LoopKit
 import LoopCore
 
 protocol CGMStalenessMonitorDelegate: class {
-    func getLatestCGMGlucose(since: Date, completion: @escaping (_ result: GlucoseStoreResult<StoredGlucoseSample?>) -> Void)
+    func getLatestCGMGlucose(since: Date, completion: @escaping (_ result: Swift.Result<StoredGlucoseSample?, Error>) -> Void)
 }
 
 class CGMStalenessMonitor {

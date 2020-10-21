@@ -12,7 +12,7 @@ import LoopKit
 
 extension DeviceDataManager: SimpleBolusViewModelDelegate {
     func addGlucose(_ samples: [NewGlucoseSample], completion: @escaping (Error?) -> Void) {
-        loopManager.addGlucose(samples) { (result) in
+        loopManager.addGlucoseSamples(samples) { (result) in
             switch result {
             case .failure(let error):
                 completion(error)
