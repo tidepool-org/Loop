@@ -126,6 +126,8 @@ final class StatusExtensionDataManager {
             context.cgmStatusHighlightContext = DeviceStatusHighlightContext(from: dataManager.cgmStatusHighlight)
             context.cgmLifecycleProgressContext = DeviceLifecycleProgressContext(from: dataManager.cgmLifecycleProgress)
 
+            context.carbsOnBoardValue = state.carbsOnBoard?.quantity.doubleValue(for: .gram())
+            
             completionHandler(context)
         }
     }
