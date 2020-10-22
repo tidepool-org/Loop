@@ -294,6 +294,7 @@ struct StatusExtensionContext: RawRepresentable {
     var pumpLifecycleProgressContext: DeviceLifecycleProgressContext?
     var cgmStatusHighlightContext: DeviceStatusHighlightContext?
     var cgmLifecycleProgressContext: DeviceLifecycleProgressContext?
+    var carbsOnBoard: Double?
     
     init() { }
     
@@ -314,6 +315,7 @@ struct StatusExtensionContext: RawRepresentable {
         isClosedLoop = rawValue["isClosedLoop"] as? Bool
         batteryPercentage = rawValue["batteryPercentage"] as? Double
         reservoirCapacity = rawValue["reservoirCapacity"] as? Double
+        carbsOnBoard = rawValue["carbsOnBoard"] as? Double
 
         if let rawValue = rawValue["glucoseDisplay"] as? GlucoseDisplayableContext.RawValue {
             glucoseDisplay = GlucoseDisplayableContext(rawValue: rawValue)
@@ -357,6 +359,7 @@ struct StatusExtensionContext: RawRepresentable {
         raw["pumpLifecycleProgressContext"] = pumpLifecycleProgressContext?.rawValue
         raw["cgmStatusHighlightContext"] = cgmStatusHighlightContext?.rawValue
         raw["cgmLifecycleProgressContext"] = cgmLifecycleProgressContext?.rawValue
+        raw["carbsOnBoard"] = carbsOnBoard
         
         return raw
     }
