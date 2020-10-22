@@ -28,7 +28,7 @@ struct SimpleBolusCalculator {
                 let correctionTarget = correctionRange.averageValue(for: .milligramsPerDeciliter)
                 let correctionBolus = (manualGlucose.doubleValue(for: .milligramsPerDeciliter) - correctionTarget) / sensitivity
                 let correctionBolusMinusActiveInsulin = correctionBolus - activeInsulin.doubleValue(for: .internationalUnit())
-                recommendedBolus += correctionBolusMinusActiveInsulin
+                recommendedBolus += max(0, correctionBolusMinusActiveInsulin)
             }
         }
         
