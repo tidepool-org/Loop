@@ -9,6 +9,7 @@
 import XCTest
 import HealthKit
 import LoopKit
+import LoopCore
 @testable import Loop
 
 class SimpleBolusViewModelTests: XCTestCase {
@@ -112,11 +113,24 @@ extension SimpleBolusViewModelTests: SimpleBolusViewModelDelegate {
         completion(nil)
     }
     
-    func addCarbEntry(_ carbEntry: NewCarbEntry, completion: @escaping (Error?) -> Void) {
+    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<StoredCarbEntry>) -> Void) {
+        
         addedCarbEntry = carbEntry
-        completion(nil)
+        let storedCarbEntry = StoredCarbEntry(
+            uuid: UUID(),
+            provenanceIdentifier: UUID().uuidString,
+            syncIdentifier: UUID().uuidString,
+            syncVersion: 1,
+            startDate: carbEntry.startDate,
+            quantity: carbEntry.quantity,
+            foodType: carbEntry.foodType,
+            absorptionTime: carbEntry.absorptionTime,
+            createdByCurrentApp: true,
+            userCreatedDate: Date(),
+            userUpdatedDate: nil)
+        completion(.success(storedCarbEntry))
     }
-    
+
     func enactBolus(units: Double, at startDate: Date) {
         enactedBolus = (units: units, startDate: startDate)
     }
