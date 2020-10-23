@@ -318,7 +318,17 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
         func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<StoredCarbEntry>) -> Void) {
             
             let storedCarbEntry = StoredCarbEntry(
-                uuid: UUID(), provenanceIdentifier: UUID().uuidString, syncIdentifier: UUID().uuidString, syncVersion: 1, startDate: carbEntry.startDate, quantity: carbEntry.quantity, foodType: carbEntry.foodType, absorptionTime: carbEntry.absorptionTime, createdByCurrentApp: true, userCreatedDate: Date(), userUpdatedDate: nil)
+                uuid: UUID(),
+                provenanceIdentifier: UUID().uuidString,
+                syncIdentifier: UUID().uuidString,
+                syncVersion: 1,
+                startDate: carbEntry.startDate,
+                quantity: carbEntry.quantity,
+                foodType: carbEntry.foodType,
+                absorptionTime: carbEntry.absorptionTime,
+                createdByCurrentApp: true,
+                userCreatedDate: Date(),
+                userUpdatedDate: nil)
             completion(.success(storedCarbEntry))
         }
         

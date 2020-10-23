@@ -200,6 +200,7 @@ class SimpleBolusViewModel: ObservableObject {
             self.recommendationDate = recommendationDate
         } else {
             dosingDecision = nil
+            self.recommendationDate = nil
         }
     }
     
