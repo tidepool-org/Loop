@@ -20,6 +20,7 @@ class SimpleBolusViewModelTests: XCTestCase {
     
     var addedGlucose: [NewGlucoseSample] = []
     var addedCarbEntry: NewCarbEntry?
+    var storedBolusDecision: BolusDosingDecision?
     var enactedBolus: (units: Double, startDate: Date)?
     var currentIOB: InsulinValue = SimpleBolusViewModelTests.noIOB
     var currentRecommendation: Double = 0
@@ -103,7 +104,9 @@ class SimpleBolusViewModelTests: XCTestCase {
         XCTAssertEqual(180, addedGlucose.first?.quantity.doubleValue(for: .milligramsPerDeciliter))
         
         XCTAssertEqual(2.5, enactedBolus?.units)
-
+        
+        XCTAssertEqual(storedBolusDecision?.recommendedBolus?.amount, 2.5)
+        XCTAssertEqual(storedBolusDecision?.carbEntry?.quantity, addedCarbEntry?.quantity)
     }
 }
 
@@ -139,10 +142,17 @@ extension SimpleBolusViewModelTests: SimpleBolusViewModelDelegate {
         completion(.success(currentIOB))
     }
     
-    func computeSimpleBolusRecommendation(mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> HKQuantity? {
-        return HKQuantity(unit: .internationalUnit(), doubleValue: currentRecommendation)
+    func computeSimpleBolusRecommendation(at date: Date, mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> BolusDosingDecision? {
+        
+        var decision = BolusDosingDecision()
+        decision.recommendedBolus = BolusRecommendation(amount: currentRecommendation, pendingInsulin: 0, notice: .none)
+        return decision
     }
     
+    func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
+        storedBolusDecision = bolusDosingDecision
+    }
+
     var preferredGlucoseUnit: HKUnit {
         return .milligramsPerDeciliter
     }
