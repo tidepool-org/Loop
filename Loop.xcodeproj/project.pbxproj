@@ -453,6 +453,7 @@
 		B4E96D5B248A8229002DABAD /* StatusBarHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E96D5A248A8229002DABAD /* StatusBarHUDView.swift */; };
 		B4E96D5D248A82A2002DABAD /* StatusBarHUDView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4E96D5C248A82A2002DABAD /* StatusBarHUDView.xib */; };
 		B4F3D25124AF890C0095CE44 /* BluetoothStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F3D25024AF890C0095CE44 /* BluetoothStateManager.swift */; };
+		B4FACBB12541FAB700199981 /* LoopDataManagerAlertingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FACBB02541FAB700199981 /* LoopDataManagerAlertingTests.swift */; };
 		B4FEEF7D24B8A71F00A8DF9B /* DeviceDataManager+DeviceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FEEF7C24B8A71F00A8DF9B /* DeviceDataManager+DeviceStatus.swift */; };
 		C10B28461EA9BA5E006EA1FC /* far_future_high_bg_forecast.json in Resources */ = {isa = PBXBuildFile; fileRef = C10B28451EA9BA5E006EA1FC /* far_future_high_bg_forecast.json */; };
 		C11BD0552523CFED00236B08 /* SimpleBolusViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11BD0542523CFED00236B08 /* SimpleBolusViewModel.swift */; };
@@ -1325,6 +1326,7 @@
 		B4E96D5A248A8229002DABAD /* StatusBarHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarHUDView.swift; sourceTree = "<group>"; };
 		B4E96D5C248A82A2002DABAD /* StatusBarHUDView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = StatusBarHUDView.xib; sourceTree = "<group>"; };
 		B4F3D25024AF890C0095CE44 /* BluetoothStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothStateManager.swift; sourceTree = "<group>"; };
+		B4FACBB02541FAB700199981 /* LoopDataManagerAlertingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopDataManagerAlertingTests.swift; sourceTree = "<group>"; };
 		B4FEEF7C24B8A71F00A8DF9B /* DeviceDataManager+DeviceStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DeviceDataManager+DeviceStatus.swift"; sourceTree = "<group>"; };
 		C10B28451EA9BA5E006EA1FC /* far_future_high_bg_forecast.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = far_future_high_bg_forecast.json; sourceTree = "<group>"; };
 		C11BD0542523CFED00236B08 /* SimpleBolusViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBolusViewModel.swift; sourceTree = "<group>"; };
@@ -1559,6 +1561,8 @@
 			children = (
 				1DA7A84024476E98008257F0 /* Alerts */,
 				A91E4C2224F86F1000BE9213 /* CriticalEventLogExportManagerTests.swift */,
+				B4FACBB02541FAB700199981 /* LoopDataManagerAlertingTests.swift */,
+				E9C58A7124DB489100487A17 /* LoopDataManagerTests.swift */,
 				A9F5F1F4251050EC00E7C8A4 /* ZipArchiveTests.swift */,
 				C16575722538AFF6004AE16E /* CGMStalenessMonitorTests.swift */,
 			);
@@ -2033,7 +2037,6 @@
 				A9DF02CA24F72B9E00B7C988 /* CriticalEventLogTests.swift */,
 				A9DAE7CF2332D77F006AE942 /* LoopTests.swift */,
 				8968B113240C55F10074BB48 /* LoopSettingsTests.swift */,
-				E9C58A7124DB489100487A17 /* LoopDataManagerTests.swift */,
 				A9DF02CC24F72BC800B7C988 /* PersistenceControllerTestCase.swift */,
 				E93E86AC24DDE02C00FF40C8 /* Mock Stores */,
 			);
@@ -3667,6 +3670,7 @@
 				C165756F2534C468004AE16E /* SimpleBolusViewModelTests.swift in Sources */,
 				A9E6DFE6246A042E005B1A1C /* CarbStoreTests.swift in Sources */,
 				A9DAE7D02332D77F006AE942 /* LoopTests.swift in Sources */,
+				B4FACBB12541FAB700199981 /* LoopDataManagerAlertingTests.swift in Sources */,
 				B45E704F25277EA2000C0E68 /* AdverseEventReportViewModelTests.swift in Sources */,
 				E93E86B024DDE1BD00FF40C8 /* MockGlucoseStore.swift in Sources */,
 				1DFE9E172447B6270082C280 /* UserNotificationAlertPresenterTests.swift in Sources */,

@@ -39,6 +39,8 @@ final class LoopDataManager {
 
     private let analyticsServicesManager: AnalyticsServicesManager
 
+    private let alertManager: AlertPresenter?
+
     private let now: () -> Date
 
     // References to registered notification center observers
@@ -68,7 +70,7 @@ final class LoopDataManager {
         dosingDecisionStore: DosingDecisionStoreProtocol,
         settingsStore: SettingsStoreProtocol,
         now: @escaping () -> Date = { Date() },
-        alertManager: AlertManager? = nil
+        alertManager: AlertPresenter? = nil
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -92,8 +94,9 @@ final class LoopDataManager {
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
+        self.alertManager = alertManager
+
         overrideHistory.delegate = self
-        self.settings.alertManager = alertManager
 
         // Observe changes
         notificationObservers = [
@@ -707,6 +710,7 @@ extension LoopDataManager {
             self.logger.default("Loop running")
             NotificationCenter.default.post(name: .LoopRunning, object: self)
 
+            self.checkAlerts()
             self.lastLoopError = nil
             let startDate = self.now()
 
@@ -1970,5 +1974,34 @@ extension LoopDataManager {
                         carbRatioSchedule: carbRatioSchedule,
                         basalRateSchedule: basalRateSchedule,
                         insulinModelSettings: insulinModelSettings)
+    }
+}
+
+//MARK: - Alerts
+
+extension LoopDataManager {
+    private func checkAlerts() {
+        checkScheduleWorkoutOverrideReminder()
+    }
+
+    private func checkScheduleWorkoutOverrideReminder() {
+        guard settings.isScheduleOverrideInfiniteWorkout else {
+            settings.indefinteWorkoutOverrideEnabledDate = nil
+            return
+        }
+
+        guard let indefinteWorkoutOverrideEnabledDate = settings.indefinteWorkoutOverrideEnabledDate else {
+            return
+        }
+
+        if  -indefinteWorkoutOverrideEnabledDate.timeIntervalSinceNow > settings.workoutOverrideReminderInterval {
+            issueWorkoutOverrideReminder()
+            // reset the date to allow the alert to be issued again after the workoutOverrideReminderInterval is surpassed
+            settings.indefinteWorkoutOverrideEnabledDate = Date()
+        }
+    }
+
+    private func issueWorkoutOverrideReminder() {
+        alertManager?.issueAlert(settings.workoutOverrideReminderAlert)
     }
 }

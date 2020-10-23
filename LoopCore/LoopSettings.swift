@@ -8,17 +8,8 @@
 import HealthKit
 import LoopKit
 
-public struct LoopSettings {
-    public weak var alertManager: AlertPresenter? {
-        didSet {
-            if isScheduleOverrideInfiniteWorkout {
-                // schedule workout override reminder
-                alertManager?.issueAlert(workoutOverrideReminderAlert)
-            }
-        }
-    }
-    
-    var isScheduleOverrideInfiniteWorkout: Bool {
+public struct LoopSettings: Equatable {
+    public var isScheduleOverrideInfiniteWorkout: Bool {
         guard let scheduleOverride = scheduleOverride else { return false }
         return scheduleOverride.context == .legacyWorkout && scheduleOverride.duration.isInfinite
     }
@@ -32,6 +23,10 @@ public struct LoopSettings {
     public var preMealTargetRange: DoubleRange?
 
     public var legacyWorkoutTargetRange: DoubleRange?
+
+    public var indefinteWorkoutOverrideEnabledDate: Date?
+
+    public var workoutOverrideReminderInterval: TimeInterval = .days(1)
 
     public var overridePresets: [TemporaryScheduleOverridePreset] = []
 
@@ -103,15 +98,13 @@ public struct LoopSettings {
         glucoseTargetRangeSchedule: GlucoseRangeSchedule? = nil,
         maximumBasalRatePerHour: Double? = nil,
         maximumBolus: Double? = nil,
-        suspendThreshold: GlucoseThreshold? = nil,
-        alertManager: AlertPresenter? = nil
+        suspendThreshold: GlucoseThreshold? = nil
     ) {
         self.dosingEnabled = dosingEnabled
         self.glucoseTargetRangeSchedule = glucoseTargetRangeSchedule
         self.maximumBasalRatePerHour = maximumBasalRatePerHour
         self.maximumBolus = maximumBolus
         self.suspendThreshold = suspendThreshold
-        self.alertManager = alertManager
     }
 }
 
@@ -179,18 +172,16 @@ extension LoopSettings {
     public mutating func enableLegacyWorkoutOverride(at date: Date = Date(), for duration: TimeInterval) {
         scheduleOverride = legacyWorkoutOverride(beginningAt: date, for: duration)
         preMealOverride = nil
+        if duration.isInfinite {
+            indefinteWorkoutOverrideEnabledDate = date
+        }
     }
 
     public func legacyWorkoutOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
         guard let legacyWorkoutTargetRange = legacyWorkoutTargetRange, let unit = glucoseUnit else {
             return nil
         }
-        
-        if duration.isInfinite {
-            // schedule workout override reminder
-            alertManager?.issueAlert(workoutOverrideReminderAlert)
-        }
-            
+
         return TemporaryScheduleOverride(
             context: .legacyWorkout,
             settings: TemporaryScheduleOverrideSettings(unit: unit, targetRange: legacyWorkoutTargetRange),
@@ -209,11 +200,6 @@ extension LoopSettings {
 
         guard let scheduleOverride = scheduleOverride else { return }
         
-        if isScheduleOverrideInfiniteWorkout {
-            // retract workout override reminder
-            alertManager?.retractAlert(identifier: LoopSettings.workoutOverrideReminderAlertIdentifier)
-        }
-
         if let context = context {
             if scheduleOverride.context == context {
                 self.scheduleOverride = nil
@@ -262,6 +248,12 @@ extension LoopSettings: RawRepresentable {
             self.legacyWorkoutTargetRange = DoubleRange(rawValue: rawLegacyWorkoutTargetRange)
         }
 
+        self.indefinteWorkoutOverrideEnabledDate = rawValue["indefinteWorkoutOverrideEnabledDate"] as? Date
+
+        if let workoutOverrideReminderInterval = rawValue["workoutOverrideReminderInterval"] as? TimeInterval {
+            self.workoutOverrideReminderInterval = workoutOverrideReminderInterval
+        }
+
         if let rawPresets = rawValue["overridePresets"] as? [TemporaryScheduleOverridePreset.RawValue] {
             self.overridePresets = rawPresets.compactMap(TemporaryScheduleOverridePreset.init(rawValue:))
         }
@@ -293,6 +285,8 @@ extension LoopSettings: RawRepresentable {
         raw["glucoseTargetRangeSchedule"] = glucoseTargetRangeSchedule?.rawValue
         raw["preMealTargetRange"] = preMealTargetRange?.rawValue
         raw["legacyWorkoutTargetRange"] = legacyWorkoutTargetRange?.rawValue
+        raw["indefinteWorkoutOverrideEnabledDate"] = indefinteWorkoutOverrideEnabledDate
+        raw["workoutOverrideReminderInterval"] = workoutOverrideReminderInterval
         raw["preMealOverride"] = preMealOverride?.rawValue
         raw["scheduleOverride"] = scheduleOverride?.rawValue
         raw["maximumBasalRatePerHour"] = maximumBasalRatePerHour
@@ -300,22 +294,6 @@ extension LoopSettings: RawRepresentable {
         raw["minimumBGGuard"] = suspendThreshold?.rawValue
 
         return raw
-    }
-}
-
-extension LoopSettings: Equatable {
-    public static func == (lhs: LoopSettings, rhs: LoopSettings) -> Bool {
-        return lhs.dosingEnabled == rhs.dosingEnabled &&
-            lhs.glucoseTargetRangeSchedule == rhs.glucoseTargetRangeSchedule &&
-            lhs.preMealTargetRange == rhs.preMealTargetRange &&
-            lhs.legacyWorkoutTargetRange == rhs.legacyWorkoutTargetRange &&
-            lhs.overridePresets == rhs.overridePresets &&
-            lhs.scheduleOverride == rhs.scheduleOverride &&
-            lhs.preMealOverride == rhs.preMealOverride &&
-            lhs.maximumBasalRatePerHour == rhs.maximumBasalRatePerHour &&
-            lhs.maximumBolus == rhs.maximumBolus &&
-            lhs.suspendThreshold == rhs.suspendThreshold &&
-            lhs.deviceToken == rhs.deviceToken
     }
 }
 
@@ -337,6 +315,6 @@ extension LoopSettings {
         return Alert(identifier: LoopSettings.workoutOverrideReminderAlertIdentifier,
                      foregroundContent: content,
                      backgroundContent: content,
-                     trigger: .repeating(repeatInterval: TimeInterval.hours(24)))
+                     trigger: .immediate)
     }
 }
