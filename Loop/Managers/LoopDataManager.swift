@@ -1981,23 +1981,23 @@ extension LoopDataManager {
 
 extension LoopDataManager {
     private func checkAlerts() {
-        checkScheduleWorkoutOverrideReminder()
+        checkWorkoutOverrideReminder()
     }
 
-    private func checkScheduleWorkoutOverrideReminder() {
+    private func checkWorkoutOverrideReminder() {
         guard settings.isScheduleOverrideInfiniteWorkout else {
-            settings.indefinteWorkoutOverrideEnabledDate = nil
+            settings.indefiniteWorkoutOverrideEnabledDate = nil
             return
         }
 
-        guard let indefinteWorkoutOverrideEnabledDate = settings.indefinteWorkoutOverrideEnabledDate else {
+        guard let indefiniteWorkoutOverrideEnabledDate = settings.indefiniteWorkoutOverrideEnabledDate else {
             return
         }
 
-        if  -indefinteWorkoutOverrideEnabledDate.timeIntervalSinceNow > settings.workoutOverrideReminderInterval {
+        if  -indefiniteWorkoutOverrideEnabledDate.timeIntervalSinceNow > settings.workoutOverrideReminderInterval {
             issueWorkoutOverrideReminder()
             // reset the date to allow the alert to be issued again after the workoutOverrideReminderInterval is surpassed
-            settings.indefinteWorkoutOverrideEnabledDate = Date()
+            settings.indefiniteWorkoutOverrideEnabledDate = Date()
         }
     }
 
