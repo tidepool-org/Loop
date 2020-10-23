@@ -250,10 +250,6 @@ extension LoopSettings: RawRepresentable {
 
         self.indefinteWorkoutOverrideEnabledDate = rawValue["indefinteWorkoutOverrideEnabledDate"] as? Date
 
-        if let workoutOverrideReminderInterval = rawValue["workoutOverrideReminderInterval"] as? TimeInterval {
-            self.workoutOverrideReminderInterval = workoutOverrideReminderInterval
-        }
-
         if let rawPresets = rawValue["overridePresets"] as? [TemporaryScheduleOverridePreset.RawValue] {
             self.overridePresets = rawPresets.compactMap(TemporaryScheduleOverridePreset.init(rawValue:))
         }
@@ -286,7 +282,6 @@ extension LoopSettings: RawRepresentable {
         raw["preMealTargetRange"] = preMealTargetRange?.rawValue
         raw["legacyWorkoutTargetRange"] = legacyWorkoutTargetRange?.rawValue
         raw["indefinteWorkoutOverrideEnabledDate"] = indefinteWorkoutOverrideEnabledDate
-        raw["workoutOverrideReminderInterval"] = workoutOverrideReminderInterval
         raw["preMealOverride"] = preMealOverride?.rawValue
         raw["scheduleOverride"] = scheduleOverride?.rawValue
         raw["maximumBasalRatePerHour"] = maximumBasalRatePerHour
