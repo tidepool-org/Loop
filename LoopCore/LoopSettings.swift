@@ -172,16 +172,17 @@ extension LoopSettings {
     public mutating func enableLegacyWorkoutOverride(at date: Date = Date(), for duration: TimeInterval) {
         scheduleOverride = legacyWorkoutOverride(beginningAt: date, for: duration)
         preMealOverride = nil
-        if duration.isInfinite {
-            indefiniteWorkoutOverrideEnabledDate = date
-        }
     }
 
-    public func legacyWorkoutOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
+    public mutating func legacyWorkoutOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
         guard let legacyWorkoutTargetRange = legacyWorkoutTargetRange, let unit = glucoseUnit else {
             return nil
         }
 
+        if duration.isInfinite {
+            indefiniteWorkoutOverrideEnabledDate = date
+        }
+        
         return TemporaryScheduleOverride(
             context: .legacyWorkout,
             settings: TemporaryScheduleOverrideSettings(unit: unit, targetRange: legacyWorkoutTargetRange),
