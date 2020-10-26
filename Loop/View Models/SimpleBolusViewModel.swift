@@ -133,7 +133,7 @@ class SimpleBolusViewModel: ObservableObject {
             if let decision = dosingDecision, let insulinOnBoard = decision.insulinOnBoard, insulinOnBoard.value > 0 {
                 activeInsulin = Self.doseAmountFormatter.string(from: insulinOnBoard.value)
             } else {
-                self.activeInsulin = nil
+                activeInsulin = nil
             }
         }
     }
