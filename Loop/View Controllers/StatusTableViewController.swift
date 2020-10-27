@@ -1149,6 +1149,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             vc.doseStore = deviceManager.doseStore
             vc.hidesBottomBarWhenPushed = true
             vc.enableDeleteAllButton = FeatureFlags.deleteAllButtonEnabled
+            vc.headerValueLabelColor = .insulinTintColor
         case let vc as OverrideSelectionViewController:
             if deviceManager.loopManager.settings.futureOverrideEnabled() {
                 vc.scheduledOverride = deviceManager.loopManager.settings.scheduleOverride
