@@ -715,7 +715,6 @@ extension LoopDataManager {
             self.logger.default("Loop running")
             NotificationCenter.default.post(name: .LoopRunning, object: self)
 
-//            self.checkAlerts()
             self.lastLoopError = nil
             let startDate = self.now()
 
