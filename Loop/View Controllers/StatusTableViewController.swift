@@ -1444,10 +1444,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     @objc private func showLoopCompletionMessage(_: Any) {
         guard let loopCompletionMessage = hudView?.loopCompletionHUD.loopCompletionMessage else { return }
-        presentLoopCmpletionMesage(title: loopCompletionMessage.title, message: loopCompletionMessage.message)
+        presentLoopCompletionMesage(title: loopCompletionMessage.title, message: loopCompletionMessage.message)
     }
     
-    private func presentLoopCmpletionMesage(title: String, message: String) {
+    private func presentLoopCompletionMesage(title: String, message: String) {
         let action = UIAlertAction(title: NSLocalizedString("Dismiss", comment: "The button label of the action used to dismiss an error alert"),
                                    style: .default)
         let alertController = UIAlertController(title: title,
