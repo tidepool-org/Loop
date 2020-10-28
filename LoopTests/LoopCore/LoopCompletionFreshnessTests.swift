@@ -17,7 +17,7 @@ class LoopCompletionFreshnessTests: XCTestCase {
         let staleAge1 = TimeInterval(minutes: 20)
         let staleAge2 = TimeInterval(hours: 20)
         
-        XCTAssertEqual(LoopCompletionFreshness(: nil), .stale)
+        XCTAssertEqual(LoopCompletionFreshness(age: nil), .stale)
         XCTAssertEqual(LoopCompletionFreshness(age: freshAge), .fresh)
         XCTAssertEqual(LoopCompletionFreshness(age: agingAge), .aging)
         XCTAssertEqual(LoopCompletionFreshness(age: staleAge1), .stale)
