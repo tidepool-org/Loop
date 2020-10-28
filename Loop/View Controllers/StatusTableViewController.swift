@@ -469,8 +469,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
             if let glucoseSamples = glucoseSamples {
                 self.statusCharts.setGlucoseValues(glucoseSamples)
             }
-            if let predictedGlucoseValues = predictedGlucoseValues {
+            if self.deviceManager.isClosedLoop, let predictedGlucoseValues = predictedGlucoseValues {
                 self.statusCharts.setPredictedGlucoseValues(predictedGlucoseValues)
+            } else {
+                self.statusCharts.setPredictedGlucoseValues([])
             }
             if !FeatureFlags.predictedGlucoseChartClampEnabled,
                 let lastPoint = self.statusCharts.glucose.predictedGlucosePoints.last?.y
@@ -1024,7 +1026,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case .charts:
             switch ChartRow(rawValue: indexPath.row)! {
             case .glucose:
-                performSegue(withIdentifier: PredictionTableViewController.className, sender: indexPath)
+                if self.deviceManager.isClosedLoop {
+                    performSegue(withIdentifier: PredictionTableViewController.className, sender: indexPath)
+                }
             case .iob, .dose:
                 performSegue(withIdentifier: InsulinDeliveryTableViewController.className, sender: indexPath)
             case .cob:
@@ -1144,7 +1148,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case let vc as InsulinDeliveryTableViewController:
             vc.doseStore = deviceManager.doseStore
             vc.hidesBottomBarWhenPushed = true
-            vc.enableDeleteAllButton = FeatureFlags.deleteAllButtonEnabled
+            vc.enableEntryDeletion = FeatureFlags.entryDeletionEnabled
+            vc.headerValueLabelColor = .insulinTintColor
         case let vc as OverrideSelectionViewController:
             if deviceManager.loopManager.settings.futureOverrideEnabled() {
                 vc.scheduledOverride = deviceManager.loopManager.settings.scheduleOverride
@@ -1846,13 +1851,6 @@ extension StatusTableViewController {
                 setupCompletion(cgmManagerType.init(rawState: [:]))
             }
         }
-    }
-}
-
-fileprivate extension UIViewController {
-    /// Argumentless wrapper around `dismiss(animated:)` in order to pass as a selector
-    @objc func dismissWithAnimation() {
-        dismiss(animated: true)
     }
 }
 
