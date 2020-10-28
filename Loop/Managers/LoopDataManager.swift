@@ -174,28 +174,6 @@ final class LoopDataManager {
             UserDefaults.appGroup?.loopSettings = newValue
             notify(forChange: .preferences)
         }
-//        didSet {
-//            guard settings != oldValue else {
-//                return
-//            }
-//
-//            if settings.preMealOverride != oldValue.preMealOverride {
-//                // The prediction isn't actually invalid, but a target range change requires recomputing recommended doses
-//                predictedGlucose = nil
-//            }
-//
-//            if settings.scheduleOverride != oldValue.scheduleOverride {
-//                overrideHistory.recordOverride(settings.scheduleOverride)
-//
-//                // Invalidate cached effects affected by the override
-//                self.carbEffect = nil
-//                self.carbsOnBoard = nil
-//                self.insulinEffect = nil
-//            }
-//            UserDefaults.appGroup?.loopSettings = settings
-//            notify(forChange: .preferences)
-//            analyticsServicesManager.didChangeLoopSettings(from: oldValue, to: settings)
-//        }
     }
 
     let overrideHistory: TemporaryScheduleOverrideHistory
