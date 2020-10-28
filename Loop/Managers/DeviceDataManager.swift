@@ -301,7 +301,7 @@ final class DeviceDataManager {
             .store(in: &cancellables)
 
         $isClosedLoopAllowed
-            .combineLatest(loopManager.$settings)
+            .combineLatest(loopManager.loopSettingsManager.$settings)
             .map { $0 && $1.dosingEnabled }
             .assign(to: \.isClosedLoop, on: self)
             .store(in: &cancellables)

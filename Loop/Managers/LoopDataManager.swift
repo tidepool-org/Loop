@@ -39,7 +39,7 @@ final class LoopDataManager {
 
     private let analyticsServicesManager: AnalyticsServicesManager
 
-    private let alertManager: AlertPresenter?
+    let loopSettingsManager: LoopSettingsManager
 
     private let now: () -> Date
 
@@ -75,7 +75,6 @@ final class LoopDataManager {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
         self.lockedBasalDeliveryState = Locked(basalDeliveryState)
-        self.settings = settings
         self.overrideHistory = overrideHistory
 
         let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
@@ -94,7 +93,8 @@ final class LoopDataManager {
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
-        self.alertManager = alertManager
+        loopSettingsManager = LoopSettingsManager(alertManager: alertManager,
+                                                  settings: settings)
 
         overrideHistory.delegate = self
 
@@ -146,30 +146,56 @@ final class LoopDataManager {
     /// Loop-related settings
     ///
     /// These are not thread-safe.
-    
-    @Published var settings: LoopSettings {
-        didSet {
-            guard settings != oldValue else {
+    var settings: LoopSettings {
+        get {
+            loopSettingsManager.settings
+        }
+        set {
+            guard loopSettingsManager.settings != newValue else {
                 return
             }
-            
-            if settings.preMealOverride != oldValue.preMealOverride {
+
+            if loopSettingsManager.settings.preMealOverride != newValue.preMealOverride {
                 // The prediction isn't actually invalid, but a target range change requires recomputing recommended doses
                 predictedGlucose = nil
             }
 
-            if settings.scheduleOverride != oldValue.scheduleOverride {
-                overrideHistory.recordOverride(settings.scheduleOverride)
+            if loopSettingsManager.settings.scheduleOverride != newValue.scheduleOverride {
+                overrideHistory.recordOverride(loopSettingsManager.settings.scheduleOverride)
 
                 // Invalidate cached effects affected by the override
                 self.carbEffect = nil
                 self.carbsOnBoard = nil
                 self.insulinEffect = nil
             }
-            UserDefaults.appGroup?.loopSettings = settings
+            
+            analyticsServicesManager.didChangeLoopSettings(from: loopSettingsManager.settings, to: newValue)
+            loopSettingsManager.settings = newValue
+            UserDefaults.appGroup?.loopSettings = newValue
             notify(forChange: .preferences)
-            analyticsServicesManager.didChangeLoopSettings(from: oldValue, to: settings)
         }
+//        didSet {
+//            guard settings != oldValue else {
+//                return
+//            }
+//
+//            if settings.preMealOverride != oldValue.preMealOverride {
+//                // The prediction isn't actually invalid, but a target range change requires recomputing recommended doses
+//                predictedGlucose = nil
+//            }
+//
+//            if settings.scheduleOverride != oldValue.scheduleOverride {
+//                overrideHistory.recordOverride(settings.scheduleOverride)
+//
+//                // Invalidate cached effects affected by the override
+//                self.carbEffect = nil
+//                self.carbsOnBoard = nil
+//                self.insulinEffect = nil
+//            }
+//            UserDefaults.appGroup?.loopSettings = settings
+//            notify(forChange: .preferences)
+//            analyticsServicesManager.didChangeLoopSettings(from: oldValue, to: settings)
+//        }
     }
 
     let overrideHistory: TemporaryScheduleOverrideHistory
@@ -711,7 +737,7 @@ extension LoopDataManager {
             self.logger.default("Loop running")
             NotificationCenter.default.post(name: .LoopRunning, object: self)
 
-            self.checkAlerts()
+//            self.checkAlerts()
             self.lastLoopError = nil
             let startDate = self.now()
 
@@ -2004,34 +2030,5 @@ extension LoopDataManager {
                         carbRatioSchedule: carbRatioSchedule,
                         basalRateSchedule: basalRateSchedule,
                         insulinModelSettings: insulinModelSettings)
-    }
-}
-
-//MARK: - Alerts
-
-extension LoopDataManager {
-    private func checkAlerts() {
-        checkWorkoutOverrideReminder()
-    }
-
-    private func checkWorkoutOverrideReminder() {
-        guard settings.isScheduleOverrideInfiniteWorkout else {
-            settings.indefiniteWorkoutOverrideEnabledDate = nil
-            return
-        }
-
-        guard let indefiniteWorkoutOverrideEnabledDate = settings.indefiniteWorkoutOverrideEnabledDate else {
-            return
-        }
-
-        if  -indefiniteWorkoutOverrideEnabledDate.timeIntervalSinceNow > settings.workoutOverrideReminderInterval {
-            issueWorkoutOverrideReminder()
-            // reset the date to allow the alert to be issued again after the workoutOverrideReminderInterval is surpassed
-            settings.indefiniteWorkoutOverrideEnabledDate = Date()
-        }
-    }
-
-    private func issueWorkoutOverrideReminder() {
-        alertManager?.issueAlert(settings.workoutOverrideReminderAlert)
     }
 }
