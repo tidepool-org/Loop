@@ -29,7 +29,7 @@ public enum LoopCompletionFreshness {
     
     public init(age: TimeInterval?) {
         guard let age = age else {
-            self = .unknown
+            self = .stale
             return
         }
         
@@ -41,13 +41,13 @@ public enum LoopCompletionFreshness {
         case let t where t <= LoopCompletionFreshness.stale.maxAge!:
             self = .stale
         default:
-            self = .unknown
+            self = .stale
         }
     }
     
     public init(lastCompletion: Date?, at date: Date = Date()) {
         guard let lastCompletion = lastCompletion else {
-            self = .unknown
+            self = .stale
             return
         }
         
