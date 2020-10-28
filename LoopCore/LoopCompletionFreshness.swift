@@ -12,7 +12,6 @@ public enum LoopCompletionFreshness {
     case fresh
     case aging
     case stale
-    case unknown
     
     public var maxAge: TimeInterval? {
         switch self {
@@ -21,8 +20,6 @@ public enum LoopCompletionFreshness {
         case .aging:
             return TimeInterval(minutes: 16)
         case .stale:
-            return TimeInterval(hours: 12)
-        case .unknown:
             return nil
         }
     }
@@ -38,8 +35,6 @@ public enum LoopCompletionFreshness {
             self = .fresh
         case let t where t <= LoopCompletionFreshness.aging.maxAge!:
             self = .aging
-        case let t where t <= LoopCompletionFreshness.stale.maxAge!:
-            self = .stale
         default:
             self = .stale
         }

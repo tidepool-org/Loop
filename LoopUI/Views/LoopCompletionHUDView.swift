@@ -78,8 +78,6 @@ public final class LoopCompletionHUDView: BaseHUDView {
             tintColor = stateColors?.warning
         case .stale:
             tintColor = stateColors?.error
-        case .unknown:
-            tintColor = stateColors?.unknown
         }
 
         self.tintColor = tintColor
