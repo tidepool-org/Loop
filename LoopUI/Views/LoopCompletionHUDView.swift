@@ -176,8 +176,6 @@ extension LoopCompletionHUDView {
         case .stale:
             return (title: NSLocalizedString("Loop Failure", comment: "title of red loop message"),
                     message: NSLocalizedString("\nTidepool Loop has not completed a loop successfully in over 15 minutes.\n\nTap your CGM and insulin pump status icons for more information. Tidepool Loop will continue trying to complete a loop, but check for potential communication issues with your pump and CGM.", comment: "Red loop message"))
-        default:
-            return nil
         }
     }
 }
