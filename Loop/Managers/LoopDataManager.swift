@@ -147,6 +147,7 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
     /// Loop-related settings
     ///
     /// These are not thread-safe.
+
     @Published var settings: LoopSettings {
         didSet {
             guard settings != oldValue else {
@@ -160,13 +161,13 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
 
             if settings.scheduleOverride != oldValue.scheduleOverride {
                 overrideHistory.recordOverride(settings.scheduleOverride)
-                
+
                 // Invalidate cached effects affected by the override
                 self.carbEffect = nil
                 self.carbsOnBoard = nil
                 self.insulinEffect = nil
             }
-            
+
             UserDefaults.appGroup?.loopSettings = settings
             notify(forChange: .preferences)
             analyticsServicesManager.didChangeLoopSettings(from: oldValue, to: settings)

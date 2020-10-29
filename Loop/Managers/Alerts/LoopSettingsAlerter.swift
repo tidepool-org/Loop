@@ -18,15 +18,16 @@ class LoopSettingsAlerter {
     weak var delegate: LoopSettingsAlerterDelegate?
 
     private let alertPresenter: AlertPresenter?
-
-    init(alertPresenter: AlertPresenter? = nil)
+    
+    let workoutOverrideReminderInterval: TimeInterval
+    
+    init(alertPresenter: AlertPresenter? = nil,
+         workoutOverrideReminderInterval: TimeInterval = .days(1))
     {
         self.alertPresenter = alertPresenter
+        self.workoutOverrideReminderInterval = workoutOverrideReminderInterval
 
-        NotificationCenter.default.addObserver(forName: .LoopRunning,
-                                               object: nil,
-                                               queue: nil
-        ) {
+        NotificationCenter.default.addObserver(forName: .LoopRunning, object: nil, queue: nil) {
             [weak self] _ in self?.checkAlerts()
         }
     }
@@ -47,7 +48,7 @@ class LoopSettingsAlerter {
             return
         }
 
-        if  -indefiniteWorkoutOverrideEnabledDate.timeIntervalSinceNow > settings.workoutOverrideReminderInterval {
+        if  -indefiniteWorkoutOverrideEnabledDate.timeIntervalSinceNow > workoutOverrideReminderInterval {
             issueWorkoutOverrideReminder()
             // reset the date to allow the alert to be issued again after the workoutOverrideReminderInterval is surpassed
             delegate?.settings.indefiniteWorkoutOverrideEnabledDate = Date()

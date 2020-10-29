@@ -26,8 +26,6 @@ public struct LoopSettings: Equatable {
 
     public var indefiniteWorkoutOverrideEnabledDate: Date?
 
-    public var workoutOverrideReminderInterval: TimeInterval = .days(1)
-
     public var overridePresets: [TemporaryScheduleOverridePreset] = []
 
     public var scheduleOverride: TemporaryScheduleOverride? {
