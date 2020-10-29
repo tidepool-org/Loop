@@ -37,14 +37,9 @@ class LoopSettingsAlerter {
     }
 
     private func checkWorkoutOverrideReminder() {
-        guard let settings = delegate?.settings else { return }
-
-        guard settings.isScheduleOverrideInfiniteWorkout else {
-            delegate?.settings.indefiniteWorkoutOverrideEnabledDate = nil
-            return
-        }
-
-        guard let indefiniteWorkoutOverrideEnabledDate = delegate?.settings.indefiniteWorkoutOverrideEnabledDate else {
+        guard let settings = delegate?.settings,
+              let indefiniteWorkoutOverrideEnabledDate = settings.indefiniteWorkoutOverrideEnabledDate else
+        {
             return
         }
 
