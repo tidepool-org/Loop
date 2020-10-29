@@ -12,7 +12,7 @@ import LoopKit
 import LoopCore
 
 
-final class LoopDataManager {
+final class LoopDataManager: LoopSettingsAlerterDelegate {
     enum LoopUpdateContext: Int {
         case bolus
         case carbs
@@ -39,7 +39,7 @@ final class LoopDataManager {
 
     private let analyticsServicesManager: AnalyticsServicesManager
 
-    let loopSettingsManager: LoopSettingsManager
+    let loopSettingsAlerter: LoopSettingsAlerter
 
     private let now: () -> Date
 
@@ -70,11 +70,12 @@ final class LoopDataManager {
         dosingDecisionStore: DosingDecisionStoreProtocol,
         settingsStore: SettingsStoreProtocol,
         now: @escaping () -> Date = { Date() },
-        alertManager: AlertPresenter? = nil
+        alertPresenter: AlertPresenter? = nil
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
         self.lockedBasalDeliveryState = Locked(basalDeliveryState)
+        self.settings = settings
         self.overrideHistory = overrideHistory
 
         let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
@@ -93,8 +94,8 @@ final class LoopDataManager {
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
-        loopSettingsManager = LoopSettingsManager(alertManager: alertManager,
-                                                  settings: settings)
+        loopSettingsAlerter = LoopSettingsAlerter(alertPresenter: alertPresenter)
+        loopSettingsAlerter.delegate = self
 
         overrideHistory.delegate = self
 
@@ -146,33 +147,29 @@ final class LoopDataManager {
     /// Loop-related settings
     ///
     /// These are not thread-safe.
-    var settings: LoopSettings {
-        get {
-            loopSettingsManager.settings
-        }
-        set {
-            guard loopSettingsManager.settings != newValue else {
+    @Published var settings: LoopSettings {
+        didSet {
+            guard settings != oldValue else {
                 return
             }
 
-            if loopSettingsManager.settings.preMealOverride != newValue.preMealOverride {
+            if settings.preMealOverride != oldValue.preMealOverride {
                 // The prediction isn't actually invalid, but a target range change requires recomputing recommended doses
                 predictedGlucose = nil
             }
 
-            if loopSettingsManager.settings.scheduleOverride != newValue.scheduleOverride {
-                overrideHistory.recordOverride(loopSettingsManager.settings.scheduleOverride)
-
+            if settings.scheduleOverride != oldValue.scheduleOverride {
+                overrideHistory.recordOverride(settings.scheduleOverride)
+                
                 // Invalidate cached effects affected by the override
                 self.carbEffect = nil
                 self.carbsOnBoard = nil
                 self.insulinEffect = nil
             }
             
-            analyticsServicesManager.didChangeLoopSettings(from: loopSettingsManager.settings, to: newValue)
-            loopSettingsManager.settings = newValue
-            UserDefaults.appGroup?.loopSettings = newValue
+            UserDefaults.appGroup?.loopSettings = settings
             notify(forChange: .preferences)
+            analyticsServicesManager.didChangeLoopSettings(from: oldValue, to: settings)
         }
     }
 

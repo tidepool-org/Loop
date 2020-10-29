@@ -296,25 +296,3 @@ extension LoopSettings: RawRepresentable {
         return raw
     }
 }
-
-// MARK: - Alerts
-
-extension LoopSettings {
-    static var managerIdentifier = "LoopSettings"
-    
-    public static var workoutOverrideReminderAlertIdentifier: Alert.Identifier {
-        return Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "WorkoutOverrideReminder")
-    }
-    
-    public var workoutOverrideReminderAlert: Alert {
-        let title = NSLocalizedString("Workout Temp Adjust Still On", comment: "Workout override still on reminder alert title")
-        let body = NSLocalizedString("Workout Temp Adjust has been turned on for more than 24 hours. Make sure you still want it enabled, or turn it off in the app.", comment: "Workout override still on reminder alert body.")
-        let content = Alert.Content(title: title,
-                                    body: body,
-                                    acknowledgeActionButtonLabel: NSLocalizedString("Dismiss", comment: "Default alert dismissal"))
-        return Alert(identifier: LoopSettings.workoutOverrideReminderAlertIdentifier,
-                     foregroundContent: content,
-                     backgroundContent: content,
-                     trigger: .immediate)
-    }
-}

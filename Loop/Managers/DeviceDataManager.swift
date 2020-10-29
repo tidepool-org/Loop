@@ -252,7 +252,7 @@ final class DeviceDataManager {
             carbStore: carbStore,
             dosingDecisionStore: dosingDecisionStore,
             settingsStore: settingsStore,
-            alertManager: alertManager
+            alertPresenter: alertManager
         )
         cacheStore.delegate = loopManager
         
@@ -301,7 +301,7 @@ final class DeviceDataManager {
             .store(in: &cancellables)
 
         $isClosedLoopAllowed
-            .combineLatest(loopManager.loopSettingsManager.$settings)
+            .combineLatest(loopManager.$settings)
             .map { $0 && $1.dosingEnabled }
             .assign(to: \.isClosedLoop, on: self)
             .store(in: &cancellables)
