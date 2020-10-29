@@ -164,17 +164,17 @@ extension LoopCompletionHUDView {
         switch freshness {
         case .fresh:
             if loopStateView.open {
-                return (title: NSLocalizedString("Closed Loop OFF", comment: "title of green open loop OFF message"),
+                return (title: NSLocalizedString("Closed Loop OFF", comment: "Title of green open loop OFF message"),
                         message: NSLocalizedString("\nTidepool Loop is operating with Closed Loop in the OFF position. Your pump and CGM will continue operating, but your basal insulin will not adjust automatically.\n\nTap Settings to toggle Closed Loop ON if you wish for the app to automate your insulin.", comment: "Green closed loop OFF message"))
             } else {
-                return (title: NSLocalizedString("Closed Loop ON", comment: "title of green closed loop ON message"),
+                return (title: NSLocalizedString("Closed Loop ON", comment: "Title of green closed loop ON message"),
                         message: NSLocalizedString("\nTidepool Loop is operating with Closed Loop in the ON position. Your last loop was successful within the last 5 minutes.", comment: "Green closed loop ON message"))
             }
         case .aging:
-            return (title: NSLocalizedString("Loop Failure", comment: "title of yellow loop message"),
+            return (title: NSLocalizedString("Loop Failure", comment: "Title of yellow loop message"),
                     message: NSLocalizedString("\nTidepool Loop has not completed a loop successfully in the past 5-15 minutes.\n\nTap your CGM and insulin pump status icons for more information. Tidepool Loop will continue trying to complete a loop, but watch for potential communication issues with your pump and CGM.", comment: "Yellow loop message"))
         case .stale:
-            return (title: NSLocalizedString("Loop Failure", comment: "title of red loop message"),
+            return (title: NSLocalizedString("Loop Failure", comment: "Title of red loop message"),
                     message: NSLocalizedString("\nTidepool Loop has not completed a loop successfully in over 15 minutes.\n\nTap your CGM and insulin pump status icons for more information. Tidepool Loop will continue trying to complete a loop, but check for potential communication issues with your pump and CGM.", comment: "Red loop message"))
         }
     }
