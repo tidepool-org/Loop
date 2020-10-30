@@ -130,7 +130,7 @@ class SimpleBolusViewModel: ObservableObject {
                 recommendation = nil
             }
             
-            if let decision = dosingDecision, let insulinOnBoard = decision.insulinOnBoard, insulinOnBoard.value > 0 {
+            if let decision = dosingDecision, let insulinOnBoard = decision.insulinOnBoard, insulinOnBoard.value > 0, glucose != nil {
                 activeInsulin = Self.doseAmountFormatter.string(from: insulinOnBoard.value)
             } else {
                 activeInsulin = nil
