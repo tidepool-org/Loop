@@ -37,11 +37,7 @@ class LoopSettingsAlerter {
     }
 
     private func checkWorkoutOverrideReminder() {
-        guard let settings = delegate?.settings,
-              let indefiniteWorkoutOverrideEnabledDate = settings.indefiniteWorkoutOverrideEnabledDate else
-        {
-            return
-        }
+        guard let indefiniteWorkoutOverrideEnabledDate = delegate?.settings.indefiniteWorkoutOverrideEnabledDate else { return }
 
         if  -indefiniteWorkoutOverrideEnabledDate.timeIntervalSinceNow > workoutOverrideReminderInterval {
             issueWorkoutOverrideReminder()
