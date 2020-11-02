@@ -582,6 +582,7 @@
                                 </tableViewCellContentView>
                                 <connections>
                                     <outlet property="chartContentView" destination="ADL-hs-cfT" id="RhA-6H-bW1"/>
+                                    <outlet property="rightArrowHint" destination="xjX-iH-yIb" id="t2y-Si-vqU"/>
                                     <outlet property="subtitleLabel" destination="Rse-x8-amW" id="ud0-fJ-Pcw"/>
                                     <outlet property="titleLabel" destination="tuw-av-A3x" id="clh-H1-JJe"/>
                                 </connections>
