@@ -218,7 +218,7 @@ extension PredictedGlucoseChart {
     private func determineYAxisValues(axisLabelSettings: ChartLabelSettings? = nil) -> [ChartAxisValue] {
         let points = [
             glucosePoints, predictedGlucosePoints,
-            preMealOverrideDurationPoints,
+            preMealOverrideDurationPoints, targetOverrideDurationPoints,
             targetGlucosePoints.flatMap { $0 },
             glucoseDisplayRangePoints
         ].flatMap { $0 }

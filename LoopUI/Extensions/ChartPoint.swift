@@ -13,7 +13,7 @@ import SwiftCharts
 
 
 extension ChartPoint {
-    static func pointsForGlucoseRangeSchedule(_ glucoseRangeSchedule: GlucoseRangeSchedule, unit: HKUnit, xAxisValues: [ChartAxisValue], considering override: TemporaryScheduleOverride? = nil) -> [[ChartPoint]] {
+    static func pointsForGlucoseRangeSchedule(_ glucoseRangeSchedule: GlucoseRangeSchedule, unit: HKUnit, xAxisValues: [ChartAxisValue], considering potentialOverride: TemporaryScheduleOverride? = nil) -> [[ChartPoint]] {
         let targetRanges = glucoseRangeSchedule.quantityBetween(
             start: ChartAxisValueDate.dateFromScalar(xAxisValues.first!.scalar),
             end: ChartAxisValueDate.dateFromScalar(xAxisValues.last!.scalar)
@@ -39,15 +39,15 @@ extension ChartPoint {
                 endDate = ChartAxisValueDate(date: targetRanges[index + 1].startDate, formatter: dateFormatter)
             }
 
-            if let override = override, startDate.date < endDate.date {
+            if let potentialOverride = potentialOverride, startDate.date < endDate.date {
                 let chartRange = startDate.date...endDate.date
-                let overrideRange = override.startDate...override.endDate
+                let overrideRange = potentialOverride.startDate...potentialOverride.endDate
                 if overrideRange.overlaps(chartRange) {
-                    addBar(value: range.value, unit: unit, startDate: startDate, endDate: ChartAxisValueDate(date: override.startDate, formatter: dateFormatter), maxPoints: &maxPoints, minPoints: &minPoints)
+                    addBar(value: range.value, unit: unit, startDate: startDate, endDate: ChartAxisValueDate(date: potentialOverride.startDate, formatter: dateFormatter), maxPoints: &maxPoints, minPoints: &minPoints)
                     result += [maxPoints + minPoints.reversed()]
                     maxPoints = []
                     minPoints = []
-                    addBar(value: range.value, unit: unit, startDate: ChartAxisValueDate(date: override.endDate, formatter: dateFormatter), endDate: endDate, maxPoints: &maxPoints, minPoints: &minPoints)
+                    addBar(value: range.value, unit: unit, startDate: ChartAxisValueDate(date: potentialOverride.endDate, formatter: dateFormatter), endDate: endDate, maxPoints: &maxPoints, minPoints: &minPoints)
                 } else {
                     addBar(value: range.value, unit: unit, startDate: startDate, endDate: endDate, maxPoints: &maxPoints, minPoints: &minPoints)
                 }
