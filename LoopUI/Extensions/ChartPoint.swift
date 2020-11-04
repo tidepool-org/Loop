@@ -48,6 +48,8 @@ extension ChartPoint {
                     maxPoints = []
                     minPoints = []
                     addBar(value: range.value, unit: unit, startDate: ChartAxisValueDate(date: override.endDate, formatter: dateFormatter), endDate: endDate, maxPoints: &maxPoints, minPoints: &minPoints)
+                } else {
+                    addBar(value: range.value, unit: unit, startDate: startDate, endDate: endDate, maxPoints: &maxPoints, minPoints: &minPoints)
                 }
             } else {
                 addBar(value: range.value, unit: unit, startDate: startDate, endDate: endDate, maxPoints: &maxPoints, minPoints: &minPoints)
