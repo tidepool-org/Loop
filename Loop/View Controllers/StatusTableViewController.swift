@@ -878,14 +878,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     switch override.context {
                     case .preMeal:
                         let symbolAttachment = NSTextAttachment()
-                        symbolAttachment.image = UIImage(systemName: "questionmark.circle")?.withTintColor(.glucoseTintColor)
+                        symbolAttachment.image = UIImage(named: "Pre-Meal-symbol")?.withTintColor(.carbTintColor)
 
                         let attributedString = NSMutableAttributedString(attachment: symbolAttachment)
                         attributedString.append(NSAttributedString(string: NSLocalizedString(" Pre-meal Preset", comment: "Status row title for premeal override enabled (leading space is to separate from symbol)")))
                         cell.titleLabel.attributedText = attributedString
                     case .legacyWorkout:
                         let symbolAttachment = NSTextAttachment()
-                        symbolAttachment.image = UIImage(systemName: "questionmark.circle")?.withTintColor(.glucoseTintColor)
+                        symbolAttachment.image = UIImage(named: "workout-symbol")?.withTintColor(.glucoseTintColor)
 
                         let attributedString = NSMutableAttributedString(attachment: symbolAttachment)
                         attributedString.append(NSAttributedString(string: NSLocalizedString(" Workout Preset", comment: "Status row title for workout override enabled (leading space is to separate from symbol)")))
