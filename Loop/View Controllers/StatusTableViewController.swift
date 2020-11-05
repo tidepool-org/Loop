@@ -156,12 +156,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
         if !appearedOnce {
             appearedOnce = true
 
-            if deviceManager.authorizationRequired {
-                deviceManager.authorize {
-                    DispatchQueue.main.async {
-                        self.log.debug("[reloadData] after HealthKit authorization")
-                        self.reloadData()
-                    }
+            deviceManager.authorize {
+                DispatchQueue.main.async {
+                    self.log.debug("[reloadData] after HealthKit authorization")
+                    self.reloadData()
                 }
             }
         }
@@ -815,6 +813,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     return self?.statusCharts.glucoseChart(withFrame: frame)?.view
                 })
                 cell.setTitleLabelText(label: NSLocalizedString("Glucose", comment: "The title of the glucose and prediction graph"))
+                cell.doesNavigate = self.deviceManager.isClosedLoop 
             case .iob:
                 cell.setChartGenerator(generator: { [weak self] (frame) in
                     return self?.statusCharts.iobChart(withFrame: frame)?.view
@@ -973,6 +972,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 } else {
                     cell.setSubtitleLabel(label: nil)
                 }
+                cell.doesNavigate = self.deviceManager.isClosedLoop
             case .iob:
                 if let currentIOB = currentIOBDescription {
                     cell.setSubtitleLabel(label: currentIOB)
