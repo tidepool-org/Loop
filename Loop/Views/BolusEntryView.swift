@@ -192,7 +192,7 @@ struct BolusEntryView: View, HorizontalSizeClassOverride {
                         text: typedManualGlucoseEntry,
                         placeholder: "---",
                         // The heavy title is ending up clipped due to a bug that is fixed in iOS 14.  Uncomment the following when we can build for iOS 14.
-                        font: typedManualGlucoseEntry.wrappedValue == "" ? .preferredFont(forTextStyle: .title1) : .heavy(.title1), // .heavy(.title1),
+                        font: .preferredFont(forTextStyle: .title1), // .heavy(.title1),
                         textAlignment: .right,
                         keyboardType: .decimalPad,
                         shouldBecomeFirstResponder: isManualGlucoseEntryRowVisible,
