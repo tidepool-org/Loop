@@ -21,7 +21,7 @@ final class GlucoseThresholdTableViewController: TextFieldTableViewController {
         
         super.init(style: .grouped)
         
-        placeholder = NSLocalizedString("Enter glucose safety limit", comment: "The placeholder text instructing users to enter a suspend treshold")
+        placeholder = NSLocalizedString("Enter glucose safety limit", comment: "The placeholder text instructing users to enter a glucose safety limit")
         keyboardType = .decimalPad
         contextHelp = NSLocalizedString("When current or forecasted glucose is below the glucose safety limit, Loop will not recommend a bolus, and will always recommend a temporary basal rate of 0 units per hour.", comment: "Explanation of glucose safety limit")
 
