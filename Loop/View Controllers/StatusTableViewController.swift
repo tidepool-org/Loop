@@ -1271,7 +1271,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let vc = UIAlertController(premealDurationSelectionHandler: { duration in
                 let startDate = Date()
                 
-                guard self.workoutMode == false else {
+                guard self.workoutMode != true else {
                     // allow cell animation when switching between presets
                     self.deviceManager.loopManager.settings.clearOverride()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -1297,7 +1297,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 let vc = UIAlertController(workoutDurationSelectionHandler: { duration in
                     let startDate = Date()
                     
-                    guard self.preMealMode == false else {
+                    guard self.preMealMode != true else {
                         // allow cell animation when switching between presets
                         self.deviceManager.loopManager.settings.clearOverride(matching: .preMeal)
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
