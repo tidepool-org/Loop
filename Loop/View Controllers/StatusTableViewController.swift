@@ -1586,6 +1586,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var rotateTimer: Timer?
     let rotateTimerTimeout = TimeInterval.seconds(2)
     private func maybeOpenDebugMenu() {
+        guard FeatureFlags.scenariosEnabled || FeatureFlags.simulatedCoreDataEnabled || FeatureFlags.mockTherapySettingsEnabled else {
+            return
+        }
         // Opens the debug menu if you rotate the phone 6 times (or back & forth 3 times), each rotation within 2 secs.
         if lastOrientation != UIDevice.current.orientation {
             if UIDevice.current.orientation == .portrait && rotateCount >= maxRotationsToTrigger-1 {
