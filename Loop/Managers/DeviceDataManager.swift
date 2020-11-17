@@ -811,7 +811,7 @@ extension DeviceDataManager: PumpManagerDelegate {
             }
 
             if let oldBatteryValue = oldStatus.pumpBatteryChargeRemaining, newBatteryValue - oldBatteryValue >= LoopConstants.batteryReplacementDetectionThreshold {
-                alertManager.retractAlert(identifier: DeviceDataManager.pumpBatteryLowAlertIdentifier)
+                retractAlert(identifier: DeviceDataManager.pumpBatteryLowAlertIdentifier)
                 analyticsServicesManager.pumpBatteryWasReplaced()
             }
         }
