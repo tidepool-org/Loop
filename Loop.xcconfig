@@ -13,7 +13,7 @@ MAIN_APP_BUNDLE_IDENTIFIER = com.${DEVELOPMENT_TEAM}.loopkit
 // Application name [DEFAULT]
 MAIN_APP_DISPLAY_NAME = Loop
 
-// Appication icon [DEFAULT]
+// Application icon [DEFAULT]
 APPICON_NAME = AppIcon
 
 // Features [DEFAULT]
@@ -44,3 +44,6 @@ LOOP_PROVISIONING_PROFILE_SPECIFIER_WATCHAPP_EXTENSION_RELEASE =
 
 // Optional overrides
 #include? "LoopOverride.xcconfig"
+
+// Build-time overrides
+#include? "BuildOverride.xcconfig"
