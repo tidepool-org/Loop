@@ -62,7 +62,7 @@ extension CLKComplicationTemplate {
         let isGlucoseStale = date.timeIntervalSince(glucoseDate) > recencyInterval
 
         if isGlucoseStale {
-            glucoseString = "---"
+            glucoseString = "– – –"
             trendString = ""
         } else {
             guard let formattedGlucose = formatter.string(from: glucose.doubleValue(for: unit)) else {

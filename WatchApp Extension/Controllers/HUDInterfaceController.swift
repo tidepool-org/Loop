@@ -68,7 +68,7 @@ class HUDInterfaceController: WKInterfaceController {
         }())
 
         if date != nil {
-            glucoseLabel.setText("---")
+            glucoseLabel.setText("– – –")
             glucoseLabel.setHidden(false)
             if let glucose = activeContext.glucose, let glucoseDate = activeContext.glucoseDate, let unit = activeContext.preferredGlucoseUnit, glucoseDate.timeIntervalSinceNow > -LoopCoreConstants.inputDataRecencyInterval {
                 let formatter = NumberFormatter.glucoseFormatter(for: unit)
