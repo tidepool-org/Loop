@@ -10,10 +10,6 @@ import Foundation
 import LoopKit
 import LoopKitUI
 
-private let managersByIdentifier: [String: PumpManagerUI.Type] = staticPumpManagers.compactMap{ $0 }.reduce(into: [:]) { (map, Type) in
-    map[Type.managerIdentifier] = Type
-}
-
 typealias PumpManagerHUDViewRawValue = [String: Any]
 
 func PumpManagerHUDViewFromRawValue(_ rawValue: PumpManagerHUDViewRawValue, pluginManager: PluginManager) -> LevelHUDView? {
