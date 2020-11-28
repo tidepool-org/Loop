@@ -105,26 +105,19 @@ extension SettingsView {
         
     private var therapySettingsSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Configuration", comment: "The title of the Configuration section in settings"))) {
-            LargeButton(action: { self.therapySettingsIsPresented = true },
-                            includeArrow: true,
+            NavigationLink(destination: TherapySettingsView(
+                viewModel: TherapySettingsViewModel(mode: .settings,
+                                                    therapySettings: viewModel.therapySettings(),
+                                                    supportedInsulinModelSettings: viewModel.supportedInsulinModelSettings,
+                                                    pumpSupportedIncrements: viewModel.pumpSupportedIncrements,
+                                                    syncPumpSchedule: viewModel.syncPumpSchedule,
+                                                    chartColors: .primary,
+                                                    didSave: viewModel.didSave))) {
+                LargeButton(action: { },
+                            includeArrow: false,
                             imageView: AnyView(Image("Therapy Icon")),
                             label: NSLocalizedString("Therapy Settings", comment: "Title text for button to Therapy Settings"),
                             descriptiveText: NSLocalizedString("Diabetes Treatment", comment: "Descriptive text for Therapy Settings"))
-                .sheet(isPresented: $therapySettingsIsPresented) {
-                    TherapySettingsView(
-                        viewModel: TherapySettingsViewModel(mode: .settings,
-                                                            therapySettings: self.viewModel.therapySettings(),
-                                                            supportedInsulinModelSettings: self.viewModel.supportedInsulinModelSettings,
-                                                            pumpSupportedIncrements: self.viewModel.pumpSupportedIncrements,
-                                                            syncPumpSchedule: self.viewModel.syncPumpSchedule,
-                                                            chartColors: .primary,
-                                                            didSave: self.viewModel.didSave))
-                        .environment(\.dismiss, self.dismiss)
-                        .environment(\.appName, self.appName)
-                        .environment(\.carbTintColor, self.carbTintColor)
-                        .environment(\.glucoseTintColor, self.glucoseTintColor)
-                        .environment(\.guidanceColors, self.guidanceColors)
-                        .environment(\.insulinTintColor, self.insulinTintColor)
             }
         }
     }
