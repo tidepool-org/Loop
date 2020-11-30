@@ -413,41 +413,21 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         if currentContext.contains(.insulin) {
             reloadGroup.enter()
-            deviceManager.doseStore.getInsulinOnBoardValues(start: startDate, end: nil, basalDosingEnd: nil) { (result) -> Void in
-                switch result {
-                case .failure(let error):
-                    self.log.error("DoseStore failed to get insulin on board values: %{public}@", String(describing: error))
-                    retryContext.update(with: .insulin)
-                    iobValues = []
-                case .success(let values):
-                    iobValues = values
-                }
-                reloadGroup.leave()
-            }
-
-            reloadGroup.enter()
             deviceManager.doseStore.getNormalizedDoseEntries(start: startDate, end: nil) { (result) -> Void in
                 switch result {
                 case .failure(let error):
                     self.log.error("DoseStore failed to get normalized dose entries: %{public}@", String(describing: error))
                     retryContext.update(with: .insulin)
                     doseEntries = []
+                    iobValues = []
+                    totalDelivery = nil
                 case .success(let doses):
                     doseEntries = doses
+                    // use the doses to get IOB
+                    iobValues = self.deviceManager.doseStore.getInsulinOnBoardValues(from: doses, start: startDate, end: nil, basalDosingEnd: nil)
+                    // use the doses to get total units delivered
+                    totalDelivery = self.deviceManager.doseStore.getTotalUnitsDelivered(from: doses, since: Calendar.current.startOfDay(for: Date())).value
                 }
-                reloadGroup.leave()
-            }
-
-            reloadGroup.enter()
-            deviceManager.doseStore.getTotalUnitsDelivered(since: Calendar.current.startOfDay(for: Date())) { (result) in
-                switch result {
-                case .failure:
-                    retryContext.update(with: .insulin)
-                    totalDelivery = nil
-                case .success(let total):
-                    totalDelivery = total.value
-                }
-
                 reloadGroup.leave()
             }
         }
@@ -466,7 +446,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             workoutMode = deviceManager.loopManager.settings.nonPreMealOverrideEnabled()
         }
 
-        reloadGroup.notify(queue: .main) {
+        reloadGroup.notify(qos: .userInteractive, queue: .main) {
             /// Update the chart data
 
             // Glucose
