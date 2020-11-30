@@ -1282,7 +1282,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 guard self.workoutMode != true else {
                     // allow cell animation when switching between presets
                     self.deviceManager.loopManager.settings.clearOverride()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, qos: .userInteractive) {
                         self.deviceManager.loopManager.settings.enablePreMealOverride(at: startDate, for: duration)
                     }
                     return
@@ -1308,7 +1308,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     guard self.preMealMode != true else {
                         // allow cell animation when switching between presets
                         self.deviceManager.loopManager.settings.clearOverride(matching: .preMeal)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, qos: .userInteractive) {
                             self.deviceManager.loopManager.settings.enableLegacyWorkoutOverride(at: startDate, for: duration)
                         }
                         return
@@ -1838,7 +1838,7 @@ extension StatusTableViewController: DoseProgressObserver {
         if doseProgressReporter.progress.isComplete {
             // Bolus ended
             self.bolusProgressReporter = nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, qos: .userInteractive, execute: {
                 self.bolusState = .noBolus
                 self.reloadData(animated: true)
             })
