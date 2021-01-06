@@ -10,20 +10,13 @@ import Foundation
 import LoopKit
 import LoopKitUI
 
-
-public struct AvailableDevice {
-    let identifier: String
-    let localizedTitle: String
-    let providesOnboarding: Bool
-}
-
-typealias AvailableService = AvailableDevice
-
 class PluginManager {
     private let pluginBundles: [Bundle]
+    private let extensionObjects: [NSObject]
 
     public init(pluginsURL: URL? = Bundle.main.privateFrameworksURL) {
         var bundles = [Bundle]()
+        var objects = [NSObject]()
 
         if let pluginsURL = pluginsURL {
             do {
@@ -34,10 +27,10 @@ class PluginManager {
                             bundles.append(bundle)
                         }
                         if bundle.isLoopExtension {
-                            print("Found Loop Extension at \(pluginURL)...loading")
+                            print("Found Loop extension at \(pluginURL), loading...")
                             try bundle.loadAndReturnError()
                             if let principalClass = bundle.principalClass as? NSObject.Type  {
-                                _ = principalClass.init()
+                                objects.append(principalClass.init())
                             }
                         }
                     }
@@ -47,6 +40,7 @@ class PluginManager {
             }
         }
         self.pluginBundles = bundles
+        self.extensionObjects = objects
     }
 
     func getPumpManagerTypeByIdentifier(_ identifier: String) -> PumpManagerUI.Type? {
@@ -74,14 +68,14 @@ class PluginManager {
         return nil
     }
 
-    var availablePumpManagers: [AvailableDevice] {
-        return pluginBundles.compactMap({ (bundle) -> AvailableDevice? in
+    var availablePumpManagers: [PumpManagerDescriptor] {
+        return pluginBundles.compactMap({ (bundle) -> PumpManagerDescriptor? in
             guard let title = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerDisplayName.rawValue) as? String,
                 let identifier = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerIdentifier.rawValue) as? String else {
                     return nil
             }
             
-            return AvailableDevice(identifier: identifier, localizedTitle: title, providesOnboarding: false)
+            return PumpManagerDescriptor(identifier: identifier, localizedTitle: title)
         })
     }
     
@@ -110,14 +104,14 @@ class PluginManager {
         return nil
     }
     
-    var availableCGMManagers: [AvailableDevice] {
-        return pluginBundles.compactMap({ (bundle) -> AvailableDevice? in
+    var availableCGMManagers: [CGMManagerDescriptor] {
+        return pluginBundles.compactMap({ (bundle) -> CGMManagerDescriptor? in
             guard let title = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerDisplayName.rawValue) as? String,
                 let identifier = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) as? String else {
                     return nil
             }
             
-            return AvailableDevice(identifier: identifier, localizedTitle: title, providesOnboarding: false)
+            return CGMManagerDescriptor(identifier: identifier, localizedTitle: title)
         })
     }
 
@@ -146,17 +140,50 @@ class PluginManager {
         return nil
     }
 
-    var availableServices: [AvailableService] {
-        return pluginBundles.compactMap({ (bundle) -> AvailableService? in
+    var availableServices: [ServiceDescriptor] {
+        return pluginBundles.compactMap({ (bundle) -> ServiceDescriptor? in
             guard let title = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.serviceDisplayName.rawValue) as? String,
                 let identifier = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String else {
                     return nil
             }
-            
-            let providesOnboarding = (bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.providesOnboarding.rawValue) as? Bool) == true
 
-            return AvailableService(identifier: identifier, localizedTitle: title, providesOnboarding: providesOnboarding)
+            return ServiceDescriptor(identifier: identifier, localizedTitle: title)
         })
+    }
+
+    func getOnboardingTypeByIdentifier(_ identifier: String) -> OnboardingUI.Type? {
+        for bundle in pluginBundles {
+            if let name = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) as? String, name == identifier {
+                do {
+                    try bundle.loadAndReturnError()
+
+                    if let principalClass = bundle.principalClass as? NSObject.Type {
+
+                        if let plugin = principalClass.init() as? OnboardingUIPlugin {
+                            return plugin.onboardingType
+                        } else {
+                            fatalError("PrincipalClass does not conform to OnboardingUIPlugin")
+                        }
+
+                    } else {
+                        fatalError("PrincipalClass not found")
+                    }
+                } catch let error {
+                    print(error)
+                }
+            }
+        }
+        return nil
+    }
+
+    var availableOnboardingIdentifiers: [String] {
+        return pluginBundles.compactMap({ (bundle) -> String? in
+            return bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) as? String
+        })
+    }
+
+    var availableSupports: [SupportUI] {
+        return extensionObjects.compactMap { ($0 as? SupportUIExtension)?.support }
     }
 
 }
@@ -167,7 +194,8 @@ extension Bundle {
         return
             object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerIdentifier.rawValue) as? String != nil ||
             object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) as? String != nil ||
-            object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String != nil
+            object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String != nil ||
+            object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) as? String != nil
     }
     
     var isLoopExtension: Bool {

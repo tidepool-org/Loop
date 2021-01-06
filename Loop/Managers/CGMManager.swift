@@ -16,7 +16,7 @@ let staticCGMManagersByIdentifier: [String: CGMManager.Type] = [
 ]
 
 let availableStaticCGMManagers = [
-    AvailableDevice(identifier: MockCGMManager.managerIdentifier, localizedTitle: MockCGMManager.localizedTitle, providesOnboarding: false)
+    CGMManagerDescriptor(identifier: MockCGMManager.managerIdentifier, localizedTitle: MockCGMManager.localizedTitle)
 ]
 
 func CGMManagerFromRawValue(_ rawValue: [String: Any]) -> CGMManager? {
