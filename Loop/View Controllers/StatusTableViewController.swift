@@ -32,6 +32,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     lazy private var cancellables = Set<AnyCancellable>()
 
+    private var glucoseUnitObservers = WeakSynchronizedSet<GlucoseUnitObserver>()
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -82,6 +84,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             notificationCenter.addObserver(forName: .CGMManagerChanged, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
                 DispatchQueue.main.async {
                     self?.configureCGMManagerHUDViews()
+                    self?.publishGlucoseUnitToCGMManagerIfNeeded()
                 }
             },
             notificationCenter.addObserver(forName: .PumpEventsAdded, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
@@ -93,8 +96,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
                     self?.log.debug("[reloadData] for HealthKit unit preference change")
-                    self?.preferredGlucoseUnit = self?.deviceManager.glucoseStore.preferredUnit
-                    self?.unitPreferencesDidChange(to: self?.preferredGlucoseUnit)
+                    if let glucoseUnit = self?.deviceManager.glucoseStore.preferredUnit {
+                        self?.preferredGlucoseUnit = glucoseUnit
+                        self?.unitPreferencesDidChange(to: glucoseUnit)
+                        self?.notifyObserversOfGlucoseUnitChange(to: glucoseUnit)
+                    }
                     self?.refreshContext = RefreshContext.all
                 }
             }
@@ -127,6 +133,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         addScenarioStepGestureRecognizers()
 
         self.tableView.backgroundColor = .secondarySystemBackground
+        publishGlucoseUnitToCGMManagerIfNeeded()
     }
 
     override func didReceiveMemoryWarning() {
@@ -1408,6 +1415,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           supportInfoProvider: deviceManager,
                                           activeServices: deviceManager.servicesManager.activeServices,
                                           delegate: self)
+        addGlucoseUnitObserver(viewModel)
         let hostingController = DismissibleHostingController(
             rootView: SettingsView(viewModel: viewModel).environment(\.appName, Bundle.main.bundleDisplayName),
             isModalInPresentation: false)
@@ -1432,6 +1440,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         var settings = cgmManager.settingsViewController(for: unit, glucoseTintColor: .glucoseTintColor, guidanceColors: .default)
         settings.completionDelegate = self
+        addGlucoseUnitObserver(settings)
         show(settings, sender: self)
     }
     
@@ -1555,9 +1564,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         switch action {
-        case .presentViewController(let vc):
+        case .presentPumpViewController(let vc):
             var completionNotifyingVC = vc
             completionNotifyingVC.completionDelegate = self
+            self.present(completionNotifyingVC, animated: true, completion: nil)
+        case .presentCGMViewController(let vc):
+            var completionNotifyingVC = vc
+            completionNotifyingVC.completionDelegate = self
+            addGlucoseUnitObserver(completionNotifyingVC)
             self.present(completionNotifyingVC, animated: true, completion: nil)
         case .openAppURL(let url):
             UIApplication.shared.open(url)
@@ -2065,4 +2079,27 @@ extension StatusTableViewController: ServicesViewModelDelegate {
         }
     }
 
+}
+
+extension StatusTableViewController: GlucoseUnitPublisher {
+    func addGlucoseUnitObserver(_ observer: GlucoseUnitObserver, queue: DispatchQueue = .main) {
+        glucoseUnitObservers.insert(observer, queue: queue)
+    }
+
+    func removeGlucoseUnitObserver(_ observer: GlucoseUnitObserver) {
+        glucoseUnitObservers.removeElement(observer)
+    }
+
+    func notifyObserversOfGlucoseUnitChange(to glucoseUnit: HKUnit) {
+        glucoseUnitObservers.forEach { $0.glucoseUnitDidChange(to: glucoseUnit) }
+    }
+
+    private func publishGlucoseUnitToCGMManagerIfNeeded() {
+        if let cgmManagerObservesGlucoseUnit = deviceManager.cgmManager as? GlucoseUnitObserver,
+           let glucoseUnit = deviceManager.glucoseStore.preferredUnit
+        {
+            addGlucoseUnitObserver(cgmManagerObservesGlucoseUnit)
+            notifyObserversOfGlucoseUnitChange(to: glucoseUnit)
+        }
+    }
 }
