@@ -56,6 +56,8 @@ final class DeviceDataManager {
 
     private var cgmStalenessMonitor: CGMStalenessMonitor
 
+    private var glucoseUnitObservers = WeakSynchronizedSet<GlucoseUnitObserver>()
+
     // MARK: - CGM
 
     var cgmManager: CGMManager? {
@@ -334,6 +336,17 @@ final class DeviceDataManager {
             .receive(on: DispatchQueue.main)
             .sink { if !$0 { self.loopManager.settings.clearOverride(matching: .preMeal) } }
             .store(in: &cancellables)
+
+
+        NotificationCenter.default.addObserver(forName: .HKUserPreferencesDidChange, object: glucoseStore.healthStore, queue: nil) { [weak self] _ in
+            guard let strongSelf = self else {
+                return
+            }
+
+            if let glucoseUnit = strongSelf.glucoseStore.preferredUnit {
+                strongSelf.notifyObserversOfGlucoseUnitChange(to: glucoseUnit)
+            }
+        }
     }
     
     var isCGMManagerValidPumpManager: Bool {
@@ -533,6 +546,7 @@ private extension DeviceDataManager {
             alertManager?.addAlertSoundVendor(managerIdentifier: cgmManager.managerIdentifier,
                                               soundVendor: cgmManager)            
             cgmHasValidSensorSession = cgmManager.cgmStatus.hasValidSensorSession
+            addGlucoseUnitObserver(cgmManager)
         }
         
     }
@@ -1307,4 +1321,21 @@ extension DeviceDataManager: SupportInfoProvider {
         generateDiagnosticReport(completion)
     }
     
+}
+
+extension DeviceDataManager: GlucoseUnitPublisher {
+    func addGlucoseUnitObserver(_ observer: GlucoseUnitObserver, queue: DispatchQueue = .main) {
+        glucoseUnitObservers.insert(observer, queue: queue)
+        if let glucoseUnit = glucoseStore.preferredUnit {
+            observer.glucoseUnitDidChange(to: glucoseUnit)
+        }
+    }
+
+    func removeGlucoseUnitObserver(_ observer: GlucoseUnitObserver) {
+        glucoseUnitObservers.removeElement(observer)
+    }
+
+    func notifyObserversOfGlucoseUnitChange(to glucoseUnit: HKUnit) {
+        glucoseUnitObservers.forEach { $0.glucoseUnitDidChange(to: glucoseUnit) }
+    }
 }

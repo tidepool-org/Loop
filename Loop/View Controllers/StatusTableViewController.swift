@@ -84,7 +84,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             notificationCenter.addObserver(forName: .CGMManagerChanged, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
                 DispatchQueue.main.async {
                     self?.configureCGMManagerHUDViews()
-                    self?.publishGlucoseUnitToCGMManagerIfNeeded()
                 }
             },
             notificationCenter.addObserver(forName: .PumpEventsAdded, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
@@ -133,7 +132,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
         addScenarioStepGestureRecognizers()
 
         self.tableView.backgroundColor = .secondarySystemBackground
-        publishGlucoseUnitToCGMManagerIfNeeded()
     }
 
     override func didReceiveMemoryWarning() {
@@ -2092,14 +2090,5 @@ extension StatusTableViewController: GlucoseUnitPublisher {
 
     func notifyObserversOfGlucoseUnitChange(to glucoseUnit: HKUnit) {
         glucoseUnitObservers.forEach { $0.glucoseUnitDidChange(to: glucoseUnit) }
-    }
-
-    private func publishGlucoseUnitToCGMManagerIfNeeded() {
-        if let cgmManagerObservesGlucoseUnit = deviceManager.cgmManager as? GlucoseUnitObserver,
-           let glucoseUnit = deviceManager.glucoseStore.preferredUnit
-        {
-            addGlucoseUnitObserver(cgmManagerObservesGlucoseUnit)
-            notifyObserversOfGlucoseUnitChange(to: glucoseUnit)
-        }
     }
 }
