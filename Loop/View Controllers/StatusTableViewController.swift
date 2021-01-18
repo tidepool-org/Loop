@@ -92,7 +92,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     self?.reloadData(animated: true)
                 }
             },
-            notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
+            notificationCenter.addObserver(forName: .HealthStoreUnitDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
                     self?.log.debug("[reloadData] for HealthKit unit preference change")
                     if let glucoseUnit = self?.deviceManager.glucoseStore.preferredUnit {

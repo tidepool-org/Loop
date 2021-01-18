@@ -338,7 +338,7 @@ final class DeviceDataManager {
             .store(in: &cancellables)
 
 
-        NotificationCenter.default.addObserver(forName: .HKUserPreferencesDidChange, object: glucoseStore.healthStore, queue: nil) { [weak self] _ in
+        NotificationCenter.default.addObserver(forName: .HealthStoreUnitDidChange, object: glucoseStore.healthStore, queue: nil) { [weak self] _ in
             guard let strongSelf = self else {
                 return
             }
