@@ -1562,14 +1562,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         switch action {
-        case .presentPumpViewController(let vc):
+        case .presentViewController(let vc):
             var completionNotifyingVC = vc
             completionNotifyingVC.completionDelegate = self
-            self.present(completionNotifyingVC, animated: true, completion: nil)
-        case .presentCGMViewController(let vc):
-            var completionNotifyingVC = vc
-            completionNotifyingVC.completionDelegate = self
-            addGlucoseUnitObserver(completionNotifyingVC)
+            if let glucoseUnitObservingVC = completionNotifyingVC as? GlucoseUnitObserver {
+                addGlucoseUnitObserver(glucoseUnitObservingVC)
+            }
             self.present(completionNotifyingVC, animated: true, completion: nil)
         case .openAppURL(let url):
             UIApplication.shared.open(url)
