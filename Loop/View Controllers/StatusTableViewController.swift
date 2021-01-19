@@ -2080,6 +2080,11 @@ extension StatusTableViewController: ServicesViewModelDelegate {
 extension StatusTableViewController: GlucoseUnitPublisher {
     func addGlucoseUnitObserver(_ observer: GlucoseUnitObserver, queue: DispatchQueue = .main) {
         glucoseUnitObservers.insert(observer, queue: queue)
+        if let glucoseUnit = preferredGlucoseUnit {
+            DispatchQueue.main.async {
+                observer.glucoseUnitDidChange(to: glucoseUnit)
+            }
+        }
     }
 
     func removeGlucoseUnitObserver(_ observer: GlucoseUnitObserver) {

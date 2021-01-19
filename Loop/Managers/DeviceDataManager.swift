@@ -1327,7 +1327,9 @@ extension DeviceDataManager: GlucoseUnitPublisher {
     func addGlucoseUnitObserver(_ observer: GlucoseUnitObserver, queue: DispatchQueue = .main) {
         glucoseUnitObservers.insert(observer, queue: queue)
         if let glucoseUnit = glucoseStore.preferredUnit {
-            observer.glucoseUnitDidChange(to: glucoseUnit)
+            DispatchQueue.main.async {
+                observer.glucoseUnitDidChange(to: glucoseUnit)
+            }
         }
     }
 
