@@ -32,7 +32,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     lazy private var cancellables = Set<AnyCancellable>()
 
-    private var glucoseUnitObservers = WeakSynchronizedSet<GlucoseUnitObserver>()
+    private var preferredGlucoseUnitObservers = WeakSynchronizedSet<PreferredGlucoseUnitObserver>()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -92,13 +92,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     self?.reloadData(animated: true)
                 }
             },
-            notificationCenter.addObserver(forName: .HealthStoreUnitDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
+            notificationCenter.addObserver(forName: .HealthStorePreferredGlucoseUnitDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
                     self?.log.debug("[reloadData] for HealthKit unit preference change")
-                    if let glucoseUnit = self?.deviceManager.glucoseStore.preferredUnit {
-                        self?.preferredGlucoseUnit = glucoseUnit
-                        self?.unitPreferencesDidChange(to: glucoseUnit)
-                        self?.notifyObserversOfGlucoseUnitChange(to: glucoseUnit)
+                    if let preferredGlucoseUnit = self?.deviceManager.glucoseStore.preferredUnit {
+                        self?.preferredGlucoseUnit = preferredGlucoseUnit
+                        self?.unitPreferencesDidChange(to: preferredGlucoseUnit)
+                        self?.notifyObserversOfPreferredGlucoseUnitChange(to: preferredGlucoseUnit)
                     }
                     self?.refreshContext = RefreshContext.all
                 }
@@ -1413,7 +1413,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           supportInfoProvider: deviceManager,
                                           activeServices: deviceManager.servicesManager.activeServices,
                                           delegate: self)
-        addGlucoseUnitObserver(viewModel)
+        addPreferredGlucoseUnitObserver(viewModel)
         let hostingController = DismissibleHostingController(
             rootView: SettingsView(viewModel: viewModel).environment(\.appName, Bundle.main.bundleDisplayName),
             isModalInPresentation: false)
@@ -1438,7 +1438,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         var settings = cgmManager.settingsViewController(for: unit, glucoseTintColor: .glucoseTintColor, guidanceColors: .default)
         settings.completionDelegate = self
-        addGlucoseUnitObserver(settings)
+        addPreferredGlucoseUnitObserver(settings)
         show(settings, sender: self)
     }
     
@@ -1565,8 +1565,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case .presentViewController(let vc):
             var completionNotifyingVC = vc
             completionNotifyingVC.completionDelegate = self
-            if let glucoseUnitObservingVC = completionNotifyingVC as? GlucoseUnitObserver {
-                addGlucoseUnitObserver(glucoseUnitObservingVC)
+            if let preferredGlucoseUnitObservingVC = completionNotifyingVC as? PreferredGlucoseUnitObserver {
+                addPreferredGlucoseUnitObserver(preferredGlucoseUnitObservingVC)
             }
             self.present(completionNotifyingVC, animated: true, completion: nil)
         case .openAppURL(let url):
@@ -2077,21 +2077,21 @@ extension StatusTableViewController: ServicesViewModelDelegate {
 
 }
 
-extension StatusTableViewController: GlucoseUnitPublisher {
-    func addGlucoseUnitObserver(_ observer: GlucoseUnitObserver, queue: DispatchQueue = .main) {
-        glucoseUnitObservers.insert(observer, queue: queue)
-        if let glucoseUnit = preferredGlucoseUnit {
+extension StatusTableViewController: PreferredGlucoseUnitPublisher {
+    func addPreferredGlucoseUnitObserver(_ observer: PreferredGlucoseUnitObserver, queue: DispatchQueue = .main) {
+        preferredGlucoseUnitObservers.insert(observer, queue: queue)
+        if let preferredGlucoseUnit = preferredGlucoseUnit {
             DispatchQueue.main.async {
-                observer.glucoseUnitDidChange(to: glucoseUnit)
+                observer.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit)
             }
         }
     }
 
-    func removeGlucoseUnitObserver(_ observer: GlucoseUnitObserver) {
-        glucoseUnitObservers.removeElement(observer)
+    func removePreferredGlucoseUnitObserver(_ observer: PreferredGlucoseUnitObserver) {
+        preferredGlucoseUnitObservers.removeElement(observer)
     }
 
-    func notifyObserversOfGlucoseUnitChange(to glucoseUnit: HKUnit) {
-        glucoseUnitObservers.forEach { $0.glucoseUnitDidChange(to: glucoseUnit) }
+    func notifyObserversOfPreferredGlucoseUnitChange(to preferredGlucoseUnit: HKUnit) {
+        preferredGlucoseUnitObservers.forEach { $0.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit) }
     }
 }

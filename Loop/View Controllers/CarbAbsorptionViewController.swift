@@ -52,7 +52,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
                     self?.reloadData(animated: true)
                 }
             },
-            notificationCenter.addObserver(forName: .HealthStoreUnitDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
+            notificationCenter.addObserver(forName: .HealthStorePreferredGlucoseUnitDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
                 DispatchQueue.main.async {
                     self?.log.debug("[reloadData] for HealthKit unit preference change")
                     self?.unitPreferencesDidChange(to: self?.deviceManager.glucoseStore.preferredUnit)

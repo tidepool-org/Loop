@@ -148,8 +148,8 @@ public class SettingsViewModel: ObservableObject {
     }
 }
 
-extension SettingsViewModel: GlucoseUnitObserver {
-    public func glucoseUnitDidChange(to glucoseUnit: HKUnit) {
-        preferredGlucoseUnit = glucoseUnit
+extension SettingsViewModel: PreferredGlucoseUnitObserver {
+    public func preferredGlucoseUnitDidChange(to preferredGlucoseUnit: HKUnit) {
+        self.preferredGlucoseUnit = preferredGlucoseUnit
     }
 }
