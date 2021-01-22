@@ -1341,10 +1341,8 @@ extension DeviceDataManager {
     }
 
     func notifyObserversOfPreferredGlucoseUnitChange(to preferredGlucoseUnit: HKUnit) {
-        DispatchQueue.main.async {
-            self.preferredGlucoseUnitObservers.forEach {
-                $0.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit)
-            }
+        self.preferredGlucoseUnitObservers.forEach {
+            $0.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit)
         }
     }
 }
