@@ -81,10 +81,21 @@ public class SettingsViewModel: ObservableObject {
     let syncPumpSchedule: (() -> PumpManager.SyncSchedule?)?
     let sensitivityOverridesEnabled: Bool
     let supportInfoProvider: SupportInfoProvider
-        
+
     @Published var isClosedLoopAllowed: Bool
     @Published var preferredGlucoseUnit: HKUnit
-    
+
+    lazy var therapySettingsViewModel: TherapySettingsViewModel = {
+        TherapySettingsViewModel(mode: .settings,
+                                 therapySettings: therapySettings(),
+                                 preferredGlucoseUnit: preferredGlucoseUnit,
+                                 supportedInsulinModelSettings: supportedInsulinModelSettings,
+                                 pumpSupportedIncrements: pumpSupportedIncrements,
+                                 syncPumpSchedule: syncPumpSchedule,
+                                 chartColors: .primary,
+                                 didSave: didSave)
+    }()
+
     var closedLoopPreference: Bool {
        didSet {
            delegate?.dosingEnabledChanged(closedLoopPreference)
@@ -126,7 +137,7 @@ public class SettingsViewModel: ObservableObject {
         self.activeServices = activeServices
         self.supportInfoProvider = supportInfoProvider
         self.delegate = delegate
-        
+
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
         notificationsCriticalAlertPermissionsViewModel.objectWillChange.sink { [weak self] in
             self?.objectWillChange.send()
@@ -151,5 +162,6 @@ public class SettingsViewModel: ObservableObject {
 extension SettingsViewModel: PreferredGlucoseUnitObserver {
     public func preferredGlucoseUnitDidChange(to preferredGlucoseUnit: HKUnit) {
         self.preferredGlucoseUnit = preferredGlucoseUnit
+        self.therapySettingsViewModel.preferredGlucoseUnit = preferredGlucoseUnit
     }
 }
