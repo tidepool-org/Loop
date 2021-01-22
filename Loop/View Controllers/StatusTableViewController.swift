@@ -92,18 +92,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     self?.reloadData(animated: true)
                 }
             },
-            notificationCenter.addObserver(forName: .HealthStorePreferredGlucoseUnitDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
-                DispatchQueue.main.async {
-                    self?.log.debug("[reloadData] for HealthKit unit preference change")
-                    if let preferredGlucoseUnit = self?.deviceManager.glucoseStore.preferredUnit {
-                        self?.preferredGlucoseUnit = preferredGlucoseUnit
-                        self?.unitPreferencesDidChange(to: preferredGlucoseUnit)
-                    }
-                    self?.refreshContext = RefreshContext.all
-                }
-            }
         ]
-        
+
+        deviceManager.addPreferredGlucoseUnitObserver(self)
+
         deviceManager.$isClosedLoop
             .receive(on: DispatchQueue.main)
             .sink { self.closedLoopStatusChanged($0) }
@@ -2072,5 +2064,14 @@ extension StatusTableViewController: ServicesViewModelDelegate {
         } else if let service = serviceUIType.init(rawState: [:]) {
             deviceManager.servicesManager.addActiveService(service)
         }
+    }
+}
+
+extension StatusTableViewController: PreferredGlucoseUnitObserver {
+    func preferredGlucoseUnitDidChange(to preferredGlucoseUnit: HKUnit) {
+        self.log.debug("[reloadData] for HealthKit unit preference change")
+        self.preferredGlucoseUnit = preferredGlucoseUnit
+        self.unitPreferencesDidChange(to: preferredGlucoseUnit)
+        self.refreshContext = RefreshContext.all
     }
 }
