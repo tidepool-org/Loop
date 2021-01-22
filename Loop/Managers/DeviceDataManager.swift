@@ -1325,12 +1325,12 @@ extension DeviceDataManager: SupportInfoProvider {
     
 }
 
-extension DeviceDataManager: PreferredGlucoseUnitPublisher {
-
-    func addPreferredGlucoseUnitObserver(_ observer: PreferredGlucoseUnitObserver, queue: DispatchQueue = .main) {
+extension DeviceDataManager {
+    func addPreferredGlucoseUnitObserver(_ observer: PreferredGlucoseUnitObserver) {
+        let queue = DispatchQueue.main
         preferredGlucoseUnitObservers.insert(observer, queue: queue)
         if let preferredGlucoseUnit = glucoseStore.preferredUnit {
-            DispatchQueue.main.async {
+            queue.async {
                 observer.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit)
             }
         }
@@ -1341,6 +1341,10 @@ extension DeviceDataManager: PreferredGlucoseUnitPublisher {
     }
 
     func notifyObserversOfPreferredGlucoseUnitChange(to preferredGlucoseUnit: HKUnit) {
-        preferredGlucoseUnitObservers.forEach { $0.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit) }
+        DispatchQueue.main.async {
+            self.preferredGlucoseUnitObservers.forEach {
+                $0.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit)
+            }
+        }
     }
 }

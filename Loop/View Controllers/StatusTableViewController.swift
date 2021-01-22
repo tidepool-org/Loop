@@ -98,7 +98,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     if let preferredGlucoseUnit = self?.deviceManager.glucoseStore.preferredUnit {
                         self?.preferredGlucoseUnit = preferredGlucoseUnit
                         self?.unitPreferencesDidChange(to: preferredGlucoseUnit)
-                        self?.notifyObserversOfPreferredGlucoseUnitChange(to: preferredGlucoseUnit)
                     }
                     self?.refreshContext = RefreshContext.all
                 }
@@ -1413,7 +1412,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           supportInfoProvider: deviceManager,
                                           activeServices: deviceManager.servicesManager.activeServices,
                                           delegate: self)
-        addPreferredGlucoseUnitObserver(viewModel)
+        deviceManager.addPreferredGlucoseUnitObserver(viewModel)
         let hostingController = DismissibleHostingController(
             rootView: SettingsView(viewModel: viewModel).environment(\.appName, Bundle.main.bundleDisplayName),
             isModalInPresentation: false)
@@ -1438,7 +1437,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         var settings = cgmManager.settingsViewController(for: unit, glucoseTintColor: .glucoseTintColor, guidanceColors: .default)
         settings.completionDelegate = self
-        addPreferredGlucoseUnitObserver(settings)
+        deviceManager.addPreferredGlucoseUnitObserver(settings)
         show(settings, sender: self)
     }
     
@@ -1566,7 +1565,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             var completionNotifyingVC = vc
             completionNotifyingVC.completionDelegate = self
             if let preferredGlucoseUnitObservingVC = completionNotifyingVC as? PreferredGlucoseUnitObserver {
-                addPreferredGlucoseUnitObserver(preferredGlucoseUnitObservingVC)
+                deviceManager.addPreferredGlucoseUnitObserver(preferredGlucoseUnitObservingVC)
             }
             self.present(completionNotifyingVC, animated: true, completion: nil)
         case .openAppURL(let url):
@@ -2073,25 +2072,5 @@ extension StatusTableViewController: ServicesViewModelDelegate {
         } else if let service = serviceUIType.init(rawState: [:]) {
             deviceManager.servicesManager.addActiveService(service)
         }
-    }
-
-}
-
-extension StatusTableViewController: PreferredGlucoseUnitPublisher {
-    func addPreferredGlucoseUnitObserver(_ observer: PreferredGlucoseUnitObserver, queue: DispatchQueue = .main) {
-        preferredGlucoseUnitObservers.insert(observer, queue: queue)
-        if let preferredGlucoseUnit = preferredGlucoseUnit {
-            DispatchQueue.main.async {
-                observer.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit)
-            }
-        }
-    }
-
-    func removePreferredGlucoseUnitObserver(_ observer: PreferredGlucoseUnitObserver) {
-        preferredGlucoseUnitObservers.removeElement(observer)
-    }
-
-    func notifyObserversOfPreferredGlucoseUnitChange(to preferredGlucoseUnit: HKUnit) {
-        preferredGlucoseUnitObservers.forEach { $0.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit) }
     }
 }
