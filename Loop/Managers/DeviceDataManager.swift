@@ -399,7 +399,7 @@ final class DeviceDataManager {
             }
         case .noData:
             log.default("CGMManager:%{public}@ did update with no data", String(describing: type(of: manager)))
-
+            loopManager.notify(forChange: .carbs)
             pumpManager?.ensureCurrentPumpData(completion: nil)
         case .error(let error):
             log.default("CGMManager:%{public}@ did update with error: %{public}@", String(describing: type(of: manager)), String(describing: error))
