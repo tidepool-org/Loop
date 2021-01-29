@@ -494,7 +494,7 @@ extension LoopDataManager {
     /// An active high temp basal (greater than the basal schedule) is cancelled when the CGM data is unreliable.
     func recievedUnreliableCGMReading() {
         guard case .tempBasal(let tempBasal) = basalDeliveryState,
-              let scheduledBasalRate = therapySettings.basalRateSchedule?.value(at: now()),
+              let scheduledBasalRate = basalRateSchedule?.value(at: now()),
               tempBasal.unitsPerHour > scheduledBasalRate else
         {
             return
