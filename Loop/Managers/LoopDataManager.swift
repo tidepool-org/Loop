@@ -488,6 +488,26 @@ extension LoopDataManager {
             }
         }
     }
+    
+    /// Take actions to address how insulin is delivered when the CGM data is unreliable
+    ///
+    /// An active high temp basal (greater than the basal schedule) is cancelled when the CGM data is unreliable.
+    func recievedUnreliableCGMReading() {
+        guard case .tempBasal(let tempBasal) = basalDeliveryState,
+              let scheduledBasalRate = therapySettings.basalRateSchedule?.value(at: now()),
+              tempBasal.unitsPerHour > scheduledBasalRate else
+        {
+            return
+        }
+              
+        //TODO cancel temp basal.... is this possible here?
+        let basalRecommendation = TempBasalRecommendation(unitsPerHour: scheduledBasalRate, duration: .minutes(30))
+        recommendedTempBasal = (recommendation: basalRecommendation, date: self.now())
+        enactRecommendedTempBasal { (error) -> Void in
+            self.storeDosingDecision(withDate: self.now(), withError: error)
+            self.notify(forChange: .tempBasal)
+        }
+    }
 
     /// Adds and stores carb data, and recommends a bolus if needed
     ///
