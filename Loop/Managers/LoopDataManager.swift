@@ -501,8 +501,7 @@ extension LoopDataManager {
         }
               
         // Setting a temp basal with 0 duration effectively cancels that temp basal
-        let basalRecommendation = TempBasalRecommendation(unitsPerHour: scheduledBasalRate, duration: 0)
-        recommendedTempBasal = (recommendation: basalRecommendation, date: self.now())
+        recommendedTempBasal = (recommendation: TempBasalRecommendation.cancel, date: self.now())
         enactRecommendedTempBasal { (error) -> Void in
             self.storeDosingDecision(withDate: self.now(), withError: error)
             self.notify(forChange: .tempBasal)
