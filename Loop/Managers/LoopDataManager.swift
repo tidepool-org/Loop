@@ -500,7 +500,7 @@ extension LoopDataManager {
             return
         }
               
-        // Setting a temp basal with 0 duration effectively cancels that temp basal
+        // Cancel that temp basal
         recommendedTempBasal = (recommendation: TempBasalRecommendation.cancel, date: self.now())
         enactRecommendedTempBasal { (error) -> Void in
             self.storeDosingDecision(withDate: self.now(), withError: error)
