@@ -1902,26 +1902,29 @@ extension StatusTableViewController {
         switch setupCGMManager(withIdentifier: identifier) {
         case .failure(let error):
             log.default("Failure to setup CGM manager with identifier '%{public}@': %{public}@", identifier, String(describing: error))
-        case .userInteractionRequired(var setupViewController):
-            setupViewController.cgmManagerCreateDelegate = self
-            setupViewController.cgmManagerOnboardDelegate = self
-            setupViewController.completionDelegate = self
-            show(setupViewController, sender: self)
-        case .success:
-            log.default("CGM manager with identifier '%{public}@' created and onboarded", identifier)
+        case .success(let success):
+            switch success {
+            case .userInteractionRequired(var setupViewController):
+                setupViewController.cgmManagerCreateDelegate = self
+                setupViewController.cgmManagerOnboardDelegate = self
+                setupViewController.completionDelegate = self
+                show(setupViewController, sender: self)
+            case .createdAndOnboarded:
+                log.default("CGM manager with identifier '%{public}@' created and onboarded", identifier)
+            }
         }
     }
 }
 
 extension StatusTableViewController: CGMManagerCreateDelegate {
-    func cgmManagerCreateNotifying(_ notifying: CGMManagerCreateNotifying, didCreateCGMManager cgmManager: CGMManagerUI) {
+    func cgmManagerCreateNotifying(didCreateCGMManager cgmManager: CGMManagerUI) {
         log.default("CGM manager with identifier '%{public}@' created", cgmManager.managerIdentifier)
         deviceManager.cgmManager = cgmManager
     }
 }
 
 extension StatusTableViewController: CGMManagerOnboardDelegate {
-    func cgmManagerOnboardNotifying(_ notifying: CGMManagerOnboardNotifying, didOnboardCGMManager cgmManager: CGMManagerUI) {
+    func cgmManagerOnboardNotifying(didOnboardCGMManager cgmManager: CGMManagerUI) {
         precondition(cgmManager.isOnboarded)
         log.default("CGM manager with identifier '%{public}@' onboarded", cgmManager.managerIdentifier)
     }
@@ -1929,32 +1932,35 @@ extension StatusTableViewController: CGMManagerOnboardDelegate {
 
 extension StatusTableViewController {
     fileprivate func addPumpManager(withIdentifier identifier: String) {
-        let settings = PumpManagerSettings(maxBasalRateUnitsPerHour: deviceManager.loopManager.settings.maximumBasalRatePerHour,
+        let settings = PumpManagerSetupSettings(maxBasalRateUnitsPerHour: deviceManager.loopManager.settings.maximumBasalRatePerHour,
                                            maxBolusUnits: deviceManager.loopManager.settings.maximumBolus,
                                            basalSchedule: deviceManager.loopManager.basalRateSchedule)
         switch setupPumpManagerUI(withIdentifier: identifier, initialSettings: settings) {
         case .failure(let error):
             log.default("Failure to setup pump manager with identifier '%{public}@': %{public}@", identifier, String(describing: error))
-        case .userInteractionRequired(var setupViewController):
-            setupViewController.pumpManagerCreateDelegate = self
-            setupViewController.pumpManagerOnboardDelegate = self
-            setupViewController.completionDelegate = self
-            show(setupViewController, sender: self)
-        case .success:
-            log.default("Pump manager with identifier '%{public}@' created and onboarded", identifier)
+        case .success(let success):
+            switch success {
+            case .userInteractionRequired(var setupViewController):
+                setupViewController.pumpManagerCreateDelegate = self
+                setupViewController.pumpManagerOnboardDelegate = self
+                setupViewController.completionDelegate = self
+                show(setupViewController, sender: self)
+            case .createdAndOnboarded:
+                log.default("Pump manager with identifier '%{public}@' created and onboarded", identifier)
+            }
         }
     }
 }
 
 extension StatusTableViewController: PumpManagerCreateDelegate {
-    func pumpManagerCreateNotifying(_ notifying: PumpManagerCreateNotifying, didCreatePumpManager pumpManager: PumpManagerUI) {
+    func pumpManagerCreateNotifying(didCreatePumpManager pumpManager: PumpManagerUI) {
         log.default("Pump manager with identifier '%{public}@' created", pumpManager.managerIdentifier)
         deviceManager.pumpManager = pumpManager
     }
 }
 
 extension StatusTableViewController: PumpManagerOnboardDelegate {
-    func pumpManagerOnboardNotifying(_ notifying: PumpManagerOnboardNotifying, didOnboardPumpManager pumpManager: PumpManagerUI, withFinalSettings settings: PumpManagerSettings) {
+    func pumpManagerOnboardNotifying(didOnboardPumpManager pumpManager: PumpManagerUI, withFinalSettings settings: PumpManagerSetupSettings) {
         precondition(pumpManager.isOnboarded)
         log.default("Pump manager with identifier '%{public}@' onboarded", pumpManager.managerIdentifier)
 
@@ -2033,13 +2039,16 @@ extension StatusTableViewController: ServicesViewModelDelegate {
         switch setupService(withIdentifier: identifier) {
         case .failure(let error):
             log.default("Failure to setup service with identifier '%{public}@': %{public}@", identifier, String(describing: error))
-        case .userInteractionRequired(var setupViewController):
-            setupViewController.serviceCreateDelegate = self
-            setupViewController.serviceOnboardDelegate = self
-            setupViewController.completionDelegate = self
-            show(setupViewController, sender: self)
-        case .success:
-            log.default("Service with identifier '%{public}@' created and onboarded", identifier)
+        case .success(let success):
+            switch success {
+            case .userInteractionRequired(var setupViewController):
+                setupViewController.serviceCreateDelegate = self
+                setupViewController.serviceOnboardDelegate = self
+                setupViewController.completionDelegate = self
+                show(setupViewController, sender: self)
+            case .createdAndOnboarded:
+                log.default("Service with identifier '%{public}@' created and onboarded", identifier)
+            }
         }
     }
 
@@ -2059,14 +2068,14 @@ extension StatusTableViewController: ServicesViewModelDelegate {
 }
 
 extension StatusTableViewController: ServiceCreateDelegate {
-    func serviceCreateNotifying(_ notifying: ServiceCreateNotifying, didCreateService service: Service) {
+    func serviceCreateNotifying(didCreateService service: Service) {
         log.default("Service with identifier '%{public}@' created", service.serviceIdentifier)
         deviceManager.servicesManager.addActiveService(service)
     }
 }
 
 extension StatusTableViewController: ServiceOnboardDelegate {
-    func serviceOnboardNotifying(_ notifying: ServiceOnboardNotifying, didOnboardService service: Service) {
+    func serviceOnboardNotifying(didOnboardService service: Service) {
         precondition(service.isOnboarded)
         log.default("Service with identifier '%{public}@' onboarded", service.serviceIdentifier)
     }
@@ -2080,7 +2089,7 @@ extension StatusTableViewController {
             return
         }
 
-        let onboarding = onboardingUIType.init()
+        let onboarding = onboardingUIType.createOnboarding()
         var onboardingViewController = onboarding.onboardingViewController(preferredGlucoseUnit: deviceManager.preferredGlucoseUnit,
                                                                            cgmManagerProvider: self,
                                                                            pumpManagerProvider: self,
@@ -2106,32 +2115,35 @@ extension StatusTableViewController: CGMManagerProvider {
 
     var availableCGMManagers: [CGMManagerDescriptor] { deviceManager.availableCGMManagers }
 
-    func setupCGMManager(withIdentifier identifier: String) -> UIResult<UIViewController & CGMManagerCreateNotifying & CGMManagerOnboardNotifying & CompletionNotifying, CGMManager, Error> {
+    func setupCGMManager(withIdentifier identifier: String) -> Swift.Result<SetupUIResult<UIViewController & CGMManagerCreateNotifying & CGMManagerOnboardNotifying & CompletionNotifying, CGMManager>, Error> {
         if let cgmManager = deviceManager.setupCGMManagerFromPumpManager(withIdentifier: identifier) {
-            return .success(cgmManager)
+            return .success(.createdAndOnboarded(cgmManager))
         }
 
         switch setupCGMManagerUI(withIdentifier: identifier) {
-        case .userInteractionRequired(let viewController):
-            return .userInteractionRequired(viewController)
-        case .success(let cgmManagerUI):
-            return .success(cgmManagerUI)
         case .failure(let error):
             return .failure(error)
+        case .success(let success):
+            switch success {
+            case .userInteractionRequired(let viewController):
+                return .success(.userInteractionRequired(viewController))
+            case .createdAndOnboarded(let cgmManagerUI):
+                return .success(.createdAndOnboarded(cgmManagerUI))
+            }
         }
     }
 
-    fileprivate func setupCGMManagerUI(withIdentifier identifier: String) -> UIResult<UIViewController & CGMManagerCreateNotifying & CGMManagerOnboardNotifying & CompletionNotifying, CGMManagerUI, Error> {
+    fileprivate func setupCGMManagerUI(withIdentifier identifier: String) -> Swift.Result<SetupUIResult<UIViewController & CGMManagerCreateNotifying & CGMManagerOnboardNotifying & CompletionNotifying, CGMManagerUI>, Error> {
         guard let cgmManagerUIType = deviceManager.cgmManagerTypeByIdentifier(identifier) else {
             return .failure(UnknownIdentifierError())
         }
 
         let result = cgmManagerUIType.setupViewController(colorPalette: .default)
-        if case .success(let cgmManagerUI) = result {
+        if case .createdAndOnboarded(let cgmManagerUI) = result {
             deviceManager.cgmManager = cgmManagerUI
         }
 
-        return result
+        return .success(result)
     }
 }
 
@@ -2140,31 +2152,34 @@ extension StatusTableViewController: PumpManagerProvider {
 
     var availablePumpManagers: [PumpManagerDescriptor] { deviceManager.availablePumpManagers }
 
-    func setupPumpManager(withIdentifier identifier: String, initialSettings settings: PumpManagerSettings) -> UIResult<UIViewController & PumpManagerCreateNotifying & PumpManagerOnboardNotifying & CompletionNotifying, PumpManager, Error> {
+    func setupPumpManager(withIdentifier identifier: String, initialSettings settings: PumpManagerSetupSettings) -> Swift.Result<SetupUIResult<UIViewController & PumpManagerCreateNotifying & PumpManagerOnboardNotifying & CompletionNotifying, PumpManager>, Error> {
         switch setupPumpManagerUI(withIdentifier: identifier, initialSettings: settings) {
-        case .userInteractionRequired(let viewController):
-            return .userInteractionRequired(viewController)
-        case .success(let pumpManagerUI):
-            return .success(pumpManagerUI)
         case .failure(let error):
             return .failure(error)
+        case .success(let success):
+            switch success {
+            case .userInteractionRequired(let viewController):
+                return .success(.userInteractionRequired(viewController))
+            case .createdAndOnboarded(let pumpManagerUI):
+                return .success(.createdAndOnboarded(pumpManagerUI))
+            }
         }
     }
 
-    fileprivate func setupPumpManagerUI(withIdentifier identifier: String, initialSettings settings: PumpManagerSettings) -> UIResult<UIViewController & PumpManagerCreateNotifying & PumpManagerOnboardNotifying & CompletionNotifying, PumpManagerUI, Error> {
+    fileprivate func setupPumpManagerUI(withIdentifier identifier: String, initialSettings settings: PumpManagerSetupSettings) -> Swift.Result<SetupUIResult<UIViewController & PumpManagerCreateNotifying & PumpManagerOnboardNotifying & CompletionNotifying, PumpManagerUI>, Error> {
         guard let pumpManagerUIType = deviceManager.pumpManagerTypeByIdentifier(identifier) else {
             return .failure(UnknownIdentifierError())
         }
 
         let result = pumpManagerUIType.setupViewController(initialSettings: settings, colorPalette: .default)
-        if case .success(let pumpManagerUI) = result {
+        if case .createdAndOnboarded(let pumpManagerUI) = result {
             if let basalRateSchedule = deviceManager.loopManager.basalRateSchedule {
                 pumpManagerUI.syncBasalRateSchedule(items: basalRateSchedule.items, completion: { _ in })
             }
             deviceManager.pumpManager = pumpManagerUI
         }
 
-        return result
+        return .success(result)
     }
 }
 
@@ -2173,28 +2188,31 @@ extension StatusTableViewController: ServiceProvider {
 
     var availableServices: [ServiceDescriptor] { deviceManager.servicesManager.availableServices }
 
-    func setupService(withIdentifier identifier: String) -> UIResult<UIViewController & ServiceCreateNotifying & ServiceOnboardNotifying & CompletionNotifying, Service, Error> {
+    func setupService(withIdentifier identifier: String) -> Swift.Result<SetupUIResult<UIViewController & ServiceCreateNotifying & ServiceOnboardNotifying & CompletionNotifying, Service>, Error> {
         switch setupServiceUI(withIdentifier: identifier) {
-        case .userInteractionRequired(let viewController):
-            return .userInteractionRequired(viewController)
-        case .success(let serviceUI):
-            return .success(serviceUI)
         case .failure(let error):
             return .failure(error)
+        case .success(let success):
+            switch success {
+            case .userInteractionRequired(let viewController):
+                return .success(.userInteractionRequired(viewController))
+            case .createdAndOnboarded(let serviceUI):
+                return .success(.createdAndOnboarded(serviceUI))
+            }
         }
     }
 
-    fileprivate func setupServiceUI(withIdentifier identifier: String) -> UIResult<UIViewController & ServiceCreateNotifying & ServiceOnboardNotifying & CompletionNotifying, ServiceUI, Error> {
+    fileprivate func setupServiceUI(withIdentifier identifier: String) -> Swift.Result<SetupUIResult<UIViewController & ServiceCreateNotifying & ServiceOnboardNotifying & CompletionNotifying, ServiceUI>, Error> {
         guard let serviceUIType = deviceManager.servicesManager.serviceUITypeByIdentifier(identifier) else {
             return .failure(UnknownIdentifierError())
         }
 
         let result = serviceUIType.setupViewController(colorPalette: .default)
-        if case .success(let serviceUI) = result {
+        if case .createdAndOnboarded(let serviceUI) = result {
             deviceManager.servicesManager.addActiveService(serviceUI)
         }
 
-        return result
+        return .success(result)
     }
 }
 
@@ -2208,7 +2226,7 @@ extension StatusTableViewController: PreferredGlucoseUnitObserver {
 }
 
 extension StatusTableViewController: OnboardingDelegate {
-    func onboardingNotifying(_ notifying: OnboardingNotifying, hasNewTherapySettings therapySettings: TherapySettings) {
+    func onboardingNotifying(hasNewTherapySettings therapySettings: TherapySettings) {
         log.default("Onboarding has new therapy settings")
 
         deviceManager.loopManager.settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule

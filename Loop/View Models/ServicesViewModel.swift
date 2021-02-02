@@ -6,8 +6,9 @@
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
-import LoopKit
 import SwiftUI
+import LoopKit
+import LoopKitUI
 
 public protocol ServicesViewModelDelegate: class {
     func addService(withIdentifier identifier: String)

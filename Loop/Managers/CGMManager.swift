@@ -6,6 +6,7 @@
 //
 
 import LoopKit
+import LoopKitUI
 import MockKit
 
 // TODO: Need a flag other than Debug for including MockCGMManager

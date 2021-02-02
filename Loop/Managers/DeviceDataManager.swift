@@ -764,13 +764,13 @@ extension DeviceDataManager: CGMManagerDelegate {
 }
 
 extension DeviceDataManager: CGMManagerCreateDelegate {
-    func cgmManagerCreateNotifying(_ notifying: CGMManagerCreateNotifying, didCreateCGMManager cgmManager: CGMManagerUI) {
+    func cgmManagerCreateNotifying(didCreateCGMManager cgmManager: CGMManagerUI) {
         self.cgmManager = cgmManager
     }
 }
 
 extension DeviceDataManager: CGMManagerOnboardDelegate {
-    func cgmManagerOnboardNotifying(_ notifying: CGMManagerOnboardNotifying, didOnboardCGMManager cgmManager: CGMManagerUI) {}
+    func cgmManagerOnboardNotifying(didOnboardCGMManager cgmManager: CGMManagerUI) {}
 }
 
 // MARK: - PumpManagerDelegate

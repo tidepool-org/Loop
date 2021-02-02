@@ -140,7 +140,7 @@ extension ServicesManager: ServiceDelegate {
         saveState()
     }
 
-    func serviceWasDeleted(_ service: Service) {
+    func serviceWantsDeletion(_ service: Service) {
         log.default("Service with identifier '%{public}@' deleted", service.serviceIdentifier)
         removeActiveService(service)
     }

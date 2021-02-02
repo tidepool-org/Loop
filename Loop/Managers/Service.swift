@@ -7,6 +7,7 @@
 //
 
 import LoopKit
+import LoopKitUI
 import MockKit
 
 let staticServices: [Service.Type] = [MockService.self]
