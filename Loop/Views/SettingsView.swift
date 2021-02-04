@@ -347,7 +347,6 @@ fileprivate class FakeService1: Service {
     required init() {}
     required init?(rawState: RawStateValue) {}
     let isOnboarded = true
-    func delete() { serviceDelegate?.serviceWantsDeletion(self) }
     var available: ServiceDescriptor { ServiceDescriptor(identifier: serviceIdentifier, localizedTitle: localizedTitle) }
 }
 fileprivate class FakeService2: Service {
@@ -358,7 +357,6 @@ fileprivate class FakeService2: Service {
     required init() {}
     required init?(rawState: RawStateValue) {}
     let isOnboarded = true
-    func delete() { serviceDelegate?.serviceWantsDeletion(self) }
     var available: ServiceDescriptor { ServiceDescriptor(identifier: serviceIdentifier, localizedTitle: localizedTitle) }
 }
 fileprivate let servicesViewModel = ServicesViewModel(showServices: true,

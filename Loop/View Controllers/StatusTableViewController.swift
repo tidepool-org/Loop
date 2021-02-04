@@ -1933,8 +1933,8 @@ extension StatusTableViewController: CGMManagerOnboardDelegate {
 extension StatusTableViewController {
     fileprivate func addPumpManager(withIdentifier identifier: String) {
         let settings = PumpManagerSetupSettings(maxBasalRateUnitsPerHour: deviceManager.loopManager.settings.maximumBasalRatePerHour,
-                                           maxBolusUnits: deviceManager.loopManager.settings.maximumBolus,
-                                           basalSchedule: deviceManager.loopManager.basalRateSchedule)
+                                                maxBolusUnits: deviceManager.loopManager.settings.maximumBolus,
+                                                basalSchedule: deviceManager.loopManager.basalRateSchedule)
         switch setupPumpManagerUI(withIdentifier: identifier, initialSettings: settings) {
         case .failure(let error):
             log.default("Failure to setup pump manager with identifier '%{public}@': %{public}@", identifier, String(describing: error))
