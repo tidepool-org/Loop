@@ -921,7 +921,6 @@ extension LoopDataManager {
         }
     }
 
-    // HACK
     func notify(forChange context: LoopUpdateContext) {
         if case .preferences = context {
             storeSettings()
