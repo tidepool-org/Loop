@@ -12,11 +12,12 @@ import LoopKitUI
 
 class PluginManager {
     private let pluginBundles: [Bundle]
-    private let extensionObjects: [NSObject]
+
+    public let availableSupports: [SupportUI]
 
     public init(pluginsURL: URL? = Bundle.main.privateFrameworksURL) {
         var bundles = [Bundle]()
-        var objects = [NSObject]()
+        var availableSupports = [SupportUI]()
 
         if let pluginsURL = pluginsURL {
             do {
@@ -25,12 +26,16 @@ class PluginManager {
                         if bundle.isLoopPlugin {
                             print("Found loop plugin at \(pluginURL)")
                             bundles.append(bundle)
+                            if bundle.isSupportPlugin {
+                                if let support = try bundle.loadAndInstantiateSupport() {
+                                    availableSupports.append(support)
+                                }
+                            }
                         }
                         if bundle.isLoopExtension {
                             print("Found Loop extension at \(pluginURL), loading...")
-                            try bundle.loadAndReturnError()
-                            if let principalClass = bundle.principalClass as? NSObject.Type  {
-                                objects.append(principalClass.init())
+                            if let support = try bundle.loadAndInstantiateSupport() {
+                                availableSupports.append(support)
                             }
                         }
                     }
@@ -40,7 +45,7 @@ class PluginManager {
             }
         }
         self.pluginBundles = bundles
-        self.extensionObjects = objects
+        self.availableSupports = availableSupports
     }
 
     func getPumpManagerTypeByIdentifier(_ identifier: String) -> PumpManagerUI.Type? {
@@ -181,24 +186,28 @@ class PluginManager {
             return bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) as? String
         })
     }
-
-    var availableSupports: [SupportUI] {
-        return extensionObjects.compactMap { ($0 as? SupportUIExtension)?.support }
-    }
-
 }
 
 
 extension Bundle {
-    var isLoopPlugin: Bool {
-        return
-            object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerIdentifier.rawValue) as? String != nil ||
-            object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) as? String != nil ||
-            object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String != nil ||
-            object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) as? String != nil
-    }
-    
-    var isLoopExtension: Bool {
-        return object(forInfoDictionaryKey: LoopPluginBundleKey.extensionIdentifier.rawValue) as? String != nil
+    var isPumpManagerPlugin: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerIdentifier.rawValue) as? String != nil }
+    var isCGMManagerPlugin: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) as? String != nil }
+    var isServicePlugin: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String != nil }
+    var isOnboardingPlugin: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) as? String != nil }
+    var isSupportPlugin: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.supportIdentifier.rawValue) as? String != nil }
+
+    var isLoopPlugin: Bool { isPumpManagerPlugin || isCGMManagerPlugin || isServicePlugin || isOnboardingPlugin || isSupportPlugin }
+
+    var isLoopExtension: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.extensionIdentifier.rawValue) as? String != nil }
+
+    fileprivate func loadAndInstantiateSupport() throws -> SupportUI? {
+        try loadAndReturnError()
+
+        guard let principalClass = principalClass as? NSObject.Type,
+              let supportUIPlugin = principalClass.init() as? SupportUIPlugin else {
+            return nil
+        }
+        
+        return supportUIPlugin.support
     }
 }
