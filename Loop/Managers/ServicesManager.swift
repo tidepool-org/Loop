@@ -145,3 +145,7 @@ extension ServicesManager: ServiceDelegate {
         removeActiveService(service)
     }
 }
+
+extension ServicesManager {
+    var availableSupports: [SupportUI] { activeServices.compactMap { $0 as? SupportUI } }
+}

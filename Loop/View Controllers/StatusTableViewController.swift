@@ -1400,7 +1400,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           isClosedLoopAllowed: deviceManager.$isClosedLoopAllowed,
                                           preferredGlucoseUnit: deviceManager.preferredGlucoseUnit,
                                           supportInfoProvider: deviceManager,
-                                          availableSupports: deviceManager.pluginManager.availableSupports,
+                                          availableSupports: deviceManager.availableSupports,
                                           delegate: self)
         deviceManager.addPreferredGlucoseUnitObserver(viewModel)
         let hostingController = DismissibleHostingController(

@@ -1352,3 +1352,10 @@ extension DeviceDataManager {
         }
     }
 }
+
+extension DeviceDataManager {
+    var availableSupports: [SupportUI] {
+        let availableSupports = pluginManager.availableSupports + servicesManager.availableSupports + [cgmManager, pumpManager].compactMap { $0 as? SupportUI }
+        return availableSupports.sorted { $0.supportIdentifier < $1.supportIdentifier } // Provide a consistent ordering
+    }
+}
