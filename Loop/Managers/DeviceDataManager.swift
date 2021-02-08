@@ -387,7 +387,6 @@ final class DeviceDataManager {
         switch readingResult {
         case .newData(let values):
             log.default("CGMManager:%{public}@ did update with %d values", String(describing: type(of: manager)), values.count)
-
             loopManager.addGlucoseSamples(values) { result in
                 self.log.default("Asserting current pump data")
                 self.pumpManager?.ensureCurrentPumpData(completion: nil)
@@ -407,10 +406,6 @@ final class DeviceDataManager {
 
             self.setLastError(error: error)
             log.default("Asserting current pump data")
-            pumpManager?.ensureCurrentPumpData(completion: nil)
-        case .deviceStatus:
-            log.default("CGMManager:%{public}@ did update with new status", String(describing: type(of: manager)))
-            loopManager.notify(forChange: .carbs)
             pumpManager?.ensureCurrentPumpData(completion: nil)
         }
 

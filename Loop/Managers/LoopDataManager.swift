@@ -921,7 +921,7 @@ extension LoopDataManager {
         }
     }
 
-    func notify(forChange context: LoopUpdateContext) {
+    private func notify(forChange context: LoopUpdateContext) {
         if case .preferences = context {
             storeSettings()
         }
