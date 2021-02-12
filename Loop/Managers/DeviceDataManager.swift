@@ -386,7 +386,6 @@ final class DeviceDataManager {
         switch readingResult {
         case .newData(let values):
             log.default("CGMManager:%{public}@ did update with %d values", String(describing: type(of: manager)), values.count)
-
             loopManager.addGlucoseSamples(values) { result in
                 self.log.default("Asserting current pump data")
                 self.pumpManager?.ensureCurrentPumpData(completion: nil)
@@ -396,9 +395,10 @@ final class DeviceDataManager {
                     }
                 }
             }
+        case .unreliableData:
+            loopManager.recievedUnreliableCGMReading()
         case .noData:
             log.default("CGMManager:%{public}@ did update with no data", String(describing: type(of: manager)))
-
             pumpManager?.ensureCurrentPumpData(completion: nil)
         case .error(let error):
             log.default("CGMManager:%{public}@ did update with error: %{public}@", String(describing: type(of: manager)), String(describing: error))
@@ -460,7 +460,7 @@ final class DeviceDataManager {
     }
     
     // Get HealthKit authorization for all of the stores
-    func authorizeHealthStore(_ completion: @escaping () -> Void) {
+    func authorizeHealthStore(_ completion: @escaping (Bool) -> Void) {
         // Authorize all types at once for simplicity
         healthStore.requestAuthorization(toShare: shareTypes, read: readTypes) { (success, error) in
             if success {
@@ -470,7 +470,7 @@ final class DeviceDataManager {
                 self.glucoseStore.authorize(toShare: true, { _ in })
             }
 
-            completion()
+            completion(success)
         }
     }
 
@@ -544,7 +544,7 @@ private extension DeviceDataManager {
                                             alertResponder: cgmManager)
             alertManager?.addAlertSoundVendor(managerIdentifier: cgmManager.managerIdentifier,
                                               soundVendor: cgmManager)            
-            cgmHasValidSensorSession = cgmManager.cgmStatus.hasValidSensorSession
+            cgmHasValidSensorSession = cgmManager.cgmManagerStatus.hasValidSensorSession
         }
 
         if let cgmManagerUI = cgmManager as? CGMManagerUI {

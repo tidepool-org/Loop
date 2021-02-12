@@ -44,6 +44,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         registerPumpManager()
+        registerCGMManager()
 
         let notificationCenter = NotificationCenter.default
 
@@ -83,6 +84,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             },
             notificationCenter.addObserver(forName: .CGMManagerChanged, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
                 DispatchQueue.main.async {
+                    self?.registerCGMManager()
                     self?.configureCGMManagerHUDViews()
                 }
             },
@@ -157,17 +159,18 @@ final class StatusTableViewController: LoopChartsTableViewController {
         super.viewDidAppear(animated)
 
         if !appearedOnce {
-            appearedOnce = true
+            authorizeHealthStore { success in
+                self.appearedOnce = success
+                if success {
+                    DispatchQueue.main.async {
+                        // On first launch, before HealthKit permissions are acknowledged, preferredGlucoseUnit will be nil, so set here when available
+                        self.preferredGlucoseUnit = self.deviceManager.glucoseStore.preferredUnit
 
-            deviceManager.authorizeHealthStore {
-                DispatchQueue.main.async {
-                    // On first launch, before HealthKit permissions are acknowledged, preferredGlucoseUnit will be nil, so set here when available
-                    self.preferredGlucoseUnit = self.deviceManager.glucoseStore.preferredUnit
-
-                    self.log.debug("[reloadData] after HealthKit authorization")
-                    self.reloadData()
-                    if !self.isOnboardingComplete && self.hasOnboarding {
-                        self.navigateToOnboarding()
+                        self.log.debug("[reloadData] after HealthKit authorization")
+                        self.reloadData()
+                        if !self.isOnboardingComplete && self.hasOnboarding {
+                            self.navigateToOnboarding()
+                        }
                     }
                 }
             }
@@ -178,6 +181,18 @@ final class StatusTableViewController: LoopChartsTableViewController {
         deviceManager.analyticsServicesManager.didDisplayStatusScreen()
 
         deviceManager.checkDeliveryUncertaintyState()
+    }
+    
+    private func authorizeHealthStore(completion: @escaping (Bool) -> Void) {
+        deviceManager.authorizeHealthStore { accessFormWasCompleted in
+            // returned Bool only indicates if the user completed the health access form.
+            if accessFormWasCompleted {
+                completion(accessFormWasCompleted)
+            } else {
+                // if the user did not complete the health access form, present the health access form again so the user can allow or deny access
+                self.authorizeHealthStore(completion: completion)
+            }
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -270,6 +285,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func glucoseUnitDidChange() {
         refreshContext = RefreshContext.all
     }
+    
+    private func registerCGMManager() {
+        deviceManager.cgmManager?.removeStatusObserver(self)
+        deviceManager.cgmManager?.addStatusObserver(self, queue: .main)
+    }
 
     private func registerPumpManager() {
         self.basalDeliveryState = deviceManager.pumpManager?.status.basalDeliveryState
@@ -277,7 +297,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         deviceManager.pumpManager?.removeStatusObserver(self)
         deviceManager.pumpManager?.addStatusObserver(self, queue: .main)
     }
-
+    
     private lazy var statusCharts = StatusChartsManager(colors: .primary, settings: .default, traitCollection: self.traitCollection)
 
     override func createChartsManager() -> ChartsManager {
@@ -1857,6 +1877,13 @@ extension StatusTableViewController: PumpManagerStatusObserver {
     }
 }
 
+extension StatusTableViewController: CGMManagerStatusObserver {
+    func cgmManager(_ manager: CGMManager, didUpdate status: CGMManagerStatus) {
+        refreshContext.update(with: .status)
+        self.reloadData(animated: true)
+    }
+}
+
 extension StatusTableViewController: DoseProgressObserver {
     func doseProgressReporterDidUpdate(_ doseProgressReporter: DoseProgressReporter) {
 
@@ -1978,7 +2005,7 @@ extension StatusTableViewController: PumpManagerOnboardDelegate {
 
 extension StatusTableViewController: BluetoothStateManagerObserver {
     func bluetoothStateManager(_ bluetoothStateManager: BluetoothStateManager,
-                           bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
+                               bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
     {
         refreshContext.update(with: .status)
         reloadData(animated: true)
