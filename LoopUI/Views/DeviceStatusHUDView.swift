@@ -94,7 +94,7 @@ import LoopKitUI
         
         presentStatusHighlight(withMessage: statusHighlight.localizedMessage,
                                image: statusHighlight.image,
-                               color: statusHighlight.color)
+                               color: statusHighlight.state.color)
     }
     
     private func presentStatusHighlight(withMessage message: String,
@@ -125,11 +125,14 @@ import LoopKitUI
             return
         }
         
-        presentStatusBadge(statusBadge.image)
+        presentStatusBadge(withIcon: statusBadge.image,
+                           color: statusBadge.state.color)
     }
     
-    private func presentStatusBadge(_ badgeIcon: UIImage?) {
+    private func presentStatusBadge(withIcon badgeIcon: UIImage?,
+                                    color: UIColor) {
         statusBadgeView.setBadgeIcon(badgeIcon)
+        statusBadgeView.tintColor = color
         presentStatusBadge()
     }
     
