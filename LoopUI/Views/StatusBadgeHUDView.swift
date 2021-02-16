@@ -7,9 +7,6 @@
 //
 
 import UIKit
-//import HealthKit
-//import LoopKit
-//import LoopKitUI
 
 public final class StatusBadgeHUDView: UIView {
     
@@ -22,5 +19,9 @@ public final class StatusBadgeHUDView: UIView {
     
     public func setBadgeIcon(_ icon: UIImage?) {
         badgeIcon.image = icon
+    }
+    
+    override public func tintColorDidChange() {
+        badgeIcon.tintColor = self.tintColor
     }
 }
