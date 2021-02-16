@@ -15,7 +15,7 @@ public final class StatusBadgeHUDView: UIView {
     
     @IBOutlet private weak var badgeIcon: UIImageView! {
         didSet {
-            // badge color design is currently always the warning color
+            // badge common (default) color is warning
             badgeIcon.tintColor = .warning
         }
     }
