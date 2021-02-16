@@ -13,13 +13,19 @@ import LoopKitUI
 
 @objc open class DeviceStatusHUDView: BaseHUDView {
     
-    public var statusHighlightView: StatusHighlightHUDView! {
+    var statusHighlightView: StatusHighlightHUDView! {
         didSet {
             statusHighlightView.isHidden = true
         }
     }
     
-    @IBOutlet public weak var progressView: UIProgressView! {
+    @IBOutlet private var statusBadgeView: StatusBadgeHUDView! {
+        didSet {
+            statusBadgeView.isHidden = true
+        }
+    }
+    
+    @IBOutlet private weak var progressView: UIProgressView! {
         didSet {
             progressView.isHidden = true
             progressView.tintColor = .systemGray
@@ -31,14 +37,14 @@ import LoopKitUI
         }
     }
     
-    @IBOutlet public weak var backgroundView: UIView! {
+    @IBOutlet private weak var backgroundView: UIView! {
         didSet {
             backgroundView.backgroundColor = .systemBackground
             backgroundView.layer.cornerRadius = 23
         }
     }
     
-    @IBOutlet public weak var statusStackView: UIStackView!
+    @IBOutlet weak var statusStackView: UIStackView!
     
     public var lifecycleProgress: DeviceLifecycleProgress? {
         didSet {
@@ -69,7 +75,7 @@ import LoopKitUI
         }
     }
     
-    public func resetProgress() {
+    private func resetProgress() {
         progressView.isHidden = true
         progressView.progress = 0
     }
@@ -91,7 +97,7 @@ import LoopKitUI
                                color: statusHighlight.color)
     }
     
-    public func presentStatusHighlight(withMessage message: String,
+    private func presentStatusHighlight(withMessage message: String,
                                        image: UIImage?,
                                        color: UIColor)
     {
@@ -113,4 +119,25 @@ import LoopKitUI
         statusStackView?.removeArrangedSubview(statusHighlightView)
     }
     
+    public func presentStatusBadge(_ statusBadge: DeviceStatusBadge?) {
+        guard let statusBadge = statusBadge else {
+            dismissStatusBadge()
+            return
+        }
+        
+        presentStatusBadge(statusBadge.image)
+    }
+    
+    private func presentStatusBadge(_ badgeIcon: UIImage?) {
+        statusBadgeView.setBadgeIcon(badgeIcon)
+        presentStatusBadge()
+    }
+    
+    private func presentStatusBadge() {
+        statusBadgeView.isHidden = false
+    }
+    
+    private func dismissStatusBadge() {
+        statusBadgeView.isHidden = true
+    }
 }
