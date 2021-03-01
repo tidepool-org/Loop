@@ -14,7 +14,6 @@ import LoopKitUI
 import UIKit
 import UserNotifications
 
-@UIApplicationMain
 final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationController {
 
     private lazy var log = DiagnosticLog(category: "AppDelegate")
