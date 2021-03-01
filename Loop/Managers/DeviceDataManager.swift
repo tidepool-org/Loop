@@ -293,8 +293,7 @@ final class DeviceDataManager {
             pluginManager: pluginManager,
             analyticsServicesManager: analyticsServicesManager,
             loggingServicesManager: loggingServicesManager,
-            remoteDataServicesManager: remoteDataServicesManager,
-            dataManager: loopManager
+            remoteDataServicesManager: remoteDataServicesManager
         )
 
         let criticalEventLogs: [CriticalEventLog] = [settingsStore, glucoseStore, carbStore, dosingDecisionStore, doseStore, deviceLog, alertManager.alertStore]
@@ -357,12 +356,12 @@ final class DeviceDataManager {
         return pumpManagerTypeFromRawValue(rawValue) != nil
     }
 
-    var availablePumpManagers: [AvailableDevice] {
+    var availablePumpManagers: [PumpManagerDescriptor] {
         return pluginManager.availablePumpManagers + availableStaticPumpManagers
     }
 
     public func pumpManagerTypeByIdentifier(_ identifier: String) -> PumpManagerUI.Type? {
-        return pluginManager.getPumpManagerTypeByIdentifier(identifier) ?? staticPumpManagersByIdentifier[identifier] as? PumpManagerUI.Type
+        return pluginManager.getPumpManagerTypeByIdentifier(identifier) ?? staticPumpManagersByIdentifier[identifier]
     }
 
     private func pumpManagerTypeFromRawValue(_ rawValue: [String: Any]) -> PumpManager.Type? {
@@ -387,7 +386,6 @@ final class DeviceDataManager {
         switch readingResult {
         case .newData(let values):
             log.default("CGMManager:%{public}@ did update with %d values", String(describing: type(of: manager)), values.count)
-
             loopManager.addGlucoseSamples(values) { result in
                 self.log.default("Asserting current pump data")
                 self.pumpManager?.ensureCurrentPumpData(completion: nil)
@@ -397,9 +395,10 @@ final class DeviceDataManager {
                     }
                 }
             }
+        case .unreliableData:
+            loopManager.recievedUnreliableCGMReading()
         case .noData:
             log.default("CGMManager:%{public}@ did update with no data", String(describing: type(of: manager)))
-
             pumpManager?.ensureCurrentPumpData(completion: nil)
         case .error(let error):
             log.default("CGMManager:%{public}@ did update with error: %{public}@", String(describing: type(of: manager)), String(describing: error))
@@ -412,10 +411,10 @@ final class DeviceDataManager {
         updatePumpManagerBLEHeartbeatPreference()
     }
 
-    var availableCGMManagers: [AvailableDevice] {
+    var availableCGMManagers: [CGMManagerDescriptor] {
         var availableCGMManagers = pluginManager.availableCGMManagers + availableStaticCGMManagers
         if let pumpManagerAsCGMManager = pumpManager as? CGMManager {
-            availableCGMManagers.append(AvailableDevice(identifier: pumpManagerAsCGMManager.managerIdentifier, localizedTitle: pumpManagerAsCGMManager.localizedTitle, providesOnboarding: false))
+            availableCGMManagers.append(CGMManagerDescriptor(identifier: pumpManagerAsCGMManager.managerIdentifier, localizedTitle: pumpManagerAsCGMManager.localizedTitle))
         }
         return availableCGMManagers
     }
@@ -424,14 +423,14 @@ final class DeviceDataManager {
         return pluginManager.getCGMManagerTypeByIdentifier(identifier) ?? staticCGMManagersByIdentifier[identifier] as? CGMManagerUI.Type
     }
     
-    public typealias SetupCGMCompletion = (CGMManager?) -> Void
-    public func maybeSetupCGMManager(_ identifier: String, setupClosure: (CGMManagerUI.Type) -> Void) {
-        if identifier == pumpManager?.managerIdentifier, let cgmManager = pumpManager as? CGMManager {
-            // We have a pump that is a CGM!
-            self.cgmManager = cgmManager
-        } else if let cgmManagerType = cgmManagerTypeByIdentifier(identifier) {
-            setupClosure(cgmManagerType)
+    public func setupCGMManagerFromPumpManager(withIdentifier identifier: String) -> CGMManager? {
+        guard identifier == pumpManager?.managerIdentifier, let cgmManager = pumpManager as? CGMManager else {
+            return nil
         }
+
+        // We have a pump that is a CGM!
+        self.cgmManager = cgmManager
+        return cgmManager
     }
     
     private func cgmManagerTypeFromRawValue(_ rawValue: [String: Any]) -> CGMManager.Type? {
@@ -461,7 +460,7 @@ final class DeviceDataManager {
     }
     
     // Get HealthKit authorization for all of the stores
-    func authorizeHealthStore(_ completion: @escaping () -> Void) {
+    func authorizeHealthStore(_ completion: @escaping (Bool) -> Void) {
         // Authorize all types at once for simplicity
         healthStore.requestAuthorization(toShare: shareTypes, read: readTypes) { (success, error) in
             if success {
@@ -471,7 +470,7 @@ final class DeviceDataManager {
                 self.glucoseStore.authorize(toShare: true, { _ in })
             }
 
-            completion()
+            completion(success)
         }
     }
 
@@ -545,7 +544,7 @@ private extension DeviceDataManager {
                                             alertResponder: cgmManager)
             alertManager?.addAlertSoundVendor(managerIdentifier: cgmManager.managerIdentifier,
                                               soundVendor: cgmManager)            
-            cgmHasValidSensorSession = cgmManager.cgmStatus.hasValidSensorSession
+            cgmHasValidSensorSession = cgmManager.cgmManagerStatus.hasValidSensorSession
         }
 
         if let cgmManagerUI = cgmManager as? CGMManagerUI {
@@ -560,7 +559,7 @@ private extension DeviceDataManager {
         pumpManager?.delegateQueue = queue
 
         doseStore.device = pumpManager?.status.device
-        pumpManagerHUDProvider = pumpManager?.hudProvider(insulinTintColor: .insulinTintColor, guidanceColors: .default)
+        pumpManagerHUDProvider = pumpManager?.hudProvider(colorPalette: .default)
 
         // Proliferate PumpModel preferences to DoseStore
         if let pumpRecordsBasalProfileStartEvents = pumpManager?.pumpRecordsBasalProfileStartEvents {
@@ -726,6 +725,9 @@ extension DeviceDataManager: AlertPresenter {
 extension DeviceDataManager: CGMManagerDelegate {
     func cgmManagerWantsDeletion(_ manager: CGMManager) {
         dispatchPrecondition(condition: .onQueue(queue))
+
+        log.default("CGM manager with identifier '%{public}@' wants deletion", manager.managerIdentifier)
+
         DispatchQueue.main.async {
             self.cgmManager = nil
         }
@@ -761,10 +763,14 @@ extension DeviceDataManager: CGMManagerDelegate {
     }
 }
 
-extension DeviceDataManager: CGMManagerSetupViewControllerDelegate {
-    func cgmManagerSetupViewController(_ cgmManagerSetupViewController: CGMManagerSetupViewController, didSetUpCGMManager cgmManager: CGMManagerUI) {
+extension DeviceDataManager: CGMManagerCreateDelegate {
+    func cgmManagerCreateNotifying(didCreateCGMManager cgmManager: CGMManagerUI) {
         self.cgmManager = cgmManager
     }
+}
+
+extension DeviceDataManager: CGMManagerOnboardDelegate {
+    func cgmManagerOnboardNotifying(didOnboardCGMManager cgmManager: CGMManagerUI) {}
 }
 
 // MARK: - PumpManagerDelegate
@@ -893,7 +899,7 @@ extension DeviceDataManager: PumpManagerDelegate {
     func pumpManagerWillDeactivate(_ pumpManager: PumpManager) {
         dispatchPrecondition(condition: .onQueue(queue))
 
-        log.default("PumpManager:%{public}@ will deactivate", String(describing: type(of: pumpManager)))
+        log.default("Pump manager with identifier '%{public}@' will deactivate", pumpManager.managerIdentifier)
 
         doseStore.resetPumpData(completion: nil)
         DispatchQueue.main.async {
@@ -944,29 +950,6 @@ extension DeviceDataManager: PumpManagerDelegate {
                 completion(.failure(error))
             case .success(let (newValue, lastValue, areStoredValuesContinuous)):
                 completion(.success((newValue: newValue, lastValue: lastValue, areStoredValuesContinuous: areStoredValuesContinuous)))
-
-                // Send notifications for low reservoir if necessary
-                if let previousVolume = lastValue?.unitVolume {
-                    guard newValue.unitVolume > 0 else {
-                        NotificationManager.sendPumpReservoirEmptyNotification()
-                        return
-                    }
-
-                    let warningThresholds: [Double] = [10, 20, 30]
-
-                    for threshold in warningThresholds {
-                        if newValue.unitVolume <= threshold && previousVolume > threshold {
-                            NotificationManager.sendPumpReservoirLowNotificationForAmount(newValue.unitVolume, andTimeRemaining: nil)
-                            break
-                        }
-                    }
-
-                    if newValue.unitVolume > previousVolume + 1 {
-                        self.analyticsServicesManager.reservoirWasRewound()
-
-                        NotificationManager.clearPumpReservoirNotification()
-                    }
-                }
             }
         }
     }
@@ -1165,10 +1148,10 @@ extension DeviceDataManager {
 // MARK: - Critical Event Log Export
 
 extension DeviceDataManager {
-    private static var criticalEventLogHistoricalExportBackgroundTaskIdentifer: String { "com.loopkit.background-task.critical-event-log.historical-export" }
+    private static var criticalEventLogHistoricalExportBackgroundTaskIdentifier: String { "com.loopkit.background-task.critical-event-log.historical-export" }
 
     public static func registerCriticalEventLogHistoricalExportBackgroundTask(_ handler: @escaping (BGProcessingTask) -> Void) -> Bool {
-        return BGTaskScheduler.shared.register(forTaskWithIdentifier: criticalEventLogHistoricalExportBackgroundTaskIdentifer, using: nil) { handler($0 as! BGProcessingTask) }
+        return BGTaskScheduler.shared.register(forTaskWithIdentifier: criticalEventLogHistoricalExportBackgroundTaskIdentifier, using: nil) { handler($0 as! BGProcessingTask) }
     }
 
     public func handleCriticalEventLogHistoricalExportBackgroundTask(_ task: BGProcessingTask) {
@@ -1200,7 +1183,7 @@ extension DeviceDataManager {
     public func scheduleCriticalEventLogHistoricalExportBackgroundTask(isRetry: Bool = false) {
         do {
             let earliestBeginDate = isRetry ? criticalEventLogExportManager.retryExportHistoricalDate() : criticalEventLogExportManager.nextExportHistoricalDate()
-            let request = BGProcessingTaskRequest(identifier: Self.criticalEventLogHistoricalExportBackgroundTaskIdentifer)
+            let request = BGProcessingTaskRequest(identifier: Self.criticalEventLogHistoricalExportBackgroundTaskIdentifier)
             request.earliestBeginDate = earliestBeginDate
             request.requiresExternalPower = true
 
@@ -1344,5 +1327,12 @@ extension DeviceDataManager {
         self.preferredGlucoseUnitObservers.forEach {
             $0.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit)
         }
+    }
+}
+
+extension DeviceDataManager {
+    var availableSupports: [SupportUI] {
+        let availableSupports = pluginManager.availableSupports + servicesManager.availableSupports + [cgmManager, pumpManager].compactMap { $0 as? SupportUI }
+        return availableSupports.sorted { $0.supportIdentifier < $1.supportIdentifier } // Provide a consistent ordering
     }
 }

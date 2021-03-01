@@ -193,6 +193,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, DeviceOrientationCo
 
     var supportedInterfaceOrientations = UIInterfaceOrientationMask.allButUpsideDown
 
+    func setOriginallySupportedInferfaceOrientations() {
+        supportedInterfaceOrientations = UIInterfaceOrientationMask.allButUpsideDown
+    }
+
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         supportedInterfaceOrientations
     }
@@ -247,8 +251,6 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         switch notification.request.identifier {
         // TODO: Until these notifications are converted to use the new alert system, they shall still show in the foreground
         case LoopNotificationCategory.bolusFailure.rawValue,
-             LoopNotificationCategory.pumpReservoirLow.rawValue,
-             LoopNotificationCategory.pumpReservoirEmpty.rawValue,
              LoopNotificationCategory.pumpBatteryLow.rawValue,
              LoopNotificationCategory.pumpExpired.rawValue,
              LoopNotificationCategory.pumpFault.rawValue:

@@ -25,6 +25,10 @@ extension DeviceDataManager {
         }
     }
     
+    var cgmStatusBadge: DeviceStatusBadge? {
+        return (cgmManager as? CGMManagerUI)?.cgmStatusBadge
+    }
+    
     var cgmLifecycleProgress: DeviceLifecycleProgress? {
         return (cgmManager as? CGMManagerUI)?.cgmLifecycleProgress
     }
@@ -72,7 +76,7 @@ extension DeviceDataManager {
         } else if let cgmManagerUI = (cgmManager as? CGMManagerUI),
             let unit = glucoseStore.preferredUnit
         {
-            return .presentViewController(cgmManagerUI.settingsViewController(for: unit, glucoseTintColor: .glucoseTintColor, guidanceColors: .default))
+            return .presentViewController(cgmManagerUI.settingsViewController(for: unit, colorPalette: .default))
         } else {
             return .setupNewCGM
         }
@@ -87,7 +91,7 @@ extension DeviceDataManager {
         {
             return action
         } else if let pumpManager = pumpManager {
-            return .presentViewController(pumpManager.settingsViewController(insulinTintColor: .insulinTintColor, guidanceColors: .default))
+            return .presentViewController(pumpManager.settingsViewController(colorPalette: .default))
         } else {
             return .setupNewPump
         }
