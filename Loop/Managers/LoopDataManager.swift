@@ -99,6 +99,9 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
 
         overrideHistory.delegate = self
 
+        // Required for device settings in stored dosing decisions
+        UIDevice.current.isBatteryMonitoringEnabled = true
+
         // Observe changes
         notificationObservers = [
             NotificationCenter.default.addObserver(

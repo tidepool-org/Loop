@@ -11,7 +11,7 @@ import LoopKit
 
 public class InAppModalAlertPresenter: AlertPresenter {
 
-    private weak var rootViewController: UIViewController?
+    private weak var viewControllerProvider: ViewControllerProvider?
     private weak var alertManagerResponder: AlertManagerResponder?
 
     private var alertsShowing: [Alert.Identifier: (UIAlertController, Alert)] = [:]
@@ -25,12 +25,12 @@ public class InAppModalAlertPresenter: AlertPresenter {
 
     private let soundPlayer: AlertSoundPlayer
 
-    init(rootViewController: UIViewController,
+    init(viewControllerProvider: ViewControllerProvider?,
          alertManagerResponder: AlertManagerResponder,
          soundPlayer: AlertSoundPlayer = DeviceAVSoundPlayer(),
          newActionFunc: @escaping ActionFactoryFunction = UIAlertAction.init,
          newTimerFunc: TimerFactoryFunction? = nil) {
-        self.rootViewController = rootViewController
+        self.viewControllerProvider = viewControllerProvider
         self.alertManagerResponder = alertManagerResponder
         self.soundPlayer = soundPlayer
         self.newActionFunc = newActionFunc
@@ -140,7 +140,7 @@ extension InAppModalAlertPresenter {
         // For now, this is a simple alert with an "OK" button
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alertController.addAction(newActionFunc(action, isCritical ? .destructive : .default, { _ in completion() }))
-        rootViewController?.topmostViewController.present(alertController, animated: true)
+        viewControllerProvider?.viewController?.topmostViewController.present(alertController, animated: true)
         return alertController
     }
         

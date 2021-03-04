@@ -63,6 +63,14 @@ class AlertManagerTests: XCTestCase {
         }
     }
     
+    class MockViewControllerProvider: ViewControllerProvider {
+        var viewController: UIViewController?
+
+        init(viewController: UIViewController?) {
+            self.viewController = viewController
+        }
+    }
+
     class MockSoundVendor: AlertSoundVendor {
         func getSoundBaseURL() -> URL? {
             // Hm.  It's not easy to make a "fake" URL, so we'll use this one:
@@ -112,6 +120,7 @@ class AlertManagerTests: XCTestCase {
     let mockAlert = Alert(identifier: mockIdentifier, foregroundContent: nil, backgroundContent: nil, trigger: .immediate)
     
     var mockFileManager: MockFileManager!
+    var mockViewControllerProvider: MockViewControllerProvider!
     var mockPresenter: MockPresenter!
     var mockUserNotificationCenter: MockUserNotificationCenter!
     var mockAlertStore: MockAlertStore!
@@ -125,10 +134,11 @@ class AlertManagerTests: XCTestCase {
     
     override func setUp() {
         mockFileManager = MockFileManager()
+        mockViewControllerProvider = MockViewControllerProvider(viewController: UIViewController())
         mockPresenter = MockPresenter()
         mockUserNotificationCenter = MockUserNotificationCenter()
         mockAlertStore = MockAlertStore()
-        alertManager = AlertManager(rootViewController: UIViewController(),
+        alertManager = AlertManager(viewControllerProvider: mockViewControllerProvider,
                                     handlers: [mockPresenter],
                                     userNotificationCenter: mockUserNotificationCenter,
                                     fileManager: mockFileManager,
@@ -200,7 +210,7 @@ class AlertManagerTests: XCTestCase {
                               foregroundContent: content, backgroundContent: content, trigger: .immediate)
             mockAlertStore.storedAlerts = [StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)]
 
-            alertManager = AlertManager(rootViewController: UIViewController(),
+            alertManager = AlertManager(viewControllerProvider: mockViewControllerProvider,
                                         handlers: [mockPresenter],
                                         userNotificationCenter: mockUserNotificationCenter,
                                         fileManager: mockFileManager,
@@ -218,7 +228,7 @@ class AlertManagerTests: XCTestCase {
             let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
             storedAlert.issuedDate = date
             mockAlertStore.storedAlerts = [storedAlert]
-            alertManager = AlertManager(rootViewController: UIViewController(),
+            alertManager = AlertManager(viewControllerProvider: mockViewControllerProvider,
                                         handlers: [mockPresenter],
                                         userNotificationCenter: mockUserNotificationCenter,
                                         fileManager: mockFileManager,
@@ -237,7 +247,7 @@ class AlertManagerTests: XCTestCase {
             let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
             storedAlert.issuedDate = date
             mockAlertStore.storedAlerts = [storedAlert]
-            alertManager = AlertManager(rootViewController: UIViewController(),
+            alertManager = AlertManager(viewControllerProvider: mockViewControllerProvider,
                                         handlers: [mockPresenter],
                                         userNotificationCenter: mockUserNotificationCenter,
                                         fileManager: mockFileManager,
@@ -265,7 +275,7 @@ class AlertManagerTests: XCTestCase {
             let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
             storedAlert.issuedDate = date
             mockAlertStore.storedAlerts = [storedAlert]
-            alertManager = AlertManager(rootViewController: UIViewController(),
+            alertManager = AlertManager(viewControllerProvider: mockViewControllerProvider,
                                         handlers: [mockPresenter],
                                         userNotificationCenter: mockUserNotificationCenter,
                                         fileManager: mockFileManager,

@@ -135,22 +135,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
     }
 
-    private var isOnboardingComplete: Bool { deviceManager.loopManager.therapySettings.isComplete }
-
-    private var hasOnboarding: Bool { !deviceManager.pluginManager.availableOnboardingIdentifiers.isEmpty }
-
-    private func navigateToOnboarding() {
-        if let identifier = deviceManager.pluginManager.availableOnboardingIdentifiers.first {
-            setupOnboarding(withIdentifier: identifier)
-        }
-    }
-
     private var appearedOnce = false
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        navigationController?.setToolbarHidden(false, animated: animated)
 
         updateBolusProgress()
     }
@@ -159,20 +150,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
         super.viewDidAppear(animated)
 
         if !appearedOnce {
-            authorizeHealthStore { success in
-                self.appearedOnce = success
-                if success {
-                    DispatchQueue.main.async {
-                        // On first launch, before HealthKit permissions are acknowledged, preferredGlucoseUnit will be nil, so set here when available
-                        self.preferredGlucoseUnit = self.deviceManager.glucoseStore.preferredUnit
+            self.appearedOnce = true
+            DispatchQueue.main.async {
+                // On first launch, before HealthKit permissions are acknowledged, preferredGlucoseUnit will be nil, so set here when available
+                self.preferredGlucoseUnit = self.deviceManager.glucoseStore.preferredUnit
 
-                        self.log.debug("[reloadData] after HealthKit authorization")
-                        self.reloadData()
-                        if !self.isOnboardingComplete && self.hasOnboarding {
-                            self.navigateToOnboarding()
-                        }
-                    }
-                }
+                self.log.debug("[reloadData] after HealthKit authorization")
+                self.reloadData()
             }
         }
 
@@ -181,18 +165,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
         deviceManager.analyticsServicesManager.didDisplayStatusScreen()
 
         deviceManager.checkDeliveryUncertaintyState()
-    }
-    
-    private func authorizeHealthStore(completion: @escaping (Bool) -> Void) {
-        deviceManager.authorizeHealthStore { accessFormWasCompleted in
-            // returned Bool only indicates if the user completed the health access form.
-            if accessFormWasCompleted {
-                completion(accessFormWasCompleted)
-            } else {
-                // if the user did not complete the health access form, present the health access form again so the user can allow or deny access
-                self.authorizeHealthStore(completion: completion)
-            }
-        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -326,7 +298,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         // This should be kept up to date immediately
         hudView?.loopCompletionHUD.lastLoopCompleted = deviceManager.loopManager.lastLoopCompleted
 
-        guard !reloading && !deviceManager.authorizationRequired && isOnboardingComplete else {
+        guard !reloading && !deviceManager.authorizationRequired else {
             return
         }
 
@@ -1431,11 +1403,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func onPumpTapped() {
-        guard var settingsViewController = deviceManager.pumpManager?.settingsViewController(colorPalette: .default) else {
+        guard var settingsViewController = deviceManager.pumpManager?.settingsViewController(bluetoothProvider: deviceManager.bluetoothProvider, colorPalette: .default) else {
             // assert?
             return
         }
-        settingsViewController.pumpManagerOnboardDelegate = self
+        settingsViewController.pumpManagerOnboardDelegate = deviceManager
         settingsViewController.completionDelegate = self
         show(settingsViewController, sender: self)
     }
@@ -1447,8 +1419,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             return
         }
 
-        var settings = cgmManager.settingsViewController(for: unit, colorPalette: .default)
-        settings.cgmManagerOnboardDelegate = self
+        var settings = cgmManager.settingsViewController(for: unit, bluetoothProvider: deviceManager.bluetoothProvider, colorPalette: .default)
+        settings.cgmManagerOnboardDelegate = deviceManager
         settings.completionDelegate = self
         deviceManager.addPreferredGlucoseUnitObserver(settings)
         show(settings, sender: self)
@@ -1689,11 +1661,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self.presentError(error)
             }
         })
-        if hasOnboarding {
-            actionSheet.addAction(UIAlertAction(title: "Present Onboarding", style: .default) { _ in
-                self.navigateToOnboarding()
-            })
-        }
         if FeatureFlags.mockTherapySettingsEnabled {
             actionSheet.addAction(UIAlertAction(title: "Mock Therapy Settings", style: .default) { _ in
                 let settings = TherapySettings.mockTherapySettings
@@ -1927,14 +1894,14 @@ extension StatusTableViewController: AddEditOverrideTableViewControllerDelegate 
 
 extension StatusTableViewController {
     fileprivate func addCGMManager(withIdentifier identifier: String) {
-        switch setupCGMManager(withIdentifier: identifier) {
+        switch deviceManager.setupCGMManager(withIdentifier: identifier) {
         case .failure(let error):
             log.default("Failure to setup CGM manager with identifier '%{public}@': %{public}@", identifier, String(describing: error))
         case .success(let success):
             switch success {
             case .userInteractionRequired(var setupViewController):
-                setupViewController.cgmManagerCreateDelegate = self
-                setupViewController.cgmManagerOnboardDelegate = self
+                setupViewController.cgmManagerCreateDelegate = deviceManager
+                setupViewController.cgmManagerOnboardDelegate = deviceManager
                 setupViewController.completionDelegate = self
                 show(setupViewController, sender: self)
             case .createdAndOnboarded:
@@ -1944,33 +1911,19 @@ extension StatusTableViewController {
     }
 }
 
-extension StatusTableViewController: CGMManagerCreateDelegate {
-    func cgmManagerCreateNotifying(didCreateCGMManager cgmManager: CGMManagerUI) {
-        log.default("CGM manager with identifier '%{public}@' created", cgmManager.managerIdentifier)
-        deviceManager.cgmManager = cgmManager
-    }
-}
-
-extension StatusTableViewController: CGMManagerOnboardDelegate {
-    func cgmManagerOnboardNotifying(didOnboardCGMManager cgmManager: CGMManagerUI) {
-        precondition(cgmManager.isOnboarded)
-        log.default("CGM manager with identifier '%{public}@' onboarded", cgmManager.managerIdentifier)
-    }
-}
-
 extension StatusTableViewController {
     fileprivate func addPumpManager(withIdentifier identifier: String) {
         let settings = PumpManagerSetupSettings(maxBasalRateUnitsPerHour: deviceManager.loopManager.settings.maximumBasalRatePerHour,
                                                 maxBolusUnits: deviceManager.loopManager.settings.maximumBolus,
                                                 basalSchedule: deviceManager.loopManager.basalRateSchedule)
-        switch setupPumpManagerUI(withIdentifier: identifier, initialSettings: settings) {
+        switch deviceManager.setupPumpManagerUI(withIdentifier: identifier, initialSettings: settings) {
         case .failure(let error):
             log.default("Failure to setup pump manager with identifier '%{public}@': %{public}@", identifier, String(describing: error))
         case .success(let success):
             switch success {
             case .userInteractionRequired(var setupViewController):
-                setupViewController.pumpManagerCreateDelegate = self
-                setupViewController.pumpManagerOnboardDelegate = self
+                setupViewController.pumpManagerCreateDelegate = deviceManager
+                setupViewController.pumpManagerOnboardDelegate = deviceManager
                 setupViewController.completionDelegate = self
                 show(setupViewController, sender: self)
             case .createdAndOnboarded:
@@ -1980,34 +1933,8 @@ extension StatusTableViewController {
     }
 }
 
-extension StatusTableViewController: PumpManagerCreateDelegate {
-    func pumpManagerCreateNotifying(didCreatePumpManager pumpManager: PumpManagerUI) {
-        log.default("Pump manager with identifier '%{public}@' created", pumpManager.managerIdentifier)
-        deviceManager.pumpManager = pumpManager
-    }
-}
-
-extension StatusTableViewController: PumpManagerOnboardDelegate {
-    func pumpManagerOnboardNotifying(didOnboardPumpManager pumpManager: PumpManagerUI, withFinalSettings settings: PumpManagerSetupSettings) {
-        precondition(pumpManager.isOnboarded)
-        log.default("Pump manager with identifier '%{public}@' onboarded", pumpManager.managerIdentifier)
-
-        if let basalRateSchedule = settings.basalSchedule {
-            deviceManager.loopManager.basalRateSchedule = basalRateSchedule
-        }
-        if let maxBasalRateUnitsPerHour = settings.maxBasalRateUnitsPerHour {
-            deviceManager.loopManager.settings.maximumBasalRatePerHour = maxBasalRateUnitsPerHour
-        }
-        if let maxBolusUnits = settings.maxBolusUnits {
-            deviceManager.loopManager.settings.maximumBolus = maxBolusUnits
-        }
-    }
-}
-
-extension StatusTableViewController: BluetoothStateManagerObserver {
-    func bluetoothStateManager(_ bluetoothStateManager: BluetoothStateManager,
-                               bluetoothStateDidUpdate bluetoothState: BluetoothStateManager.BluetoothState)
-    {
+extension StatusTableViewController: BluetoothObserver {
+    func bluetoothDidUpdateState(_ state: BluetoothState) {
         refreshContext.update(with: .status)
         reloadData(animated: true)
     }
@@ -2064,14 +1991,14 @@ extension StatusTableViewController: SettingsViewModelDelegate {
 
 extension StatusTableViewController: ServicesViewModelDelegate {
     func addService(withIdentifier identifier: String) {
-        switch setupService(withIdentifier: identifier) {
+        switch deviceManager.servicesManager.setupService(withIdentifier: identifier) {
         case .failure(let error):
             log.default("Failure to setup service with identifier '%{public}@': %{public}@", identifier, String(describing: error))
         case .success(let success):
             switch success {
             case .userInteractionRequired(var setupViewController):
-                setupViewController.serviceCreateDelegate = self
-                setupViewController.serviceOnboardDelegate = self
+                setupViewController.serviceCreateDelegate = deviceManager.servicesManager
+                setupViewController.serviceOnboardDelegate = deviceManager.servicesManager
                 setupViewController.completionDelegate = self
                 show(setupViewController, sender: self)
             case .createdAndOnboarded:
@@ -2089,160 +2016,9 @@ extension StatusTableViewController: ServicesViewModelDelegate {
 
     fileprivate func showServiceSettings(_ serviceUI: ServiceUI) {
         var settingsViewController = serviceUI.settingsViewController(colorPalette: .default)
-        settingsViewController.serviceOnboardDelegate = self
+        settingsViewController.serviceOnboardDelegate = deviceManager.servicesManager
         settingsViewController.completionDelegate = self
         show(settingsViewController, sender: self)
-    }
-}
-
-extension StatusTableViewController: ServiceCreateDelegate {
-    func serviceCreateNotifying(didCreateService service: Service) {
-        log.default("Service with identifier '%{public}@' created", service.serviceIdentifier)
-        deviceManager.servicesManager.addActiveService(service)
-    }
-}
-
-extension StatusTableViewController: ServiceOnboardDelegate {
-    func serviceOnboardNotifying(didOnboardService service: Service) {
-        precondition(service.isOnboarded)
-        log.default("Service with identifier '%{public}@' onboarded", service.serviceIdentifier)
-    }
-}
-
-// MARK: - Onboarding
-
-extension StatusTableViewController {
-    fileprivate func setupOnboarding(withIdentifier identifier: String) {
-        guard let onboardingUIType = deviceManager.pluginManager.getOnboardingTypeByIdentifier(identifier) else {
-            return
-        }
-
-        let onboarding = onboardingUIType.createOnboarding()
-        var onboardingViewController = onboarding.onboardingViewController(cgmManagerProvider: self,
-                                                                           pumpManagerProvider: self,
-                                                                           serviceProvider: self,
-                                                                           preferredGlucoseUnit: deviceManager.preferredGlucoseUnit,
-                                                                           colorPalette: .default)
-        onboardingViewController.onboardingDelegate = self
-        onboardingViewController.cgmManagerCreateDelegate = self
-        onboardingViewController.cgmManagerOnboardDelegate = self
-        onboardingViewController.pumpManagerCreateDelegate = self
-        onboardingViewController.pumpManagerOnboardDelegate = self
-        onboardingViewController.serviceCreateDelegate = self
-        onboardingViewController.serviceOnboardDelegate = self
-        onboardingViewController.completionDelegate = self
-
-        deviceManager.addPreferredGlucoseUnitObserver(onboardingViewController)
-
-        present(onboardingViewController, animated: true)
-    }
-}
-
-struct UnknownIdentifierError: Error {}
-
-extension StatusTableViewController: CGMManagerProvider {
-    var activeCGMManager: CGMManager? { deviceManager.cgmManager }
-
-    var availableCGMManagers: [CGMManagerDescriptor] { deviceManager.availableCGMManagers }
-
-    func setupCGMManager(withIdentifier identifier: String) -> Swift.Result<SetupUIResult<UIViewController & CGMManagerCreateNotifying & CGMManagerOnboardNotifying & CompletionNotifying, CGMManager>, Error> {
-        if let cgmManager = deviceManager.setupCGMManagerFromPumpManager(withIdentifier: identifier) {
-            return .success(.createdAndOnboarded(cgmManager))
-        }
-
-        switch setupCGMManagerUI(withIdentifier: identifier) {
-        case .failure(let error):
-            return .failure(error)
-        case .success(let success):
-            switch success {
-            case .userInteractionRequired(let viewController):
-                return .success(.userInteractionRequired(viewController))
-            case .createdAndOnboarded(let cgmManagerUI):
-                return .success(.createdAndOnboarded(cgmManagerUI))
-            }
-        }
-    }
-
-    fileprivate func setupCGMManagerUI(withIdentifier identifier: String) -> Swift.Result<SetupUIResult<UIViewController & CGMManagerCreateNotifying & CGMManagerOnboardNotifying & CompletionNotifying, CGMManagerUI>, Error> {
-        guard let cgmManagerUIType = deviceManager.cgmManagerTypeByIdentifier(identifier) else {
-            return .failure(UnknownIdentifierError())
-        }
-
-        let result = cgmManagerUIType.setupViewController(colorPalette: .default)
-        if case .createdAndOnboarded(let cgmManagerUI) = result {
-            deviceManager.cgmManager = cgmManagerUI
-        }
-
-        return .success(result)
-    }
-}
-
-extension StatusTableViewController: PumpManagerProvider {
-    var activePumpManager: PumpManager? { deviceManager.pumpManager }
-
-    var availablePumpManagers: [PumpManagerDescriptor] { deviceManager.availablePumpManagers }
-
-    func setupPumpManager(withIdentifier identifier: String, initialSettings settings: PumpManagerSetupSettings) -> Swift.Result<SetupUIResult<UIViewController & PumpManagerCreateNotifying & PumpManagerOnboardNotifying & CompletionNotifying, PumpManager>, Error> {
-        switch setupPumpManagerUI(withIdentifier: identifier, initialSettings: settings) {
-        case .failure(let error):
-            return .failure(error)
-        case .success(let success):
-            switch success {
-            case .userInteractionRequired(let viewController):
-                return .success(.userInteractionRequired(viewController))
-            case .createdAndOnboarded(let pumpManagerUI):
-                return .success(.createdAndOnboarded(pumpManagerUI))
-            }
-        }
-    }
-
-    fileprivate func setupPumpManagerUI(withIdentifier identifier: String, initialSettings settings: PumpManagerSetupSettings) -> Swift.Result<SetupUIResult<UIViewController & PumpManagerCreateNotifying & PumpManagerOnboardNotifying & CompletionNotifying, PumpManagerUI>, Error> {
-        guard let pumpManagerUIType = deviceManager.pumpManagerTypeByIdentifier(identifier) else {
-            return .failure(UnknownIdentifierError())
-        }
-
-        let result = pumpManagerUIType.setupViewController(initialSettings: settings, colorPalette: .default)
-        if case .createdAndOnboarded(let pumpManagerUI) = result {
-            if let basalRateSchedule = deviceManager.loopManager.basalRateSchedule {
-                pumpManagerUI.syncBasalRateSchedule(items: basalRateSchedule.items, completion: { _ in })
-            }
-            deviceManager.pumpManager = pumpManagerUI
-        }
-
-        return .success(result)
-    }
-}
-
-extension StatusTableViewController: ServiceProvider {
-    var activeServices: [Service] { deviceManager.servicesManager.activeServices }
-
-    var availableServices: [ServiceDescriptor] { deviceManager.servicesManager.availableServices }
-
-    func setupService(withIdentifier identifier: String) -> Swift.Result<SetupUIResult<UIViewController & ServiceCreateNotifying & ServiceOnboardNotifying & CompletionNotifying, Service>, Error> {
-        switch setupServiceUI(withIdentifier: identifier) {
-        case .failure(let error):
-            return .failure(error)
-        case .success(let success):
-            switch success {
-            case .userInteractionRequired(let viewController):
-                return .success(.userInteractionRequired(viewController))
-            case .createdAndOnboarded(let serviceUI):
-                return .success(.createdAndOnboarded(serviceUI))
-            }
-        }
-    }
-
-    fileprivate func setupServiceUI(withIdentifier identifier: String) -> Swift.Result<SetupUIResult<UIViewController & ServiceCreateNotifying & ServiceOnboardNotifying & CompletionNotifying, ServiceUI>, Error> {
-        guard let serviceUIType = deviceManager.servicesManager.serviceUITypeByIdentifier(identifier) else {
-            return .failure(UnknownIdentifierError())
-        }
-
-        let result = serviceUIType.setupViewController(colorPalette: .default)
-        if case .createdAndOnboarded(let serviceUI) = result {
-            deviceManager.servicesManager.addActiveService(serviceUI)
-        }
-
-        return .success(result)
     }
 }
 
@@ -2252,22 +2028,5 @@ extension StatusTableViewController: PreferredGlucoseUnitObserver {
         self.preferredGlucoseUnit = preferredGlucoseUnit
         self.unitPreferencesDidChange(to: preferredGlucoseUnit)
         self.refreshContext = RefreshContext.all
-    }
-}
-
-extension StatusTableViewController: OnboardingDelegate {
-    func onboardingNotifying(hasNewTherapySettings therapySettings: TherapySettings) {
-        log.default("Onboarding has new therapy settings")
-
-        deviceManager.loopManager.settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule
-        deviceManager.loopManager.settings.preMealTargetRange = therapySettings.preMealTargetRange
-        deviceManager.loopManager.settings.legacyWorkoutTargetRange = therapySettings.workoutTargetRange
-        deviceManager.loopManager.settings.suspendThreshold = therapySettings.suspendThreshold
-        deviceManager.loopManager.settings.maximumBolus = therapySettings.maximumBolus
-        deviceManager.loopManager.settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour
-        deviceManager.loopManager.insulinSensitivitySchedule = therapySettings.insulinSensitivitySchedule
-        deviceManager.loopManager.carbRatioSchedule = therapySettings.carbRatioSchedule
-        deviceManager.loopManager.basalRateSchedule = therapySettings.basalRateSchedule
-        deviceManager.loopManager.insulinModelSettings = therapySettings.insulinModelSettings
     }
 }

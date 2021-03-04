@@ -57,6 +57,14 @@ class InAppModalAlertPresenterTests: XCTestCase {
         }
     }
     
+    class MockViewControllerProvider: ViewControllerProvider {
+        var viewController: UIViewController?
+
+        init(viewController: UIViewController?) {
+            self.viewController = viewController
+        }
+    }
+
     class MockSoundPlayer: AlertSoundPlayer {
         var vibrateCalled = false
         func vibrate() {
@@ -82,12 +90,14 @@ class InAppModalAlertPresenterTests: XCTestCase {
     var mockTimerRepeats: Bool?
     var mockAlertManagerResponder: MockAlertManagerResponder!
     var mockViewController: MockViewController!
+    var mockViewControllerProvider: MockViewControllerProvider!
     var mockSoundPlayer: MockSoundPlayer!
     var inAppModalAlertPresenter: InAppModalAlertPresenter!
     
     override func setUp() {
         mockAlertManagerResponder = MockAlertManagerResponder()
         mockViewController = MockViewController()
+        mockViewControllerProvider = MockViewControllerProvider(viewController: mockViewController)
         mockSoundPlayer = MockSoundPlayer()
         
         let newTimerFunc: InAppModalAlertPresenter.TimerFactoryFunction = { timeInterval, repeats, block in
@@ -98,7 +108,7 @@ class InAppModalAlertPresenterTests: XCTestCase {
             return timer
         }
         inAppModalAlertPresenter =
-            InAppModalAlertPresenter(rootViewController: mockViewController,
+            InAppModalAlertPresenter(viewControllerProvider: mockViewControllerProvider,
                                      alertManagerResponder: mockAlertManagerResponder,
                                      soundPlayer: mockSoundPlayer,
                                      newActionFunc: MockAlertAction.init,

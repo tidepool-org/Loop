@@ -12,18 +12,18 @@ import LoopKitUI
 
 class DeliveryUncertaintyAlertManager {
     private let pumpManager: PumpManagerUI
-    private let rootViewController: UIViewController
+    private let viewControllerProvider: ViewControllerProvider
     private var uncertainDeliveryAlert: UIAlertController?
 
-    init(pumpManager: PumpManagerUI, rootViewController: UIViewController) {
+    init(pumpManager: PumpManagerUI, viewControllerProvider: ViewControllerProvider) {
         self.pumpManager = pumpManager
-        self.rootViewController = rootViewController
+        self.viewControllerProvider = viewControllerProvider
     }
 
     private func showUncertainDeliveryRecoveryView() {
         var controller = pumpManager.deliveryUncertaintyRecoveryViewController(colorPalette: .default)
         controller.completionDelegate = self
-        self.rootViewController.present(controller, animated: true)
+        self.viewControllerProvider.viewController?.present(controller, animated: true)
     }
     
     func showAlert(animated: Bool = true) {
@@ -39,8 +39,8 @@ class DeliveryUncertaintyAlertManager {
                 self.showUncertainDeliveryRecoveryView()
             }
             alert.addAction(action)
-            self.rootViewController.dismiss(animated: false) {
-                self.rootViewController.present(alert, animated: animated)
+            self.viewControllerProvider.viewController?.dismiss(animated: false) {
+                self.viewControllerProvider.viewController?.present(alert, animated: animated)
             }
             self.uncertainDeliveryAlert = alert
         }

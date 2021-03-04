@@ -45,7 +45,7 @@ public final class AlertManager {
 
     let alertStore: AlertStore
     
-    public init(rootViewController: UIViewController,
+    public init(viewControllerProvider: ViewControllerProvider,
                 handlers: [AlertPresenter]? = nil,
                 userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
                 fileManager: FileManager = FileManager.default,
@@ -66,7 +66,7 @@ public final class AlertManager {
         self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: alertStoreDirectory, expireAfter: expireAfter)
         self.handlers = handlers ??
             [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
-            InAppModalAlertPresenter(rootViewController: rootViewController, alertManagerResponder: self)]
+            InAppModalAlertPresenter(viewControllerProvider: viewControllerProvider, alertManagerResponder: self)]
 
         playbackAlertsFromPersistence()
     }
