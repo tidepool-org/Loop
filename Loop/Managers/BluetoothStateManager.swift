@@ -96,7 +96,11 @@ extension BluetoothState {
         case .resetting:
             self = .resetting
         case .unsupported:
+            #if IOS_SIMULATOR
+            self = .poweredOn   // Simulator reports unsupported, but pretend it is powered on
+            #else
             self = .unsupported
+            #endif
         case .unauthorized:
             self = .unauthorized
         case .poweredOff:
