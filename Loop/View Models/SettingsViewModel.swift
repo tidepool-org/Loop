@@ -86,12 +86,11 @@ public class SettingsViewModel: ObservableObject {
     let supportInfoProvider: SupportInfoProvider
 
     @Published var isClosedLoopAllowed: Bool
-    @Published var preferredGlucoseUnit: HKUnit
+    @Published var displayGlucoseUnitObservable: DisplayGlucoseUnitObservable
 
     lazy var therapySettingsViewModel: TherapySettingsViewModel = {
         TherapySettingsViewModel(mode: .settings,
                                  therapySettings: therapySettings(),
-                                 preferredGlucoseUnit: preferredGlucoseUnit,
                                  supportedInsulinModelSettings: supportedInsulinModelSettings,
                                  pumpSupportedIncrements: pumpSupportedIncrements,
                                  syncPumpSchedule: syncPumpSchedule,
@@ -119,7 +118,7 @@ public class SettingsViewModel: ObservableObject {
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
                 isClosedLoopAllowed: Published<Bool>.Publisher,
-                preferredGlucoseUnit: HKUnit,
+                displayGlucoseUnit: HKUnit,
                 supportInfoProvider: SupportInfoProvider,
                 availableSupports: [SupportUI],
                 delegate: SettingsViewModelDelegate?
@@ -136,7 +135,7 @@ public class SettingsViewModel: ObservableObject {
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
         self.isClosedLoopAllowed = false
-        self.preferredGlucoseUnit = preferredGlucoseUnit
+        self.displayGlucoseUnitObservable = DisplayGlucoseUnitObservable(displayGlucoseUnit: displayGlucoseUnit)
         self.supportInfoProvider = supportInfoProvider
         self.availableSupports = availableSupports
         self.delegate = delegate
@@ -158,13 +157,11 @@ public class SettingsViewModel: ObservableObject {
         isClosedLoopAllowed
             .assign(to: \.isClosedLoopAllowed, on: self)
             .store(in: &cancellables)
-        
     }
 }
 
-extension SettingsViewModel: PreferredGlucoseUnitObserver {
-    public func preferredGlucoseUnitDidChange(to preferredGlucoseUnit: HKUnit) {
-        self.preferredGlucoseUnit = preferredGlucoseUnit
-        self.therapySettingsViewModel.preferredGlucoseUnit = preferredGlucoseUnit
+extension SettingsViewModel: DisplayGlucoseUnitObserver {
+    public func displayGlucoseUnitDidChange(to displayGlucoseUnit: HKUnit) {
+        self.displayGlucoseUnitObservable.displayGlucoseUnitDidChange(to: displayGlucoseUnit)
     }
 }

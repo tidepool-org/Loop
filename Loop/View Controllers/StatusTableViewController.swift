@@ -32,8 +32,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     lazy private var cancellables = Set<AnyCancellable>()
 
-    private var preferredGlucoseUnitObservers = WeakSynchronizedSet<PreferredGlucoseUnitObserver>()
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -96,7 +94,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             },
         ]
 
-        deviceManager.addPreferredGlucoseUnitObserver(self)
+        deviceManager.addDisplayGlucoseUnitObserver(self)
 
         deviceManager.$isClosedLoop
             .receive(on: DispatchQueue.main)
@@ -163,7 +161,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self.appearedOnce = success
                 if success {
                     DispatchQueue.main.async {
-                        // On first launch, before HealthKit permissions are acknowledged, preferredGlucoseUnit will be nil, so set here when available
+                        // On first launch, before HealthKit permissions are acknowledged, displayGlucoseUnit will be nil, so set here when available
                         self.preferredGlucoseUnit = self.deviceManager.glucoseStore.preferredUnit
 
                         self.log.debug("[reloadData] after HealthKit authorization")
@@ -1419,11 +1417,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
                                           isClosedLoopAllowed: deviceManager.$isClosedLoopAllowed,
-                                          preferredGlucoseUnit: deviceManager.preferredGlucoseUnit,
+                                          displayGlucoseUnit: deviceManager.preferredGlucoseUnit,
                                           supportInfoProvider: deviceManager,
                                           availableSupports: deviceManager.availableSupports,
                                           delegate: self)
-        deviceManager.addPreferredGlucoseUnitObserver(viewModel)
+        deviceManager.addDisplayGlucoseUnitObserver(viewModel)
         let hostingController = DismissibleHostingController(
             rootView: SettingsView(viewModel: viewModel).environment(\.appName, Bundle.main.bundleDisplayName),
             isModalInPresentation: false)
@@ -1450,7 +1448,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         var settings = cgmManager.settingsViewController(for: unit, colorPalette: .default)
         settings.cgmManagerOnboardDelegate = self
         settings.completionDelegate = self
-        deviceManager.addPreferredGlucoseUnitObserver(settings)
+        deviceManager.addDisplayGlucoseUnitObserver(settings)
         show(settings, sender: self)
     }
 
@@ -1577,8 +1575,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case .presentViewController(let vc):
             var completionNotifyingVC = vc
             completionNotifyingVC.completionDelegate = self
-            if let preferredGlucoseUnitObservingVC = completionNotifyingVC as? PreferredGlucoseUnitObserver {
-                deviceManager.addPreferredGlucoseUnitObserver(preferredGlucoseUnitObservingVC)
+            if let preferredGlucoseUnitObservingVC = completionNotifyingVC as? DisplayGlucoseUnitObserver {
+                deviceManager.addDisplayGlucoseUnitObserver(preferredGlucoseUnitObservingVC)
             }
             self.present(completionNotifyingVC, animated: true, completion: nil)
         case .openAppURL(let url):
@@ -2121,7 +2119,7 @@ extension StatusTableViewController {
         var onboardingViewController = onboarding.onboardingViewController(cgmManagerProvider: self,
                                                                            pumpManagerProvider: self,
                                                                            serviceProvider: self,
-                                                                           preferredGlucoseUnit: deviceManager.preferredGlucoseUnit,
+                                                                           displayGlucoseUnit: deviceManager.preferredGlucoseUnit,
                                                                            colorPalette: .default)
         onboardingViewController.onboardingDelegate = self
         onboardingViewController.cgmManagerCreateDelegate = self
@@ -2132,7 +2130,7 @@ extension StatusTableViewController {
         onboardingViewController.serviceOnboardDelegate = self
         onboardingViewController.completionDelegate = self
 
-        deviceManager.addPreferredGlucoseUnitObserver(onboardingViewController)
+        deviceManager.addDisplayGlucoseUnitObserver(onboardingViewController)
 
         present(onboardingViewController, animated: true)
     }
@@ -2246,11 +2244,11 @@ extension StatusTableViewController: ServiceProvider {
     }
 }
 
-extension StatusTableViewController: PreferredGlucoseUnitObserver {
-    func preferredGlucoseUnitDidChange(to preferredGlucoseUnit: HKUnit) {
+extension StatusTableViewController: DisplayGlucoseUnitObserver {
+    func displayGlucoseUnitDidChange(to displayGlucoseUnit: HKUnit) {
         self.log.debug("[reloadData] for HealthKit unit preference change")
-        self.preferredGlucoseUnit = preferredGlucoseUnit
-        self.unitPreferencesDidChange(to: preferredGlucoseUnit)
+        self.preferredGlucoseUnit = displayGlucoseUnit
+        self.unitPreferencesDidChange(to: displayGlucoseUnit)
         self.refreshContext = RefreshContext.all
     }
 }

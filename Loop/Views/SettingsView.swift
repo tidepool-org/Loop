@@ -55,6 +55,7 @@ public struct SettingsView: View {
             .insetGroupedListStyle()
             .navigationBarTitle(Text(NSLocalizedString("Settings", comment: "Settings screen title")))
             .navigationBarItems(trailing: dismissButton)
+            .environmentObject(viewModel.displayGlucoseUnitObservable)
         }
     }
     
@@ -392,7 +393,7 @@ public struct SettingsView_Previews: PreviewProvider {
                                           sensitivityOverridesEnabled: false,
                                           initialDosingEnabled: true,
                                           isClosedLoopAllowed: fakeClosedLoopAllowedPublisher.$mockIsClosedLoopAllowed,
-                                          preferredGlucoseUnit: .milligramsPerDeciliter,
+                                          displayGlucoseUnit: .milligramsPerDeciliter,
                                           supportInfoProvider: MockSupportInfoProvider(),
                                           availableSupports: [],
                                           delegate: nil)

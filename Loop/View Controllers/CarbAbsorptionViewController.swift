@@ -54,7 +54,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
             },
         ]
 
-        deviceManager.addPreferredGlucoseUnitObserver(self)
+        deviceManager.addDisplayGlucoseUnitObserver(self)
 
         if let gestureRecognizer = charts.gestureRecognizer {
             tableView.addGestureRecognizer(gestureRecognizer)
@@ -538,10 +538,10 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     @IBAction func unwindFromEditing(_ segue: UIStoryboardSegue) {}
 }
 
-extension CarbAbsorptionViewController: PreferredGlucoseUnitObserver {
-    func preferredGlucoseUnitDidChange(to preferredGlucoseUnit: HKUnit) {
+extension CarbAbsorptionViewController: DisplayGlucoseUnitObserver {
+    func displayGlucoseUnitDidChange(to displayGlucoseUnit: HKUnit) {
         self.log.debug("[reloadData] for HealthKit unit preference change")
-        self.unitPreferencesDidChange(to: preferredGlucoseUnit)
+        self.unitPreferencesDidChange(to: displayGlucoseUnit)
         self.refreshContext = RefreshContext.all
     }
 }

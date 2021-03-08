@@ -51,7 +51,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
             },
         ]
 
-        deviceManager.addPreferredGlucoseUnitObserver(self)
+        deviceManager.addDisplayGlucoseUnitObserver(self)
     }
 
     override func didReceiveMemoryWarning() {
@@ -315,10 +315,10 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
     }
 }
 
-extension PredictionTableViewController: PreferredGlucoseUnitObserver {
-    func preferredGlucoseUnitDidChange(to preferredGlucoseUnit: HKUnit) {
+extension PredictionTableViewController: DisplayGlucoseUnitObserver {
+    func displayGlucoseUnitDidChange(to displayGlucoseUnit: HKUnit) {
         self.log.debug("[reloadData] for HealthKit unit preference change")
-        self.unitPreferencesDidChange(to: preferredGlucoseUnit)
+        self.unitPreferencesDidChange(to: displayGlucoseUnit)
         self.refreshContext = RefreshContext.all
     }
 }

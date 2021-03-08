@@ -56,7 +56,7 @@ final class DeviceDataManager {
 
     private var cgmStalenessMonitor: CGMStalenessMonitor
 
-    private var preferredGlucoseUnitObservers = WeakSynchronizedSet<PreferredGlucoseUnitObserver>()
+    private var displayGlucoseUnitObservers = WeakSynchronizedSet<DisplayGlucoseUnitObserver>()
 
     // MARK: - CGM
 
@@ -548,7 +548,7 @@ private extension DeviceDataManager {
         }
 
         if let cgmManagerUI = cgmManager as? CGMManagerUI {
-            addPreferredGlucoseUnitObserver(cgmManagerUI)
+            addDisplayGlucoseUnitObserver(cgmManagerUI)
         }
     }
 
@@ -1309,23 +1309,23 @@ extension DeviceDataManager: SupportInfoProvider {
 }
 
 extension DeviceDataManager {
-    func addPreferredGlucoseUnitObserver(_ observer: PreferredGlucoseUnitObserver) {
+    func addDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver) {
         let queue = DispatchQueue.main
-        preferredGlucoseUnitObservers.insert(observer, queue: queue)
+        displayGlucoseUnitObservers.insert(observer, queue: queue)
         if let preferredGlucoseUnit = glucoseStore.preferredUnit {
             queue.async {
-                observer.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit)
+                observer.displayGlucoseUnitDidChange(to: preferredGlucoseUnit)
             }
         }
     }
 
-    func removePreferredGlucoseUnitObserver(_ observer: PreferredGlucoseUnitObserver) {
-        preferredGlucoseUnitObservers.removeElement(observer)
+    func removeDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver) {
+        displayGlucoseUnitObservers.removeElement(observer)
     }
 
     func notifyObserversOfPreferredGlucoseUnitChange(to preferredGlucoseUnit: HKUnit) {
-        self.preferredGlucoseUnitObservers.forEach {
-            $0.preferredGlucoseUnitDidChange(to: preferredGlucoseUnit)
+        self.displayGlucoseUnitObservers.forEach {
+            $0.displayGlucoseUnitDidChange(to: preferredGlucoseUnit)
         }
     }
 }
