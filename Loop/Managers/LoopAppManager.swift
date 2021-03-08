@@ -75,17 +75,20 @@ class LoopAppManager: NSObject {
     var isLaunchComplete: Bool { state == .launchComplete }
 
     private func resumeLaunch() {
-        launchManagers()
-        launchOnboarding()
-        launchHomeScreen()
+        if state == .launchManagers {
+            launchManagers()
+        }
+        if state == .launchOnboarding {
+            launchOnboarding()
+        }
+        if state == .launchHomeScreen {
+            launchHomeScreen()
+        }
     }
 
     private func launchManagers() {
         dispatchPrecondition(condition: .onQueue(.main))
-
-        guard state == .launchManagers else {
-            return
-        }
+        precondition(state == .launchManagers)
 
         self.pluginManager = PluginManager()
         self.bluetoothStateManager = BluetoothStateManager()
@@ -117,10 +120,7 @@ class LoopAppManager: NSObject {
 
     private func launchOnboarding() {
         dispatchPrecondition(condition: .onQueue(.main))
-
-        guard state == .launchOnboarding else {
-            return
-        }
+        precondition(state == .launchOnboarding)
 
         onboardingManager.onboard {
             DispatchQueue.main.async {
@@ -132,10 +132,7 @@ class LoopAppManager: NSObject {
 
     private func launchHomeScreen() {
         dispatchPrecondition(condition: .onQueue(.main))
-
-        guard state == .launchHomeScreen else {
-            return
-        }
+        precondition(state == .launchHomeScreen)
 
         let storyboard = UIStoryboard(name: "Main", bundle: Bundle(for: Self.self))
         let statusTableViewController = storyboard.instantiateViewController(withIdentifier: "MainStatusViewController") as! StatusTableViewController

@@ -2022,15 +2022,30 @@ extension LoopDataManager {
 
 extension LoopDataManager {
     public var therapySettings: TherapySettings {
-        TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
-                        preMealTargetRange: settings.preMealTargetRange,
-                        workoutTargetRange: settings.legacyWorkoutTargetRange,
-                        maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
-                        maximumBolus: settings.maximumBolus,
-                        suspendThreshold: settings.suspendThreshold,
-                        insulinSensitivitySchedule: insulinSensitivitySchedule,
-                        carbRatioSchedule: carbRatioSchedule,
-                        basalRateSchedule: basalRateSchedule,
-                        insulinModelSettings: insulinModelSettings)
+        get {
+            TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
+                            preMealTargetRange: settings.preMealTargetRange,
+                            workoutTargetRange: settings.legacyWorkoutTargetRange,
+                            maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
+                            maximumBolus: settings.maximumBolus,
+                            suspendThreshold: settings.suspendThreshold,
+                            insulinSensitivitySchedule: insulinSensitivitySchedule,
+                            carbRatioSchedule: carbRatioSchedule,
+                            basalRateSchedule: basalRateSchedule,
+                            insulinModelSettings: insulinModelSettings)
+        }
+        
+        set {
+            settings.glucoseTargetRangeSchedule = newValue.glucoseTargetRangeSchedule
+            settings.preMealTargetRange = newValue.preMealTargetRange
+            settings.legacyWorkoutTargetRange = newValue.workoutTargetRange
+            settings.suspendThreshold = newValue.suspendThreshold
+            settings.maximumBolus = newValue.maximumBolus
+            settings.maximumBasalRatePerHour = newValue.maximumBasalRatePerHour
+            insulinSensitivitySchedule = newValue.insulinSensitivitySchedule
+            carbRatioSchedule = newValue.carbRatioSchedule
+            basalRateSchedule = newValue.basalRateSchedule
+            insulinModelSettings = newValue.insulinModelSettings
+        }
     }
 }

@@ -205,16 +205,7 @@ extension OnboardingManager: OnboardingDelegate {
 
     func onboarding(_ onboarding: OnboardingUI, hasNewTherapySettings therapySettings: TherapySettings) {
         precondition(onboarding === activeOnboarding)
-        loopDataManager.settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule
-        loopDataManager.settings.preMealTargetRange = therapySettings.preMealTargetRange
-        loopDataManager.settings.legacyWorkoutTargetRange = therapySettings.workoutTargetRange
-        loopDataManager.settings.suspendThreshold = therapySettings.suspendThreshold
-        loopDataManager.settings.maximumBolus = therapySettings.maximumBolus
-        loopDataManager.settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour
-        loopDataManager.insulinSensitivitySchedule = therapySettings.insulinSensitivitySchedule
-        loopDataManager.carbRatioSchedule = therapySettings.carbRatioSchedule
-        loopDataManager.basalRateSchedule = therapySettings.basalRateSchedule
-        loopDataManager.insulinModelSettings = therapySettings.insulinModelSettings
+        loopDataManager.therapySettings = therapySettings
     }
 }
 
