@@ -71,8 +71,7 @@ class LoopSettingsTests: XCTestCase {
         let override = TemporaryScheduleOverride(
             context: .custom,
             settings: TemporaryScheduleOverrideSettings(
-                unit: .milligramsPerDeciliter,
-                targetRange: overrideTargetRange
+                targetRange: overrideTargetRange.quantityRange(for: .milligramsPerDeciliter)
             ),
             startDate: overrideStart,
             duration: .finite(3 /* hours */ * 60 * 60),
@@ -105,8 +104,7 @@ class LoopSettingsTests: XCTestCase {
         let override = TemporaryScheduleOverride(
             context: .custom,
             settings: TemporaryScheduleOverrideSettings(
-                unit: .milligramsPerDeciliter,
-                targetRange: overrideTargetRange
+                targetRange: overrideTargetRange.quantityRange(for: .milligramsPerDeciliter)
             ),
             startDate: overrideStart,
             duration: .finite(3 /* hours */ * 60 * 60),
