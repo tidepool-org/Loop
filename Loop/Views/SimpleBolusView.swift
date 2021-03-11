@@ -391,5 +391,6 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
             SimpleBolusView(displayMealEntry: true, viewModel: viewModel)
         }
         .previewDevice("iPod touch (7th generation)")
+        .environmentObject(DisplayGlucoseUnitObservable(displayGlucoseUnit: .milligramsPerDeciliter))
     }
 }
