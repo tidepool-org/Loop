@@ -1,5 +1,5 @@
 //
-//  InAppModalAlertPresenter.swift
+//  InAppModalAlertIssuer.swift
 //  LoopKit
 //
 //  Created by Rick Pasetto on 4/9/20.
@@ -9,9 +9,9 @@
 import Foundation
 import LoopKit
 
-public class InAppModalAlertPresenter: AlertPresenter {
+public class InAppModalAlertIssuer: AlertIssuer {
 
-    private weak var viewControllerProvider: ViewControllerProvider?
+    private weak var alertPresenter: AlertPresenter?
     private weak var alertManagerResponder: AlertManagerResponder?
 
     private var alertsShowing: [Alert.Identifier: (UIAlertController, Alert)] = [:]
@@ -25,12 +25,12 @@ public class InAppModalAlertPresenter: AlertPresenter {
 
     private let soundPlayer: AlertSoundPlayer
 
-    init(viewControllerProvider: ViewControllerProvider?,
+    init(alertPresenter: AlertPresenter?,
          alertManagerResponder: AlertManagerResponder,
          soundPlayer: AlertSoundPlayer = DeviceAVSoundPlayer(),
          newActionFunc: @escaping ActionFactoryFunction = UIAlertAction.init,
          newTimerFunc: TimerFactoryFunction? = nil) {
-        self.viewControllerProvider = viewControllerProvider
+        self.alertPresenter = alertPresenter
         self.alertManagerResponder = alertManagerResponder
         self.soundPlayer = soundPlayer
         self.newActionFunc = newActionFunc
@@ -65,7 +65,7 @@ public class InAppModalAlertPresenter: AlertPresenter {
 }
 
 /// Private functions
-extension InAppModalAlertPresenter {
+extension InAppModalAlertIssuer {
         
     private func schedule(alert: Alert, interval: TimeInterval, repeats: Bool) {
         guard alert.foregroundContent != nil else {
@@ -140,7 +140,7 @@ extension InAppModalAlertPresenter {
         // For now, this is a simple alert with an "OK" button
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alertController.addAction(newActionFunc(action, isCritical ? .destructive : .default, { _ in completion() }))
-        viewControllerProvider?.viewController?.topmostViewController.present(alertController, animated: true)
+        alertPresenter?.present(alertController, animated: true)
         return alertController
     }
         

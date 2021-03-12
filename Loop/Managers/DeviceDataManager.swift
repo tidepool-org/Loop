@@ -41,7 +41,7 @@ final class DeviceDataManager {
 
     // MARK: - App-level responsibilities
 
-    private var viewControllerProvider: ViewControllerProvider
+    private var alertPresenter: AlertPresenter
     
     private var deliveryUncertaintyAlertManager: DeliveryUncertaintyAlertManager?
     
@@ -171,7 +171,7 @@ final class DeviceDataManager {
 
     private(set) var loopManager: LoopDataManager!
 
-    init(pluginManager: PluginManager, alertManager: AlertManager, bluetoothProvider: BluetoothProvider, viewControllerProvider: ViewControllerProvider) {
+    init(pluginManager: PluginManager, alertManager: AlertManager, bluetoothProvider: BluetoothProvider, alertPresenter: AlertPresenter) {
         let localCacheDuration = Bundle.main.localCacheDuration
 
         let fileManager = FileManager.default
@@ -192,7 +192,7 @@ final class DeviceDataManager {
         self.pluginManager = pluginManager
         self.alertManager = alertManager
         self.bluetoothProvider = bluetoothProvider
-        self.viewControllerProvider = viewControllerProvider
+        self.alertPresenter = alertPresenter
         
         self.healthStore = HKHealthStore()
         self.cacheStore = PersistenceController.controllerInAppGroupDirectory()
@@ -273,7 +273,7 @@ final class DeviceDataManager {
             carbStore: carbStore,
             dosingDecisionStore: dosingDecisionStore,
             settingsStore: settingsStore,
-            alertPresenter: alertManager
+            alertIssuer: alertManager
         )
         cacheStore.delegate = loopManager
         
@@ -640,7 +640,7 @@ private extension DeviceDataManager {
             alertManager?.addAlertSoundVendor(managerIdentifier: pumpManager.managerIdentifier,
                                                     soundVendor: pumpManager)
             
-            deliveryUncertaintyAlertManager = DeliveryUncertaintyAlertManager(pumpManager: pumpManager, viewControllerProvider: viewControllerProvider)
+            deliveryUncertaintyAlertManager = DeliveryUncertaintyAlertManager(pumpManager: pumpManager, alertPresenter: alertPresenter)
         }
     }
 
@@ -762,7 +762,7 @@ extension DeviceDataManager: DeviceManagerDelegate {
 }
 
 // MARK: - UserAlertHandler
-extension DeviceDataManager: AlertPresenter {
+extension DeviceDataManager: AlertIssuer {
     static let managerIdentifier = "DeviceDataManager"
 
     func issueAlert(_ alert: Alert) {

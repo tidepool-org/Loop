@@ -10,8 +10,26 @@ import UIKit
 import LoopKit
 import LoopKitUI
 
-public protocol ViewControllerProvider: AnyObject {
-    var viewController: UIViewController? { get set }
+public protocol AlertPresenter: AnyObject {
+    /// Present the alert view controller, with or without animation.
+    /// - Parameters:
+    ///   - viewControllerToPresent: The alert view controller to present.
+    ///   - animated: Animate the alert view controller presentation or not.
+    ///   - completion: Completion to call once view controller is presented.
+    func present(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion: (() -> Void)?)
+
+    /// Retract any alerts with the given identifier.  This includes both pending and delivered alerts.
+
+    /// Dismiss the topmost view controller, presumably the alert view controller.
+    /// - Parameters:
+    ///   - animated: Animate the alert view controller dismissal or not.
+    ///   - completion: Completion to call once view controller is dismissed.
+    func dismiss(animated: Bool, completion: (() -> Void)?)
+}
+
+public extension AlertPresenter {
+    func present(_ viewController: UIViewController, animated: Bool) { present(viewController, animated: animated, completion: nil) }
+    func dismiss(animated: Bool) { dismiss(animated: animated, completion: nil) }
 }
 
 class LoopAppManager: NSObject {
@@ -92,7 +110,7 @@ class LoopAppManager: NSObject {
 
         self.pluginManager = PluginManager()
         self.bluetoothStateManager = BluetoothStateManager()
-        self.alertManager = AlertManager(viewControllerProvider: self,
+        self.alertManager = AlertManager(alertPresenter: self,
                                          expireAfter: Bundle.main.localCacheDuration)
         self.loopAlertsManager = LoopAlertsManager(alertManager: alertManager,
                                                    bluetoothProvider: bluetoothStateManager)
@@ -100,7 +118,7 @@ class LoopAppManager: NSObject {
         self.deviceDataManager = DeviceDataManager(pluginManager: pluginManager,
                                                    alertManager: alertManager,
                                                    bluetoothProvider: bluetoothStateManager,
-                                                   viewControllerProvider: self)
+                                                   alertPresenter: self)
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 
         scheduleBackgroundTasks()
@@ -110,7 +128,7 @@ class LoopAppManager: NSObject {
                                                    deviceDataManager: deviceDataManager,
                                                    servicesManager: deviceDataManager.servicesManager,
                                                    loopDataManager: deviceDataManager.loopManager,
-                                                   viewControllerProvider: self,
+                                                   window: window,
                                                    userDefaults: UserDefaults.appGroup!)
 
         deviceDataManager.analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
@@ -140,7 +158,7 @@ class LoopAppManager: NSObject {
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 
         let rootNavigationController = RootNavigationController()
-        viewController = rootNavigationController
+        rootViewController = rootNavigationController
         rootNavigationController.setViewControllers([statusTableViewController], animated: true)
 
         handleRemoteNotificationFromLaunchOptions()
@@ -181,7 +199,7 @@ class LoopAppManager: NSObject {
         if #available(iOS 12.0, *) {
             if userActivity.activityType == NewCarbEntryIntent.className {
                 log.default("Restoring %{public}@ intent", userActivity.activityType)
-                viewController?.restoreUserActivityState(.forNewCarbEntry())
+                rootViewController?.restoreUserActivityState(.forNewCarbEntry())
                 return true
             }
         }
@@ -190,8 +208,8 @@ class LoopAppManager: NSObject {
         case NSUserActivity.newCarbEntryActivityType,
              NSUserActivity.viewLoopStatusActivityType:
             log.default("Restoring %{public}@ activity", userActivity.activityType)
-            if let viewController = viewController {
-                restorationHandler([viewController])
+            if let rootViewController = rootViewController {
+                restorationHandler([rootViewController])
             }
             return true
         default:
@@ -239,14 +257,22 @@ class LoopAppManager: NSObject {
         }
         return false
     }
-}
 
-// MARK: - ViewControllerProvider
-
-extension LoopAppManager: ViewControllerProvider {
-    var viewController: UIViewController? {
+    private var rootViewController: UIViewController? {
         get { window?.rootViewController }
         set { window?.rootViewController = newValue }
+    }
+}
+
+// MARK: - AlertPresenter
+
+extension LoopAppManager: AlertPresenter {
+    func present(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (() -> Void)?) {
+        rootViewController?.present(viewControllerToPresent, animated: animated, completion: completion)
+    }
+
+    func dismiss(animated: Bool, completion: (() -> Void)?) {
+        rootViewController?.dismiss(animated: animated, completion: completion)
     }
 }
 

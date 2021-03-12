@@ -70,7 +70,7 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
         dosingDecisionStore: DosingDecisionStoreProtocol,
         settingsStore: SettingsStoreProtocol,
         now: @escaping () -> Date = { Date() },
-        alertPresenter: AlertPresenter? = nil
+        alertIssuer: AlertIssuer? = nil
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -94,7 +94,7 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
-        loopSettingsAlerter = LoopSettingsAlerter(alertPresenter: alertPresenter)
+        loopSettingsAlerter = LoopSettingsAlerter(alertIssuer: alertIssuer)
         loopSettingsAlerter.delegate = self
 
         overrideHistory.delegate = self

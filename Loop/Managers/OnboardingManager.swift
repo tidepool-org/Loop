@@ -16,7 +16,7 @@ class OnboardingManager {
     private let deviceDataManager: DeviceDataManager
     private let servicesManager: ServicesManager
     private let loopDataManager: LoopDataManager
-    private let viewControllerProvider: ViewControllerProvider
+    private let window: UIWindow?
     private let userDefaults: UserDefaults
 
     private var isOnboarded: Bool {
@@ -31,13 +31,13 @@ class OnboardingManager {
 
     private var completion: (() -> Void)?
 
-    init(pluginManager: PluginManager, bluetoothProvider: BluetoothProvider, deviceDataManager: DeviceDataManager, servicesManager: ServicesManager, loopDataManager: LoopDataManager, viewControllerProvider: ViewControllerProvider, userDefaults: UserDefaults = .standard) {
+    init(pluginManager: PluginManager, bluetoothProvider: BluetoothProvider, deviceDataManager: DeviceDataManager, servicesManager: ServicesManager, loopDataManager: LoopDataManager, window: UIWindow?, userDefaults: UserDefaults = .standard) {
         self.pluginManager = pluginManager
         self.bluetoothProvider = bluetoothProvider
         self.deviceDataManager = deviceDataManager
         self.servicesManager = servicesManager
         self.loopDataManager = loopDataManager
-        self.viewControllerProvider = viewControllerProvider
+        self.window = window
         self.userDefaults = userDefaults
 
         self.isOnboarded = userDefaults.onboardingManagerIsOnboarded
@@ -114,7 +114,7 @@ class OnboardingManager {
 
         deviceDataManager.addPreferredGlucoseUnitObserver(onboardingViewController)
 
-        viewControllerProvider.viewController = onboardingViewController
+        window?.rootViewController = onboardingViewController
     }
 
     private func completeActiveOnboarding() {
