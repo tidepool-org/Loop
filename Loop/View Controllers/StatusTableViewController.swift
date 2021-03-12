@@ -1724,9 +1724,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(stepActiveScenarioBackward))
             rightSwipe.direction = .right
 
-            let toolBar = navigationController!.toolbar!
-            toolBar.addGestureRecognizer(leftSwipe)
-            toolBar.addGestureRecognizer(rightSwipe)
+            if let toolBar = navigationController?.toolbar {
+                toolBar.addGestureRecognizer(leftSwipe)
+                toolBar.addGestureRecognizer(rightSwipe)
+            }
         }
     }
 
