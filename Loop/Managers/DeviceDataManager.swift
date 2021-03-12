@@ -58,6 +58,8 @@ final class DeviceDataManager {
 
     private var displayGlucoseUnitObservers = WeakSynchronizedSet<DisplayGlucoseUnitObserver>()
 
+    public private(set) var displayGlucoseUnitObservable: DisplayGlucoseUnitObservable
+
     // MARK: - CGM
 
     var cgmManager: CGMManager? {
@@ -246,6 +248,9 @@ final class DeviceDataManager {
         self.cgmHasValidSensorSession = false
         self.isClosedLoop = false
         self.isClosedLoopAllowed = false
+
+        // HealthStorePreferredGlucoseUnitDidChange will be notified once the user completes the health access form. Set to .milligramsPerDeciliter until then
+        displayGlucoseUnitObservable = DisplayGlucoseUnitObservable(displayGlucoseUnit: glucoseStore.preferredUnit ?? .milligramsPerDeciliter)
         
         bluetoothStateManager.addBluetoothStateObserver(self)
 
@@ -343,7 +348,8 @@ final class DeviceDataManager {
             }
 
             if let preferredGlucoseUnit = strongSelf.glucoseStore.preferredUnit {
-                strongSelf.notifyObserversOfPreferredGlucoseUnitChange(to: preferredGlucoseUnit)
+                strongSelf.displayGlucoseUnitObservable.displayGlucoseUnitDidChange(to: preferredGlucoseUnit)
+                strongSelf.notifyObserversOfDisplayGlucoseUnitChange(to: preferredGlucoseUnit)
             }
         }
     }
@@ -1312,9 +1318,9 @@ extension DeviceDataManager {
     func addDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver) {
         let queue = DispatchQueue.main
         displayGlucoseUnitObservers.insert(observer, queue: queue)
-        if let preferredGlucoseUnit = glucoseStore.preferredUnit {
+        if let displayGlucoseUnit = glucoseStore.preferredUnit {
             queue.async {
-                observer.displayGlucoseUnitDidChange(to: preferredGlucoseUnit)
+                observer.displayGlucoseUnitDidChange(to: displayGlucoseUnit)
             }
         }
     }
@@ -1323,9 +1329,9 @@ extension DeviceDataManager {
         displayGlucoseUnitObservers.removeElement(observer)
     }
 
-    func notifyObserversOfPreferredGlucoseUnitChange(to preferredGlucoseUnit: HKUnit) {
+    func notifyObserversOfDisplayGlucoseUnitChange(to displayGlucoseUnit: HKUnit) {
         self.displayGlucoseUnitObservers.forEach {
-            $0.displayGlucoseUnitDidChange(to: preferredGlucoseUnit)
+            $0.displayGlucoseUnitDidChange(to: displayGlucoseUnit)
         }
     }
 }
