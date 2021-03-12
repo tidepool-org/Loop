@@ -70,10 +70,8 @@ extension DeviceDataManager {
             UIApplication.shared.canOpenURL(url)
         {
             return .openAppURL(url)
-        } else if let cgmManagerUI = (cgmManager as? CGMManagerUI),
-            let unit = glucoseStore.preferredUnit
-        {
-            return .presentViewController(cgmManagerUI.settingsViewController(for: unit, bluetoothProvider: bluetoothProvider, colorPalette: .default))
+        } else if let cgmManagerUI = (cgmManager as? CGMManagerUI) {
+            return .presentViewController(cgmManagerUI.settingsViewController(for: displayGlucoseUnitObservable, bluetoothProvider: bluetoothProvider, colorPalette: .default))
         } else {
             return .setupNewCGM
         }

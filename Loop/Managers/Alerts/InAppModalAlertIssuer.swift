@@ -139,7 +139,7 @@ extension InAppModalAlertIssuer {
         dispatchPrecondition(condition: .onQueue(.main))
         // For now, this is a simple alert with an "OK" button
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alertController.addAction(newActionFunc(action, isCritical ? .destructive : .default, { _ in completion() }))
+        alertController.addAction(newActionFunc(action, .default, { _ in completion() }))
         alertPresenter?.present(alertController, animated: true)
         return alertController
     }

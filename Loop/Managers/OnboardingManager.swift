@@ -103,7 +103,7 @@ class OnboardingManager {
     }
 
     private func displayOnboarding(_ onboarding: OnboardingUI) {
-        var onboardingViewController = onboarding.onboardingViewController(onboardingProvider: self, preferredGlucoseUnit: deviceDataManager.preferredGlucoseUnit, colorPalette: .default)
+        var onboardingViewController = onboarding.onboardingViewController(onboardingProvider: self, displayGlucoseUnitObservable: deviceDataManager.displayGlucoseUnitObservable, colorPalette: .default)
         onboardingViewController.cgmManagerCreateDelegate = deviceDataManager
         onboardingViewController.cgmManagerOnboardDelegate = deviceDataManager
         onboardingViewController.pumpManagerCreateDelegate = deviceDataManager
@@ -111,8 +111,6 @@ class OnboardingManager {
         onboardingViewController.serviceCreateDelegate = servicesManager
         onboardingViewController.serviceOnboardDelegate = servicesManager
         onboardingViewController.completionDelegate = self
-
-        deviceDataManager.addPreferredGlucoseUnitObserver(onboardingViewController)
 
         window?.rootViewController = onboardingViewController
     }

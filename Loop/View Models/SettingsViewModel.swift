@@ -84,9 +84,8 @@ public class SettingsViewModel: ObservableObject {
     let syncPumpSchedule: (() -> PumpManager.SyncSchedule?)?
     let sensitivityOverridesEnabled: Bool
     let supportInfoProvider: SupportInfoProvider
-        
+
     @Published var isClosedLoopAllowed: Bool
-    @Published var preferredGlucoseUnit: HKUnit
     
     var closedLoopPreference: Bool {
        didSet {
@@ -108,7 +107,6 @@ public class SettingsViewModel: ObservableObject {
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
                 isClosedLoopAllowed: Published<Bool>.Publisher,
-                preferredGlucoseUnit: HKUnit,
                 supportInfoProvider: SupportInfoProvider,
                 availableSupports: [SupportUI],
                 delegate: SettingsViewModelDelegate?
@@ -125,11 +123,10 @@ public class SettingsViewModel: ObservableObject {
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
         self.isClosedLoopAllowed = false
-        self.preferredGlucoseUnit = preferredGlucoseUnit
         self.supportInfoProvider = supportInfoProvider
         self.availableSupports = availableSupports
         self.delegate = delegate
-        
+
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
         notificationsCriticalAlertPermissionsViewModel.objectWillChange.sink { [weak self] in
             self?.objectWillChange.send()
@@ -147,12 +144,5 @@ public class SettingsViewModel: ObservableObject {
         isClosedLoopAllowed
             .assign(to: \.isClosedLoopAllowed, on: self)
             .store(in: &cancellables)
-        
-    }
-}
-
-extension SettingsViewModel: PreferredGlucoseUnitObserver {
-    public func preferredGlucoseUnitDidChange(to preferredGlucoseUnit: HKUnit) {
-        self.preferredGlucoseUnit = preferredGlucoseUnit
     }
 }
