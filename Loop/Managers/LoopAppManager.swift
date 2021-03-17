@@ -32,7 +32,7 @@ public extension AlertPresenter {
     func dismiss(animated: Bool) { dismiss(animated: animated, completion: nil) }
 }
 
-protocol WindowProvider {
+protocol WindowProvider: AnyObject {
     var window: UIWindow? { get }
 }
 
@@ -47,7 +47,7 @@ class LoopAppManager: NSObject {
         var next: State { State(rawValue: rawValue + 1) ?? .launchComplete }
     }
 
-    private var windowProvider: WindowProvider?
+    private weak var windowProvider: WindowProvider?
     private var launchOptions: [UIApplication.LaunchOptionsKey: Any]?
 
     private var pluginManager: PluginManager!

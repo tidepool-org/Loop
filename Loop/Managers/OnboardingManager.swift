@@ -16,7 +16,7 @@ class OnboardingManager {
     private let deviceDataManager: DeviceDataManager
     private let servicesManager: ServicesManager
     private let loopDataManager: LoopDataManager
-    private let windowProvider: WindowProvider?
+    private weak var windowProvider: WindowProvider?
     private let userDefaults: UserDefaults
 
     private var isOnboarded: Bool {
