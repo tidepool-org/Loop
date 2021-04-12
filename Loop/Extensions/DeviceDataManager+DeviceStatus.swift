@@ -19,6 +19,8 @@ extension DeviceDataManager {
             return BluetoothState.offHighlight
         } else if cgmManager == nil {
             return DeviceDataManager.addCGMStatusHighlight
+        } else if let signalLossHighlight = cgmManager?.cgmManagerStatus.signalLossHighlight {
+            return signalLossHighlight
         } else {
             return (cgmManager as? CGMManagerUI)?.cgmStatusHighlight
         }
@@ -133,5 +135,25 @@ fileprivate extension BluetoothState {
         default:
             return nil
         }
+    }
+}
+
+fileprivate extension CGMManagerStatus {
+    struct Highlight: DeviceStatusHighlight {
+        var localizedMessage: String
+        var imageName: String = "exclamationmark.circle.fill"
+        var state: DeviceStatusHighlightState = .critical
+
+        init(localizedMessage: String) {
+            self.localizedMessage = localizedMessage
+        }
+    }
+
+    var signalLossHighlight: DeviceStatusHighlight? {
+        guard let lastCommunicationDate = lastCommunicationDate,
+              abs(lastCommunicationDate.timeIntervalSinceNow) > LoopCoreConstants.inputDataRecencyInterval else
+        { return nil }
+
+        return Highlight(localizedMessage: NSLocalizedString("Signal Loss", comment: "Message to the user to that a CGM signal has been loss"))
     }
 }
