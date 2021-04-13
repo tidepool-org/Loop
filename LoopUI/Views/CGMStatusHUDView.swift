@@ -123,7 +123,7 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     }
 
     public func setLastCommunicationDate(_ lastCommunicationDate: Date?) {
-        viewModel.setLastCommunicationDate(lastCommunicationDate)
+        viewModel.lastCommunicationDate = lastCommunicationDate
         updateDisplay()
     }
     

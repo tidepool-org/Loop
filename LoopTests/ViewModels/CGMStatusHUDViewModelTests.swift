@@ -209,7 +209,7 @@ class CGMStatusHUDViewModelTests: XCTestCase {
                                      glucoseDisplay: glucoseDisplay,
                                      wasUserEntered: false,
                                      isDisplayOnly: false)
-        viewModel.setLastCommunicationDate(lastCommunicationDate)
+        viewModel.lastCommunicationDate = lastCommunicationDate
         XCTAssertNil(viewModel.statusHighlight)
 
         // simulate communications exist but no new glucose value for 2 hours
@@ -226,7 +226,7 @@ class CGMStatusHUDViewModelTests: XCTestCase {
 
         // simulate no communications for 2 hours
         lastCommunicationDate.addTimeInterval(-.hours(2))
-        viewModel.setLastCommunicationDate(lastCommunicationDate)
+        viewModel.lastCommunicationDate = lastCommunicationDate
         XCTAssertNotNil(viewModel.statusHighlight)
         XCTAssertEqual(viewModel.statusHighlight?.localizedMessage, "Signal Loss")
     }

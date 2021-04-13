@@ -98,7 +98,7 @@ public class CGMStatusHUDViewModel {
         self.staleGlucoseValueHandler = staleGlucoseValueHandler
     }
 
-    private var lastCommunicationDate: Date? {
+    var lastCommunicationDate: Date? {
         didSet {
             if let signalLossHighlight = signalLossHighlight {
                 statusHighlight = signalLossHighlight
@@ -108,10 +108,6 @@ public class CGMStatusHUDViewModel {
 
     private var staleGlucoseAge: TimeInterval?
 
-    func setLastCommunicationDate(_ lastCommunicationDate: Date?) {
-        self.lastCommunicationDate = lastCommunicationDate
-    }
-    
     func setGlucoseQuantity(_ glucoseQuantity: Double,
                             at glucoseStartDate: Date,
                             unit: HKUnit,
@@ -170,11 +166,11 @@ public class CGMStatusHUDViewModel {
     }
 
     func displayStaleGlucoseValue() {
-        self.glucoseValueString = CGMStatusHUDViewModel.staleGlucoseRepresentation
-        self.glucoseValueTintColor = .label
-        self.trend = nil
-        self.glucoseTrendTintColor = .glucoseTintColor
-        self.manualGlucoseTrendIconOverride = nil
+        glucoseValueString = CGMStatusHUDViewModel.staleGlucoseRepresentation
+        glucoseValueTintColor = .label
+        trend = nil
+        glucoseTrendTintColor = .glucoseTintColor
+        manualGlucoseTrendIconOverride = nil
         if let signalLossHighlight = signalLossHighlight {
             statusHighlight = signalLossHighlight
         }
