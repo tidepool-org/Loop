@@ -69,6 +69,10 @@ public final class AlertManager {
             [UserNotificationAlertIssuer(userNotificationCenter: userNotificationCenter),
             InAppModalAlertIssuer(alertPresenter: alertPresenter, alertManagerResponder: self)]
     }
+    
+    public func addAlertIssuer(_ issuer: AlertIssuer) {
+        handlers.append(issuer)
+    }
 
     public func addAlertResponder(managerIdentifier: String, alertResponder: AlertResponder) {
         responders[managerIdentifier] = Weak(alertResponder)

@@ -13,6 +13,7 @@ import LoopKit
 import LoopCore
 
 final class LoopDataManager: LoopSettingsAlerterDelegate {
+
     enum LoopUpdateContext: Int {
         case bolus
         case carbs
@@ -50,6 +51,9 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
 
+    // HACKORAMA
+    private let followerNotifier: FollowerNotifier = FirebaseNotifier()
+    
     deinit {
         for observer in notificationObservers {
             NotificationCenter.default.removeObserver(observer)
@@ -647,6 +651,7 @@ extension LoopDataManager {
     ///       - lastValue: The previous new stored value
     ///       - areStoredValuesContinuous: Whether the current recent state of the stored reservoir data is considered continuous and reliable for deriving insulin effects after addition of this new value.
     func addReservoirValue(_ units: Double, at date: Date, completion: @escaping (_ result: Result<(newValue: ReservoirValue, lastValue: ReservoirValue?, areStoredValuesContinuous: Bool)>) -> Void) {
+
         doseStore.addReservoirValue(units, at: date) { (newValue, previousValue, areStoredValuesContinuous, error) in
             if let error = error {
                 completion(.failure(error))
@@ -953,6 +958,19 @@ extension LoopDataManager {
                 throw error
             }
         }
+        
+        // HACKORAMA
+        let netBasal: NetBasal?
+        if let basalSchedule = basalRateScheduleApplyingOverrideHistory, let basalDeliveryState = basalDeliveryState {
+            netBasal = basalDeliveryState.getNetBasal(basalSchedule: basalSchedule, settings: settings)
+        } else {
+            netBasal = nil
+        }
+        self.followerNotifier.tellFollowers(doseStore: doseStore,
+                                            netBasal: netBasal,
+                                            carbsOnBoard: carbsOnBoard,
+                                            isClosedLoop: automaticDosingStatus.isClosedLoop,
+                                            lastLoopCompleted: lastLoopCompleted)
     }
 
     private func notify(forChange context: LoopUpdateContext) {
@@ -2069,6 +2087,32 @@ extension LoopDataManager {
             carbRatioSchedule = newValue.carbRatioSchedule
             basalRateSchedule = newValue.basalRateSchedule
             insulinModelSettings = newValue.insulinModelSettings
+        }
+    }
+}
+
+extension Double {
+    func rounded(digits: Int) -> Self {
+        let power = digits - 1
+        let pow = NSDecimalNumber(decimal: pow(10.0, power)).doubleValue
+        return (pow * self).rounded() / pow
+    }
+}
+
+extension LoopCompletionFreshness: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .fresh: return "fresh"
+        case .aging: return "aging"
+        case .stale: return "stale"
+        }
+    }
+    
+    var asInt: Int {
+        switch self {
+        case .fresh: return 0
+        case .aging: return 1
+        case .stale: return 2
         }
     }
 }

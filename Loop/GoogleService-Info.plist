@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>73598136348-kjs4j015qbl5kgfv9lc9tuq5iefjia5v.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.73598136348-kjs4j015qbl5kgfv9lc9tuq5iefjia5v</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBaqshE4X_mPx8s1Z0cC_ITKDBcGCLjqKQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>73598136348</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>org.tidepool.Loop</string>
+	<key>PROJECT_ID</key>
+	<string>awesome-897bb</string>
+	<key>STORAGE_BUCKET</key>
+	<string>awesome-897bb.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:73598136348:ios:83e09027e67d0f32af6fd9</string>
+	<key>DATABASE_URL</key>
+	<string>https://awesome-897bb-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

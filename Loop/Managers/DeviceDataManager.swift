@@ -57,6 +57,9 @@ final class DeviceDataManager {
 
     public private(set) var displayGlucoseUnitObservable: DisplayGlucoseUnitObservable
 
+    // HACKORAMA
+    private let followerNotifier: FollowerNotifier = FirebaseNotifier()
+
     // MARK: - CGM
 
     var cgmManager: CGMManager? {
@@ -200,6 +203,9 @@ final class DeviceDataManager {
 
         self.pluginManager = pluginManager
         self.alertManager = alertManager
+        // HACKORAMA
+        alertManager.addAlertIssuer(followerNotifier)
+        
         self.bluetoothProvider = bluetoothProvider
         self.alertPresenter = alertPresenter
         
@@ -434,10 +440,13 @@ final class DeviceDataManager {
             log.default("Asserting current pump data")
             pumpManager?.ensureCurrentPumpData(completion: nil)
         }
-
+        
+        // HACKORAMA
+        followerNotifier.tellFollowers(readingResult: readingResult, cgmStatusBadge: cgmStatusBadge, glucoseDisplayFunc: glucoseDisplay(for:))
+        
         updatePumpManagerBLEHeartbeatPreference()
     }
-
+        
     var availableCGMManagers: [CGMManagerDescriptor] {
         var availableCGMManagers = pluginManager.availableCGMManagers + availableStaticCGMManagers
         if let pumpManagerAsCGMManager = pumpManager as? CGMManager {
@@ -1000,6 +1009,8 @@ extension DeviceDataManager: PumpManagerDelegate {
         dispatchPrecondition(condition: .onQueue(queue))
         log.default("PumpManager:%{public}@ did read reservoir value", String(describing: type(of: pumpManager)))
 
+        
+        
         loopManager.addReservoirValue(units, at: date) { (result) in
             switch result {
             case .failure(let error):

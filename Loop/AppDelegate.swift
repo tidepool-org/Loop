@@ -6,6 +6,8 @@
 //  Copyright © 2015 Nathan Racklyeft. All rights reserved.
 //
 
+import FirebaseCore
+import FirebaseDatabase
 import UIKit
 import LoopKit
 
@@ -21,6 +23,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, WindowProvider {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         log.default("%{public}@ with launchOptions: %{public}@", #function, String(describing: launchOptions))
 
+        FirebaseApp.configure()
+        
         loopAppManager.initialize(windowProvider: self, launchOptions: launchOptions)
         loopAppManager.launch()
         return loopAppManager.isLaunchComplete

@@ -30,6 +30,9 @@ public struct SettingsView: View {
     @State private var deletePumpDataAlertIsPresented = false
     @State private var deleteCGMDataAlertIsPresented = false
 
+    @State private var showShareSheet = false
+    @State private var username: String = UserDefaults.standard.username ?? ""
+     
     public init(viewModel: SettingsViewModel) {
         self.viewModel = viewModel
     }
@@ -51,6 +54,7 @@ public struct SettingsView: View {
                 if viewModel.servicesViewModel.showServices {
                     servicesSection
                 }
+                shareSection
                 supportSection
             }
             .insetGroupedListStyle()
@@ -279,6 +283,35 @@ extension SettingsView {
         }
     }
 
+    private var shareSection: some View {
+        Section(header: SectionHeader(label: NSLocalizedString("Share", comment: "The title of the share section in settings"))) {
+            HStack{
+                Text("My name is:")
+                TextField(
+                    "User name",
+                    text: $username
+                ) { _ in
+                } onCommit: {
+                    UserDefaults.standard.username = username
+                }
+                .autocapitalization(.words)
+                .disableAutocorrection(true)
+            }
+            Button(action: { showShareSheet = true }) {
+                Text(NSLocalizedString("Share with Follower", comment: "The title of the support item in settings"))
+            }
+            .sheet(isPresented: $showShareSheet) {
+                ShareSheet(sharing: [URL(string: "tidepoolcarepartner://\(shareID.uuidString)")!])
+            }
+        }
+    }
+    
+    private var shareID: UUID {
+        let id = UserDefaults.standard.shareID ?? UUID()
+        UserDefaults.standard.shareID = id
+        return id
+    }
+    
     private var plusImage: some View {
         Image(systemName: "plus.circle")
             .resizable()
@@ -338,6 +371,21 @@ fileprivate struct LargeButton: View {
         }
     }
 }
+
+struct ShareSheet: UIViewControllerRepresentable {
+    typealias UIViewControllerType = UIActivityViewController
+
+    var sharing: [Any]
+
+    func makeUIViewController(context: UIViewControllerRepresentableContext<ShareSheet>) -> UIActivityViewController {
+        UIActivityViewController(activityItems: sharing, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: UIViewControllerRepresentableContext<ShareSheet>) {
+
+    }
+}
+
 
 fileprivate class FakeService1: Service {
     static var localizedTitle: String = "Service 1"
