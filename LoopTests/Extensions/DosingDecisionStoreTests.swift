@@ -652,10 +652,9 @@ class StoredDosingDecisionCodableTests: XCTestCase {
       "udiDeviceIdentifier" : "Device UDI Device Identifier"
     },
     "pumpBatteryChargeRemaining" : 3.5,
-    "pumpLifecycleProgress" : {
-      "percentComplete" : 0.5,
-      "progressState" : "warning"
-    },
+    "timeZone" : {
+      "identifier" : "America/Los_Angeles"
+    }
   },
   "recommendedBolus" : {
     "date" : "2020-05-14T22:38:16Z",
