@@ -664,24 +664,25 @@ extension DeviceDataManager {
             return
         }
 
-        self.loopManager.addRequestedBolus(DoseEntry(type: .bolus, startDate: Date(), value: units, unit: .units), completion: nil)
-        pumpManager.enactBolus(units: units, at: startDate) { (result) in
-            switch result {
-            case .failure(let error):
-                self.log.error("%{public}@", String(describing: error))
-                switch error {
-                case .uncertainDelivery:
-                    // Do not generate notification on uncertain delivery error
-                    break
-                default:
-                    NotificationManager.sendBolusFailureNotification(for: error, units: units, at: startDate)
-                }
-                self.loopManager.bolusRequestFailed(error) {
-                    completion(error)
-                }
-            case .success(let dose):
-                self.loopManager.bolusConfirmed(dose) {
-                    completion(nil)
+        self.loopManager.addRequestedBolus(DoseEntry(type: .bolus, startDate: Date(), value: units, unit: .units)) {
+            pumpManager.enactBolus(units: units, at: startDate) { (result) in
+                switch result {
+                case .failure(let error):
+                    self.log.error("%{public}@", String(describing: error))
+                    switch error {
+                    case .uncertainDelivery:
+                        // Do not generate notification on uncertain delivery error
+                        break
+                    default:
+                        NotificationManager.sendBolusFailureNotification(for: error, units: units, at: startDate)
+                    }
+                    self.loopManager.bolusRequestFailed(error) {
+                        completion(error)
+                    }
+                case .success(let dose):
+                    self.loopManager.bolusConfirmed(dose) {
+                        completion(nil)
+                    }
                 }
             }
         }

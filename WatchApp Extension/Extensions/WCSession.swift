@@ -52,8 +52,14 @@ extension WCSession {
             }
         )
     }
-
+    
     func sendBolusMessage(_ userInfo: SetBolusUserInfo, completionHandler: @escaping (Error?) -> Void) throws {
+        struct BolusMessageError: LocalizedError {
+            let str: String
+            var localizedDescription: String { "Bolus Failed: \(str)" }
+            var errorDescription: String? { localizedDescription }
+        }
+
         guard activationState == .activated else {
             throw MessageError.activation
         }
@@ -64,7 +70,7 @@ extension WCSession {
 
         sendMessage(userInfo.rawValue,
             replyHandler: { reply in
-                completionHandler(reply["error"] as? Error)
+                completionHandler((reply["error"] as? String).map { return BolusMessageError(str: $0) })
             },
             errorHandler: { error in
                 completionHandler(error)

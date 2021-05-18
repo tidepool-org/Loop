@@ -344,8 +344,13 @@ final class WatchDataManager: NSObject {
     }
 
     private func addCarbEntryAndBolusFromWatchMessage(_ message: [String: Any], completion: @escaping (_ error: Error?) -> Void) {
+        enum PrivateError: Error {
+            case badBolusUserInfoRawValue
+        }
+        
         guard let bolus = SetBolusUserInfo(rawValue: message as SetBolusUserInfo.RawValue) else {
             log.error("Could not enact bolus from from unknown message: %{public}@", String(describing: message))
+            completion(PrivateError.badBolusUserInfoRawValue)
             return
         }
 
@@ -356,13 +361,14 @@ final class WatchDataManager: NSObject {
             dosingDecision = BolusDosingDecision()  // The user saved without waiting for recommendation (no bolus)
         }
 
-        func enactBolus() {
+        func enactBolus(completion: @escaping (_ error: Error?) -> Void) {
             dosingDecision.requestedBolus = bolus.value
             deviceManager.loopManager.storeBolusDosingDecision(dosingDecision, withDate: bolus.startDate)
 
             guard bolus.value > 0 else {
                 // Ensure active carbs is updated in the absence of a bolus
                 sendWatchContextIfNeeded()
+                completion(nil)
                 return
             }
 
@@ -383,14 +389,15 @@ final class WatchDataManager: NSObject {
                 case .success(let storedCarbEntry):
                     dosingDecision.carbEntry = storedCarbEntry
                     self.deviceManager.analyticsServicesManager.didAddCarbsFromWatch()
-                    enactBolus()
+                    enactBolus(completion: completion)
                 case .failure(let error):
                     self.log.error("%{public}@", String(describing: error))
+                    completion(error)
                 }
             }
         } else {
             dosingDecision.carbEntry = nil
-            enactBolus()
+            enactBolus(completion: completion)
         }
     }
 }
@@ -411,7 +418,9 @@ extension WatchDataManager: WCSessionDelegate {
         case SetBolusUserInfo.name?:
             // Add carbs if applicable; start the bolus and reply when it's successfully requested
             addCarbEntryAndBolusFromWatchMessage(message) { error in
-                let handlerDict = ["error": error as Any]
+                let errorRaw = (error as? LocalizedError)?.errorDescription ?? error?.localizedDescription
+                let handlerDict: [String: Any] = errorRaw.map { ["error": $0] } ?? [:]
+                print("**** session error \(String(describing: error)): \(handlerDict.values.map { $0 } )")
                 replyHandler(handlerDict)
             }
         case LoopSettingsUserInfo.name?:
