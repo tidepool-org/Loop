@@ -343,7 +343,7 @@ final class WatchDataManager: NSObject {
         }
     }
 
-    private func addCarbEntryAndBolusFromWatchMessage(_ message: [String: Any]) {
+    private func addCarbEntryAndBolusFromWatchMessage(_ message: [String: Any], completion: @escaping (_ error: Error?) -> Void) {
         guard let bolus = SetBolusUserInfo(rawValue: message as SetBolusUserInfo.RawValue) else {
             log.error("Could not enact bolus from from unknown message: %{public}@", String(describing: message))
             return
@@ -371,6 +371,7 @@ final class WatchDataManager: NSObject {
                     self.deviceManager.analyticsServicesManager.didSetBolusFromWatch(bolus.value)
                 }
 
+                completion(error)
                 // When we've successfully started the bolus, send a new context with our new prediction
                 self.sendWatchContextIfNeeded()
             }
@@ -409,10 +410,10 @@ extension WatchDataManager: WCSessionDelegate {
             }
         case SetBolusUserInfo.name?:
             // Add carbs if applicable; start the bolus and reply when it's successfully requested
-            addCarbEntryAndBolusFromWatchMessage(message)
-
-            // Reply immediately
-            replyHandler([:])
+            addCarbEntryAndBolusFromWatchMessage(message) { error in
+                let handlerDict = ["error": error as Any]
+                replyHandler(handlerDict)
+            }
         case LoopSettingsUserInfo.name?:
             if let watchSettings = LoopSettingsUserInfo(rawValue: message)?.settings {
                 // So far we only support watch changes of temporary schedule overrides

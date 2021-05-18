@@ -64,7 +64,7 @@ extension WCSession {
 
         sendMessage(userInfo.rawValue,
             replyHandler: { reply in
-                completionHandler(nil)
+                completionHandler(reply["error"] as? Error)
             },
             errorHandler: { error in
                 completionHandler(error)

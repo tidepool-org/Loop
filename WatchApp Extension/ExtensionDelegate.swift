@@ -262,7 +262,9 @@ extension ExtensionDelegate {
     func present(_ error: Error) {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        WKExtension.shared().rootInterfaceController?.presentAlert(withTitle: error.localizedDescription, message: (error as NSError).localizedRecoverySuggestion ?? (error as NSError).localizedFailureReason, preferredStyle: .alert, actions: [WKAlertAction.dismissAction()])
+        WKExtension.shared().rootInterfaceController?.presentAlert(withTitle: (error as? LocalizedError)?.errorDescription ?? error.localizedDescription,
+                                                                   message: (error as? LocalizedError)?.recoverySuggestion ?? (error as NSError).localizedRecoverySuggestion ?? (error as NSError).localizedFailureReason,
+                                                                   preferredStyle: .alert, actions: [WKAlertAction.dismissAction()])
     }
 }
 
