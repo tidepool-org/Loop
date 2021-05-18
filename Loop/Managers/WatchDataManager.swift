@@ -419,9 +419,8 @@ extension WatchDataManager: WCSessionDelegate {
             // Add carbs if applicable; start the bolus and reply when it's successfully requested
             addCarbEntryAndBolusFromWatchMessage(message) { error in
                 let errorRaw = (error as? LocalizedError)?.errorDescription ?? error?.localizedDescription
-                let handlerDict: [String: Any] = errorRaw.map { ["error": $0] } ?? [:]
-                print("**** session error \(String(describing: error)): \(handlerDict.values.map { $0 } )")
-                replyHandler(handlerDict)
+                let raw: [String: Any] = errorRaw.map { ["error": $0] } ?? [:]
+                replyHandler(raw)
             }
         case LoopSettingsUserInfo.name?:
             if let watchSettings = LoopSettingsUserInfo(rawValue: message)?.settings {
