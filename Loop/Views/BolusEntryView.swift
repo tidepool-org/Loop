@@ -349,6 +349,11 @@ struct BolusEntryView: View {
                 caption: Text(String(format: NSLocalizedString("Your pump data is stale. %1$@ cannot recommend a bolus amount.", comment: "Caption for bolus screen notice when pump data is missing or stale"), appName)),
                 severity: .critical
             )
+        case .predictedGlucoseInRange:
+            return WarningView(
+                title: Text("No Bolus Recommended", comment: "Title for bolus screen notice when no bolus is recommended"),
+                caption: Text("Your glucose is currently predicted to stay within your correction range.", comment: "Caption for bolus screen notice when pump data is missing or stale")
+            )
         }
     }
             
