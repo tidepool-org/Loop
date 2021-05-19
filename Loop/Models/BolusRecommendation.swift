@@ -52,6 +52,10 @@ extension BolusRecommendationNotice: Equatable {
                 minGlucose1.startDate == minGlucose2.startDate &&
                 minGlucose1.endDate == minGlucose2.endDate &&
                 minGlucose1.quantity == minGlucose2.quantity
+
+        case (.predictedGlucoseInRange, .predictedGlucoseInRange):
+            return true
+
         default:
             return false
         }
