@@ -50,7 +50,7 @@ public class CGMStatusHUDViewModel {
     var statusHighlight: DeviceStatusHighlight? {
         get {
             guard !isManualGlucoseCurrent else {
-                // if there a current manual glucose, don't provide the stored status highlight
+                // if there is a current manual glucose, don't provide the stored status highlight
                 return nil
             }
             return storedStatusHighlight
