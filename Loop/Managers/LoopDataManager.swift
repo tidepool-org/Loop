@@ -503,11 +503,21 @@ extension LoopDataManager {
             return
         }
               
-        // Cancel that temp basal
-        recommendedTempBasal = (recommendation: TempBasalRecommendation.cancel, date: self.now())
-        enactRecommendedTempBasal { (error) -> Void in
-            self.storeDosingDecision(withDate: self.now(), withError: error)
-            self.notify(forChange: .tempBasal)
+        // Cancel active high temp basal
+        cancelActiveTempBasal()
+    }
+
+    /// Cancel the active temp basal
+    func cancelActiveTempBasal() {
+        guard case .tempBasal(_) = basalDeliveryState else { return }
+
+        dataAccessQueue.async {
+            // assign recommendedTempBasal right before setRecommendedTempBasal to avoid another assignment during asynchronous call
+            self.recommendedTempBasal = (recommendation: TempBasalRecommendation.cancel, date: self.now())
+            self.setRecommendedTempBasal { (error) -> Void in
+                self.storeDosingDecision(withDate: self.now(), withError: error)
+                self.notify(forChange: .tempBasal)
+            }
         }
     }
 

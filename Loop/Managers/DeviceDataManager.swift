@@ -332,11 +332,15 @@ final class DeviceDataManager {
             .store(in: &cancellables)
         
         // Turn off preMeal when going into closed loop off mode
+        // Cancel any active temp basal when going into closed loop off mode
         // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
         $isClosedLoop
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
-            .sink { if !$0 { self.loopManager.settings.clearOverride(matching: .preMeal) } }
+            .sink { if !$0 {
+                self.loopManager.settings.clearOverride(matching: .preMeal)
+                self.loopManager.cancelActiveTempBasal()
+            } }
             .store(in: &cancellables)
 
 
