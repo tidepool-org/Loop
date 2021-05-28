@@ -160,6 +160,7 @@ class LoopAppManager: NSObject {
 
         let storyboard = UIStoryboard(name: "Main", bundle: Bundle(for: Self.self))
         let statusTableViewController = storyboard.instantiateViewController(withIdentifier: "MainStatusViewController") as! StatusTableViewController
+        statusTableViewController.closedLoopStatusObservable = closedLoopStatusObservable
         statusTableViewController.deviceManager = deviceDataManager
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 

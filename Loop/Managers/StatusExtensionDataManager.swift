@@ -13,9 +13,13 @@ import LoopKit
 
 final class StatusExtensionDataManager {
     unowned let deviceManager: DeviceDataManager
+    private let closedLoopStatusObservable: ClosedLoopStatusObservable
 
-    init(deviceDataManager: DeviceDataManager) {
+    init(deviceDataManager: DeviceDataManager,
+         closedLoopStatusObservable: ClosedLoopStatusObservable)
+    {
         self.deviceManager = deviceDataManager
+        self.closedLoopStatusObservable = closedLoopStatusObservable
 
         NotificationCenter.default.addObserver(self, selector: #selector(notificationReceived(_:)), name: .LoopDataUpdated, object: deviceDataManager.loopManager)
         NotificationCenter.default.addObserver(self, selector: #selector(notificationReceived(_:)), name: .PumpManagerChanged, object: nil)
@@ -83,7 +87,7 @@ final class StatusExtensionDataManager {
 
             context.lastLoopCompleted = lastLoopCompleted
             
-            context.isClosedLoop = dataManager.isClosedLoop
+            context.isClosedLoop = self.closedLoopStatusObservable.isClosedLoop
 
             // Drop the first element in predictedGlucose because it is the currentGlucose
             // and will have a different interval to the next element

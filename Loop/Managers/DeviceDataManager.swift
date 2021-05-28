@@ -49,12 +49,7 @@ final class DeviceDataManager {
 
     @Published public var isClosedLoopAllowed: Bool
     
-    let closedLoopStatusObservable: ClosedLoopStatusObservable
-
-    public var isClosedLoop: Bool {
-        get { closedLoopStatusObservable.isClosedLoop }
-        set { closedLoopStatusObservable.isClosedLoop = newValue }
-    }
+    private let closedLoopStatusObservable: ClosedLoopStatusObservable
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -274,7 +269,7 @@ final class DeviceDataManager {
             self.cgmManager = pumpManager as? CGMManager
         }
 
-        statusExtensionManager = StatusExtensionDataManager(deviceDataManager: self)
+        statusExtensionManager = StatusExtensionDataManager(deviceDataManager: self, closedLoopStatusObservable: closedLoopStatusObservable)
 
         loopManager = LoopDataManager(
             lastLoopCompleted: statusExtensionManager.context?.lastLoopCompleted,
@@ -339,7 +334,7 @@ final class DeviceDataManager {
         $isClosedLoopAllowed
             .combineLatest(loopManager.$settings)
             .map { $0 && $1.dosingEnabled }
-            .assign(to: \.isClosedLoop, on: self)
+            .assign(to: \.closedLoopStatusObservable.isClosedLoop, on: self)
             .store(in: &cancellables)
 
         NotificationCenter.default.addObserver(forName: .HealthStorePreferredGlucoseUnitDidChange, object: glucoseStore.healthStore, queue: nil) { [weak self] _ in
@@ -1224,10 +1219,6 @@ extension DeviceDataManager: LoopDataManagerDelegate {
                 }
             }
         )
-    }
-    
-    var automaticDosingEnabled: Bool {
-        return isClosedLoop
     }
 }
 
