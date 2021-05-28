@@ -47,7 +47,7 @@ final class DeviceDataManager {
     
     @Published var cgmHasValidSensorSession: Bool
 
-    private let closedLoopStatusObservable: ClosedLoopStatusObservable
+    private let closedLoopStatus: ClosedLoopStatus
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -175,7 +175,7 @@ final class DeviceDataManager {
          alertManager: AlertManager,
          bluetoothProvider: BluetoothProvider,
          alertPresenter: AlertPresenter,
-         closedLoopStatusObservable: ClosedLoopStatusObservable)
+         closedLoopStatus: ClosedLoopStatus)
     {
         let localCacheDuration = Bundle.main.localCacheDuration
 
@@ -249,7 +249,7 @@ final class DeviceDataManager {
         self.settingsStore = SettingsStore(store: cacheStore, expireAfter: localCacheDuration)
         
         self.cgmHasValidSensorSession = false
-        self.closedLoopStatusObservable = closedLoopStatusObservable
+        self.closedLoopStatus = closedLoopStatus
 
         // HealthStorePreferredGlucoseUnitDidChange will be notified once the user completes the health access form. Set to .milligramsPerDeciliter until then
         displayGlucoseUnitObservable = DisplayGlucoseUnitObservable(displayGlucoseUnit: glucoseStore.preferredUnit ?? .milligramsPerDeciliter)
@@ -267,7 +267,7 @@ final class DeviceDataManager {
         }
 
         //TODO The instantiation of these non-device related managers should be moved to LoopAppManager, and then LoopAppManager can wire up the connections between them.
-        statusExtensionManager = StatusExtensionDataManager(deviceDataManager: self, closedLoopStatusObservable: closedLoopStatusObservable)
+        statusExtensionManager = StatusExtensionDataManager(deviceDataManager: self, closedLoopStatus: closedLoopStatus)
 
         loopManager = LoopDataManager(
             lastLoopCompleted: statusExtensionManager.context?.lastLoopCompleted,
@@ -282,7 +282,7 @@ final class DeviceDataManager {
             dosingDecisionStore: dosingDecisionStore,
             settingsStore: settingsStore,
             alertIssuer: alertManager,
-            automaticDosingObservable: closedLoopStatusObservable
+            automaticDosingStatus: closedLoopStatus
         )
         cacheStore.delegate = loopManager
         
@@ -326,7 +326,7 @@ final class DeviceDataManager {
         cgmStalenessMonitor.$cgmDataIsStale
             .combineLatest($cgmHasValidSensorSession)
             .map { $0 == false || $1 }
-            .assign(to: \.closedLoopStatusObservable.isClosedLoopAllowed, on: self)
+            .assign(to: \.closedLoopStatus.isClosedLoopAllowed, on: self)
             .store(in: &cancellables)
 
         NotificationCenter.default.addObserver(forName: .HealthStorePreferredGlucoseUnitDidChange, object: glucoseStore.healthStore, queue: nil) { [weak self] _ in

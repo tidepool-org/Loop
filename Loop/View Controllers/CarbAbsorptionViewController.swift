@@ -26,7 +26,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     
     private var allowEditing: Bool = true
 
-    var closedLoopStatusObservable: ClosedLoopStatusObservable!
+    var closedLoopStatus: ClosedLoopStatus!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -60,7 +60,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
             tableView.addGestureRecognizer(gestureRecognizer)
         }
 
-        if !closedLoopStatusObservable.isClosedLoop {
+        if !closedLoopStatus.isClosedLoop {
             allowEditing = false
         }
         
@@ -500,7 +500,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     
     @IBAction func presentCarbEntryScreen() {
         let navigationWrapper: UINavigationController
-        if closedLoopStatusObservable.isClosedLoop {
+        if closedLoopStatus.isClosedLoop {
             let carbEntryViewController = UIStoryboard(name: "Main", bundle: Bundle(for: AppDelegate.self)).instantiateViewController(withIdentifier: "CarbEntryViewController") as! CarbEntryViewController
             
             carbEntryViewController.deviceManager = deviceManager

@@ -30,7 +30,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     lazy var quantityFormatter: QuantityFormatter = QuantityFormatter()
 
-    var closedLoopStatusObservable: ClosedLoopStatusObservable!
+    var closedLoopStatus: ClosedLoopStatus!
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -96,7 +96,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             },
         ]
 
-        closedLoopStatusObservable.$isClosedLoop
+        closedLoopStatus.$isClosedLoop
             .receive(on: DispatchQueue.main)
             .sink { self.closedLoopStatusChanged($0) }
             .store(in: &cancellables)
@@ -333,7 +333,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         var carbsOnBoard: HKQuantity?
         let startDate = charts.startDate
         let basalDeliveryState = self.basalDeliveryState
-        let isClosedLoop = closedLoopStatusObservable.isClosedLoop
+        let isClosedLoop = closedLoopStatus.isClosedLoop
 
         // TODO: Don't always assume currentContext.contains(.status)
         reloadGroup.enter()
@@ -449,7 +449,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
         }
 
-        updatePreMealModeAvailability(allowed: closedLoopStatusObservable.isClosedLoop)
+        updatePreMealModeAvailability(allowed: closedLoopStatus.isClosedLoop)
 
         if deviceManager.loopManager.settings.preMealTargetRange == nil {
             preMealMode = nil
@@ -470,7 +470,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             if let glucoseSamples = glucoseSamples {
                 self.statusCharts.setGlucoseValues(glucoseSamples)
             }
-            if self.closedLoopStatusObservable.isClosedLoop, let predictedGlucoseValues = predictedGlucoseValues {
+            if self.closedLoopStatus.isClosedLoop, let predictedGlucoseValues = predictedGlucoseValues {
                 self.statusCharts.setPredictedGlucoseValues(predictedGlucoseValues)
             } else {
                 self.statusCharts.setPredictedGlucoseValues([])
@@ -766,7 +766,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             guard oldValue != preMealMode else {
                 return
             }
-            updatePreMealModeAvailability(allowed: closedLoopStatusObservable.isClosedLoop)
+            updatePreMealModeAvailability(allowed: closedLoopStatus.isClosedLoop)
         }
     }
 
@@ -821,7 +821,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     return self?.statusCharts.glucoseChart(withFrame: frame)?.view
                 })
                 cell.setTitleLabelText(label: NSLocalizedString("Glucose", comment: "The title of the glucose and prediction graph"))
-                cell.doesNavigate = self.closedLoopStatusObservable.isClosedLoop
+                cell.doesNavigate = self.closedLoopStatus.isClosedLoop
             case .iob:
                 cell.setChartGenerator(generator: { [weak self] (frame) in
                     return self?.statusCharts.iobChart(withFrame: frame)?.view
@@ -980,7 +980,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 } else {
                     cell.setSubtitleLabel(label: nil)
                 }
-                cell.doesNavigate = self.closedLoopStatusObservable.isClosedLoop
+                cell.doesNavigate = self.closedLoopStatus.isClosedLoop
             case .iob:
                 if let currentIOB = currentIOBDescription {
                     cell.setSubtitleLabel(label: currentIOB)
@@ -1035,7 +1035,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case .charts:
             switch ChartRow(rawValue: indexPath.row)! {
             case .glucose:
-                if self.closedLoopStatusObservable.isClosedLoop {
+                if self.closedLoopStatus.isClosedLoop {
                     performSegue(withIdentifier: PredictionTableViewController.className, sender: indexPath)
                 }
             case .iob, .dose:
@@ -1157,7 +1157,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         switch targetViewController {
         case let vc as CarbAbsorptionViewController:
             vc.deviceManager = deviceManager
-            vc.closedLoopStatusObservable = closedLoopStatusObservable
+            vc.closedLoopStatus = closedLoopStatus
             vc.hidesBottomBarWhenPushed = true
         case let vc as InsulinDeliveryTableViewController:
             vc.doseStore = deviceManager.doseStore
@@ -1188,7 +1188,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     func presentCarbEntryScreen(_ activity: NSUserActivity?) {
         let navigationWrapper: UINavigationController
-        if closedLoopStatusObservable.isClosedLoop {
+        if closedLoopStatus.isClosedLoop {
             let carbEntryViewController = UIStoryboard(name: "Main", bundle: Bundle(for: AppDelegate.self)).instantiateViewController(withIdentifier: "CarbEntryViewController") as! CarbEntryViewController
 
             carbEntryViewController.deviceManager = deviceManager
@@ -1217,7 +1217,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     func presentBolusEntryView(enableManualGlucoseEntry: Bool = false) {
         let hostingController: DismissibleHostingController
-        if closedLoopStatusObservable.isClosedLoop {
+        if closedLoopStatus.isClosedLoop {
             let viewModel = BolusEntryViewModel(delegate: deviceManager, isManualGlucoseEntryEnabled: enableManualGlucoseEntry)
             let bolusEntryView = BolusEntryView(viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
@@ -1380,7 +1380,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           syncPumpSchedule: syncBasalRateSchedule,
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
-                                          isClosedLoopAllowed: closedLoopStatusObservable.$isClosedLoopAllowed,
+                                          isClosedLoopAllowed: closedLoopStatus.$isClosedLoopAllowed,
                                           supportInfoProvider: deviceManager,
                                           availableSupports: deviceManager.availableSupports,
                                           delegate: self)
@@ -1442,7 +1442,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
             // when HUD view is initialized, update loop completion HUD (e.g., icon and last loop completed)
             hudView.loopCompletionHUD.stateColors = .loopStatus
-            hudView.loopCompletionHUD.loopIconClosed = closedLoopStatusObservable.isClosedLoop
+            hudView.loopCompletionHUD.loopIconClosed = closedLoopStatus.isClosedLoop
             hudView.loopCompletionHUD.lastLoopCompleted = deviceManager.loopManager.lastLoopCompleted
 
             hudView.cgmStatusHUD.stateColors = .cgmStatus

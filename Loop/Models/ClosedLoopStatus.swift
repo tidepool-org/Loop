@@ -1,5 +1,5 @@
 //
-//  ClosedLoopStatusObservable.swift
+//  ClosedLoopStatus.swift
 //  Loop
 //
 //  Created by Nathaniel Hamming on 2021-05-28.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-class ClosedLoopStatusObservable {
+class ClosedLoopStatus {
     @Published var isClosedLoop: Bool
     @Published var isClosedLoopAllowed: Bool
 
@@ -20,4 +20,4 @@ class ClosedLoopStatusObservable {
     }
 }
 
-typealias AutomaticDosingObservable = ClosedLoopStatusObservable
+typealias AutomaticDosingStatus = ClosedLoopStatus

@@ -43,7 +43,7 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
 
     private let now: () -> Date
 
-    private let automaticDosingObservable: AutomaticDosingObservable
+    private let automaticDosingStatus: AutomaticDosingStatus
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -75,7 +75,7 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
         settingsStore: SettingsStoreProtocol,
         now: @escaping () -> Date = { Date() },
         alertIssuer: AlertIssuer? = nil,
-        automaticDosingObservable: AutomaticDosingObservable
+        automaticDosingStatus: AutomaticDosingStatus
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -97,7 +97,7 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
 
         self.settingsStore = settingsStore
 
-        self.automaticDosingObservable = automaticDosingObservable
+        self.automaticDosingStatus = automaticDosingStatus
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
@@ -156,7 +156,7 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
         // Turn off preMeal when going into closed loop off mode
         // Cancel any active temp basal when going into closed loop off mode
         // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
-        self.automaticDosingObservable.$isClosedLoop
+        self.automaticDosingStatus.$isClosedLoop
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { if !$0 {
@@ -770,7 +770,7 @@ extension LoopDataManager {
             do {
                 try self.update()
 
-                if self.automaticDosingObservable.isClosedLoop == true {
+                if self.automaticDosingStatus.isClosedLoop == true {
                     self.setRecommendedTempBasal { (error) -> Void in
                         if let error = error {
                             self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSince(self.now()))

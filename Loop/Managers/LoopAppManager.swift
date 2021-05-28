@@ -63,7 +63,7 @@ class LoopAppManager: NSObject {
 
     private let log = DiagnosticLog(category: "LoopAppManager")
 
-    private let closedLoopStatusObservable = ClosedLoopStatusObservable(isClosedLoop: false, isClosedLoopAllowed: false)
+    private let closedLoopStatus = ClosedLoopStatus(isClosedLoop: false, isClosedLoopAllowed: false)
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -127,7 +127,7 @@ class LoopAppManager: NSObject {
                                                    alertManager: alertManager,
                                                    bluetoothProvider: bluetoothStateManager,
                                                    alertPresenter: self,
-                                                   closedLoopStatusObservable: closedLoopStatusObservable)
+                                                   closedLoopStatus: closedLoopStatus)
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 
         scheduleBackgroundTasks()
@@ -144,10 +144,10 @@ class LoopAppManager: NSObject {
 
         self.state = state.next
 
-        closedLoopStatusObservable.$isClosedLoopAllowed
+        closedLoopStatus.$isClosedLoopAllowed
             .combineLatest(deviceDataManager.loopManager.$settings)
             .map { $0 && $1.dosingEnabled }
-            .assign(to: \.closedLoopStatusObservable.isClosedLoop, on: self)
+            .assign(to: \.closedLoopStatus.isClosedLoop, on: self)
             .store(in: &cancellables)
     }
 
@@ -169,7 +169,7 @@ class LoopAppManager: NSObject {
 
         let storyboard = UIStoryboard(name: "Main", bundle: Bundle(for: Self.self))
         let statusTableViewController = storyboard.instantiateViewController(withIdentifier: "MainStatusViewController") as! StatusTableViewController
-        statusTableViewController.closedLoopStatusObservable = closedLoopStatusObservable
+        statusTableViewController.closedLoopStatus = closedLoopStatus
         statusTableViewController.deviceManager = deviceDataManager
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 
