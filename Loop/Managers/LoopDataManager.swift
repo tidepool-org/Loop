@@ -7,10 +7,10 @@
 //
 
 import Foundation
+import Combine
 import HealthKit
 import LoopKit
 import LoopCore
-
 
 final class LoopDataManager: LoopSettingsAlerterDelegate {
     enum LoopUpdateContext: Int {
@@ -43,6 +43,10 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
 
     private let now: () -> Date
 
+    private let automaticDosingObservable: AutomaticDosingObservable
+
+    lazy private var cancellables = Set<AnyCancellable>()
+
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
 
@@ -70,7 +74,8 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
         dosingDecisionStore: DosingDecisionStoreProtocol,
         settingsStore: SettingsStoreProtocol,
         now: @escaping () -> Date = { Date() },
-        alertIssuer: AlertIssuer? = nil
+        alertIssuer: AlertIssuer? = nil,
+        automaticDosingObservable: AutomaticDosingObservable
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -91,6 +96,8 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
         self.now = now
 
         self.settingsStore = settingsStore
+
+        self.automaticDosingObservable = automaticDosingObservable
 
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
@@ -145,6 +152,18 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
                 }
             }
         ]
+
+        // Turn off preMeal when going into closed loop off mode
+        // Cancel any active temp basal when going into closed loop off mode
+        // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
+        self.automaticDosingObservable.$isClosedLoop
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { if !$0 {
+                self.settings.clearOverride(matching: .preMeal)
+                self.cancelActiveTempBasal()
+            } }
+            .store(in: &cancellables)
     }
 
     /// Loop-related settings
@@ -751,7 +770,7 @@ extension LoopDataManager {
             do {
                 try self.update()
 
-                if self.delegate?.automaticDosingEnabled == true {
+                if self.automaticDosingObservable.isClosedLoop == true {
                     self.setRecommendedTempBasal { (error) -> Void in
                         if let error = error {
                             self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSince(self.now()))
@@ -1895,9 +1914,6 @@ protocol LoopDataManagerDelegate: class {
 
     /// The pump manager status, if one exists.
     var pumpManagerStatus: PumpManagerStatus? { get }
-    
-    /// The pump manager status, if one exists.
-    var automaticDosingEnabled: Bool { get }
 }
 
 private extension TemporaryScheduleOverride {

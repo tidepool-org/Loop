@@ -94,7 +94,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             },
         ]
 
-        deviceManager.$isClosedLoop
+        deviceManager.closedLoopStatusObservable.$isClosedLoop
             .receive(on: DispatchQueue.main)
             .sink { self.closedLoopStatusChanged($0) }
             .store(in: &cancellables)

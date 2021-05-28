@@ -62,6 +62,8 @@ class LoopAppManager: NSObject {
 
     private let log = DiagnosticLog(category: "LoopAppManager")
 
+    private let closedLoopStatusObservable = ClosedLoopStatusObservable(isClosedLoop: false)
+
     // MARK: - Initialization
 
     func initialize(windowProvider: WindowProvider, launchOptions: [UIApplication.LaunchOptionsKey: Any]?) {
@@ -121,7 +123,8 @@ class LoopAppManager: NSObject {
         self.deviceDataManager = DeviceDataManager(pluginManager: pluginManager,
                                                    alertManager: alertManager,
                                                    bluetoothProvider: bluetoothStateManager,
-                                                   alertPresenter: self)
+                                                   alertPresenter: self,
+                                                   closedLoopStatusObservable: closedLoopStatusObservable)
         SharedLogging.instance = deviceDataManager.loggingServicesManager
 
         scheduleBackgroundTasks()

@@ -49,8 +49,13 @@ final class DeviceDataManager {
 
     @Published public var isClosedLoopAllowed: Bool
     
-    @Published public var isClosedLoop: Bool
-    
+    public let closedLoopStatusObservable: ClosedLoopStatusObservable
+
+    public var isClosedLoop: Bool {
+        get { closedLoopStatusObservable.isClosedLoop }
+        set { closedLoopStatusObservable.isClosedLoop = newValue }
+    }
+
     lazy private var cancellables = Set<AnyCancellable>()
 
     private var cgmStalenessMonitor: CGMStalenessMonitor
@@ -173,7 +178,12 @@ final class DeviceDataManager {
 
     private(set) var loopManager: LoopDataManager!
 
-    init(pluginManager: PluginManager, alertManager: AlertManager, bluetoothProvider: BluetoothProvider, alertPresenter: AlertPresenter) {
+    init(pluginManager: PluginManager,
+         alertManager: AlertManager,
+         bluetoothProvider: BluetoothProvider,
+         alertPresenter: AlertPresenter,
+         closedLoopStatusObservable: ClosedLoopStatusObservable)
+    {
         let localCacheDuration = Bundle.main.localCacheDuration
 
         let fileManager = FileManager.default
@@ -246,7 +256,7 @@ final class DeviceDataManager {
         self.settingsStore = SettingsStore(store: cacheStore, expireAfter: localCacheDuration)
         
         self.cgmHasValidSensorSession = false
-        self.isClosedLoop = false
+        self.closedLoopStatusObservable = closedLoopStatusObservable
         self.isClosedLoopAllowed = false
 
         // HealthStorePreferredGlucoseUnitDidChange will be notified once the user completes the health access form. Set to .milligramsPerDeciliter until then
@@ -278,7 +288,8 @@ final class DeviceDataManager {
             carbStore: carbStore,
             dosingDecisionStore: dosingDecisionStore,
             settingsStore: settingsStore,
-            alertIssuer: alertManager
+            alertIssuer: alertManager,
+            automaticDosingObservable: closedLoopStatusObservable
         )
         cacheStore.delegate = loopManager
         
@@ -330,19 +341,6 @@ final class DeviceDataManager {
             .map { $0 && $1.dosingEnabled }
             .assign(to: \.isClosedLoop, on: self)
             .store(in: &cancellables)
-        
-        // Turn off preMeal when going into closed loop off mode
-        // Cancel any active temp basal when going into closed loop off mode
-        // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
-        $isClosedLoop
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { if !$0 {
-                self.loopManager.settings.clearOverride(matching: .preMeal)
-                self.loopManager.cancelActiveTempBasal()
-            } }
-            .store(in: &cancellables)
-
 
         NotificationCenter.default.addObserver(forName: .HealthStorePreferredGlucoseUnitDidChange, object: glucoseStore.healthStore, queue: nil) { [weak self] _ in
             guard let strongSelf = self else {
