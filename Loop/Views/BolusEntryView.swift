@@ -352,7 +352,7 @@ struct BolusEntryView: View {
         case .predictedGlucoseInRange:
             return WarningView(
                 title: Text("No Bolus Recommended", comment: "Title for bolus screen notice when no bolus is recommended"),
-                caption: Text("Your glucose is currently predicted to stay within your correction range.", comment: "Caption for bolus screen notice when predicted glucose is in range")
+                caption: Text("Based on your predicted glucose, no bolus is recommended.", comment: "Caption for bolus screen notice when no bolus is recommended for the predicted glucose")
             )
         }
     }
