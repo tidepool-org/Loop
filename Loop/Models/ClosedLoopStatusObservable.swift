@@ -8,11 +8,15 @@
 
 import Foundation
 
-public class ClosedLoopStatusObservable: ObservableObject {
-    @Published public var isClosedLoop: Bool
+class ClosedLoopStatusObservable {
+    @Published var isClosedLoop: Bool
+    @Published var isClosedLoopAllowed: Bool
 
-    public init(isClosedLoop: Bool) {
+    init(isClosedLoop: Bool,
+         isClosedLoopAllowed: Bool)
+    {
         self.isClosedLoop = isClosedLoop
+        self.isClosedLoopAllowed = isClosedLoopAllowed
     }
 }
 

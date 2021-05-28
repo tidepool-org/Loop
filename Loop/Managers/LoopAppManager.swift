@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Combine
 import LoopKit
 import LoopKitUI
 
@@ -62,7 +63,9 @@ class LoopAppManager: NSObject {
 
     private let log = DiagnosticLog(category: "LoopAppManager")
 
-    private let closedLoopStatusObservable = ClosedLoopStatusObservable(isClosedLoop: false)
+    private let closedLoopStatusObservable = ClosedLoopStatusObservable(isClosedLoop: false, isClosedLoopAllowed: false)
+
+    lazy private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Initialization
 
@@ -140,6 +143,12 @@ class LoopAppManager: NSObject {
         deviceDataManager.analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
         self.state = state.next
+
+        closedLoopStatusObservable.$isClosedLoopAllowed
+            .combineLatest(deviceDataManager.loopManager.$settings)
+            .map { $0 && $1.dosingEnabled }
+            .assign(to: \.closedLoopStatusObservable.isClosedLoop, on: self)
+            .store(in: &cancellables)
     }
 
     private func launchOnboarding() {

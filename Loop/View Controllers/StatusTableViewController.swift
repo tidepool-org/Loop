@@ -1380,7 +1380,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           syncPumpSchedule: syncBasalRateSchedule,
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
-                                          isClosedLoopAllowed: deviceManager.$isClosedLoopAllowed,
+                                          isClosedLoopAllowed: closedLoopStatusObservable.$isClosedLoopAllowed,
                                           supportInfoProvider: deviceManager,
                                           availableSupports: deviceManager.availableSupports,
                                           delegate: self)

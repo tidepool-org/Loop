@@ -47,8 +47,6 @@ final class DeviceDataManager {
     
     @Published var cgmHasValidSensorSession: Bool
 
-    @Published public var isClosedLoopAllowed: Bool
-    
     private let closedLoopStatusObservable: ClosedLoopStatusObservable
 
     lazy private var cancellables = Set<AnyCancellable>()
@@ -252,7 +250,6 @@ final class DeviceDataManager {
         
         self.cgmHasValidSensorSession = false
         self.closedLoopStatusObservable = closedLoopStatusObservable
-        self.isClosedLoopAllowed = false
 
         // HealthStorePreferredGlucoseUnitDidChange will be notified once the user completes the health access form. Set to .milligramsPerDeciliter until then
         displayGlucoseUnitObservable = DisplayGlucoseUnitObservable(displayGlucoseUnit: glucoseStore.preferredUnit ?? .milligramsPerDeciliter)
@@ -269,6 +266,7 @@ final class DeviceDataManager {
             self.cgmManager = pumpManager as? CGMManager
         }
 
+        //TODO The instantiation of these non-device related managers should be moved to LoopAppManager, and then LoopAppManager can wire up the connections between them.
         statusExtensionManager = StatusExtensionDataManager(deviceDataManager: self, closedLoopStatusObservable: closedLoopStatusObservable)
 
         loopManager = LoopDataManager(
@@ -328,13 +326,7 @@ final class DeviceDataManager {
         cgmStalenessMonitor.$cgmDataIsStale
             .combineLatest($cgmHasValidSensorSession)
             .map { $0 == false || $1 }
-            .assign(to: \.isClosedLoopAllowed, on: self)
-            .store(in: &cancellables)
-
-        $isClosedLoopAllowed
-            .combineLatest(loopManager.$settings)
-            .map { $0 && $1.dosingEnabled }
-            .assign(to: \.closedLoopStatusObservable.isClosedLoop, on: self)
+            .assign(to: \.closedLoopStatusObservable.isClosedLoopAllowed, on: self)
             .store(in: &cancellables)
 
         NotificationCenter.default.addObserver(forName: .HealthStorePreferredGlucoseUnitDidChange, object: glucoseStore.healthStore, queue: nil) { [weak self] _ in
