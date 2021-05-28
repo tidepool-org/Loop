@@ -49,7 +49,7 @@ final class DeviceDataManager {
 
     @Published public var isClosedLoopAllowed: Bool
     
-    public let closedLoopStatusObservable: ClosedLoopStatusObservable
+    let closedLoopStatusObservable: ClosedLoopStatusObservable
 
     public var isClosedLoop: Bool {
         get { closedLoopStatusObservable.isClosedLoop }
