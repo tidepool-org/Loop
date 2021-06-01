@@ -158,6 +158,7 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         XCTAssertEqual(Self.exampleBolusQuantity, bolusEntryViewModel.enteredBolus)
         waitOnMain()
+        waitOnMain()
         XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 0), bolusEntryViewModel.enteredBolus)
     }
     
@@ -465,6 +466,7 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         // manualGlucoseSample updates asynchronously on main
         waitOnMain()
+        waitOnMain()
 
         try saveAndDeliver(BolusEntryViewModelTests.noBolus)
 
@@ -472,6 +474,7 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual([expectedGlucoseSample], delegate.glucoseSamplesAdded)
 
         delegate.addGlucoseCompletion?(.success([Self.exampleManualStoredGlucoseSample]))
+        waitOnMain()
         waitOnMain()
 
         XCTAssertTrue(delegate.carbEntriesAdded.isEmpty)
@@ -514,7 +517,8 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         // manualGlucoseSample updates asynchronously on main
         waitOnMain()
-        
+        waitOnMain()
+
         try saveAndDeliver(BolusEntryViewModelTests.exampleBolusQuantity)
         
         let expectedGlucoseSample = NewGlucoseSample(date: now, quantity: Self.exampleManualGlucoseQuantity, isDisplayOnly: false, wasUserEntered: true, syncIdentifier: mockUUID)
@@ -522,7 +526,8 @@ class BolusEntryViewModelTests: XCTestCase {
         
         delegate.addGlucoseCompletion?(.success([Self.exampleManualStoredGlucoseSample]))
         waitOnMain()
-        
+        waitOnMain()
+
         XCTAssertTrue(delegate.carbEntriesAdded.isEmpty)
         XCTAssertEqual(1, delegate.bolusDosingDecisionsAdded.count)
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.0, BolusDosingDecision(manualGlucose: Self.exampleManualStoredGlucoseSample,
@@ -537,13 +542,15 @@ class BolusEntryViewModelTests: XCTestCase {
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
         // manualGlucoseSample updates asynchronously on main
         waitOnMain()
-                
+        waitOnMain()
+
         try saveAndDeliver(BolusEntryViewModelTests.exampleBolusQuantity)
         
         let addCarbEntryCompletion = try XCTUnwrap(delegate.addCarbEntryCompletion)
         addCarbEntryCompletion(.success(mockFinalCarbEntry))
         waitOnMain()
-        
+        waitOnMain()
+
         XCTAssertTrue(delegate.glucoseSamplesAdded.isEmpty)
         XCTAssertEqual(1, delegate.carbEntriesAdded.count)
         XCTAssertEqual(mockPotentialCarbEntry, delegate.carbEntriesAdded.first?.0)
@@ -592,7 +599,8 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         // manualGlucoseSample updates asynchronously on main
         waitOnMain()
-        
+        waitOnMain()
+
         try saveAndDeliver(BolusEntryViewModelTests.exampleBolusQuantity)
         
         let expectedGlucoseSample = NewGlucoseSample(date: now, quantity: Self.exampleManualGlucoseQuantity, isDisplayOnly: false, wasUserEntered: true, syncIdentifier: mockUUID)
@@ -600,9 +608,11 @@ class BolusEntryViewModelTests: XCTestCase {
         
         delegate.addGlucoseCompletion?(.success([Self.exampleManualStoredGlucoseSample]))
         waitOnMain()
-        
+        waitOnMain()
+
         let addCarbEntryCompletion = try XCTUnwrap(delegate.addCarbEntryCompletion)
         addCarbEntryCompletion(.success(mockFinalCarbEntry))
+        waitOnMain()
         waitOnMain()
 
         XCTAssertEqual(1, delegate.carbEntriesAdded.count)
