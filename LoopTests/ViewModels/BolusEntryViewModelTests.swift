@@ -157,6 +157,8 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.enteredBolus = Self.exampleBolusQuantity
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         XCTAssertEqual(Self.exampleBolusQuantity, bolusEntryViewModel.enteredBolus)
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
         XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 0), bolusEntryViewModel.enteredBolus)
@@ -407,6 +409,8 @@ class BolusEntryViewModelTests: XCTestCase {
         mockState.bolusRecommendationResult = BolusRecommendation(amount: 1.234, pendingInsulin: 4.321)
         try triggerLoopStateUpdatedWithDataAndWait(with: mockState)
         // Now, through the magic of `observeRecommendedBolusChanges` and the recommendedBolus publisher it should update to 1.234.  But we have to wait twice on main to make this reliable...
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
         XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 1.234), bolusEntryViewModel.enteredBolus)
@@ -465,6 +469,8 @@ class BolusEntryViewModelTests: XCTestCase {
     func testSaveManualGlucoseNoBolus() throws {
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         // manualGlucoseSample updates asynchronously on main
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
 
@@ -474,6 +480,8 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual([expectedGlucoseSample], delegate.glucoseSamplesAdded)
 
         delegate.addGlucoseCompletion?(.success([Self.exampleManualStoredGlucoseSample]))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
 
@@ -516,6 +524,8 @@ class BolusEntryViewModelTests: XCTestCase {
     func testSaveManualGlucoseAndBolus() throws {
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         // manualGlucoseSample updates asynchronously on main
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
 
@@ -525,6 +535,8 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual([expectedGlucoseSample], delegate.glucoseSamplesAdded)
         
         delegate.addGlucoseCompletion?(.success([Self.exampleManualStoredGlucoseSample]))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
 
@@ -541,6 +553,8 @@ class BolusEntryViewModelTests: XCTestCase {
     func testSaveCarbAndBolus() throws {
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
         // manualGlucoseSample updates asynchronously on main
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
 
@@ -548,6 +562,8 @@ class BolusEntryViewModelTests: XCTestCase {
         
         let addCarbEntryCompletion = try XCTUnwrap(delegate.addCarbEntryCompletion)
         addCarbEntryCompletion(.success(mockFinalCarbEntry))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
 
@@ -598,6 +614,8 @@ class BolusEntryViewModelTests: XCTestCase {
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         // manualGlucoseSample updates asynchronously on main
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
 
@@ -607,11 +625,15 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual([expectedGlucoseSample], delegate.glucoseSamplesAdded)
         
         delegate.addGlucoseCompletion?(.success([Self.exampleManualStoredGlucoseSample]))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
 
         let addCarbEntryCompletion = try XCTUnwrap(delegate.addCarbEntryCompletion)
         addCarbEntryCompletion(.success(mockFinalCarbEntry))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
 
