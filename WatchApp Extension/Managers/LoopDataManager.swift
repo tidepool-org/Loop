@@ -129,23 +129,42 @@ extension LoopDataManager {
         }
     }
 
-    @discardableResult
-    func requestGlucoseBackfillIfNecessary() -> Bool {
-        dispatchPrecondition(condition: .onQueue(.main))
+    func requestContextAndBackfillUpdate() {
+        // the glucose backfill request needs to be prepared before context update, since the current glucose value may be updated leaving a gap
+        let glucoseBackfillRequest = prepareGlucoseBackfillRequestIfNecessary()
+        requestContextUpdate(completion: { [weak self] in
+            if let glucoseBackfillRequest = glucoseBackfillRequest {
+                self?.requestGlucoseBackfill(glucoseBackfillRequest: glucoseBackfillRequest)
+            }
+        })
+    }
 
+    func requestGlucoseBackfillIfNecessary() -> Bool {
+        guard let glucoseBackfillRequest = prepareGlucoseBackfillRequestIfNecessary() else { return false }
+        return requestGlucoseBackfill(glucoseBackfillRequest: glucoseBackfillRequest)
+    }
+
+    private func prepareGlucoseBackfillRequestIfNecessary() -> GlucoseBackfillRequestUserInfo? {
         guard lastGlucoseBackfill < .staleGlucoseCutoff else {
             log.default("Skipping glucose backfill request because our latest attempt was %{public}@", String(describing: lastGlucoseBackfill))
-            return false
+            return nil
         }
 
+        //TODO this should try to detect a gap instead of just looking at the latest glucose timestamp.
         let latestDate = glucoseStore.latestGlucose?.startDate ?? .earliestGlucoseCutoff
         guard latestDate < .staleGlucoseCutoff else {
             self.log.default("Skipping glucose backfill request because our latest sample date is %{public}@", String(describing: latestDate))
-            return false
+            return nil
         }
 
+        return GlucoseBackfillRequestUserInfo(startDate: latestDate)
+    }
+
+    @discardableResult
+    private func requestGlucoseBackfill(glucoseBackfillRequest userInfo: GlucoseBackfillRequestUserInfo) -> Bool {
+        dispatchPrecondition(condition: .onQueue(.main))
+
         lastGlucoseBackfill = Date()
-        let userInfo = GlucoseBackfillRequestUserInfo(startDate: latestDate)
         WCSession.default.sendGlucoseBackfillRequestMessage(userInfo) { (result) in
             switch result {
             case .success(let context):
@@ -166,7 +185,7 @@ extension LoopDataManager {
         return true
     }
 
-    func requestContextUpdate(completion: @escaping () -> Void = { }) {
+    private func requestContextUpdate(completion: @escaping () -> Void = { }) {
         try? WCSession.default.sendContextRequestMessage(WatchContextRequestUserInfo(), completionHandler: { (result) in
             DispatchQueue.main.async {
                 switch result {
