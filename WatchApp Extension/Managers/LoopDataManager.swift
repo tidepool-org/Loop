@@ -129,7 +129,7 @@ extension LoopDataManager {
         }
     }
 
-    func requestContextAndBackfillUpdate() {
+    func requestContextUpdateAndGlucoseBackfill() {
         // the glucose backfill request needs to be prepared before context update, since the current glucose value may be updated leaving a gap
         let glucoseBackfillRequest = prepareGlucoseBackfillRequestIfNecessary()
         requestContextUpdate(completion: { [weak self] in
