@@ -113,7 +113,7 @@ public extension DoseChart {
         let bolusLayer: ChartPointsScatterDownTrianglesLayer<ChartPoint>?
 
         if points.bolus.count > 0 {
-            bolusLayer = ChartPointsScatterDownTrianglesLayer(xAxis: xAxisLayer.axis, yAxis: yAxisLayer.axis, chartPoints: points.bolus, displayDelay: 10, itemSize: CGSize(width: bolusPointSize, height: bolusPointSize), itemFillColor: colors.insulinTint)
+            bolusLayer = ChartPointsScatterDownTrianglesLayer(xAxis: xAxisLayer.axis, yAxis: yAxisLayer.axis, chartPoints: points.bolus, displayDelay: 0, itemSize: CGSize(width: bolusPointSize, height: bolusPointSize), itemFillColor: colors.insulinTint)
         } else {
             bolusLayer = nil
         }
