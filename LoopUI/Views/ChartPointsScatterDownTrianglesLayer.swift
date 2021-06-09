@@ -42,7 +42,7 @@ public class ChartPointsScatterDownTrianglesLayer<T: ChartPoint>: ChartPointsSca
 
         let path = CGMutablePath()
         path.move(to: CGPoint(x: chartPointModel.screenLoc.x + horizontalOffset, y: chartPointModel.screenLoc.y + verticalOffset + h / 2))
-        path.addLine(to: CGPoint(x: chartPointModel.screenLoc.x + horizontalOffset + w / 2 , y: chartPointModel.screenLoc.y + verticalOffset - h / 2))
+        path.addLine(to: CGPoint(x: chartPointModel.screenLoc.x + horizontalOffset + w / 2, y: chartPointModel.screenLoc.y + verticalOffset - h / 2))
         path.addLine(to: CGPoint(x: chartPointModel.screenLoc.x + horizontalOffset - w / 2, y: chartPointModel.screenLoc.y + verticalOffset - h / 2))
         path.closeSubpath()
 
