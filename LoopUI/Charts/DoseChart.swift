@@ -65,7 +65,7 @@ public extension DoseChart {
         
         let points = generateDosePoints(startDate: startDate)
 
-        var yAxisValues = ChartAxisValuesStaticGenerator.generateYAxisValuesUsingLinearSegmentStep(
+        let yAxisValues = ChartAxisValuesStaticGenerator.generateYAxisValuesUsingLinearSegmentStep(
             chartPoints: points.basal + points.bolus + doseDisplayRangePoints,
             minSegmentCount: 2,
             maxSegmentCount: 3,
@@ -73,27 +73,11 @@ public extension DoseChart {
             axisValueGenerator: { ChartAxisValueDoubleLog(screenLocDouble: $0, formatter: integerFormatter, labelSettings: axisLabelSettings) },
             addPaddingSegmentIfEdge: true)
         
-        var yAxisModel = ChartAxisModel(axisValues: yAxisValues, lineColor: colors.axisLine, labelSpaceReservationMode: .fixed(labelsWidthY))
+        let yAxisModel = ChartAxisModel(axisValues: yAxisValues, lineColor: colors.axisLine, labelSpaceReservationMode: .fixed(labelsWidthY))
 
-        var coordsSpace = ChartCoordsSpaceLeftBottomSingleAxis(chartSettings: chartSettings, chartFrame: frame, xModel: xAxisModel, yModel: yAxisModel)
+        let coordsSpace = ChartCoordsSpaceLeftBottomSingleAxis(chartSettings: chartSettings, chartFrame: frame, xModel: xAxisModel, yModel: yAxisModel)
 
-        var (xAxisLayer, yAxisLayer, innerFrame) = (coordsSpace.xAxisLayer, coordsSpace.yAxisLayer, coordsSpace.chartInnerFrame)
-
-        // check if the max bolus value and half the size of bolus point is at or above the top of the chart
-        let bolusPointSize: Double = 12
-        if let maxBolusPoint = points.bolus.max(by: { $0.y.scalar < $1.y.scalar }),
-           yAxisLayer.axis.screenLocForScalar(maxBolusPoint.y.scalar) - CGFloat(bolusPointSize/2) <= chartSettings.top,
-           let lastSegment = yAxisLayer.currentAxisValues.last
-        {
-            // add another segment to yAxisValues to avoid clipping the bolus icon
-            let segmentDelta = abs(yAxisLayer.currentAxisValues[1] - yAxisLayer.currentAxisValues[0])
-            yAxisValues.append(ChartAxisValueDoubleLog(screenLocDouble: lastSegment+segmentDelta, formatter: integerFormatter, labelSettings: axisLabelSettings))
-
-            // re-create the y-axis model and coordinate space
-            yAxisModel = ChartAxisModel(axisValues: yAxisValues, lineColor: colors.axisLine, labelSpaceReservationMode: .fixed(labelsWidthY))
-            coordsSpace = ChartCoordsSpaceLeftBottomSingleAxis(chartSettings: chartSettings, chartFrame: frame, xModel: xAxisModel, yModel: yAxisModel)
-            (xAxisLayer, yAxisLayer, innerFrame) = (coordsSpace.xAxisLayer, coordsSpace.yAxisLayer, coordsSpace.chartInnerFrame)
-        }
+        let (xAxisLayer, yAxisLayer, innerFrame) = (coordsSpace.xAxisLayer, coordsSpace.yAxisLayer, coordsSpace.chartInnerFrame)
 
         // The dose area
         let lineModel = ChartLineModel(chartPoints: points.basal, lineColor: colors.insulinTint, lineWidth: 2, animDuration: 0, animDelay: 0)
@@ -110,6 +94,7 @@ public extension DoseChart {
         )
 
         // bolus points
+        let bolusPointSize: Double = 12
         let bolusLayer: ChartPointsScatterDownTrianglesLayer<ChartPoint>?
 
         if points.bolus.count > 0 {
@@ -154,7 +139,14 @@ public extension DoseChart {
             bolusLayer
         ]
 
-        return Chart(frame: frame, innerFrame: innerFrame, settings: chartSettings, layers: layers.compactMap { $0 })
+        let chart = Chart(frame: frame, innerFrame: innerFrame, settings: chartSettings, layers: layers.compactMap { $0 })
+
+        // the bolus points are drawn in the chart's drawersContentView. Update the drawersContentView frame to allow the bolus points to be drawn without clipping
+        var frame = chart.drawersContentView.frame
+        frame.size.height = frame.height+CGFloat(bolusPointSize/2)
+        chart.drawersContentView.frame = frame.offsetBy(dx: 0, dy: -CGFloat(bolusPointSize/2))
+
+        return chart
     }
     
     private func generateDosePoints(startDate: Date) -> DosePointsCache {
