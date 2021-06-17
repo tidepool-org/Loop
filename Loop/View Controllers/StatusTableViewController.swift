@@ -1899,11 +1899,10 @@ extension StatusTableViewController {
 
 extension StatusTableViewController {
     fileprivate func addPumpManager(withIdentifier identifier: String) {
-        guard let basalSchedule = deviceManager.loopManager.basalRateSchedule else {
-            log.default("Failure to setup pump manager with identifier '%{public}@': No basal schedule defined", identifier)
-            return
-        }
-        switch deviceManager.setupPumpManagerUI(withIdentifier: identifier, basalSchedule: basalSchedule) {
+        let settings = PumpManagerSetupSettings(maxBasalRateUnitsPerHour: deviceManager.loopManager.settings.maximumBasalRatePerHour,
+                                                maxBolusUnits: deviceManager.loopManager.settings.maximumBolus,
+                                                basalSchedule: deviceManager.loopManager.basalRateSchedule)
+        switch deviceManager.setupPumpManagerUI(withIdentifier: identifier, initialSettings: settings) {
         case .failure(let error):
             log.default("Failure to setup pump manager with identifier '%{public}@': %{public}@", identifier, String(describing: error))
         case .success(let success):

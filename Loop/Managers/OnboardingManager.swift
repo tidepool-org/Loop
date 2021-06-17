@@ -314,9 +314,9 @@ extension OnboardingManager: PumpManagerProvider {
                                        maximumBasalScheduleEntryCount: pumpManagerType.onboardingMaximumBasalScheduleEntryCount)
     }
 
-    func onboardPumpManager(withIdentifier identifier: String, basalSchedule: BasalRateSchedule) -> Swift.Result<OnboardingResult<PumpManagerViewController, PumpManager>, Error> {
+    func onboardPumpManager(withIdentifier identifier: String, initialSettings settings: PumpManagerSetupSettings) -> Swift.Result<OnboardingResult<PumpManagerViewController, PumpManager>, Error> {
         guard let pumpManager = deviceDataManager.pumpManager else {
-            return deviceDataManager.setupPumpManager(withIdentifier: identifier, basalSchedule: basalSchedule)
+            return deviceDataManager.setupPumpManager(withIdentifier: identifier, initialSettings: settings)
         }
         guard pumpManager.managerIdentifier == identifier else {
             return .failure(OnboardingError.invalidState)

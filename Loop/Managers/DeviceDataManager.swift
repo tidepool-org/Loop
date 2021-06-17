@@ -357,8 +357,8 @@ final class DeviceDataManager {
         return pluginManager.availablePumpManagers + availableStaticPumpManagers
     }
 
-    func setupPumpManager(withIdentifier identifier: String, basalSchedule: BasalRateSchedule) -> Swift.Result<SetupUIResult<PumpManagerViewController, PumpManager>, Error> {
-        switch setupPumpManagerUI(withIdentifier: identifier, basalSchedule: basalSchedule) {
+    func setupPumpManager(withIdentifier identifier: String, initialSettings settings: PumpManagerSetupSettings) -> Swift.Result<SetupUIResult<PumpManagerViewController, PumpManager>, Error> {
+        switch setupPumpManagerUI(withIdentifier: identifier, initialSettings: settings) {
         case .failure(let error):
             return .failure(error)
         case .success(let success):
@@ -373,12 +373,12 @@ final class DeviceDataManager {
 
     struct UnknownPumpManagerIdentifierError: Error {}
 
-    func setupPumpManagerUI(withIdentifier identifier: String, basalSchedule: BasalRateSchedule) -> Swift.Result<SetupUIResult<PumpManagerViewController, PumpManagerUI>, Error> {
+    func setupPumpManagerUI(withIdentifier identifier: String, initialSettings settings: PumpManagerSetupSettings) -> Swift.Result<SetupUIResult<PumpManagerViewController, PumpManagerUI>, Error> {
         guard let pumpManagerUIType = pumpManagerTypeByIdentifier(identifier) else {
             return .failure(UnknownPumpManagerIdentifierError())
         }
 
-        let result = pumpManagerUIType.setupViewController(basalSchedule: basalSchedule, bluetoothProvider: bluetoothProvider, colorPalette: .default, allowDebugFeatures: FeatureFlags.mockTherapySettingsEnabled)
+        let result = pumpManagerUIType.setupViewController(initialSettings: settings, bluetoothProvider: bluetoothProvider, colorPalette: .default, allowDebugFeatures: FeatureFlags.mockTherapySettingsEnabled)
         if case .createdAndOnboarded(let pumpManagerUI) = result {
             pumpManagerOnboarding(didCreatePumpManager: pumpManagerUI)
             pumpManagerOnboarding(didOnboardPumpManager: pumpManagerUI)
