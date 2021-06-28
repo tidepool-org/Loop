@@ -69,11 +69,40 @@ class AlertPermissionsChecker {
                 let criticalAlertsPermissions = settings.criticalAlertSetting
                 
                 if notificationsPermissions == .disabled || criticalAlertsPermissions == .disabled {
-                    self.alertManager?.issueAlert(AlertPermissionsChecker.criticalAlertPermissionsAlert)
+                    self.maybeNotifyPermissionsDisabled()
                 } else {
-                    self.alertManager?.retractAlert(identifier: AlertPermissionsChecker.criticalAlertPermissionsAlertIdentifier)
+                    self.permissionsEnabled()
                 }
             }
+        }
+    }
+    
+    private func maybeNotifyPermissionsDisabled() {
+        if !UserDefaults.standard.hasUserBeenNotifiedOfPermissionsAlert {
+            alertManager?.issueAlert(AlertPermissionsChecker.criticalAlertPermissionsAlert)
+            UserDefaults.standard.hasUserBeenNotifiedOfPermissionsAlert = true
+        }
+    }
+    
+    private func permissionsEnabled() {
+        alertManager?.retractAlert(identifier: AlertPermissionsChecker.criticalAlertPermissionsAlertIdentifier)
+        UserDefaults.standard.hasUserBeenNotifiedOfPermissionsAlert = false
+    }
+    
+}
+
+extension UserDefaults {
+    
+    private enum Key: String {
+        case hasUserBeenNotifiedOfPermissionsAlert = "com.loopkit.Loop.AlertPermissionsChecker"
+    }
+    
+    var hasUserBeenNotifiedOfPermissionsAlert: Bool {
+        get {
+            return object(forKey: Key.hasUserBeenNotifiedOfPermissionsAlert.rawValue) as? Bool ?? false
+        }
+        set {
+            set(newValue, forKey: Key.hasUserBeenNotifiedOfPermissionsAlert.rawValue)
         }
     }
 }
