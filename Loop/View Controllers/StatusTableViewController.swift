@@ -126,6 +126,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         tableView.backgroundColor = .secondarySystemBackground
     
+        tableView.register(TempStatusCell.self, forCellReuseIdentifier: TempStatusCell.className)
         notificationsCriticalAlertPermissionsViewModel.$showWarning
             .receive(on: RunLoop.main)
             .sink { [weak self] in
@@ -818,20 +819,30 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
     }
 
+    private class TempStatusCell: UITableViewCell {
+  
+        override func updateConfiguration(using state: UICellConfigurationState) {
+            super.updateConfiguration(using: state)
+            let content = NSLocalizedString("Alerts Permissions Disabled", comment: "Warning text for when Notifications or Critical Alerts Permissions is disabled")
+            var contentConfig = defaultContentConfiguration().updated(for: state)
+            contentConfig.text = content
+            contentConfig.textProperties.color = .red
+            contentConfig.textProperties.font = .systemFont(ofSize: 15, weight: .semibold)
+            contentConfig.textProperties.adjustsFontSizeToFitWidth = true
+            contentConfig.image = UIImage(systemName: "exclamationmark.triangle.fill")?.withTintColor(.red)
+            contentConfig.imageProperties.tintColor = .red
+            contentConfiguration = contentConfig
+            var backgroundConfig = backgroundConfiguration?.updated(for: state)
+            backgroundConfig?.backgroundColor = .secondarySystemBackground
+            backgroundConfiguration = backgroundConfig
+            accessoryType = .disclosureIndicator
+        }
+    }
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         switch Section(rawValue: indexPath.section)! {
         case .tempStatus:
-            let cell = UITableViewCell(style: .default, reuseIdentifier: "tempStatus")
-            cell.imageView?.image = UIImage(systemName: "exclamationmark.triangle.fill")
-            cell.imageView?.tintColor = .red
-            cell.textLabel?.text = NSLocalizedString("Alerts Permissions Disabled", comment: "Warning text for when Notifications or Critical Alerts Permissions is disabled")
-            cell.textLabel?.textColor = .red
-            cell.textLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
-            cell.textLabel?.adjustsFontSizeToFitWidth = true
-            cell.accessoryType = .disclosureIndicator
-            cell.backgroundColor = tableView.backgroundColor
-            
-            return cell
+            return tableView.dequeueReusableCell(withIdentifier: TempStatusCell.className, for: indexPath) as! TempStatusCell
         case .hud:
             let cell = tableView.dequeueReusableCell(withIdentifier: HUDViewTableViewCell.className, for: indexPath) as! HUDViewTableViewCell
             hudView = cell.hudView
@@ -1057,17 +1068,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch Section(rawValue: indexPath.section)! {
-        case .charts:
-            switch ChartRow(rawValue: indexPath.row)! {
-            case .glucose:
-                if closedLoopStatus.isClosedLoop {
-                    performSegue(withIdentifier: PredictionTableViewController.className, sender: indexPath)
-                }
-            case .iob, .dose:
-                performSegue(withIdentifier: InsulinDeliveryTableViewController.className, sender: indexPath)
-            case .cob:
-                performSegue(withIdentifier: CarbAbsorptionViewController.className, sender: indexPath)
-            }
+        case .tempStatus:
+            tableView.deselectRow(at: indexPath, animated: true)
+            presentSettings()
+        case .hud:
+            break
         case .status:
             switch StatusRow(rawValue: indexPath.row)! {
             case .status:
@@ -1143,10 +1148,17 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     break
                 }
             }
-        case .hud:
-            break
-        case .tempStatus:
-            presentSettings()
+        case .charts:
+            switch ChartRow(rawValue: indexPath.row)! {
+            case .glucose:
+                if closedLoopStatus.isClosedLoop {
+                    performSegue(withIdentifier: PredictionTableViewController.className, sender: indexPath)
+                }
+            case .iob, .dose:
+                performSegue(withIdentifier: InsulinDeliveryTableViewController.className, sender: indexPath)
+            case .cob:
+                performSegue(withIdentifier: CarbAbsorptionViewController.className, sender: indexPath)
+            }
         }
     }
 
