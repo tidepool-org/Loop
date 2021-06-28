@@ -31,6 +31,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
     lazy var quantityFormatter: QuantityFormatter = QuantityFormatter()
 
     var closedLoopStatus: ClosedLoopStatus!
+    
+    let notificationsCriticalAlertPermissionsViewModel = NotificationsCriticalAlertPermissionsViewModel()
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -123,6 +125,18 @@ final class StatusTableViewController: LoopChartsTableViewController {
         addScenarioStepGestureRecognizers()
 
         tableView.backgroundColor = .secondarySystemBackground
+    
+        notificationsCriticalAlertPermissionsViewModel.$showWarning
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in
+                let current = self?.tableView.numberOfRows(inSection: Section.tempStatus.rawValue) ?? 0
+                if !$0 && current > 0 {
+                    self?.tableView.deleteRows(at: [IndexPath(row: 0, section: Section.tempStatus.rawValue)], with: .top)
+                } else if $0 && current == 0 {
+                    self?.tableView.insertRows(at: [IndexPath(row: 0, section: Section.tempStatus.rawValue)], with: .top)
+                }
+            }
+            .store(in: &cancellables)
     }
 
     override func didReceiveMemoryWarning() {
@@ -141,6 +155,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         navigationController?.setNavigationBarHidden(true, animated: animated)
         navigationController?.setToolbarHidden(false, animated: animated)
 
+        notificationsCriticalAlertPermissionsViewModel.updateState()
+        
         updateBolusProgress()
     }
 
@@ -572,23 +588,20 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
     }
 
-    private enum Section: Int {
-        case hud = 0
+    private enum Section: Int, CaseIterable {
+        case tempStatus
+        case hud
         case status
         case charts
-
-        static let count = 3
     }
 
     // MARK: - Chart Section Data
 
-    private enum ChartRow: Int {
-        case glucose = 0
+    private enum ChartRow: Int, CaseIterable {
+        case glucose
         case iob
         case dose
         case cob
-
-        static let count = 4
     }
 
     // MARK: Glucose
@@ -609,10 +622,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     // MARK: - Loop Status Section Data
 
-    private enum StatusRow: Int {
+    private enum StatusRow: Int, CaseIterable {
         case status = 0
-
-        static let count = 1
     }
 
     private enum StatusRowMode {
@@ -791,22 +802,36 @@ final class StatusTableViewController: LoopChartsTableViewController {
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return Section.count
+        return Section.allCases.count
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch Section(rawValue: section)! {
+        case .tempStatus:
+            return notificationsCriticalAlertPermissionsViewModel.showWarning ? 1 : 0
         case .hud:
             return shouldShowHUD ? 1 : 0
         case .charts:
-            return ChartRow.count
+            return ChartRow.allCases.count
         case .status:
-            return shouldShowStatus ? StatusRow.count : 0
+            return shouldShowStatus ? StatusRow.allCases.count : 0
         }
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         switch Section(rawValue: indexPath.section)! {
+        case .tempStatus:
+            let cell = UITableViewCell(style: .default, reuseIdentifier: "tempStatus")
+            cell.imageView?.image = UIImage(systemName: "exclamationmark.triangle.fill")
+            cell.imageView?.tintColor = .red
+            cell.textLabel?.text = NSLocalizedString("Alerts Permissions Disabled", comment: "Warning text for when Notifications or Critical Alerts Permissions is disabled")
+            cell.textLabel?.textColor = .red
+            cell.textLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+            cell.textLabel?.adjustsFontSizeToFitWidth = true
+            cell.accessoryType = .disclosureIndicator
+            cell.backgroundColor = tableView.backgroundColor
+            
+            return cell
         case .hud:
             let cell = tableView.dequeueReusableCell(withIdentifier: HUDViewTableViewCell.className, for: indexPath) as! HUDViewTableViewCell
             hudView = cell.hudView
@@ -1004,7 +1029,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     cell.setSubtitleLabel(label: nil)
                 }
             }
-        case .hud, .status:
+        case .hud, .status, .tempStatus:
             break
         }
     }
@@ -1025,7 +1050,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             case .iob, .dose, .cob:
                 return max(106, 0.21 * availableSize)
             }
-        case .hud, .status:
+        case .hud, .status, .tempStatus:
             return UITableView.automaticDimension
         }
     }
@@ -1120,6 +1145,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
         case .hud:
             break
+        case .tempStatus:
+            presentSettings()
         }
     }
 
@@ -1319,7 +1346,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func presentSettings() {
-        let notificationsCriticalAlertPermissionsViewModel = NotificationsCriticalAlertPermissionsViewModel()
         let deletePumpDataFunc: () -> PumpManagerViewModel.DeleteTestingDataFunc? = { [weak self] in
             (self?.deviceManager.pumpManager is TestingPumpManager) ? {
                 [weak self] in self?.deviceManager.deleteTestingPumpData()
