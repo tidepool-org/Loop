@@ -12,21 +12,36 @@ import LoopKit
 import SwiftUI
 
 class AlertPermissionsChecker {
+    private static let notificationsPermissionsAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
+                                                                                  alertIdentifier: "notificationsPermissionsAlert")
+    private static let notificationsPermissionsAlertContent = Alert.Content(
+        title: NSLocalizedString("Notifications Disabled",
+                                 comment: "Notifications permissions disabled alert title"),
+        body: String(format: NSLocalizedString("Keep Notifications and Critical Alerts turned ON in your phone’s settings to ensure that you can receive %1$@ notifications.",
+                                               comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
+                     Bundle.main.bundleDisplayName),
+        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
+    )
+    private static let notificationsPermissionsAlert = Alert(identifier: notificationsPermissionsAlertIdentifier,
+                                                             foregroundContent: notificationsPermissionsAlertContent,
+                                                             backgroundContent: notificationsPermissionsAlertContent,
+                                                             trigger: .immediate)
+    
     private static let criticalAlertPermissionsAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
                                                                                   alertIdentifier: "criticalAlertPermissionsAlert")
     private static let criticalAlertPermissionsAlertContent = Alert.Content(
-        title: NSLocalizedString("Alert Permissions Disabled",
-                                 comment: "Critical Alert or Notifications permissions disabled alert title"),
+        title: NSLocalizedString("Critical Alerts Disabled",
+                                 comment: "Critical Alert permissions disabled alert title"),
         body: String(format: NSLocalizedString("Keep Notifications and Critical Alerts turned ON in your phone’s settings to ensure that you can receive %1$@ notifications.",
-                                               comment: "Format for critical Alert or Notifications permissions disabled alert body. (1: app name)"),
+                                               comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
                      Bundle.main.bundleDisplayName),
-        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert or Notifications permissions disabled alert button")
+        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert permissions disabled alert button")
     )
     private static let criticalAlertPermissionsAlert = Alert(identifier: criticalAlertPermissionsAlertIdentifier,
                                                              foregroundContent: criticalAlertPermissionsAlertContent,
                                                              backgroundContent: criticalAlertPermissionsAlertContent,
                                                              trigger: .immediate)
-    
+
     private weak var alertManager: AlertManager?
     
     private var isAppInBackground: Bool {
@@ -71,25 +86,43 @@ class AlertPermissionsChecker {
                 let notificationsPermissions = settings.alertSetting
                 let criticalAlertsPermissions = settings.criticalAlertSetting
                 
-                if notificationsPermissions == .disabled || criticalAlertsPermissions == .disabled {
-                    self.maybeNotifyPermissionsDisabled()
+                if notificationsPermissions == .disabled {
+                    self.maybeNotifyNotificationPermissionsDisabled()
                 } else {
-                    self.permissionsEnabled()
+                    self.notificationsPermissionsEnabled()
+                }
+                
+                if criticalAlertsPermissions == .disabled {
+                    self.maybeNotifyCriticalAlertPermissionsDisabled()
+                } else {
+                    self.criticalAlertPermissionsEnabled()
                 }
             }
         }
     }
     
-    private func maybeNotifyPermissionsDisabled() {
-        if !UserDefaults.standard.hasUserBeenNotifiedOfPermissionsAlert {
-            alertManager?.issueAlert(AlertPermissionsChecker.criticalAlertPermissionsAlert)
-            UserDefaults.standard.hasUserBeenNotifiedOfPermissionsAlert = true
+    private func maybeNotifyNotificationPermissionsDisabled() {
+        if !UserDefaults.standard.hasIssuedNotificationsPermissionsAlert {
+            alertManager?.issueAlert(AlertPermissionsChecker.notificationsPermissionsAlert)
+            UserDefaults.standard.hasIssuedNotificationsPermissionsAlert = true
         }
     }
     
-    private func permissionsEnabled() {
+    private func notificationsPermissionsEnabled() {
+        alertManager?.retractAlert(identifier: AlertPermissionsChecker.notificationsPermissionsAlertIdentifier)
+        UserDefaults.standard.hasIssuedNotificationsPermissionsAlert = false
+    }
+    
+    private func maybeNotifyCriticalAlertPermissionsDisabled() {
+        if !UserDefaults.standard.hasIssuedCriticalAlertPermissionsAlert {
+            alertManager?.issueAlert(AlertPermissionsChecker.criticalAlertPermissionsAlert)
+            UserDefaults.standard.hasIssuedCriticalAlertPermissionsAlert = true
+        }
+    }
+    
+    private func criticalAlertPermissionsEnabled() {
         alertManager?.retractAlert(identifier: AlertPermissionsChecker.criticalAlertPermissionsAlertIdentifier)
-        UserDefaults.standard.hasUserBeenNotifiedOfPermissionsAlert = false
+        UserDefaults.standard.hasIssuedCriticalAlertPermissionsAlert = false
     }
     
 }
@@ -97,15 +130,25 @@ class AlertPermissionsChecker {
 extension UserDefaults {
     
     private enum Key: String {
-        case hasUserBeenNotifiedOfPermissionsAlert = "com.loopkit.Loop.HasUserBeenNotifiedOfPermissionsAlert"
+        case hasIssuedNotificationsPermissionsAlert = "com.loopkit.Loop.HasIssuedNotificationsPermissionsAlert"
+        case hasIssuedCriticalAlertPermissionsAlert = "com.loopkit.Loop.HasIssuedCriticalAlertPermissionsAlert"
     }
     
-    var hasUserBeenNotifiedOfPermissionsAlert: Bool {
+    var hasIssuedNotificationsPermissionsAlert: Bool {
         get {
-            return object(forKey: Key.hasUserBeenNotifiedOfPermissionsAlert.rawValue) as? Bool ?? false
+            return object(forKey: Key.hasIssuedNotificationsPermissionsAlert.rawValue) as? Bool ?? false
         }
         set {
-            set(newValue, forKey: Key.hasUserBeenNotifiedOfPermissionsAlert.rawValue)
+            set(newValue, forKey: Key.hasIssuedNotificationsPermissionsAlert.rawValue)
+        }
+    }
+    
+    var hasIssuedCriticalAlertPermissionsAlert: Bool {
+        get {
+            return object(forKey: Key.hasIssuedCriticalAlertPermissionsAlert.rawValue) as? Bool ?? false
+        }
+        set {
+            set(newValue, forKey: Key.hasIssuedCriticalAlertPermissionsAlert.rawValue)
         }
     }
 }
