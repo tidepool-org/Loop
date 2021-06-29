@@ -126,15 +126,16 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         tableView.backgroundColor = .secondarySystemBackground
     
-        tableView.register(TempStatusCell.self, forCellReuseIdentifier: TempStatusCell.className)
+        tableView.register(AlertPermissionsDisabledWarningCell.self, forCellReuseIdentifier: AlertPermissionsDisabledWarningCell.className)
         notificationsCriticalAlertPermissionsViewModel.$showWarning
             .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                let current = self?.tableView.numberOfRows(inSection: Section.tempStatus.rawValue) ?? 0
-                if !$0 && current > 0 {
-                    self?.tableView.deleteRows(at: [IndexPath(row: 0, section: Section.tempStatus.rawValue)], with: .top)
-                } else if $0 && current == 0 {
-                    self?.tableView.insertRows(at: [IndexPath(row: 0, section: Section.tempStatus.rawValue)], with: .top)
+            .sink { [weak self] showWarning in
+                guard let self = self else { return }
+                let isWarningVisible = self.tableView.numberOfRows(inSection: Section.alertPermissionsDisabledWarning.rawValue) != 0
+                if !showWarning && isWarningVisible {
+                    self.tableView.deleteRows(at: [IndexPath(row: 0, section: Section.alertPermissionsDisabledWarning.rawValue)], with: .top)
+                } else if showWarning && !isWarningVisible {
+                    self.tableView.insertRows(at: [IndexPath(row: 0, section: Section.alertPermissionsDisabledWarning.rawValue)], with: .top)
                 }
             }
             .store(in: &cancellables)
@@ -590,7 +591,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private enum Section: Int, CaseIterable {
-        case tempStatus
+        case alertPermissionsDisabledWarning
         case hud
         case status
         case charts
@@ -808,7 +809,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch Section(rawValue: section)! {
-        case .tempStatus:
+        case .alertPermissionsDisabledWarning:
             return notificationsCriticalAlertPermissionsViewModel.showWarning ? 1 : 0
         case .hud:
             return shouldShowHUD ? 1 : 0
@@ -819,7 +820,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
     }
 
-    private class TempStatusCell: UITableViewCell {
+    private class AlertPermissionsDisabledWarningCell: UITableViewCell {
   
         override func updateConfiguration(using state: UICellConfigurationState) {
             super.updateConfiguration(using: state)
@@ -841,8 +842,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         switch Section(rawValue: indexPath.section)! {
-        case .tempStatus:
-            return tableView.dequeueReusableCell(withIdentifier: TempStatusCell.className, for: indexPath) as! TempStatusCell
+        case .alertPermissionsDisabledWarning:
+            return tableView.dequeueReusableCell(withIdentifier: AlertPermissionsDisabledWarningCell.className, for: indexPath) as! AlertPermissionsDisabledWarningCell
         case .hud:
             let cell = tableView.dequeueReusableCell(withIdentifier: HUDViewTableViewCell.className, for: indexPath) as! HUDViewTableViewCell
             hudView = cell.hudView
@@ -1040,7 +1041,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     cell.setSubtitleLabel(label: nil)
                 }
             }
-        case .hud, .status, .tempStatus:
+        case .hud, .status, .alertPermissionsDisabledWarning:
             break
         }
     }
@@ -1061,14 +1062,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
             case .iob, .dose, .cob:
                 return max(106, 0.21 * availableSize)
             }
-        case .hud, .status, .tempStatus:
+        case .hud, .status, .alertPermissionsDisabledWarning:
             return UITableView.automaticDimension
         }
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch Section(rawValue: indexPath.section)! {
-        case .tempStatus:
+        case .alertPermissionsDisabledWarning:
             tableView.deselectRow(at: indexPath, animated: true)
             presentSettings()
         case .hud:
