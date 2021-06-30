@@ -17,7 +17,7 @@ class AlertPermissionsChecker {
     private static let notificationsPermissionsAlertContent = Alert.Content(
         title: NSLocalizedString("Notifications Disabled",
                                  comment: "Notifications permissions disabled alert title"),
-        body: String(format: NSLocalizedString("Keep Notifications and Critical Alerts turned ON in your phone’s settings to ensure that you can receive %1$@ notifications.",
+        body: String(format: NSLocalizedString("Keep Notifications turned ON in your phone’s settings to ensure that you can receive %1$@ notifications.",
                                                comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
                      Bundle.main.bundleDisplayName),
         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
@@ -32,8 +32,8 @@ class AlertPermissionsChecker {
     private static let criticalAlertPermissionsAlertContent = Alert.Content(
         title: NSLocalizedString("Critical Alerts Disabled",
                                  comment: "Critical Alert permissions disabled alert title"),
-        body: String(format: NSLocalizedString("Keep Notifications and Critical Alerts turned ON in your phone’s settings to ensure that you can receive %1$@ notifications.",
-                                               comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
+        body: String(format: NSLocalizedString("Keep Critical Alerts turned ON in your phone’s settings to ensure that you can receive %1$@ critical alerts.",
+                                               comment: "Format for Critical Alerts permissions disabled alert body. (1: app name)"),
                      Bundle.main.bundleDisplayName),
         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert permissions disabled alert button")
     )
@@ -91,11 +91,12 @@ class AlertPermissionsChecker {
                 } else {
                     self.notificationsPermissionsEnabled()
                 }
-                
-                if criticalAlertsPermissions == .disabled {
-                    self.maybeNotifyCriticalAlertPermissionsDisabled()
-                } else {
-                    self.criticalAlertPermissionsEnabled()
+                if FeatureFlags.criticalAlertsEnabled {
+                    if criticalAlertsPermissions == .disabled {
+                        self.maybeNotifyCriticalAlertPermissionsDisabled()
+                    } else {
+                        self.criticalAlertPermissionsEnabled()
+                    }
                 }
             }
         }
