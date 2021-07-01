@@ -1339,10 +1339,10 @@ extension DeviceDataManager: SupportInfoProvider {
 
     private var branchNameIfNotReleaseBranch: String? {
         return Bundle.main.gitBranch.filter { branch in
-            return branch != ""
-                && branch != "main"
-                && branch != "master"
-                && !branch.starts(with: "release/")
+            return branch != "" &&
+                branch != "main" &&
+                branch != "master" &&
+                !branch.starts(with: "release/")
         }
     }
     
