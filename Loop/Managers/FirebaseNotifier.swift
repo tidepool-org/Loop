@@ -35,57 +35,62 @@ final class FirebaseNotifier: FollowerNotifier {
     var name: String? {
         UserDefaults.standard.username ?? id.map { String($0.prefix(6)) }
     }
-
+    
     init() {
         // HACKORAMA
         ref = Database.database().reference()
     }
-}
-
-extension FirebaseNotifier {
     
-    func tellFollowers(readingResult: CGMReadingResult,
-                       cgmStatusBadge: DeviceStatusBadge?,
-                       glucoseDisplayFunc: @escaping (GlucoseSampleValue?) -> GlucoseDisplayable?) {
+    // HACKORAMA
+    // ICK ICK ICK ICK this stores ALL data so it ALL can be published at once.
+    private var cache: [AnyHashable : Any] = [:]
+    private func sendToFirebase(_ new: [AnyHashable : Any]) {
         guard let id = id else {
             return
         }
         DispatchQueue.main.async { [self] in
-            switch readingResult {
-            case .newData(let values):
-                if let lastGlucose = values.last {
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.dateStyle = .none
-                    dateFormatter.timeStyle = .short
-                    
-                    // Unfortunately, we only have an image here.  We can't really introspect it, so here we hack away!
-                    let badge: String? = {
-                        switch cgmStatusBadge?.image?.accessibilityIdentifier {
-                        case "drop.circle.fill": return "calibration"
-                        case "battery.circle.fill": return "battery"
-                        case .some(let thing): return thing
-                        default: return nil
-                        }
-                    }()
-                    // TODO: Use strong type FolloweeData?
-                    ref.child("followees").child(id).updateChildValues(
-                        [
-                            "name": name as Any,
-                            "date": dateFormatter.string(from: lastGlucose.date),
-                            "glucose": lastGlucose.quantity.doubleValue(for: .milligramsPerDeciliter, withRounding: true),
-                            "glucoseCategory": glucoseDisplayFunc(lastGlucose.quantitySample)?.glucoseRangeCategory?.glucoseCategoryColor.rawValue as Any,
-                            "trendCategory": glucoseDisplayFunc(lastGlucose.quantitySample)?.glucoseRangeCategory?.trendCategoryColor.rawValue as Any,
-                            "trend": glucoseDisplayFunc(lastGlucose.quantitySample)?.trendType?.arrows as Any,
-                            "badge": badge as Any
-                        ]
-                    )
-                }
-            case .unreliableData:
-                // TODO HACKORAMA
-                break
-            default:
-                break
+            cache.merge(new) { (_, new) in new }
+            ref.child("followees").child(id).updateChildValues(cache)
+        }
+    }
+}
+
+extension FirebaseNotifier {
+        
+    func tellFollowers(readingResult: CGMReadingResult,
+                       cgmStatusBadge: DeviceStatusBadge?,
+                       glucoseDisplayFunc: @escaping (GlucoseSampleValue?) -> GlucoseDisplayable?) {
+        switch readingResult {
+        case .newData(let values):
+            if let lastGlucose = values.last {
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateStyle = .none
+                dateFormatter.timeStyle = .short
+                
+                // Unfortunately, we only have an image here.  We can't really introspect it, so here we hack away!
+                let badge: String? = {
+                    switch cgmStatusBadge?.image?.accessibilityIdentifier {
+                    case "drop.circle.fill": return "calibration"
+                    case "battery.circle.fill": return "battery"
+                    case .some(let thing): return thing
+                    default: return nil
+                    }
+                }()
+                sendToFirebase([
+                    "name": name as Any,
+                    "date": dateFormatter.string(from: lastGlucose.date),
+                    "glucose": lastGlucose.quantity.doubleValue(for: .milligramsPerDeciliter, withRounding: true),
+                    "glucoseCategory": glucoseDisplayFunc(lastGlucose.quantitySample)?.glucoseRangeCategory?.glucoseCategoryColor.rawValue as Any,
+                    "trendCategory": glucoseDisplayFunc(lastGlucose.quantitySample)?.glucoseRangeCategory?.trendCategoryColor.rawValue as Any,
+                    "trend": glucoseDisplayFunc(lastGlucose.quantitySample)?.trendType?.arrows as Any,
+                    "badge": badge as Any
+                ])
             }
+        case .unreliableData:
+            // TODO HACKORAMA
+            break
+        default:
+            break
         }
     }
 }
@@ -93,29 +98,21 @@ extension FirebaseNotifier {
 extension FirebaseNotifier {
     
     func tellFollowers(doseStore: DoseStoreProtocol, netBasal: NetBasal?, carbsOnBoard: CarbValue?, isClosedLoop: Bool?, lastLoopCompleted: Date?) {
-        guard let id = id else {
-            return
-        }
         doseStore.insulinOnBoard(at: Date()) { (result) in
             if case .success(let iobValue) = result {
-                DispatchQueue.main.async { [self] in
-                    let activeInsulin = iobValue.value
-                    let reservoirVolume = doseStore.lastReservoirValue?.unitVolume
-                    let activeCarbs = carbsOnBoard.map { $0.quantity.doubleValue(for: .gram(), withRounding: true) } ?? 0
-                    // TODO: Use strong type FolloweeData?
-                    self.ref.child("followees").child(id).updateChildValues(
-                        [
-                            "name": name as Any,
-                            "isClosedLoop": isClosedLoop as Any,
-                            "loopCompletionFreshness": LoopCompletionFreshness(lastCompletion: lastLoopCompleted).description,
-                            "netBasalRate": netBasal.map { $0.rate } as Any,
-                            "netBasalPercent": netBasal.map { $0.percent } as Any,
-                            "activeCarbs": activeCarbs,
-                            "reservoir": reservoirVolume as Any,
-                            "activeInsulin": activeInsulin
-                        ]
-                    )
-                }
+                let activeInsulin = iobValue.value
+                let reservoirVolume = doseStore.lastReservoirValue?.unitVolume
+                let activeCarbs = carbsOnBoard.map { $0.quantity.doubleValue(for: .gram(), withRounding: true) } ?? 0
+                self.sendToFirebase([
+                    "name": self.name as Any,
+                    "isClosedLoop": isClosedLoop as Any,
+                    "loopCompletionFreshness": LoopCompletionFreshness(lastCompletion: lastLoopCompleted).description,
+                    "netBasalRate": netBasal.map { $0.rate } as Any,
+                    "netBasalPercent": netBasal.map { $0.percent } as Any,
+                    "activeCarbs": activeCarbs,
+                    "reservoir": reservoirVolume as Any,
+                    "activeInsulin": activeInsulin
+                ])
             }
         }
     }
@@ -123,23 +120,15 @@ extension FirebaseNotifier {
 
 extension FirebaseNotifier: AlertIssuer {
     func issueAlert(_ alert: Alert) {
-        guard let id = id else {
-            return
-        }
-
         if let title = (alert.foregroundContent ?? alert.backgroundContent)?.title, alert.trigger == .immediate {
-            ref.child("followees").child(id).updateChildValues([
+            sendToFirebase([
                 "alert": title
             ])
         }
     }
     
     func retractAlert(identifier: Alert.Identifier) {
-        guard let id = id else {
-            return
-        }
-
-        ref.child("followees").child(id).updateChildValues([
+        sendToFirebase([
             "alert": ""
         ])
     }
