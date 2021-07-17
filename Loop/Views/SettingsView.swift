@@ -83,12 +83,14 @@ extension SettingsView {
             Toggle(isOn: closedLoopToggleState) {
                 VStack(alignment: .leading) {
                     Text(NSLocalizedString("Closed Loop", comment: "The title text for the looping enabled switch cell"))
-                    if !viewModel.isClosedLoopAllowed {
+                    if !viewModel.isOnboardingComplete {
+                        DescriptiveText(label: NSLocalizedString("Closed Loop requires Setup to be Complete", comment: "The description text for the looping enabled switch cell when onboarding is not complete"))
+                    } else if !viewModel.isClosedLoopAllowed {
                         DescriptiveText(label: NSLocalizedString("Closed Loop requires an active CGM Sensor Session", comment: "The description text for the looping enabled switch cell when closed loop is not allowed"))
                     }
                 }
             }
-            .disabled(!viewModel.isClosedLoopAllowed)
+            .disabled(!viewModel.isOnboardingComplete || !viewModel.isClosedLoopAllowed)
         }
     }
 
@@ -162,7 +164,7 @@ extension SettingsView {
                         imageView: deviceImage(uiImage: viewModel.pumpManagerSettingsViewModel.image()),
                         label: viewModel.pumpManagerSettingsViewModel.name(),
                         descriptiveText: NSLocalizedString("Insulin Pump", comment: "Descriptive text for Insulin Pump"))
-        } else {
+        } else if viewModel.isOnboardingComplete {
             LargeButton(action: { self.pumpChooserIsPresented = true },
                         includeArrow: false,
                         imageView: AnyView(plusImage),
@@ -171,6 +173,8 @@ extension SettingsView {
                 .actionSheet(isPresented: $pumpChooserIsPresented) {
                     ActionSheet(title: Text("Add Pump", comment: "The title of the pump chooser in settings"), buttons: pumpChoices)
             }
+        } else {
+            EmptyView()
         }
     }
     
@@ -379,6 +383,10 @@ fileprivate let servicesViewModel = ServicesViewModel(showServices: true,
                                                       activeServices: { [FakeService1()] })
 
 
+fileprivate class FakeIsOnboardingCompletePublisher {
+    @Published var mockIsOnboardingComplete: Bool = false
+}
+
 fileprivate class FakeClosedLoopAllowedPublisher {
     @Published var mockIsClosedLoopAllowed: Bool = false
 }
@@ -402,6 +410,7 @@ public struct SettingsView_Previews: PreviewProvider {
     }
     
     public static var previews: some View {
+        let fakeIsOnboardingCompletePublisher = FakeIsOnboardingCompletePublisher()
         let fakeClosedLoopAllowedPublisher = FakeClosedLoopAllowedPublisher()
         let displayGlucoseUnitObservable = DisplayGlucoseUnitObservable(displayGlucoseUnit: .milligramsPerDeciliter)
         let viewModel = SettingsViewModel(notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel(),
@@ -414,6 +423,7 @@ public struct SettingsView_Previews: PreviewProvider {
                                           syncPumpSchedule: nil,
                                           sensitivityOverridesEnabled: false,
                                           initialDosingEnabled: true,
+                                          isOnboardingComplete: fakeIsOnboardingCompletePublisher.$mockIsOnboardingComplete,
                                           isClosedLoopAllowed: fakeClosedLoopAllowedPublisher.$mockIsClosedLoopAllowed,
                                           supportInfoProvider: MockSupportInfoProvider(),
                                           dosingStrategy: .automaticBolus,

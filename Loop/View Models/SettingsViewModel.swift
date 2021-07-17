@@ -85,6 +85,7 @@ public class SettingsViewModel: ObservableObject {
     let sensitivityOverridesEnabled: Bool
     let supportInfoProvider: SupportInfoProvider
 
+    @Published var isOnboardingComplete: Bool
     @Published var isClosedLoopAllowed: Bool
     @Published var dosingStrategy: DosingStrategy {
         didSet {
@@ -110,6 +111,7 @@ public class SettingsViewModel: ObservableObject {
                 syncPumpSchedule: (() -> PumpManager.SyncSchedule?)?,
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
+                isOnboardingComplete: Published<Bool>.Publisher,
                 isClosedLoopAllowed: Published<Bool>.Publisher,
                 supportInfoProvider: SupportInfoProvider,
                 dosingStrategy: DosingStrategy,
@@ -126,6 +128,7 @@ public class SettingsViewModel: ObservableObject {
         self.syncPumpSchedule = syncPumpSchedule
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
+        self.isOnboardingComplete = false
         self.isClosedLoopAllowed = false
         self.dosingStrategy = dosingStrategy
         self.supportInfoProvider = supportInfoProvider
@@ -146,6 +149,9 @@ public class SettingsViewModel: ObservableObject {
         }
         .store(in: &cancellables)
         
+        isOnboardingComplete
+            .assign(to: \.isOnboardingComplete, on: self)
+            .store(in: &cancellables)
         isClosedLoopAllowed
             .assign(to: \.isClosedLoopAllowed, on: self)
             .store(in: &cancellables)

@@ -10,6 +10,14 @@ import HealthKit
 import LoopKit
 import LoopKitUI
 
+class OnboardingStatus {
+    @Published var isComplete: Bool
+
+    init(isComplete: Bool) {
+        self.isComplete = isComplete
+    }
+}
+
 class OnboardingManager {
     private let pluginManager: PluginManager
     private let bluetoothProvider: BluetoothProvider
@@ -19,8 +27,13 @@ class OnboardingManager {
     private weak var windowProvider: WindowProvider?
     private let userDefaults: UserDefaults
 
-    private var isOnboarded: Bool {
-        didSet { userDefaults.onboardingManagerIsOnboarded = isOnboarded }
+    public let status: OnboardingStatus
+
+    private var isComplete: Bool {
+        didSet {
+            userDefaults.onboardingManagerIsComplete = isComplete
+            status.isComplete = isComplete
+        }
     }
     private var completedOnboardingIdentifiers: [String] = [] {
         didSet { userDefaults.onboardingManagerCompletedOnboardingIdentifiers = completedOnboardingIdentifiers }
@@ -40,8 +53,12 @@ class OnboardingManager {
         self.windowProvider = windowProvider
         self.userDefaults = userDefaults
 
-        self.isOnboarded = userDefaults.onboardingManagerIsOnboarded && loopDataManager.therapySettings.isComplete
-        if !isOnboarded {
+        let isComplete = userDefaults.onboardingManagerIsComplete && loopDataManager.therapySettings.isComplete
+
+        self.status = OnboardingStatus(isComplete: isComplete)
+
+        self.isComplete = isComplete
+        if !isComplete {
             if loopDataManager.therapySettings.isComplete {
                 self.completedOnboardingIdentifiers = userDefaults.onboardingManagerCompletedOnboardingIdentifiers
             }
@@ -52,30 +69,41 @@ class OnboardingManager {
         }
     }
 
-    func onboard(_ completion: @escaping () -> Void) {
+    func launch(_ completion: @escaping () -> Void) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        precondition(self.completion == nil)
+
         self.completion = completion
-        resumeOnboarding()
+        continueOnboarding()
     }
 
-    private func resumeOnboarding() {
+    func resume() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        precondition(self.completion == nil)
+
+        self.completion = {
+            self.windowProvider?.window?.rootViewController?.dismiss(animated: true, completion: nil)
+        }
+        continueOnboarding(resumeSuspended: true)
+    }
+
+    private func continueOnboarding(resumeSuspended: Bool = false) {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        guard !isOnboarded else {
+        guard !isComplete else {
+            complete()
+            return
+        }
+        guard let onboarding = nextActiveOnboarding else {
+            authorizeAndComplete()
+            return
+        }
+        guard !onboarding.isSuspended || resumeSuspended else {
             complete()
             return
         }
 
-        if let onboarding = nextActiveOnboarding {
-            displayOnboarding(onboarding)
-            return
-        }
-
-        ensureAuthorization {
-            DispatchQueue.main.async {
-                self.isOnboarded = true
-                self.complete()
-            }
-        }
+        displayOnboarding(onboarding)
     }
 
     private var nextActiveOnboarding: OnboardingUI? {
@@ -111,17 +139,22 @@ class OnboardingManager {
         onboardingViewController.serviceOnboardingDelegate = servicesManager
         onboardingViewController.completionDelegate = self
 
-        windowProvider?.window?.rootViewController = onboardingViewController
+        if onboarding.isSuspended {
+            onboardingViewController.isModalInPresentation = true
+            windowProvider?.window?.rootViewController?.present(onboardingViewController, animated: true, completion: nil)
+        } else {
+            windowProvider?.window?.rootViewController = onboardingViewController
+        }
     }
 
     private func completeActiveOnboarding() {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        if let activeOnboarding = self.activeOnboarding {
+        if let activeOnboarding = self.activeOnboarding, !activeOnboarding.isSuspended {
             completedOnboardingIdentifiers.append(activeOnboarding.onboardingIdentifier)
             self.activeOnboarding = nil
         }
-        resumeOnboarding()
+        continueOnboarding()
     }
 
     private func ensureAuthorization(_ completion: @escaping () -> Void) {
@@ -158,6 +191,15 @@ class OnboardingManager {
             return
         }
         authorizeBluetooth { _ in completion() }
+    }
+
+    private func authorizeAndComplete() {
+        ensureAuthorization {
+            DispatchQueue.main.async {
+                self.isComplete = true
+                self.complete()
+            }
+        }
     }
 
     private func complete() {
@@ -401,14 +443,14 @@ enum OnboardingError: LocalizedError {
 
 fileprivate extension UserDefaults {
     private enum Key: String {
-        case onboardingManagerIsOnboarded = "com.loopkit.Loop.OnboardingManager.IsOnboarded"
+        case onboardingManagerIsComplete = "com.loopkit.Loop.OnboardingManager.IsComplete"
         case onboardingManagerCompletedOnboardingIdentifiers = "com.loopkit.Loop.OnboardingManager.CompletedOnboardingIdentifiers"
         case onboardingManagerActiveOnboardingRawValue = "com.loopkit.Loop.OnboardingManager.ActiveOnboardingRawValue"
     }
 
-    var onboardingManagerIsOnboarded: Bool {
-        get { bool(forKey: Key.onboardingManagerIsOnboarded.rawValue) }
-        set { set(newValue, forKey: Key.onboardingManagerIsOnboarded.rawValue) }
+    var onboardingManagerIsComplete: Bool {
+        get { bool(forKey: Key.onboardingManagerIsComplete.rawValue) }
+        set { set(newValue, forKey: Key.onboardingManagerIsComplete.rawValue) }
     }
 
     var onboardingManagerCompletedOnboardingIdentifiers: [String] {

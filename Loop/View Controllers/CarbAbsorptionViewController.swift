@@ -26,6 +26,8 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     
     private var allowEditing: Bool = true
 
+    var onboardingStatus: OnboardingStatus!
+
     var closedLoopStatus: ClosedLoopStatus!
 
     override func viewDidLoad() {
@@ -59,6 +61,8 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
         if let gestureRecognizer = charts.gestureRecognizer {
             tableView.addGestureRecognizer(gestureRecognizer)
         }
+
+        navigationItem.rightBarButtonItem?.isEnabled = onboardingStatus.isComplete
 
         if !closedLoopStatus.isClosedLoop {
             allowEditing = false

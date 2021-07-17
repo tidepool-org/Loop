@@ -41,6 +41,8 @@ final class DeviceDataManager {
 
     // MARK: - App-level responsibilities
 
+    var resumeOnboardingProvider: ResumeOnboardingProvider
+
     private var alertPresenter: AlertPresenter
     
     private var deliveryUncertaintyAlertManager: DeliveryUncertaintyAlertManager?
@@ -187,6 +189,7 @@ final class DeviceDataManager {
 
     init(pluginManager: PluginManager,
          alertManager: AlertManager,
+         resumeOnboardingProvider: ResumeOnboardingProvider,
          bluetoothProvider: BluetoothProvider,
          alertPresenter: AlertPresenter,
          closedLoopStatus: ClosedLoopStatus)
@@ -210,6 +213,7 @@ final class DeviceDataManager {
 
         self.pluginManager = pluginManager
         self.alertManager = alertManager
+        self.resumeOnboardingProvider = resumeOnboardingProvider
         self.bluetoothProvider = bluetoothProvider
         self.alertPresenter = alertPresenter
         
@@ -836,6 +840,10 @@ extension DeviceDataManager: CGMManagerOnboardingDelegate {
     func cgmManagerOnboarding(didOnboardCGMManager cgmManager: CGMManagerUI) {
         precondition(cgmManager.isOnboarded)
         log.default("CGM manager with identifier '%{public}@' onboarded", cgmManager.managerIdentifier)
+
+        DispatchQueue.main.async {
+            self.refreshDeviceData()
+        }
     }
 }
 
@@ -906,7 +914,10 @@ extension DeviceDataManager: PumpManagerDelegate {
     func refreshDeviceData() {
         refreshCGM() {
             self.queue.async {
-                self.pumpManager?.ensureCurrentPumpData(completion: nil)
+                guard let pumpManager = self.pumpManager, pumpManager.isOnboarded else {
+                    return
+                }
+                pumpManager.ensureCurrentPumpData(completion: nil)
             }
         }
     }
@@ -1043,12 +1054,15 @@ extension DeviceDataManager: PumpManagerOnboardingDelegate {
     func pumpManagerOnboarding(didCreatePumpManager pumpManager: PumpManagerUI) {
         log.default("Pump manager with identifier '%{public}@' created", pumpManager.managerIdentifier)
         self.pumpManager = pumpManager
-        self.deliveryUncertaintyAlertManager = DeliveryUncertaintyAlertManager(pumpManager: pumpManager, alertPresenter: alertPresenter)
     }
 
     func pumpManagerOnboarding(didOnboardPumpManager pumpManager: PumpManagerUI) {
         precondition(pumpManager.isOnboarded)
         log.default("Pump manager with identifier '%{public}@' onboarded", pumpManager.managerIdentifier)
+
+        DispatchQueue.main.async {
+            self.refreshDeviceData()
+        }
     }
 }
 

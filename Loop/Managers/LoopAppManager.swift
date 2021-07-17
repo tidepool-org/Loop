@@ -12,6 +12,14 @@ import Combine
 import LoopKit
 import LoopKitUI
 
+protocol ResumeOnboardingProvider: AnyObject {
+    /// Onboarding status
+    var onboardingStatus: OnboardingStatus { get }
+
+    /// Resume onboarding from where suspended.
+    func resumeOnboarding()
+}
+
 public protocol AlertPresenter: AnyObject {
     /// Present the alert view controller, with or without animation.
     /// - Parameters:
@@ -133,6 +141,7 @@ class LoopAppManager: NSObject {
         self.trustedTimeChecker = TrustedTimeChecker(alertManager: alertManager)
         self.deviceDataManager = DeviceDataManager(pluginManager: pluginManager,
                                                    alertManager: alertManager,
+                                                   resumeOnboardingProvider: self,
                                                    bluetoothProvider: bluetoothStateManager,
                                                    alertPresenter: self,
                                                    closedLoopStatus: closedLoopStatus)
@@ -150,20 +159,20 @@ class LoopAppManager: NSObject {
 
         deviceDataManager.analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
-        self.state = state.next
-
         closedLoopStatus.$isClosedLoopAllowed
             .combineLatest(deviceDataManager.loopManager.$dosingEnabled)
             .map { $0 && $1 }
             .assign(to: \.closedLoopStatus.isClosedLoop, on: self)
             .store(in: &cancellables)
+
+        self.state = state.next
     }
 
     private func launchOnboarding() {
         dispatchPrecondition(condition: .onQueue(.main))
         precondition(state == .launchOnboarding)
 
-        onboardingManager.onboard {
+        onboardingManager.launch {
             DispatchQueue.main.async {
                 self.state = self.state.next
                 self.resumeLaunch()
@@ -177,6 +186,7 @@ class LoopAppManager: NSObject {
 
         let storyboard = UIStoryboard(name: "Main", bundle: Bundle(for: Self.self))
         let statusTableViewController = storyboard.instantiateViewController(withIdentifier: "MainStatusViewController") as! StatusTableViewController
+        statusTableViewController.resumeOnboardingProvider = self
         statusTableViewController.closedLoopStatus = closedLoopStatus
         statusTableViewController.deviceManager = deviceDataManager
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
@@ -294,6 +304,19 @@ class LoopAppManager: NSObject {
     private var rootViewController: UIViewController? {
         get { windowProvider?.window?.rootViewController }
         set { windowProvider?.window?.rootViewController = newValue }
+    }
+}
+
+// MARK: - ResumeOnboardingProvider
+
+extension LoopAppManager: ResumeOnboardingProvider {
+    var onboardingStatus: OnboardingStatus { onboardingManager.status }
+
+    func resumeOnboarding() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        precondition(state == .launchComplete)
+
+        onboardingManager.resume()
     }
 }
 
