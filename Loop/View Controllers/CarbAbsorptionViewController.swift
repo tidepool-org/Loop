@@ -26,6 +26,8 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     
     private var allowEditing: Bool = true
 
+    var closedLoopStatus: ClosedLoopStatus!
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -52,20 +54,13 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
                     self?.reloadData(animated: true)
                 }
             },
-            notificationCenter.addObserver(forName: .HKUserPreferencesDidChange, object: deviceManager.glucoseStore.healthStore, queue: nil) {[weak self] _ in
-                DispatchQueue.main.async {
-                    self?.log.debug("[reloadData] for HealthKit unit preference change")
-                    self?.unitPreferencesDidChange(to: self?.deviceManager.glucoseStore.preferredUnit)
-                    self?.refreshContext = RefreshContext.all
-                }
-            }
         ]
 
         if let gestureRecognizer = charts.gestureRecognizer {
             tableView.addGestureRecognizer(gestureRecognizer)
         }
 
-        if !deviceManager.isClosedLoop {
+        if !closedLoopStatus.isClosedLoop {
             allowEditing = false
         }
         
@@ -113,6 +108,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     }
 
     override func glucoseUnitDidChange() {
+        self.log.debug("[reloadData] for HealthKit unit preference change")
         refreshContext = RefreshContext.all
     }
 
@@ -504,7 +500,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     
     @IBAction func presentCarbEntryScreen() {
         let navigationWrapper: UINavigationController
-        if deviceManager.isClosedLoop {
+        if closedLoopStatus.isClosedLoop {
             let carbEntryViewController = UIStoryboard(name: "Main", bundle: Bundle(for: AppDelegate.self)).instantiateViewController(withIdentifier: "CarbEntryViewController") as! CarbEntryViewController
             
             carbEntryViewController.deviceManager = deviceManager
@@ -542,4 +538,3 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
 
     @IBAction func unwindFromEditing(_ segue: UIStoryboardSegue) {}
 }
-

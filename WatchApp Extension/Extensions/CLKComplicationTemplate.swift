@@ -21,7 +21,7 @@ extension CLKComplicationTemplate {
         recencyInterval: TimeInterval,
         chartGenerator makeChart: () -> UIImage?
     ) -> CLKComplicationTemplate? {
-        guard let glucose = context.glucose, let unit = context.preferredGlucoseUnit else {
+        guard let glucose = context.glucose, let unit = context.displayGlucoseUnit else {
             return nil
         }
         
@@ -62,7 +62,7 @@ extension CLKComplicationTemplate {
         let isGlucoseStale = date.timeIntervalSince(glucoseDate) > recencyInterval
 
         if isGlucoseStale {
-            glucoseString = "---"
+            glucoseString = NSLocalizedString("---", comment: "No glucose value representation (3 dashes for mg/dL; no spaces as this will get truncated in the watch complication)")
             trendString = ""
         } else {
             guard let formattedGlucose = formatter.string(from: glucose.doubleValue(for: unit)) else {
@@ -83,8 +83,6 @@ extension CLKComplicationTemplate {
             tintColor = .agingColor
         case .stale:
             tintColor = .staleColor
-        case .unknown:
-            tintColor = .disabledButtonColor
         }
 
         let glucoseAndTrend = "\(glucoseString)\(trendString)"

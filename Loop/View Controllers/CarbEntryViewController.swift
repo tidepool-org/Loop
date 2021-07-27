@@ -30,7 +30,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     var preferredCarbUnit = HKUnit.gram()
     
     private var glucoseUnit: HKUnit {
-        return deviceManager.glucoseStore.preferredUnit ?? .milligramsPerDeciliter
+        return deviceManager.displayGlucoseUnitObservable.displayGlucoseUnit
     }
 
     var maxQuantity = HKQuantity(unit: .gram(), doubleValue: 250)
@@ -111,9 +111,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     private var shouldDisplayAccurateCarbEntryWarning = false {
         didSet {
             if shouldDisplayAccurateCarbEntryWarning != oldValue {
-                DispatchQueue.main.async {
-                    self.displayAccuracyWarning()
-                }
+                self.displayAccuracyWarning()
             }
         }
     }
@@ -131,7 +129,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
                 date: lastEntryDate,
                 quantity: quantity,
                 startDate: date,
-                foodType: foodType,
+                foodType: foodType ?? selectedDefaultAbsorptionTimeEmoji,
                 absorptionTime: absorptionTime
             )
         } else {
@@ -218,22 +216,30 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
     private var foodKeyboard: EmojiInputController!
     
     private func updateDisplayAccurateCarbEntryWarning() {
-        deviceManager.loopManager.getLoopState { [weak self] (_, state) in
-            let endDate = Date()
-            let startDate = endDate.addingTimeInterval(.minutes(-20))
-            let threshold = HKQuantity(unit: GlucoseEffectVelocity.unit, doubleValue: 3)
+        let now = Date()
+        let startDate = now.addingTimeInterval(-LoopConstants.missedMealWarningGlucoseRecencyWindow)
 
-            let filteredInsulinCounteractionEffects = state.insulinCounteractionEffects.filterDateRange(startDate, endDate)
-
-            // at least 3 insulin counteraction effects are required to calculate the average
-            guard filteredInsulinCounteractionEffects.count >= 3,
-                let averageInsulinCounteractionEffect = filteredInsulinCounteractionEffects.average(unit: GlucoseEffectVelocity.unit) else
-            {
-                self?.shouldDisplayAccurateCarbEntryWarning = false
-                return
+        deviceManager.glucoseStore.getGlucoseSamples(start: startDate, end: nil) { [weak self] (result) -> Void in
+            DispatchQueue.main.async {
+                switch result {
+                case .failure:
+                    self?.shouldDisplayAccurateCarbEntryWarning = false
+                case .success(let samples):
+                    let filteredSamples = samples.filterDateRange(startDate, now)
+                    guard let startSample = filteredSamples.first, let endSample = filteredSamples.last else {
+                        self?.shouldDisplayAccurateCarbEntryWarning = false
+                        return
+                    }
+                    let duration = endSample.startDate.timeIntervalSince(startSample.startDate)
+                    guard duration >= LoopConstants.missedMealWarningVelocitySampleMinDuration else {
+                        self?.shouldDisplayAccurateCarbEntryWarning = false
+                        return
+                    }
+                    let delta = endSample.quantity.doubleValue(for: .milligramsPerDeciliter) - startSample.quantity.doubleValue(for: .milligramsPerDeciliter)
+                    let velocity = delta / duration.minutes // Unit = mg/dL/m
+                    self?.shouldDisplayAccurateCarbEntryWarning = velocity > LoopConstants.missedMealWarningGlucoseRiseThreshold
+                }
             }
-
-            self?.shouldDisplayAccurateCarbEntryWarning = averageInsulinCounteractionEffect >= threshold
         }
     }
     
@@ -490,7 +496,7 @@ final class CarbEntryViewController: LoopChartsTableViewController, Identifiable
             selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji
         )
 
-        let bolusEntryView = BolusEntryView(viewModel: viewModel)
+        let bolusEntryView = BolusEntryView(viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
 
         // After confirming a bolus, pop back to this controller's predecessor, i.e. all the way back out of the carb flow.
         let predecessorViewControllerType = (navigationController?.viewControllers.dropLast().last).map { type(of: $0) } ?? UIViewController.self

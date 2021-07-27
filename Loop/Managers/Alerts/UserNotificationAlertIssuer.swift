@@ -1,5 +1,5 @@
 //
-//  UserNotificationAlertPresenter.swift
+//  UserNotificationAlertIssuer.swift
 //  LoopKit
 //
 //  Created by Rick Pasetto on 4/9/20.
@@ -7,11 +7,12 @@
 //
 
 import LoopKit
+import UIKit
 
-class UserNotificationAlertPresenter: AlertPresenter {
+class UserNotificationAlertIssuer: AlertIssuer {
     
     let userNotificationCenter: UserNotificationCenter
-    let log = DiagnosticLog(category: "UserNotificationAlertPresenter")
+    let log = DiagnosticLog(category: "UserNotificationAlertIssuer")
     
     init(userNotificationCenter: UserNotificationCenter) {
         self.userNotificationCenter = userNotificationCenter
@@ -45,7 +46,7 @@ class UserNotificationAlertPresenter: AlertPresenter {
     }
 }
 
-extension UserNotificationAlertPresenter: AlertManagerResponder {
+extension UserNotificationAlertIssuer: AlertManagerResponder {
     func acknowledgeAlert(identifier: Alert.Identifier) {
         DispatchQueue.main.async {
             self.log.debug("Removing notification %@ from delivered notifications", identifier.value)

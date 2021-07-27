@@ -20,7 +20,7 @@ extension UIAlertController {
      */
     internal convenience init(workoutDurationSelectionHandler handler: @escaping (_ duration: TimeInterval) -> Void) {
         self.init(
-            title: NSLocalizedString("Use Workout Glucose Targets", comment: "The title of the alert controller used to select a duration for workout targets"),
+            title: NSLocalizedString("Use Workout Preset", comment: "The title of the alert controller used to select a duration for workout targets"),
             message: nil,
             preferredStyle: .actionSheet
         )
@@ -37,9 +37,30 @@ extension UIAlertController {
             })
         }
 
-        let distantFuture = NSLocalizedString("Until I turn off", comment: "The title of a target alert action specifying an workout targets duration until it is turned off by the user")
+        let distantFuture = NSLocalizedString("Until I turn off", comment: "The title of a target alert action specifying workout targets duration until it is turned off by the user")
         addAction(UIAlertAction(title: distantFuture, style: .default) { _ in
             handler(.infinity)
+        })
+
+        addCancelAction()
+    }
+    
+    /**
+     Initializes an ActionSheet-styled controller for selecting a pre-meal preset duration
+     
+     - parameter handler: A closure to execute when the sheet is dismissed after selection. The closure has a single argument:
+        - duration: The duration for which the pre-meal preset is to be enabled
+     */
+    internal convenience init(premealDurationSelectionHandler handler: @escaping (_ duration: TimeInterval) -> Void) {
+        self.init(
+            title: NSLocalizedString("Use Pre-Meal Preset", comment: "The title of the alert controller used to select a duration for pre-meal targets"),
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+
+        let distantFuture = NSLocalizedString("Until I enter carbs", comment: "The title of a target alert action specifying pre-meal targets duration for 1 hour or until the user enters carbs (whichever comes first).")
+        addAction(UIAlertAction(title: distantFuture, style: .default) { _ in
+            handler(.hours(1))
         })
 
         addCancelAction()
@@ -48,22 +69,22 @@ extension UIAlertController {
     /// Initializes an action sheet-styled controller for selecting a PumpManager
     ///
     /// - Parameters:
-    ///   - pumpManagers: An array of available PumpManagers
+    ///   - availablePumpManagers: An array of available PumpManagers
     ///   - selectionHandler: A closure to execute when a manager is selected
     ///   - identifier: Identifier of the selected PumpManager
-    internal convenience init(pumpManagers: [AvailableDevice], selectionHandler: @escaping (_ identifier: String) -> Void) {
+    internal convenience init(availablePumpManagers: [PumpManagerDescriptor], selectionHandler: @escaping (_ identifier: String) -> Void) {
         self.init(
             title: NSLocalizedString("Add Pump", comment: "Action sheet title selecting Pump"),
             message: nil,
             preferredStyle: .actionSheet
         )
 
-        for device in pumpManagers {
+        for availablePumpManager in availablePumpManagers {
             addAction(UIAlertAction(
-                title: device.localizedTitle,
+                title: availablePumpManager.localizedTitle,
                 style: .default,
                 handler: { (_) in
-                    selectionHandler(device.identifier)
+                    selectionHandler(availablePumpManager.identifier)
                 }
             ))
         }
@@ -72,22 +93,22 @@ extension UIAlertController {
     /// Initializes an action sheet-styled controller for selecting a CGMManager
     ///
     /// - Parameters:
-    ///   - cgmManagers: An array of available CGMManagers
+    ///   - availableCGMManagers: An array of available CGMManagers
     ///   - selectionHandler: A closure to execute when either a new CGMManager or the current PumpManager is selected
     ///   - identifier: Identifier of the selected CGMManager
-    internal convenience init(cgmManagers: [AvailableDevice], selectionHandler: @escaping (_ identifier: String) -> Void) {
+    internal convenience init(availableCGMManagers: [CGMManagerDescriptor], selectionHandler: @escaping (_ identifier: String) -> Void) {
         self.init(
             title: NSLocalizedString("Add CGM", comment: "Action sheet title selecting CGM"),
             message: nil,
             preferredStyle: .actionSheet
         )
         
-        for manager in cgmManagers {
+        for availableCGMManager in availableCGMManagers {
             addAction(UIAlertAction(
-                title: manager.localizedTitle,
+                title: availableCGMManager.localizedTitle,
                 style: .default,
                 handler: { (_) in
-                    selectionHandler(manager.identifier)
+                    selectionHandler(availableCGMManager.identifier)
             }
             ))
         }
@@ -116,22 +137,22 @@ extension UIAlertController {
     /// Initializes an action sheet-styled controller for selecting a service.
     ///
     /// - Parameters:
-    ///   - services: An array of available services.
+    ///   - availableServices: An array of available services.
     ///   - selectionHandler: A closure to execute when a service is selected.
     ///   - identifier: The identifier of the selected service.
-    internal convenience init(services: [AvailableService], selectionHandler: @escaping (_ identifier: String) -> Void) {
+    internal convenience init(availableServices: [ServiceDescriptor], selectionHandler: @escaping (_ identifier: String) -> Void) {
         self.init(
             title: NSLocalizedString("Add Service", comment: "Action sheet title selecting service"),
             message: nil,
             preferredStyle: .actionSheet
         )
 
-        for service in services {
+        for availableService in availableServices {
             addAction(UIAlertAction(
-                title: service.localizedTitle,
+                title: availableService.localizedTitle,
                 style: .default,
                 handler: { (_) in
-                    selectionHandler(service.identifier)
+                    selectionHandler(availableService.identifier)
                 }
             ))
         }

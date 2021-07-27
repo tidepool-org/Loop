@@ -7,8 +7,9 @@
 //
 
 import LoopKit
+import UIKit
 
-protocol AlertManagerResponder: class {
+protocol AlertManagerResponder: AnyObject {
     /// Method for our Handlers to call to kick off alert response.  Differs from AlertResponder because here we need the whole `Identifier`.
     func acknowledgeAlert(identifier: Alert.Identifier)
 }
@@ -36,7 +37,7 @@ public final class AlertManager {
 
     private let log = DiagnosticLog(category: "AlertManager")
 
-    private var handlers: [AlertPresenter] = []
+    private var handlers: [AlertIssuer] = []
     private var responders: [String: Weak<AlertResponder>] = [:]
     private var soundVendors: [String: Weak<AlertSoundVendor>] = [:]
 
@@ -45,8 +46,8 @@ public final class AlertManager {
 
     let alertStore: AlertStore
     
-    public init(rootViewController: UIViewController,
-                handlers: [AlertPresenter]? = nil,
+    public init(alertPresenter: AlertPresenter,
+                handlers: [AlertIssuer]? = nil,
                 userNotificationCenter: UserNotificationCenter = UNUserNotificationCenter.current(),
                 fileManager: FileManager = FileManager.default,
                 alertStore: AlertStore? = nil,
@@ -65,10 +66,8 @@ public final class AlertManager {
         }
         self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: alertStoreDirectory, expireAfter: expireAfter)
         self.handlers = handlers ??
-            [UserNotificationAlertPresenter(userNotificationCenter: userNotificationCenter),
-            InAppModalAlertPresenter(rootViewController: rootViewController, alertManagerResponder: self)]
-
-        playbackAlertsFromPersistence()
+            [UserNotificationAlertIssuer(userNotificationCenter: userNotificationCenter),
+            InAppModalAlertIssuer(alertPresenter: alertPresenter, alertManagerResponder: self)]
     }
 
     public func addAlertResponder(managerIdentifier: String, alertResponder: AlertResponder) {
@@ -101,9 +100,9 @@ extension AlertManager: AlertManagerResponder {
     }
 }
 
-// MARK: AlertPresenter implementation
+// MARK: AlertIssuer implementation
 
-extension AlertManager: AlertPresenter {
+extension AlertManager: AlertIssuer {
 
     public func issueAlert(_ alert: Alert) {
         handlers.forEach { $0.issueAlert(alert) }
@@ -160,7 +159,7 @@ extension AlertManager {
 
 extension AlertManager {
 
-    private func playbackAlertsFromPersistence() {
+    func playbackAlertsFromPersistence() {
         playbackAlertsFromAlertStore()
     }
 

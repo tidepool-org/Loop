@@ -92,7 +92,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
         observationEnabled: false,
         insulinModel: defaults?.insulinModelSettings?.model,
         basalProfile: defaults?.basalRateSchedule,
-        insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule
+        insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule,
+        provenanceIdentifier: HKSource.default().bundleIdentifier
     )
     
     private var pluginManager: PluginManager = {
@@ -291,7 +292,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                     unit: unit,
                     staleGlucoseAge: LoopCoreConstants.inputDataRecencyInterval,
                     glucoseDisplay: context.glucoseDisplay,
-                    wasUserEntered: lastGlucose.wasUserEntered
+                    wasUserEntered: lastGlucose.wasUserEntered,
+                    isDisplayOnly: lastGlucose.isDisplayOnly
                 )
             }
 
@@ -302,8 +304,10 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             self.charts.predictedGlucose.glucoseUnit = unit
             self.charts.predictedGlucose.setGlucoseValues(glucose)
 
-            if let predictedGlucose = context.predictedGlucose?.samples {
+            if let predictedGlucose = context.predictedGlucose?.samples, context.isClosedLoop == true {
                 self.charts.predictedGlucose.setPredictedGlucoseValues(predictedGlucose)
+            } else {
+                self.charts.predictedGlucose.setPredictedGlucoseValues([])
             }
 
             self.charts.predictedGlucose.targetGlucoseSchedule = defaults.loopSettings?.glucoseTargetRangeSchedule

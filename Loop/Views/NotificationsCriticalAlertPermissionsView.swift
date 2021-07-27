@@ -9,8 +9,8 @@
 import LoopKitUI
 import SwiftUI
 
-public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeClassOverride {
-    @Environment(\.dismiss) private var dismiss
+public struct NotificationsCriticalAlertPermissionsView: View {
+    @Environment(\.dismissAction) private var dismiss
     @Environment(\.appName) private var appName
 
     private let backButtonText: String
@@ -49,10 +49,9 @@ public struct NotificationsCriticalAlertPermissionsView: View, HorizontalSizeCla
             manageCriticalAlertsSection
             notificationAndCriticalAlertPermissionSupportSection
         }
-        .listStyle(GroupedListStyle())
+        .insetGroupedListStyle()
         .navigationBarTitle(Text(NSLocalizedString("Alert Permissions", comment: "Notification & Critical Alert Permissions screen title")))
         .navigationBarItems(leading: dismissButton)
-        .environment(\.horizontalSizeClass, horizontalOverride)
     }
 }
 
@@ -64,7 +63,7 @@ extension NotificationsCriticalAlertPermissionsView {
             Text(backButtonText)
         }
     }
-
+    
     private var manageNotificationsSection: some View {
         Section(header: Spacer(),
                 footer: DescriptiveText(label: NSLocalizedString("""
@@ -76,11 +75,12 @@ extension NotificationsCriticalAlertPermissionsView {
             Button( action: { self.viewModel.gotoSettings() } ) {
                 HStack {
                     Text(NSLocalizedString("Manage Notifications in Settings", comment: "Manage Notifications in Settings button text"))
+                    Spacer()
                     if !viewModel.notificationsPermissionsGiven {
-                        Spacer()
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.warning)
                     }
+                    Image(systemName: "chevron.right").foregroundColor(.gray).font(.footnote)
                 }
             }
             .accentColor(.primary)
@@ -88,18 +88,19 @@ extension NotificationsCriticalAlertPermissionsView {
     }
     
     private var manageCriticalAlertsSection: some View {
-        Section(footer:      DescriptiveText(label: NSLocalizedString("""
+        Section(footer: DescriptiveText(label: NSLocalizedString("""
             Critical Alerts will always play a sound and appear on the Lock screen even if your iPhone is muted or Do Not Disturb is on.
             """, comment: "Manage Notifications in Settings descriptive text")))
         {
             Button( action: { self.viewModel.gotoSettings() } ) {
                 HStack {
                     Text(NSLocalizedString("Manage Critical Alerts in Settings", comment: "Manage Critical Alerts in Settings button text"))
+                    Spacer()
                     if !viewModel.criticalAlertsPermissionsGiven {
-                        Spacer()
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.critical)
                     }
+                    Image(systemName: "chevron.right").foregroundColor(.gray).font(.footnote)
                 }
             }
             .accentColor(.primary)

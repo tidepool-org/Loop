@@ -166,7 +166,7 @@ extension LoopDataManager {
         return true
     }
 
-    func requestContextUpdate() {
+    func requestContextUpdate(completion: @escaping () -> Void = { }) {
         try? WCSession.default.sendContextRequestMessage(WatchContextRequestUserInfo(), completionHandler: { (result) in
             DispatchQueue.main.async {
                 switch result {
@@ -175,8 +175,15 @@ extension LoopDataManager {
                 case .failure:
                     break
                 }
+                completion()
             }
         })
+    }
+}
+
+extension LoopDataManager {
+    var displayGlucoseUnit: HKUnit {
+        activeContext?.displayGlucoseUnit ?? .milligramsPerDeciliter
     }
 }
 
@@ -197,7 +204,7 @@ extension LoopDataManager {
                 historicalGlucose = samples
             }
             let chartData = GlucoseChartData(
-                unit: activeContext.preferredGlucoseUnit,
+                unit: activeContext.displayGlucoseUnit,
                 correctionRange: self.settings.glucoseTargetRangeSchedule,
                 preMealOverride: self.settings.preMealOverride,
                 scheduleOverride: self.settings.scheduleOverride,

@@ -11,8 +11,9 @@ import LoopCore
 import LoopKit
 import LoopKitUI
 import SwiftUI
+import HealthKit
 
-public class DeviceViewModel: ObservableObject {
+public class DeviceViewModel<T>: ObservableObject {
     public typealias DeleteTestingDataFunc = () -> Void
     
     let isSetUp: () -> Bool
@@ -20,20 +21,20 @@ public class DeviceViewModel: ObservableObject {
     let name: () -> String
     let deleteTestingDataFunc: () -> DeleteTestingDataFunc?
     let didTap: () -> Void
-    let didTapAdd: (_ device: AvailableDevice) -> Void
+    let didTapAdd: (_ device: T) -> Void
     var isTestingDevice: Bool {
         return deleteTestingDataFunc() != nil
     }
 
-    @Published var availableDevices: [AvailableDevice]
+    @Published var availableDevices: [T]
 
     public init(image: @escaping () -> UIImage? = { nil },
                 name: @escaping () -> String = { "" },
                 isSetUp: @escaping () -> Bool = { false },
-                availableDevices: [AvailableDevice] = [],
+                availableDevices: [T] = [],
                 deleteTestingDataFunc: @escaping  () -> DeleteTestingDataFunc? = { nil },
                 onTapped: @escaping () -> Void = { },
-                didTapAddDevice: @escaping (AvailableDevice) -> Void = { _ in  }
+                didTapAddDevice: @escaping (T) -> Void = { _ in  }
                 ) {
         self.image = image
         self.name = name
@@ -45,7 +46,10 @@ public class DeviceViewModel: ObservableObject {
     }
 }
 
-public protocol SettingsViewModelDelegate: class {
+public typealias CGMManagerViewModel = DeviceViewModel<CGMManagerDescriptor>
+public typealias PumpManagerViewModel = DeviceViewModel<PumpManagerDescriptor>
+
+public protocol SettingsViewModelDelegate: AnyObject {
     func dosingEnabledChanged(_: Bool)
     func didSave(therapySetting: TherapySetting, therapySettings: TherapySettings)
     func didTapIssueReport(title: String)
@@ -56,8 +60,6 @@ public class SettingsViewModel: ObservableObject {
     let notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel
 
     private weak var delegate: SettingsViewModelDelegate?
-    
-    @Published var appNameAndVersion: String
     
     var showWarning: Bool {
         notificationsCriticalAlertPermissionsViewModel.showWarning
@@ -70,18 +72,19 @@ public class SettingsViewModel: ObservableObject {
     var didTapIssueReport: ((String) -> Void)? {
         delegate?.didTapIssueReport
     }
-
-    let pumpManagerSettingsViewModel: DeviceViewModel
-    let cgmManagerSettingsViewModel: DeviceViewModel
+    
+    var availableSupports: [SupportUI]
+    let pumpManagerSettingsViewModel: PumpManagerViewModel
+    let cgmManagerSettingsViewModel: CGMManagerViewModel
     let servicesViewModel: ServicesViewModel
     let criticalEventLogExportViewModel: CriticalEventLogExportViewModel
-    let adverseEventReportViewModel: AdverseEventReportViewModel
     let therapySettings: () -> TherapySettings
     let supportedInsulinModelSettings: SupportedInsulinModelSettings
     let pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?
     let syncPumpSchedule: (() -> PumpManager.SyncSchedule?)?
     let sensitivityOverridesEnabled: Bool
-        
+    let supportInfoProvider: SupportInfoProvider
+
     @Published var isClosedLoopAllowed: Bool
     
     var closedLoopPreference: Bool {
@@ -92,13 +95,11 @@ public class SettingsViewModel: ObservableObject {
 
     lazy private var cancellables = Set<AnyCancellable>()
 
-    public init(appNameAndVersion: String,
-                notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel,
-                pumpManagerSettingsViewModel: DeviceViewModel,
-                cgmManagerSettingsViewModel: DeviceViewModel,
+    public init(notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel,
+                pumpManagerSettingsViewModel: PumpManagerViewModel,
+                cgmManagerSettingsViewModel: CGMManagerViewModel,
                 servicesViewModel: ServicesViewModel,
                 criticalEventLogExportViewModel: CriticalEventLogExportViewModel,
-                adverseEventReportViewModel: AdverseEventReportViewModel,
                 therapySettings: @escaping () -> TherapySettings,
                 supportedInsulinModelSettings: SupportedInsulinModelSettings,
                 pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?,
@@ -106,15 +107,15 @@ public class SettingsViewModel: ObservableObject {
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
                 isClosedLoopAllowed: Published<Bool>.Publisher,
+                supportInfoProvider: SupportInfoProvider,
+                availableSupports: [SupportUI],
                 delegate: SettingsViewModelDelegate?
     ) {
         self.notificationsCriticalAlertPermissionsViewModel = notificationsCriticalAlertPermissionsViewModel
-        self.appNameAndVersion = appNameAndVersion
         self.pumpManagerSettingsViewModel = pumpManagerSettingsViewModel
         self.cgmManagerSettingsViewModel = cgmManagerSettingsViewModel
         self.servicesViewModel = servicesViewModel
         self.criticalEventLogExportViewModel = criticalEventLogExportViewModel
-        self.adverseEventReportViewModel = adverseEventReportViewModel
         self.therapySettings = therapySettings
         self.supportedInsulinModelSettings = supportedInsulinModelSettings
         self.pumpSupportedIncrements = pumpSupportedIncrements
@@ -122,6 +123,8 @@ public class SettingsViewModel: ObservableObject {
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
         self.isClosedLoopAllowed = false
+        self.supportInfoProvider = supportInfoProvider
+        self.availableSupports = availableSupports
         self.delegate = delegate
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
@@ -141,6 +144,5 @@ public class SettingsViewModel: ObservableObject {
         isClosedLoopAllowed
             .assign(to: \.isClosedLoopAllowed, on: self)
             .store(in: &cancellables)
-        
     }
 }

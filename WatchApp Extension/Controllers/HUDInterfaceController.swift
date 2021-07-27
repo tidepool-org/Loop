@@ -29,9 +29,10 @@ class HUDInterfaceController: WKInterfaceController {
                 }
             }
         }
-        
-        loopManager.requestGlucoseBackfillIfNecessary()
-        loopManager.requestContextUpdate()
+
+        loopManager.requestContextUpdate(completion: {
+            self.loopManager.requestGlucoseBackfillIfNecessary()
+        })
     }
 
     override func didDeactivate() {
@@ -68,9 +69,9 @@ class HUDInterfaceController: WKInterfaceController {
         }())
 
         if date != nil {
-            glucoseLabel.setText("---")
+            glucoseLabel.setText(NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"))
             glucoseLabel.setHidden(false)
-            if let glucose = activeContext.glucose, let glucoseDate = activeContext.glucoseDate, let unit = activeContext.preferredGlucoseUnit, glucoseDate.timeIntervalSinceNow > -LoopCoreConstants.inputDataRecencyInterval {
+            if let glucose = activeContext.glucose, let glucoseDate = activeContext.glucoseDate, let unit = activeContext.displayGlucoseUnit, glucoseDate.timeIntervalSinceNow > -LoopCoreConstants.inputDataRecencyInterval {
                 let formatter = NumberFormatter.glucoseFormatter(for: unit)
                 
                 if let glucoseValue = formatter.string(from: glucose.doubleValue(for: unit)) {

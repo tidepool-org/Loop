@@ -31,7 +31,7 @@ protocol SimpleBolusViewModelDelegate: class {
 
     func computeSimpleBolusRecommendation(at date: Date, mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> BolusDosingDecision?
 
-    var preferredGlucoseUnit: HKUnit { get }
+    var displayGlucoseUnitObservable: DisplayGlucoseUnitObservable { get }
     
     var maximumBolus: Double { get }
 
@@ -61,7 +61,7 @@ class SimpleBolusViewModel: ObservableObject {
 
     var isNoticeVisible: Bool { return activeNotice != nil }    
 
-    @Published var recommendedBolus: String = "0"
+    @Published var recommendedBolus: String = "–"
     
     @Published var activeInsulin: String?
 
@@ -79,7 +79,7 @@ class SimpleBolusViewModel: ObservableObject {
     @Published var enteredGlucoseAmount: String = "" {
         didSet {
             if let enteredGlucose = glucoseAmountFormatter.number(from: enteredGlucoseAmount)?.doubleValue {
-                glucose = HKQuantity(unit: delegate.preferredGlucoseUnit, doubleValue: enteredGlucose)
+                glucose = HKQuantity(unit: delegate.displayGlucoseUnitObservable.displayGlucoseUnit, doubleValue: enteredGlucose)
                 if let glucose = glucose, glucose < suspendThreshold {
                     activeNotice = .glucoseBelowSuspendThreshold
                 } else {
@@ -106,7 +106,7 @@ class SimpleBolusViewModel: ObservableObject {
     private var glucose: HKQuantity? = nil
     private var bolus: HKQuantity? = nil
     
-    var glucoseUnit: HKUnit { return delegate.preferredGlucoseUnit }
+    var glucoseUnit: HKUnit { return delegate.displayGlucoseUnitObservable.displayGlucoseUnit }
     
     var suspendThreshold: HKQuantity { return delegate.suspendThreshold }
 
@@ -116,27 +116,13 @@ class SimpleBolusViewModel: ObservableObject {
                 recommendedBolus = recommendationString
                 enteredBolusAmount = recommendationString
             } else {
-                recommendedBolus = NSLocalizedString("-", comment: "String denoting lack of a recommended bolus amount in the simple bolus calculator")
+                recommendedBolus = NSLocalizedString("–", comment: "String denoting lack of a recommended bolus amount in the simple bolus calculator")
                 enteredBolusAmount = Self.doseAmountFormatter.string(from: 0.0)!
             }
         }
     }
     
-    private var dosingDecision: BolusDosingDecision? {
-        didSet {
-            if let decision = dosingDecision, let bolusRecommendation = decision.recommendedBolus {
-                recommendation = bolusRecommendation.amount
-            } else {
-                recommendation = nil
-            }
-            
-            if let decision = dosingDecision, let insulinOnBoard = decision.insulinOnBoard, insulinOnBoard.value > 0 {
-                activeInsulin = Self.doseAmountFormatter.string(from: insulinOnBoard.value)
-            } else {
-                activeInsulin = nil
-            }
-        }
-    }
+    private var dosingDecision: BolusDosingDecision?
     
     private var recommendationDate: Date?
 
@@ -194,7 +180,7 @@ class SimpleBolusViewModel: ObservableObject {
     init(delegate: SimpleBolusViewModelDelegate) {
         self.delegate = delegate
         let glucoseQuantityFormatter = QuantityFormatter()
-        glucoseQuantityFormatter.setPreferredNumberFormatter(for: delegate.preferredGlucoseUnit)
+        glucoseQuantityFormatter.setPreferredNumberFormatter(for: delegate.displayGlucoseUnitObservable.displayGlucoseUnit)
         glucoseAmountFormatter = glucoseQuantityFormatter.numberFormatter
         enteredBolusAmount = Self.doseAmountFormatter.string(from: 0.0)!
         updateRecommendation()
@@ -205,9 +191,22 @@ class SimpleBolusViewModel: ObservableObject {
         let recommendationDate = Date()
         if carbs != nil || glucose != nil {
             dosingDecision = delegate.computeSimpleBolusRecommendation(at: recommendationDate, mealCarbs: carbs, manualGlucose: glucose)
+            if let decision = dosingDecision, let bolusRecommendation = decision.recommendedBolus {
+                recommendation = bolusRecommendation.amount
+            } else {
+                recommendation = nil
+            }
+            
+            if let decision = dosingDecision, let insulinOnBoard = decision.insulinOnBoard, insulinOnBoard.value > 0, glucose != nil {
+                activeInsulin = Self.doseAmountFormatter.string(from: insulinOnBoard.value)
+            } else {
+                activeInsulin = nil
+            }
             self.recommendationDate = recommendationDate
         } else {
             dosingDecision = nil
+            recommendation = nil
+            activeInsulin = nil
             self.recommendationDate = nil
         }
     }

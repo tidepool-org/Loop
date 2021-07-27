@@ -17,7 +17,7 @@ import LoopKitUI
 import LoopUI
 import SwiftUI
 
-protocol BolusEntryViewModelDelegate: class {
+protocol BolusEntryViewModelDelegate: AnyObject {
     
     func withLoopState(do block: @escaping (LoopState) -> Void)
 
@@ -44,8 +44,6 @@ protocol BolusEntryViewModelDelegate: class {
     
     var isPumpConfigured: Bool { get }
     
-    var preferredGlucoseUnit: HKUnit { get }
-    
     var insulinModel: InsulinModel? { get }
     
     var settings: LoopSettings { get }
@@ -64,7 +62,9 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     enum Notice: Equatable {
+        case predictedGlucoseInRange
         case predictedGlucoseBelowSuspendThreshold(suspendThreshold: HKQuantity)
+        case glucoseBelowTarget
         case staleGlucoseData
         case stalePumpData
     }
@@ -76,7 +76,6 @@ final class BolusEntryViewModel: ObservableObject {
     @Published var glucoseValues: [GlucoseValue] = [] // stored glucose values + manual glucose entry
     private var storedGlucoseValues: [GlucoseValue] = []
     @Published var predictedGlucoseValues: [GlucoseValue] = []
-    @Published var glucoseUnit: HKUnit = .milligramsPerDeciliter
     @Published var chartDateInterval: DateInterval
 
     @Published var activeCarbs: HKQuantity?
@@ -634,6 +633,10 @@ final class BolusEntryViewModel: ObservableObject {
                     } else {
                         notice = nil
                     }
+                case .predictedGlucoseInRange:
+                    notice = .predictedGlucoseInRange
+                case .allGlucoseBelowTarget(minGlucose: _):
+                    notice = .glucoseBelowTarget
                 default:
                     notice = nil
                 }
@@ -697,8 +700,6 @@ final class BolusEntryViewModel: ObservableObject {
         guard let delegate = delegate else {
             return
         }
-
-        glucoseUnit = delegate.preferredGlucoseUnit
 
         targetGlucoseSchedule = delegate.settings.glucoseTargetRangeSchedule
         // Pre-meal override should be ignored if we have carbs (LOOP-1964)

@@ -16,7 +16,7 @@ import XCTest
 
 class BolusEntryViewModelTests: XCTestCase {
    
-    static let now = Date.distantFuture
+    static let now = ISO8601DateFormatter().date(from: "2020-03-11T07:00:00-0700")!
     static let exampleStartDate = now - .hours(2)
     static let exampleEndDate = now - .hours(1)
     static fileprivate let exampleGlucoseValue = MockGlucoseValue(quantity: exampleManualGlucoseQuantity, startDate: exampleStartDate)
@@ -88,7 +88,6 @@ class BolusEntryViewModelTests: XCTestCase {
     func testInitialConditions() throws {
         XCTAssertEqual(0, bolusEntryViewModel.glucoseValues.count)
         XCTAssertEqual(0, bolusEntryViewModel.predictedGlucoseValues.count)
-        XCTAssertEqual(.milligramsPerDeciliter, bolusEntryViewModel.glucoseUnit)
         XCTAssertNil(bolusEntryViewModel.activeCarbs)
         XCTAssertNil(bolusEntryViewModel.activeInsulin)
         XCTAssertNil(bolusEntryViewModel.targetGlucoseSchedule)
@@ -158,6 +157,9 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.enteredBolus = Self.exampleBolusQuantity
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         XCTAssertEqual(Self.exampleBolusQuantity, bolusEntryViewModel.enteredBolus)
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
+        waitOnMain()
         waitOnMain()
         XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 0), bolusEntryViewModel.enteredBolus)
     }
@@ -189,8 +191,7 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertNil(bolusEntryViewModel.preMealOverride)
         XCTAssertNil(bolusEntryViewModel.scheduleOverride)
         XCTAssertNil(bolusEntryViewModel.targetGlucoseSchedule)
-        XCTAssertEqual(.milligramsPerDeciliter, bolusEntryViewModel.glucoseUnit)
-        let newGlucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: .millimolesPerLiter, dailyItems: [
+        let newGlucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: .milligramsPerDeciliter, dailyItems: [
             RepeatingScheduleValue(startTime: TimeInterval(0), value: DoubleRange(minValue: 100, maxValue: 110)),
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
@@ -210,7 +211,6 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual(newSettings.preMealOverride, bolusEntryViewModel.preMealOverride)
         XCTAssertEqual(newSettings.scheduleOverride, bolusEntryViewModel.scheduleOverride)
         XCTAssertEqual(newGlucoseTargetRangeSchedule, bolusEntryViewModel.targetGlucoseSchedule)
-        XCTAssertEqual(.milligramsPerDeciliter, bolusEntryViewModel.glucoseUnit)
     }
 
     func testUpdateSettingsWithCarbs() throws {
@@ -218,8 +218,7 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertNil(bolusEntryViewModel.preMealOverride)
         XCTAssertNil(bolusEntryViewModel.scheduleOverride)
         XCTAssertNil(bolusEntryViewModel.targetGlucoseSchedule)
-        XCTAssertEqual(.milligramsPerDeciliter, bolusEntryViewModel.glucoseUnit)
-        let newGlucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: .millimolesPerLiter, dailyItems: [
+        let newGlucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: .milligramsPerDeciliter, dailyItems: [
             RepeatingScheduleValue(startTime: TimeInterval(0), value: DoubleRange(minValue: 100, maxValue: 110)),
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
@@ -238,7 +237,6 @@ class BolusEntryViewModelTests: XCTestCase {
         // Pre-meal override should be ignored if we have carbs (LOOP-1964), and cleared in settings
         XCTAssertEqual(newSettings.scheduleOverride, bolusEntryViewModel.scheduleOverride)
         XCTAssertEqual(newGlucoseTargetRangeSchedule, bolusEntryViewModel.targetGlucoseSchedule)
-        XCTAssertEqual(.milligramsPerDeciliter, bolusEntryViewModel.glucoseUnit)
         
         // ... but restored if we cancel without bolusing
         bolusEntryViewModel = nil
@@ -411,6 +409,8 @@ class BolusEntryViewModelTests: XCTestCase {
         mockState.bolusRecommendationResult = BolusRecommendation(amount: 1.234, pendingInsulin: 4.321)
         try triggerLoopStateUpdatedWithDataAndWait(with: mockState)
         // Now, through the magic of `observeRecommendedBolusChanges` and the recommendedBolus publisher it should update to 1.234.  But we have to wait twice on main to make this reliable...
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
         waitOnMain()
         XCTAssertEqual(HKQuantity(unit: .internationalUnit(), doubleValue: 1.234), bolusEntryViewModel.enteredBolus)
@@ -469,6 +469,9 @@ class BolusEntryViewModelTests: XCTestCase {
     func testSaveManualGlucoseNoBolus() throws {
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         // manualGlucoseSample updates asynchronously on main
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
+        waitOnMain()
         waitOnMain()
 
         try saveAndDeliver(BolusEntryViewModelTests.noBolus)
@@ -477,6 +480,9 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual([expectedGlucoseSample], delegate.glucoseSamplesAdded)
 
         delegate.addGlucoseCompletion?(.success([Self.exampleManualStoredGlucoseSample]))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
+        waitOnMain()
         waitOnMain()
 
         XCTAssertTrue(delegate.carbEntriesAdded.isEmpty)
@@ -518,16 +524,22 @@ class BolusEntryViewModelTests: XCTestCase {
     func testSaveManualGlucoseAndBolus() throws {
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         // manualGlucoseSample updates asynchronously on main
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
-        
+        waitOnMain()
+
         try saveAndDeliver(BolusEntryViewModelTests.exampleBolusQuantity)
         
         let expectedGlucoseSample = NewGlucoseSample(date: now, quantity: Self.exampleManualGlucoseQuantity, isDisplayOnly: false, wasUserEntered: true, syncIdentifier: mockUUID)
         XCTAssertEqual([expectedGlucoseSample], delegate.glucoseSamplesAdded)
         
         delegate.addGlucoseCompletion?(.success([Self.exampleManualStoredGlucoseSample]))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
-        
+        waitOnMain()
+
         XCTAssertTrue(delegate.carbEntriesAdded.isEmpty)
         XCTAssertEqual(1, delegate.bolusDosingDecisionsAdded.count)
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.0, BolusDosingDecision(manualGlucose: Self.exampleManualStoredGlucoseSample,
@@ -541,14 +553,20 @@ class BolusEntryViewModelTests: XCTestCase {
     func testSaveCarbAndBolus() throws {
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
         // manualGlucoseSample updates asynchronously on main
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
-                
+        waitOnMain()
+
         try saveAndDeliver(BolusEntryViewModelTests.exampleBolusQuantity)
         
         let addCarbEntryCompletion = try XCTUnwrap(delegate.addCarbEntryCompletion)
         addCarbEntryCompletion(.success(mockFinalCarbEntry))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
-        
+        waitOnMain()
+
         XCTAssertTrue(delegate.glucoseSamplesAdded.isEmpty)
         XCTAssertEqual(1, delegate.carbEntriesAdded.count)
         XCTAssertEqual(mockPotentialCarbEntry, delegate.carbEntriesAdded.first?.0)
@@ -596,18 +614,27 @@ class BolusEntryViewModelTests: XCTestCase {
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
         bolusEntryViewModel.enteredManualGlucose = Self.exampleManualGlucoseQuantity
         // manualGlucoseSample updates asynchronously on main
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
-        
+        waitOnMain()
+
         try saveAndDeliver(BolusEntryViewModelTests.exampleBolusQuantity)
         
         let expectedGlucoseSample = NewGlucoseSample(date: now, quantity: Self.exampleManualGlucoseQuantity, isDisplayOnly: false, wasUserEntered: true, syncIdentifier: mockUUID)
         XCTAssertEqual([expectedGlucoseSample], delegate.glucoseSamplesAdded)
         
         delegate.addGlucoseCompletion?(.success([Self.exampleManualStoredGlucoseSample]))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
         waitOnMain()
-        
+        waitOnMain()
+
         let addCarbEntryCompletion = try XCTUnwrap(delegate.addCarbEntryCompletion)
         addCarbEntryCompletion(.success(mockFinalCarbEntry))
+        // For some reason, starting with Xcode 12.5, in order for these tests to pass we need to call `waitOnMain()`
+        // _twice_ here.  Not exactly sure why, needs investigation.
+        waitOnMain()
         waitOnMain()
 
         XCTAssertEqual(1, delegate.carbEntriesAdded.count)
@@ -665,14 +692,14 @@ class BolusEntryViewModelTests: XCTestCase {
     func testCarbEntryDateAndAbsorptionTimeString() throws {
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
 
-        XCTAssertEqual("10:00 PM + 0m", bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
+        XCTAssertEqual("12:00 PM + 0m", bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
     }
     
     func testCarbEntryDateAndAbsorptionTimeString2() throws {
         let potentialCarbEntry = NewCarbEntry(quantity: BolusEntryViewModelTests.exampleCarbQuantity, startDate: Self.exampleStartDate, foodType: nil, absorptionTime: nil)
         setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: potentialCarbEntry)
 
-        XCTAssertEqual("10:00 PM", bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
+        XCTAssertEqual("12:00 PM", bolusEntryViewModel.carbEntryDateAndAbsorptionTimeString)
     }
 
     func testIsManualGlucosePromptVisible() throws {

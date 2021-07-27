@@ -7,12 +7,12 @@
 //
 
 import Foundation
+import Combine
 import HealthKit
 import LoopKit
 import LoopCore
 
-
-final class LoopDataManager {
+final class LoopDataManager: LoopSettingsAlerterDelegate {
     enum LoopUpdateContext: Int {
         case bolus
         case carbs
@@ -39,7 +39,13 @@ final class LoopDataManager {
 
     private let analyticsServicesManager: AnalyticsServicesManager
 
+    let loopSettingsAlerter: LoopSettingsAlerter
+
     private let now: () -> Date
+
+    private let automaticDosingStatus: AutomaticDosingStatus
+
+    lazy private var cancellables = Set<AnyCancellable>()
 
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
@@ -68,7 +74,8 @@ final class LoopDataManager {
         dosingDecisionStore: DosingDecisionStoreProtocol,
         settingsStore: SettingsStoreProtocol,
         now: @escaping () -> Date = { Date() },
-        alertManager: AlertManager? = nil
+        alertIssuer: AlertIssuer? = nil,
+        automaticDosingStatus: AutomaticDosingStatus
     ) {
         self.analyticsServicesManager = analyticsServicesManager
         self.lockedLastLoopCompleted = Locked(lastLoopCompleted)
@@ -90,10 +97,17 @@ final class LoopDataManager {
 
         self.settingsStore = settingsStore
 
+        self.automaticDosingStatus = automaticDosingStatus
+
         retrospectiveCorrection = settings.enabledRetrospectiveCorrectionAlgorithm
 
+        loopSettingsAlerter = LoopSettingsAlerter(alertIssuer: alertIssuer)
+        loopSettingsAlerter.delegate = self
+
         overrideHistory.delegate = self
-        self.settings.alertManager = alertManager
+
+        // Required for device settings in stored dosing decisions
+        UIDevice.current.isBatteryMonitoringEnabled = true
 
         // Observe changes
         notificationObservers = [
@@ -138,18 +152,30 @@ final class LoopDataManager {
                 }
             }
         ]
+
+        // Turn off preMeal when going into closed loop off mode
+        // Cancel any active temp basal when going into closed loop off mode
+        // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
+        self.automaticDosingStatus.$isClosedLoop
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { if !$0 {
+                self.settings.clearOverride(matching: .preMeal)
+                self.cancelActiveTempBasal()
+            } }
+            .store(in: &cancellables)
     }
 
     /// Loop-related settings
     ///
     /// These are not thread-safe.
-    
+
     @Published var settings: LoopSettings {
         didSet {
             guard settings != oldValue else {
                 return
             }
-            
+
             if settings.preMealOverride != oldValue.preMealOverride {
                 // The prediction isn't actually invalid, but a target range change requires recomputing recommended doses
                 predictedGlucose = nil
@@ -163,6 +189,7 @@ final class LoopDataManager {
                 self.carbsOnBoard = nil
                 self.insulinEffect = nil
             }
+
             UserDefaults.appGroup?.loopSettings = settings
             notify(forChange: .preferences)
             analyticsServicesManager.didChangeLoopSettings(from: oldValue, to: settings)
@@ -483,6 +510,35 @@ extension LoopDataManager {
             }
         }
     }
+    
+    /// Take actions to address how insulin is delivered when the CGM data is unreliable
+    ///
+    /// An active high temp basal (greater than the basal schedule) is cancelled when the CGM data is unreliable.
+    func receivedUnreliableCGMReading() {
+        guard case .tempBasal(let tempBasal) = basalDeliveryState,
+              let scheduledBasalRate = basalRateSchedule?.value(at: now()),
+              tempBasal.unitsPerHour > scheduledBasalRate else
+        {
+            return
+        }
+              
+        // Cancel active high temp basal
+        cancelActiveTempBasal()
+    }
+
+    /// Cancel the active temp basal
+    func cancelActiveTempBasal() {
+        guard case .tempBasal(_) = basalDeliveryState else { return }
+
+        dataAccessQueue.async {
+            // assign recommendedTempBasal right before setRecommendedTempBasal to avoid another assignment during asynchronous call
+            self.recommendedTempBasal = (recommendation: TempBasalRecommendation.cancel, date: self.now())
+            self.setRecommendedTempBasal { (error) -> Void in
+                self.storeDosingDecision(withDate: self.now(), withError: error)
+                self.notify(forChange: .tempBasal)
+            }
+        }
+    }
 
     /// Adds and stores carb data, and recommends a bolus if needed
     ///
@@ -518,6 +574,7 @@ extension LoopDataManager {
     ///
     /// - Parameters:
     ///   - dose: The DoseEntry representing the requested bolus
+    ///   - completion: A closure that is called after state has been updated
     func addRequestedBolus(_ dose: DoseEntry, completion: (() -> Void)?) {
         dataAccessQueue.async {
             self.logger.debug("addRequestedBolus")
@@ -531,8 +588,8 @@ extension LoopDataManager {
     /// Notifies the manager that the bolus is confirmed, but not fully delivered.
     ///
     /// - Parameters:
-    ///   - dose: The DoseEntry representing the confirmed bolus.
-    func bolusConfirmed(_ dose: DoseEntry, completion: (() -> Void)?) {
+    ///   - completion: A closure that is called after state has been updated
+    func bolusConfirmed(completion: (() -> Void)?) {
         self.dataAccessQueue.async {
             self.logger.debug("bolusConfirmed")
             self.lastRequestedBolus = nil
@@ -548,7 +605,8 @@ extension LoopDataManager {
     /// Notifies the manager that the bolus failed.
     ///
     /// - Parameters:
-    ///   - dose: The DoseEntry representing the confirmed bolus.
+    ///   - error: An error describing why the bolus request failed
+    ///   - completion: A closure that is called after state has been updated
     func bolusRequestFailed(_ error: Error, completion: (() -> Void)?) {
         self.dataAccessQueue.async {
             self.logger.debug("bolusRequestFailed")
@@ -714,7 +772,7 @@ extension LoopDataManager {
             do {
                 try self.update()
 
-                if self.delegate?.automaticDosingEnabled == true {
+                if self.automaticDosingStatus.isClosedLoop == true {
                     self.setRecommendedTempBasal { (error) -> Void in
                         if let error = error {
                             self.loopDidError(date: self.now(), error: error, duration: -startDate.timeIntervalSince(self.now()))
@@ -861,9 +919,14 @@ extension LoopDataManager {
             updateGroup.enter()
             carbStore.carbsOnBoard(at: now(), effectVelocities: settings.dynamicCarbAbsorptionEnabled ? insulinCounteractionEffects : nil) { (result) in
                 switch result {
-                case .failure:
-                    // Failure is expected when there is no carb data
-                    self.carbsOnBoard = nil
+                case .failure(let error):
+                    switch error {
+                    case .noData:
+                        // when there is no data, carbs on board is set to 0
+                        self.carbsOnBoard = CarbValue(startDate: Date(), quantity: HKQuantity(unit: .gram(), doubleValue: 0))
+                    default:
+                        self.carbsOnBoard = nil
+                    }
                 case .success(let value):
                     self.carbsOnBoard = value
                 }
@@ -1449,15 +1512,12 @@ extension LoopDataManager {
             return
         }
 
-        delegate?.loopDataManager(self, didRecommendBasalChange: recommendedTempBasal) { (result) in
+        delegate?.loopDataManager(self, didRecommendBasalChange: recommendedTempBasal) { (error) in
             self.dataAccessQueue.async {
-                switch result {
-                case .success:
+                if error == nil {
                     self.recommendedTempBasal = nil
-                    completion(nil)
-                case .failure(let error):
-                    completion(error)
                 }
+                completion(error)
             }
         }
     }
@@ -1826,16 +1886,15 @@ extension Notification.Name {
     static let LoopCompleted = Notification.Name(rawValue: "com.loopkit.Loop.LoopCompleted")
 }
 
-protocol LoopDataManagerDelegate: class {
+protocol LoopDataManagerDelegate: AnyObject {
 
     /// Informs the delegate that an immediate basal change is recommended
     ///
     /// - Parameters:
     ///   - manager: The manager
     ///   - basal: The new recommended basal
-    ///   - completion: A closure called once on completion
-    ///   - result: The enacted basal
-    func loopDataManager(_ manager: LoopDataManager, didRecommendBasalChange basal: (recommendation: TempBasalRecommendation, date: Date), completion: @escaping (_ result: Result<DoseEntry>) -> Void) -> Void
+    ///   - completion: A closure called once on completion. Will be passed a non-null error if acting on the recommendation fails.
+    func loopDataManager(_ manager: LoopDataManager, didRecommendBasalChange basal: (recommendation: TempBasalRecommendation, date: Date), completion: @escaping (Error?) -> Void) -> Void
 
     /// Asks the delegate to round a recommended basal rate to a supported rate
     ///
@@ -1853,9 +1912,6 @@ protocol LoopDataManagerDelegate: class {
 
     /// The pump manager status, if one exists.
     var pumpManagerStatus: PumpManagerStatus? { get }
-    
-    /// The pump manager status, if one exists.
-    var automaticDosingEnabled: Bool { get }
 }
 
 private extension TemporaryScheduleOverride {
@@ -1990,15 +2046,29 @@ extension LoopDataManager {
 
 extension LoopDataManager {
     public var therapySettings: TherapySettings {
-        TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
-                        preMealTargetRange: settings.preMealTargetRange,
-                        workoutTargetRange: settings.legacyWorkoutTargetRange,
-                        maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
-                        maximumBolus: settings.maximumBolus,
-                        suspendThreshold: settings.suspendThreshold,
-                        insulinSensitivitySchedule: insulinSensitivitySchedule,
-                        carbRatioSchedule: carbRatioSchedule,
-                        basalRateSchedule: basalRateSchedule,
-                        insulinModelSettings: insulinModelSettings)
+        get {
+            TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
+                            correctionRangeOverrides: CorrectionRangeOverrides(preMeal: settings.preMealTargetRange, workout: settings.legacyWorkoutTargetRange),
+                            maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
+                            maximumBolus: settings.maximumBolus,
+                            suspendThreshold: settings.suspendThreshold,
+                            insulinSensitivitySchedule: insulinSensitivitySchedule,
+                            carbRatioSchedule: carbRatioSchedule,
+                            basalRateSchedule: basalRateSchedule,
+                            insulinModelSettings: insulinModelSettings)
+        }
+        
+        set {
+            settings.glucoseTargetRangeSchedule = newValue.glucoseTargetRangeSchedule
+            settings.preMealTargetRange = newValue.correctionRangeOverrides?.preMeal
+            settings.legacyWorkoutTargetRange = newValue.correctionRangeOverrides?.workout
+            settings.suspendThreshold = newValue.suspendThreshold
+            settings.maximumBolus = newValue.maximumBolus
+            settings.maximumBasalRatePerHour = newValue.maximumBasalRatePerHour
+            insulinSensitivitySchedule = newValue.insulinSensitivitySchedule
+            carbRatioSchedule = newValue.carbRatioSchedule
+            basalRateSchedule = newValue.basalRateSchedule
+            insulinModelSettings = newValue.insulinModelSettings
+        }
     }
 }

@@ -1,17 +1,17 @@
 //
-//  InAppModalAlertPresenter.swift
+//  InAppModalAlertIssuer.swift
 //  LoopKit
 //
 //  Created by Rick Pasetto on 4/9/20.
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
-import Foundation
+import UIKit
 import LoopKit
 
-public class InAppModalAlertPresenter: AlertPresenter {
+public class InAppModalAlertIssuer: AlertIssuer {
 
-    private weak var rootViewController: UIViewController?
+    private weak var alertPresenter: AlertPresenter?
     private weak var alertManagerResponder: AlertManagerResponder?
 
     private var alertsShowing: [Alert.Identifier: (UIAlertController, Alert)] = [:]
@@ -25,12 +25,12 @@ public class InAppModalAlertPresenter: AlertPresenter {
 
     private let soundPlayer: AlertSoundPlayer
 
-    init(rootViewController: UIViewController,
+    init(alertPresenter: AlertPresenter?,
          alertManagerResponder: AlertManagerResponder,
          soundPlayer: AlertSoundPlayer = DeviceAVSoundPlayer(),
          newActionFunc: @escaping ActionFactoryFunction = UIAlertAction.init,
          newTimerFunc: TimerFactoryFunction? = nil) {
-        self.rootViewController = rootViewController
+        self.alertPresenter = alertPresenter
         self.alertManagerResponder = alertManagerResponder
         self.soundPlayer = soundPlayer
         self.newActionFunc = newActionFunc
@@ -65,7 +65,7 @@ public class InAppModalAlertPresenter: AlertPresenter {
 }
 
 /// Private functions
-extension InAppModalAlertPresenter {
+extension InAppModalAlertIssuer {
         
     private func schedule(alert: Alert, interval: TimeInterval, repeats: Bool) {
         guard alert.foregroundContent != nil else {
@@ -93,15 +93,18 @@ extension InAppModalAlertPresenter {
             if self.isAlertShowing(identifier: alert.identifier) {
                 return
             }
-            self.playSound(for: alert)
-            let alertController = self.presentAlert(title: content.title,
-                                                    message: content.body,
-                                                    action: content.acknowledgeActionButtonLabel,
-                                                    isCritical: content.isCritical) { [weak self] in
-                self?.clearDeliveredAlert(identifier: alert.identifier)
-                self?.alertManagerResponder?.acknowledgeAlert(identifier: alert.identifier)
+            let alertController = self.constructAlert(title: content.title,
+                                                      message: content.body,
+                                                      action: content.acknowledgeActionButtonLabel,
+                                                      isCritical: content.isCritical) { [weak self] in
+                  self?.clearDeliveredAlert(identifier: alert.identifier)
+                  self?.alertManagerResponder?.acknowledgeAlert(identifier: alert.identifier)
             }
-            self.addDeliveredAlert(alert: alert, controller: alertController)
+            self.alertPresenter?.present(alertController, animated: true) { [weak self] in
+                // the completion is called after the alert is displayed
+                self?.playSound(for: alert)
+                self?.addDeliveredAlert(alert: alert, controller: alertController)
+            }
         }
     }
     
@@ -135,15 +138,14 @@ extension InAppModalAlertPresenter {
         return alertsShowing.index(forKey: identifier) != nil
     }
 
-    private func presentAlert(title: String, message: String, action: String, isCritical: Bool, completion: @escaping () -> Void) -> UIAlertController {
+    private func constructAlert(title: String, message: String, action: String, isCritical: Bool, completion: @escaping () -> Void) -> UIAlertController {
         dispatchPrecondition(condition: .onQueue(.main))
         // For now, this is a simple alert with an "OK" button
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alertController.addAction(newActionFunc(action, isCritical ? .destructive : .default, { _ in completion() }))
-        rootViewController?.topmostViewController.present(alertController, animated: true)
+        alertController.addAction(newActionFunc(action, .default, { _ in completion() }))
         return alertController
     }
-        
+
     private func playSound(for alert: Alert) {
         guard let sound = alert.sound else { return }
         switch sound {

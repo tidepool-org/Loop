@@ -7,18 +7,21 @@
 //
 
 import LoopKit
+import SwiftUI
 
 extension DeviceLifecycleProgressState {
     public var color: UIColor {
         switch self {
+        case .critical:
+            return .critical
+        case .dimmed:
+            return UIColor(Color.secondary)
         case .normalCGM:
             return .glucose
         case .normalPump:
             return .insulin
         case .warning:
             return .warning
-        case .critical:
-            return .critical
         }
     }
 }
