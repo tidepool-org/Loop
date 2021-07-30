@@ -26,6 +26,9 @@ protocol GlucoseStoreProtocol: AnyObject {
     
     var sharingDenied: Bool { get }
     
+    /// The length of time to delay until storing samples into HealthKit. 0 = no delay.
+    var healthKitStorageDelay: TimeInterval { get set }
+
     func authorize(toShare: Bool, read: Bool, _ completion: @escaping (_ result: HealthKitSampleStoreResult<Bool>) -> Void)
     
     // MARK: Sample Management

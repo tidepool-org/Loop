@@ -35,7 +35,6 @@ extension WatchHistoricalGlucose: RawRepresentable {
     }
 
     private struct Flattened: Codable {
-        let uuids: [UUID?]
         let provenanceIdentifiers: [String]
         let syncIdentifiers: [String?]
         let syncVersions: [Int?]
@@ -45,7 +44,6 @@ extension WatchHistoricalGlucose: RawRepresentable {
         let wasUserEntereds: [Bool]
 
         init(samples: [StoredGlucoseSample]) {
-            self.uuids = samples.map { $0.uuid }
             self.provenanceIdentifiers = samples.map { $0.provenanceIdentifier }
             self.syncIdentifiers = samples.map { $0.syncIdentifier }
             self.syncVersions = samples.map { $0.syncVersion }
@@ -56,9 +54,8 @@ extension WatchHistoricalGlucose: RawRepresentable {
         }
 
         var samples: [StoredGlucoseSample] {
-            return (0..<uuids.count).map {
-                StoredGlucoseSample(uuid: uuids[$0],
-                                    provenanceIdentifier: provenanceIdentifiers[$0],
+            return (0..<syncIdentifiers.count).map {
+                StoredGlucoseSample(provenanceIdentifier: provenanceIdentifiers[$0],
                                     syncIdentifier: syncIdentifiers[$0],
                                     syncVersion: syncVersions[$0],
                                     startDate: startDates[$0],
