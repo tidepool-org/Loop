@@ -11,7 +11,6 @@ import FirebaseDatabase
 import UIKit
 import LoopKit
 
-@UIApplicationMain
 final class AppDelegate: UIResponder, UIApplicationDelegate, WindowProvider {
     var window: UIWindow?
 
