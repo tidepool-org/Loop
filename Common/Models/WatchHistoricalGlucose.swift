@@ -61,7 +61,8 @@ extension WatchHistoricalGlucose: RawRepresentable {
                                     startDate: startDates[$0],
                                     quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: quantities[$0]),
                                     isDisplayOnly: isDisplayOnlys[$0],
-                                    wasUserEntered: wasUserEntereds[$0])
+                                    wasUserEntered: wasUserEntereds[$0],
+                                    device: nil)
             }
         }
     }
