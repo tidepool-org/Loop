@@ -35,6 +35,7 @@ extension WatchHistoricalGlucose: RawRepresentable {
     }
 
     private struct Flattened: Codable {
+        let uuids: [UUID?]
         let provenanceIdentifiers: [String]
         let syncIdentifiers: [String?]
         let syncVersions: [Int?]
@@ -42,8 +43,10 @@ extension WatchHistoricalGlucose: RawRepresentable {
         let quantities: [Double]
         let isDisplayOnlys: [Bool]
         let wasUserEntereds: [Bool]
+        let devices: [Data?]
 
         init(samples: [StoredGlucoseSample]) {
+            self.uuids = samples.map { $0.uuid }
             self.provenanceIdentifiers = samples.map { $0.provenanceIdentifier }
             self.syncIdentifiers = samples.map { $0.syncIdentifier }
             self.syncVersions = samples.map { $0.syncVersion }
@@ -51,27 +54,29 @@ extension WatchHistoricalGlucose: RawRepresentable {
             self.quantities = samples.map { $0.quantity.doubleValue(for: .milligramsPerDeciliter) }
             self.isDisplayOnlys = samples.map { $0.isDisplayOnly }
             self.wasUserEntereds = samples.map { $0.wasUserEntered }
+            self.devices = samples.map { try? WatchHistoricalGlucose.encoder.encode($0.device) }
         }
 
         var samples: [StoredGlucoseSample] {
-            return (0..<syncIdentifiers.count).map {
-                StoredGlucoseSample(provenanceIdentifier: provenanceIdentifiers[$0],
+            return (0..<uuids.count).map {
+                return StoredGlucoseSample(uuid: uuids[$0],
+                                    provenanceIdentifier: provenanceIdentifiers[$0],
                                     syncIdentifier: syncIdentifiers[$0],
                                     syncVersion: syncVersions[$0],
                                     startDate: startDates[$0],
                                     quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: quantities[$0]),
                                     isDisplayOnly: isDisplayOnlys[$0],
                                     wasUserEntered: wasUserEntereds[$0],
-                                    device: nil)
+                                    device: devices[$0].flatMap { try? HKDevice(from: $0) })
             }
         }
     }
 
-    private static var encoder: PropertyListEncoder {
+    fileprivate static var encoder: PropertyListEncoder {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .binary
         return encoder
     }
 
-    private static var decoder: PropertyListDecoder = PropertyListDecoder()
+    fileprivate static var decoder: PropertyListDecoder = PropertyListDecoder()
 }
