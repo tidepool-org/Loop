@@ -25,7 +25,6 @@ struct BolusEntryView: View {
     @State private var shouldBolusEntryBecomeFirstResponder = false
 
     @State private var isManualGlucoseEntryRowVisible = false
-    @State private var enteredManualGlucose = ""
 
     @State private var isInteractingWithChart = false
     @State private var isKeyboardVisible = false
@@ -74,7 +73,7 @@ struct BolusEntryView: View {
                 // The view model can disable manual glucose entry if CGM data returns.
                 if !isManualGlucoseEntryEnabled {
                     self.isManualGlucoseEntryRowVisible = false
-                    self.enteredManualGlucose = ""
+                    self.viewModel.manualGlucoseEntry = ""
                 }
             }
         }
@@ -216,16 +215,8 @@ struct BolusEntryView: View {
 
     private var typedManualGlucoseEntry: Binding<String> {
         Binding(
-            get: { self.enteredManualGlucose },
-            set: { newValue in
-                if let doubleValue = glucoseFormatter.number(from: newValue)?.doubleValue {
-                    viewModel.enteredManualGlucose = HKQuantity(unit: displayGlucoseUnitObservable.displayGlucoseUnit, doubleValue: doubleValue)
-                } else {
-                    viewModel.enteredManualGlucose = nil
-                }
-
-                enteredManualGlucose = newValue
-            }
+            get: { viewModel.manualGlucoseEntry },
+            set: { newValue in viewModel.manualGlucoseEntry = newValue }
         )
     }
 

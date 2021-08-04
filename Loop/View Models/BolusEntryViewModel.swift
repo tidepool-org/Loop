@@ -47,6 +47,8 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     var insulinModel: InsulinModel? { get }
     
     var settings: LoopSettings { get }
+
+    var displayGlucoseUnitObservable: DisplayGlucoseUnitObservable { get }
 }
 
 final class BolusEntryViewModel: ObservableObject {
@@ -116,6 +118,52 @@ final class BolusEntryViewModel: ObservableObject {
         return ChartsManager(colors: .primary, settings: .default, charts: [predictedGlucoseChart], traitCollection: .current)
     }()
 
+    private var cachedDisplayGlucoseUnit: HKUnit
+
+    private var glucoseUnit: HKUnit? {
+        delegate?.displayGlucoseUnitObservable.displayGlucoseUnit
+    }
+
+    private let glucoseQuantityFormatter = QuantityFormatter()
+
+    private var glucoseAmount = "" {
+        didSet {
+            guard let newGlucoseValue = glucoseQuantityFormatter.numberFormatter.number(from: glucoseAmount)?.doubleValue
+            else {
+                enteredManualGlucose = nil
+                return
+            }
+
+            // only update enteredManualGlucose if needed
+            if enteredManualGlucose == nil ||
+                glucoseAmount != glucoseQuantityFormatter.string(from: enteredManualGlucose!, for: cachedDisplayGlucoseUnit, includeUnit: false)
+            {
+                self.enteredManualGlucose = HKQuantity(unit: cachedDisplayGlucoseUnit, doubleValue: newGlucoseValue)
+            }
+        }
+    }
+
+    var manualGlucoseEntry: String {
+        get {
+            guard let glucoseUnit = glucoseUnit else { return "" }
+            if cachedDisplayGlucoseUnit != glucoseUnit {
+                cachedDisplayGlucoseUnit = glucoseUnit
+                glucoseQuantityFormatter.setPreferredNumberFormatter(for: glucoseUnit)
+                guard let enteredManualGlucose = enteredManualGlucose,
+                      let glucoseAmount = glucoseQuantityFormatter.string(from: enteredManualGlucose, for: glucoseUnit, includeUnit: false)
+                else {
+                    glucoseAmount = ""
+                    return glucoseAmount
+                }
+                self.glucoseAmount = glucoseAmount
+            }
+            return glucoseAmount
+        }
+        set {
+            glucoseAmount = newValue
+        }
+    }
+
     // MARK: - Seams
     private weak var delegate: BolusEntryViewModelDelegate?
     private let now: () -> Date
@@ -160,6 +208,7 @@ final class BolusEntryViewModel: ObservableObject {
         
         self.dosingDecision.originalCarbEntry = originalCarbEntry
 
+        self.cachedDisplayGlucoseUnit = delegate.displayGlucoseUnitObservable.displayGlucoseUnit
         observeLoopUpdates()
         observeEnteredBolusChanges()
         observeEnteredManualGlucoseChanges()
