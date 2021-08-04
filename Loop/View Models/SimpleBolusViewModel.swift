@@ -76,10 +76,34 @@ class SimpleBolusViewModel: ObservableObject {
         }
     }
 
-    @Published var enteredGlucoseAmount: String = "" {
+    // needed to detect change in display glucose unit when returning to the app
+    private var cachedDisplayGlucoseUnit: HKUnit
+
+    var enteredGlucoseAmount: String {
+        get  {
+            if cachedDisplayGlucoseUnit != glucoseUnit {
+                cachedDisplayGlucoseUnit = glucoseUnit
+                glucoseQuantityFormatter.setPreferredNumberFormatter(for: glucoseUnit)
+                guard let glucose = glucose,
+                      let glucoseAmount = glucoseQuantityFormatter.string(from: glucose, for: glucoseUnit, includeUnit: false)
+                else {
+                    glucoseAmount = ""
+                    return glucoseAmount
+                }
+                self.glucoseAmount = glucoseAmount
+            }
+
+            return glucoseAmount
+        }
+        set {
+            glucoseAmount = newValue
+        }
+    }
+
+    @Published var glucoseAmount: String = "" {
         didSet {
-            if let enteredGlucose = glucoseAmountFormatter.number(from: enteredGlucoseAmount)?.doubleValue {
-                glucose = HKQuantity(unit: delegate.displayGlucoseUnitObservable.displayGlucoseUnit, doubleValue: enteredGlucose)
+            if let enteredGlucose = glucoseQuantityFormatter.numberFormatter.number(from: enteredGlucoseAmount)?.doubleValue {
+                glucose = HKQuantity(unit: glucoseUnit, doubleValue: enteredGlucose)
                 if let glucose = glucose, glucose < suspendThreshold {
                     activeNotice = .glucoseBelowSuspendThreshold
                 } else {
@@ -167,7 +191,7 @@ class SimpleBolusViewModel: ObservableObject {
         Self.carbAmountFormatter.string(from: 0.0)!
     }
 
-    private let glucoseAmountFormatter: NumberFormatter
+    private let glucoseQuantityFormatter = QuantityFormatter()
     private let delegate: SimpleBolusViewModelDelegate
     private let log = OSLog(category: "SimpleBolusViewModel")
     
@@ -181,7 +205,7 @@ class SimpleBolusViewModel: ObservableObject {
         self.delegate = delegate
         let glucoseQuantityFormatter = QuantityFormatter()
         glucoseQuantityFormatter.setPreferredNumberFormatter(for: delegate.displayGlucoseUnitObservable.displayGlucoseUnit)
-        glucoseAmountFormatter = glucoseQuantityFormatter.numberFormatter
+        cachedDisplayGlucoseUnit = delegate.displayGlucoseUnitObservable.displayGlucoseUnit
         enteredBolusAmount = Self.doseAmountFormatter.string(from: 0.0)!
         updateRecommendation()
         dosingDecision = BolusDosingDecision()
