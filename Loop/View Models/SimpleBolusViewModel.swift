@@ -79,38 +79,38 @@ class SimpleBolusViewModel: ObservableObject {
     // needed to detect change in display glucose unit when returning to the app
     private var cachedDisplayGlucoseUnit: HKUnit
 
-    var enteredGlucoseAmount: String {
+    var manualGlucoseString: String {
         get  {
-            if cachedDisplayGlucoseUnit != glucoseUnit {
-                cachedDisplayGlucoseUnit = glucoseUnit
-                glucoseQuantityFormatter.setPreferredNumberFormatter(for: glucoseUnit)
-                guard let glucose = glucose,
-                      let glucoseAmount = glucoseQuantityFormatter.string(from: glucose, for: glucoseUnit, includeUnit: false)
+            if cachedDisplayGlucoseUnit != displayGlucoseUnit {
+                cachedDisplayGlucoseUnit = displayGlucoseUnit
+                glucoseQuantityFormatter.setPreferredNumberFormatter(for: displayGlucoseUnit)
+                guard let manualGlucoseQuantity = manualGlucoseQuantity,
+                      let manualGlucoseString = glucoseQuantityFormatter.string(from: manualGlucoseQuantity, for: displayGlucoseUnit, includeUnit: false)
                 else {
-                    glucoseAmount = ""
-                    return glucoseAmount
+                    _manualGlucoseString = ""
+                    return _manualGlucoseString
                 }
-                self.glucoseAmount = glucoseAmount
+                self._manualGlucoseString = manualGlucoseString
             }
 
-            return glucoseAmount
+            return _manualGlucoseString
         }
         set {
-            glucoseAmount = newValue
+            _manualGlucoseString = newValue
         }
     }
 
-    @Published var glucoseAmount: String = "" {
+    @Published private var _manualGlucoseString: String = "" {
         didSet {
-            if let enteredGlucose = glucoseQuantityFormatter.numberFormatter.number(from: enteredGlucoseAmount)?.doubleValue {
-                glucose = HKQuantity(unit: glucoseUnit, doubleValue: enteredGlucose)
-                if let glucose = glucose, glucose < suspendThreshold {
+            if let manualGlucoseValue = glucoseQuantityFormatter.numberFormatter.number(from: _manualGlucoseString)?.doubleValue {
+                manualGlucoseQuantity = HKQuantity(unit: displayGlucoseUnit, doubleValue: manualGlucoseValue)
+                if let manualGlucoseQuantity = manualGlucoseQuantity, manualGlucoseQuantity < suspendThreshold {
                     activeNotice = .glucoseBelowSuspendThreshold
                 } else {
                     activeNotice = nil
                 }
             } else {
-                glucose = nil
+                manualGlucoseQuantity = nil
             }
             updateRecommendation()
         }
@@ -127,10 +127,10 @@ class SimpleBolusViewModel: ObservableObject {
     }
     
     private var carbs: HKQuantity? = nil
-    private var glucose: HKQuantity? = nil
+    private var manualGlucoseQuantity: HKQuantity? = nil
     private var bolus: HKQuantity? = nil
     
-    var glucoseUnit: HKUnit { return delegate.displayGlucoseUnitObservable.displayGlucoseUnit }
+    var displayGlucoseUnit: HKUnit { return delegate.displayGlucoseUnitObservable.displayGlucoseUnit }
     
     var suspendThreshold: HKQuantity { return delegate.suspendThreshold }
 
@@ -171,7 +171,7 @@ class SimpleBolusViewModel: ObservableObject {
     }
     
     var hasDataToSave: Bool {
-        return glucose != nil || carbs != nil
+        return manualGlucoseQuantity != nil || carbs != nil
     }
     
     var hasBolusEntryReadyToDeliver: Bool {
@@ -213,15 +213,15 @@ class SimpleBolusViewModel: ObservableObject {
     
     func updateRecommendation() {
         let recommendationDate = Date()
-        if carbs != nil || glucose != nil {
-            dosingDecision = delegate.computeSimpleBolusRecommendation(at: recommendationDate, mealCarbs: carbs, manualGlucose: glucose)
+        if carbs != nil || manualGlucoseQuantity != nil {
+            dosingDecision = delegate.computeSimpleBolusRecommendation(at: recommendationDate, mealCarbs: carbs, manualGlucose: manualGlucoseQuantity)
             if let decision = dosingDecision, let bolusRecommendation = decision.recommendedBolus {
                 recommendation = bolusRecommendation.amount
             } else {
                 recommendation = nil
             }
             
-            if let decision = dosingDecision, let insulinOnBoard = decision.insulinOnBoard, insulinOnBoard.value > 0, glucose != nil {
+            if let decision = dosingDecision, let insulinOnBoard = decision.insulinOnBoard, insulinOnBoard.value > 0, manualGlucoseQuantity != nil {
                 activeInsulin = Self.doseAmountFormatter.string(from: insulinOnBoard.value)
             } else {
                 activeInsulin = nil
@@ -244,8 +244,8 @@ class SimpleBolusViewModel: ObservableObject {
             }
         }
 
-        if let glucose = glucose {
-            guard LoopConstants.validManualGlucoseEntryRange.contains(glucose) else {
+        if let manualGlucoseQuantity = manualGlucoseQuantity {
+            guard LoopConstants.validManualGlucoseEntryRange.contains(manualGlucoseQuantity) else {
                 presentAlert(.manualGlucoseEntryOutOfAcceptableRange)
                 completion(false)
                 return
@@ -280,8 +280,8 @@ class SimpleBolusViewModel: ObservableObject {
         }
         
         func saveManualGlucose(_ completion: @escaping (Bool) -> Void) {
-            if let glucose = glucose {
-                let manualGlucoseSample = NewGlucoseSample(date: saveDate, quantity: glucose, isDisplayOnly: false, wasUserEntered: true, syncIdentifier: UUID().uuidString)
+            if let manualGlucoseQuantity = manualGlucoseQuantity {
+                let manualGlucoseSample = NewGlucoseSample(date: saveDate, quantity: manualGlucoseQuantity, isDisplayOnly: false, wasUserEntered: true, syncIdentifier: UUID().uuidString)
                 delegate.addGlucose([manualGlucoseSample]) { error in
                     DispatchQueue.main.async {
                         if let error = error {

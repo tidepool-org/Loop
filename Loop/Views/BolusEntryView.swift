@@ -71,10 +71,7 @@ struct BolusEntryView: View {
             }
             .onReceive(self.viewModel.$isManualGlucoseEntryEnabled) { isManualGlucoseEntryEnabled in
                 // The view model can disable manual glucose entry if CGM data returns.
-                if !isManualGlucoseEntryEnabled {
-                    self.isManualGlucoseEntryRowVisible = false
-                    self.viewModel.manualGlucoseEntry = ""
-                }
+                self.isManualGlucoseEntryRowVisible = isManualGlucoseEntryEnabled
             }
         }
     }
@@ -189,7 +186,7 @@ struct BolusEntryView: View {
                 Spacer()
                 HStack(alignment: .firstTextBaseline) {
                     DismissibleKeyboardTextField(
-                        text: typedManualGlucoseEntry,
+                        text: enteredManualGlucose,
                         placeholder: NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
                         font: .heavy(.title1),
                         textAlignment: .right,
@@ -213,10 +210,10 @@ struct BolusEntryView: View {
         }
     }
 
-    private var typedManualGlucoseEntry: Binding<String> {
+    private var enteredManualGlucose: Binding<String> {
         Binding(
-            get: { viewModel.manualGlucoseEntry },
-            set: { newValue in viewModel.manualGlucoseEntry = newValue }
+            get: { viewModel.manualGlucoseString },
+            set: { newValue in viewModel.manualGlucoseString = newValue }
         )
     }
 

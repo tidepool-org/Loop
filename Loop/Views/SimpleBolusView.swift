@@ -23,10 +23,10 @@ struct SimpleBolusView: View {
     var displayMealEntry: Bool
     @ObservedObject var viewModel: SimpleBolusViewModel
 
-    private var enteredGlucoseAmount: Binding<String> {
+    private var enteredManualGlucose: Binding<String> {
         Binding(
-            get: { return viewModel.enteredGlucoseAmount },
-            set: { newValue in viewModel.enteredGlucoseAmount = newValue }
+            get: { return viewModel.manualGlucoseString },
+            set: { newValue in viewModel.manualGlucoseString = newValue }
         )
     }
 
@@ -143,7 +143,7 @@ struct SimpleBolusView: View {
             Spacer()
             HStack(alignment: .firstTextBaseline) {
                 DismissibleKeyboardTextField(
-                    text: enteredGlucoseAmount,
+                    text: enteredManualGlucose,
                     placeholder: NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
                     font: .heavy(.title1),
                     textAlignment: .right,
