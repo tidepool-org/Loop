@@ -214,7 +214,7 @@ final class DeviceDataManager {
         self.alertPresenter = alertPresenter
         
         self.healthStore = HKHealthStore()
-        self.cacheStore = PersistenceController.controllerInLocalDirectory()// .controllerInAppGroupDirectory()
+        self.cacheStore = PersistenceController.controllerInAppGroupDirectory()
         
         let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
         let sensitivitySchedule = UserDefaults.appGroup?.insulinSensitivitySchedule
