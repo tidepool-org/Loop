@@ -25,10 +25,10 @@ struct BolusEntryView: View {
     @State private var shouldBolusEntryBecomeFirstResponder = false
 
     @State private var isManualGlucoseEntryRowVisible = false
-    @State private var enteredManualGlucose = ""
 
     @State private var isInteractingWithChart = false
     @State private var isKeyboardVisible = false
+    @State private var pickerShouldExpand = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -58,11 +58,7 @@ struct BolusEntryView: View {
             }
             .keyboardAware()
             .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
-            .navigationBarTitle(
-                self.viewModel.potentialCarbEntry == nil
-                    ? Text("Bolus", comment: "Title for bolus entry screen")
-                    : Text("Meal Bolus", comment: "Title for bolus entry screen when also entering carbs")
-            )
+            .navigationBarTitle(self.title)
                 .supportedInterfaceOrientations(.portrait)
                 .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
                 .onReceive(self.viewModel.$enteredBolus) { updatedBolusEntry in
@@ -72,12 +68,16 @@ struct BolusEntryView: View {
             }
             .onReceive(self.viewModel.$isManualGlucoseEntryEnabled) { isManualGlucoseEntryEnabled in
                 // The view model can disable manual glucose entry if CGM data returns.
-                if !isManualGlucoseEntryEnabled {
-                    self.isManualGlucoseEntryRowVisible = false
-                    self.enteredManualGlucose = ""
-                }
+                self.isManualGlucoseEntryRowVisible = isManualGlucoseEntryEnabled
             }
         }
+    }
+    
+    private var title: Text {
+        if viewModel.potentialCarbEntry == nil {
+            return Text("Bolus", comment: "Title for bolus entry screen")
+        }
+        return Text("Meal Bolus", comment: "Title for bolus entry screen when also entering carbs")
     }
 
     private func shouldAutoScroll(basedOn geometry: GeometryProxy) -> Bool {
@@ -152,7 +152,7 @@ struct BolusEntryView: View {
     private var summarySection: some View {
         Section {
             VStack(spacing: 16) {
-                Text("Bolus Summary", comment: "Title for card displaying carb entry and bolus recommendation")
+                titleText
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -165,7 +165,7 @@ struct BolusEntryView: View {
                 }
             }
             .padding(.top, 8)
-
+            
             if viewModel.isManualGlucoseEntryEnabled && viewModel.potentialCarbEntry != nil {
                 potentialCarbEntryRow
             }
@@ -176,6 +176,10 @@ struct BolusEntryView: View {
 
             bolusEntryRow
         }
+    }
+    
+    private var titleText: Text {
+        return Text("Bolus Summary", comment: "Title for card displaying carb entry and bolus recommendation")
     }
 
     private var glucoseFormatter: NumberFormatter {
@@ -190,7 +194,7 @@ struct BolusEntryView: View {
                 Spacer()
                 HStack(alignment: .firstTextBaseline) {
                     DismissibleKeyboardTextField(
-                        text: typedManualGlucoseEntry,
+                        text: enteredManualGlucose,
                         placeholder: NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
                         font: .heavy(.title1),
                         textAlignment: .right,
@@ -214,18 +218,10 @@ struct BolusEntryView: View {
         }
     }
 
-    private var typedManualGlucoseEntry: Binding<String> {
+    private var enteredManualGlucose: Binding<String> {
         Binding(
-            get: { self.enteredManualGlucose },
-            set: { newValue in
-                if let doubleValue = glucoseFormatter.number(from: newValue)?.doubleValue {
-                    viewModel.enteredManualGlucose = HKQuantity(unit: displayGlucoseUnitObservable.displayGlucoseUnit, doubleValue: doubleValue)
-                } else {
-                    viewModel.enteredManualGlucose = nil
-                }
-
-                enteredManualGlucose = newValue
-            }
+            get: { viewModel.manualGlucoseString },
+            set: { newValue in viewModel.manualGlucoseString = newValue }
         )
     }
 
@@ -265,6 +261,7 @@ struct BolusEntryView: View {
                 bolusUnitsLabel
             }
         }
+        .accessibilityElement(children: .combine)
     }
 
     private var recommendedBolusString: String {
@@ -290,10 +287,10 @@ struct BolusEntryView: View {
                     maxLength: 5,
                     doneButtonColor: .loopAccent
                 )
-                
                 bolusUnitsLabel
             }
         }
+        .accessibilityElement(children: .combine)
     }
 
     private var bolusUnitsLabel: some View {
@@ -462,6 +459,7 @@ struct LabeledQuantity: View {
                 .foregroundColor(Color(.secondaryLabel))
                 .fixedSize(horizontal: true, vertical: false)
         }
+        .accessibilityElement(children: .combine)
         .font(.subheadline)
         .modifier(LabelBackground())
     }

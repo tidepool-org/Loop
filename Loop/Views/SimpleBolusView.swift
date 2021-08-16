@@ -22,7 +22,14 @@ struct SimpleBolusView: View {
 
     var displayMealEntry: Bool
     @ObservedObject var viewModel: SimpleBolusViewModel
-    
+
+    private var enteredManualGlucose: Binding<String> {
+        Binding(
+            get: { return viewModel.manualGlucoseString },
+            set: { newValue in viewModel.manualGlucoseString = newValue }
+        )
+    }
+
     init(displayMealEntry: Bool, viewModel: SimpleBolusViewModel) {
         self.displayMealEntry = displayMealEntry
         self.viewModel = viewModel
@@ -136,7 +143,7 @@ struct SimpleBolusView: View {
             Spacer()
             HStack(alignment: .firstTextBaseline) {
                 DismissibleKeyboardTextField(
-                    text: $viewModel.enteredGlucoseAmount,
+                    text: enteredManualGlucose,
                     placeholder: NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
                     font: .heavy(.title1),
                     textAlignment: .right,
@@ -355,7 +362,7 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
             completion(.success(storedCarbEntry))
         }
         
-        func enactBolus(units: Double, at startDate: Date) {
+        func enactBolus(units: Double, automatic: Bool) {
         }
         
         func insulinOnBoard(at date: Date, completion: @escaping (DoseStoreResult<InsulinValue>) -> Void) {
@@ -364,7 +371,7 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
         
         func computeSimpleBolusRecommendation(at date: Date, mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> BolusDosingDecision? {
             var decision = BolusDosingDecision()
-            decision.recommendedBolus = BolusRecommendation(amount: 3, pendingInsulin: 0)
+            decision.recommendedBolus = ManualBolusRecommendation(amount: 3, pendingInsulin: 0)
             return decision
         }
         
