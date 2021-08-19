@@ -423,7 +423,9 @@ extension WatchDataManager: WCSessionDelegate {
 
                 // Prevent re-sending these updated settings back to the watch
                 lastSentSettings = settings
-                deviceManager.loopManager.settings = settings
+                deviceManager.loopManager.mutateSettings { settings in
+                    settings = settings
+                }
             }
 
             // Since target range affects recommended bolus, send back a new one
