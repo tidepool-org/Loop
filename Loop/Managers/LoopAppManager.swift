@@ -153,8 +153,8 @@ class LoopAppManager: NSObject {
         self.state = state.next
 
         closedLoopStatus.$isClosedLoopAllowed
-            .combineLatest(deviceDataManager.loopManager.$settings)
-            .map { $0 && $1.dosingEnabled }
+            .combineLatest(deviceDataManager.loopManager.$dosingEnabled)
+            .map { $0 && $1 }
             .assign(to: \.closedLoopStatus.isClosedLoop, on: self)
             .store(in: &cancellables)
     }
@@ -210,7 +210,9 @@ class LoopAppManager: NSObject {
     // MARK: - Remote Notification
 
     func setRemoteNotificationsDeviceToken(_ remoteNotificationsDeviceToken: Data) {
-        deviceDataManager?.loopManager.settings.deviceToken = remoteNotificationsDeviceToken
+        deviceDataManager?.loopManager.mutateSettings {
+            settings in settings.deviceToken = remoteNotificationsDeviceToken
+        }
     }
 
     private func handleRemoteNotificationFromLaunchOptions() {
