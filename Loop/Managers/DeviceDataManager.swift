@@ -1209,9 +1209,9 @@ extension DeviceDataManager {
                     log.default("Canceling temporary override from remote command")
                     loopManager.mutateSettings { settings in settings.scheduleOverride = nil }
                 }
+            } else {
+                log.info("Unhandled remote notification: %{public}@", String(describing: notification))
             }
-        } else {
-            log.info("Unhandled remote notification: %{public}@", String(describing: notification))
         }
     }
 }
