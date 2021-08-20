@@ -11,7 +11,7 @@ import LoopCore
 
 protocol LoopSettingsAlerterDelegate: AnyObject {
     var settings: LoopSettings { get }
-    @discardableResult func mutateSettings(_ changes: (_ settings: inout LoopSettings) -> Void) -> LoopSettings
+    func mutateSettings(_ changes: (_ settings: inout LoopSettings) -> Void)
 }
 
 class LoopSettingsAlerter {

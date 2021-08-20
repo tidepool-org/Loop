@@ -200,23 +200,15 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
         lockedSettings.value
     }
 
-    @discardableResult func mutateSettings(_ changes: (_ settings: inout LoopSettings) -> Void) -> LoopSettings {
-        setSettingsWithResult({ (settings) -> LoopSettings in
-            changes(&settings)
-            return settings
-        })
-    }
-
-    private func setSettingsWithResult(_ changes: (_ settings: inout LoopSettings) -> LoopSettings) -> LoopSettings {
+    func mutateSettings(_ changes: (_ settings: inout LoopSettings) -> Void) {
         var oldValue: LoopSettings!
-        var returnValue: LoopSettings!
         let newValue = lockedSettings.mutate { settings in
             oldValue = settings
-            returnValue = changes(&settings)
+            changes(&settings)
         }
 
         guard oldValue != newValue else {
-            return returnValue
+            return
         }
 
         dosingEnabled = newValue.dosingEnabled
@@ -238,8 +230,6 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
         UserDefaults.appGroup?.loopSettings = newValue
         notify(forChange: .preferences)
         analyticsServicesManager.didChangeLoopSettings(from: oldValue, to: newValue)
-
-        return returnValue
     }
 
     @Published private(set) var dosingEnabled: Bool
