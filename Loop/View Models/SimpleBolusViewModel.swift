@@ -60,6 +60,7 @@ class SimpleBolusViewModel: ObservableObject {
         case glucoseOutOfAllowedInputRange
         case maxBolusExceeded
         case recommendationExceedsMaxBolus
+        case carbohydrateEntryTooLarge
     }
 
     @Published var activeNotice: Notice?
@@ -110,6 +111,20 @@ class SimpleBolusViewModel: ObservableObject {
     
     private func updateNotice() {
         
+        if let carbs = self.carbQuantity {
+            guard carbs <= LoopConstants.maxCarbEntryQuantity else {
+                activeNotice = .carbohydrateEntryTooLarge
+                return
+            }
+        }
+        
+        if let bolus = bolus {
+            guard bolus.doubleValue(for: .internationalUnit()) <= delegate.maximumBolus else {
+                activeNotice = .maxBolusExceeded
+                return
+            }
+        }
+
         let isAddingCarbs: Bool
         if let carbQuantity = carbQuantity, carbQuantity.doubleValue(for: .gram()) > 0 {
             isAddingCarbs = true
@@ -121,11 +136,6 @@ class SimpleBolusViewModel: ObservableObject {
             isAddingCarbs ?
             LoopConstants.simpleBolusCalculatorMinGlucoseMealBolusRecommendation :
             LoopConstants.simpleBolusCalculatorMinGlucoseBolusRecommendation
-
-        if let bolus = bolus, bolus.doubleValue(for: .internationalUnit()) > delegate.maximumBolus {
-            activeNotice = .maxBolusExceeded
-            return
-        }
         
         switch manualGlucoseQuantity {
         case let .some(g) where !LoopConstants.validManualGlucoseEntryRange.contains(g):
@@ -251,7 +261,7 @@ class SimpleBolusViewModel: ObservableObject {
     
     var actionButtonDisabled: Bool {
         switch activeNotice {
-        case .glucoseOutOfAllowedInputRange, .maxBolusExceeded:
+        case .glucoseOutOfAllowedInputRange, .maxBolusExceeded, .carbohydrateEntryTooLarge:
             return true
         default:
             return false
@@ -286,6 +296,21 @@ class SimpleBolusViewModel: ObservableObject {
     
     func updateRecommendation() {
         let recommendationDate = Date()
+        
+        if let carbs = self.carbQuantity {
+            guard carbs <= LoopConstants.maxCarbEntryQuantity else {
+                recommendation = nil
+                return
+            }
+        }
+        
+        if let glucose = manualGlucoseQuantity {
+            guard LoopConstants.validManualGlucoseEntryRange.contains(glucose) else {
+                recommendation = nil
+                return
+            }
+        }
+        
         if carbQuantity != nil || manualGlucoseQuantity != nil {
             dosingDecision = delegate.computeSimpleBolusRecommendation(at: recommendationDate, mealCarbs: carbQuantity, manualGlucose: manualGlucoseQuantity)
             if let decision = dosingDecision, let bolusRecommendation = decision.recommendedBolus {

@@ -265,7 +265,7 @@ struct SimpleBolusView: View {
             label: {
                 switch viewModel.actionButtonAction {
                 case .saveWithoutBolusing:
-                    return Text("Save 10ithout Bolusing", comment: "Button text to save carbs and/or manual glucose entry without a bolus")
+                    return Text("Save without Bolusing", comment: "Button text to save carbs and/or manual glucose entry without a bolus")
                 case .saveAndDeliver:
                     return Text("Save and Deliver", comment: "Button text to save carbs and/or manual glucose entry and deliver a bolus")
                 case .enterBolus:
@@ -366,7 +366,11 @@ struct SimpleBolusView: View {
             return WarningView(
                 title: Text("Recommended Bolus Exceeds Maximum Bolus", comment: "Title for bolus screen warning when recommended bolus exceeds max bolus"),
                 caption: Text(String(format: NSLocalizedString("Your recommended bolus exceeds your maximum bolus amount of %1$@.", comment: "Warning for simple bolus when recommended bolus exceeds max bolus. (1: maximum bolus)"), viewModel.maximumBolusAmountString )))
-
+        case .carbohydrateEntryTooLarge:
+            let maximumCarbohydrateString = QuantityFormatter().string(from: LoopConstants.maxCarbEntryQuantity, for: .gram())!
+            return WarningView(
+                title: Text("Carbohydrate Entry Too Large", comment: "Title for bolus screen warning when carbohydrate entry is too large"),
+                caption: Text(String(format: NSLocalizedString("The maximum amount allowed is %1$@.", comment: "Warning for simple bolus when carbohydrate entry is too large. (1: maximum carbohydrate entry)"), maximumCarbohydrateString)))
         }
     }
     

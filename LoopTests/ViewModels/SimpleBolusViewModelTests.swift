@@ -232,15 +232,23 @@ class SimpleBolusViewModelTests: XCTestCase {
         viewModel.manualGlucoseString = "72"
         XCTAssertEqual(viewModel.activeNotice, .glucoseBelowSuspendThreshold)
         XCTAssert(!viewModel.bolusRecommended)
-        
+        XCTAssert(!viewModel.actionButtonDisabled)
+
         viewModel.manualGlucoseString = "69"
         XCTAssertEqual(viewModel.activeNotice, .glucoseBelowRecommendationLimit)
         viewModel.manualGlucoseString = "54"
         XCTAssertEqual(viewModel.activeNotice, .glucoseBelowRecommendationLimit)
         viewModel.manualGlucoseString = "800"
         XCTAssertEqual(viewModel.activeNotice, .glucoseOutOfAllowedInputRange)
+        XCTAssert(viewModel.actionButtonDisabled)
         viewModel.manualGlucoseString = "9"
-        XCTAssertEqual(viewModel.activeNotice, .glucoseOutOfAllowedInputRange)        
+        XCTAssertEqual(viewModel.activeNotice, .glucoseOutOfAllowedInputRange)
+        XCTAssert(viewModel.actionButtonDisabled)
+
+        viewModel.manualGlucoseString = ""
+        viewModel.enteredCarbString = "400"
+        XCTAssertEqual(viewModel.activeNotice, .carbohydrateEntryTooLarge)
+        XCTAssert(viewModel.actionButtonDisabled)
     }
     
     func testGlucoseEntryWarningsForMealBolus() {
@@ -248,6 +256,18 @@ class SimpleBolusViewModelTests: XCTestCase {
         viewModel.manualGlucoseString = "69"
         viewModel.enteredCarbString = "25"
         XCTAssertEqual(viewModel.activeNotice, .glucoseWarning)
+    }
+    
+    func testOutOfBoundsGlucoseShowsNoRecommendation() {
+        let viewModel = SimpleBolusViewModel(delegate: self, displayMealEntry: true)
+        viewModel.manualGlucoseString = "699"
+        XCTAssert(!viewModel.bolusRecommended)
+    }
+    
+    func testOutOfBoundsCarbsShowsNoRecommendation() {
+        let viewModel = SimpleBolusViewModel(delegate: self, displayMealEntry: true)
+        viewModel.enteredCarbString = "400"
+        XCTAssert(!viewModel.bolusRecommended)
     }
     
     func testMaxBolusWarnings() {
