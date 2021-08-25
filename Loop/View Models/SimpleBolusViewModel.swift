@@ -16,7 +16,7 @@ import LoopCore
 import Intents
 import LocalAuthentication
 
-protocol SimpleBolusViewModelDelegate: class {
+protocol SimpleBolusViewModelDelegate: AnyObject {
     
     func addGlucose(_ samples: [NewGlucoseSample], completion: @escaping (Error?) -> Void)
     
@@ -43,10 +43,10 @@ class SimpleBolusViewModel: ObservableObject {
     var authenticate: AuthenticationChallenge = LocalAuthentication.deviceOwnerCheck
 
     enum Alert: Int {
-        case maxBolusExceeded
+        case maxBolusExceeded // TODO: remove
         case carbEntryPersistenceFailure
-        case carbEntrySizeTooLarge
-        case manualGlucoseEntryOutOfAcceptableRange
+        case carbEntrySizeTooLarge // TODO: remove
+        case manualGlucoseEntryOutOfAcceptableRange // TODO: remove
         case manualGlucoseEntryPersistenceFailure
         case infoPopup
     }
@@ -57,6 +57,9 @@ class SimpleBolusViewModel: ObservableObject {
         case glucoseBelowSuspendThreshold
         case glucoseBelowRecommendationLimit
         case glucoseWarning
+        case glucoseOutOfAllowedInputRange
+        case maxBolusExceeded
+        case recommendationExceedsMaxBolus
     }
 
     @Published var activeNotice: Notice?
@@ -106,9 +109,27 @@ class SimpleBolusViewModel: ObservableObject {
     }
     
     private func updateNotice() {
-        let minRecommendationGlucose = displayMealEntry ? LoopConstants.simpleBolusCalculatorMinGlucoseMealBolusRecommendation : LoopConstants.simpleBolusCalculatorMinGlucoseBolusRecommendation
+        
+        let isAddingCarbs: Bool
+        if let carbQuantity = carbQuantity, carbQuantity.doubleValue(for: .gram()) > 0 {
+            isAddingCarbs = true
+        } else {
+            isAddingCarbs = false
+        }
+        
+        let minRecommendationGlucose =
+            isAddingCarbs ?
+            LoopConstants.simpleBolusCalculatorMinGlucoseMealBolusRecommendation :
+            LoopConstants.simpleBolusCalculatorMinGlucoseBolusRecommendation
+
+        if let bolus = bolus, bolus.doubleValue(for: .internationalUnit()) > delegate.maximumBolus {
+            activeNotice = .maxBolusExceeded
+            return
+        }
         
         switch manualGlucoseQuantity {
+        case let .some(g) where !LoopConstants.validManualGlucoseEntryRange.contains(g):
+            activeNotice = .glucoseOutOfAllowedInputRange
         case let g? where g < minRecommendationGlucose:
             activeNotice = .glucoseBelowRecommendationLimit
         case let g? where g < LoopConstants.simpleBolusCalculatorGlucoseWarningLimit:
@@ -116,7 +137,11 @@ class SimpleBolusViewModel: ObservableObject {
         case let g? where g < suspendThreshold:
             activeNotice = .glucoseBelowSuspendThreshold
         default:
-            activeNotice = nil
+            if let recommendation = recommendation, recommendation > delegate.maximumBolus {
+                activeNotice = .recommendationExceedsMaxBolus
+            } else {
+                activeNotice = nil
+            }
         }
 
     }
@@ -139,13 +164,14 @@ class SimpleBolusViewModel: ObservableObject {
         }
     }
 
-    @Published var enteredBolusAmount: String {
+    @Published var enteredBolusString: String {
         didSet {
-            if let enteredBolusAmount = Self.doseAmountFormatter.number(from: enteredBolusAmount)?.doubleValue, enteredBolusAmount > 0 {
+            if let enteredBolusAmount = Self.doseAmountFormatter.number(from: enteredBolusString)?.doubleValue, enteredBolusAmount > 0 {
                 bolus = HKQuantity(unit: .internationalUnit(), doubleValue: enteredBolusAmount)
             } else {
                 bolus = nil
             }
+            updateNotice()
         }
     }
     
@@ -172,12 +198,12 @@ class SimpleBolusViewModel: ObservableObject {
 
     private var recommendation: Double? = nil {
         didSet {
-            if let recommendation = recommendation, let recommendationString = Self.doseAmountFormatter.string(from: recommendation) {
-                recommendedBolus = recommendationString
-                enteredBolusAmount = recommendationString
+            if let recommendation = recommendation {
+                recommendedBolus = Self.doseAmountFormatter.string(from: recommendation)!
+                enteredBolusString = Self.doseAmountFormatter.string(from: min(recommendation, delegate.maximumBolus))!
             } else {
                 recommendedBolus = NSLocalizedString("–", comment: "String denoting lack of a recommended bolus amount in the simple bolus calculator")
-                enteredBolusAmount = Self.doseAmountFormatter.string(from: 0.0)!
+                enteredBolusString = Self.doseAmountFormatter.string(from: 0.0)!
             }
         }
     }
@@ -223,6 +249,15 @@ class SimpleBolusViewModel: ObservableObject {
         }
     }
     
+    var actionButtonDisabled: Bool {
+        switch activeNotice {
+        case .glucoseOutOfAllowedInputRange, .maxBolusExceeded:
+            return true
+        default:
+            return false
+        }
+    }
+    
     var carbPlaceholder: String {
         Self.carbAmountFormatter.string(from: 0.0)!
     }
@@ -233,8 +268,9 @@ class SimpleBolusViewModel: ObservableObject {
     
     private lazy var bolusVolumeFormatter = QuantityFormatter(for: .internationalUnit())
 
-    var maximumBolusAmountString: String? {
-        return bolusVolumeFormatter.numberFormatter.string(from: delegate.maximumBolus) ?? String(delegate.maximumBolus)
+    var maximumBolusAmountString: String {
+        let maxBolusQuantity = HKQuantity(unit: .internationalUnit(), doubleValue: delegate.maximumBolus)
+        return bolusVolumeFormatter.string(from: maxBolusQuantity, for: .internationalUnit())!
     }
 
     init(delegate: SimpleBolusViewModelDelegate, displayMealEntry: Bool) {
@@ -243,7 +279,7 @@ class SimpleBolusViewModel: ObservableObject {
         let glucoseQuantityFormatter = QuantityFormatter()
         glucoseQuantityFormatter.setPreferredNumberFormatter(for: delegate.displayGlucoseUnitObservable.displayGlucoseUnit)
         cachedDisplayGlucoseUnit = delegate.displayGlucoseUnitObservable.displayGlucoseUnit
-        enteredBolusAmount = Self.doseAmountFormatter.string(from: 0.0)!
+        enteredBolusString = Self.doseAmountFormatter.string(from: 0.0)!
         updateRecommendation()
         dosingDecision = BolusDosingDecision()
     }
@@ -302,7 +338,7 @@ class SimpleBolusViewModel: ObservableObject {
         // Authenticate the bolus before saving anything
         func authenticateIfNeeded(_ completion: @escaping (Bool) -> Void) {
             if let bolus = bolus, bolus.doubleValue(for: .internationalUnit()) > 0 {
-                let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmount)
+                let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusString)
                 authenticate(message) {
                     switch $0 {
                     case .success:
