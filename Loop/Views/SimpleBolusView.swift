@@ -282,32 +282,10 @@ struct SimpleBolusView: View {
     
     private func alert(for alert: SimpleBolusViewModel.Alert) -> SwiftUI.Alert {
         switch alert {
-        case .maxBolusExceeded:
-            return SwiftUI.Alert(
-                title: Text("Exceeds Maximum Bolus", comment: "Alert title for a maximum bolus validation error"),
-                message: Text(String(format: NSLocalizedString("The maximum bolus amount is %1$@ U.", comment: "Format string for maximum bolus exceeded alert (1: maximumBolusAmount)"), viewModel.maximumBolusAmountString))
-            )
         case .carbEntryPersistenceFailure:
             return SwiftUI.Alert(
                 title: Text("Unable to Save Carb Entry", comment: "Alert title for a carb entry persistence error"),
                 message: Text("An error occurred while trying to save your carb entry.", comment: "Alert message for a carb entry persistence error")
-            )
-        case .carbEntrySizeTooLarge:
-            let message = String(
-                format: NSLocalizedString("The maximum allowed amount is %1$@ grams", comment: "Alert body displayed for quantity greater than max (1: maximum quantity in grams)"),
-                NumberFormatter.localizedString(from: NSNumber(value: LoopConstants.maxCarbEntryQuantity.doubleValue(for: .gram())), number: .none)
-            )
-            return SwiftUI.Alert(
-                title: Text("Carb Entry Too Large", comment: "Alert title for a carb entry too large error"),
-                message: Text(message)
-            )
-        case .manualGlucoseEntryOutOfAcceptableRange:
-            let formatter = QuantityFormatter(for: displayGlucoseUnitObservable.displayGlucoseUnit)
-            let acceptableLowerBound = formatter.string(from: LoopConstants.validManualGlucoseEntryRange.lowerBound, for: displayGlucoseUnitObservable.displayGlucoseUnit) ?? String(describing: LoopConstants.validManualGlucoseEntryRange.lowerBound)
-            let acceptableUpperBound = formatter.string(from: LoopConstants.validManualGlucoseEntryRange.upperBound, for: displayGlucoseUnitObservable.displayGlucoseUnit) ?? String(describing: LoopConstants.validManualGlucoseEntryRange.upperBound)
-            return SwiftUI.Alert(
-                title: Text("Glucose Entry Out of Range", comment: "Alert title for a manual glucose entry out of range error"),
-                message: Text(String(format: NSLocalizedString("A manual glucose entry must be between %1$@ and %2$@", comment: "Alert message for a manual glucose entry out of range error. (1: acceptable lower bound) (2: acceptable upper bound)"), acceptableLowerBound, acceptableUpperBound))
             )
         case .manualGlucoseEntryPersistenceFailure:
             return SwiftUI.Alert(

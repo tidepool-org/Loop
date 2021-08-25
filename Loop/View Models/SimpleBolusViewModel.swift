@@ -43,10 +43,7 @@ class SimpleBolusViewModel: ObservableObject {
     var authenticate: AuthenticationChallenge = LocalAuthentication.deviceOwnerCheck
 
     enum Alert: Int {
-        case maxBolusExceeded // TODO: remove
         case carbEntryPersistenceFailure
-        case carbEntrySizeTooLarge // TODO: remove
-        case manualGlucoseEntryOutOfAcceptableRange // TODO: remove
         case manualGlucoseEntryPersistenceFailure
         case infoPopup
     }
@@ -334,29 +331,6 @@ class SimpleBolusViewModel: ObservableObject {
     }
     
     func saveAndDeliver(completion: @escaping (Bool) -> Void) {
-        if let bolus = bolus {
-            guard bolus.doubleValue(for: .internationalUnit()) <= delegate.maximumBolus else {
-                presentAlert(.maxBolusExceeded)
-                completion(false)
-                return
-            }
-        }
-
-        if let manualGlucoseQuantity = manualGlucoseQuantity {
-            guard LoopConstants.validManualGlucoseEntryRange.contains(manualGlucoseQuantity) else {
-                presentAlert(.manualGlucoseEntryOutOfAcceptableRange)
-                completion(false)
-                return
-            }
-        }
-        
-        if let carbs = carbQuantity {
-            guard carbs <= LoopConstants.maxCarbEntryQuantity else {
-                presentAlert(.carbEntrySizeTooLarge)
-                completion(false)
-                return
-            }
-        }
         
         let saveDate = Date()
 
