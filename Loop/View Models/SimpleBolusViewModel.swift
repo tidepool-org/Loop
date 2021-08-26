@@ -51,13 +51,13 @@ class SimpleBolusViewModel: ObservableObject {
     @Published var activeAlert: Alert?
     
     enum Notice: Int {
-        case glucoseBelowSuspendThreshold
+        case carbohydrateEntryTooLarge
         case glucoseBelowRecommendationLimit
-        case glucoseWarning
+        case glucoseBelowSuspendThreshold
         case glucoseOutOfAllowedInputRange
+        case glucoseWarning
         case maxBolusExceeded
         case recommendationExceedsMaxBolus
-        case carbohydrateEntryTooLarge
     }
 
     @Published var activeNotice: Notice?
