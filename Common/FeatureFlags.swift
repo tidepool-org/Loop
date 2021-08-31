@@ -14,7 +14,6 @@ struct FeatureFlagConfiguration: Decodable {
     let automaticBolusEnabled: Bool
     let cgmManagerCategorizeManualGlucoseRangeEnabled: Bool
     let criticalAlertsEnabled: Bool
-    let debugFeaturesEnabled: Bool
     let entryDeletionEnabled: Bool
     let fiaspInsulinModelEnabled: Bool
     let includeServicesInSettingsEnabled: Bool
@@ -47,12 +46,6 @@ struct FeatureFlagConfiguration: Decodable {
         self.criticalAlertsEnabled = true
         #else
         self.criticalAlertsEnabled = false
-        #endif
-
-        #if DEBUG_FEATURES_ENABLED
-        self.debugFeaturesEnabled = true
-        #else
-        self.debugFeaturesEnabled = false
         #endif
 
         // Swift compiler config is inverse, since the default state is enabled.
@@ -178,9 +171,10 @@ extension FeatureFlagConfiguration {
         if UserDefaults.appGroup?.allowDebugFeatures ?? false {
             return true
         }
-        if debugFeaturesEnabled {
-            return debugFeaturesEnabled
-        }
+        #if ALLOW_DEBUG_FEATURES_ENABLED
+        return true
+        #else
         return false
+        #endif
     }
 }
