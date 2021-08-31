@@ -92,7 +92,12 @@ class OnboardingManager {
             return
         }
 
-        displayOnboarding(onboarding)
+        let resuming = isSuspended
+        self.isSuspended = false
+
+        if !displayOnboarding(onboarding, resuming: resuming) {
+            completeActiveOnboarding()
+        }
     }
 
     private var nextActiveOnboarding: OnboardingUI? {
@@ -121,20 +126,24 @@ class OnboardingManager {
         return nil
     }
 
-    private func displayOnboarding(_ onboarding: OnboardingUI) {
+    private func displayOnboarding(_ onboarding: OnboardingUI, resuming: Bool) -> Bool {
         var onboardingViewController = onboarding.onboardingViewController(onboardingProvider: self, displayGlucoseUnitObservable: deviceDataManager.displayGlucoseUnitObservable, colorPalette: .default)
         onboardingViewController.cgmManagerOnboardingDelegate = deviceDataManager
         onboardingViewController.pumpManagerOnboardingDelegate = deviceDataManager
         onboardingViewController.serviceOnboardingDelegate = servicesManager
         onboardingViewController.completionDelegate = self
 
-        if isSuspended {
-            self.isSuspended = false
+        guard !onboarding.isOnboarded else {
+            return false
+        }
+
+        if resuming {
             onboardingViewController.isModalInPresentation = true
             windowProvider?.window?.rootViewController?.present(onboardingViewController, animated: true, completion: nil)
         } else {
             windowProvider?.window?.rootViewController = onboardingViewController
         }
+        return true
     }
 
     private func completeActiveOnboarding() {
