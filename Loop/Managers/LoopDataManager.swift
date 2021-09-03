@@ -2168,7 +2168,8 @@ extension LoopDataManager {
 extension LoopDataManager {
     public var therapySettings: TherapySettings {
         get {
-            TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
+            let settings = settings
+            return TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
                             correctionRangeOverrides: CorrectionRangeOverrides(preMeal: settings.preMealTargetRange, workout: settings.legacyWorkoutTargetRange),
                             maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
                             maximumBolus: settings.maximumBolus,
@@ -2180,7 +2181,7 @@ extension LoopDataManager {
         }
         
         set {
-            lockedSettings.mutate { settings in
+            mutateSettings { settings in
                 settings.glucoseTargetRangeSchedule = newValue.glucoseTargetRangeSchedule
                 settings.preMealTargetRange = newValue.correctionRangeOverrides?.preMeal
                 settings.legacyWorkoutTargetRange = newValue.correctionRangeOverrides?.workout
