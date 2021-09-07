@@ -41,7 +41,10 @@ extension WatchHistoricalGlucose: RawRepresentable {
         let syncVersions: [Int?]
         let startDates: [Date]
         let quantities: [Double]
+        let conditionTitles: [String?]
+        let conditionThresholds: [Double?]
         let trends: [GlucoseTrend?]
+        let trendRates: [Double?]
         let isDisplayOnlys: [Bool]
         let wasUserEntereds: [Bool]
         let devices: [Data?]
@@ -54,7 +57,10 @@ extension WatchHistoricalGlucose: RawRepresentable {
             self.syncVersions = samples.map { $0.syncVersion }
             self.startDates = samples.map { $0.startDate }
             self.quantities = samples.map { $0.quantity.doubleValue(for: .milligramsPerDeciliter) }
+            self.conditionTitles = samples.map { $0.condition.flatMap { $0.title } }
+            self.conditionThresholds = samples.map { $0.condition.flatMap { $0.threshold?.doubleValue(for: .milligramsPerDeciliter) } }
             self.trends = samples.map { $0.trend }
+            self.trendRates = samples.map { $0.trendRate.flatMap { $0.doubleValue(for: .milligramsPerDeciliterPerMinute) } }
             self.isDisplayOnlys = samples.map { $0.isDisplayOnly }
             self.wasUserEntereds = samples.map { $0.wasUserEntered }
             self.devices = samples.map { try? WatchHistoricalGlucose.encoder.encode($0.device) }
@@ -63,13 +69,16 @@ extension WatchHistoricalGlucose: RawRepresentable {
 
         var samples: [StoredGlucoseSample] {
             return (0..<uuids.count).map {
+                let conditionThreshold = conditionThresholds[$0].flatMap { HKQuantity(unit: .milligramsPerDeciliter, doubleValue: $0) }
                 return StoredGlucoseSample(uuid: uuids[$0],
                                            provenanceIdentifier: provenanceIdentifiers[$0],
                                            syncIdentifier: syncIdentifiers[$0],
                                            syncVersion: syncVersions[$0],
                                            startDate: startDates[$0],
                                            quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: quantities[$0]),
+                                           condition: conditionTitles[$0].flatMap { GlucoseCondition(title: $0, threshold: conditionThreshold) },
                                            trend: trends[$0],
+                                           trendRate: trendRates[$0].flatMap { HKQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: $0) },
                                            isDisplayOnly: isDisplayOnlys[$0],
                                            wasUserEntered: wasUserEntereds[$0],
                                            device: devices[$0].flatMap { try? HKDevice(from: $0) },
