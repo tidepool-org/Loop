@@ -73,10 +73,10 @@ class OnboardingManager {
         self.completion = {
             self.windowProvider?.window?.rootViewController?.dismiss(animated: true, completion: nil)
         }
-        continueOnboarding(resumeSuspended: true)
+        continueOnboarding(allowResume: true)
     }
 
-    private func continueOnboarding(resumeSuspended: Bool = false) {
+    private func continueOnboarding(allowResume: Bool = false) {
         dispatchPrecondition(condition: .onQueue(.main))
 
         guard !isComplete else {
@@ -87,7 +87,7 @@ class OnboardingManager {
             authorizeAndComplete()
             return
         }
-        guard !isSuspended || resumeSuspended else {
+        guard !isSuspended || allowResume else {
             complete()
             return
         }
