@@ -14,7 +14,7 @@ public class InAppModalAlertIssuer: AlertIssuer {
     private weak var alertPresenter: AlertPresenter?
     private weak var alertManagerResponder: AlertManagerResponder?
 
-    private var alertsShowing: [Alert.Identifier: (UIAlertController, Alert)] = [:]
+    private var alertsPresented: [Alert.Identifier: (UIAlertController, Alert)] = [:]
     private var alertsPending: [Alert.Identifier: (Timer, Alert)] = [:]
 
     typealias ActionFactoryFunction = (String?, UIAlertAction.Style, ((UIAlertAction) -> Void)?) -> UIAlertAction
@@ -54,14 +54,14 @@ public class InAppModalAlertIssuer: AlertIssuer {
     public func retractAlert(identifier: Alert.Identifier) {
         DispatchQueue.main.async {
             self.removePendingAlert(identifier: identifier)
-            self.removeDeliveredAlert(identifier: identifier, completion: nil)
+            self.removePresentedAlert(identifier: identifier, completion: nil)
         }
     }
 
-    func removeDeliveredAlert(identifier: Alert.Identifier, completion: (() -> Void)?) {
-        guard let alertShowing = alertsShowing[identifier] else { return }
-        alertPresenter?.dismissAlert(alertShowing.0, animated: true, completion: completion)
-        clearDeliveredAlert(identifier: identifier)
+    func removePresentedAlert(identifier: Alert.Identifier, completion: (() -> Void)?) {
+        guard let alertPresented = alertsPresented[identifier] else { return }
+        alertPresenter?.dismissAlert(alertPresented.0, animated: true, completion: completion)
+        clearPresentedAlert(identifier: identifier)
     }
 
     func removePendingAlert(identifier: Alert.Identifier) {
@@ -97,7 +97,7 @@ extension InAppModalAlertIssuer {
             return
         }
         DispatchQueue.main.async {
-            if self.isAlertShowing(identifier: alert.identifier) {
+            if self.isAlertPresented(identifier: alert.identifier) {
                 return
             }
             let alertController = self.constructAlert(title: content.title,
@@ -105,13 +105,13 @@ extension InAppModalAlertIssuer {
                                                       action: content.acknowledgeActionButtonLabel,
                                                       isCritical: content.isCritical) { [weak self] in
                 // the completion is called after the alert is acknowledged
-                self?.clearDeliveredAlert(identifier: alert.identifier)
+                self?.clearPresentedAlert(identifier: alert.identifier)
                 self?.alertManagerResponder?.acknowledgeAlert(identifier: alert.identifier)
             }
             self.alertPresenter?.present(alertController, animated: true) { [weak self] in
-                // the completion is called after the alert is displayed
+                // the completion is called after the alert is presented
                 self?.playSound(for: alert)
-                self?.addDeliveredAlert(alert: alert, controller: alertController)
+                self?.addPresentedAlert(alert: alert, controller: alertController)
             }
         }
     }
@@ -121,9 +121,9 @@ extension InAppModalAlertIssuer {
         alertsPending[alert.identifier] = (timer, alert)
     }
 
-    private func addDeliveredAlert(alert: Alert, controller: UIAlertController) {
+    private func addPresentedAlert(alert: Alert, controller: UIAlertController) {
         dispatchPrecondition(condition: .onQueue(.main))
-        alertsShowing[alert.identifier] = (controller, alert)
+        alertsPresented[alert.identifier] = (controller, alert)
     }
     
     private func clearPendingAlert(identifier: Alert.Identifier) {
@@ -131,9 +131,9 @@ extension InAppModalAlertIssuer {
         alertsPending[identifier] = nil
     }
 
-    private func clearDeliveredAlert(identifier: Alert.Identifier) {
+    private func clearPresentedAlert(identifier: Alert.Identifier) {
         dispatchPrecondition(condition: .onQueue(.main))
-        alertsShowing[identifier] = nil
+        alertsPresented[identifier] = nil
     }
 
     private func isAlertPending(identifier: Alert.Identifier) -> Bool {
@@ -141,9 +141,9 @@ extension InAppModalAlertIssuer {
         return alertsPending.index(forKey: identifier) != nil
     }
     
-    private func isAlertShowing(identifier: Alert.Identifier) -> Bool {
+    private func isAlertPresented(identifier: Alert.Identifier) -> Bool {
         dispatchPrecondition(condition: .onQueue(.main))
-        return alertsShowing.index(forKey: identifier) != nil
+        return alertsPresented.index(forKey: identifier) != nil
     }
 
     private func constructAlert(title: String, message: String, action: String, isCritical: Bool, acknowledgeCompletion: @escaping () -> Void) -> UIAlertController {

@@ -190,7 +190,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
         XCTAssertNotNil(alertControllerPresented)
 
         var dismissed = false
-        inAppModalAlertIssuer.removeDeliveredAlert(identifier: alert.identifier) {
+        inAppModalAlertIssuer.removePresentedAlert(identifier: alert.identifier) {
             dismissed = true
         }
 
