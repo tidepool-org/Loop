@@ -29,7 +29,8 @@ public class InAppModalAlertIssuer: AlertIssuer {
          alertManagerResponder: AlertManagerResponder,
          soundPlayer: AlertSoundPlayer = DeviceAVSoundPlayer(),
          newActionFunc: @escaping ActionFactoryFunction = UIAlertAction.init,
-         newTimerFunc: TimerFactoryFunction? = nil) {
+         newTimerFunc: TimerFactoryFunction? = nil)
+    {
         self.alertPresenter = alertPresenter
         self.alertManagerResponder = alertManagerResponder
         self.soundPlayer = soundPlayer
@@ -38,7 +39,7 @@ public class InAppModalAlertIssuer: AlertIssuer {
             return Timer.scheduledTimer(withTimeInterval: timeInterval, repeats: repeats) { _ in block?() }
         }
     }
-        
+
     public func issueAlert(_ alert: Alert) {
         switch alert.trigger {
         case .immediate:
@@ -52,21 +53,27 @@ public class InAppModalAlertIssuer: AlertIssuer {
     
     public func retractAlert(identifier: Alert.Identifier) {
         DispatchQueue.main.async {
-            self.alertsPending[identifier]?.0.invalidate()
-            self.clearPendingAlert(identifier: identifier)
+            self.removePendingAlert(identifier: identifier)
             self.removeDeliveredAlert(identifier: identifier, completion: nil)
         }
     }
-        
+
     func removeDeliveredAlert(identifier: Alert.Identifier, completion: (() -> Void)?) {
-        self.alertsShowing[identifier]?.0.dismiss(animated: true, completion: completion)
-        self.clearDeliveredAlert(identifier: identifier)
+        guard let alertShowing = alertsShowing[identifier] else { return }
+        alertPresenter?.dismissAlert(alertShowing.0, animated: true, completion: completion)
+        clearDeliveredAlert(identifier: identifier)
+    }
+
+    func removePendingAlert(identifier: Alert.Identifier) {
+        guard let alertPending = alertsPending[identifier] else { return }
+        alertPending.0.invalidate()
+        clearPendingAlert(identifier: identifier)
     }
 }
 
 /// Private functions
 extension InAppModalAlertIssuer {
-        
+
     private func schedule(alert: Alert, interval: TimeInterval, repeats: Bool) {
         guard alert.foregroundContent != nil else {
             return
@@ -97,8 +104,9 @@ extension InAppModalAlertIssuer {
                                                       message: content.body,
                                                       action: content.acknowledgeActionButtonLabel,
                                                       isCritical: content.isCritical) { [weak self] in
-                  self?.clearDeliveredAlert(identifier: alert.identifier)
-                  self?.alertManagerResponder?.acknowledgeAlert(identifier: alert.identifier)
+                // the completion is called after the alert is acknowledged
+                self?.clearDeliveredAlert(identifier: alert.identifier)
+                self?.alertManagerResponder?.acknowledgeAlert(identifier: alert.identifier)
             }
             self.alertPresenter?.present(alertController, animated: true) { [weak self] in
                 // the completion is called after the alert is displayed
@@ -110,12 +118,12 @@ extension InAppModalAlertIssuer {
     
     private func addPendingAlert(alert: Alert, timer: Timer) {
         dispatchPrecondition(condition: .onQueue(.main))
-        self.alertsPending[alert.identifier] = (timer, alert)
+        alertsPending[alert.identifier] = (timer, alert)
     }
 
     private func addDeliveredAlert(alert: Alert, controller: UIAlertController) {
         dispatchPrecondition(condition: .onQueue(.main))
-        self.alertsShowing[alert.identifier] = (controller, alert)
+        alertsShowing[alert.identifier] = (controller, alert)
     }
     
     private func clearPendingAlert(identifier: Alert.Identifier) {
@@ -127,7 +135,7 @@ extension InAppModalAlertIssuer {
         dispatchPrecondition(condition: .onQueue(.main))
         alertsShowing[identifier] = nil
     }
-    
+
     private func isAlertPending(identifier: Alert.Identifier) -> Bool {
         dispatchPrecondition(condition: .onQueue(.main))
         return alertsPending.index(forKey: identifier) != nil
@@ -138,11 +146,11 @@ extension InAppModalAlertIssuer {
         return alertsShowing.index(forKey: identifier) != nil
     }
 
-    private func constructAlert(title: String, message: String, action: String, isCritical: Bool, completion: @escaping () -> Void) -> UIAlertController {
+    private func constructAlert(title: String, message: String, action: String, isCritical: Bool, acknowledgeCompletion: @escaping () -> Void) -> UIAlertController {
         dispatchPrecondition(condition: .onQueue(.main))
         // For now, this is a simple alert with an "OK" button
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alertController.addAction(newActionFunc(action, .default, { _ in completion() }))
+        alertController.addAction(newActionFunc(action, .default, { _ in acknowledgeCompletion() }))
         return alertController
     }
 

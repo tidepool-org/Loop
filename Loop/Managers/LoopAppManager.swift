@@ -25,12 +25,20 @@ public protocol AlertPresenter: AnyObject {
     /// - Parameters:
     ///   - animated: Animate the alert view controller dismissal or not.
     ///   - completion: Completion to call once view controller is dismissed.
-    func dismiss(animated: Bool, completion: (() -> Void)?)
+    func dismissTopMost(animated: Bool, completion: (() -> Void)?)
+
+    /// Dismiss an alert, even if it is not the top most alert.
+    /// - Parameters:
+    ///   - alertToDismiss: The alert to dismiss
+    ///   - animated: Animate the alert view controller dismissal or not.
+    ///   - completion: Completion to call once view controller is dismissed.
+    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool, completion: (() -> Void)?)
 }
 
 public extension AlertPresenter {
     func present(_ viewController: UIViewController, animated: Bool) { present(viewController, animated: animated, completion: nil) }
-    func dismiss(animated: Bool) { dismiss(animated: animated, completion: nil) }
+    func dismissTopMost(animated: Bool) { dismissTopMost(animated: animated, completion: nil) }
+    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool) { dismissAlert(alertToDismiss, animated: animated, completion: nil) }
 }
 
 protocol WindowProvider: AnyObject {
@@ -297,8 +305,46 @@ extension LoopAppManager: AlertPresenter {
         rootViewController?.topmostViewController.present(viewControllerToPresent, animated: animated, completion: completion)
     }
 
-    func dismiss(animated: Bool, completion: (() -> Void)?) {
+    func dismissTopMost(animated: Bool, completion: (() -> Void)?) {
         rootViewController?.topmostViewController.dismiss(animated: animated, completion: completion)
+    }
+
+    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool, completion: (() -> Void)?) {
+        if rootViewController?.topmostViewController == alertToDismiss {
+            dismissTopMost(animated: animated, completion: completion)
+        } else {
+            // check if the alert to dismiss is presenting another alert (and so on)
+            // calling dismiss() on an alert presenting another alert will only dismiss the presented alert
+            // (and any other alerts presented by the presented alert)
+
+            // get the stack of presented alerts that would be undesirably dismissed
+            var presentedAlerts: [UIAlertController] = []
+            var currentAlert = alertToDismiss
+            while let presentedAlert = currentAlert.presentedViewController as? UIAlertController {
+                presentedAlerts.append(presentedAlert)
+                currentAlert = presentedAlert
+            }
+
+            if presentedAlerts.isEmpty {
+                alertToDismiss.dismiss(animated: animated, completion: completion)
+            } else {
+                // Do not animate any of these view transitions, since the alert to dismiss is not at the top of the stack
+                // dismiss all the child presented alerts
+                alertToDismiss.dismiss(animated: false) {
+                    // dismiss the desired alert
+                    alertToDismiss.dismiss(animated: false) {
+                        // present the child alerts that were undesirably dismissed
+                        for alert in presentedAlerts {
+                            if alert == presentedAlerts.last {
+                                self.present(alert, animated: false, completion: completion)
+                            } else {
+                                self.present(alert, animated: false, completion: nil)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
