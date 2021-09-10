@@ -329,18 +329,27 @@ extension LoopAppManager: AlertPresenter {
                 alertToDismiss.dismiss(animated: animated, completion: completion)
             } else {
                 // Do not animate any of these view transitions, since the alert to dismiss is not at the top of the stack
-                // dismiss all the child presented alerts
+
+                // dismiss all the child presented alerts.
+                // Calling dismiss() on a VC that is presenting an other VC will dismiss the presented VC and all of its child presented VCs
                 alertToDismiss.dismiss(animated: false) {
                     // dismiss the desired alert
+                    // Calling dismiss() on a VC that is NOT presenting any other VCs will dismiss said VC
                     alertToDismiss.dismiss(animated: false) {
                         // present the child alerts that were undesirably dismissed
-                        for alert in presentedAlerts {
+                        var orderedPresentationBlock: (() -> Void)? = nil
+                        for alert in presentedAlerts.reversed() {
                             if alert == presentedAlerts.last {
-                                self.present(alert, animated: false, completion: completion)
+                                orderedPresentationBlock = {
+                                    self.present(alert, animated: false, completion: completion)
+                                }
                             } else {
-                                self.present(alert, animated: false, completion: nil)
+                                orderedPresentationBlock = {
+                                    self.present(alert, animated: false, completion: orderedPresentationBlock)
+                                }
                             }
                         }
+                        orderedPresentationBlock?()
                     }
                 }
             }

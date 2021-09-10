@@ -54,12 +54,15 @@ public class InAppModalAlertIssuer: AlertIssuer {
     public func retractAlert(identifier: Alert.Identifier) {
         DispatchQueue.main.async {
             self.removePendingAlert(identifier: identifier)
-            self.removePresentedAlert(identifier: identifier, completion: nil)
+            self.removePresentedAlert(identifier: identifier)
         }
     }
 
-    func removePresentedAlert(identifier: Alert.Identifier, completion: (() -> Void)?) {
-        guard let alertPresented = alertsPresented[identifier] else { return }
+    func removePresentedAlert(identifier: Alert.Identifier, completion: (() -> Void)? = nil) {
+        guard let alertPresented = alertsPresented[identifier] else {
+            completion?()
+            return
+        }
         alertPresenter?.dismissAlert(alertPresented.0, animated: true, completion: completion)
         clearPresentedAlert(identifier: identifier)
     }
