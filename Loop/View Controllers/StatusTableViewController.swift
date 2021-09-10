@@ -1516,8 +1516,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     @objc private func showLoopCompletionMessage(_: Any) {
         guard let loopCompletionMessage = hudView?.loopCompletionHUD.loopCompletionMessage else { return }
-        let versionCheckMessage = "Version \(Bundle.main.shortVersionString): \(deviceManager.servicesManager.versionCheckServicesManager.checkVersion(currentVersion: Bundle.main.shortVersionString))"
-        presentLoopCompletionMesage(title: loopCompletionMessage.title, message: loopCompletionMessage.message + "\n\n" + versionCheckMessage)
+        var message = loopCompletionMessage.message
+        if FeatureFlags.allowDebugFeatures {
+            message.append("\n\nVersion \(Bundle.main.shortVersionString): \(deviceManager.servicesManager.versionCheckServicesManager.checkVersion(currentVersion: Bundle.main.shortVersionString).localizedDescription)")
+        }
+        presentLoopCompletionMesage(title: loopCompletionMessage.title, message: message)
     }
 
     private func presentLoopCompletionMesage(title: String, message: String) {
