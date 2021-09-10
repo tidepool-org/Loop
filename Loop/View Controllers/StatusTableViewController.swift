@@ -1520,10 +1520,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
         if FeatureFlags.allowDebugFeatures {
             message.append("\n\nVersion \(Bundle.main.shortVersionString): \(deviceManager.servicesManager.versionCheckServicesManager.checkVersion(currentVersion: Bundle.main.shortVersionString).localizedDescription)")
         }
-        presentLoopCompletionMesage(title: loopCompletionMessage.title, message: message)
+        presentLoopCompletionMessage(title: loopCompletionMessage.title, message: message)
     }
 
-    private func presentLoopCompletionMesage(title: String, message: String) {
+    private func presentLoopCompletionMessage(title: String, message: String) {
         let action = UIAlertAction(title: NSLocalizedString("Dismiss", comment: "The button label of the action used to dismiss an error alert"),
                                    style: .default)
         let alertController = UIAlertController(title: title,
