@@ -15,28 +15,29 @@ final class VersionCheckServicesManager {
 
     private lazy var dispatchQueue = DispatchQueue(label: "com.loopkit.Loop.VersionCheckServicesManager")
     
-    private var versionCheckServices = [VersionCheckService]()
-
+    private var versionCheckServices = Locked<[VersionCheckService]>([])
+    
     init() {}
 
     func addService(_ versionCheckService: VersionCheckService) {
-        versionCheckServices.append(versionCheckService)
+        versionCheckServices.mutate { $0.append(versionCheckService) }
     }
 
     func restoreService(_ versionCheckService: VersionCheckService) {
-        versionCheckServices.append(versionCheckService)
+        versionCheckServices.mutate { $0.append(versionCheckService) }
     }
 
     func removeService(_ versionCheckService: VersionCheckService) {
-        versionCheckServices.removeAll { $0.serviceIdentifier == versionCheckService.serviceIdentifier }
+        versionCheckServices.mutate { $0.removeAll { $0.serviceIdentifier == versionCheckService.serviceIdentifier } }
     }
-
+    
     func checkVersion(currentVersion: String) -> VersionUpdate {
         let semaphore = DispatchSemaphore(value: 0)
         var results = [String: Result<VersionUpdate, Error>]()
-        versionCheckServices.forEach { versionCheckService in
+        let services = versionCheckServices.value
+        services.forEach { versionCheckService in
             dispatchQueue.async {
-                versionCheckService.checkVersion(currentVersion: currentVersion) { result in
+                versionCheckService.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: currentVersion) { result in
                     self.dispatchQueue.async {
                         results[versionCheckService.serviceIdentifier] = result
                         semaphore.signal()

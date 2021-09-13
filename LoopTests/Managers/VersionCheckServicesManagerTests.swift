@@ -14,7 +14,7 @@ class VersionCheckServicesManagerTests: XCTestCase {
 
     class MockVersionCheckService: VersionCheckService {
         var mockResult: Result<VersionUpdate, Error> = .success(.noneNeeded)
-        func checkVersion(currentVersion: String, completion: @escaping (Result<VersionUpdate, Error>) -> Void) {
+        func checkVersion(bundleIdentifier: String, currentVersion: String, completion: @escaping (Result<VersionUpdate, Error>) -> Void) {
             completion(mockResult)
         }
         convenience init() { self.init(rawState: [:])! }
