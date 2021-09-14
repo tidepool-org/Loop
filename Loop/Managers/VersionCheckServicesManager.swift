@@ -33,7 +33,7 @@ final class VersionCheckServicesManager {
     
     func checkVersion(currentVersion: String) -> VersionUpdate {
         let semaphore = DispatchSemaphore(value: 0)
-        var results = [String: Result<VersionUpdate, Error>]()
+        var results = [String: Result<VersionUpdate?, Error>]()
         let services = versionCheckServices.value
         services.forEach { versionCheckService in
             dispatchQueue.async {
@@ -53,7 +53,7 @@ final class VersionCheckServicesManager {
             case .failure(let error):
                 self.log.error("Error from version check service %{public}@: %{public}@", key, error.localizedDescription)
             case .success(let versionUpdate):
-                if versionUpdate > aggregatedVersionUpdate {
+                if let versionUpdate = versionUpdate, versionUpdate > aggregatedVersionUpdate {
                     aggregatedVersionUpdate = versionUpdate
                 }
             }
