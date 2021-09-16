@@ -86,37 +86,16 @@ extension NotificationManager {
     static func sendBolusFailureNotification(for error: PumpManagerError, units: Double, at startDate: Date) {
         let notification = UNMutableNotificationContent()
 
-        notification.title = NSLocalizedString("Bolus", comment: "The notification title for a bolus failure")
+        notification.title = NSLocalizedString("Bolus Issue", comment: "The notification title for a bolus issue")
 
         let fullStopCharacter = NSLocalizedString(".", comment: "Full stop character")
         let sentenceFormat = NSLocalizedString("%1@%2@", comment: "Adds a full-stop to a statement (1: statement, 2: full stop character)")
 
-        let subtitle: String
-        let bodyArray: [String?]
-        let defaultSubtitle = NSLocalizedString("Bolus Failure", comment: "The notification default subtitle for a bolus failure")
-        // This is a rough attempt at seeing if the error description can fit into the
-        // `subtitle` of the notification (it will ellipsize if not).  Unfortunately,
-        // without having code to measure the visible width of the string, and without
-        // easily being able to handle this for every screen size, I've empirically
-        // counted a conservative number of letters that fits on an iPod Touch.
-        // If it doesn't fit, it tucks it into the body.
-        let numberOfLettersThatFitOnAnIPodTouch = 25
-        if let errorDescription = error.errorDescription,
-           errorDescription.count > numberOfLettersThatFitOnAnIPodTouch {
-            subtitle = defaultSubtitle
-            bodyArray = [errorDescription, error.failureReason, error.recoverySuggestion]
-        } else {
-            subtitle = error.errorDescription ?? defaultSubtitle
-            bodyArray = [error.failureReason, error.recoverySuggestion]
-        }
-
-        let body = bodyArray.compactMap({ $0 }).map({
+        let body = [error.errorDescription, error.failureReason, error.recoverySuggestion].compactMap({ $0 }).map({
             // Avoids the double period at the end of a sentence.
-            // Note: this isn't perfect for all localization, as there may be periods in the middle of statements.
-            $0.contains(fullStopCharacter) ? $0 : String(format: sentenceFormat, $0, fullStopCharacter)
+            $0.hasSuffix(fullStopCharacter) ? $0 : String(format: sentenceFormat, $0, fullStopCharacter)
         }).joined(separator: " ")
 
-        notification.subtitle = subtitle
         notification.body = body
         notification.sound = .default
 
