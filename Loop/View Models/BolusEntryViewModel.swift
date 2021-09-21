@@ -217,9 +217,6 @@ final class BolusEntryViewModel: ObservableObject {
         observeEnteredManualGlucoseChanges()
         observeElapsedTime()
         observeRecommendedBolusChanges()
-
-        log.debug("BEVM.constructor -> update()")
-
         update()
     }
         
@@ -228,7 +225,6 @@ final class BolusEntryViewModel: ObservableObject {
             .publisher(for: .LoopDataUpdated)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.log.debug("observeLoopUpdates -> update()")
                 self?.update()
             }
             .store(in: &cancellables)
@@ -239,7 +235,6 @@ final class BolusEntryViewModel: ObservableObject {
             .removeDuplicates()
             .debounce(for: .milliseconds(debounceIntervalMilliseconds), scheduler: RunLoop.main)
             .sink { [weak self] _ in
-                self?.log.debug("observeEnteredBolusChanges -> withLoopState()")
                 self?.delegate?.withLoopState { [weak self] state in
                     self?.updatePredictedGlucoseValues(from: state)
                 }
@@ -268,14 +263,12 @@ final class BolusEntryViewModel: ObservableObject {
                 // Clear out any entered bolus whenever the manual entry changes
                 self.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
 
-                self.log.debug("observeEnteredManualGlucoseChanges -> withLoopState()")
                 self.delegate?.withLoopState { [weak self] state in
                     self?.updatePredictedGlucoseValues(from: state, completion: {
                         // Ensure the manual glucose entry appears on the chart at the same time as the updated prediction
                         self?.updateGlucoseChartValues()
                     })
 
-                    self?.log.debug("observeEnteredManualGlucoseChanges -> ensurePumpDataIsFresh()")
                     self?.ensurePumpDataIsFresh { [weak self] in
                         self?.updateRecommendedBolusAndNotice(from: state, isUpdatingFromUserInput: true)
                     }
@@ -297,7 +290,6 @@ final class BolusEntryViewModel: ObservableObject {
 
                 // Update the manual glucose sample's timestamp, which should always be "now"
                 self.updateManualGlucoseSample(enteredAt: self.now())
-                self.log.debug("observeElapsedTime -> update()")
                 self.update()
             }
             .store(in: &cancellables)
@@ -317,7 +309,6 @@ final class BolusEntryViewModel: ObservableObject {
         guard isBolusRecommended else { return }
         enteredBolus = recommendedBolus!
         isRefreshingPump = false
-        log.debug("setRecommendedBolus -> withLoopState()")
         delegate?.withLoopState { [weak self] state in
             self?.updatePredictedGlucoseValues(from: state)
         }
@@ -528,7 +519,6 @@ final class BolusEntryViewModel: ObservableObject {
         disableManualGlucoseEntryIfNecessary()
         updateChartDateInterval()
         updateStoredGlucoseValues()
-        log.debug("update() -> updateFromLoopState")
         updateFromLoopState()
         updateActiveInsulin()
     }
@@ -628,11 +618,9 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func updateFromLoopState() {
-        log.debug("updateFromLoopState -> withLoopState()")
         delegate?.withLoopState { [weak self] state in
             self?.updatePredictedGlucoseValues(from: state)
             self?.updateCarbsOnBoard(from: state)
-            self?.log.debug("updateFromLoopState -> ensurePumpDataIsFresh")
             self?.ensurePumpDataIsFresh { [weak self] in
                 self?.updateRecommendedBolusAndNotice(from: state, isUpdatingFromUserInput: false)
                 DispatchQueue.main.async {
@@ -658,7 +646,6 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func ensurePumpDataIsFresh(then completion: @escaping () -> Void) {
-        log.debug("ensurePumpDataIsFresh");
         if !isPumpDataStale {
             completion()
             return
@@ -668,7 +655,6 @@ final class BolusEntryViewModel: ObservableObject {
             // v-- This needs to happen on the main queue
             self.isRefreshingPump = true
             let wrappedCompletion: (Date?) -> Void = { [weak self] (lastSync) in
-                self?.log.debug("ensurePumpDataIsFresh calling withLoopState");
                 self?.delegate?.withLoopState { [weak self] _ in
                     // v-- This needs to happen in LoopDataManager's dataQueue
                     completion()
@@ -681,7 +667,6 @@ final class BolusEntryViewModel: ObservableObject {
                     }
                 }
             }
-            self.log.debug("ensurePumpDataIsFresh calling ensureCurrentPumpData");
             self.delegate?.ensureCurrentPumpData(completion: wrappedCompletion)
         }
     }
