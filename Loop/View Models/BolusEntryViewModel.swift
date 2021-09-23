@@ -36,7 +36,7 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     
     func carbsOnBoard(at date: Date, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (_ result: CarbStoreResult<CarbValue>) -> Void)
     
-    func ensureCurrentPumpData(completion: @escaping () -> Void)
+    func ensureCurrentPumpData(completion: @escaping (Date?) -> Void)
     
     var mostRecentGlucoseDataDate: Date? { get }
     
@@ -215,7 +215,6 @@ final class BolusEntryViewModel: ObservableObject {
         observeEnteredManualGlucoseChanges()
         observeElapsedTime()
         observeRecommendedBolusChanges()
-
         update()
     }
     
@@ -223,7 +222,9 @@ final class BolusEntryViewModel: ObservableObject {
         NotificationCenter.default
             .publisher(for: .LoopDataUpdated)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.update() }
+            .sink { [weak self] _ in
+                self?.update()
+            }
             .store(in: &cancellables)
     }
 
@@ -649,7 +650,7 @@ final class BolusEntryViewModel: ObservableObject {
         DispatchQueue.main.async {
             // v-- This needs to happen on the main queue
             self.isRefreshingPump = true
-            let wrappedCompletion: () -> Void = { [weak self] in
+            let wrappedCompletion: (Date?) -> Void = { [weak self] (lastSync) in
                 self?.delegate?.withLoopState { [weak self] _ in
                     // v-- This needs to happen in LoopDataManager's dataQueue
                     completion()

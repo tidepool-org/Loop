@@ -43,7 +43,7 @@ extension DeviceDataManager: BolusEntryViewModelDelegate {
         carbStore.carbsOnBoard(at: date, effectVelocities: effectVelocities, completion: completion)
     }
     
-    func ensureCurrentPumpData(completion: @escaping () -> Void) {
+    func ensureCurrentPumpData(completion: @escaping (Date?) -> Void) {
         pumpManager?.ensureCurrentPumpData(completion: completion)
     }
     
