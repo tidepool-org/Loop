@@ -185,9 +185,14 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
                 overrideHistory.recordOverride(settings.scheduleOverride)
 
                 // Invalidate cached effects affected by the override
-                self.carbEffect = nil
-                self.carbsOnBoard = nil
-                self.insulinEffect = nil
+                carbEffect = nil
+                carbsOnBoard = nil
+                insulinEffect = nil
+            }
+            
+            if settings.maximumBasalRatePerHour != oldValue.maximumBasalRatePerHour {
+                predictedGlucose = nil
+                loop()
             }
 
             UserDefaults.appGroup?.loopSettings = settings
