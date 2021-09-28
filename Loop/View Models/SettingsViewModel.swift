@@ -81,7 +81,8 @@ public class SettingsViewModel: ObservableObject {
     let therapySettings: () -> TherapySettings
     let supportedInsulinModelSettings: SupportedInsulinModelSettings
     let pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?
-    let syncPumpSchedule: (() -> PumpManager.SyncSchedule?)?
+    let syncBasalRateSchedule: (() -> PumpManager.SyncBasalRateSchedule?)?
+    let enactTempBasal: (() -> PumpManager.EnactTempBasal?)?
     let sensitivityOverridesEnabled: Bool
     let supportInfoProvider: SupportInfoProvider
 
@@ -103,7 +104,8 @@ public class SettingsViewModel: ObservableObject {
                 therapySettings: @escaping () -> TherapySettings,
                 supportedInsulinModelSettings: SupportedInsulinModelSettings,
                 pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?,
-                syncPumpSchedule: (() -> PumpManager.SyncSchedule?)?,
+                syncBasalRateSchedule: (() -> PumpManager.SyncBasalRateSchedule?)?,
+                enactTempBasal: (() -> PumpManager.EnactTempBasal?)?,
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
                 isClosedLoopAllowed: Published<Bool>.Publisher,
@@ -119,7 +121,8 @@ public class SettingsViewModel: ObservableObject {
         self.therapySettings = therapySettings
         self.supportedInsulinModelSettings = supportedInsulinModelSettings
         self.pumpSupportedIncrements = pumpSupportedIncrements
-        self.syncPumpSchedule = syncPumpSchedule
+        self.syncBasalRateSchedule = syncBasalRateSchedule
+        self.enactTempBasal = enactTempBasal
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
         self.isClosedLoopAllowed = false
