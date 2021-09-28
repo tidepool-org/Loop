@@ -530,20 +530,27 @@ extension LoopDataManager {
         // Cancel active high temp basal
         cancelActiveTempBasal()
     }
-
+    
     /// Cancel the active temp basal
     func cancelActiveTempBasal() {
         guard case .tempBasal(_) = basalDeliveryState else { return }
 
         dataAccessQueue.async {
-            // assign recommendedTempBasal right before setRecommendedTempBasal to avoid another assignment during asynchronous call
-            self.recommendedTempBasal = (recommendation: TempBasalRecommendation.cancel, date: self.now())
-            self.setRecommendedTempBasal { (error) -> Void in
-                self.storeDosingDecision(withDate: self.now(), withError: error)
-                self.notify(forChange: .tempBasal)
-            }
+            self.cancelActiveTempBasal(completion: nil)
         }
     }
+    
+    private func cancelActiveTempBasal(completion: ((Error?) -> Void)?) {
+        dispatchPrecondition(condition: .onQueue(dataAccessQueue))
+        // assign recommendedTempBasal right before setRecommendedTempBasal to avoid another assignment during asynchronous call
+        recommendedTempBasal = (recommendation: TempBasalRecommendation.cancel, date: self.now())
+        setRecommendedTempBasal { (error) -> Void in
+            self.storeDosingDecision(withDate: self.now(), withError: error)
+            self.notify(forChange: .tempBasal)
+            completion?(error)
+        }
+    }
+
 
     /// Adds and stores carb data, and recommends a bolus if needed
     ///
@@ -1526,6 +1533,23 @@ extension LoopDataManager {
             }
         }
     }
+    
+    public func validateTempBasal(unitsPerHour: Double, completion: @escaping (_ error: Error?) -> Void) {
+        dataAccessQueue.async {
+            switch self.basalDeliveryState {
+            case .some(.tempBasal(let dose)):
+                if dose.unitsPerHour > unitsPerHour {
+                    // Temp basal is higher than proposed rate, so should cancel
+                    self.cancelActiveTempBasal(completion: completion)
+                } else {
+                    completion(nil)
+                }
+            default:
+                completion(nil)
+            }
+        }
+    }
+
 }
 
 /// Describes a view into the loop state
