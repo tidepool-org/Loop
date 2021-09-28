@@ -52,6 +52,7 @@ class LoopDataManagerDosingTests: XCTestCase {
     let retrospectiveCorrectionGroupingIntervalMultiplier = 1.01
     let inputDataRecencyInterval = TimeInterval(minutes: 15)
     let dateFormatter = ISO8601DateFormatter.localTimeDate()
+    let defaultAccuracy = 1.0 / 40.0
     
     // MARK: Settings
     let maxBasalRate = 5.0
@@ -74,7 +75,7 @@ class LoopDataManagerDosingTests: XCTestCase {
     // MARK: Mock stores
     var loopDataManager: LoopDataManager!
     
-    func setUp(for test: DataManagerTestType) {
+    func setUp(for test: DataManagerTestType, basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil) {
         let settings = LoopSettings(
             dosingEnabled: false,
             glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
@@ -92,7 +93,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         
         loopDataManager = LoopDataManager(
             lastLoopCompleted: currentDate,
-            basalDeliveryState: .active(currentDate),
+            basalDeliveryState: basalDeliveryState ?? .active(currentDate),
             settings: settings,
             overrideHistory: TemporaryScheduleOverrideHistory(),
             lastPumpEventsReconciliation: nil, // this date is only used to init the doseStore if a DoseStoreProtocol isn't passed in, so this date can be nil
@@ -140,10 +141,10 @@ class LoopDataManagerDosingTests: XCTestCase {
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
-            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: defaultAccuracy)
         }
 
-        XCTAssertEqual(1.40, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
+        XCTAssertEqual(1.40, recommendedTempBasal!.unitsPerHour, accuracy: defaultAccuracy)
     }
     
     func testHighAndStable() {
@@ -167,10 +168,10 @@ class LoopDataManagerDosingTests: XCTestCase {
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
-            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: defaultAccuracy)
         }
 
-        XCTAssertEqual(4.63, recommendedBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
+        XCTAssertEqual(4.63, recommendedBasal!.unitsPerHour, accuracy: defaultAccuracy)
     }
     
     func testHighAndFalling() {
@@ -194,10 +195,10 @@ class LoopDataManagerDosingTests: XCTestCase {
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
-            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: defaultAccuracy)
         }
 
-        XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
+        XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: defaultAccuracy)
     }
     
     func testHighAndRisingWithCOB() {
@@ -221,10 +222,10 @@ class LoopDataManagerDosingTests: XCTestCase {
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
-            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: defaultAccuracy)
         }
 
-        XCTAssertEqual(1.6, recommendedBolus!.amount, accuracy: 1.0 / 40.0)
+        XCTAssertEqual(1.6, recommendedBolus!.amount, accuracy: defaultAccuracy)
     }
     
     func testLowAndFallingWithCOB() {
@@ -248,10 +249,10 @@ class LoopDataManagerDosingTests: XCTestCase {
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
-            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: defaultAccuracy)
         }
 
-        XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
+        XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: defaultAccuracy)
     }
     
     func testLowWithLowTreatment() {
@@ -275,10 +276,66 @@ class LoopDataManagerDosingTests: XCTestCase {
         
         for (expected, calculated) in zip(predictedGlucoseOutput, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
-            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: 1.0 / 40.0)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: defaultAccuracy)
         }
 
-        XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: 1.0 / 40.0)
+        XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: defaultAccuracy)
+    }
+    
+    func testValidateTempBasalDoesntCancelTempBasalIfHigher() {
+        let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 3.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
+        setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
+
+        class MockDelegate: LoopDataManagerDelegate {
+            var recommendation: TempBasalRecommendation?
+            var error: Error?
+            func loopDataManager(_ manager: LoopDataManager, didRecommendBasalChange basal: (recommendation: TempBasalRecommendation, date: Date), completion: @escaping (Error?) -> Void) {
+                self.recommendation = basal.recommendation
+                completion(error)
+            }
+            func loopDataManager(_ manager: LoopDataManager, roundBasalRate unitsPerHour: Double) -> Double { unitsPerHour }
+            func loopDataManager(_ manager: LoopDataManager, roundBolusVolume units: Double) -> Double { units }
+            var pumpManagerStatus: PumpManagerStatus?
+        }
+        let delegate = MockDelegate()
+        loopDataManager.delegate = delegate
+        let exp = expectation(description: #function)
+        var error: Error?
+        loopDataManager.validateTempBasal(unitsPerHour: 5.0) {
+            error = $0
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertNil(error)
+        XCTAssertNil(delegate.recommendation)
+    }
+    
+    func testValidateTempBasalCancelsTempBasalIfLower() {
+        let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 5.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
+        setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
+
+        class MockDelegate: LoopDataManagerDelegate {
+            var recommendation: TempBasalRecommendation?
+            var error: Error?
+            func loopDataManager(_ manager: LoopDataManager, didRecommendBasalChange basal: (recommendation: TempBasalRecommendation, date: Date), completion: @escaping (Error?) -> Void) {
+                self.recommendation = basal.recommendation
+                completion(error)
+            }
+            func loopDataManager(_ manager: LoopDataManager, roundBasalRate unitsPerHour: Double) -> Double { unitsPerHour }
+            func loopDataManager(_ manager: LoopDataManager, roundBolusVolume units: Double) -> Double { units }
+            var pumpManagerStatus: PumpManagerStatus?
+        }
+        let delegate = MockDelegate()
+        loopDataManager.delegate = delegate
+        let exp = expectation(description: #function)
+        var error: Error?
+        loopDataManager.validateTempBasal(unitsPerHour: 3.0) {
+            error = $0
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertNil(error)
+        XCTAssertEqual(TempBasalRecommendation.cancel, delegate.recommendation)
     }
 }
 
