@@ -282,21 +282,21 @@ class LoopDataManagerDosingTests: XCTestCase {
         XCTAssertEqual(0, recommendedTempBasal!.unitsPerHour, accuracy: defaultAccuracy)
     }
     
+    class MockDelegate: LoopDataManagerDelegate {
+        var recommendation: TempBasalRecommendation?
+        var error: Error?
+        func loopDataManager(_ manager: LoopDataManager, didRecommendBasalChange basal: (recommendation: TempBasalRecommendation, date: Date), completion: @escaping (Error?) -> Void) {
+            self.recommendation = basal.recommendation
+            completion(error)
+        }
+        func loopDataManager(_ manager: LoopDataManager, roundBasalRate unitsPerHour: Double) -> Double { unitsPerHour }
+        func loopDataManager(_ manager: LoopDataManager, roundBolusVolume units: Double) -> Double { units }
+        var pumpManagerStatus: PumpManagerStatus?
+    }
+
     func testValidateTempBasalDoesntCancelTempBasalIfHigher() {
         let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 3.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
         setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
-
-        class MockDelegate: LoopDataManagerDelegate {
-            var recommendation: TempBasalRecommendation?
-            var error: Error?
-            func loopDataManager(_ manager: LoopDataManager, didRecommendBasalChange basal: (recommendation: TempBasalRecommendation, date: Date), completion: @escaping (Error?) -> Void) {
-                self.recommendation = basal.recommendation
-                completion(error)
-            }
-            func loopDataManager(_ manager: LoopDataManager, roundBasalRate unitsPerHour: Double) -> Double { unitsPerHour }
-            func loopDataManager(_ manager: LoopDataManager, roundBolusVolume units: Double) -> Double { units }
-            var pumpManagerStatus: PumpManagerStatus?
-        }
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
         let exp = expectation(description: #function)
@@ -314,17 +314,6 @@ class LoopDataManagerDosingTests: XCTestCase {
         let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 5.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
         setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
 
-        class MockDelegate: LoopDataManagerDelegate {
-            var recommendation: TempBasalRecommendation?
-            var error: Error?
-            func loopDataManager(_ manager: LoopDataManager, didRecommendBasalChange basal: (recommendation: TempBasalRecommendation, date: Date), completion: @escaping (Error?) -> Void) {
-                self.recommendation = basal.recommendation
-                completion(error)
-            }
-            func loopDataManager(_ manager: LoopDataManager, roundBasalRate unitsPerHour: Double) -> Double { unitsPerHour }
-            func loopDataManager(_ manager: LoopDataManager, roundBolusVolume units: Double) -> Double { units }
-            var pumpManagerStatus: PumpManagerStatus?
-        }
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
         let exp = expectation(description: #function)
@@ -336,6 +325,21 @@ class LoopDataManagerDosingTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         XCTAssertNil(error)
         XCTAssertEqual(TempBasalRecommendation.cancel, delegate.recommendation)
+    }
+    
+    func testChangingMaxBasalCausesLoop() {
+        setUp(for: .highAndStable)
+        var looped = false
+        let exp = expectation(description: #function)
+        let observer = NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: nil, queue: nil) { _ in
+            looped = true
+            exp.fulfill()
+        }
+        XCTAssertFalse(looped)
+        loopDataManager.settings.maximumBasalRatePerHour = 2.0
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertTrue(looped)
+        NotificationCenter.default.removeObserver(observer)
     }
 }
 
