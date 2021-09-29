@@ -47,7 +47,7 @@ class WatchHistoricalGlucoseTests: XCTestCase {
                                     syncVersion: nil,
                                     startDate: Date(timeIntervalSinceReferenceDate: .hours(98)),
                                     quantity: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 187.65),
-                                    condition: .aboveRange(threshold: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 180.0)),
+                                    condition: .aboveRange,
                                     trend: .downDownDown,
                                     trendRate: HKQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: -4.0),
                                     isDisplayOnly: false,
