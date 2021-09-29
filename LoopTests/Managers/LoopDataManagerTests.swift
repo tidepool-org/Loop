@@ -109,6 +109,10 @@ class LoopDataManagerDosingTests: XCTestCase {
         )
     }
     
+    override func tearDownWithError() throws {
+        loopDataManager = nil
+    }
+    
     // MARK: Functions to load fixtures
     func loadGlucoseEffect(_ name: String) -> [GlucoseEffect] {
         let fixture: [JSONDictionary] = loadFixture(name)
@@ -308,12 +312,12 @@ class LoopDataManagerDosingTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         XCTAssertNil(error)
         XCTAssertNil(delegate.recommendation)
+        loopDataManager.delegate = nil
     }
     
     func testValidateTempBasalCancelsTempBasalIfLower() {
         let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 5.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
         setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
-
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
         let exp = expectation(description: #function)
@@ -325,6 +329,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         XCTAssertNil(error)
         XCTAssertEqual(TempBasalRecommendation.cancel, delegate.recommendation)
+        loopDataManager.delegate = nil
     }
     
     func testChangingMaxBasalCausesLoop() {
