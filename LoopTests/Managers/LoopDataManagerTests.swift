@@ -298,13 +298,21 @@ class LoopDataManagerDosingTests: XCTestCase {
         var pumpManagerStatus: PumpManagerStatus?
     }
 
+    func waitOnDataQueue(timeout: TimeInterval = 1.0) {
+        let e = expectation(description: "dataQueue")
+        loopDataManager.getLoopState { _, _ in
+            e.fulfill()
+        }
+        wait(for: [e], timeout: timeout)
+    }
+    
     func testValidateTempBasalDoesntCancelTempBasalIfHigher() {
         let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 3.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
         setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
-        // This wait on main is working around the issue presented by LoopDataManager.init().  It cancels the temp basal
-        // if `isClosedLoop` is false (which it is from `setUp` above), but on the main thread. When that happens, it
-        // races with `validateTempBasal` below.  This ensures only one happens at a time.
-        waitOnMain()
+        // This wait is working around the issue presented by LoopDataManager.init().  It cancels the temp basal if
+        // `isClosedLoop` is false (which it is from `setUp` above). When that happens, it races with
+        // `validateTempBasal` below.  This ensures only one happens at a time.
+        waitOnDataQueue()
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
         var error: Error?
@@ -322,10 +330,10 @@ class LoopDataManagerDosingTests: XCTestCase {
     func testValidateTempBasalCancelsTempBasalIfLower() {
         let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 5.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
         setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
-        // This wait on main is working around the issue presented by LoopDataManager.init().  It cancels the temp basal
-        // if `isClosedLoop` is false (which it is from `setUp` above), but on the main thread. When that happens, it
-        // races with `validateTempBasal` below.  This ensures only one happens at a time.
-        waitOnMain()
+        // This wait is working around the issue presented by LoopDataManager.init().  It cancels the temp basal if
+        // `isClosedLoop` is false (which it is from `setUp` above). When that happens, it races with
+        // `validateTempBasal` below.  This ensures only one happens at a time.
+        waitOnDataQueue()
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
         var error: Error?
