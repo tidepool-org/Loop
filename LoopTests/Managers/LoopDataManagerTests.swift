@@ -301,10 +301,15 @@ class LoopDataManagerDosingTests: XCTestCase {
     func testValidateTempBasalDoesntCancelTempBasalIfHigher() {
         let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 3.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
         setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
+        // This wait on main is working around the issue presented by LoopDataManager.init().  It cancels the temp basal
+        // if `isClosedLoop` is false (which it is from `setUp` above), but on the main thread. When that happens, it
+        // races with `validateTempBasal` below.  This ensures only one happens at a time.
+        waitOnMain()
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
-        let exp = expectation(description: #function)
         var error: Error?
+        let exp = expectation(description: #function)
+        XCTAssertNil(delegate.recommendation)
         loopDataManager.validateTempBasal(unitsPerHour: 5.0) {
             error = $0
             exp.fulfill()
@@ -312,16 +317,20 @@ class LoopDataManagerDosingTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         XCTAssertNil(error)
         XCTAssertNil(delegate.recommendation)
-        loopDataManager.delegate = nil
     }
     
     func testValidateTempBasalCancelsTempBasalIfLower() {
         let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 5.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
         setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
+        // This wait on main is working around the issue presented by LoopDataManager.init().  It cancels the temp basal
+        // if `isClosedLoop` is false (which it is from `setUp` above), but on the main thread. When that happens, it
+        // races with `validateTempBasal` below.  This ensures only one happens at a time.
+        waitOnMain()
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
-        let exp = expectation(description: #function)
         var error: Error?
+        let exp = expectation(description: #function)
+        XCTAssertNil(delegate.recommendation)
         loopDataManager.validateTempBasal(unitsPerHour: 3.0) {
             error = $0
             exp.fulfill()
@@ -329,7 +338,6 @@ class LoopDataManagerDosingTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         XCTAssertNil(error)
         XCTAssertEqual(TempBasalRecommendation.cancel, delegate.recommendation)
-        loopDataManager.delegate = nil
     }
     
     func testChangingMaxBasalCausesLoop() {
