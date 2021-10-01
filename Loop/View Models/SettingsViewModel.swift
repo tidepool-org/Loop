@@ -81,8 +81,8 @@ public class SettingsViewModel: ObservableObject {
     let therapySettings: () -> TherapySettings
     let supportedInsulinModelSettings: SupportedInsulinModelSettings
     let pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?
-    let syncBasalRateSchedule: (() -> PumpManager.SyncBasalRateSchedule?)?
-    let validateTempBasal: (() -> PumpManager.ValidateTempBasal?)?
+    let syncBasalRateSchedule: (() -> TherapySettingsViewModel.SyncBasalRateSchedule?)?
+    let validateTempBasal: (() -> TherapySettingsViewModel.ValidateTempBasal?)?
     let sensitivityOverridesEnabled: Bool
     let supportInfoProvider: SupportInfoProvider
 
@@ -104,8 +104,8 @@ public class SettingsViewModel: ObservableObject {
                 therapySettings: @escaping () -> TherapySettings,
                 supportedInsulinModelSettings: SupportedInsulinModelSettings,
                 pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?,
-                syncBasalRateSchedule: (() -> PumpManager.SyncBasalRateSchedule?)?,
-                validateTempBasal: (() -> PumpManager.ValidateTempBasal?)?,
+                syncBasalRateSchedule: (() -> TherapySettingsViewModel.SyncBasalRateSchedule?)?,
+                validateTempBasal: (() -> TherapySettingsViewModel.ValidateTempBasal?)?,
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
                 isClosedLoopAllowed: Published<Bool>.Publisher,
