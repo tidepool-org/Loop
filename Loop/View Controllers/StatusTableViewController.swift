@@ -1404,8 +1404,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         let syncBasalRateSchedule = { [weak self] in
             self?.deviceManager.pumpManager?.syncBasalRateSchedule
         }
-        let validateTempBasal = { [weak self] in
-            self?.deviceManager.loopManager.validateTempBasal
+        let validateMaxTempBasal = { [weak self] in
+            self?.deviceManager.loopManager.validateMaxTempBasal
         }
         let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
                                                   availableServices: { [weak self] in self?.deviceManager.servicesManager.availableServices ?? [] },
@@ -1420,7 +1420,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: FeatureFlags.fiaspInsulinModelEnabled, walshModelEnabled: FeatureFlags.walshInsulinModelEnabled),
                                           pumpSupportedIncrements: pumpSupportedIncrements,
                                           syncBasalRateSchedule: syncBasalRateSchedule,
-                                          validateTempBasal: validateTempBasal,
+                                          validateMaxTempBasal: validateMaxTempBasal,
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
                                           isClosedLoopAllowed: closedLoopStatus.$isClosedLoopAllowed,

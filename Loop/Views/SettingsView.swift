@@ -119,7 +119,7 @@ extension SettingsView {
                                                                             supportedInsulinModelSettings: self.viewModel.supportedInsulinModelSettings,
                                                                             pumpSupportedIncrements: self.viewModel.pumpSupportedIncrements,
                                                                             syncBasalRateSchedule: self.viewModel.syncBasalRateSchedule,
-                                                                            validateTempBasal: self.viewModel.validateTempBasal,
+                                                                            validateMaxTempBasal: self.viewModel.validateMaxTempBasal,
                                                                             didSave: self.viewModel.didSave))
                         .environmentObject(displayGlucoseUnitObservable)
                         .environment(\.dismissAction, self.dismiss)
@@ -399,7 +399,7 @@ public struct SettingsView_Previews: PreviewProvider {
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: true, walshModelEnabled: true),
                                           pumpSupportedIncrements: nil,
                                           syncBasalRateSchedule: nil,
-                                          validateTempBasal: nil,
+                                          validateMaxTempBasal: nil,
                                           sensitivityOverridesEnabled: false,
                                           initialDosingEnabled: true,
                                           isClosedLoopAllowed: fakeClosedLoopAllowedPublisher.$mockIsClosedLoopAllowed,

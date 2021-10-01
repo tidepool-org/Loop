@@ -1534,7 +1534,8 @@ extension LoopDataManager {
         }
     }
     
-    public func validateTempBasal(unitsPerHour: Double, completion: @escaping (_ error: Error?) -> Void) {
+    /// Ensures that the current basal delivery is at or below the proposed max temp basal either proceed with saving max temp, or display an error.
+    public func validateMaxTempBasal(unitsPerHour: Double, completion: @escaping (_ error: Error?) -> Void) {
         dataAccessQueue.async {
             switch self.basalDeliveryState {
             case .some(.tempBasal(let dose)):
