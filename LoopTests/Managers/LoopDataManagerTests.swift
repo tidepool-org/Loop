@@ -311,14 +311,14 @@ class LoopDataManagerDosingTests: XCTestCase {
         setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
         // This wait is working around the issue presented by LoopDataManager.init().  It cancels the temp basal if
         // `isClosedLoop` is false (which it is from `setUp` above). When that happens, it races with
-        // `validateMaxTempBasal` below.  This ensures only one happens at a time.
+        // `maxTempBasalSavePreflight` below.  This ensures only one happens at a time.
         waitOnDataQueue()
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
         var error: Error?
         let exp = expectation(description: #function)
         XCTAssertNil(delegate.recommendation)
-        loopDataManager.validateMaxTempBasal(unitsPerHour: 5.0) {
+        loopDataManager.maxTempBasalSavePreflight(unitsPerHour: 5.0) {
             error = $0
             exp.fulfill()
         }
@@ -332,14 +332,14 @@ class LoopDataManagerDosingTests: XCTestCase {
         setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
         // This wait is working around the issue presented by LoopDataManager.init().  It cancels the temp basal if
         // `isClosedLoop` is false (which it is from `setUp` above). When that happens, it races with
-        // `validateMaxTempBasal` below.  This ensures only one happens at a time.
+        // `maxTempBasalSavePreflight` below.  This ensures only one happens at a time.
         waitOnDataQueue()
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
         var error: Error?
         let exp = expectation(description: #function)
         XCTAssertNil(delegate.recommendation)
-        loopDataManager.validateMaxTempBasal(unitsPerHour: 3.0) {
+        loopDataManager.maxTempBasalSavePreflight(unitsPerHour: 3.0) {
             error = $0
             exp.fulfill()
         }

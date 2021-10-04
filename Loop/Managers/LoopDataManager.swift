@@ -1536,7 +1536,7 @@ extension LoopDataManager {
     
     /// Ensures that the current temp basal is at or below the proposed max temp basal, and if not, cancel it before proceeding.
     /// Calls the completion with `nil` if successful, or an `error` if canceling the active temp basal fails.
-    public func validateMaxTempBasal(unitsPerHour: Double, completion: @escaping (_ error: Error?) -> Void) {
+    public func maxTempBasalSavePreflight(unitsPerHour: Double, completion: @escaping (_ error: Error?) -> Void) {
         dataAccessQueue.async {
             switch self.basalDeliveryState {
             case .some(.tempBasal(let dose)):

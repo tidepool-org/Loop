@@ -82,7 +82,7 @@ public class SettingsViewModel: ObservableObject {
     let supportedInsulinModelSettings: SupportedInsulinModelSettings
     let pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?
     let syncBasalRateSchedule: (() -> TherapySettingsViewModel.SyncBasalRateSchedule?)?
-    let validateMaxTempBasal: (() -> TherapySettingsViewModel.ValidateMaxTempBasal?)?
+    let maxTempBasalSavePreflight: (() -> TherapySettingsViewModel.MaxTempBasalSavePreflight?)?
     let sensitivityOverridesEnabled: Bool
     let supportInfoProvider: SupportInfoProvider
 
@@ -105,7 +105,7 @@ public class SettingsViewModel: ObservableObject {
                 supportedInsulinModelSettings: SupportedInsulinModelSettings,
                 pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?,
                 syncBasalRateSchedule: (() -> TherapySettingsViewModel.SyncBasalRateSchedule?)?,
-                validateMaxTempBasal: (() -> TherapySettingsViewModel.ValidateMaxTempBasal?)?,
+                maxTempBasalSavePreflight: (() -> TherapySettingsViewModel.MaxTempBasalSavePreflight?)?,
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
                 isClosedLoopAllowed: Published<Bool>.Publisher,
@@ -122,7 +122,7 @@ public class SettingsViewModel: ObservableObject {
         self.supportedInsulinModelSettings = supportedInsulinModelSettings
         self.pumpSupportedIncrements = pumpSupportedIncrements
         self.syncBasalRateSchedule = syncBasalRateSchedule
-        self.validateMaxTempBasal = validateMaxTempBasal
+        self.maxTempBasalSavePreflight = maxTempBasalSavePreflight
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
         self.isClosedLoopAllowed = false
