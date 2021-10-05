@@ -46,6 +46,9 @@
 		1DA7A84424477698008257F0 /* InAppModalAlertIssuerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA7A84324477698008257F0 /* InAppModalAlertIssuerTests.swift */; };
 		1DB1065124467E18005542BD /* AlertManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1065024467E18005542BD /* AlertManager.swift */; };
 		1DB1CA4D24A55F0000B3B94C /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1CA4C24A55F0000B3B94C /* Image.swift */; };
+		1DB619AC270BAD3D006C9D07 /* VersionUpdateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB619AB270BAD3D006C9D07 /* VersionUpdateViewModel.swift */; };
+		1DB619AE270BB85F006C9D07 /* SoftwareUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB619AD270BB85F006C9D07 /* SoftwareUpdateView.swift */; };
+		1DB619B0270BC6D6006C9D07 /* AppStoreVersionCheckService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB619AF270BC6D6006C9D07 /* AppStoreVersionCheckService.swift */; };
 		1DC63E7425351BDF004605DA /* TrueTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DC63E7325351BDF004605DA /* TrueTime.framework */; };
 		1DD0B76724EC77AC008A2DC3 /* SupportScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DD0B76624EC77AC008A2DC3 /* SupportScreenView.swift */; };
 		1DDE273D24AEA4B000796622 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1CA4E24A56D7600B3B94C /* SettingsViewModel.swift */; };
@@ -795,6 +798,9 @@
 		1DB1065024467E18005542BD /* AlertManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlertManager.swift; sourceTree = "<group>"; };
 		1DB1CA4C24A55F0000B3B94C /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		1DB1CA4E24A56D7600B3B94C /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		1DB619AB270BAD3D006C9D07 /* VersionUpdateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionUpdateViewModel.swift; sourceTree = "<group>"; };
+		1DB619AD270BB85F006C9D07 /* SoftwareUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareUpdateView.swift; sourceTree = "<group>"; };
+		1DB619AF270BC6D6006C9D07 /* AppStoreVersionCheckService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreVersionCheckService.swift; sourceTree = "<group>"; };
 		1DC63E7325351BDF004605DA /* TrueTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TrueTime.framework; path = Carthage/Build/iOS/TrueTime.framework; sourceTree = "<group>"; };
 		1DD0B76624EC77AC008A2DC3 /* SupportScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportScreenView.swift; sourceTree = "<group>"; };
 		1DE09BA824A3E23F009EE9F9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -2051,16 +2057,17 @@
 		43F5C2CF1B92A2ED003EB13D /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				C1DE5D22251BFC4D00439E49 /* SimpleBolusView.swift */,
 				897A5A9524C2175B00C4E71D /* BolusEntryView.swift */,
 				C1F8B1D122375E4200DD66CF /* BolusProgressTableViewCell.swift */,
 				C1F8B1DB223862D500DD66CF /* BolusProgressTableViewCell.xib */,
 				43B260481ED248FB008CAA77 /* CarbEntryTableViewCell.swift */,
 				431A8C3F1EC6E8AB00823B9C /* CircleMaskView.swift */,
 				A9A056B224B93C62007CF06D /* CriticalEventLogExportView.swift */,
+				C191D2A025B3ACAA00C26C0B /* DosingStrategySelectionView.swift */,
 				43D381611EBD9759007F8C8F /* HeaderValuesTableViewCell.swift */,
 				430D85881F44037000AF2D4F /* HUDViewTableViewCell.swift */,
 				A91D2A3E26CF0FF80023B075 /* IconTitleSubtitleTableViewCell.swift */,
+				C1742331259BEADC00399C9D /* ManualEntryDoseView.swift */,
 				1DA46B5F2492E2E300D71A63 /* NotificationsCriticalAlertPermissionsView.swift */,
 				899433B723FE129700FA4BEA /* OverrideBadgeView.swift */,
 				89D6953D23B6DF8A002B3066 /* PotentialCarbEntryTableViewCell.swift */,
@@ -2068,11 +2075,11 @@
 				438D42FA1D7D11A4003244B0 /* PredictionInputEffectTableViewCell.swift */,
 				439706E522D2E84900C81566 /* PredictionSettingTableViewCell.swift */,
 				1DE09BA824A3E23F009EE9F9 /* SettingsView.swift */,
+				C1DE5D22251BFC4D00439E49 /* SimpleBolusView.swift */,
+				1DB619AD270BB85F006C9D07 /* SoftwareUpdateView.swift */,
 				1DD0B76624EC77AC008A2DC3 /* SupportScreenView.swift */,
 				43F64DD81D9C92C900D24DC6 /* TitleSubtitleTableViewCell.swift */,
 				4311FB9A1F37FE1B00D4C0A7 /* TitleSubtitleTextFieldTableViewCell.swift */,
-				C1742331259BEADC00399C9D /* ManualEntryDoseView.swift */,
-				C191D2A025B3ACAA00C26C0B /* DosingStrategySelectionView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -2109,6 +2116,7 @@
 				4328E0341CFC0AE100E199AA /* WatchDataManager.swift */,
 				1DA6499D2441266400F61E75 /* Alerts */,
 				E95D37FF24EADE68005E2F50 /* Store Protocols */,
+				1DB619AF270BC6D6006C9D07 /* AppStoreVersionCheckService.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -2390,6 +2398,7 @@
 				1DB1CA4E24A56D7600B3B94C /* SettingsViewModel.swift */,
 				1D49795724E7289700948F05 /* ServicesViewModel.swift */,
 				C174233B259BEB0F00399C9D /* ManualEntryDoseViewModel.swift */,
+				1DB619AB270BAD3D006C9D07 /* VersionUpdateViewModel.swift */,
 			);
 			path = "View Models";
 			sourceTree = "<group>";
@@ -3478,6 +3487,7 @@
 				A9F703752489C9A000C98AD8 /* GlucoseStore+SimulatedCoreData.swift in Sources */,
 				43511CE321FD80E400566C63 /* StandardRetrospectiveCorrection.swift in Sources */,
 				E95D380524EADF78005E2F50 /* GlucoseStoreProtocol.swift in Sources */,
+				1DB619B0270BC6D6006C9D07 /* AppStoreVersionCheckService.swift in Sources */,
 				43E3449F1B9D68E900C85C07 /* StatusTableViewController.swift in Sources */,
 				A9CBE45A248ACBE1008E7BA2 /* DosingDecisionStore+SimulatedCoreData.swift in Sources */,
 				A9C62D8A2331703100535612 /* ServicesManager.swift in Sources */,
@@ -3520,6 +3530,7 @@
 				A9CBE458248AB564008E7BA2 /* DoseStore+SimulatedCoreData.swift in Sources */,
 				897A5A9924C22DE800C4E71D /* BolusEntryViewModel.swift in Sources */,
 				4374B5EF209D84BF00D17AA8 /* OSLog.swift in Sources */,
+				1DB619AC270BAD3D006C9D07 /* VersionUpdateViewModel.swift in Sources */,
 				A9C62D882331703100535612 /* Service.swift in Sources */,
 				89CAB36324C8FE96009EE3CE /* PredictedGlucoseChartView.swift in Sources */,
 				4F6663941E905FD2009E74FC /* ChartColorPalette+Loop.swift in Sources */,
@@ -3570,6 +3581,7 @@
 				A92E557E2464DFFD00DB93BB /* DosingDecisionStore.swift in Sources */,
 				89ADE13B226BFA0F0067222B /* TestingScenariosManager.swift in Sources */,
 				4F7E8ACB20E2ACB500AEA65E /* WatchPredictedGlucose.swift in Sources */,
+				1DB619AE270BB85F006C9D07 /* SoftwareUpdateView.swift in Sources */,
 				436A0DA51D236A2A00104B24 /* LoopError.swift in Sources */,
 				4F11D3C220DD80B3006E072C /* WatchHistoricalGlucose.swift in Sources */,
 				4372E490213CFCE70068E043 /* LoopSettingsUserInfo.swift in Sources */,

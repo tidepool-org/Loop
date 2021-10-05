@@ -10,7 +10,7 @@ import Foundation
 import LoopKit
 import simd
 
-final class VersionCheckServicesManager {
+public final class VersionCheckServicesManager {
 
     private lazy var log = DiagnosticLog(category: "VersionCheckServicesManager")
     

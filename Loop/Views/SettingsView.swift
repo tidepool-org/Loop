@@ -38,6 +38,9 @@ public struct SettingsView: View {
         NavigationView {
             List {
                 loopSection
+                if viewModel.versionUpdateViewModel.softwareUpdateAvailable {
+                    softwareUpdateSection
+                }
                 if FeatureFlags.automaticBolusEnabled {
                     dosingStrategySection
                 }
@@ -82,7 +85,8 @@ extension SettingsView {
         Section(header: SectionHeader(label: viewModel.supportInfoProvider.localizedAppNameAndVersion)) {
             Toggle(isOn: closedLoopToggleState) {
                 VStack(alignment: .leading) {
-                    Text(NSLocalizedString("Closed Loop", comment: "The title text for the looping enabled switch cell"))
+                    Text("Closed Loop", comment: "The title text for the looping enabled switch cell")
+                        .padding(.vertical, 3)
                     if !viewModel.isOnboardingComplete {
                         DescriptiveText(label: NSLocalizedString("Closed Loop requires Setup to be Complete", comment: "The description text for the looping enabled switch cell when onboarding is not complete"))
                     } else if !viewModel.isClosedLoopAllowed {
@@ -91,6 +95,16 @@ extension SettingsView {
                 }
             }
             .disabled(!viewModel.isOnboardingComplete || !viewModel.isClosedLoopAllowed)
+        }
+    }
+    
+    private var softwareUpdateSection: some View {
+        Section(footer: Text(String(format: NSLocalizedString("A new version of %@ is available.", comment: "Software update section footer (1: app name)"), appName))) {
+            NavigationLink(destination: SoftwareUpdateView(settingsViewModel: viewModel)) {
+                Text(NSLocalizedString("Software Update", comment: "Software update button link text"))
+                Spacer()
+                viewModel.versionUpdateViewModel.icon
+            }
         }
     }
 
@@ -358,72 +372,11 @@ fileprivate struct LargeButton: View {
     }
 }
 
-fileprivate class FakeService1: Service {
-    static var localizedTitle: String = "Service 1"
-    static var serviceIdentifier: String = "FakeService1"
-    var serviceDelegate: ServiceDelegate?
-    var rawState: RawStateValue = [:]
-    required init() {}
-    required init?(rawState: RawStateValue) {}
-    let isOnboarded = true
-    var available: ServiceDescriptor { ServiceDescriptor(identifier: serviceIdentifier, localizedTitle: localizedTitle) }
-}
-fileprivate class FakeService2: Service {
-    static var localizedTitle: String = "Service 2"
-    static var serviceIdentifier: String = "FakeService2"
-    var serviceDelegate: ServiceDelegate?
-    var rawState: RawStateValue = [:]
-    required init() {}
-    required init?(rawState: RawStateValue) {}
-    let isOnboarded = true
-    var available: ServiceDescriptor { ServiceDescriptor(identifier: serviceIdentifier, localizedTitle: localizedTitle) }
-}
-fileprivate let servicesViewModel = ServicesViewModel(showServices: true,
-                                                      availableServices: { [FakeService1().available, FakeService2().available] },
-                                                      activeServices: { [FakeService1()] })
-
-
-fileprivate class FakeClosedLoopAllowedPublisher {
-    @Published var mockIsClosedLoopAllowed: Bool = false
-}
-
 public struct SettingsView_Previews: PreviewProvider {
-    
-    class MockSupportInfoProvider: SupportInfoProvider {
-        var localizedAppNameAndVersion = "Loop v1.2"
         
-        var pumpStatus: PumpManagerStatus? {
-            return nil
-        }
-        
-        var cgmDevice: HKDevice? {
-            return nil
-        }
-        
-        func generateIssueReport(completion: (String) -> Void) {
-            completion("Mock Issue Report")
-        }
-    }
-    
     public static var previews: some View {
-        let fakeClosedLoopAllowedPublisher = FakeClosedLoopAllowedPublisher()
         let displayGlucoseUnitObservable = DisplayGlucoseUnitObservable(displayGlucoseUnit: .milligramsPerDeciliter)
-        let viewModel = SettingsViewModel(notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel(),
-                                          pumpManagerSettingsViewModel: DeviceViewModel<PumpManagerDescriptor>(),
-                                          cgmManagerSettingsViewModel: DeviceViewModel<CGMManagerDescriptor>(),
-                                          servicesViewModel: servicesViewModel,
-                                          criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory()),
-                                          therapySettings: { TherapySettings() },
-                                          pumpSupportedIncrements: nil,
-                                          syncPumpSchedule: nil,
-                                          sensitivityOverridesEnabled: false,
-                                          initialDosingEnabled: true,
-                                          isClosedLoopAllowed: fakeClosedLoopAllowedPublisher.$mockIsClosedLoopAllowed,
-                                          supportInfoProvider: MockSupportInfoProvider(),
-                                          dosingStrategy: .automaticBolus,
-                                          availableSupports: [],
-                                          isOnboardingComplete: false,
-                                          delegate: nil)
+        let viewModel = SettingsViewModel.preview
         return Group {
             SettingsView(viewModel: viewModel)
                 .colorScheme(.light)

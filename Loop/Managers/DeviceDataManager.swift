@@ -314,6 +314,8 @@ final class DeviceDataManager {
         )
         
         let versionCheckServicesManager = VersionCheckServicesManager()
+        // Adds the "app store" checker
+        versionCheckServicesManager.addService(AppStoreVersionCheckService())
 
         servicesManager = ServicesManager(
             pluginManager: pluginManager,

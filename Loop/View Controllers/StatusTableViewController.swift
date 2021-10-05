@@ -35,6 +35,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var closedLoopStatus: ClosedLoopStatus!
     
     let notificationsCriticalAlertPermissionsViewModel = NotificationsCriticalAlertPermissionsViewModel()
+    
+    var versionUpdateViewModel: VersionUpdateViewModel!
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -141,6 +143,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 }
             }
             .store(in: &cancellables)
+        
+        versionUpdateViewModel = VersionUpdateViewModel(deviceManager.servicesManager.versionCheckServicesManager)
     }
 
     override func didReceiveMemoryWarning() {
@@ -1399,6 +1403,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                                   activeServices: { [weak self] in self?.deviceManager.servicesManager.activeServices ?? [] },
                                                   delegate: self)
         let viewModel = SettingsViewModel(notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
+                                          versionUpdateViewModel: versionUpdateViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,
                                           servicesViewModel: servicesViewModel,
