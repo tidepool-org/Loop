@@ -1525,25 +1525,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     @objc private func showLoopCompletionMessage(_: Any) {
         guard let loopCompletionMessage = hudView?.loopCompletionHUD.loopCompletionMessage else { return }
-        var message = loopCompletionMessage.message
-        if FeatureFlags.allowDebugFeatures {
-            getVersionUpdate { [weak self] in
-                message.append("\n\nVersion \(Bundle.main.shortVersionString): \($0.localizedDescription)")
-                self?.presentLoopCompletionMessage(title: loopCompletionMessage.title, message: message)
-            }
-        } else {
-            presentLoopCompletionMessage(title: loopCompletionMessage.title, message: message)
-        }
-    }
-    
-    private func getVersionUpdate(completion: @escaping (VersionUpdate) -> Void) {
-        if #available(iOS 15.0, *) {
-            Task {
-                completion(await deviceManager.servicesManager.versionCheckServicesManager.checkVersion(currentVersion: Bundle.main.shortVersionString))
-            }
-        } else {
-            completion(deviceManager.servicesManager.versionCheckServicesManager.checkVersion(currentVersion: Bundle.main.shortVersionString))
-        }
+        presentLoopCompletionMessage(title: loopCompletionMessage.title, message: loopCompletionMessage.message)
     }
 
     private func presentLoopCompletionMessage(title: String, message: String) {

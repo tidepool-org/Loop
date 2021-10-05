@@ -13,7 +13,8 @@ import simd
 public final class VersionCheckServicesManager {
 
     private lazy var log = DiagnosticLog(category: "VersionCheckServicesManager")
-    
+    private lazy var dispatchQueue = DispatchQueue(label: "com.loopkit.Loop.VersionCheckServicesManager")
+
     private var versionCheckServices = Locked<[VersionCheckService]>([])
     
     init() {}
@@ -28,6 +29,26 @@ public final class VersionCheckServicesManager {
 
     func removeService(_ versionCheckService: VersionCheckService) {
         versionCheckServices.mutate { $0.removeAll { $0.serviceIdentifier == versionCheckService.serviceIdentifier } }
+    }
+    
+    
+    public func performCheck() {
+        if #available(iOS 15.0.0, *) {
+            Task {
+                let versionUpdate = await checkVersion(currentVersion: Bundle.main.shortVersionString)
+                notify(versionUpdate)
+            }
+        } else {
+            checkVersion(currentVersion: Bundle.main.shortVersionString) { [self] versionUpdate in
+                notify(versionUpdate)
+            }
+        }
+    }
+    
+    private func notify(_ versionUpdate: VersionUpdate) {
+        if versionUpdate.softwareUpdateAvailable {
+            NotificationCenter.default.post(name: .SoftwareUpdateAvailable, object: versionUpdate)
+        }
     }
 
     @available(swift 5.5)
@@ -48,27 +69,21 @@ public final class VersionCheckServicesManager {
         }
         return aggregate(results: results)
     }
-    
-    @available(iOS, deprecated: 15.0.0)
-    /// This version of `checkVersion` blocks the caller until it returns.
-    /// May deadlock if one of the services' `checkVersion` pops back to whatever queue called this (e.g. DispatchQueue.main)!
-    func checkVersion(currentVersion: String) -> VersionUpdate {
-        let dispatchQueue = DispatchQueue(label: "com.loopkit.Loop.VersionCheckServicesManager")
-        let semaphore = DispatchSemaphore(value: 0)
+
+    func checkVersion(currentVersion: String, completion: @escaping (VersionUpdate) -> Void) {
+        let group = DispatchGroup()
         var results = [String: Result<VersionUpdate?, Error>]()
         let services = versionCheckServices.value
         services.forEach { versionCheckService in
-            dispatchQueue.async {
-                versionCheckService.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: currentVersion) { result in
-                    dispatchQueue.async {
-                        results[versionCheckService.serviceIdentifier] = result
-                        semaphore.signal()
-                    }
-                }
+            group.enter()
+            versionCheckService.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: currentVersion) { result in
+                results[versionCheckService.serviceIdentifier] = result
+                group.leave()
             }
-            semaphore.wait()
         }
-        return aggregate(results: results)
+        group.notify(queue: dispatchQueue) {
+            completion(self.aggregate(results: results))
+        }
     }
 
     private func aggregate(results: [String : Result<VersionUpdate?, Error>]) -> VersionUpdate {
@@ -96,4 +111,12 @@ extension VersionCheckService {
             }
         }
     }
+}
+
+extension Notification.Name {
+    static let SoftwareUpdateAvailable = Notification.Name(rawValue: "com.loopkit.Loop.SoftwareUpdateAvailable")
+}
+
+extension VersionUpdate {
+    var softwareUpdateAvailable: Bool { self != .noneNeeded }
 }

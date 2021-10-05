@@ -177,6 +177,12 @@ class LoopAppManager: NSObject {
             .assign(to: \.closedLoopStatus.isClosedLoop, on: self)
             .store(in: &cancellables)
 
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { [weak self] _ in
+                self?.deviceDataManager.servicesManager.versionCheckServicesManager.performCheck()
+            }
+            .store(in: &cancellables)
+        
         self.state = state.next
     }
 

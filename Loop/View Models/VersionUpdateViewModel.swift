@@ -16,14 +16,14 @@ public class VersionUpdateViewModel: ObservableObject {
     @Published var versionUpdate: VersionUpdate?
 
     var softwareUpdateAvailable: Bool {
-        performCheck()
+        update()
         return versionUpdate != nil && versionUpdate != .noneNeeded
     }
     
     @ViewBuilder
     var icon: some View {
         switch versionUpdate {
-        case .criticalNeeded:
+        case .criticalNeeded, .supportedNeeded:
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(.warning)
         default:
@@ -38,21 +38,23 @@ public class VersionUpdateViewModel: ObservableObject {
     init(_ versionCheckServicesManager: VersionCheckServicesManager? = nil) {
         self.versionCheckServicesManager = versionCheckServicesManager
         
-        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+        NotificationCenter.default.publisher(for: .SoftwareUpdateAvailable)
             .sink { [weak self] _ in
-                self?.performCheck()
+                self?.update()
             }
             .store(in: &cancellables)
-        performCheck()
+        update()
     }
     
-    public func performCheck() {
+    public func update() {
         if #available(iOS 15.0.0, *) {
             Task {
-                self.versionUpdate = versionCheckServicesManager?.checkVersion(currentVersion: Bundle.main.shortVersionString)
+                self.versionUpdate = await versionCheckServicesManager?.checkVersion(currentVersion: Bundle.main.shortVersionString)
             }
         } else {
-            self.versionUpdate = versionCheckServicesManager?.checkVersion(currentVersion: Bundle.main.shortVersionString)
+            versionCheckServicesManager?.checkVersion(currentVersion: Bundle.main.shortVersionString) {
+                self.versionUpdate = $0
+            }
         }
     }
     

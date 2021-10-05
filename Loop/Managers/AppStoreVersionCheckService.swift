@@ -67,10 +67,16 @@ class AppStoreVersionCheckService: VersionCheckService {
               }
         let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
             do {
-                if let error = error { throw error }
-                guard let data = data else { throw VersionError.invalidResponse }
+                if let error = error {
+                    throw error
+                }
+                guard let data = data else {
+                    throw VersionError.invalidResponse
+                }
                 let result = try Self.decoder.decode(LookupResult.self, from: data)
-                guard let info = result.results.first else { throw VersionError.noResults }
+                guard let info = result.results.first else {
+                    throw VersionError.noResults
+                }
                 completion(.success(info))
             } catch {
                 completion(.failure(error))
