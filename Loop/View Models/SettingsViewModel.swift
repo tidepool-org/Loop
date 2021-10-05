@@ -80,6 +80,7 @@ public class SettingsViewModel: ObservableObject {
     let servicesViewModel: ServicesViewModel
     let criticalEventLogExportViewModel: CriticalEventLogExportViewModel
     let therapySettings: () -> TherapySettings
+    // TODO This pattern of taking a closure that returns a closure is redundant; we should simplify here.
     let pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?
     let syncPumpSchedule: (() -> SyncSchedule?)?
     let syncDeliveryLimits: (() -> SyncDeliveryLimits?)?
