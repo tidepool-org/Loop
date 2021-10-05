@@ -195,6 +195,7 @@ extension SettingsViewModel {
                                  therapySettings: { TherapySettings() },
                                  pumpSupportedIncrements: nil,
                                  syncPumpSchedule: nil,
+                                 syncDeliveryLimits: nil,
                                  sensitivityOverridesEnabled: false,
                                  initialDosingEnabled: true,
                                  isClosedLoopAllowed: FakeClosedLoopAllowedPublisher().$mockIsClosedLoopAllowed,
