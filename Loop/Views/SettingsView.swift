@@ -134,9 +134,9 @@ extension SettingsView {
                     TherapySettingsView(mode: .settings,
                                         viewModel: TherapySettingsViewModel(therapySettings: self.viewModel.therapySettings(),
                                                                             pumpSupportedIncrements: self.viewModel.pumpSupportedIncrements,
-                                                                            syncPumpSchedule: self.viewModel.syncPumpSchedule,
+                                                                            syncBasalRateSchedule: self.viewModel.syncBasalRateSchedule,
                                                                             syncDeliveryLimits: self.viewModel.syncDeliveryLimits,
-                                                                            sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
+                                                                            maxTempBasalSavePreflight: self.viewModel.maxTempBasalSavePreflight,
                                                                             didSave: self.viewModel.didSave))
                         .environmentObject(displayGlucoseUnitObservable)
                         .environment(\.dismissAction, self.dismiss)
@@ -416,8 +416,9 @@ public struct SettingsView_Previews: PreviewProvider {
                                           criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory()),
                                           therapySettings: { TherapySettings() },
                                           pumpSupportedIncrements: nil,
-                                          syncPumpSchedule: nil,
+                                          syncBasalRateSchedule: nil,
                                           syncDeliveryLimits: nil,
+                                          maxTempBasalSavePreflight: nil,
                                           sensitivityOverridesEnabled: false,
                                           initialDosingEnabled: true,
                                           isClosedLoopAllowed: fakeClosedLoopAllowedPublisher.$mockIsClosedLoopAllowed,

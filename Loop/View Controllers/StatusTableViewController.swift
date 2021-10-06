@@ -1391,12 +1391,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                         maximumBasalScheduleEntryCount: $0.maximumBasalScheduleEntryCount)
             }
         }
-        let syncBasalRateSchedule = { [weak self] in
-            self?.deviceManager.pumpManager?.syncBasalRateSchedule
-        }
-        let syncDeliveryLimits = { [weak self]  in
-            self?.deviceManager.pumpManager?.syncDeliveryLimits
-        }
         let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
                                                   availableServices: { [weak self] in self?.deviceManager.servicesManager.availableServices ?? [] },
                                                   activeServices: { [weak self] in self?.deviceManager.servicesManager.activeServices ?? [] },
@@ -1408,8 +1402,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: deviceManager.criticalEventLogExportManager),
                                           therapySettings: { [weak self] in self?.deviceManager.loopManager.therapySettings ?? TherapySettings() },
                                           pumpSupportedIncrements: pumpSupportedIncrements,
-                                          syncPumpSchedule: syncBasalRateSchedule,
-                                          syncDeliveryLimits: syncDeliveryLimits,
+                                          syncBasalRateSchedule: deviceManager.pumpManager?.syncBasalRateSchedule,
+                                          syncDeliveryLimits: deviceManager.pumpManager?.syncDeliveryLimits,
+                                          maxTempBasalSavePreflight: deviceManager.loopManager.maxTempBasalSavePreflight,
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
                                           isClosedLoopAllowed: closedLoopStatus.$isClosedLoopAllowed,

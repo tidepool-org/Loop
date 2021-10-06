@@ -82,8 +82,9 @@ public class SettingsViewModel: ObservableObject {
     let therapySettings: () -> TherapySettings
     // TODO This pattern of taking a closure that returns a closure is redundant; we should simplify here.
     let pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?
-    let syncPumpSchedule: (() -> SyncSchedule?)?
-    let syncDeliveryLimits: (() -> SyncDeliveryLimits?)?
+    let syncBasalRateSchedule: TherapySettingsViewModel.SyncBasalRateSchedule?
+    let maxTempBasalSavePreflight: TherapySettingsViewModel.MaxTempBasalSavePreflight?
+    let syncDeliveryLimits: TherapySettingsViewModel.SyncDeliveryLimits?
     let sensitivityOverridesEnabled: Bool
     let supportInfoProvider: SupportInfoProvider
     let isOnboardingComplete: Bool
@@ -110,8 +111,9 @@ public class SettingsViewModel: ObservableObject {
                 criticalEventLogExportViewModel: CriticalEventLogExportViewModel,
                 therapySettings: @escaping () -> TherapySettings,
                 pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?,
-                syncPumpSchedule: (() -> SyncSchedule?)?,
-                syncDeliveryLimits: (() -> SyncDeliveryLimits?)?,
+                syncBasalRateSchedule: TherapySettingsViewModel.SyncBasalRateSchedule?,
+                syncDeliveryLimits: TherapySettingsViewModel.SyncDeliveryLimits?,
+                maxTempBasalSavePreflight: TherapySettingsViewModel.MaxTempBasalSavePreflight?,
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
                 isClosedLoopAllowed: Published<Bool>.Publisher,
@@ -128,8 +130,9 @@ public class SettingsViewModel: ObservableObject {
         self.criticalEventLogExportViewModel = criticalEventLogExportViewModel
         self.therapySettings = therapySettings
         self.pumpSupportedIncrements = pumpSupportedIncrements
-        self.syncPumpSchedule = syncPumpSchedule
+        self.syncBasalRateSchedule = syncBasalRateSchedule
         self.syncDeliveryLimits = syncDeliveryLimits
+        self.maxTempBasalSavePreflight = maxTempBasalSavePreflight
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
         self.isClosedLoopAllowed = false
