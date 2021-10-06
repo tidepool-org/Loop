@@ -1212,11 +1212,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
             navigationWrapper = UINavigationController(rootViewController: carbEntryViewController)
         } else {
-            let viewModel = SimpleBolusViewModel(delegate: deviceManager)
+            let viewModel = SimpleBolusViewModel(delegate: deviceManager, displayMealEntry: true)
             if let activity = activity {
                 viewModel.restoreUserActivityState(activity)
             }
-            let bolusEntryView = SimpleBolusView(displayMealEntry: true, viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
+            let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
             let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
             navigationWrapper = UINavigationController(rootViewController: hostingController)
             hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
@@ -1235,8 +1235,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let bolusEntryView = BolusEntryView(viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         } else {
-            let viewModel = SimpleBolusViewModel(delegate: deviceManager)
-            let bolusEntryView = SimpleBolusView(displayMealEntry: false, viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
+            let viewModel = SimpleBolusViewModel(delegate: deviceManager, displayMealEntry: false)
+            let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         }
         let navigationWrapper = UINavigationController(rootViewController: hostingController)
@@ -1394,6 +1394,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
         let syncBasalRateSchedule = { [weak self] in
             self?.deviceManager.pumpManager?.syncBasalRateSchedule
         }
+        let syncDeliveryLimits = { [weak self]  in
+            self?.deviceManager.pumpManager?.syncDeliveryLimits
+        }
         let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
                                                   availableServices: { [weak self] in self?.deviceManager.servicesManager.availableServices ?? [] },
                                                   activeServices: { [weak self] in self?.deviceManager.servicesManager.activeServices ?? [] },
@@ -1406,6 +1409,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           therapySettings: { [weak self] in self?.deviceManager.loopManager.therapySettings ?? TherapySettings() },
                                           pumpSupportedIncrements: pumpSupportedIncrements,
                                           syncPumpSchedule: syncBasalRateSchedule,
+                                          syncDeliveryLimits: syncDeliveryLimits,
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
                                           isClosedLoopAllowed: closedLoopStatus.$isClosedLoopAllowed,
@@ -1516,10 +1520,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     @objc private func showLoopCompletionMessage(_: Any) {
         guard let loopCompletionMessage = hudView?.loopCompletionHUD.loopCompletionMessage else { return }
-        presentLoopCompletionMesage(title: loopCompletionMessage.title, message: loopCompletionMessage.message)
+        var message = loopCompletionMessage.message
+        if FeatureFlags.allowDebugFeatures {
+            message.append("\n\nVersion \(Bundle.main.shortVersionString): \(deviceManager.servicesManager.versionCheckServicesManager.checkVersion(currentVersion: Bundle.main.shortVersionString).localizedDescription)")
+        }
+        presentLoopCompletionMessage(title: loopCompletionMessage.title, message: message)
     }
 
-    private func presentLoopCompletionMesage(title: String, message: String) {
+    private func presentLoopCompletionMessage(title: String, message: String) {
         let action = UIAlertAction(title: NSLocalizedString("Dismiss", comment: "The button label of the action used to dismiss an error alert"),
                                    style: .default)
         let alertController = UIAlertController(title: title,
