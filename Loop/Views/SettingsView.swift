@@ -118,7 +118,8 @@ extension SettingsView {
                                         viewModel: TherapySettingsViewModel(therapySettings: self.viewModel.therapySettings(),
                                                                             supportedInsulinModelSettings: self.viewModel.supportedInsulinModelSettings,
                                                                             pumpSupportedIncrements: self.viewModel.pumpSupportedIncrements,
-                                                                            syncPumpSchedule: self.viewModel.syncPumpSchedule,
+                                                                            syncBasalRateSchedule: self.viewModel.syncBasalRateSchedule,
+                                                                            maxTempBasalSavePreflight: self.viewModel.maxTempBasalSavePreflight,
                                                                             didSave: self.viewModel.didSave))
                         .environmentObject(displayGlucoseUnitObservable)
                         .environment(\.dismissAction, self.dismiss)
@@ -397,7 +398,8 @@ public struct SettingsView_Previews: PreviewProvider {
                                           therapySettings: { TherapySettings() },
                                           supportedInsulinModelSettings: SupportedInsulinModelSettings(fiaspModelEnabled: true, walshModelEnabled: true),
                                           pumpSupportedIncrements: nil,
-                                          syncPumpSchedule: nil,
+                                          syncBasalRateSchedule: nil,
+                                          maxTempBasalSavePreflight: nil,
                                           sensitivityOverridesEnabled: false,
                                           initialDosingEnabled: true,
                                           isClosedLoopAllowed: fakeClosedLoopAllowedPublisher.$mockIsClosedLoopAllowed,
