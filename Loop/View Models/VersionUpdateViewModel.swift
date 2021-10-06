@@ -25,9 +25,17 @@ public class VersionUpdateViewModel: ObservableObject {
         switch versionUpdate {
         case .criticalNeeded, .supportedNeeded:
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(.warning)
+                .foregroundColor(warningColor)
         default:
             EmptyView()
+        }
+    }
+    
+    var warningColor: Color {
+        switch versionUpdate {
+        case .criticalNeeded: return .critical
+        case .supportedNeeded: return .warning
+        default: return .primary
         }
     }
     
@@ -43,18 +51,13 @@ public class VersionUpdateViewModel: ObservableObject {
                 self?.update()
             }
             .store(in: &cancellables)
+        
         update()
     }
     
     public func update() {
-        if #available(iOS 15.0.0, *) {
-            Task {
-                self.versionUpdate = await versionCheckServicesManager?.checkVersion(currentVersion: Bundle.main.shortVersionString)
-            }
-        } else {
-            versionCheckServicesManager?.checkVersion(currentVersion: Bundle.main.shortVersionString) {
-                self.versionUpdate = $0
-            }
+        versionCheckServicesManager?.checkVersion(currentVersion: Bundle.main.shortVersionString) {
+            self.versionUpdate = $0
         }
     }
     

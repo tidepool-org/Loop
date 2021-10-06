@@ -36,7 +36,8 @@ struct SoftwareUpdateView: View {
                 DescriptiveText(label: updateBody)
                     .padding(.bottom, padding)
                     .foregroundColor(.gray)
-                
+                    .fixedSize(horizontal: false, vertical: false)
+
                 Divider()
                 appStoreButton
             }
