@@ -52,7 +52,6 @@ public typealias PumpManagerViewModel = DeviceViewModel<PumpManagerDescriptor>
 public protocol SettingsViewModelDelegate: AnyObject {
     func dosingEnabledChanged(_: Bool)
     func dosingStrategyChanged(_: DosingStrategy)
-    func didSave(therapySetting: TherapySetting, therapySettings: TherapySettings)
     func didTapIssueReport(title: String)
 }
 
@@ -66,10 +65,6 @@ public class SettingsViewModel: ObservableObject {
         notificationsCriticalAlertPermissionsViewModel.showWarning
     }
     
-    var didSave: TherapySettingsViewModel.SaveCompletion? {
-        delegate?.didSave
-    }
-    
     var didTapIssueReport: ((String) -> Void)? {
         delegate?.didTapIssueReport
     }
@@ -80,14 +75,10 @@ public class SettingsViewModel: ObservableObject {
     let servicesViewModel: ServicesViewModel
     let criticalEventLogExportViewModel: CriticalEventLogExportViewModel
     let therapySettings: () -> TherapySettings
-    // TODO This pattern of taking a closure that returns a closure is redundant; we should simplify here.
-    let pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?
-    let syncBasalRateSchedule: TherapySettingsViewModel.SyncBasalRateSchedule?
-    let maxTempBasalSavePreflight: TherapySettingsViewModel.MaxTempBasalSavePreflight?
-    let syncDeliveryLimits: TherapySettingsViewModel.SyncDeliveryLimits?
     let sensitivityOverridesEnabled: Bool
     let supportInfoProvider: SupportInfoProvider
     let isOnboardingComplete: Bool
+    let therapySettingsViewModelDelegate: TherapySettingsViewModelDelegate?
 
     @Published var isClosedLoopAllowed: Bool
     @Published var dosingStrategy: DosingStrategy {
@@ -110,10 +101,6 @@ public class SettingsViewModel: ObservableObject {
                 servicesViewModel: ServicesViewModel,
                 criticalEventLogExportViewModel: CriticalEventLogExportViewModel,
                 therapySettings: @escaping () -> TherapySettings,
-                pumpSupportedIncrements: (() -> PumpSupportedIncrements?)?,
-                syncBasalRateSchedule: TherapySettingsViewModel.SyncBasalRateSchedule?,
-                syncDeliveryLimits: TherapySettingsViewModel.SyncDeliveryLimits?,
-                maxTempBasalSavePreflight: TherapySettingsViewModel.MaxTempBasalSavePreflight?,
                 sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
                 isClosedLoopAllowed: Published<Bool>.Publisher,
@@ -121,6 +108,7 @@ public class SettingsViewModel: ObservableObject {
                 dosingStrategy: DosingStrategy,
                 availableSupports: [SupportUI],
                 isOnboardingComplete: Bool,
+                therapySettingsViewModelDelegate: TherapySettingsViewModelDelegate?,
                 delegate: SettingsViewModelDelegate?
     ) {
         self.notificationsCriticalAlertPermissionsViewModel = notificationsCriticalAlertPermissionsViewModel
@@ -129,10 +117,6 @@ public class SettingsViewModel: ObservableObject {
         self.servicesViewModel = servicesViewModel
         self.criticalEventLogExportViewModel = criticalEventLogExportViewModel
         self.therapySettings = therapySettings
-        self.pumpSupportedIncrements = pumpSupportedIncrements
-        self.syncBasalRateSchedule = syncBasalRateSchedule
-        self.syncDeliveryLimits = syncDeliveryLimits
-        self.maxTempBasalSavePreflight = maxTempBasalSavePreflight
         self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
         self.isClosedLoopAllowed = false
@@ -140,6 +124,7 @@ public class SettingsViewModel: ObservableObject {
         self.supportInfoProvider = supportInfoProvider
         self.availableSupports = availableSupports
         self.isOnboardingComplete = isOnboardingComplete
+        self.therapySettingsViewModelDelegate = therapySettingsViewModelDelegate
         self.delegate = delegate
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)

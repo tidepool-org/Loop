@@ -1400,6 +1400,68 @@ extension DeviceDataManager: SupportInfoProvider {
     
 }
 
+//MARK: TherapySettingsViewModelDelegate
+
+extension DeviceDataManager: TherapySettingsViewModelDelegate {
+    
+    func syncBasalRateSchedule(items: [RepeatingScheduleValue<Double>], completion: @escaping (Swift.Result<BasalRateSchedule, Error>) -> Void) {
+        pumpManager?.syncBasalRateSchedule(items: items, completion: completion)
+    }
+    
+    func syncDeliveryLimits(deliveryLimits: DeliveryLimits, completion: @escaping (Swift.Result<DeliveryLimits, Error>) -> Void) {
+        // FIRST we need to check to make sure if we have to cancel temp basal first
+        loopManager.maxTempBasalSavePreflight(unitsPerHour: deliveryLimits.maximumBasalRate?.doubleValue(for: .internationalUnitsPerHour)) { [weak self] error in
+            if let error = error {
+                completion(.failure(SaveTherapySettingsError.cancelTempBasalError(error)))
+            } else if let pumpManager = self?.pumpManager {
+                pumpManager.syncDeliveryLimits(limits: deliveryLimits, completion: completion)
+            } else {
+                completion(.failure(SaveTherapySettingsError.missingPumpManager))
+            }
+        }
+    }
+    
+    func saveCompletion(for therapySetting: TherapySetting, therapySettings: TherapySettings) {
+        switch therapySetting {
+        case .glucoseTargetRange:
+            loopManager.mutateSettings { settings in settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule }
+        case .preMealCorrectionRangeOverride:
+            loopManager.mutateSettings { settings in settings.preMealTargetRange = therapySettings.correctionRangeOverrides?.preMeal }
+        case .workoutCorrectionRangeOverride:
+            loopManager.mutateSettings { settings in settings.legacyWorkoutTargetRange = therapySettings.correctionRangeOverrides?.workout }
+        case .suspendThreshold:
+            loopManager.mutateSettings { settings in settings.suspendThreshold = therapySettings.suspendThreshold }
+        case .basalRate:
+            loopManager.basalRateSchedule = therapySettings.basalRateSchedule
+        case .deliveryLimits:
+            loopManager.mutateSettings { settings in
+                settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour
+                settings.maximumBolus = therapySettings.maximumBolus
+            }
+        case .insulinModel:
+            if let defaultRapidActingModel = therapySettings.defaultRapidActingModel {
+                loopManager.defaultRapidActingModel = defaultRapidActingModel
+            }
+        case .carbRatio:
+            loopManager.carbRatioSchedule = therapySettings.carbRatioSchedule
+            analyticsServicesManager.didChangeCarbRatioSchedule()
+        case .insulinSensitivity:
+            loopManager.insulinSensitivitySchedule = therapySettings.insulinSensitivitySchedule
+            analyticsServicesManager.didChangeInsulinSensitivitySchedule()
+        case .none:
+            break // NO-OP
+        }
+    }
+    
+    func pumpSupportedIncrements() -> PumpSupportedIncrements? {
+        return pumpManager.map {
+            PumpSupportedIncrements(basalRates: $0.supportedBasalRates,
+                                    bolusVolumes: $0.supportedBolusVolumes,
+                                    maximumBasalScheduleEntryCount: $0.maximumBasalScheduleEntryCount)
+        }
+    }
+}
+
 extension DeviceDataManager {
     func addDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver) {
         let queue = DispatchQueue.main
