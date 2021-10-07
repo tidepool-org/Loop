@@ -19,12 +19,12 @@ public final class VersionCheckServicesManager {
 
     private var versionCheckServices = Locked<[VersionCheckService]>([])
     
-    private let alertManager: AlertManager
+    private let alertIssuer: AlertIssuer
     
     lazy private var cancellables = Set<AnyCancellable>()
 
-    init(alertManager: AlertManager) {
-        self.alertManager = alertManager
+    init(alertIssuer: AlertIssuer) {
+        self.alertIssuer = alertIssuer
         
         // Perform a check every foreground entry and every loop
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
@@ -103,7 +103,7 @@ public final class VersionCheckServicesManager {
         } else {
             return
         }
-        alertManager.issueAlert(Alert(identifier: alertIdentifier, foregroundContent: alertContent, backgroundContent: alertContent, trigger: .immediate))
+        alertIssuer.issueAlert(Alert(identifier: alertIdentifier, foregroundContent: alertContent, backgroundContent: alertContent, trigger: .immediate))
         recordLastAlertDate()
     }
     

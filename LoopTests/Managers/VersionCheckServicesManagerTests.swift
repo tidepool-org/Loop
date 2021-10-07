@@ -26,11 +26,28 @@ class VersionCheckServicesManagerTests: XCTestCase {
         var isOnboarded: Bool = false
     }
     
+    class MockAlertIssuer: AlertIssuer {
+        var issued: Alert?
+        var retracted: Alert.Identifier?
+        var alertExpectation: XCTestExpectation?
+
+        func issueAlert(_ alert: Alert) {
+            issued = alert
+            alertExpectation?.fulfill()
+        }
+        
+        func retractAlert(identifier: Alert.Identifier) {
+            retracted = identifier
+        }
+    }
+    
     var versionCheckServicesManager: VersionCheckServicesManager!
     var mockVersionCheckService: MockVersionCheckService!
-    
+    var mockAlertIssuer: MockAlertIssuer!
+
     override func setUp() {
-        versionCheckServicesManager = VersionCheckServicesManager()
+        mockAlertIssuer = MockAlertIssuer()
+        versionCheckServicesManager = VersionCheckServicesManager(alertIssuer: mockAlertIssuer)
         mockVersionCheckService = MockVersionCheckService()
         versionCheckServicesManager.addService(mockVersionCheckService)
     }
@@ -98,5 +115,20 @@ class VersionCheckServicesManagerTests: XCTestCase {
         mockVersionCheckService.mockResult = .success(.supportedNeeded)
         versionUpdate = await versionCheckServicesManager.checkVersion(currentVersion: "")
         XCTAssertEqual(.criticalNeeded, versionUpdate)
+    }
+    
+    func testNoAlertForNormalUpdate() {
+        mockVersionCheckService.mockResult = .success(.updateNeeded)
+        mockAlertIssuer.alertExpectation = expectation(description: #function)
+        mockAlertIssuer.alertExpectation?.isInverted = true
+        versionCheckServicesManager.performCheck()
+        wait(for: [mockAlertIssuer.alertExpectation!], timeout: 1.0)
+    }
+    
+    func testAlertForRecommendedUpdate() {
+        mockVersionCheckService.mockResult = .success(.supportedNeeded)
+        mockAlertIssuer.alertExpectation = expectation(description: #function)
+        versionCheckServicesManager.performCheck()
+        wait(for: [mockAlertIssuer.alertExpectation!], timeout: 1.0)
     }
 }
