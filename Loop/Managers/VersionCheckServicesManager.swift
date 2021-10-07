@@ -15,7 +15,7 @@ public final class VersionCheckServicesManager {
     private static var alertCadence = TimeInterval.days(14) // every 2 weeks
     
     private lazy var log = DiagnosticLog(category: "VersionCheckServicesManager")
-    private lazy var dispatchQueue = DispatchQueue(label: "com.loopkit.Loop.VersionCheckServicesManager")
+    private lazy var dispatchQueue = DispatchQueue(label: "com.loopkit.Loop.VersionCheckServicesManager", qos: .background)
 
     private var versionCheckServices = Locked<[VersionCheckService]>([])
     

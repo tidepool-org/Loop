@@ -55,7 +55,7 @@ struct SoftwareUpdateView: View {
         case .criticalNeeded,  // for now...
                 .supportedNeeded:
             return NSLocalizedString("Your Tidepool Loop app is out of date. It will continue to work, but we recommend updating to the new version.", comment: "Body for supported update needed")
-        case .updateNeeded:
+        case .updateAvailable:
             return NSLocalizedString("Tidepool Loop has a new version ready for you. Please update through the App Store.", comment: "Body for information update needed")
         default:
             return ""
