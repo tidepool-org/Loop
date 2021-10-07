@@ -1401,6 +1401,26 @@ extension DeviceDataManager: SupportInfoProvider {
 }
 
 //MARK: TherapySettingsViewModelDelegate
+struct CancelTempBasalFailedError: LocalizedError {
+    let reason: Error?
+    
+    var errorDescription: String? {
+        return String(format: NSLocalizedString("%@%@ was unable to cancel your current temporary basal rate, which is higher than the new Max Basal limit you have set. This may result in higher insulin delivery than desired.\n\nConsider suspending insulin delivery manually and then immediately resuming to enact basal delivery with the new limit in place.",
+                                                comment: "Alert text for failing to cancel temp basal (1: reason description, 2: app name)"),
+                      reasonString, Bundle.main.bundleDisplayName)
+    }
+    
+    private var reasonString: String {
+        let paragraphEnd = ".\n\n"
+        if let localizedError = reason as? LocalizedError {
+            let errors = [localizedError.errorDescription, localizedError.failureReason, localizedError.recoverySuggestion].compactMap { $0 }
+            if !errors.isEmpty {
+                return errors.joined(separator: ". ") + paragraphEnd
+            }
+        }
+        return reason.map { $0.localizedDescription + paragraphEnd } ?? ""
+    }
+}
 
 extension DeviceDataManager: TherapySettingsViewModelDelegate {
     
@@ -1412,11 +1432,11 @@ extension DeviceDataManager: TherapySettingsViewModelDelegate {
         // FIRST we need to check to make sure if we have to cancel temp basal first
         loopManager.maxTempBasalSavePreflight(unitsPerHour: deliveryLimits.maximumBasalRate?.doubleValue(for: .internationalUnitsPerHour)) { [weak self] error in
             if let error = error {
-                completion(.failure(SaveTherapySettingsError.cancelTempBasalError(error)))
+                completion(.failure(CancelTempBasalFailedError(reason: error)))
             } else if let pumpManager = self?.pumpManager {
                 pumpManager.syncDeliveryLimits(limits: deliveryLimits, completion: completion)
             } else {
-                completion(.failure(SaveTherapySettingsError.missingPumpManager))
+                completion(.success(deliveryLimits))
             }
         }
     }
