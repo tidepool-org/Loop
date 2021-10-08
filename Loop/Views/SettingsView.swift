@@ -147,10 +147,7 @@ extension SettingsView {
                 .sheet(isPresented: $therapySettingsIsPresented) {
                     TherapySettingsView(mode: .settings,
                                         viewModel: TherapySettingsViewModel(therapySettings: self.viewModel.therapySettings(),
-                                                                            pumpSupportedIncrements: self.viewModel.pumpSupportedIncrements,
-                                                                            syncPumpSchedule: self.viewModel.syncPumpSchedule,
-                                                                            sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
-                                                                            didSave: self.viewModel.didSave))
+                                                                            delegate: self.viewModel.therapySettingsViewModelDelegate))
                         .environmentObject(displayGlucoseUnitObservable)
                         .environment(\.dismissAction, self.dismiss)
                         .environment(\.appName, self.appName)
