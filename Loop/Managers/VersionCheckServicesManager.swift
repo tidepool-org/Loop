@@ -7,9 +7,10 @@
 //
 
 import Combine
-import UIKit
 import Foundation
 import LoopKit
+import LoopKitUI
+import SwiftUI
 
 public final class VersionCheckServicesManager {
     private static var alertCadence = TimeInterval.days(14) // every 2 weeks
@@ -17,7 +18,8 @@ public final class VersionCheckServicesManager {
     private lazy var log = DiagnosticLog(category: "VersionCheckServicesManager")
     private lazy var dispatchQueue = DispatchQueue(label: "com.loopkit.Loop.VersionCheckServicesManager", qos: .background)
 
-    private var versionCheckServices = Locked<[VersionCheckService]>([])
+    // Only one VersionCheckService allowed at a time (last one wins)
+    private var versionCheckService = Locked<VersionCheckService?>(nil)
     
     private let alertIssuer: AlertIssuer
     
@@ -41,164 +43,124 @@ public final class VersionCheckServicesManager {
     }
 
     func addService(_ versionCheckService: VersionCheckService) {
-        versionCheckServices.mutate { $0.append(versionCheckService) }
+        self.versionCheckService.mutate { $0 = versionCheckService }
     }
 
     func restoreService(_ versionCheckService: VersionCheckService) {
-        versionCheckServices.mutate { $0.append(versionCheckService) }
+        self.versionCheckService.mutate { $0 = versionCheckService }
     }
 
     func removeService(_ versionCheckService: VersionCheckService) {
-        versionCheckServices.mutate { $0.removeAll { $0.serviceIdentifier == versionCheckService.serviceIdentifier } }
-    }
-    
-    public func performCheck() {
-        if #available(iOS 15.0.0, *) {
-            Task {
-                let versionUpdate = await checkVersion(currentVersion: Bundle.main.shortVersionString)
-                notify(versionUpdate)
-            }
-        } else {
-            checkVersion(currentVersion: Bundle.main.shortVersionString) { [self] versionUpdate in
-                notify(versionUpdate)
+        self.versionCheckService.mutate {
+            if $0?.serviceIdentifier == versionCheckService.serviceIdentifier {
+                $0 = nil
             }
         }
     }
     
+    public func performCheck() {
+        checkVersion { [self] versionUpdate in
+            notify(versionUpdate)
+        }
+    }
+
     private func notify(_ versionUpdate: VersionUpdate) {
         if versionUpdate.softwareUpdateAvailable {
             NotificationCenter.default.post(name: .SoftwareUpdateAvailable, object: versionUpdate)
         }
-        maybeIssueAlert(versionUpdate)
+//        maybeIssueAlert(versionUpdate)
     }
     
-    private func maybeIssueAlert(_ versionUpdate: VersionUpdate) {
-        // For now, we only issue alerts for recommended or higher
-        guard versionUpdate >= .supportedNeeded else {
-            noAlertNecessary()
-            return
+    public func softwareUpdateView(guidanceColors: GuidanceColors) -> AnyView? {
+        guard let versionCheckServiceUI = versionCheckService.value as? VersionCheckServiceUI else {
+            return nil
         }
-        
-        let alertIdentifier = Alert.Identifier(managerIdentifier: "VersionCheckServicesManager", alertIdentifier: versionUpdate.rawValue)
-        let alertContent: Alert.Content
-        if firstAlert {
-            alertContent = Alert.Content(title: versionUpdate.alertTitle,
-                                         body: NSLocalizedString("""
-                                            Your Tidepool Loop app is out of date. It will continue to work, but we recommend updating to the latest version.
-                                            
-                                            Go to Tidepool Loop Settings > Software Update to complete.
-                                            """, comment: "Alert content body for first software update alert"),
-                                         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "default acknowledgement"),
-                                         isCritical: versionUpdate == .criticalNeeded)
-        } else if let lastVersionCheckAlertDate = UserDefaults.appGroup?.lastVersionCheckAlertDate,
-                  abs(lastVersionCheckAlertDate.timeIntervalSinceNow) > Self.alertCadence {
-            alertContent = Alert.Content(title: NSLocalizedString("Update Reminder", comment: "Recurring software update alert title"),
-                                         body: NSLocalizedString("""
-                                            A software update is recommended to continue using the Tidepool Loop app.
-                                            
-                                            Go to Tidepool Loop Settings > Software Update to install the latest version.
-                                            """, comment: "Alert content body for recurring software update alert"),
-                                         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "default acknowledgement"),
-                                         isCritical: versionUpdate == .criticalNeeded)
+        return versionCheckServiceUI.softwareUpdateView(
+            guidanceColors: guidanceColors,
+            bundleIdentifier: Bundle.main.bundleIdentifier!,
+            currentVersion: Bundle.main.shortVersionString,
+            openAppStoreHook: openAppStore)
+    }
+
+//    private func maybeIssueAlert(_ versionUpdate: VersionUpdate) {
+//        guard versionUpdate >= .recommended else {
+//            noAlertNecessary()
+//            return
+//        }
+//
+//        let alertIdentifier = Alert.Identifier(managerIdentifier: "VersionCheckServicesManager", alertIdentifier: versionUpdate.rawValue)
+//        let alertContent: Alert.Content
+//        if firstAlert {
+//            alertContent = Alert.Content(title: versionUpdate.alertTitle,
+//                                         body: NSLocalizedString("""
+//                                            Your Tidepool Loop app is out of date. It will continue to work, but we recommend updating to the latest version.
+//
+//                                            Go to Tidepool Loop Settings > Software Update to complete.
+//                                            """, comment: "Alert content body for first software update alert"),
+//                                         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "default acknowledgement"),
+//                                         isCritical: versionUpdate == .required)
+//        } else if let lastVersionCheckAlertDate = UserDefaults.appGroup?.lastVersionCheckAlertDate,
+//                  abs(lastVersionCheckAlertDate.timeIntervalSinceNow) > Self.alertCadence {
+//            alertContent = Alert.Content(title: NSLocalizedString("Update Reminder", comment: "Recurring software update alert title"),
+//                                         body: NSLocalizedString("""
+//                                            A software update is recommended to continue using the Tidepool Loop app.
+//
+//                                            Go to Tidepool Loop Settings > Software Update to install the latest version.
+//                                            """, comment: "Alert content body for recurring software update alert"),
+//                                         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "default acknowledgement"),
+//                                         isCritical: versionUpdate == .required)
+//        } else {
+//            return
+//        }
+//        alertIssuer.issueAlert(Alert(identifier: alertIdentifier, foregroundContent: alertContent, backgroundContent: alertContent, trigger: .immediate))
+//        recordLastAlertDate()
+//    }
+//
+//    private func noAlertNecessary() {
+//        UserDefaults.appGroup?.lastVersionCheckAlertDate = nil
+//    }
+//
+//    private var firstAlert: Bool {
+//        return UserDefaults.appGroup?.lastVersionCheckAlertDate == nil
+//    }
+//
+//    private func recordLastAlertDate() {
+//        UserDefaults.appGroup?.lastVersionCheckAlertDate = Date()
+//    }
+    
+    func checkVersion(completion: @escaping (VersionUpdate) -> Void) {
+        if let service = versionCheckService.value {
+            dispatchQueue.async {
+                service.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: Bundle.main.shortVersionString) {
+                    completion($0.value)
+                }
+            }
         } else {
-            return
-        }
-        alertIssuer.issueAlert(Alert(identifier: alertIdentifier, foregroundContent: alertContent, backgroundContent: alertContent, trigger: .immediate))
-        recordLastAlertDate()
-    }
-    
-    private func noAlertNecessary() {
-        UserDefaults.appGroup?.lastVersionCheckAlertDate = nil
-    }
-    
-    private var firstAlert: Bool {
-        return UserDefaults.appGroup?.lastVersionCheckAlertDate == nil
-    }
-    
-    private func recordLastAlertDate() {
-        UserDefaults.appGroup?.lastVersionCheckAlertDate = Date()
-    }
-    
-    @available(swift 5.5)
-    @available(iOS 15.0.0, *)
-    func checkVersion(currentVersion: String) async -> VersionUpdate {
-        var results = [String: Result<VersionUpdate?, Error>]()
-        let services = versionCheckServices.value
-        await withTaskGroup(of: (String, Result<VersionUpdate?, Error>).self) { group in
-            for service in services {
-                group.addTask {
-                    let result = await service.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: currentVersion)
-                    return (service.serviceIdentifier, result)
-                }
-            }
-            for await pair in group {
-                results[pair.0] = pair.1
-            }
-        }
-        return aggregate(results: results)
-    }
-
-    @available(swift 5.5)
-    @available(iOS 15.0.0, *)
-    func checkVersion(currentVersion: String, completion: @escaping (VersionUpdate) -> Void) async {
-        Task {
-            let versionUpdate = await checkVersion(currentVersion: Bundle.main.shortVersionString)
-            completion(versionUpdate)
-        }
-    }
-
-    @available(iOS, deprecated: 15.0.0)
-    func checkVersion(currentVersion: String, completion: @escaping (VersionUpdate) -> Void) {
-        let group = DispatchGroup()
-        var results = [String: Result<VersionUpdate?, Error>]()
-        let services = versionCheckServices.value
-        services.forEach { versionCheckService in
-            group.enter()
-            versionCheckService.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: currentVersion) { result in
-                results[versionCheckService.serviceIdentifier] = result
-                group.leave()
-            }
-        }
-        group.notify(queue: dispatchQueue) {
-            completion(self.aggregate(results: results))
-        }
-    }
-
-    private func aggregate(results: [String : Result<VersionUpdate?, Error>]) -> VersionUpdate {
-        var aggregatedVersionUpdate = VersionUpdate.default
-        results.forEach { key, value in
-            switch value {
-            case .failure(let error):
-                self.log.error("Error from version check service %{public}@: %{public}@", key, error.localizedDescription)
-            case .success(let versionUpdate):
-                if let versionUpdate = versionUpdate, versionUpdate > aggregatedVersionUpdate {
-                    aggregatedVersionUpdate = versionUpdate
-                }
-            }
-        }
-        return aggregatedVersionUpdate
-    }
-}
-
-extension VersionCheckService {
-    @available(iOS 15.0.0, *)
-    func checkVersion(bundleIdentifier: String, currentVersion: String) async -> Result<VersionUpdate?, Error> {
-        return await withUnsafeContinuation { continuation in
-            self.checkVersion(bundleIdentifier: bundleIdentifier, currentVersion: currentVersion) {
-                continuation.resume(returning: $0)
-            }
+            completion(.none)
         }
     }
 }
 
-extension Notification.Name {
-    static let SoftwareUpdateAvailable = Notification.Name(rawValue: "com.loopkit.Loop.SoftwareUpdateAvailable")
+extension VersionCheckServicesManager {
+    public func openAppStore() {
+        if let appStoreURLString = Bundle.main.appStoreURL,
+            let appStoreURL = URL(string: appStoreURLString) {
+            UIApplication.shared.open(appStoreURL)
+        }
+    }
 }
 
 extension VersionUpdate {
-    var softwareUpdateAvailable: Bool { self != .noneNeeded }
-    
     var alertTitle: String { return self.localizedDescription }
+}
+
+fileprivate extension Result where Success == VersionUpdate? {
+    var value: VersionUpdate {
+        switch self {
+        case .failure: return .none
+        case .success(let val): return val ?? .none
+        }
+    }
 }
 
 fileprivate extension UserDefaults {

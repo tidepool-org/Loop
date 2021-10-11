@@ -11,9 +11,10 @@ import LoopKit
 @testable import Loop
 
 class VersionCheckServicesManagerTests: XCTestCase {
+    enum MockError: Error { case nothing }
 
     class MockVersionCheckService: VersionCheckService {
-        var mockResult: Result<VersionUpdate?, Error> = .success(.noneNeeded)
+        var mockResult: Result<VersionUpdate?, Error> = .success(.default)
         func checkVersion(bundleIdentifier: String, currentVersion: String, completion: @escaping (Result<VersionUpdate?, Error>) -> Void) {
             completion(mockResult)
         }
@@ -55,7 +56,7 @@ class VersionCheckServicesManagerTests: XCTestCase {
     func getVersion(fn: String = #function) -> VersionUpdate? {
         let e = expectation(description: fn)
         var result: VersionUpdate?
-        versionCheckServicesManager.checkVersion(currentVersion: "") {
+        versionCheckServicesManager.checkVersion {
             result = $0
             e.fulfill()
         }
@@ -64,61 +65,29 @@ class VersionCheckServicesManagerTests: XCTestCase {
     }
     
     func testVersionCheckOneService() throws {
-        XCTAssertEqual(.noneNeeded, getVersion())
-        mockVersionCheckService.mockResult = .success(.criticalNeeded)
-        XCTAssertEqual(.criticalNeeded, getVersion())
+        XCTAssertEqual(VersionUpdate.none, getVersion())
+        mockVersionCheckService.mockResult = .success(.required)
+        XCTAssertEqual(.required, getVersion())
     }
     
     func testVersionCheckOneServiceError() throws {
         // Error doesn't really do anything but log
         mockVersionCheckService.mockResult = .failure(MockError.nothing)
-        XCTAssertEqual(.noneNeeded, getVersion())
+        XCTAssertEqual(VersionUpdate.none, getVersion())
     }
     
     func testVersionCheckMultipleServices() throws {
         let anotherService = MockVersionCheckService()
         versionCheckServicesManager.addService(anotherService)
-        XCTAssertEqual(.noneNeeded, getVersion())
-        anotherService.mockResult = .success(.criticalNeeded)
-        XCTAssertEqual(.criticalNeeded, getVersion())
-        mockVersionCheckService.mockResult = .success(.supportedNeeded)
-        XCTAssertEqual(.criticalNeeded, getVersion())
-    }
-        
-    @available(iOS 15.0.0, *)
-    func testVersionCheckOneServiceAsync() async throws {
-        var versionUpdate = await versionCheckServicesManager.checkVersion(currentVersion: "")
-        XCTAssertEqual(.noneNeeded, versionUpdate)
-        mockVersionCheckService.mockResult = .success(.criticalNeeded)
-        versionUpdate = await versionCheckServicesManager.checkVersion(currentVersion: "")
-        XCTAssertEqual(.criticalNeeded, versionUpdate)
-    }
-    
-    enum MockError: Error { case nothing }
-    @available(iOS 15.0.0, *)
-    func testVersionCheckOneServiceErrorAsync() async throws {
-        // Error doesn't really do anything but log
-        mockVersionCheckService.mockResult = .failure(MockError.nothing)
-        let versionUpdate = await versionCheckServicesManager.checkVersion(currentVersion: "")
-        XCTAssertEqual(.noneNeeded, versionUpdate)
-    }
-
-    @available(iOS 15.0.0, *)
-    func testVersionCheckMultipleServicesAsync() async throws {
-        let anotherService = MockVersionCheckService()
-        versionCheckServicesManager.addService(anotherService)
-        var versionUpdate = await versionCheckServicesManager.checkVersion(currentVersion: "")
-        XCTAssertEqual(.noneNeeded, versionUpdate)
-        anotherService.mockResult = .success(.criticalNeeded)
-        versionUpdate = await versionCheckServicesManager.checkVersion(currentVersion: "")
-        XCTAssertEqual(.criticalNeeded, versionUpdate)
-        mockVersionCheckService.mockResult = .success(.supportedNeeded)
-        versionUpdate = await versionCheckServicesManager.checkVersion(currentVersion: "")
-        XCTAssertEqual(.criticalNeeded, versionUpdate)
+        XCTAssertEqual(VersionUpdate.none, getVersion())
+        anotherService.mockResult = .success(.required)
+        XCTAssertEqual(.required, getVersion())
+        mockVersionCheckService.mockResult = .success(.recommended)
+        XCTAssertEqual(.required, getVersion())
     }
     
     func testNoAlertForNormalUpdate() {
-        mockVersionCheckService.mockResult = .success(.updateNeeded)
+        mockVersionCheckService.mockResult = .success(.available)
         mockAlertIssuer.alertExpectation = expectation(description: #function)
         mockAlertIssuer.alertExpectation?.isInverted = true
         versionCheckServicesManager.performCheck()
@@ -126,7 +95,7 @@ class VersionCheckServicesManagerTests: XCTestCase {
     }
     
     func testAlertForRecommendedUpdate() {
-        mockVersionCheckService.mockResult = .success(.supportedNeeded)
+        mockVersionCheckService.mockResult = .success(.recommended)
         mockAlertIssuer.alertExpectation = expectation(description: #function)
         versionCheckServicesManager.performCheck()
         wait(for: [mockAlertIssuer.alertExpectation!], timeout: 1.0)

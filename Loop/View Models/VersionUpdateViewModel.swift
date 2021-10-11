@@ -10,6 +10,7 @@ import Combine
 import Foundation
 import LoopKit
 import SwiftUI
+import LoopKitUI
 
 public class VersionUpdateViewModel: ObservableObject {
     
@@ -17,13 +18,13 @@ public class VersionUpdateViewModel: ObservableObject {
 
     var softwareUpdateAvailable: Bool {
         update()
-        return versionUpdate != nil && versionUpdate != .noneNeeded
+        return versionUpdate?.softwareUpdateAvailable ?? false
     }
     
     @ViewBuilder
     var icon: some View {
         switch versionUpdate {
-        case .criticalNeeded, .supportedNeeded:
+        case .required, .recommended:
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(warningColor)
         default:
@@ -31,20 +32,27 @@ public class VersionUpdateViewModel: ObservableObject {
         }
     }
     
+    @ViewBuilder
+    var softwareUpdateView: some View {
+        versionCheckServicesManager?.softwareUpdateView(guidanceColors: guidanceColors)
+    }
+    
     var warningColor: Color {
         switch versionUpdate {
-        case .criticalNeeded: return .critical
-        case .supportedNeeded: return .warning
+        case .required: return guidanceColors.critical
+        case .recommended: return guidanceColors.warning
         default: return .primary
         }
     }
     
+    private weak var versionCheckServicesManager: VersionCheckServicesManager?
+    private let guidanceColors: GuidanceColors
+
     lazy private var cancellables = Set<AnyCancellable>()
 
-    weak var versionCheckServicesManager: VersionCheckServicesManager?
-    
-    init(_ versionCheckServicesManager: VersionCheckServicesManager? = nil) {
+    init(versionCheckServicesManager: VersionCheckServicesManager? = nil, guidanceColors: GuidanceColors) {
         self.versionCheckServicesManager = versionCheckServicesManager
+        self.guidanceColors = guidanceColors
         
         NotificationCenter.default.publisher(for: .SoftwareUpdateAvailable)
             .sink { [weak self] _ in
@@ -56,14 +64,9 @@ public class VersionUpdateViewModel: ObservableObject {
     }
     
     public func update() {
-        versionCheckServicesManager?.checkVersion(currentVersion: Bundle.main.shortVersionString) {
+        versionCheckServicesManager?.checkVersion {
             self.versionUpdate = $0
         }
     }
     
-    func gotoAppStore() {
-        // TODO: use real App Store URL
-        UIApplication.shared.open(URL(string: "itms-apps://itunes.apple.com/us/app/apple-store/id1474388545")!)
-    }
-
 }

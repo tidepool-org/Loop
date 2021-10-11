@@ -175,15 +175,12 @@ extension SettingsViewModel {
 
     static var preview: SettingsViewModel {
         return SettingsViewModel(notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel(),
-                                 versionUpdateViewModel: VersionUpdateViewModel(),
+                                 versionUpdateViewModel: VersionUpdateViewModel(versionCheckServicesManager: nil, guidanceColors: GuidanceColors()),
                                  pumpManagerSettingsViewModel: DeviceViewModel<PumpManagerDescriptor>(),
                                  cgmManagerSettingsViewModel: DeviceViewModel<CGMManagerDescriptor>(),
                                  servicesViewModel: ServicesViewModel.preview,
                                  criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory()),
                                  therapySettings: { TherapySettings() },
-                                 pumpSupportedIncrements: nil,
-                                 syncPumpSchedule: nil,
-                                 syncDeliveryLimits: nil,
                                  sensitivityOverridesEnabled: false,
                                  initialDosingEnabled: true,
                                  isClosedLoopAllowed: FakeClosedLoopAllowedPublisher().$mockIsClosedLoopAllowed,
@@ -191,6 +188,7 @@ extension SettingsViewModel {
                                  dosingStrategy: .automaticBolus,
                                  availableSupports: [],
                                  isOnboardingComplete: false,
+                                 therapySettingsViewModelDelegate: nil,
                                  delegate: nil)
     }
 }

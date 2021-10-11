@@ -100,7 +100,7 @@ extension SettingsView {
     
     private var softwareUpdateSection: some View {
         Section(footer: Text(String(format: NSLocalizedString("A new version of %@ is available.", comment: "Software update section footer (1: app name)"), appName))) {
-            NavigationLink(destination: SoftwareUpdateView(settingsViewModel: viewModel)) {
+            NavigationLink(destination: viewModel.versionUpdateViewModel.softwareUpdateView) {
                 Text(NSLocalizedString("Software Update", comment: "Software update button link text"))
                 Spacer()
                 viewModel.versionUpdateViewModel.icon
