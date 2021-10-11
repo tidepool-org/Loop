@@ -13,13 +13,19 @@ import LoopKitUI
 import SwiftUI
 
 public final class VersionCheckServicesManager {
-    private static var alertCadence = TimeInterval.days(14) // every 2 weeks
     
     private lazy var log = DiagnosticLog(category: "VersionCheckServicesManager")
-    private lazy var dispatchQueue = DispatchQueue(label: "com.loopkit.Loop.VersionCheckServicesManager", qos: .background)
 
-    // Only one VersionCheckService allowed at a time (last one wins)
-    private var versionCheckService = Locked<VersionCheckService?>(nil)
+    private var versionCheckServices = Locked<[VersionCheckService]>([])
+    
+    private var serviceIdentifierWithHighestVersionUpdate: String? {
+        get {
+            return UserDefaults.appGroup?.serviceIdentifierWithHighestVersionUpdate
+        }
+        set {
+            UserDefaults.appGroup?.serviceIdentifierWithHighestVersionUpdate = newValue
+        }
+    }
     
     private let alertIssuer: AlertIssuer
     
@@ -43,19 +49,15 @@ public final class VersionCheckServicesManager {
     }
 
     func addService(_ versionCheckService: VersionCheckService) {
-        self.versionCheckService.mutate { $0 = versionCheckService }
+        self.versionCheckServices.mutate { $0.append(versionCheckService) }
     }
 
     func restoreService(_ versionCheckService: VersionCheckService) {
-        self.versionCheckService.mutate { $0 = versionCheckService }
+        self.versionCheckServices.mutate { $0.append(versionCheckService) }
     }
 
     func removeService(_ versionCheckService: VersionCheckService) {
-        self.versionCheckService.mutate {
-            if $0?.serviceIdentifier == versionCheckService.serviceIdentifier {
-                $0 = nil
-            }
-        }
+        self.versionCheckServices.mutate { $0.removeAll(where:({ $0.serviceIdentifier == versionCheckService.serviceIdentifier })) }
     }
     
     public func performCheck() {
@@ -64,81 +66,71 @@ public final class VersionCheckServicesManager {
         }
     }
 
+    private func updateAlertIssuer(_ versionCheckService: VersionCheckService?, _ alertIssuer: AlertIssuer?) {
+        guard let versionCheckServiceUI = versionCheckService as? VersionCheckServiceUI else {
+            return
+        }
+        versionCheckServiceUI.setAlertIssuer(alertIssuer: alertIssuer)
+    }
+    
     private func notify(_ versionUpdate: VersionUpdate) {
         if versionUpdate.softwareUpdateAvailable {
             NotificationCenter.default.post(name: .SoftwareUpdateAvailable, object: versionUpdate)
         }
-//        maybeIssueAlert(versionUpdate)
     }
     
     public func softwareUpdateView(guidanceColors: GuidanceColors) -> AnyView? {
-        guard let versionCheckServiceUI = versionCheckService.value as? VersionCheckServiceUI else {
-            return nil
-        }
-        return versionCheckServiceUI.softwareUpdateView(
+        return lastHighestVersionUpdateService?.softwareUpdateView(
             guidanceColors: guidanceColors,
             bundleIdentifier: Bundle.main.bundleIdentifier!,
             currentVersion: Bundle.main.shortVersionString,
             openAppStoreHook: openAppStore)
     }
-
-//    private func maybeIssueAlert(_ versionUpdate: VersionUpdate) {
-//        guard versionUpdate >= .recommended else {
-//            noAlertNecessary()
-//            return
-//        }
-//
-//        let alertIdentifier = Alert.Identifier(managerIdentifier: "VersionCheckServicesManager", alertIdentifier: versionUpdate.rawValue)
-//        let alertContent: Alert.Content
-//        if firstAlert {
-//            alertContent = Alert.Content(title: versionUpdate.alertTitle,
-//                                         body: NSLocalizedString("""
-//                                            Your Tidepool Loop app is out of date. It will continue to work, but we recommend updating to the latest version.
-//
-//                                            Go to Tidepool Loop Settings > Software Update to complete.
-//                                            """, comment: "Alert content body for first software update alert"),
-//                                         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "default acknowledgement"),
-//                                         isCritical: versionUpdate == .required)
-//        } else if let lastVersionCheckAlertDate = UserDefaults.appGroup?.lastVersionCheckAlertDate,
-//                  abs(lastVersionCheckAlertDate.timeIntervalSinceNow) > Self.alertCadence {
-//            alertContent = Alert.Content(title: NSLocalizedString("Update Reminder", comment: "Recurring software update alert title"),
-//                                         body: NSLocalizedString("""
-//                                            A software update is recommended to continue using the Tidepool Loop app.
-//
-//                                            Go to Tidepool Loop Settings > Software Update to install the latest version.
-//                                            """, comment: "Alert content body for recurring software update alert"),
-//                                         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "default acknowledgement"),
-//                                         isCritical: versionUpdate == .required)
-//        } else {
-//            return
-//        }
-//        alertIssuer.issueAlert(Alert(identifier: alertIdentifier, foregroundContent: alertContent, backgroundContent: alertContent, trigger: .immediate))
-//        recordLastAlertDate()
-//    }
-//
-//    private func noAlertNecessary() {
-//        UserDefaults.appGroup?.lastVersionCheckAlertDate = nil
-//    }
-//
-//    private var firstAlert: Bool {
-//        return UserDefaults.appGroup?.lastVersionCheckAlertDate == nil
-//    }
-//
-//    private func recordLastAlertDate() {
-//        UserDefaults.appGroup?.lastVersionCheckAlertDate = Date()
-//    }
+    
+    // Returns the VersionCheckServiceUI that gave the last "highest" VersionUpdate, or `nil` if there is none
+    private var lastHighestVersionUpdateService: VersionCheckServiceUI? {
+        return versionCheckServices.value.first {
+            $0.serviceIdentifier == serviceIdentifierWithHighestVersionUpdate
+        }
+        as? VersionCheckServiceUI
+    }
     
     func checkVersion(completion: @escaping (VersionUpdate) -> Void) {
-        if let service = versionCheckService.value {
-            dispatchQueue.async {
-                service.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: Bundle.main.shortVersionString) {
-                    completion($0.value)
-                }
+        let group = DispatchGroup()
+        var results = [String: Result<VersionUpdate?, Error>]()
+        let services = versionCheckServices.value
+        services.forEach { versionCheckService in
+            group.enter()
+            versionCheckService.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: Bundle.main.shortVersionString) { result in
+                results[versionCheckService.serviceIdentifier] = result
+                group.leave()
             }
-        } else {
-            completion(.none)
+        }
+        group.notify(queue: DispatchQueue.main) { [weak self] in
+            guard let self = self else { return }
+            let aggregatedResults = self.aggregate(results: results)
+            self.serviceIdentifierWithHighestVersionUpdate = aggregatedResults.0
+            completion(aggregatedResults.1)
         }
     }
+
+    private func aggregate(results: [String : Result<VersionUpdate?, Error>]) -> (String?, VersionUpdate) {
+        var aggregatedVersionUpdate = VersionUpdate.default
+        var serviceIdentifierWithHighestVersionUpdate: String?
+        results.forEach { key, value in
+            switch value {
+            case .failure(let error):
+                self.log.error("Error from version check service %{public}@: %{public}@", key, error.localizedDescription)
+            case .success(let versionUpdate):
+                if let versionUpdate = versionUpdate, versionUpdate > aggregatedVersionUpdate {
+                    aggregatedVersionUpdate = versionUpdate
+                    serviceIdentifierWithHighestVersionUpdate = key
+                }
+            }
+        }
+        return (serviceIdentifierWithHighestVersionUpdate, aggregatedVersionUpdate)
+    }
+
 }
 
 extension VersionCheckServicesManager {
@@ -148,10 +140,6 @@ extension VersionCheckServicesManager {
             UIApplication.shared.open(appStoreURL)
         }
     }
-}
-
-extension VersionUpdate {
-    var alertTitle: String { return self.localizedDescription }
 }
 
 fileprivate extension Result where Success == VersionUpdate? {
@@ -165,15 +153,15 @@ fileprivate extension Result where Success == VersionUpdate? {
 
 fileprivate extension UserDefaults {
     private enum Key: String {
-        case lastVersionCheckAlertDate = "com.loopkit.Loop.lastVersionCheckAlertDate"
+        case serviceIdentifierWithHighestVersionUpdate = "com.loopkit.Loop.serviceIdentifierWithHighestVersionUpdate"
     }
 
-    var lastVersionCheckAlertDate: Date? {
+    var serviceIdentifierWithHighestVersionUpdate: String? {
         get {
-            return object(forKey: Key.lastVersionCheckAlertDate.rawValue) as? Date
+            return object(forKey: Key.serviceIdentifierWithHighestVersionUpdate.rawValue) as? String
         }
         set {
-            set(newValue, forKey: Key.lastVersionCheckAlertDate.rawValue)
+            set(newValue, forKey: Key.serviceIdentifierWithHighestVersionUpdate.rawValue)
         }
     }
 }

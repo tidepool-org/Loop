@@ -64,8 +64,10 @@ public class VersionUpdateViewModel: ObservableObject {
     }
     
     public func update() {
-        versionCheckServicesManager?.checkVersion {
-            self.versionUpdate = $0
+        versionCheckServicesManager?.checkVersion { [weak self] versionUpdate in
+            DispatchQueue.main.async {
+                self?.versionUpdate = versionUpdate
+            }
         }
     }
     
