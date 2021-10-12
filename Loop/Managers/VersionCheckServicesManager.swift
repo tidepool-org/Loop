@@ -67,10 +67,10 @@ public final class VersionCheckServicesManager {
     }
 
     private func updateAlertIssuer(_ versionCheckService: VersionCheckService?, _ alertIssuer: AlertIssuer?) {
-        guard let versionCheckServiceUI = versionCheckService as? VersionCheckServiceUI else {
+        guard let VersionCheckUI = versionCheckService as? VersionCheckUI else {
             return
         }
-        versionCheckServiceUI.setAlertIssuer(alertIssuer: alertIssuer)
+        VersionCheckUI.setAlertIssuer(alertIssuer: alertIssuer)
     }
     
     private func notify(_ versionUpdate: VersionUpdate) {
@@ -80,19 +80,19 @@ public final class VersionCheckServicesManager {
     }
     
     public func softwareUpdateView(guidanceColors: GuidanceColors) -> AnyView? {
-        return lastHighestVersionUpdateService?.softwareUpdateView(
+        return lastHighestVersionCheckUI?.softwareUpdateView(
             guidanceColors: guidanceColors,
             bundleIdentifier: Bundle.main.bundleIdentifier!,
             currentVersion: Bundle.main.shortVersionString,
             openAppStoreHook: openAppStore)
     }
     
-    // Returns the VersionCheckServiceUI that gave the last "highest" VersionUpdate, or `nil` if there is none
-    private var lastHighestVersionUpdateService: VersionCheckServiceUI? {
+    // Returns the VersionCheckUI that gave the last "highest" VersionUpdate, or `nil` if there is none
+    private var lastHighestVersionCheckUI: VersionCheckUI? {
         return versionCheckServices.value.first {
             $0.serviceIdentifier == serviceIdentifierWithHighestVersionUpdate
         }
-        as? VersionCheckServiceUI
+        as? VersionCheckUI
     }
     
     func checkVersion(completion: @escaping (VersionUpdate) -> Void) {
