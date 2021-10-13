@@ -34,7 +34,7 @@ public class VersionUpdateViewModel: ObservableObject {
     
     @ViewBuilder
     var softwareUpdateView: some View {
-        versionCheckServicesManager?.softwareUpdateView(guidanceColors: guidanceColors)
+        supportManager?.softwareUpdateView(guidanceColors: guidanceColors)
     }
     
     var warningColor: Color {
@@ -45,13 +45,13 @@ public class VersionUpdateViewModel: ObservableObject {
         }
     }
     
-    private weak var versionCheckServicesManager: VersionCheckServicesManager?
+    private weak var supportManager: SupportManager?
     private let guidanceColors: GuidanceColors
 
     lazy private var cancellables = Set<AnyCancellable>()
 
-    init(versionCheckServicesManager: VersionCheckServicesManager? = nil, guidanceColors: GuidanceColors) {
-        self.versionCheckServicesManager = versionCheckServicesManager
+    init(supportManager: SupportManager? = nil, guidanceColors: GuidanceColors) {
+        self.supportManager = supportManager
         self.guidanceColors = guidanceColors
         
         NotificationCenter.default.publisher(for: .SoftwareUpdateAvailable)
@@ -64,7 +64,7 @@ public class VersionUpdateViewModel: ObservableObject {
     }
     
     public func update() {
-        versionCheckServicesManager?.checkVersion { [weak self] versionUpdate in
+        supportManager?.checkVersion { [weak self] versionUpdate in
             DispatchQueue.main.async {
                 self?.versionUpdate = versionUpdate
             }

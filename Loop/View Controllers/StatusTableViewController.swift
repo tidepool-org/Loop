@@ -35,7 +35,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var closedLoopStatus: ClosedLoopStatus!
     
     let notificationsCriticalAlertPermissionsViewModel = NotificationsCriticalAlertPermissionsViewModel()
-    var versionUpdateViewModel: VersionUpdateViewModel!
+    
+    var supportManager: SupportManager!
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -142,8 +143,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 }
             }
             .store(in: &cancellables)
-        
-        versionUpdateViewModel = VersionUpdateViewModel(versionCheckServicesManager: deviceManager.servicesManager.versionCheckServicesManager, guidanceColors: .default)
     }
 
     override func didReceiveMemoryWarning() {
@@ -1391,6 +1390,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                                   availableServices: { [weak self] in self?.deviceManager.servicesManager.availableServices ?? [] },
                                                   activeServices: { [weak self] in self?.deviceManager.servicesManager.activeServices ?? [] },
                                                   delegate: self)
+        let versionUpdateViewModel = VersionUpdateViewModel(supportManager: supportManager, guidanceColors: .default)
         let viewModel = SettingsViewModel(notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
                                           versionUpdateViewModel: versionUpdateViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
@@ -1403,7 +1403,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           isClosedLoopAllowed: closedLoopStatus.$isClosedLoopAllowed,
                                           supportInfoProvider: deviceManager,
                                           dosingStrategy: deviceManager.loopManager.settings.dosingStrategy,
-                                          availableSupports: deviceManager.availableSupports,
+                                          availableSupports: supportManager.availableSupports,
                                           isOnboardingComplete: onboardingManager.isComplete,
                                           therapySettingsViewModelDelegate: deviceManager,
                                           delegate: self)

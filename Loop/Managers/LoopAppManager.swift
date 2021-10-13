@@ -11,6 +11,7 @@ import Intents
 import Combine
 import LoopKit
 import LoopKitUI
+import MockKit
 
 public protocol AlertPresenter: AnyObject {
     /// Present the alert view controller, with or without animation.
@@ -69,6 +70,7 @@ class LoopAppManager: NSObject {
     private var deviceDataManager: DeviceDataManager!
     private var onboardingManager: OnboardingManager!
     private var alertPermissionsChecker: AlertPermissionsChecker!
+    private var supportManager: SupportManager!
 
     private var state: State = .initialize
 
@@ -171,6 +173,10 @@ class LoopAppManager: NSObject {
         deviceDataManager.onboardingManager = onboardingManager
         deviceDataManager.analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
+        supportManager = SupportManager(pluginManager: pluginManager,
+                                        deviceDataManager: deviceDataManager,
+                                        alertIssuer: alertManager)
+
         closedLoopStatus.$isClosedLoopAllowed
             .combineLatest(deviceDataManager.loopManager.$dosingEnabled)
             .map { $0 && $1 }
@@ -201,6 +207,7 @@ class LoopAppManager: NSObject {
         statusTableViewController.closedLoopStatus = closedLoopStatus
         statusTableViewController.deviceManager = deviceDataManager
         statusTableViewController.onboardingManager = onboardingManager
+        statusTableViewController.supportManager = supportManager
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 
         var rootNavigationController = rootViewController as? RootNavigationController

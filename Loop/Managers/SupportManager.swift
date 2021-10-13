@@ -1,5 +1,5 @@
 //
-//  VersionCheckServicesManager.swift
+//  SupportManager.swift
 //  Loop
 //
 //  Created by Rick Pasetto on 9/8/21.
@@ -11,28 +11,47 @@ import Foundation
 import LoopKit
 import LoopKitUI
 import SwiftUI
+import MockKitUI
 
-public final class VersionCheckServicesManager {
+public final class SupportManager {
     
-    private lazy var log = DiagnosticLog(category: "VersionCheckServicesManager")
+    private lazy var log = DiagnosticLog(category: "SupportManager")
 
-    private var versionCheckServices = Locked<[VersionCheckService]>([])
+    private var supports = Locked<[SupportUI]>([])
     
-    private var serviceIdentifierWithHighestVersionUpdate: String? {
+    private var identifierWithHighestVersionUpdate: String? {
         get {
-            return UserDefaults.appGroup?.serviceIdentifierWithHighestVersionUpdate
+            return UserDefaults.appGroup?.identifierWithHighestVersionUpdate
         }
         set {
-            UserDefaults.appGroup?.serviceIdentifierWithHighestVersionUpdate = newValue
+            UserDefaults.appGroup?.identifierWithHighestVersionUpdate = newValue
         }
     }
     
     private let alertIssuer: AlertIssuer
-    
+    private let pluginManager: PluginManager
+    private let deviceDataManager: DeviceDataManager
+    private let mockSupports: [SupportUI]
+
     lazy private var cancellables = Set<AnyCancellable>()
 
-    init(alertIssuer: AlertIssuer) {
+    init(pluginManager: PluginManager, deviceDataManager: DeviceDataManager, alertIssuer: AlertIssuer) {
         self.alertIssuer = alertIssuer
+        self.pluginManager = pluginManager
+        self.deviceDataManager = deviceDataManager
+
+        if FeatureFlags.allowSimulators {
+            mockSupports = [MockSupport(defaults: UserDefaults.appGroup!)]
+        } else {
+            mockSupports = []
+        }
+        
+        availableSupports.forEach {
+            addSupport($0)
+        }
+        
+        // TODO
+        //restoreState()
         
         // Perform a check every foreground entry and every loop
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
@@ -48,29 +67,28 @@ public final class VersionCheckServicesManager {
             .store(in: &cancellables)
     }
 
-    func addService(_ versionCheckService: VersionCheckService) {
-        self.versionCheckServices.mutate { $0.append(versionCheckService) }
+    func addSupport(_ support: SupportUI) {
+        supports.mutate {
+            $0.append(support)
+            support.setAlertIssuer(alertIssuer: alertIssuer)
+        }
     }
 
-    func restoreService(_ versionCheckService: VersionCheckService) {
-        self.versionCheckServices.mutate { $0.append(versionCheckService) }
+    func restoreSupport(_ support: SupportUI) {
+        addSupport(support)
     }
 
-    func removeService(_ versionCheckService: VersionCheckService) {
-        self.versionCheckServices.mutate { $0.removeAll(where:({ $0.serviceIdentifier == versionCheckService.serviceIdentifier })) }
+    func removeSupport(_ support: SupportUI) {
+        supports.mutate {
+            $0.removeAll { $0.supportIdentifier == support.supportIdentifier }
+            support.setAlertIssuer(alertIssuer: nil)
+        }
     }
     
     public func performCheck() {
         checkVersion { [self] versionUpdate in
             notify(versionUpdate)
         }
-    }
-
-    private func updateAlertIssuer(_ versionCheckService: VersionCheckService?, _ alertIssuer: AlertIssuer?) {
-        guard let VersionCheckUI = versionCheckService as? VersionCheckUI else {
-            return
-        }
-        VersionCheckUI.setAlertIssuer(alertIssuer: alertIssuer)
     }
     
     private func notify(_ versionUpdate: VersionUpdate) {
@@ -87,58 +105,64 @@ public final class VersionCheckServicesManager {
             openAppStoreHook: openAppStore)
     }
     
-    // Returns the VersionCheckUI that gave the last "highest" VersionUpdate, or `nil` if there is none
-    private var lastHighestVersionCheckUI: VersionCheckUI? {
-        return versionCheckServices.value.first {
-            $0.serviceIdentifier == serviceIdentifierWithHighestVersionUpdate
+    // Returns the SupportUI that gave the last "highest" VersionUpdate, or `nil` if there is none
+    private var lastHighestVersionCheckUI: SupportUI? {
+        return supports.value.first {
+            $0.supportIdentifier == identifierWithHighestVersionUpdate
         }
-        as? VersionCheckUI
     }
     
     func checkVersion(completion: @escaping (VersionUpdate) -> Void) {
         let group = DispatchGroup()
         var results = [String: Result<VersionUpdate?, Error>]()
-        let services = versionCheckServices.value
-        services.forEach { versionCheckService in
+        let supports = supports.value
+        supports.forEach { support in
             group.enter()
-            versionCheckService.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: Bundle.main.shortVersionString) { result in
-                results[versionCheckService.serviceIdentifier] = result
+            support.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: Bundle.main.shortVersionString) { result in
+                results[support.supportIdentifier] = result
                 group.leave()
             }
         }
         group.notify(queue: DispatchQueue.main) { [weak self] in
             guard let self = self else { return }
             let aggregatedResults = self.aggregate(results: results)
-            self.serviceIdentifierWithHighestVersionUpdate = aggregatedResults.0
+            self.identifierWithHighestVersionUpdate = aggregatedResults.0
             completion(aggregatedResults.1)
         }
     }
 
     private func aggregate(results: [String : Result<VersionUpdate?, Error>]) -> (String?, VersionUpdate) {
         var aggregatedVersionUpdate = VersionUpdate.default
-        var serviceIdentifierWithHighestVersionUpdate: String?
+        var identifierWithHighestVersionUpdate: String?
         results.forEach { key, value in
             switch value {
             case .failure(let error):
-                self.log.error("Error from version check service %{public}@: %{public}@", key, error.localizedDescription)
+                self.log.error("Error from version check %{public}@: %{public}@", key, error.localizedDescription)
             case .success(let versionUpdate):
                 if let versionUpdate = versionUpdate, versionUpdate > aggregatedVersionUpdate {
                     aggregatedVersionUpdate = versionUpdate
-                    serviceIdentifierWithHighestVersionUpdate = key
+                    identifierWithHighestVersionUpdate = key
                 }
             }
         }
-        return (serviceIdentifierWithHighestVersionUpdate, aggregatedVersionUpdate)
+        return (identifierWithHighestVersionUpdate, aggregatedVersionUpdate)
     }
 
 }
 
-extension VersionCheckServicesManager {
+extension SupportManager {
     public func openAppStore() {
         if let appStoreURLString = Bundle.main.appStoreURL,
             let appStoreURL = URL(string: appStoreURLString) {
             UIApplication.shared.open(appStoreURL)
         }
+    }
+}
+
+extension SupportManager {
+    var availableSupports: [SupportUI] {
+        let availableSupports = pluginManager.availableSupports + deviceDataManager.availableSupports + mockSupports
+        return availableSupports.sorted { $0.supportIdentifier < $1.supportIdentifier } // Provide a consistent ordering
     }
 }
 
@@ -153,15 +177,15 @@ fileprivate extension Result where Success == VersionUpdate? {
 
 fileprivate extension UserDefaults {
     private enum Key: String {
-        case serviceIdentifierWithHighestVersionUpdate = "com.loopkit.Loop.serviceIdentifierWithHighestVersionUpdate"
+        case identifierWithHighestVersionUpdate = "com.loopkit.Loop.identifierWithHighestVersionUpdate"
     }
 
-    var serviceIdentifierWithHighestVersionUpdate: String? {
+    var identifierWithHighestVersionUpdate: String? {
         get {
-            return object(forKey: Key.serviceIdentifierWithHighestVersionUpdate.rawValue) as? String
+            return object(forKey: Key.identifierWithHighestVersionUpdate.rawValue) as? String
         }
         set {
-            set(newValue, forKey: Key.serviceIdentifierWithHighestVersionUpdate.rawValue)
+            set(newValue, forKey: Key.identifierWithHighestVersionUpdate.rawValue)
         }
     }
 }

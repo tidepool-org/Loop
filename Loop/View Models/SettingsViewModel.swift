@@ -175,7 +175,7 @@ extension SettingsViewModel {
 
     static var preview: SettingsViewModel {
         return SettingsViewModel(notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel(),
-                                 versionUpdateViewModel: VersionUpdateViewModel(versionCheckServicesManager: nil, guidanceColors: GuidanceColors()),
+                                 versionUpdateViewModel: VersionUpdateViewModel(supportManager: nil, guidanceColors: GuidanceColors()),
                                  pumpManagerSettingsViewModel: DeviceViewModel<PumpManagerDescriptor>(),
                                  cgmManagerSettingsViewModel: DeviceViewModel<CGMManagerDescriptor>(),
                                  servicesViewModel: ServicesViewModel.preview,
