@@ -29,24 +29,32 @@ public final class SupportManager {
     }
     
     private let alertIssuer: AlertIssuer
-    private let pluginManager: PluginManager
-    private let deviceDataManager: DeviceDataManager
-    private let servicesManager: ServicesManager
+    private let pluginManager: PluginManager?
+    private let staticSupportTypes: [SupportUI.Type]
+    private let staticSupportTypesByIdentifier: [String: SupportUI.Type]
 
     lazy private var cancellables = Set<AnyCancellable>()
 
-    init(pluginManager: PluginManager, deviceDataManager: DeviceDataManager, servicesManager: ServicesManager, alertIssuer: AlertIssuer) {
+    init(pluginManager: PluginManager? = nil,
+         deviceDataManager: DeviceDataManager? = nil,
+         servicesManager: ServicesManager? = nil,
+         staticSupportTypes: [SupportUI.Type]? = nil,
+         alertIssuer: AlertIssuer) {
+        
         self.alertIssuer = alertIssuer
         self.pluginManager = pluginManager
-        self.deviceDataManager = deviceDataManager
-        self.servicesManager = servicesManager
-        
+        self.staticSupportTypes = staticSupportTypes ??
+            (FeatureFlags.allowSimulators ? [MockSupport.self] : [])
+        staticSupportTypesByIdentifier = self.staticSupportTypes.reduce(into: [:]) { (map, type) in
+            map[type.supportIdentifier] = type
+        }
+
         restoreState()
 
-        (pluginManager.availableSupports +
-         deviceDataManager.availableSupports +
-         servicesManager.availableSupports +
-         staticSupportTypes.map { $0.init(rawState: [:]) }.compactMap { $0 })
+        ((pluginManager?.availableSupports ?? [SupportUI]()) +
+         (deviceDataManager?.availableSupports ?? [SupportUI]()) +
+         (servicesManager?.availableSupports ?? [SupportUI]()) +
+         self.staticSupportTypes.map { $0.init(rawState: [:]) }.compactMap { $0 })
             .forEach {
                 addSupport($0)
             }
@@ -90,7 +98,7 @@ extension SupportManager {
     
     var availableSupports: [SupportUI] {
         return Array(supports.value.values)
-    }
+    } 
 }
 
 // MARK: Version checking
@@ -193,7 +201,7 @@ extension SupportManager {
 
     private func supportTypeFromRawValue(_ rawValue: [String: Any]) -> SupportUI.Type? {
         guard let supportIdentifier = rawValue["supportIdentifier"] as? String,
-              let supportType = pluginManager.getSupportUITypeByIdentifier(supportIdentifier) ?? staticSupportTypesByIdentifier[supportIdentifier]
+              let supportType = pluginManager?.getSupportUITypeByIdentifier(supportIdentifier) ?? staticSupportTypesByIdentifier[supportIdentifier]
         else {
             return nil
         }
@@ -236,14 +244,6 @@ fileprivate extension UserDefaults {
         }
     }
 
-}
-
-let staticSupportTypes: [SupportUI.Type] = {
-    FeatureFlags.allowSimulators ? [MockSupport.self] : []
-}()
-
-let staticSupportTypesByIdentifier: [String: SupportUI.Type] = staticSupportTypes.reduce(into: [:]) { (map, type) in
-    map[type.supportIdentifier] = type
 }
 
 extension SupportUI {

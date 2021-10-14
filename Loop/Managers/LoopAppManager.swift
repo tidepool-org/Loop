@@ -411,7 +411,7 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
              LoopNotificationCategory.pumpBatteryLow.rawValue,
              LoopNotificationCategory.pumpExpired.rawValue,
              LoopNotificationCategory.pumpFault.rawValue:
-            completionHandler([.badge, .sound, .alert])
+            completionHandler([.badge, .sound, .list, .banner])
         default:
             // All other userNotifications are not to be displayed while in the foreground
             completionHandler([])
