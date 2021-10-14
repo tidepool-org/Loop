@@ -64,7 +64,10 @@ public final class SupportManager {
             }
             .store(in: &cancellables)
     }
+}
 
+// MARK: Manage list of Supports
+extension SupportManager {
     func addSupport(_ support: SupportUI) {
         supports.mutate {
             if $0[support.identifier] == nil {
@@ -85,7 +88,14 @@ public final class SupportManager {
         }
     }
     
-    public func performCheck() {
+    var availableSupports: [SupportUI] {
+        return Array(supports.value.values)
+    }
+}
+
+// MARK: Version checking
+extension SupportManager {
+    func performCheck() {
         checkVersion { [self] versionUpdate in
             notify(versionUpdate)
         }
@@ -96,20 +106,7 @@ public final class SupportManager {
             NotificationCenter.default.post(name: .SoftwareUpdateAvailable, object: versionUpdate)
         }
     }
-    
-    public func softwareUpdateView(guidanceColors: GuidanceColors) -> AnyView? {
-        return lastHighestVersionCheckUI?.softwareUpdateView(
-            guidanceColors: guidanceColors,
-            bundleIdentifier: Bundle.main.bundleIdentifier!,
-            currentVersion: Bundle.main.shortVersionString,
-            openAppStoreHook: openAppStore)
-    }
-    
-    // Returns the SupportUI that gave the last "highest" VersionUpdate, or `nil` if there is none
-    private var lastHighestVersionCheckUI: SupportUI? {
-        identifierWithHighestVersionUpdate.flatMap { supports.value[$0] }
-    }
-    
+        
     func checkVersion(completion: @escaping (VersionUpdate) -> Void) {
         let group = DispatchGroup()
         var results = [String: Result<VersionUpdate?, Error>]()
@@ -148,8 +145,20 @@ public final class SupportManager {
 
 }
 
+// MARK: UI
 extension SupportManager {
-    public func openAppStore() {
+    func softwareUpdateView(guidanceColors: GuidanceColors) -> AnyView? {
+        // This is the SupportUI that gave the last "highest" VersionUpdate, or `nil` if there is none
+        let lastHighestVersionCheckUI =  identifierWithHighestVersionUpdate.flatMap { supports.value[$0] }
+
+        return lastHighestVersionCheckUI?.softwareUpdateView(
+            guidanceColors: guidanceColors,
+            bundleIdentifier: Bundle.main.bundleIdentifier!,
+            currentVersion: Bundle.main.shortVersionString,
+            openAppStoreHook: openAppStore)
+    }
+    
+    func openAppStore() {
         if let appStoreURLString = Bundle.main.appStoreURL,
             let appStoreURL = URL(string: appStoreURLString) {
             UIApplication.shared.open(appStoreURL)
@@ -157,10 +166,8 @@ extension SupportManager {
     }
 }
 
+// MARK: Private functions
 extension SupportManager {
-    var availableSupports: [SupportUI] {
-        return Array(supports.value.values)
-    }
 
     private func saveState() {
         UserDefaults.appGroup?.supportsState = availableSupports.compactMap { $0.rawValue }
