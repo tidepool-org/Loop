@@ -22,6 +22,7 @@ public struct SettingsView: View {
     @Environment(\.insulinTintColor) private var insulinTintColor
 
     @ObservedObject var viewModel: SettingsViewModel
+    @ObservedObject var versionUpdateViewModel: VersionUpdateViewModel
 
     @State private var pumpChooserIsPresented: Bool = false
     @State private var cgmChooserIsPresented: Bool = false
@@ -32,13 +33,14 @@ public struct SettingsView: View {
 
     public init(viewModel: SettingsViewModel) {
         self.viewModel = viewModel
+        self.versionUpdateViewModel = viewModel.versionUpdateViewModel
     }
     
     public var body: some View {
         NavigationView {
             List {
                 loopSection
-                if viewModel.versionUpdateViewModel.softwareUpdateAvailable {
+                if versionUpdateViewModel.softwareUpdateAvailable {
                     softwareUpdateSection
                 }
                 if FeatureFlags.automaticBolusEnabled {
