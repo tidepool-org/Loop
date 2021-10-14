@@ -231,7 +231,9 @@ fileprivate extension UserDefaults {
 
 }
 
-let staticSupportTypes: [SupportUI.Type] = [MockSupport.self]
+let staticSupportTypes: [SupportUI.Type] = {
+    FeatureFlags.allowSimulators ? [MockSupport.self] : []
+}()
 
 let staticSupportTypesByIdentifier: [String: SupportUI.Type] = staticSupportTypes.reduce(into: [:]) { (map, type) in
     map[type.supportIdentifier] = type
