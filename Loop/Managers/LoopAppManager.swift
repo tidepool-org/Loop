@@ -175,6 +175,7 @@ class LoopAppManager: NSObject {
 
         supportManager = SupportManager(pluginManager: pluginManager,
                                         deviceDataManager: deviceDataManager,
+                                        servicesManager: deviceDataManager.servicesManager,
                                         alertIssuer: alertManager)
 
         closedLoopStatus.$isClosedLoopAllowed

@@ -17,7 +17,6 @@ public class VersionUpdateViewModel: ObservableObject {
     @Published var versionUpdate: VersionUpdate?
 
     var softwareUpdateAvailable: Bool {
-        update()
         return versionUpdate?.softwareUpdateAvailable ?? false
     }
     

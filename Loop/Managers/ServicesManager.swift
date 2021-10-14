@@ -190,3 +190,7 @@ extension ServicesManager: ServiceOnboardingDelegate {
         log.default("Service with identifier '%{public}@' onboarded", service.serviceIdentifier)
     }
 }
+
+extension ServicesManager {
+    var availableSupports: [SupportUI] { activeServices.compactMap { $0 as? SupportUI } }
+}

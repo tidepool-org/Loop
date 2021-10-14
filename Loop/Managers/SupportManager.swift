@@ -17,7 +17,7 @@ public final class SupportManager {
     
     private lazy var log = DiagnosticLog(category: "SupportManager")
 
-    private var supports = Locked<[SupportUI]>([])
+    private var supports = Locked<[String: SupportUI]>([:])
     
     private var identifierWithHighestVersionUpdate: String? {
         get {
@@ -31,28 +31,26 @@ public final class SupportManager {
     private let alertIssuer: AlertIssuer
     private let pluginManager: PluginManager
     private let deviceDataManager: DeviceDataManager
-    private let mockSupports: [SupportUI]
+    private let servicesManager: ServicesManager
 
     lazy private var cancellables = Set<AnyCancellable>()
 
-    init(pluginManager: PluginManager, deviceDataManager: DeviceDataManager, alertIssuer: AlertIssuer) {
+    init(pluginManager: PluginManager, deviceDataManager: DeviceDataManager, servicesManager: ServicesManager, alertIssuer: AlertIssuer) {
         self.alertIssuer = alertIssuer
         self.pluginManager = pluginManager
         self.deviceDataManager = deviceDataManager
+        self.servicesManager = servicesManager
+        
+        restoreState()
 
-        if FeatureFlags.allowSimulators {
-            mockSupports = [MockSupport(defaults: UserDefaults.appGroup!)]
-        } else {
-            mockSupports = []
-        }
-        
-        availableSupports.forEach {
-            addSupport($0)
-        }
-        
-        // TODO
-        //restoreState()
-        
+        (pluginManager.availableSupports +
+         deviceDataManager.availableSupports +
+         servicesManager.availableSupports +
+         staticSupportTypes.map { $0.init(rawState: [:]) }.compactMap { $0 })
+            .forEach {
+                addSupport($0)
+            }
+                
         // Perform a check every foreground entry and every loop
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
             .sink { [weak self] _ in
@@ -69,8 +67,10 @@ public final class SupportManager {
 
     func addSupport(_ support: SupportUI) {
         supports.mutate {
-            $0.append(support)
-            support.setAlertIssuer(alertIssuer: alertIssuer)
+            if $0[support.identifier] == nil {
+                $0[support.identifier] = support
+                support.setAlertIssuer(alertIssuer: alertIssuer)
+            }
         }
     }
 
@@ -80,7 +80,7 @@ public final class SupportManager {
 
     func removeSupport(_ support: SupportUI) {
         supports.mutate {
-            $0.removeAll { $0.supportIdentifier == support.supportIdentifier }
+            $0[support.identifier] = nil
             support.setAlertIssuer(alertIssuer: nil)
         }
     }
@@ -107,24 +107,22 @@ public final class SupportManager {
     
     // Returns the SupportUI that gave the last "highest" VersionUpdate, or `nil` if there is none
     private var lastHighestVersionCheckUI: SupportUI? {
-        return supports.value.first {
-            $0.supportIdentifier == identifierWithHighestVersionUpdate
-        }
+        identifierWithHighestVersionUpdate.flatMap { supports.value[$0] }
     }
     
     func checkVersion(completion: @escaping (VersionUpdate) -> Void) {
         let group = DispatchGroup()
         var results = [String: Result<VersionUpdate?, Error>]()
-        let supports = supports.value
-        supports.forEach { support in
+        supports.value.values.forEach { support in
             group.enter()
             support.checkVersion(bundleIdentifier: Bundle.main.bundleIdentifier!, currentVersion: Bundle.main.shortVersionString) { result in
-                results[support.supportIdentifier] = result
+                results[support.identifier] = result
                 group.leave()
             }
         }
         group.notify(queue: DispatchQueue.main) { [weak self] in
             guard let self = self else { return }
+            self.saveState()
             let aggregatedResults = self.aggregate(results: results)
             self.identifierWithHighestVersionUpdate = aggregatedResults.0
             completion(aggregatedResults.1)
@@ -161,9 +159,41 @@ extension SupportManager {
 
 extension SupportManager {
     var availableSupports: [SupportUI] {
-        let availableSupports = pluginManager.availableSupports + deviceDataManager.availableSupports + mockSupports
-        return availableSupports.sorted { $0.supportIdentifier < $1.supportIdentifier } // Provide a consistent ordering
+        return Array(supports.value.values)
     }
+
+    private func saveState() {
+        UserDefaults.appGroup?.supportsState = availableSupports.compactMap { $0.rawValue }
+    }
+
+    private func restoreState() {
+        UserDefaults.appGroup?.supportsState.forEach { rawValue in
+            if let support = supportFromRawValue(rawValue) {
+                restoreSupport(support)
+            }
+        }
+    }
+
+    private func supportFromRawValue(_ rawValue: SupportUI.RawStateValue) -> SupportUI? {
+        guard let supportType = supportTypeFromRawValue(rawValue),
+            let rawState = rawValue["state"] as? SupportUI.RawStateValue
+            else {
+                return nil
+        }
+
+        return supportType.init(rawState: rawState)
+    }
+
+    private func supportTypeFromRawValue(_ rawValue: [String: Any]) -> SupportUI.Type? {
+        guard let supportIdentifier = rawValue["supportIdentifier"] as? String,
+              let supportType = pluginManager.getSupportUITypeByIdentifier(supportIdentifier) ?? staticSupportTypesByIdentifier[supportIdentifier]
+        else {
+            return nil
+        }
+        
+        return supportType
+    }
+    
 }
 
 fileprivate extension Result where Success == VersionUpdate? {
@@ -177,6 +207,7 @@ fileprivate extension Result where Success == VersionUpdate? {
 
 fileprivate extension UserDefaults {
     private enum Key: String {
+        case supportsState = "com.loopkit.Loop.supportsState"
         case identifierWithHighestVersionUpdate = "com.loopkit.Loop.identifierWithHighestVersionUpdate"
     }
 
@@ -188,4 +219,31 @@ fileprivate extension UserDefaults {
             set(newValue, forKey: Key.identifierWithHighestVersionUpdate.rawValue)
         }
     }
+    
+    var supportsState: [SupportUI.RawStateValue] {
+        get {
+            return array(forKey: Key.supportsState.rawValue) as? [[String: Any]] ?? []
+        }
+        set {
+            set(newValue, forKey: Key.supportsState.rawValue)
+        }
+    }
+
+}
+
+let staticSupportTypes: [SupportUI.Type] = [MockSupport.self]
+
+let staticSupportTypesByIdentifier: [String: SupportUI.Type] = staticSupportTypes.reduce(into: [:]) { (map, type) in
+    map[type.supportIdentifier] = type
+}
+
+extension SupportUI {
+
+    var rawValue: RawStateValue {
+        return [
+            "supportIdentifier": Self.supportIdentifier,
+            "state": rawState
+        ]
+    }
+
 }
