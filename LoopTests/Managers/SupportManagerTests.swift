@@ -19,15 +19,14 @@ class SupportManagerTests: XCTestCase {
         func supportMenuItem(supportInfoProvider: SupportInfoProvider, urlHandler: @escaping (URL) -> Void) -> AnyView? {
             nil
         }
-        func setAlertIssuer(alertIssuer: AlertIssuer?) {
-        }
-        func softwareUpdateView(guidanceColors: GuidanceColors, bundleIdentifier: String, currentVersion: String, openAppStoreHook: (() -> Void)?) -> AnyView? {
+        func softwareUpdateView(bundleIdentifier: String, currentVersion: String, guidanceColors: GuidanceColors, openAppStore: (() -> Void)?) -> AnyView? {
             nil
         }
         var mockResult: Result<VersionUpdate?, Error> = .success(.default)
         func checkVersion(bundleIdentifier: String, currentVersion: String, completion: @escaping (Result<VersionUpdate?, Error>) -> Void) {
             completion(mockResult)
         }
+        weak var delegate: SupportUIDelegate?
     }
     class MockSupport: Mixin, SupportUI {
         static var supportIdentifier: String { "SupportManagerTestsMockSupport" }

@@ -201,7 +201,7 @@ class PluginManager {
                         if let plugin = principalClass.init() as? SupportUIPlugin {
                             return type(of: plugin.support)
                         } else {
-                            fatalError("PrincipalClass does not conform to ServiceUIPlugin")
+                            fatalError("PrincipalClass does not conform to SupportUIPlugin")
                         }
 
                     } else {

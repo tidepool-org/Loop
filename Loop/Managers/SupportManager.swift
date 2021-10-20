@@ -51,13 +51,14 @@ public final class SupportManager {
 
         restoreState()
 
-        ((pluginManager?.availableSupports ?? [SupportUI]()) +
-         (deviceDataManager?.availableSupports ?? [SupportUI]()) +
-         (servicesManager?.availableSupports ?? [SupportUI]()) +
-         self.staticSupportTypes.map { $0.init(rawState: [:]) }.compactMap { $0 })
-            .forEach {
-                addSupport($0)
-            }
+        let availablePluginSupports = pluginManager?.availableSupports ?? [SupportUI]()
+        let availableDeviceSupports = deviceDataManager?.availableSupports ?? [SupportUI]()
+        let availableServiceSupports = servicesManager?.availableSupports ?? [SupportUI]()
+        let staticSupports = self.staticSupportTypes.map { $0.init(rawState: [:]) }.compactMap { $0 }
+        let allSupports = availablePluginSupports + availableDeviceSupports + availableServiceSupports + staticSupports
+        allSupports.forEach {
+            addSupport($0)
+        }
                 
         // Perform a check every foreground entry and every loop
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
@@ -80,7 +81,7 @@ extension SupportManager {
         supports.mutate {
             if $0[support.identifier] == nil {
                 $0[support.identifier] = support
-                support.setAlertIssuer(alertIssuer: alertIssuer)
+                support.delegate = self
             }
         }
     }
@@ -92,7 +93,7 @@ extension SupportManager {
     func removeSupport(_ support: SupportUI) {
         supports.mutate {
             $0[support.identifier] = nil
-            support.setAlertIssuer(alertIssuer: nil)
+            support.delegate = self
         }
     }
     
@@ -104,8 +105,8 @@ extension SupportManager {
 // MARK: Version checking
 extension SupportManager {
     func performCheck() {
-        checkVersion { [self] versionUpdate in
-            notify(versionUpdate)
+        checkVersion { [weak self] versionUpdate in
+            self?.notify(versionUpdate)
         }
     }
     
@@ -128,9 +129,9 @@ extension SupportManager {
         group.notify(queue: DispatchQueue.main) { [weak self] in
             guard let self = self else { return }
             self.saveState()
-            let aggregatedResults = self.aggregate(results: results)
-            self.identifierWithHighestVersionUpdate = aggregatedResults.0
-            completion(aggregatedResults.1)
+            let (identifierWithHighestVersionUpdate, aggregatedVersionUpdate) = self.aggregate(results: results)
+            self.identifierWithHighestVersionUpdate = identifierWithHighestVersionUpdate
+            completion(aggregatedVersionUpdate)
         }
     }
 
@@ -160,10 +161,10 @@ extension SupportManager {
         let lastHighestVersionCheckUI =  identifierWithHighestVersionUpdate.flatMap { supports.value[$0] }
 
         return lastHighestVersionCheckUI?.softwareUpdateView(
-            guidanceColors: guidanceColors,
             bundleIdentifier: Bundle.main.bundleIdentifier!,
             currentVersion: Bundle.main.shortVersionString,
-            openAppStoreHook: openAppStore)
+            guidanceColors: guidanceColors,
+            openAppStore: openAppStore)
     }
     
     func openAppStore() {
@@ -172,6 +173,18 @@ extension SupportManager {
             UIApplication.shared.open(appStoreURL)
         }
     }
+}
+
+// MARK: SupportUIDelegate
+extension SupportManager: SupportUIDelegate {
+    public func issueAlert(_ alert: LoopKit.Alert) {
+        alertIssuer.issueAlert(alert)
+    }
+    
+    public func retractAlert(identifier: LoopKit.Alert.Identifier) {
+        alertIssuer.retractAlert(identifier: identifier)
+    }
+
 }
 
 // MARK: Private functions
