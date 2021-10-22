@@ -106,9 +106,16 @@ fileprivate extension Alert {
 fileprivate extension UNNotificationRequest {
     convenience init(from alert: Alert, timestamp: Date) throws {
         let content = try alert.getUserNotificationContent(timestamp: timestamp)
+        let trigger: UNNotificationTrigger?
+        switch alert.trigger {
+        case .dailyOnce, .dailyRepeat:
+            trigger = UNCalendarNotificationTrigger(from: alert.trigger)
+        default:
+            trigger = UNTimeIntervalNotificationTrigger(from: alert.trigger)
+        }
         self.init(identifier: alert.identifier.value,
                   content: content,
-                  trigger: UNTimeIntervalNotificationTrigger(from: alert.trigger))
+                  trigger: trigger)
     }
 }
 
@@ -121,6 +128,27 @@ fileprivate extension UNTimeIntervalNotificationTrigger {
             self.init(timeInterval: timeInterval, repeats: false)
         case .repeating(let repeatInterval):
             self.init(timeInterval: repeatInterval, repeats: true)
+        case .dailyOnce:
+            return nil
+        case .dailyRepeat:
+            return nil
+        }
+    }
+}
+
+fileprivate extension UNCalendarNotificationTrigger {
+    convenience init?(from alertTrigger: Alert.Trigger) {
+        switch alertTrigger {
+        case .immediate:
+            return nil
+        case .delayed:
+            return nil
+        case .repeating:
+            return nil
+        case .dailyOnce(let time):
+            self.init(dateMatching: time, repeats: false)
+        case .dailyRepeat(let time):
+            self.init(dateMatching: time, repeats: true)
         }
     }
 }

@@ -102,6 +102,8 @@ extension Alert.Trigger {
         case .immediate: return 0
         case .delayed: return 1
         case .repeating: return 2
+        case .dailyOnce: return 3
+        case .dailyRepeat: return 4
         }
     }
     var storedInterval: NSNumber? {
@@ -109,6 +111,10 @@ extension Alert.Trigger {
         case .immediate: return nil
         case .delayed(let interval): return NSNumber(value: interval)
         case .repeating(let repeatInterval): return NSNumber(value: repeatInterval)
+        case .dailyOnce(let time):
+            return NSNumber(value: TimeInterval.hours(Double(time.hour ?? 0)) + TimeInterval.minutes(Double(time.minute ?? 0)) + TimeInterval.minutes(Double(time.second ?? 0)))
+        case .dailyRepeat(let time):
+            return NSNumber(value: TimeInterval.hours(Double(time.hour ?? 0)) + TimeInterval.minutes(Double(time.minute ?? 0)) + TimeInterval.minutes(Double(time.second ?? 0)))
         }
     }
     
@@ -136,6 +142,28 @@ extension Alert.Trigger {
             // the best we can do is just use the original trigger
             if let storedInterval = storedInterval {
                 self = .repeating(repeatInterval: storedInterval.doubleValue)
+            } else {
+                throw StorageError.invalidStoredInterval
+            }
+        case 3:
+            if let storedInterval = storedInterval {
+                let timeInterval = TimeInterval(storedInterval.doubleValue)
+                let hours = Int(timeInterval.hours)
+                let minutes = Int((timeInterval-Double(hours)).minutes)
+                let seconds = Int((timeInterval-Double(hours+minutes)))
+                let time = DateComponents(hour: hours, minute: minutes, second: seconds)
+                self = .dailyOnce(at: time)
+            } else {
+                throw StorageError.invalidStoredInterval
+            }
+        case 4:
+            if let storedInterval = storedInterval {
+                let timeInterval = TimeInterval(storedInterval.doubleValue)
+                let hours = Int(timeInterval.hours)
+                let minutes = Int((timeInterval-Double(hours)).minutes)
+                let seconds = Int((timeInterval-Double(hours+minutes)))
+                let time = DateComponents(hour: hours, minute: minutes, second: seconds)
+                self = .dailyRepeat(at: time)
             } else {
                 throw StorageError.invalidStoredInterval
             }

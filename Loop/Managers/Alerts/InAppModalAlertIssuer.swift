@@ -48,7 +48,28 @@ public class InAppModalAlertIssuer: AlertIssuer {
             schedule(alert: alert, interval: interval, repeats: false)
         case .repeating(let interval):
             schedule(alert: alert, interval: interval, repeats: true)
+        case .dailyOnce(let time):
+            guard let date = date(fromTimeComponents: time) else { return }
+            schedule(alert: alert, date: date, repeats: false)
+        case .dailyRepeat(let time):
+            guard let date = date(fromTimeComponents: time) else { return }
+            schedule(alert: alert, date: date, repeats: true)
         }
+    }
+
+    private func date(fromTimeComponents timeComponents: DateComponents, using calendar: Calendar = Calendar.current) -> Date? {
+        let now = Date()
+        guard var date = Calendar.current.date(bySettingHour: timeComponents.hour ?? 0,
+                                               minute: timeComponents.minute ?? 0,
+                                               second: timeComponents.second ?? 0,
+                                               of: now)
+        else { return nil }
+
+        if date < now {
+            // move to the future
+            date = date.addingTimeInterval(.days(1))
+        }
+        return date
     }
     
     public func retractAlert(identifier: Alert.Identifier) {
@@ -91,6 +112,26 @@ extension InAppModalAlertIssuer {
                     self?.clearPendingAlert(identifier: alert.identifier)
                 }
             }
+            self.addPendingAlert(alert: alert, timer: timer)
+        }
+    }
+
+    private func schedule(alert: Alert, date: Date, repeats: Bool) {
+        guard alert.foregroundContent != nil else {
+            return
+        }
+
+        DispatchQueue.main.async {
+            if self.isAlertPending(identifier: alert.identifier) {
+                return
+            }
+            let timer = Timer(fire: date, interval: .seconds(10), repeats: repeats) { [weak self] _ in //.days(1)
+                self?.show(alert: alert)
+                if !repeats {
+                    self?.clearPendingAlert(identifier: alert.identifier)
+                }
+            }
+            RunLoop.main.add(timer, forMode: .default)
             self.addPendingAlert(alert: alert, timer: timer)
         }
     }
