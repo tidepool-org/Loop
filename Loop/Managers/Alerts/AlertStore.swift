@@ -107,6 +107,8 @@ public class AlertStore {
                                 // Note: this only applies to .delayed or .repeating alerts!
                                 if let delay = $0.trigger.interval, $0.issuedDate + delay >= date {
                                     return .delete
+//                                } else if let dateOfTrigger = $0.trigger.date, date >= date {
+
                                 } else {
                                     $0.retractedDate = date
                                     return .save
@@ -413,6 +415,8 @@ extension Alert.Identifier {
 extension Alert.Trigger {
     var interval: TimeInterval? {
         switch self {
+        case .dailyRepeat(let time): return nil //TODO need to calculate the interval from now until the time, considering the repeat
+        case .dailyOnce(let time): return nil //TODO need to calculate the interval from now until the time, considering the repeat
         case .delayed(let interval): return interval
         case .repeating(let repeatInterval): return repeatInterval
         case .immediate: return nil
