@@ -26,7 +26,7 @@ class PluginManager {
             do {
                 for pluginURL in try FileManager.default.contentsOfDirectory(at: pluginsURL, includingPropertiesForKeys: nil).filter({$0.path.hasSuffix(".framework")}) {
                     if let bundle = Bundle(url: pluginURL) {
-                        if bundle.isLoopPlugin {
+                        if bundle.isLoopPlugin && (!bundle.isSimulator || FeatureFlags.allowSimulators) {
                             log.debug("Found loop plugin: %{public}@", pluginURL.absoluteString)
                             bundles.append(bundle)
                             if bundle.isSupportPlugin {
@@ -189,6 +189,32 @@ class PluginManager {
             return bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) as? String
         })
     }
+
+    func getSupportUITypeByIdentifier(_ identifier: String) -> SupportUI.Type? {
+        for bundle in pluginBundles {
+            if let name = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.supportIdentifier.rawValue) as? String, name == identifier {
+                do {
+                    try bundle.loadAndReturnError()
+
+                    if let principalClass = bundle.principalClass as? NSObject.Type {
+
+                        if let plugin = principalClass.init() as? SupportUIPlugin {
+                            return type(of: plugin.support)
+                        } else {
+                            fatalError("PrincipalClass does not conform to SupportUIPlugin")
+                        }
+
+                    } else {
+                        fatalError("PrincipalClass not found")
+                    }
+                } catch let error {
+                    log.error("Error loading plugin: %{public}@", String(describing: error))
+                }
+            }
+        }
+        return nil
+    }
+
 }
 
 
@@ -203,6 +229,8 @@ extension Bundle {
 
     var isLoopExtension: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.extensionIdentifier.rawValue) as? String != nil }
 
+    var isSimulator: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.pluginIsSimulator.rawValue) as? Bool == true }
+    
     fileprivate func loadAndInstantiateSupport() throws -> SupportUI? {
         try loadAndReturnError()
 

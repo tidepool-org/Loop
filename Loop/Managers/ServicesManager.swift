@@ -19,7 +19,7 @@ class ServicesManager {
     let loggingServicesManager: LoggingServicesManager
 
     let remoteDataServicesManager: RemoteDataServicesManager
-
+    
     private var services = [Service]()
 
     private let servicesLock = UnfairLock()
@@ -36,7 +36,6 @@ class ServicesManager {
         self.analyticsServicesManager = analyticsServicesManager
         self.loggingServicesManager = loggingServicesManager
         self.remoteDataServicesManager = remoteDataServicesManager
-        
         restoreState()
     }
 

@@ -36,7 +36,7 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     
     func carbsOnBoard(at date: Date, effectVelocities: [GlucoseEffectVelocity]?, completion: @escaping (_ result: CarbStoreResult<CarbValue>) -> Void)
     
-    func ensureCurrentPumpData(completion: @escaping () -> Void)
+    func ensureCurrentPumpData(completion: @escaping (Date?) -> Void)
     
     func insulinActivityDuration(for type: InsulinType?) -> TimeInterval
 
@@ -217,7 +217,6 @@ final class BolusEntryViewModel: ObservableObject {
         observeEnteredManualGlucoseChanges()
         observeElapsedTime()
         observeRecommendedBolusChanges()
-
         update()
     }
         
@@ -225,7 +224,9 @@ final class BolusEntryViewModel: ObservableObject {
         NotificationCenter.default
             .publisher(for: .LoopDataUpdated)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.update() }
+            .sink { [weak self] _ in
+                self?.update()
+            }
             .store(in: &cancellables)
     }
 
@@ -338,6 +339,7 @@ final class BolusEntryViewModel: ObservableObject {
 
         // Authenticate the bolus before saving anything
         if enteredBolus.doubleValue(for: .internationalUnit()) > 0 {
+            isInitiatingSaveOrBolus = true
             let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusAmountString)
             authenticate(message) { [weak self] in
                 switch $0 {
@@ -501,7 +503,9 @@ final class BolusEntryViewModel: ObservableObject {
             NewGlucoseSample(
                 date: entryDate,
                 quantity: quantity,
-                trend: nil, // All manual glucose entries are assumed to have no trend.
+                condition: nil,     // All manual glucose entries are assumed to have no condition.
+                trend: nil,         // All manual glucose entries are assumed to have no trend.
+                trendRate: nil,     // All manual glucose entries are assumed to have no trend rate.
                 isDisplayOnly: false,
                 wasUserEntered: true,
                 syncIdentifier: uuidProvider()
@@ -653,7 +657,7 @@ final class BolusEntryViewModel: ObservableObject {
         DispatchQueue.main.async {
             // v-- This needs to happen on the main queue
             self.isRefreshingPump = true
-            let wrappedCompletion: () -> Void = { [weak self] in
+            let wrappedCompletion: (Date?) -> Void = { [weak self] (lastSync) in
                 self?.delegate?.withLoopState { [weak self] _ in
                     // v-- This needs to happen in LoopDataManager's dataQueue
                     completion()

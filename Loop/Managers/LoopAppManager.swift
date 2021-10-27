@@ -11,6 +11,7 @@ import Intents
 import Combine
 import LoopKit
 import LoopKitUI
+import MockKit
 
 public protocol AlertPresenter: AnyObject {
     /// Present the alert view controller, with or without animation.
@@ -26,12 +27,20 @@ public protocol AlertPresenter: AnyObject {
     /// - Parameters:
     ///   - animated: Animate the alert view controller dismissal or not.
     ///   - completion: Completion to call once view controller is dismissed.
-    func dismiss(animated: Bool, completion: (() -> Void)?)
+    func dismissTopMost(animated: Bool, completion: (() -> Void)?)
+
+    /// Dismiss an alert, even if it is not the top most alert.
+    /// - Parameters:
+    ///   - alertToDismiss: The alert to dismiss
+    ///   - animated: Animate the alert view controller dismissal or not.
+    ///   - completion: Completion to call once view controller is dismissed.
+    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool, completion: (() -> Void)?)
 }
 
 public extension AlertPresenter {
     func present(_ viewController: UIViewController, animated: Bool) { present(viewController, animated: animated, completion: nil) }
-    func dismiss(animated: Bool) { dismiss(animated: animated, completion: nil) }
+    func dismissTopMost(animated: Bool) { dismissTopMost(animated: animated, completion: nil) }
+    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool) { dismissAlert(alertToDismiss, animated: animated, completion: nil) }
 }
 
 protocol WindowProvider: AnyObject {
@@ -41,6 +50,7 @@ protocol WindowProvider: AnyObject {
 class LoopAppManager: NSObject {
     private enum State: Int {
         case initialize
+        case checkProtectedDataAvailable
         case launchManagers
         case launchOnboarding
         case launchHomeScreen
@@ -60,6 +70,7 @@ class LoopAppManager: NSObject {
     private var deviceDataManager: DeviceDataManager!
     private var onboardingManager: OnboardingManager!
     private var alertPermissionsChecker: AlertPermissionsChecker!
+    private var supportManager: SupportManager!
 
     private var state: State = .initialize
 
@@ -89,25 +100,20 @@ class LoopAppManager: NSObject {
 
     func launch() {
         dispatchPrecondition(condition: .onQueue(.main))
-        precondition(!isLaunchComplete)
-        precondition(state != .initialize)
-
-        guard isProtectedDataAvailable() else {
-            log.default("Protected data not available; deferring launch...")
-            return
-        }
-
-        windowProvider?.window?.tintColor = .loopAccent
-        OrientationLock.deviceOrientationController = self
-        UNUserNotificationCenter.current().delegate = self
+        precondition(isLaunchPending)
 
         resumeLaunch()
         finishLaunch()
     }
 
+    var isLaunchPending: Bool { state == .checkProtectedDataAvailable }
+
     var isLaunchComplete: Bool { state == .launchComplete }
 
     private func resumeLaunch() {
+        if state == .checkProtectedDataAvailable {
+            checkProtectedDataAvailable()
+        }
         if state == .launchManagers {
             launchManagers()
         }
@@ -119,9 +125,25 @@ class LoopAppManager: NSObject {
         }
     }
 
+    private func checkProtectedDataAvailable() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        precondition(state == .checkProtectedDataAvailable)
+
+        guard isProtectedDataAvailable() else {
+            log.default("Protected data not available; deferring launch...")
+            return
+        }
+
+        self.state = state.next
+    }
+
     private func launchManagers() {
         dispatchPrecondition(condition: .onQueue(.main))
         precondition(state == .launchManagers)
+
+        windowProvider?.window?.tintColor = .loopAccent
+        OrientationLock.deviceOrientationController = self
+        UNUserNotificationCenter.current().delegate = self
 
         self.pluginManager = PluginManager()
         self.bluetoothStateManager = BluetoothStateManager()
@@ -150,6 +172,11 @@ class LoopAppManager: NSObject {
 
         deviceDataManager.onboardingManager = onboardingManager
         deviceDataManager.analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
+
+        supportManager = SupportManager(pluginManager: pluginManager,
+                                        deviceDataManager: deviceDataManager,
+                                        servicesManager: deviceDataManager.servicesManager,
+                                        alertIssuer: alertManager)
 
         closedLoopStatus.$isClosedLoopAllowed
             .combineLatest(deviceDataManager.loopManager.$dosingEnabled)
@@ -181,6 +208,7 @@ class LoopAppManager: NSObject {
         statusTableViewController.closedLoopStatus = closedLoopStatus
         statusTableViewController.deviceManager = deviceDataManager
         statusTableViewController.onboardingManager = onboardingManager
+        statusTableViewController.supportManager = supportManager
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 
         var rootNavigationController = rootViewController as? RootNavigationController
@@ -200,12 +228,19 @@ class LoopAppManager: NSObject {
     }
 
     private func finishLaunch() {
+        guard !isLaunchPending else {
+            return
+        }
+
         alertManager.playbackAlertsFromPersistence()
     }
 
     // MARK: - Life Cycle
 
     func didBecomeActive() {
+        if let rootViewController = rootViewController {
+            ProfileExpirationAlerter.alertIfNeeded(viewControllerToPresentFrom: rootViewController)
+        }
         deviceDataManager?.didBecomeActive()
     }
 
@@ -306,8 +341,55 @@ extension LoopAppManager: AlertPresenter {
         rootViewController?.topmostViewController.present(viewControllerToPresent, animated: animated, completion: completion)
     }
 
-    func dismiss(animated: Bool, completion: (() -> Void)?) {
+    func dismissTopMost(animated: Bool, completion: (() -> Void)?) {
         rootViewController?.topmostViewController.dismiss(animated: animated, completion: completion)
+    }
+
+    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool, completion: (() -> Void)?) {
+        if rootViewController?.topmostViewController == alertToDismiss {
+            dismissTopMost(animated: animated, completion: completion)
+        } else {
+            // check if the alert to dismiss is presenting another alert (and so on)
+            // calling dismiss() on an alert presenting another alert will only dismiss the presented alert
+            // (and any other alerts presented by the presented alert)
+
+            // get the stack of presented alerts that would be undesirably dismissed
+            var presentedAlerts: [UIAlertController] = []
+            var currentAlert = alertToDismiss
+            while let presentedAlert = currentAlert.presentedViewController as? UIAlertController {
+                presentedAlerts.append(presentedAlert)
+                currentAlert = presentedAlert
+            }
+
+            if presentedAlerts.isEmpty {
+                alertToDismiss.dismiss(animated: animated, completion: completion)
+            } else {
+                // Do not animate any of these view transitions, since the alert to dismiss is not at the top of the stack
+
+                // dismiss all the child presented alerts.
+                // Calling dismiss() on a VC that is presenting an other VC will dismiss the presented VC and all of its child presented VCs
+                alertToDismiss.dismiss(animated: false) {
+                    // dismiss the desired alert
+                    // Calling dismiss() on a VC that is NOT presenting any other VCs will dismiss said VC
+                    alertToDismiss.dismiss(animated: false) {
+                        // present the child alerts that were undesirably dismissed
+                        var orderedPresentationBlock: (() -> Void)? = nil
+                        for alert in presentedAlerts.reversed() {
+                            if alert == presentedAlerts.last {
+                                orderedPresentationBlock = {
+                                    self.present(alert, animated: false, completion: completion)
+                                }
+                            } else {
+                                orderedPresentationBlock = {
+                                    self.present(alert, animated: false, completion: orderedPresentationBlock)
+                                }
+                            }
+                        }
+                        orderedPresentationBlock?()
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -329,7 +411,7 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
              LoopNotificationCategory.pumpBatteryLow.rawValue,
              LoopNotificationCategory.pumpExpired.rawValue,
              LoopNotificationCategory.pumpFault.rawValue:
-            completionHandler([.badge, .sound, .alert])
+            completionHandler([.badge, .sound, .list, .banner])
         default:
             // All other userNotifications are not to be displayed while in the foreground
             completionHandler([])
@@ -346,7 +428,9 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
                 deviceDataManager?.analyticsServicesManager.didRetryBolus()
                 
                 deviceDataManager?.enactBolus(units: units, automatic: false) { (_) in
-                    completionHandler()
+                    DispatchQueue.main.async {
+                        completionHandler()
+                    }
                 }
                 return
             }

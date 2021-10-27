@@ -35,6 +35,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var closedLoopStatus: ClosedLoopStatus!
     
     let notificationsCriticalAlertPermissionsViewModel = NotificationsCriticalAlertPermissionsViewModel()
+    
+    var supportManager: SupportManager!
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -1212,11 +1214,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
             navigationWrapper = UINavigationController(rootViewController: carbEntryViewController)
         } else {
-            let viewModel = SimpleBolusViewModel(delegate: deviceManager)
+            let viewModel = SimpleBolusViewModel(delegate: deviceManager, displayMealEntry: true)
             if let activity = activity {
                 viewModel.restoreUserActivityState(activity)
             }
-            let bolusEntryView = SimpleBolusView(displayMealEntry: true, viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
+            let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
             let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
             navigationWrapper = UINavigationController(rootViewController: hostingController)
             hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
@@ -1235,8 +1237,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let bolusEntryView = BolusEntryView(viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         } else {
-            let viewModel = SimpleBolusViewModel(delegate: deviceManager)
-            let bolusEntryView = SimpleBolusView(displayMealEntry: false, viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
+            let viewModel = SimpleBolusViewModel(delegate: deviceManager, displayMealEntry: false)
+            let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(deviceManager.displayGlucoseUnitObservable)
             hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         }
         let navigationWrapper = UINavigationController(rootViewController: hostingController)
@@ -1384,35 +1386,26 @@ final class StatusTableViewController: LoopChartsTableViewController {
             didTapAddDevice: { [weak self] in
                 self?.addCGMManager(withIdentifier: $0.identifier)
         })
-        let pumpSupportedIncrements = { [weak self] in
-            self?.deviceManager.pumpManager.map {
-                PumpSupportedIncrements(basalRates: $0.supportedBasalRates,
-                                        bolusVolumes: $0.supportedBolusVolumes,
-                                        maximumBasalScheduleEntryCount: $0.maximumBasalScheduleEntryCount)
-            }
-        }
-        let syncBasalRateSchedule = { [weak self] in
-            self?.deviceManager.pumpManager?.syncBasalRateSchedule
-        }
         let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
                                                   availableServices: { [weak self] in self?.deviceManager.servicesManager.availableServices ?? [] },
                                                   activeServices: { [weak self] in self?.deviceManager.servicesManager.activeServices ?? [] },
                                                   delegate: self)
+        let versionUpdateViewModel = VersionUpdateViewModel(supportManager: supportManager, guidanceColors: .default)
         let viewModel = SettingsViewModel(notificationsCriticalAlertPermissionsViewModel: notificationsCriticalAlertPermissionsViewModel,
+                                          versionUpdateViewModel: versionUpdateViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,
                                           servicesViewModel: servicesViewModel,
                                           criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: deviceManager.criticalEventLogExportManager),
                                           therapySettings: { [weak self] in self?.deviceManager.loopManager.therapySettings ?? TherapySettings() },
-                                          pumpSupportedIncrements: pumpSupportedIncrements,
-                                          syncPumpSchedule: syncBasalRateSchedule,
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: deviceManager.loopManager.settings.dosingEnabled,
                                           isClosedLoopAllowed: closedLoopStatus.$isClosedLoopAllowed,
                                           supportInfoProvider: deviceManager,
                                           dosingStrategy: deviceManager.loopManager.settings.dosingStrategy,
-                                          availableSupports: deviceManager.availableSupports,
+                                          availableSupports: supportManager.availableSupports,
                                           isOnboardingComplete: onboardingManager.isComplete,
+                                          therapySettingsViewModelDelegate: deviceManager,
                                           delegate: self)
         let hostingController = DismissibleHostingController(
             rootView: SettingsView(viewModel: viewModel)
@@ -1516,10 +1509,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     @objc private func showLoopCompletionMessage(_: Any) {
         guard let loopCompletionMessage = hudView?.loopCompletionHUD.loopCompletionMessage else { return }
-        presentLoopCompletionMesage(title: loopCompletionMessage.title, message: loopCompletionMessage.message)
+        presentLoopCompletionMessage(title: loopCompletionMessage.title, message: loopCompletionMessage.message)
     }
 
-    private func presentLoopCompletionMesage(title: String, message: String) {
+    private func presentLoopCompletionMessage(title: String, message: String) {
         let action = UIAlertAction(title: NSLocalizedString("Dismiss", comment: "The button label of the action used to dismiss an error alert"),
                                    style: .default)
         let alertController = UIAlertController(title: title,
@@ -1999,38 +1992,6 @@ extension StatusTableViewController: SettingsViewModelDelegate {
     func dosingStrategyChanged(_ strategy: DosingStrategy) {
         self.deviceManager.loopManager.mutateSettings { settings in
             settings.dosingStrategy = strategy
-        }
-    }
-
-    func didSave(therapySetting: TherapySetting, therapySettings: TherapySettings) {
-        switch therapySetting {
-        case .glucoseTargetRange:
-            deviceManager?.loopManager.mutateSettings { settings in settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule }
-        case .preMealCorrectionRangeOverride:
-            deviceManager?.loopManager.mutateSettings { settings in settings.preMealTargetRange = therapySettings.correctionRangeOverrides?.preMeal }
-        case .workoutCorrectionRangeOverride:
-            deviceManager?.loopManager.mutateSettings { settings in settings.legacyWorkoutTargetRange = therapySettings.correctionRangeOverrides?.workout }
-        case .suspendThreshold:
-            deviceManager?.loopManager.mutateSettings { settings in settings.suspendThreshold = therapySettings.suspendThreshold }
-        case .basalRate:
-            deviceManager?.loopManager.basalRateSchedule = therapySettings.basalRateSchedule
-        case .deliveryLimits:
-            deviceManager?.loopManager.mutateSettings { settings in
-                settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour
-                settings.maximumBolus = therapySettings.maximumBolus
-            }
-        case .insulinModel:
-            if let defaultRapidActingModel = therapySettings.defaultRapidActingModel {
-                deviceManager?.loopManager.defaultRapidActingModel = defaultRapidActingModel
-            }
-        case .carbRatio:
-            deviceManager?.loopManager.carbRatioSchedule = therapySettings.carbRatioSchedule
-            deviceManager?.analyticsServicesManager.didChangeCarbRatioSchedule()
-        case .insulinSensitivity:
-            deviceManager?.loopManager.insulinSensitivitySchedule = therapySettings.insulinSensitivitySchedule
-            deviceManager?.analyticsServicesManager.didChangeInsulinSensitivitySchedule()
-        case .none:
-            break // NO-OP
         }
     }
 

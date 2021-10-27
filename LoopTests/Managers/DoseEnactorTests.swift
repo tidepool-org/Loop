@@ -24,6 +24,7 @@ extension MockPumpManagerError: LocalizedError {
 class MockPumpManager: PumpManager {
     
     var enactBolusCalled: ((Double, Bool) -> Void)?
+
     var enactTempBasalCalled: ((Double, TimeInterval) -> Void)?
     
     var enactTempBasalError: PumpManagerError?
@@ -53,7 +54,7 @@ class MockPumpManager: PumpManager {
     
     var pumpReservoirCapacity: Double = 50
     
-    var lastReconciliation: Date?
+    var lastSync: Date?
     
     var status: PumpManagerStatus =
         PumpManagerStatus(
@@ -70,8 +71,8 @@ class MockPumpManager: PumpManager {
     func removeStatusObserver(_ observer: PumpManagerStatusObserver) {
     }
     
-    func ensureCurrentPumpData(completion: (() -> Void)?) {
-        completion?()
+    func ensureCurrentPumpData(completion: ((Date?) -> Void)?) {
+        completion?(Date())
     }
     
     func setMustProvideBLEHeartbeat(_ mustProvideBLEHeartbeat: Bool) {
@@ -105,7 +106,11 @@ class MockPumpManager: PumpManager {
     
     func syncBasalRateSchedule(items scheduleItems: [RepeatingScheduleValue<Double>], completion: @escaping (Result<BasalRateSchedule, Error>) -> Void) {
     }
-    
+
+    func syncDeliveryLimits(limits deliveryLimits: DeliveryLimits, completion: @escaping (Result<DeliveryLimits, Error>) -> Void) {
+
+    }
+
     var managerIdentifier: String = "MockPumpManager"
     
     var localizedTitle: String = "MockPumpManager"
