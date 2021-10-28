@@ -356,7 +356,7 @@ class LoopDataManagerDosingTests: XCTestCase {
         waitOnDataQueue()
         var looped = false
         let exp = expectation(description: #function)
-        let observer = NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: nil, queue: nil) { _ in
+        let observer = NotificationCenter.default.addObserver(forName: .LoopCompleted, object: nil, queue: nil) { _ in
             looped = true
             exp.fulfill()
         }
