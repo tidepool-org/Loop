@@ -226,7 +226,12 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
             self.carbsOnBoard = nil
             self.insulinEffect = nil
         }
-
+        
+        if newValue.maximumBasalRatePerHour != oldValue.maximumBasalRatePerHour {
+            predictedGlucose = nil
+            loop()
+        }
+        
         UserDefaults.appGroup?.loopSettings = newValue
         notify(forChange: .preferences)
         analyticsServicesManager.didChangeLoopSettings(from: oldValue, to: newValue)
