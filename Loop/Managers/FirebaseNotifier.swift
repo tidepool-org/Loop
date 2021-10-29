@@ -183,21 +183,44 @@ extension UserDefaults {
 //    }
 
 struct FolloweeData: Codable {
+    // Followee Share ID & Name
+    // (Can/should these come from some identity database? From Tidepool Service?  Or...?)
+    let id: String
     let name: String
-    let glucose: Double
+    
+    // Probably won't need, but this comes from cgmStatusBadge out of DeviceDataManager
     let badge: String?
-    let unit: String?
-    let date: String
-    let trend: String
-    let glucoseCategory: String
-    let trendCategory: String
-    let reservoir: Double
+    
+    // From GlucoseStore: (?)
+    let glucose: Double // StoredGlucoseSample.quantity.doubleValue
+    let unit: String? // StoredGlucoseSample.quantity.unit
+    let date: String // StoredGlucoseSample.startDate
+    let trend: String // StoredGlucoseSample.trend
+
+    // Note: DeviceDataManager has policy for these:
+    let glucoseCategory: String // GlucoseDisplayable.glucoseRangeCategory.glucoseCategoryColor
+    let trendCategory: String // GlucoseDisplayable.glucoseRangeCategory.trendCategoryColor
+
+    // From DoseStore: (?)
+    let reservoir: Double  // DoseStore.lastReservoirValue.unitVolume
+    
+    // This one is tricky: LoopDataManager has basalDeliveryState (which, I *think* comes from
+    // PumpManagerStatus via DeviceManager...sigh), which has `getNetBasal()` function on it,
+    // which provides these (double sigh)
     let netBasalRate: Double
     let netBasalPercent: Double
+    
+    // This comes from a policy implemented in a separate functional class, LoopCompletionFreshness,
+    // which computes it based on `lastLoopCompleted` (which comes from LoopDataManager)
     let loopCompletionFreshness: String?
+    
+    // This is directly from LoopDataManager.automaticDosingStatus.isClosedLoop:
     let isClosedLoop: Bool
-    let activeCarbs: Double
-    let activeInsulin: Double
+    
+    
+    let activeCarbs: Double // LoopDataManager.carbsOnBoard.quantity.doubleValue(for: gram(), withRounding: true)
+    let activeInsulin: Double // DoesStore.insulinOnBoard (at: now)
+    
+    // From AlertIssuer
     let alert: String?
-    let id: String
 }
