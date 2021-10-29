@@ -1646,8 +1646,13 @@ extension LoopDataManager {
             switch self.basalDeliveryState {
             case .some(.tempBasal(let dose)):
                 if dose.unitsPerHour > unitsPerHour {
-                    // Temp basal is higher than proposed rate, so should cancel
-                    self.cancelActiveTempBasal(completion: completion)
+                    // Temp basal is higher than proposed rate, so should cancel and trigger loop
+                    self.cancelActiveTempBasal { error in
+                        completion(error)
+                        if error == nil {
+                            self.loop()
+                        }
+                    }
                 } else {
                     completion(nil)
                 }
