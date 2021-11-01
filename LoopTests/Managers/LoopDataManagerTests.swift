@@ -290,7 +290,6 @@ class LoopDataManagerDosingTests: XCTestCase {
     }
     
     class MockDelegate: LoopDataManagerDelegate {
-        enum MockError: Error { case arbitrary }
         var recommendation: AutomaticDoseRecommendation?
         var error: Error?
         func loopDataManager(_ manager: LoopDataManager, didRecommend automaticDose: (recommendation: AutomaticDoseRecommendation, date: Date), completion: @escaping (Error?) -> Void) {
@@ -352,84 +351,19 @@ class LoopDataManagerDosingTests: XCTestCase {
         XCTAssertEqual(TempBasalRecommendation.cancel, delegate.recommendation?.basalAdjustment)
     }
     
-    func testChangingMaxBasalDoesNotLoopIfNotLower() {
-        let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 5.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
-        setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
+    func testChangingMaxBasalCausesLoop() {
+        setUp(for: .highAndStable)
         waitOnDataQueue()
-        let delegate = MockDelegate()
-        loopDataManager.delegate = delegate
         var looped = false
-        let exp = expectation(description: #function + "NotificationCenter.default.addObserver")
-        exp.isInverted = true
+        let exp = expectation(description: #function)
         let observer = NotificationCenter.default.addObserver(forName: .LoopCompleted, object: nil, queue: nil) { _ in
             looped = true
             exp.fulfill()
         }
         XCTAssertFalse(looped)
-        var error: Error?
-        let exp2 = expectation(description: #function + "maxTempBasalSavePreflight")
-        loopDataManager.maxTempBasalSavePreflight(unitsPerHour: 6.0) {
-            error = $0
-            exp2.fulfill()
-        }
-        wait(for: [exp, exp2], timeout: 1.0)
-        XCTAssertNil(error)
-        XCTAssertFalse(looped)
-        XCTAssertNil(delegate.recommendation)
-        NotificationCenter.default.removeObserver(observer)
-    }
-    
-    func testChangingMaxBasalDoesNotLoopIfError() {
-        let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 5.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
-        setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
-        waitOnDataQueue()
-        let delegate = MockDelegate()
-        delegate.error = MockDelegate.MockError.arbitrary
-        loopDataManager.delegate = delegate
-        var looped = false
-        let exp = expectation(description: #function + "NotificationCenter.default.addObserver")
-        exp.isInverted = true
-        let observer = NotificationCenter.default.addObserver(forName: .LoopCompleted, object: nil, queue: nil) { _ in
-            looped = true
-            exp.fulfill()
-        }
-        XCTAssertFalse(looped)
-        var error: Error?
-        let exp2 = expectation(description: #function + "maxTempBasalSavePreflight")
-        loopDataManager.maxTempBasalSavePreflight(unitsPerHour: 3.0) {
-            error = $0
-            exp2.fulfill()
-        }
-        wait(for: [exp, exp2], timeout: 1.0)
-        XCTAssertNotNil(error)
-        XCTAssertFalse(looped)
-        XCTAssertNotNil(delegate.recommendation)
-        NotificationCenter.default.removeObserver(observer)
-    }
-
-    func testChangingMaxBasalCausesLoopIfLower() {
-        let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 5.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
-        setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
-        waitOnDataQueue()
-        let delegate = MockDelegate()
-        loopDataManager.delegate = delegate
-        var looped = false
-        let exp = expectation(description: #function + "NotificationCenter.default.addObserver")
-        let observer = NotificationCenter.default.addObserver(forName: .LoopCompleted, object: nil, queue: nil) { _ in
-            looped = true
-            exp.fulfill()
-        }
-        XCTAssertFalse(looped)
-        var error: Error?
-        let exp2 = expectation(description: #function + "maxTempBasalSavePreflight")
-        loopDataManager.maxTempBasalSavePreflight(unitsPerHour: 3.0) {
-            error = $0
-            exp2.fulfill()
-        }
-        wait(for: [exp, exp2], timeout: 1.0)
-        XCTAssertNil(error)
+        loopDataManager.mutateSettings { $0.maximumBasalRatePerHour = 2.0 }
+        wait(for: [exp], timeout: 1.0)
         XCTAssertTrue(looped)
-        XCTAssertNotNil(delegate.recommendation)
         NotificationCenter.default.removeObserver(observer)
     }
 }
