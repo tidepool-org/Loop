@@ -811,7 +811,11 @@ extension LoopDataManager {
         self.dosingDecisionStore.storeDosingDecision(dosingDecision) {}
     }
 
-    func storeSettings() {
+    func storeSettings(notificationSettings: NotificationSettings? = nil,
+                       controllerDevice: StoredSettings.ControllerDevice? = nil,
+                       cgmDevice: HKDevice? = nil,
+                       pumpDevice: HKDevice? = nil)
+    {
         guard let appGroup = UserDefaults.appGroup, let loopSettings = appGroup.loopSettings else {
             return
         }
@@ -827,13 +831,16 @@ extension LoopDataManager {
                                       maximumBasalRatePerHour: loopSettings.maximumBasalRatePerHour,
                                       maximumBolus: loopSettings.maximumBolus,
                                       suspendThreshold: loopSettings.suspendThreshold,
-                                      deviceToken: loopSettings.deviceToken?.hexadecimalString,
                                       defaultRapidActingModel: appGroup.defaultRapidActingModel.map(StoredInsulinModel.init),
                                       basalRateSchedule: appGroup.basalRateSchedule,
                                       insulinSensitivitySchedule: appGroup.insulinSensitivitySchedule,
                                       carbRatioSchedule: appGroup.carbRatioSchedule,
+                                      notificationSettings: notificationSettings ?? settingsStore.latestSettings?.notificationSettings,
+                                      controllerDevice: controllerDevice ?? UIDevice.current.controllerDevice,
+                                      cgmDevice: cgmDevice ?? delegate?.cgmManagerStatus?.device,
+                                      pumpDevice: pumpDevice ?? delegate?.pumpManagerStatus?.device,
                                       bloodGlucoseUnit: loopSettings.glucoseUnit)
-        self.settingsStore.storeSettings(settings) {}
+        settingsStore.storeSettings(settings) {}
     }
 
     // Actions
@@ -847,6 +854,8 @@ extension LoopDataManager {
         self.dataAccessQueue.async {
             self.logger.default("Loop running")
             NotificationCenter.default.post(name: .LoopRunning, object: self)
+
+            self.storeUpdatedSettings()
 
             self.lastLoopError = nil
             let startDate = self.now()
@@ -1910,6 +1919,37 @@ extension LoopDataManager {
     }
 }
 
+extension LoopDataManager {
+    func didBecomeActive () {
+        storeUpdatedSettings()
+    }
+
+    func storeUpdatedSettings() {
+        UNUserNotificationCenter.current().getNotificationSettings() { notificationSettings in
+            self.dataAccessQueue.async {
+                guard let latestSettings = self.settingsStore.latestSettings else {
+                    return
+                }
+                
+                let notificationSettings = NotificationSettings(notificationSettings)
+                let controllerDevice = UIDevice.current.controllerDevice
+                let cgmDevice = self.delegate?.cgmManagerStatus?.device
+                let pumpDevice = self.delegate?.pumpManagerStatus?.device
+
+                if notificationSettings != latestSettings.notificationSettings ||
+                    controllerDevice != latestSettings.controllerDevice ||
+                    cgmDevice != latestSettings.cgmDevice ||
+                    pumpDevice != latestSettings.pumpDevice
+                {
+                    self.storeSettings(notificationSettings: notificationSettings,
+                                       controllerDevice: controllerDevice,
+                                       cgmDevice: cgmDevice,
+                                       pumpDevice: pumpDevice)
+                }
+            }
+        }
+    }
+}
 
 extension LoopDataManager {
     /// Generates a diagnostic report about the current state
@@ -2045,6 +2085,9 @@ protocol LoopDataManagerDelegate: AnyObject {
 
     /// The pump manager status, if one exists.
     var pumpManagerStatus: PumpManagerStatus? { get }
+
+    /// The cgm manager status, if one exists.
+    var cgmManagerStatus: CGMManagerStatus? { get }
 }
 
 private extension TemporaryScheduleOverride {
