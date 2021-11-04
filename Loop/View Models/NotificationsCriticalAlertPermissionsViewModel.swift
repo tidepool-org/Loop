@@ -51,6 +51,10 @@ public class NotificationsCriticalAlertPermissionsViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self.notificationsPermissionsGiven = settings.alertSetting == .enabled
                 self.criticalAlertsPermissionsGiven = settings.criticalAlertSetting == .enabled
+                if #available(iOS 15.0, *) {
+                    self.notificationsPermissionsGiven = self.notificationsPermissionsGiven && settings.scheduledDeliverySetting == .disabled
+                    self.notificationsPermissionsGiven = self.notificationsPermissionsGiven && settings.timeSensitiveSetting == .enabled
+                }
             }
         }
     }

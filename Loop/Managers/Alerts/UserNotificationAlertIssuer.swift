@@ -70,7 +70,7 @@ fileprivate extension Alert {
         userNotificationContent.body = content.body
         userNotificationContent.sound = userNotificationSound
         if #available(iOS 15.0, *) {
-            userNotificationContent.interruptionLevel = interruptionLevel
+            userNotificationContent.interruptionLevel = backgroundContent?.isCritical == true ? .critical : .timeSensitive
         }
         // TODO: Once we have a final design and approval for custom UserNotification buttons, we'll need to set categoryIdentifier
 //        userNotificationContent.categoryIdentifier = LoopNotificationCategory.alert.rawValue
@@ -80,14 +80,6 @@ fileprivate extension Alert {
             LoopNotificationUserInfoKey.alertTypeID.rawValue: identifier.alertIdentifier,
         ]
         return userNotificationContent
-    }
-
-    @available(iOS 15.0, *)
-    private var interruptionLevel: UNNotificationInterruptionLevel {
-        if backgroundContent?.isCritical == true {
-            return .critical
-        }
-        return .timeSensitive
     }
     
     private var userNotificationSound: UNNotificationSound? {
