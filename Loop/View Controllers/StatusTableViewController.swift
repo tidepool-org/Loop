@@ -682,7 +682,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     private func updateBannerRow(animated: Bool) {
         let warningWasVisible = tableView.numberOfRows(inSection: Section.alertPermissionsDisabledWarning.rawValue) != 0
-        let showWarning = notificationsCriticalAlertPermissionsViewModel.showWarning
+        let showWarning = notificationsCriticalAlertPermissionsViewModel.showWarning != nil
         if !showWarning && warningWasVisible {
             tableView.deleteRows(at: [IndexPath(row: 0, section: Section.alertPermissionsDisabledWarning.rawValue)], with: animated ? .top : .none)
         } else if showWarning && !warningWasVisible {
@@ -802,7 +802,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch Section(rawValue: section)! {
         case .alertPermissionsDisabledWarning:
-            return notificationsCriticalAlertPermissionsViewModel.showWarning ? 1 : 0
+            return notificationsCriticalAlertPermissionsViewModel.showWarning != nil ? 1 : 0
         case .hud:
             return shouldShowHUD ? 1 : 0
         case .charts:
@@ -814,16 +814,24 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     private class AlertPermissionsDisabledWarningCell: UITableViewCell {
   
+        var warning: NotificationsCriticalAlertPermissionsViewModel.Warning?
+        
         override func updateConfiguration(using state: UICellConfigurationState) {
             super.updateConfiguration(using: state)
-            let content = NSLocalizedString("Alert Permissions Disabled", comment: "Warning text for when Notifications or Critical Alerts Permissions is disabled")
+            let content = NSLocalizedString("Alert Permissions Need Attention", comment: "Warning text for when Notifications or Critical Alerts Permissions is disabled")
             var contentConfig = defaultContentConfiguration().updated(for: state)
             contentConfig.text = content
             contentConfig.textProperties.color = .red
             contentConfig.textProperties.font = .systemFont(ofSize: 15, weight: .semibold)
             contentConfig.textProperties.adjustsFontSizeToFitWidth = true
-            contentConfig.image = UIImage(systemName: "exclamationmark.triangle.fill")?.withTintColor(.red)
-            contentConfig.imageProperties.tintColor = .red
+            if let warning = warning {
+                let color = UIColor(warning.iconTuple.1)
+                contentConfig.image = UIImage(systemName: warning.iconTuple.0)?.withTintColor(color)
+                contentConfig.imageProperties.tintColor = color
+            } else {
+                contentConfig.image = UIImage(systemName: "exclamationmark.triangle.fill")?.withTintColor(.red)
+                contentConfig.imageProperties.tintColor = .red
+            }
             contentConfiguration = contentConfig
             var backgroundConfig = backgroundConfiguration?.updated(for: state)
             backgroundConfig?.backgroundColor = .secondarySystemBackground
@@ -835,7 +843,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         switch Section(rawValue: indexPath.section)! {
         case .alertPermissionsDisabledWarning:
-            return tableView.dequeueReusableCell(withIdentifier: AlertPermissionsDisabledWarningCell.className, for: indexPath) as! AlertPermissionsDisabledWarningCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: AlertPermissionsDisabledWarningCell.className, for: indexPath) as! AlertPermissionsDisabledWarningCell
+            cell.warning = notificationsCriticalAlertPermissionsViewModel.showWarning
+            return cell
         case .hud:
             let cell = tableView.dequeueReusableCell(withIdentifier: HUDViewTableViewCell.className, for: indexPath) as! HUDViewTableViewCell
             hudView = cell.hudView

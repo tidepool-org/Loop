@@ -47,6 +47,10 @@ public struct NotificationsCriticalAlertPermissionsView: View {
         List {
             manageNotificationsSection
             manageCriticalAlertsSection
+            if #available(iOS 15.0, *) {
+                manageTimeSensitiveAlertsSection
+//                manageDeliveryScheduleSection
+            }
             notificationAndCriticalAlertPermissionSupportSection
         }
         .insetGroupedListStyle()
@@ -77,8 +81,7 @@ extension NotificationsCriticalAlertPermissionsView {
                     Text(NSLocalizedString("Manage Notifications in Settings", comment: "Manage Notifications in Settings button text"))
                     Spacer()
                     if !viewModel.notificationsPermissionsGiven {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.warning)
+                        NotificationsCriticalAlertPermissionsViewModel.Warning.notificationPermissions.icon
                     }
                     Image(systemName: "chevron.right").foregroundColor(.gray).font(.footnote)
                 }
@@ -86,7 +89,7 @@ extension NotificationsCriticalAlertPermissionsView {
             .accentColor(.primary)
         }
     }
-    
+        
     private var manageCriticalAlertsSection: some View {
         Section(footer: DescriptiveText(label: NSLocalizedString("""
             Critical Alerts will always play a sound and appear on the Lock screen even if your iPhone is muted or Do Not Disturb is on.
@@ -97,8 +100,27 @@ extension NotificationsCriticalAlertPermissionsView {
                     Text(NSLocalizedString("Manage Critical Alerts in Settings", comment: "Manage Critical Alerts in Settings button text"))
                     Spacer()
                     if !viewModel.criticalAlertsPermissionsGiven {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.critical)
+                        NotificationsCriticalAlertPermissionsViewModel.Warning.criticalAlerts.icon
+                    }
+                    Image(systemName: "chevron.right").foregroundColor(.gray).font(.footnote)
+                }
+            }
+            .accentColor(.primary)
+        }
+    }
+
+    @available(iOS 15.0, *)
+    private var manageTimeSensitiveAlertsSection: some View {
+        Section(footer: DescriptiveText(label: NSLocalizedString("""
+            \(appName) uses Time Sensitive notifications to ensure timely alerting of therapy issues.  This needs to be enabled.
+            """, comment: "Manage Time Sensitive Notifications in Settings descriptive text")))
+        {
+            Button( action: { self.viewModel.gotoSettings() } ) {
+                HStack {
+                    Text(NSLocalizedString("Manage Time Sensitive Notifications in Settings", comment: "Manage Time Sensitive notifications in Settings button text"))
+                    Spacer()
+                    if !viewModel.timeSensitiveAlertsPermissionGiven {
+                        NotificationsCriticalAlertPermissionsViewModel.Warning.timeSensitive.icon
                     }
                     Image(systemName: "chevron.right").foregroundColor(.gray).font(.footnote)
                 }
@@ -107,6 +129,26 @@ extension NotificationsCriticalAlertPermissionsView {
         }
     }
     
+    @available(iOS 15.0, *)
+    private var manageDeliveryScheduleSection: some View {
+        Section(footer: DescriptiveText(label: NSLocalizedString("""
+                                Scheduled Delivery defers notifications.  Turn it off.
+            """, comment: "Manage Scheduled Delivery Notifications in Settings descriptive text")))
+        {
+            Button( action: { self.viewModel.gotoSettings() } ) {
+                HStack {
+                    Text(NSLocalizedString("Manage Scheduled Delivery in Settings", comment: "Manage Scheduled Delivery in Settings button text"))
+                    Spacer()
+                    if viewModel.scheduledDeliveryEnabled {
+                        NotificationsCriticalAlertPermissionsViewModel.Warning.scheduledDelivery.icon
+                    }
+                    Image(systemName: "chevron.right").foregroundColor(.gray).font(.footnote)
+                }
+            }
+            .accentColor(.primary)
+        }
+    }
+
     private var notificationAndCriticalAlertPermissionSupportSection: some View {
         Section(header: SectionHeader(label: NSLocalizedString("Support", comment: "Section title for Support"))) {
             NavigationLink(destination: Text("Get help with Notification & Critical Alert Permissions screen")) {
@@ -115,6 +157,27 @@ extension NotificationsCriticalAlertPermissionsView {
         }
     }
 
+}
+
+extension NotificationsCriticalAlertPermissionsViewModel.Warning {
+        
+    @ViewBuilder
+    var icon: some View {
+        Image(systemName: iconTuple.0).foregroundColor(iconTuple.1)
+    }
+    
+    var iconTuple: (String, Color) {
+        switch self {
+        case .notificationPermissions:
+            return ("exclamationmark.triangle.fill", .warning)
+        case .timeSensitive:
+            return ("clock.fill", .warning)
+        case .scheduledDelivery:
+            return ("bell.fill", .blue)
+        case .criticalAlerts:
+            return ("exclamationmark.triangle.fill", .critical)
+        }
+    }
 }
 
 struct NotificationsCriticalAlertPermissionsView_Previews: PreviewProvider {
