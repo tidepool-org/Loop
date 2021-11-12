@@ -155,6 +155,7 @@ fileprivate extension StoredSettings {
                               maximumBasalRatePerHour: 3.5,
                               maximumBolus: 10.0,
                               suspendThreshold: GlucoseThreshold(unit: .milligramsPerDeciliter, value: 75.0),
+                              deviceToken: UUID().uuidString,
                               defaultRapidActingModel: StoredInsulinModel(ExponentialInsulinModelPreset.rapidActingAdult),
                               basalRateSchedule: basalRateSchedule,
                               insulinSensitivitySchedule: insulinSensitivitySchedule,
