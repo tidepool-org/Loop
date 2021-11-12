@@ -238,13 +238,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func updateToolbarItems() {
-        let isOnboardingComplete = onboardingManager.isComplete
+        let isPumpOnboarded = onboardingManager.isComplete || deviceManager.pumpManager?.isOnboarded == true
         let isClosedLoop = closedLoopStatus.isClosedLoop
 
-        toolbarItems![0].isEnabled = isOnboardingComplete
-        toolbarItems![2].isEnabled = isOnboardingComplete && isClosedLoop
-        toolbarItems![4].isEnabled = isOnboardingComplete
-        toolbarItems![6].isEnabled = isOnboardingComplete
+        toolbarItems![0].isEnabled = isPumpOnboarded
+        toolbarItems![2].isEnabled = isPumpOnboarded && isClosedLoop
+        toolbarItems![4].isEnabled = isPumpOnboarded
+        toolbarItems![6].isEnabled = isPumpOnboarded
         toolbarItems![8].isEnabled = true
     }
 
