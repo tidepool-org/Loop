@@ -86,12 +86,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 DispatchQueue.main.async {
                     self?.registerPumpManager()
                     self?.configurePumpManagerHUDViews()
+                    self?.updateToolbarItems()
                 }
             },
             notificationCenter.addObserver(forName: .CGMManagerChanged, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
                 DispatchQueue.main.async {
                     self?.registerCGMManager()
                     self?.configureCGMManagerHUDViews()
+                    self?.updateToolbarItems()
                 }
             },
             notificationCenter.addObserver(forName: .PumpEventsAdded, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
