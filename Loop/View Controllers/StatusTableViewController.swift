@@ -157,7 +157,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         onboardingManager.$isComplete
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.updateToolbarItems() }
+            .sink { [weak self] _ in
+                self?.reloadData()
+                self?.updateToolbarItems()
+            }
             .store(in: &cancellables)
     }
 
