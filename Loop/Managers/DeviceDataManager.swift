@@ -1399,8 +1399,8 @@ extension DeviceDataManager: SupportInfoProvider {
         return pumpManager?.status
     }
     
-    public var cgmDevice: HKDevice? {
-        return cgmManager?.device
+    public var cgmStatus: CGMManagerStatus? {
+        return cgmManager?.cgmManagerStatus
     }
     
     public func generateIssueReport(completion: @escaping (String) -> Void) {
