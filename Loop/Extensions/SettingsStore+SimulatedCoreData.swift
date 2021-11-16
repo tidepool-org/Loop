@@ -145,6 +145,7 @@ fileprivate extension StoredSettings {
                                   localIdentifier: "Pump Local Identifier",
                                   udiDeviceIdentifier: "Pump UDI Device Identifier")
         return StoredSettings(date: date,
+                              timeZone: timeZone,
                               dosingEnabled: true,
                               glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
                               preMealTargetRange: DoubleRange(minValue: 80.0, maxValue: 90.0).quantityRange(for: .milligramsPerDeciliter),
