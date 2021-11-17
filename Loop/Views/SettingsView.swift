@@ -49,7 +49,7 @@ public struct SettingsView: View {
                 if FeatureFlags.automaticBolusEnabled {
                     dosingStrategySection
                 }
-                if viewModel.showWarning {
+                if viewModel.notificationsCriticalAlertPermissionsViewModel.showWarning {
                     alertPermissionsSection
                 }
                 if viewModel.pumpManagerSettingsViewModel.isSetUp() {
@@ -105,7 +105,7 @@ extension SettingsView {
     }
     
     private var softwareUpdateSection: some View {
-        Section(footer: Text(String(format: NSLocalizedString("A new version of %@ is available.", comment: "Software update section footer (1: app name)"), appName))) {
+        Section(footer: Text(viewModel.versionUpdateViewModel.footer(appName: appName))) {
             NavigationLink(destination: viewModel.versionUpdateViewModel.softwareUpdateView) {
                 Text(NSLocalizedString("Software Update", comment: "Software update button link text"))
                 Spacer()
@@ -133,7 +133,7 @@ extension SettingsView {
             {
                 HStack {
                     Text(NSLocalizedString("Alert Permissions", comment: "Alert Permissions button text"))
-                    if viewModel.showWarning {
+                    if viewModel.notificationsCriticalAlertPermissionsViewModel.showWarning {
                         Spacer()
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.critical)

@@ -86,12 +86,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 DispatchQueue.main.async {
                     self?.registerPumpManager()
                     self?.configurePumpManagerHUDViews()
+                    self?.updateToolbarItems()
                 }
             },
             notificationCenter.addObserver(forName: .CGMManagerChanged, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
                 DispatchQueue.main.async {
                     self?.registerCGMManager()
                     self?.configureCGMManagerHUDViews()
+                    self?.updateToolbarItems()
                 }
             },
             notificationCenter.addObserver(forName: .PumpEventsAdded, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
@@ -131,18 +133,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
         tableView.backgroundColor = .secondarySystemBackground
     
         tableView.register(AlertPermissionsDisabledWarningCell.self, forCellReuseIdentifier: AlertPermissionsDisabledWarningCell.className)
-        notificationsCriticalAlertPermissionsViewModel.$showWarning
-            .receive(on: RunLoop.main)
-            .sink { [weak self] showWarning in
-                guard let self = self else { return }
-                let isWarningVisible = self.tableView.numberOfRows(inSection: Section.alertPermissionsDisabledWarning.rawValue) != 0
-                if !showWarning && isWarningVisible {
-                    self.tableView.deleteRows(at: [IndexPath(row: 0, section: Section.alertPermissionsDisabledWarning.rawValue)], with: .top)
-                } else if showWarning && !isWarningVisible {
-                    self.tableView.insertRows(at: [IndexPath(row: 0, section: Section.alertPermissionsDisabledWarning.rawValue)], with: .top)
-                }
-            }
-            .store(in: &cancellables)
     }
 
     override func didReceiveMemoryWarning() {
@@ -167,7 +157,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         onboardingManager.$isComplete
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.updateToolbarItems() }
+            .sink { [weak self] _ in
+                self?.reloadData()
+                self?.updateToolbarItems()
+            }
             .store(in: &cancellables)
     }
 
@@ -250,13 +243,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func updateToolbarItems() {
-        let isOnboardingComplete = onboardingManager.isComplete
+        let isPumpOnboarded = onboardingManager.isComplete || deviceManager.pumpManager?.isOnboarded == true
         let isClosedLoop = closedLoopStatus.isClosedLoop
 
-        toolbarItems![0].isEnabled = isOnboardingComplete
-        toolbarItems![2].isEnabled = isOnboardingComplete && isClosedLoop
-        toolbarItems![4].isEnabled = isOnboardingComplete
-        toolbarItems![6].isEnabled = isOnboardingComplete
+        toolbarItems![0].isEnabled = isPumpOnboarded
+        toolbarItems![2].isEnabled = isPumpOnboarded && isClosedLoop
+        toolbarItems![4].isEnabled = isPumpOnboarded
+        toolbarItems![6].isEnabled = isPumpOnboarded
         toolbarItems![8].isEnabled = true
     }
 
@@ -337,7 +330,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         updateChartDateRange()
-        redrawCharts()
 
         if case .bolusing = statusRowMode, bolusProgressReporter?.progress.isComplete == true {
             refreshContext.update(with: .status)
@@ -350,6 +342,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         guard active && visible && !refreshContext.isEmpty else {
+            redrawCharts()
             return
         }
 
@@ -582,7 +575,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             // Show/hide the table view rows
             let statusRowMode = self.determineStatusRowMode()
 
-            self.updateHUDandStatusRows(statusRowMode: statusRowMode, newSize: currentContext.newSize, animated: animated)
+            self.updateBannerAndHUDandStatusRows(statusRowMode: statusRowMode, newSize: currentContext.newSize, animated: animated)
 
             self.redrawCharts()
 
@@ -691,8 +684,18 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         return statusRowMode
     }
+    
+    private func updateBannerRow(animated: Bool) {
+        let warningWasVisible = tableView.numberOfRows(inSection: Section.alertPermissionsDisabledWarning.rawValue) != 0
+        let showWarning = notificationsCriticalAlertPermissionsViewModel.showWarning
+        if !showWarning && warningWasVisible {
+            tableView.deleteRows(at: [IndexPath(row: 0, section: Section.alertPermissionsDisabledWarning.rawValue)], with: animated ? .top : .none)
+        } else if showWarning && !warningWasVisible {
+            tableView.insertRows(at: [IndexPath(row: 0, section: Section.alertPermissionsDisabledWarning.rawValue)], with: animated ? .top : .none)
+        }
+    }
 
-    private func updateHUDandStatusRows(statusRowMode: StatusRowMode, newSize: CGSize?, animated: Bool) {
+    private func updateBannerAndHUDandStatusRows(statusRowMode: StatusRowMode, newSize: CGSize?, animated: Bool) {
         let hudWasVisible = self.shouldShowHUD
         let statusWasVisible = self.shouldShowStatus
 
@@ -701,7 +704,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         self.statusRowMode = statusRowMode
 
         if let newSize = newSize {
-            self.landscapeMode = newSize.width > newSize.height
+            landscapeMode = newSize.width > newSize.height
         }
 
         let hudIsVisible = self.shouldShowHUD
@@ -710,12 +713,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
         hudView?.cgmStatusHUD?.isVisible = hudIsVisible
 
         tableView.beginUpdates()
+        
+        updateBannerRow(animated: animated)
 
         switch (hudWasVisible, hudIsVisible) {
         case (false, true):
-            self.tableView.insertRows(at: [IndexPath(row: 0, section: Section.hud.rawValue)], with: animated ? .top : .none)
+            tableView.insertRows(at: [IndexPath(row: 0, section: Section.hud.rawValue)], with: animated ? .top : .none)
         case (true, false):
-            self.tableView.deleteRows(at: [IndexPath(row: 0, section: Section.hud.rawValue)], with: animated ? .top : .none)
+            tableView.deleteRows(at: [IndexPath(row: 0, section: Section.hud.rawValue)], with: animated ? .top : .none)
         default:
             break
         }
@@ -1069,17 +1074,17 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
                 switch statusRowMode {
                 case .pumpSuspended(let resuming) where !resuming:
-                    updateHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: true) , newSize: nil, animated: true)
+                    updateBannerAndHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: true) , newSize: nil, animated: true)
                     deviceManager.pumpManager?.resumeDelivery() { (error) in
                         DispatchQueue.main.async {
                             if let error = error {
                                 let alert = UIAlertController(with: error, title: NSLocalizedString("Failed to Resume Insulin Delivery", comment: "The alert title for a resume error"))
                                 self.present(alert, animated: true, completion: nil)
                                 if case .suspended = self.basalDeliveryState {
-                                    self.updateHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: false), newSize: nil, animated: true)
+                                    self.updateBannerAndHUDandStatusRows(statusRowMode: .pumpSuspended(resuming: false), newSize: nil, animated: true)
                                 }
                             } else {
-                                self.updateHUDandStatusRows(statusRowMode: self.determineStatusRowMode(), newSize: nil, animated: true)
+                                self.updateBannerAndHUDandStatusRows(statusRowMode: self.determineStatusRowMode(), newSize: nil, animated: true)
                                 self.refreshContext.update(with: .insulin)
                                 self.log.debug("[reloadData] after manually resuming suspend")
                                 self.reloadData()
@@ -1097,7 +1102,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         show(vc, sender: tableView.cellForRow(at: indexPath))
                     }
                 case .bolusing:
-                    updateHUDandStatusRows(statusRowMode: .cancelingBolus, newSize: nil, animated: true)
+                    updateBannerAndHUDandStatusRows(statusRowMode: .cancelingBolus, newSize: nil, animated: true)
                     deviceManager.pumpManager?.cancelBolus() { (result) in
                         DispatchQueue.main.async {
                             switch result {
@@ -1107,9 +1112,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
                             case .failure(let error):
                                 self.presentErrorCancelingBolus(error)
                                 if case .inProgress(let dose) = self.bolusState {
-                                    self.updateHUDandStatusRows(statusRowMode: .bolusing(dose: dose), newSize: nil, animated: true)
+                                    self.updateBannerAndHUDandStatusRows(statusRowMode: .bolusing(dose: dose), newSize: nil, animated: true)
                                 } else {
-                                    self.updateHUDandStatusRows(statusRowMode: .hidden, newSize: nil, animated: true)
+                                    self.updateBannerAndHUDandStatusRows(statusRowMode: .hidden, newSize: nil, animated: true)
                                 }
                             }
                         }
