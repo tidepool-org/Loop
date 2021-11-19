@@ -161,66 +161,85 @@ extension UserDefaults {
 
 }
 
-
-//    export interface Followee {
-//      name: string
-//      glucose: number
-//      badge: string | null
-//      unit: string
-//      date: string
-//      trend: string
-//      glucoseCategory: string
-//      trendCategory: string
-//      reservoir: number
-//      netBasalRate: number
-//      netBasalPercent: number
-//      loopCompletionFreshness: string | null
-//      isClosedLoop: boolean
-//      activeCarbs: number
-//      activeInsulin: number
-//      alert: string | null | undefined
-//      id: string
-//    }
-
-struct FolloweeData: Codable {
+struct Followee {
+    typealias Id = String
     // Followee Share ID & Name
     // (Can/should these come from some identity database? From Tidepool Service?  Or...?)
-    let id: String
+    let id: Id
     let name: String
-    
+
+    let data: FolloweeData
+}
+enum GlucoseUnit: Codable {
+    case mgdL, mmolL
+}
+enum CarbUnit: Codable {
+    case g
+}
+
+struct FolloweeData: Codable {
     // Probably won't need, but this comes from cgmStatusBadge out of DeviceDataManager
     let badge: String?
     
+    let lastUpdate: Date?
+    
     // From GlucoseStore: (?)
-    let glucose: Double // StoredGlucoseSample.quantity.doubleValue
-    let unit: String? // StoredGlucoseSample.quantity.unit
-    let date: String // StoredGlucoseSample.startDate
-    let trend: String // StoredGlucoseSample.trend
-
+    struct GlucoseData: Codable {
+        let value: Double // StoredGlucoseSample.quantity.doubleValue
+        let unit: GlucoseUnit//String? // StoredGlucoseSample.quantity.unit
+        let date: Date?//String // StoredGlucoseSample.startDate
+        let trendRate: Double//String // StoredGlucoseSample.trend
+    }
+    let glucose: [GlucoseData]
     // Note: DeviceDataManager has policy for these:
-    let glucoseCategory: String // GlucoseDisplayable.glucoseRangeCategory.glucoseCategoryColor
-    let trendCategory: String // GlucoseDisplayable.glucoseRangeCategory.trendCategoryColor
+//    let glucoseCategory: String // GlucoseDisplayable.glucoseRangeCategory.glucoseCategoryColor
+//    let trendCategory: String // GlucoseDisplayable.glucoseRangeCategory.trendCategoryColor
 
     // From DoseStore: (?)
-    let reservoir: Double  // DoseStore.lastReservoirValue.unitVolume
+//    let reservoir: Double  // DoseStore.lastReservoirValue.unitVolume
     
     // This one is tricky: LoopDataManager has basalDeliveryState (which, I *think* comes from
     // PumpManagerStatus via DeviceManager...sigh), which has `getNetBasal()` function on it,
     // which provides these (double sigh)
-    let netBasalRate: Double
-    let netBasalPercent: Double
+    let netBasalRate: Double // U/hr
+//    let netBasalPercent: Double
     
     // This comes from a policy implemented in a separate functional class, LoopCompletionFreshness,
     // which computes it based on `lastLoopCompleted` (which comes from LoopDataManager)
-    let loopCompletionFreshness: String?
-    
+//    let loopCompletionFreshness: String?
+    let lastLoopCompleted: Date?
     // This is directly from LoopDataManager.automaticDosingStatus.isClosedLoop:
     let isClosedLoop: Bool
-    
-    
-    let activeCarbs: Double // LoopDataManager.carbsOnBoard.quantity.doubleValue(for: gram(), withRounding: true)
+
     let activeInsulin: Double // DoesStore.insulinOnBoard (at: now)
-    
+    let lastBolus: Date?
+
+    let activeCarbs: Double // LoopDataManager.carbsOnBoard.quantity.doubleValue(for: gram(), withRounding: true)
+    let lastCarbEntry: Date?
+
     // From AlertIssuer
     let alert: String?
+}
+
+struct Follower: Codable {
+    let followees: [Followee.Id]
+    let settings: FollowerSettings
+}
+
+struct FollowerSettings: Codable {
+    let glucoseUnit: GlucoseUnit
+    let carbUnit: CarbUnit
+    
+    struct Notifications {
+        struct Threshold {
+            let enabled: Bool
+            let limit: Double
+            let repeatFrequency: TimeInterval
+            let sound: String?
+        }
+        let urgentLow: Threshold
+        let low: Threshold
+        let high: Threshold
+        let fallRate: Threshold
+    }
 }
