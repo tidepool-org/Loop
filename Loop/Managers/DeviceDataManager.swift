@@ -67,7 +67,9 @@ final class DeviceDataManager {
     public private(set) var displayGlucoseUnitObservable: DisplayGlucoseUnitObservable
 
     // HACKORAMA
-    private let followerNotifier: FollowerNotifier = FirebaseNotifier()
+    private var followerNotifier: FollowerNotifier {
+        FirebaseNotifier.shared
+    }
 
     // MARK: - CGM
 
@@ -214,8 +216,6 @@ final class DeviceDataManager {
 
         self.pluginManager = pluginManager
         self.alertManager = alertManager
-        // HACKORAMA
-        alertManager.addAlertIssuer(followerNotifier)
         
         self.bluetoothProvider = bluetoothProvider
         self.alertPresenter = alertPresenter
@@ -362,6 +362,9 @@ final class DeviceDataManager {
                 strongSelf.notifyObserversOfDisplayGlucoseUnitChange(to: preferredGlucoseUnit)
             }
         }
+        
+        // HACKORAMA
+        alertManager.addAlertIssuer(followerNotifier)
     }
     
     var isCGMManagerValidPumpManager: Bool {

@@ -333,15 +333,13 @@ extension SettingsView {
                 Text(NSLocalizedString("Share with Follower", comment: "The title of the support item in settings"))
             }
             .sheet(isPresented: $showShareSheet) {
-                ShareSheet(sharing: [URL(string: "tidepoolcarepartner://\(shareID.uuidString)")!])
+                ShareSheet(sharing: [URL(string: "tidepoolcarepartner://\(FirebaseNotifier.shared.id)")!]) { _, completed, _, _ in
+                    if completed {
+                        FirebaseNotifier.shared.introduce()
+                    }
+                }
             }
         }
-    }
-    
-    private var shareID: UUID {
-        let id = UserDefaults.standard.shareID ?? UUID()
-        UserDefaults.standard.shareID = id
-        return id
     }
     
     private var plusImage: some View {
@@ -408,9 +406,12 @@ struct ShareSheet: UIViewControllerRepresentable {
     typealias UIViewControllerType = UIActivityViewController
     
     var sharing: [Any]
+    var completion: UIActivityViewController.CompletionWithItemsHandler?
     
     func makeUIViewController(context: UIViewControllerRepresentableContext<ShareSheet>) -> UIActivityViewController {
-        UIActivityViewController(activityItems: sharing, applicationActivities: nil)
+        let result = UIActivityViewController(activityItems: sharing, applicationActivities: nil)
+        result.completionWithItemsHandler = completion
+        return result
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: UIViewControllerRepresentableContext<ShareSheet>) {

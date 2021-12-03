@@ -54,7 +54,9 @@ final class LoopDataManager: LoopSettingsAlerterDelegate {
     private var overrideObserver: NSKeyValueObservation? = nil
 
     // HACKORAMA
-    private let followerNotifier: FollowerNotifier = FirebaseNotifier()
+    private var followerNotifier: FollowerNotifier {
+        FirebaseNotifier.shared
+    }
     
     deinit {
         for observer in notificationObservers {
