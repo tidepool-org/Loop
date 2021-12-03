@@ -715,6 +715,10 @@ extension DeviceDataManager {
         return pumpManager?.status
     }
 
+    var cgmManagerStatus: CGMManagerStatus? {
+        return cgmManager?.cgmManagerStatus
+    }
+
     func glucoseDisplay(for glucose: GlucoseSampleValue?) -> GlucoseDisplayable? {
         guard let glucose = glucose else {
             return cgmManager?.glucoseDisplay
@@ -758,6 +762,7 @@ extension DeviceDataManager {
 
     func didBecomeActive() {
         updatePumpManagerBLEHeartbeatPreference()
+        loopManager.didBecomeActive()
     }
 
     func updatePumpManagerBLEHeartbeatPreference() {
@@ -819,6 +824,7 @@ extension DeviceDataManager: CGMManagerDelegate {
             }
             self.cgmManager = nil
             self.displayGlucoseUnitObservers.cleanupDeallocatedElements()
+            self.loopManager.storeSettings()
         }
     }
 
@@ -866,6 +872,7 @@ extension DeviceDataManager: CGMManagerOnboardingDelegate {
 
         DispatchQueue.main.async {
             self.refreshDeviceData()
+            self.loopManager.storeSettings()
         }
     }
 }
@@ -1009,6 +1016,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         DispatchQueue.main.async {
             self.pumpManager = nil
             self.deliveryUncertaintyAlertManager = nil
+            self.loopManager.storeSettings()
         }
     }
 
@@ -1081,6 +1089,7 @@ extension DeviceDataManager: PumpManagerOnboardingDelegate {
 
         DispatchQueue.main.async {
             self.refreshDeviceData()
+            self.loopManager.storeSettings()
         }
     }
 }
@@ -1401,8 +1410,8 @@ extension DeviceDataManager: SupportInfoProvider {
         return pumpManager?.status
     }
     
-    public var cgmDevice: HKDevice? {
-        return cgmManager?.device
+    public var cgmStatus: CGMManagerStatus? {
+        return cgmManager?.cgmManagerStatus
     }
     
     public func generateIssueReport(completion: @escaping (String) -> Void) {
