@@ -78,14 +78,17 @@ final class FirebaseNotifier: FollowerNotifier {
         followee.collection("glucose")
     }
     
-    private func postGlucose(_ glucose: GlucoseData) {
+    private func postGlucose(_ glucose: GlucoseData) throws {
         // TODO: Put into a transaction?
-        followee.setData(["lastUpdate": Date()], merge: true) { error in
+        followee.setData(["lastUpdate": lastUpdateTime], merge: true) { error in
             if let error = error {
                 print("!!!!!!!!! NOPE: \(error)")
             }
         }
-        glucoseData.addDocument(data: try! glucose.dict())
+        // OMG this is such a hack
+        var dict = try glucose.dict()
+        dict["date"] = Timestamp(date: glucose.date)
+        glucoseData.addDocument(data: dict)
         // TODO: predictedGlucose
         
         flush(glucose.date)
@@ -110,12 +113,14 @@ final class FirebaseNotifier: FollowerNotifier {
     private var window = TimeInterval.seconds(20)
     private func flush(_ lastGlucoseDate: Date) {
         let d = Timestamp(date: lastGlucoseDate - window)
-        glucoseData.whereField("date", isLessThan: d).getDocuments { snapshot, error in
+        glucoseData
+            .whereField("date", isLessThan: d)
+            .getDocuments { snapshot, error in
             if let error = error {
                 print("########## NOPE: \(error)")
             }
             for document in snapshot!.documents {
-                print("\(document.documentID) => \(document.data())")
+                print("******* \(document.documentID) => \(document.data()) d=\(d)")
                 self.glucoseData.document(document.documentID).delete()
             }
         }
@@ -156,7 +161,7 @@ extension FirebaseNotifier {
                                               unit: .mgdL,
                                               date: lastGlucose.date,
                                               trendRate: lastGlucose.trendRate?.doubleValue(for: .milligramsPerDeciliterPerMinute, withRounding: true))
-                postGlucose(glucoseData)
+                try? postGlucose(glucoseData)
             }
         case .unreliableData:
             // TODO HACKORAMA
