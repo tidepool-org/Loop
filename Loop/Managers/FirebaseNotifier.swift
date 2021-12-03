@@ -54,6 +54,9 @@ final class FirebaseNotifier: FollowerNotifier {
     }
     
     func introduce() {
+        // Right now there's no way to pick a Follower by User ID, so this basically doesn't do anything.
+        // Otherwise, we _could_ put the follower's ID in a list for the followee.  So the entire act of "Sharing"
+        // is "Authorizing" a follower, who just keeps a list of followees
         updateFollowee([:])
     }
     
