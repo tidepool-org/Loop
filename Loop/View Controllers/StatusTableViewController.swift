@@ -343,7 +343,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         guard active && visible && !refreshContext.isEmpty else {
-            updateBannerRow(animated: true)
+            updateBannerRow(animated: animated)
             redrawCharts()
             return
         }
