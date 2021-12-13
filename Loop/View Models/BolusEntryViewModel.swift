@@ -26,7 +26,7 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry? ,
                       completion: @escaping (_ result: Result<StoredCarbEntry>) -> Void)
 
-    func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
+    func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
     
     func enactBolus(units: Double, automatic: Bool, completion: @escaping (_ error: Error?) -> Void)
     
@@ -417,7 +417,7 @@ final class BolusEntryViewModel: ObservableObject {
         let bolusVolume = enteredBolus.doubleValue(for: .internationalUnit())
 
         dosingDecision.manualBolusRequested = bolusVolume
-        delegate?.storeBolusDosingDecision(dosingDecision, withDate: now)
+        delegate?.storeManualBolusDosingDecision(dosingDecision, withDate: now)
 
         guard bolusVolume > 0 else {
             completion()

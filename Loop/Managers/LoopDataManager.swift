@@ -779,7 +779,7 @@ extension LoopDataManager {
         }
     }
 
-    func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
+    func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
         let dosingDecision = StoredDosingDecision(date: date,
                                                   reason: bolusDosingDecision.reason.rawValue,
                                                   settings: StoredDosingDecision.Settings(settingsStore.latestSettings),
@@ -887,11 +887,6 @@ extension LoopDataManager {
         case getLoopState
     }
 
-    /// - Throws:
-    ///     - LoopError.configurationError
-    ///     - LoopError.glucoseTooOld
-    ///     - LoopError.missingDataError
-    ///     - LoopError.pumpDataTooOld
     fileprivate func update(for reason: UpdateReason) -> (StoredDosingDecision, LoopError?) {
         dispatchPrecondition(condition: .onQueue(dataAccessQueue))
 

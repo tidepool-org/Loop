@@ -58,7 +58,8 @@ extension DosingDecisionStore {
 
 fileprivate extension StoredDosingDecision {
     static func simulated(date: Date) -> StoredDosingDecision {
-        let timeZone = TimeZone(identifier: "America/Los_Angeles")!
+        let timeZone = TimeZone(identifier: "America/Phoenix")!
+        let scheduleTimeZone = TimeZone(secondsFromGMT: timeZone.secondsFromGMT())!
         let reason = "simulatedCoreData"
         let settings = StoredDosingDecision.Settings(syncIdentifier: UUID(uuidString: "18CF3948-0B3D-4B12-8BFE-14986B0E6784")!)
         let scheduleOverride = TemporaryScheduleOverride(context: .preMeal,
@@ -72,7 +73,7 @@ fileprivate extension StoredDosingDecision {
                                                          syncIdentifier: UUID())
         let controllerStatus = StoredDosingDecision.ControllerStatus(batteryState: .charging,
                                                                      batteryLevel: 0.5)
-        let pumpManagerStatus = PumpManagerStatus(timeZone: timeZone,
+        let pumpManagerStatus = PumpManagerStatus(timeZone: scheduleTimeZone,
                                                   device: HKDevice(name: "Pump Name",
                                                                    manufacturer: "Pump Manufacturer",
                                                                    model: "Pump Model",
@@ -157,7 +158,7 @@ fileprivate extension StoredDosingDecision {
                                                                                                                 RepeatingScheduleValue(startTime: .hours(16), value: DoubleRange(minValue: 100.0, maxValue: 110.0)),
                                                                                                                 RepeatingScheduleValue(startTime: .hours(18), value: DoubleRange(minValue: 90.0, maxValue: 100.0)),
                                                                                                                 RepeatingScheduleValue(startTime: .hours(21), value: DoubleRange(minValue: 110.0, maxValue: 120.0))],
-                                                                                                   timeZone: timeZone)!)
+                                                                                                   timeZone: scheduleTimeZone)!)
         var predictedGlucose = [PredictedGlucoseValue]()
         for minutes in stride(from: 5.0, to: 360.0, by: 5.0) {
             predictedGlucose.append(PredictedGlucoseValue(startDate: date.addingTimeInterval(.minutes(minutes)),

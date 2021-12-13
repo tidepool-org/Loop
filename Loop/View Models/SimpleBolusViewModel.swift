@@ -23,7 +23,7 @@ protocol SimpleBolusViewModelDelegate: AnyObject {
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry? ,
                       completion: @escaping (_ result: Result<StoredCarbEntry>) -> Void)
 
-    func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
+    func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
     
     func enactBolus(units: Double, automatic: Bool)
 
@@ -418,7 +418,7 @@ class SimpleBolusViewModel: ObservableObject {
         
         func saveBolusDecision() {
             if let decision = dosingDecision, let recommendationDate = recommendationDate {
-                delegate.storeBolusDosingDecision(decision, withDate: recommendationDate)
+                delegate.storeManualBolusDosingDecision(decision, withDate: recommendationDate)
             }
         }
         

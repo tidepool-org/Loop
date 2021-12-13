@@ -399,7 +399,7 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
             return decision
         }
         
-        func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
+        func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
         }
         
         var displayGlucoseUnitObservable: DisplayGlucoseUnitObservable {

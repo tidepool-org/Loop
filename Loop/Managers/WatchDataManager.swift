@@ -365,7 +365,7 @@ final class WatchDataManager: NSObject {
 
         func enactBolus() {
             dosingDecision.manualBolusRequested = bolus.value
-            deviceManager.loopManager.storeBolusDosingDecision(dosingDecision, withDate: bolus.startDate)
+            deviceManager.loopManager.storeManualBolusDosingDecision(dosingDecision, withDate: bolus.startDate)
 
             guard bolus.value > 0 else {
                 // Ensure active carbs is updated in the absence of a bolus

@@ -325,7 +325,7 @@ extension SimpleBolusViewModelTests: SimpleBolusViewModelDelegate {
         return decision
     }
     
-    func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
+    func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
         storedBolusDecision = bolusDosingDecision
     }
 

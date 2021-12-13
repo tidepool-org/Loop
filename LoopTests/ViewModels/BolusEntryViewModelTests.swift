@@ -923,7 +923,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     }
     
     var bolusDosingDecisionsAdded = [(BolusDosingDecision, Date)]()
-    func storeBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
+    func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) {
         bolusDosingDecisionsAdded.append((bolusDosingDecision, date))
     }
 
