@@ -60,8 +60,8 @@ extension SettingsStore {
 
 fileprivate extension StoredSettings {
     static func simulated(date: Date) -> StoredSettings {
-        let timeZone = TimeZone(identifier: "America/Phoenix")!
-        let scheduleTimeZone = TimeZone(secondsFromGMT: timeZone.secondsFromGMT())!
+        let controllerTimeZone = TimeZone(identifier: "America/Los_Angeles")!
+        let scheduleTimeZone = TimeZone(secondsFromGMT: TimeZone(identifier: "America/Phoenix")!.secondsFromGMT())!
         let glucoseTargetRangeSchedule =  GlucoseRangeSchedule(rangeSchedule: DailyQuantitySchedule(unit: .milligramsPerDeciliter,
                                                                                                     dailyItems: [RepeatingScheduleValue(startTime: .hours(0), value: DoubleRange(minValue: 100.0, maxValue: 110.0)),
                                                                                                                  RepeatingScheduleValue(startTime: .hours(8), value: DoubleRange(minValue: 95.0, maxValue: 105.0)),
@@ -146,7 +146,7 @@ fileprivate extension StoredSettings {
                                   localIdentifier: "Pump Local Identifier",
                                   udiDeviceIdentifier: "Pump UDI Device Identifier")
         return StoredSettings(date: date,
-                              timeZone: timeZone,
+                              controllerTimeZone: controllerTimeZone,
                               dosingEnabled: true,
                               glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
                               preMealTargetRange: DoubleRange(minValue: 80.0, maxValue: 90.0).quantityRange(for: .milligramsPerDeciliter),

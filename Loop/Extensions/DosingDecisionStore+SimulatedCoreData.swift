@@ -58,8 +58,8 @@ extension DosingDecisionStore {
 
 fileprivate extension StoredDosingDecision {
     static func simulated(date: Date) -> StoredDosingDecision {
-        let timeZone = TimeZone(identifier: "America/Phoenix")!
-        let scheduleTimeZone = TimeZone(secondsFromGMT: timeZone.secondsFromGMT())!
+        let controllerTimeZone = TimeZone(identifier: "America/Los_Angeles")!
+        let scheduleTimeZone = TimeZone(secondsFromGMT: TimeZone(identifier: "America/Phoenix")!.secondsFromGMT())!
         let reason = "simulatedCoreData"
         let settings = StoredDosingDecision.Settings(syncIdentifier: UUID(uuidString: "18CF3948-0B3D-4B12-8BFE-14986B0E6784")!)
         let scheduleOverride = TemporaryScheduleOverride(context: .preMeal,
@@ -179,7 +179,7 @@ fileprivate extension StoredDosingDecision {
                                Issue(id: "bravo", details: ["size": "tiny"])]
 
         return StoredDosingDecision(date: date,
-                                    timeZone: timeZone,
+                                    controllerTimeZone: controllerTimeZone,
                                     reason: reason,
                                     settings: settings,
                                     scheduleOverride: scheduleOverride,
