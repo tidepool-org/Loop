@@ -49,7 +49,7 @@ public struct NotificationsCriticalAlertPermissionsView: View {
             manageCriticalAlertsSection
             if #available(iOS 15.0, *) {
                 manageTimeSensitiveAlertsSection
-//                manageDeliveryScheduleSection
+                manageDeliveryScheduleSection
             }
             notificationAndCriticalAlertPermissionSupportSection
         }
@@ -167,16 +167,17 @@ extension NotificationsCriticalAlertPermissionsViewModel.Warning {
     }
     
     var iconTuple: (String, Color) {
-        switch self {
-        case .notificationPermissions:
-            return ("exclamationmark.triangle.fill", .warning)
-        case .timeSensitive:
-            return ("clock.fill", .warning)
-        case .scheduledDelivery:
-            return ("bell.fill", .blue)
-        case .criticalAlerts:
-            return ("exclamationmark.triangle.fill", .critical)
-        }
+//        switch self {
+//        case .notificationPermissions:
+//            return ("exclamationmark.triangle.fill", .warning)
+//        case .timeSensitive:
+//            return ("clock.fill", .warning)
+//        case .scheduledDelivery:
+//            return ("bell.fill", .blue)
+//        case .criticalAlerts:
+//            return ("exclamationmark.triangle.fill", .critical)
+//        }
+        return ("exclamationmark.triangle.fill", .critical)
     }
 }
 

@@ -34,7 +34,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     var closedLoopStatus: ClosedLoopStatus!
     
-    let notificationsCriticalAlertPermissionsViewModel = NotificationsCriticalAlertPermissionsViewModel()
+    var notificationsCriticalAlertPermissionsViewModel: NotificationsCriticalAlertPermissionsViewModel!
     
     var supportManager: SupportManager!
 

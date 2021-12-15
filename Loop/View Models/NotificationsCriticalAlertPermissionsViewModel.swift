@@ -63,6 +63,13 @@ public class NotificationsCriticalAlertPermissionsViewModel: ObservableObject {
                 self?.updateState()
             }
             .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+            .sink { [weak self] _ in
+                self?.updateState()
+            }
+            .store(in: &cancellables)
+        
         updateState()
         
         showWarningPublisher
@@ -78,7 +85,7 @@ public class NotificationsCriticalAlertPermissionsViewModel: ObservableObject {
                 self.criticalAlertsPermissionsGiven = settings.criticalAlertSetting == .enabled
                 if #available(iOS 15.0, *) {
                     self.scheduledDeliveryEnabled = settings.scheduledDeliverySetting == .enabled
-                    self.timeSensitiveAlertsPermissionGiven = settings.alertSetting != .disabled && settings.timeSensitiveSetting == .enabled
+                    self.timeSensitiveAlertsPermissionGiven = settings.alertSetting == .disabled || settings.timeSensitiveSetting == .enabled
                 }
             }
         }
