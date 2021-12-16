@@ -40,6 +40,7 @@ public class AlertPermissionsChecker: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+        
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
             .sink { [weak self] _ in
                 self?.check()
@@ -51,14 +52,15 @@ public class AlertPermissionsChecker: ObservableObject {
                 self?.check()
             }
             .store(in: &cancellables)
-
-        $notificationCenterSettings
-            .receive(on: RunLoop.main)
-            .sink(receiveValue: notificationCenterSettingsChanged)
-            .store(in: &cancellables)
+        
+        check {
+            // Note: we do this, instead of calling notificationCenterSettingsChanged directly, so that we only
+            // get called when it _changes_.
+            self.listenToNotificationCenter()
+        }
     }
  
-    func check() {
+    func check(then completion: (() -> Void)? = nil) {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
                 self.notificationCenterSettings.notificationsDisabled = settings.alertSetting == .disabled
@@ -69,6 +71,7 @@ public class AlertPermissionsChecker: ObservableObject {
                     self.notificationCenterSettings.scheduledDeliveryEnabled = settings.scheduledDeliverySetting == .enabled
                     self.notificationCenterSettings.timeSensitiveNotificationsDisabled = settings.alertSetting != .disabled && settings.timeSensitiveSetting == .disabled
                 }
+                completion?()
             }
         }
     }
@@ -80,6 +83,14 @@ public class AlertPermissionsChecker: ObservableObject {
 
 fileprivate extension AlertPermissionsChecker {
 
+    private func listenToNotificationCenter() {
+        $notificationCenterSettings
+            .receive(on: RunLoop.main)
+            .removeDuplicates()
+            .sink(receiveValue: notificationCenterSettingsChanged)
+            .store(in: &cancellables)
+    }
+    
     private func notificationCenterSettingsChanged(_ newValue: NotificationCenterSettingsFlags) {
         if newValue.isRiskMitigating && !UserDefaults.standard.hasIssuedRiskMitigatingAlert {
             alertManager?.issueAlert(AlertPermissionsChecker.riskMitigatingAlert)

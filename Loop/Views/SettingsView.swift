@@ -127,7 +127,8 @@ extension SettingsView {
             {
                 HStack {
                     Text(NSLocalizedString("Alert Permissions", comment: "Alert Permissions button text"))
-                    if viewModel.alertPermissionsChecker.showWarning {
+                    if viewModel.alertPermissionsChecker.showWarning ||
+                        viewModel.alertPermissionsChecker.notificationCenterSettings.scheduledDeliveryEnabled {
                         Spacer()
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.red)
