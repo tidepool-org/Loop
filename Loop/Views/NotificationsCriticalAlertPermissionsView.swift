@@ -14,7 +14,7 @@ public struct NotificationsCriticalAlertPermissionsView: View {
     @Environment(\.appName) private var appName
 
     private let backButtonText: String
-    @ObservedObject private var viewModel: AlertPermissionsChecker
+    @ObservedObject private var checker: AlertPermissionsChecker
 
     // TODO: This screen is used in both the 'old Settings UI' and the 'new Settings UI'.  This is temporary.
     // In the old UI, it is a "top level" navigation view.  In the new UI, it is just part of the "flow".  This
@@ -24,9 +24,9 @@ public struct NotificationsCriticalAlertPermissionsView: View {
     }
     private let mode: PresentationMode
     
-    public init(backButtonText: String = "", mode: PresentationMode = .topLevel, viewModel: AlertPermissionsChecker) {
+    public init(backButtonText: String = "", mode: PresentationMode = .topLevel, checker: AlertPermissionsChecker) {
         self.backButtonText = backButtonText
-        self.viewModel = viewModel
+        self.checker = checker
         self.mode = mode
     }
     
@@ -51,14 +51,15 @@ public struct NotificationsCriticalAlertPermissionsView: View {
                 Keep these turned ON in your phone’s settings to ensure you receive %1$@ Notifications, Critical Alerts, and Time Sensitive Notifications.
                 """, comment: "Alert Permissions descriptive text (1: app name)"), appName)))
             {
-                
                 manageNotifications
                 notificationsEnabledStatus
                 if #available(iOS 15.0, *) {
-                    if !viewModel.notificationCenterSettings.notificationsDisabled { notificationDelivery
+                    if !checker.notificationCenterSettings.notificationsDisabled {
+                        notificationDelivery
                     }
                     criticalAlertsStatus
-                    if !viewModel.notificationCenterSettings.notificationsDisabled { timeSensitiveStatus
+                    if !checker.notificationCenterSettings.notificationsDisabled {
+                        timeSensitiveStatus
                     }
                 }
             }
@@ -84,7 +85,7 @@ extension NotificationsCriticalAlertPermissionsView {
     }
     
     private var manageNotifications: some View {
-        Button( action: { self.viewModel.gotoSettings() } ) {
+        Button( action: { self.checker.gotoSettings() } ) {
             HStack {
                 Text(NSLocalizedString("Manage Permissions in Settings", comment: "Manage Permissions in Settings button text"))
                 Spacer()
@@ -98,7 +99,7 @@ extension NotificationsCriticalAlertPermissionsView {
         HStack {
             Text("Notifications", comment: "Notifications Status text")
             Spacer()
-            onOff(!viewModel.notificationCenterSettings.notificationsDisabled)
+            onOff(!checker.notificationCenterSettings.notificationsDisabled)
         }
     }
         
@@ -106,7 +107,7 @@ extension NotificationsCriticalAlertPermissionsView {
         HStack {
             Text("Critical Alerts", comment: "Critical Alerts Status text")
             Spacer()
-            onOff(!viewModel.notificationCenterSettings.criticalAlertsDisabled)
+            onOff(!checker.notificationCenterSettings.criticalAlertsDisabled)
         }
     }
 
@@ -115,7 +116,7 @@ extension NotificationsCriticalAlertPermissionsView {
         HStack {
             Text("Time Sensitive Notifications", comment: "Time Sensitive Status text")
             Spacer()
-            onOff(!viewModel.notificationCenterSettings.timeSensitiveNotificationsDisabled)
+            onOff(!checker.notificationCenterSettings.timeSensitiveNotificationsDisabled)
         }
     }
     
@@ -124,7 +125,7 @@ extension NotificationsCriticalAlertPermissionsView {
         HStack {
             Text("Notification Delivery", comment: "Notification Delivery Status text")
             Spacer()
-            if viewModel.notificationCenterSettings.scheduledDeliveryEnabled {
+            if checker.notificationCenterSettings.scheduledDeliveryEnabled {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.critical)
                 Text("Scheduled", comment: "Scheduled Delivery status text")
             } else {
@@ -146,11 +147,11 @@ extension NotificationsCriticalAlertPermissionsView {
 struct NotificationsCriticalAlertPermissionsView_Previews: PreviewProvider {
     static var previews: some View {
         return Group {
-            NotificationsCriticalAlertPermissionsView(viewModel: AlertPermissionsChecker())
+            NotificationsCriticalAlertPermissionsView(checker: AlertPermissionsChecker())
                 .colorScheme(.light)
                 .previewDevice(PreviewDevice(rawValue: "iPhone SE"))
                 .previewDisplayName("SE light")
-            NotificationsCriticalAlertPermissionsView(viewModel: AlertPermissionsChecker())
+            NotificationsCriticalAlertPermissionsView(checker: AlertPermissionsChecker())
                 .colorScheme(.dark)
                 .previewDevice(PreviewDevice(rawValue: "iPhone XS Max"))
                 .previewDisplayName("XS Max dark")

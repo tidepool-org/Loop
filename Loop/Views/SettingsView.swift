@@ -123,7 +123,7 @@ extension SettingsView {
     private var alertPermissionsSection: some View {
         Section {
             NavigationLink(destination:
-                NotificationsCriticalAlertPermissionsView(mode: .flow, viewModel: viewModel.alertPermissionsChecker))
+                NotificationsCriticalAlertPermissionsView(mode: .flow, checker: viewModel.alertPermissionsChecker))
             {
                 HStack {
                     Text(NSLocalizedString("Alert Permissions", comment: "Alert Permissions button text"))
@@ -131,7 +131,7 @@ extension SettingsView {
                         viewModel.alertPermissionsChecker.notificationCenterSettings.scheduledDeliveryEnabled {
                         Spacer()
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.red)
+                            .foregroundColor(.critical)
                     }
                 }
             }
