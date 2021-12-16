@@ -11,75 +11,7 @@ import Combine
 import LoopKit
 import SwiftUI
 
-class AlertPermissionsChecker {
-    
-    // MARK: Notifications Permissions Alert
-    private static let notificationsPermissionsAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
-                                                                                  alertIdentifier: "notificationsPermissionsAlert")
-    private static let notificationsPermissionsAlertContent = Alert.Content(
-        title: NSLocalizedString("Notifications Disabled",
-                                 comment: "Notifications permissions disabled alert title"),
-        body: String(format: NSLocalizedString("Keep Notifications turned ON in your phone’s settings to ensure that you can receive %1$@ notifications.",
-                                               comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
-                     Bundle.main.bundleDisplayName),
-        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
-    )
-    private static let notificationsPermissionsAlert = Alert(identifier: notificationsPermissionsAlertIdentifier,
-                                                             foregroundContent: notificationsPermissionsAlertContent,
-                                                             backgroundContent: notificationsPermissionsAlertContent,
-                                                             trigger: .immediate)
-    
-    // MARK: Critical Alert Permissions Alert
-    private static let criticalAlertPermissionsAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
-                                                                                  alertIdentifier: "criticalAlertPermissionsAlert")
-    private static let criticalAlertPermissionsAlertContent = Alert.Content(
-        title: NSLocalizedString("Critical Alerts Disabled",
-                                 comment: "Critical Alert permissions disabled alert title"),
-        body: String(format: NSLocalizedString("Keep Critical Alerts turned ON in your phone’s settings to ensure that you can receive %1$@ critical alerts.",
-                                               comment: "Format for Critical Alerts permissions disabled alert body. (1: app name)"),
-                     Bundle.main.bundleDisplayName),
-        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert permissions disabled alert button")
-    )
-    private static let criticalAlertPermissionsAlert = Alert(identifier: criticalAlertPermissionsAlertIdentifier,
-                                                             foregroundContent: criticalAlertPermissionsAlertContent,
-                                                             backgroundContent: criticalAlertPermissionsAlertContent,
-                                                             trigger: .immediate)
-
-    // MARK: Time Sensitive Permissions Alert
-    private static let timeSensitiveAlertsPermissionsAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
-                                                                                        alertIdentifier: "timeSensitiveAlertsPermissionsAlert")
-    private static let timeSensitiveAlertsPermissionsAlertContent = Alert.Content(
-        title: NSLocalizedString("Alert Permissions Need Attention",
-                                 comment: "Alert Permissions Need Attention alert title"),
-        body: String(format: NSLocalizedString("""
-            Time Sensitive Notifications are turned off in your phone’s settings.
-            
-            Keep Time Sensitive Notifications turned ON to ensure that you can receive %1$@ notifications.
-            """,
-                                               comment: "Format for Time Sensitive Notifications permissions disabled alert body. (1: app name)"),
-                     Bundle.main.bundleDisplayName),
-        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Time Sensitive Notifications permissions disabled alert button")
-    )
-    private static let timeSensitiveAlertsPermissionsAlert = Alert(identifier: timeSensitiveAlertsPermissionsAlertIdentifier,
-                                                             foregroundContent: timeSensitiveAlertsPermissionsAlertContent,
-                                                             backgroundContent: timeSensitiveAlertsPermissionsAlertContent,
-                                                             trigger: .immediate)
-
-    // MARK: Scheduled Delivery Enabled Alert
-    private static let scheduledDeliveryEnabledAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
-                                                                                  alertIdentifier: "scheduledDeliveryEnabledAlert")
-    private static let scheduledDeliveryEnabledAlertContent = Alert.Content(
-        title: NSLocalizedString("Alert Permissions Need Attention",
-                                 comment: "Critical Alert permissions disabled alert title"),
-        body: String(format: NSLocalizedString("Keep Critical Alerts turned ON in your phone’s settings to ensure that you can receive %1$@ critical alerts.",
-                                               comment: "Format for Critical Alerts permissions disabled alert body. (1: app name)"),
-                     Bundle.main.bundleDisplayName),
-        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert permissions disabled alert button")
-    )
-    private static let scheduledDeliveryEnabledAlert = Alert(identifier: scheduledDeliveryEnabledAlertIdentifier,
-                                                             foregroundContent: scheduledDeliveryEnabledAlertContent,
-                                                             backgroundContent: scheduledDeliveryEnabledAlertContent,
-                                                             trigger: .immediate)
+public class AlertPermissionsChecker: ObservableObject {
 
     private weak var alertManager: AlertManager?
     
@@ -89,9 +21,13 @@ class AlertPermissionsChecker {
     
     private lazy var cancellables = Set<AnyCancellable>()
 
-    let viewModel = NotificationsCriticalAlertPermissionsViewModel()
+    @Published var notificationCenterSettings: NotificationCenterSettingsFlags = .none
     
-    init(alertManager: AlertManager) {
+    var showWarning: Bool {
+        notificationCenterSettings.isRiskMitigating
+    }
+    
+    init(alertManager: AlertManager? = nil) {
         self.alertManager = alertManager
         
         // Check on loop complete, but only while in the background.
@@ -100,150 +36,120 @@ class AlertPermissionsChecker {
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 if self.isAppInBackground {
-                    self.viewModel.updateState()
+                    self.check()
                 }
             }
             .store(in: &cancellables)
-                
-        if FeatureFlags.criticalAlertsEnabled {
-            viewModel.$criticalAlertsPermissionsGiven
-                .receive(on: RunLoop.main)
-                .sink {
-                    if $0 {
-                        self.criticalAlertPermissionsEnabled()
-                    } else {
-                        self.maybeNotifyCriticalAlertPermissionsDisabled()
-                    }
-                }
-                .store(in: &cancellables)
-        }
-        viewModel.$notificationsPermissionsGiven
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { [weak self] _ in
+                self?.check()
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+            .sink { [weak self] _ in
+                self?.check()
+            }
+            .store(in: &cancellables)
+
+        $notificationCenterSettings
             .receive(on: RunLoop.main)
-            .sink {
-                if $0 {
-                    self.notificationsPermissionsEnabled()
-                } else {
-                    self.maybeNotifyNotificationPermissionsDisabled()
-                }
-            }
-            .store(in: &cancellables)
-        viewModel.$timeSensitiveAlertsPermissionGiven
-            .receive(on: RunLoop.main)
-            .sink {
-                if $0 {
-                    self.timeSensitiveAlertsPermissionEnabled()
-                } else {
-                    self.maybeNotifyTimeSensitiveAlertsPermissionsDisabled()
-                }
-            }
-            .store(in: &cancellables)
-        viewModel.$scheduledDeliveryEnabled
-            .receive(on: RunLoop.main)
-            .sink {
-                if $0 {
-                    self.maybeNotifyScheduledDeliveryEnabled()
-                } else {
-                    self.scheduledDeliveryDisabled()
-                }
-            }
+            .sink(receiveValue: notificationCenterSettingsChanged)
             .store(in: &cancellables)
     }
-    
-    private func maybeNotifyNotificationPermissionsDisabled() {
-        if !UserDefaults.standard.hasIssuedNotificationsPermissionsAlert {
-            alertManager?.issueAlert(AlertPermissionsChecker.notificationsPermissionsAlert)
-            UserDefaults.standard.hasIssuedNotificationsPermissionsAlert = true
+ 
+    func check() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                self.notificationCenterSettings.notificationsDisabled = settings.alertSetting == .disabled
+                if FeatureFlags.criticalAlertsEnabled {
+                    self.notificationCenterSettings.criticalAlertsDisabled = settings.criticalAlertSetting == .disabled
+                }
+                if #available(iOS 15.0, *) {
+                    self.notificationCenterSettings.scheduledDeliveryEnabled = settings.scheduledDeliverySetting == .enabled
+                    self.notificationCenterSettings.timeSensitiveNotificationsDisabled = settings.alertSetting != .disabled && settings.timeSensitiveSetting == .disabled
+                }
+            }
         }
     }
 
-    private func notificationsPermissionsEnabled() {
-        alertManager?.retractAlert(identifier: AlertPermissionsChecker.notificationsPermissionsAlertIdentifier)
-        UserDefaults.standard.hasIssuedNotificationsPermissionsAlert = false
+    func gotoSettings() {
+        UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
     }
+}
 
-    private func maybeNotifyCriticalAlertPermissionsDisabled() {
-        if !UserDefaults.standard.hasIssuedCriticalAlertPermissionsAlert {
-            alertManager?.issueAlert(AlertPermissionsChecker.criticalAlertPermissionsAlert)
-            UserDefaults.standard.hasIssuedCriticalAlertPermissionsAlert = true
-        }
-    }
+fileprivate extension AlertPermissionsChecker {
 
-    private func criticalAlertPermissionsEnabled() {
-        alertManager?.retractAlert(identifier: AlertPermissionsChecker.criticalAlertPermissionsAlertIdentifier)
-        UserDefaults.standard.hasIssuedCriticalAlertPermissionsAlert = false
-    }
-
-    private func maybeNotifyTimeSensitiveAlertsPermissionsDisabled() {
-        if !UserDefaults.standard.hasIssuedTimeSensitiveAlertsPermissionsAlert {
-            alertManager?.issueAlert(AlertPermissionsChecker.timeSensitiveAlertsPermissionsAlert)
-            UserDefaults.standard.hasIssuedTimeSensitiveAlertsPermissionsAlert = true
-        }
-    }
-
-    private func timeSensitiveAlertsPermissionEnabled() {
-        alertManager?.retractAlert(identifier: AlertPermissionsChecker.timeSensitiveAlertsPermissionsAlertIdentifier)
-        UserDefaults.standard.hasIssuedTimeSensitiveAlertsPermissionsAlert = false
-    }
-
-    private func maybeNotifyScheduledDeliveryEnabled() {
-        if !UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert {
+    private func notificationCenterSettingsChanged(_ newValue: NotificationCenterSettingsFlags) {
+        if newValue.isRiskMitigating && !UserDefaults.standard.hasIssuedRiskMitigatingAlert {
+            alertManager?.issueAlert(AlertPermissionsChecker.riskMitigatingAlert)
+            UserDefaults.standard.hasIssuedRiskMitigatingAlert = true
+        } else if newValue.scheduledDeliveryEnabled && !UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert {
             alertManager?.issueAlert(AlertPermissionsChecker.scheduledDeliveryEnabledAlert)
             UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = true
         }
-    }
-
-    private func scheduledDeliveryDisabled() {
-        alertManager?.retractAlert(identifier: AlertPermissionsChecker.scheduledDeliveryEnabledAlertIdentifier)
-        UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = false
-    }
-    
-    func alert(for warning: NotificationsCriticalAlertPermissionsViewModel.Warning) -> LoopKit.Alert {
-        switch warning {
-        case .notificationPermissions:
-            return Self.notificationsPermissionsAlert
-        case .timeSensitive:
-            return Self.timeSensitiveAlertsPermissionsAlert
-        case .scheduledDelivery:
-            return Self.scheduledDeliveryEnabledAlert
-        case .criticalAlerts:
-            return Self.criticalAlertPermissionsAlert
+        if !newValue.isRiskMitigating {
+            UserDefaults.standard.hasIssuedRiskMitigatingAlert = false
+            alertManager?.retractAlert(identifier: AlertPermissionsChecker.riskMitigatingAlertIdentifier)
+        }
+        if !newValue.scheduledDeliveryEnabled {
+            UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = false
+            alertManager?.retractAlert(identifier: AlertPermissionsChecker.scheduledDeliveryEnabledAlertIdentifier)
         }
     }
 }
 
-extension UserDefaults {
+fileprivate extension AlertPermissionsChecker {
+    
+    // MARK: Risk Mitigating Alert
+    private static let riskMitigatingAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager", alertIdentifier: "riskMitigatingAlert")
+    private static let riskMitigatingAlertContent = Alert.Content(
+        title: NSLocalizedString("Alert Permissions Need Attention",
+                                 comment: "Alert Permissions Need Attention alert title"),
+        body: String(format: NSLocalizedString("Keep Notifications turned ON in your phone’s settings to ensure that you can receive %1$@ notifications.",
+                                               comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
+                     Bundle.main.bundleDisplayName),
+        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
+    )
+    private static let riskMitigatingAlert = Alert(identifier: riskMitigatingAlertIdentifier,
+                                                   foregroundContent: riskMitigatingAlertContent,
+                                                   backgroundContent: riskMitigatingAlertContent,
+                                                   trigger: .immediate)
+    
+    // MARK: Scheduled Delivery Enabled Alert
+    private static let scheduledDeliveryEnabledAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
+                                                                                  alertIdentifier: "scheduledDeliveryEnabledAlert")
+    private static let scheduledDeliveryEnabledAlertContent = Alert.Content(
+        title: NSLocalizedString("Alert Permissions Might Need Attention",
+                                 comment: "Scheduled Delivery Enabled alert title"),
+        body: String(format: NSLocalizedString("""
+            Notification delivery is set to Scheduled Summary in your phone’s settings.
+            
+            To avoid delay in receiving notifications from %1$@, we recommend notification delivery be set to Immediate Delivery.
+            """,
+                                               comment: "Format for Critical Alerts permissions disabled alert body. (1: app name)"),
+                     Bundle.main.bundleDisplayName),
+        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert permissions disabled alert button")
+    )
+    private static let scheduledDeliveryEnabledAlert = Alert(identifier: scheduledDeliveryEnabledAlertIdentifier,
+                                                             foregroundContent: scheduledDeliveryEnabledAlertContent,
+                                                             backgroundContent: scheduledDeliveryEnabledAlertContent,
+                                                             trigger: .immediate)
+}
+
+fileprivate extension UserDefaults {
     
     private enum Key: String {
-        case hasIssuedNotificationsPermissionsAlert = "com.loopkit.Loop.HasIssuedNotificationsPermissionsAlert"
-        case hasIssuedCriticalAlertPermissionsAlert = "com.loopkit.Loop.HasIssuedCriticalAlertPermissionsAlert"
-        case hasIssuedTimeSensitiveAlertsPermissionsAlert = "com.loopkit.Loop.HasIssuedTimeSensitiveAlertsPermissionsAlert"
+        case hasIssuedRiskMitigatingAlert = "com.loopkit.Loop.HasIssuedRiskMitigatingAlert"
         case hasIssuedScheduledDeliveryEnabledAlert = "com.loopkit.Loop.HasIssuedScheduledDeliveryEnabledAlert"
     }
     
-    var hasIssuedNotificationsPermissionsAlert: Bool {
+    var hasIssuedRiskMitigatingAlert: Bool {
         get {
-            return object(forKey: Key.hasIssuedNotificationsPermissionsAlert.rawValue) as? Bool ?? false
+            return object(forKey: Key.hasIssuedRiskMitigatingAlert.rawValue) as? Bool ?? false
         }
         set {
-            set(newValue, forKey: Key.hasIssuedNotificationsPermissionsAlert.rawValue)
-        }
-    }
-    
-    var hasIssuedCriticalAlertPermissionsAlert: Bool {
-        get {
-            return object(forKey: Key.hasIssuedCriticalAlertPermissionsAlert.rawValue) as? Bool ?? false
-        }
-        set {
-            set(newValue, forKey: Key.hasIssuedCriticalAlertPermissionsAlert.rawValue)
-        }
-    }
-
-    var hasIssuedTimeSensitiveAlertsPermissionsAlert: Bool {
-        get {
-            return object(forKey: Key.hasIssuedTimeSensitiveAlertsPermissionsAlert.rawValue) as? Bool ?? false
-        }
-        set {
-            set(newValue, forKey: Key.hasIssuedTimeSensitiveAlertsPermissionsAlert.rawValue)
+            set(newValue, forKey: Key.hasIssuedRiskMitigatingAlert.rawValue)
         }
     }
 
@@ -256,3 +162,64 @@ extension UserDefaults {
         }
     }
 }
+
+struct NotificationCenterSettingsFlags: OptionSet {
+    let rawValue: Int
+
+    static let none = NotificationCenterSettingsFlags([])
+    static let notificationsDisabled = NotificationCenterSettingsFlags(rawValue: 1 << 0)
+    static let criticalAlertsDisabled = NotificationCenterSettingsFlags(rawValue: 1 << 1)
+    static let timeSensitiveNotificationsDisabled = NotificationCenterSettingsFlags(rawValue: 1 << 2)
+    static let scheduledDeliveryEnabled = NotificationCenterSettingsFlags(rawValue: 1 << 3)
+
+    static let riskMitigating: NotificationCenterSettingsFlags = [ .notificationsDisabled, .criticalAlertsDisabled, .timeSensitiveNotificationsDisabled ]
+}
+
+extension NotificationCenterSettingsFlags {
+    var notificationsDisabled: Bool {
+        get {
+            contains(.notificationsDisabled)
+        }
+        set {
+            update(.notificationsDisabled, newValue)
+        }
+    }
+    var criticalAlertsDisabled: Bool {
+        get {
+            contains(.criticalAlertsDisabled)
+        }
+        set {
+            update(.criticalAlertsDisabled, newValue)
+        }
+    }
+    var timeSensitiveNotificationsDisabled: Bool {
+        get {
+            contains(.timeSensitiveNotificationsDisabled)
+        }
+        set {
+            update(.timeSensitiveNotificationsDisabled, newValue)
+        }
+    }
+    var scheduledDeliveryEnabled: Bool {
+        get {
+            contains(.scheduledDeliveryEnabled)
+        }
+        set {
+            update(.scheduledDeliveryEnabled, newValue)
+        }
+    }
+    var isRiskMitigating: Bool {
+        !self.intersection(.riskMitigating).isEmpty
+    }
+}
+
+fileprivate extension OptionSet {
+    mutating func update(_ element: Self.Element, _ value: Bool) {
+        if value {
+            insert(element)
+        } else {
+            remove(element)
+        }
+    }
+}
+

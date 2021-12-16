@@ -46,9 +46,7 @@ public struct SettingsView: View {
                 if FeatureFlags.automaticBolusEnabled {
                     dosingStrategySection
                 }
-                if viewModel.notificationsCriticalAlertPermissionsViewModel.showWarning != nil {
-                    alertPermissionsSection
-                }
+                alertPermissionsSection
                 if viewModel.pumpManagerSettingsViewModel.isSetUp() {
                     therapySettingsSection
                 }
@@ -125,13 +123,14 @@ extension SettingsView {
     private var alertPermissionsSection: some View {
         Section {
             NavigationLink(destination:
-                NotificationsCriticalAlertPermissionsView(mode: .flow, viewModel: viewModel.notificationsCriticalAlertPermissionsViewModel))
+                NotificationsCriticalAlertPermissionsView(mode: .flow, viewModel: viewModel.alertPermissionsChecker))
             {
                 HStack {
                     Text(NSLocalizedString("Alert Permissions", comment: "Alert Permissions button text"))
-                    if let showWarning = viewModel.notificationsCriticalAlertPermissionsViewModel.showWarning {
+                    if viewModel.alertPermissionsChecker.showWarning {
                         Spacer()
-                        showWarning.icon
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.red)
                     }
                 }
             }
