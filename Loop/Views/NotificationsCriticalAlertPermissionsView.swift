@@ -46,7 +46,7 @@ public struct NotificationsCriticalAlertPermissionsView: View {
     private func content() -> some View {
         List {
             Section(footer: DescriptiveText(label: String(format: NSLocalizedString("""
-                Notifications give you important Tidepool Loop app information without requiring you to open the app.
+                Notifications give you important %1$@ app information without requiring you to open the app.
                 
                 Keep these turned ON in your phone’s settings to ensure you receive %1$@ Notifications, Critical Alerts, and Time Sensitive Notifications.
                 """, comment: "Alert Permissions descriptive text (1: app name)"), appName)))
@@ -57,7 +57,9 @@ public struct NotificationsCriticalAlertPermissionsView: View {
                     if !checker.notificationCenterSettings.notificationsDisabled {
                         notificationDelivery
                     }
-                    criticalAlertsStatus
+                }
+                criticalAlertsStatus
+                if #available(iOS 15.0, *) {
                     if !checker.notificationCenterSettings.notificationsDisabled {
                         timeSensitiveStatus
                     }

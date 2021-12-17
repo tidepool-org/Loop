@@ -42,6 +42,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
+        tableView.register(AlertPermissionsDisabledWarningCell.self, forCellReuseIdentifier: AlertPermissionsDisabledWarningCell.className)
 
         if FeatureFlags.predictedGlucoseChartClampEnabled {
             statusCharts.glucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBoundClamped
@@ -126,13 +128,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
         toolbarItems![8].accessibilityLabel = NSLocalizedString("Settings", comment: "The label of the settings button")
         toolbarItems![8].tintColor = UIColor.secondaryLabel
 
-        tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
-
         addScenarioStepGestureRecognizers()
 
         tableView.backgroundColor = .secondarySystemBackground
     
-        tableView.register(AlertPermissionsDisabledWarningCell.self, forCellReuseIdentifier: AlertPermissionsDisabledWarningCell.className)
     }
 
     override func didReceiveMemoryWarning() {
