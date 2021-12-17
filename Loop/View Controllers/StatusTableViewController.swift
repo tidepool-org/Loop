@@ -822,7 +822,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
          
         override func updateConfiguration(using state: UICellConfigurationState) {
             super.updateConfiguration(using: state)
-            let content = NSLocalizedString("Alert Permissions Need Attention", comment: "Warning text for when Notifications or Critical Alerts Permissions is disabled")
+            let content = NSLocalizedString("Review Alert Permissions", comment: "Warning text for when Notifications or Critical Alerts Permissions is disabled")
             var contentConfig = defaultContentConfiguration().updated(for: state)
             contentConfig.text = content
             contentConfig.textProperties.color = .red
