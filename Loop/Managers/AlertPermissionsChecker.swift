@@ -117,7 +117,7 @@ fileprivate extension AlertPermissionsChecker {
     private static let riskMitigatingAlertContent = Alert.Content(
         title: NSLocalizedString("Alert Permissions Need Attention",
                                  comment: "Alert Permissions Need Attention alert title"),
-        body: String(format: NSLocalizedString("Keep Notifications turned ON in your phone’s settings to ensure that you can receive %1$@ notifications.",
+        body: String(format: NSLocalizedString("It is important that you always keep %1$@ Notifications, Critical Alerts, and Time Sensitive Notifications turned ON in your phone’s settings to ensure that you get notified by the app.",
                                                comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
                      Bundle.main.bundleDisplayName),
         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
