@@ -25,7 +25,7 @@ public class AlertPermissionsChecker: ObservableObject {
     @Published var notificationCenterSettings: NotificationCenterSettingsFlags = .none
     
     var showWarning: Bool {
-        notificationCenterSettings.isRiskMitigating
+        notificationCenterSettings.requiresRiskMitigation
     }
     
     init(alertManager: AlertManager? = nil) {
@@ -98,14 +98,14 @@ fileprivate extension AlertPermissionsChecker {
     }
     
     private func notificationCenterSettingsChanged(_ newValue: NotificationCenterSettingsFlags) {
-        if newValue.isRiskMitigating && !UserDefaults.standard.hasIssuedRiskMitigatingAlert {
+        if newValue.requiresRiskMitigation && !UserDefaults.standard.hasIssuedRiskMitigatingAlert {
             alertManager?.issueAlert(AlertPermissionsChecker.riskMitigatingAlert)
             UserDefaults.standard.hasIssuedRiskMitigatingAlert = true
         } else if newValue.scheduledDeliveryEnabled && !UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert {
             alertManager?.issueAlert(AlertPermissionsChecker.scheduledDeliveryEnabledAlert)
             UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = true
         }
-        if !newValue.isRiskMitigating {
+        if !newValue.requiresRiskMitigation {
             UserDefaults.standard.hasIssuedRiskMitigatingAlert = false
             alertManager?.retractAlert(identifier: AlertPermissionsChecker.riskMitigatingAlertIdentifier)
         }
@@ -189,7 +189,7 @@ struct NotificationCenterSettingsFlags: OptionSet {
     static let timeSensitiveNotificationsDisabled = NotificationCenterSettingsFlags(rawValue: 1 << 2)
     static let scheduledDeliveryEnabled = NotificationCenterSettingsFlags(rawValue: 1 << 3)
 
-    static let riskMitigating: NotificationCenterSettingsFlags = [ .notificationsDisabled, .criticalAlertsDisabled, .timeSensitiveNotificationsDisabled ]
+    static let requiresRiskMitigation: NotificationCenterSettingsFlags = [ .notificationsDisabled, .criticalAlertsDisabled, .timeSensitiveNotificationsDisabled ]
 }
 
 extension NotificationCenterSettingsFlags {
@@ -225,8 +225,8 @@ extension NotificationCenterSettingsFlags {
             update(.scheduledDeliveryEnabled, newValue)
         }
     }
-    var isRiskMitigating: Bool {
-        !self.intersection(.riskMitigating).isEmpty
+    var requiresRiskMitigation: Bool {
+        !self.intersection(.requiresRiskMitigation).isEmpty
     }
 }
 
