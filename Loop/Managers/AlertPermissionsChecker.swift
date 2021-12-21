@@ -20,6 +20,7 @@ public class AlertPermissionsChecker: ObservableObject {
     }
     
     private lazy var cancellables = Set<AnyCancellable>()
+    private var listeningToNotificationCenter = false
 
     @Published var notificationCenterSettings: NotificationCenterSettingsFlags = .none
     
@@ -52,15 +53,17 @@ public class AlertPermissionsChecker: ObservableObject {
                 self?.check()
             }
             .store(in: &cancellables)
-        
+    }
+ 
+    func checkNow() {
         check {
             // Note: we do this, instead of calling notificationCenterSettingsChanged directly, so that we only
             // get called when it _changes_.
             self.listenToNotificationCenter()
         }
     }
- 
-    func check(then completion: (() -> Void)? = nil) {
+    
+    private func check(then completion: (() -> Void)? = nil) {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
                 self.notificationCenterSettings.notificationsDisabled = settings.alertSetting == .disabled
@@ -84,11 +87,14 @@ public class AlertPermissionsChecker: ObservableObject {
 fileprivate extension AlertPermissionsChecker {
 
     private func listenToNotificationCenter() {
-        $notificationCenterSettings
-            .receive(on: RunLoop.main)
-            .removeDuplicates()
-            .sink(receiveValue: notificationCenterSettingsChanged)
-            .store(in: &cancellables)
+        if !listeningToNotificationCenter {
+            $notificationCenterSettings
+                .receive(on: RunLoop.main)
+                .removeDuplicates()
+                .sink(receiveValue: notificationCenterSettingsChanged)
+                .store(in: &cancellables)
+            listeningToNotificationCenter = true
+        }
     }
     
     private func notificationCenterSettingsChanged(_ newValue: NotificationCenterSettingsFlags) {
