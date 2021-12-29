@@ -236,7 +236,7 @@ extension AlertManager {
                     * issued: \(storedAlert.issuedDate)
                     * acknowledged: \(storedAlert.acknowledgedDate?.description ?? "n/a")
                     * retracted: \(storedAlert.retractedDate?.description ?? "n/a")
-                    * isCritical: \(storedAlert.isCritical)
+                    * interruptionLevel: \(storedAlert.interruptionLevel)
                     * trigger: \(storedAlert.trigger)
                     * foregroundContent: \(storedAlert.foregroundContent ?? "n/a")
                     * backgroundContent: \(storedAlert.backgroundContent ?? "n/a")

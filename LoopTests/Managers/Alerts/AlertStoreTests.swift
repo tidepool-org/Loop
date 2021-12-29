@@ -22,7 +22,7 @@ class AlertStoreTests: XCTestCase {
     static let identifier1 = Alert.Identifier(managerIdentifier: "managerIdentifier1", alertIdentifier: "alertIdentifier1")
     let alert1 = Alert(identifier: identifier1, foregroundContent: nil, backgroundContent: nil, trigger: .immediate, sound: nil)
     static let identifier2 = Alert.Identifier(managerIdentifier: "managerIdentifier2", alertIdentifier: "alertIdentifier2")
-    static let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label", isCritical: true)
+    static let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label", interruptionLevel: .critical)
     let alert2 = Alert(identifier: identifier2, foregroundContent: content, backgroundContent: content, trigger: .immediate, sound: .sound(name: "soundName"))
     static let delayedAlertDelay = 30.0 // seconds
     static let delayedAlertIdentifier = Alert.Identifier(managerIdentifier: "managerIdentifier3", alertIdentifier: "alertIdentifier3")
@@ -71,10 +71,10 @@ class AlertStoreTests: XCTestCase {
             let object = StoredAlert(from: alert2, context: alertStore.managedObjectContext, issuedDate: Self.historicDate)
             XCTAssertNil(object.acknowledgedDate)
             XCTAssertNil(object.retractedDate)
-            XCTAssertEqual("{\"body\":\"body\",\"isCritical\":true,\"title\":\"title\",\"acknowledgeActionButtonLabel\":\"label\"}", object.backgroundContent)
-            XCTAssertEqual("{\"body\":\"body\",\"isCritical\":true,\"title\":\"title\",\"acknowledgeActionButtonLabel\":\"label\"}", object.foregroundContent)
+            XCTAssertEqual("{\"body\":\"body\",\"acknowledgeActionButtonLabel\":\"label\",\"title\":\"title\",\"interruptionLevel\":\"critical\"}", object.backgroundContent)
+            XCTAssertEqual("{\"body\":\"body\",\"acknowledgeActionButtonLabel\":\"label\",\"title\":\"title\",\"interruptionLevel\":\"critical\"}", object.foregroundContent)
             XCTAssertEqual("managerIdentifier2.alertIdentifier2", object.identifier.value)
-            XCTAssertEqual(true, object.isCritical)
+            XCTAssertEqual(2, object.interruptionLevel)
             XCTAssertEqual(Self.historicDate, object.issuedDate)
             XCTAssertEqual(1, object.modificationCounter)
             XCTAssertEqual("{\"sound\":{\"name\":\"soundName\"}}", object.sound)
@@ -760,9 +760,9 @@ class AlertStoreLogCriticalEventLogTests: XCTestCase {
                                        progress: progress))
         XCTAssertEqual(outputStream.string, """
 [
-{"acknowledgedDate":"2100-01-02T03:08:00.000Z","alertIdentifier":"a1","isCritical":false,"issuedDate":"2100-01-02T03:08:00.000Z","managerIdentifier":"m1","modificationCounter":1,"triggerType":0},
-{"acknowledgedDate":"2100-01-02T03:04:00.000Z","alertIdentifier":"a3","isCritical":false,"issuedDate":"2100-01-02T03:04:00.000Z","managerIdentifier":"m3","modificationCounter":3,"triggerType":0},
-{"acknowledgedDate":"2100-01-02T03:06:00.000Z","alertIdentifier":"a4","isCritical":false,"issuedDate":"2100-01-02T03:06:00.000Z","managerIdentifier":"m4","modificationCounter":4,"triggerType":0}
+{"acknowledgedDate":"2100-01-02T03:08:00.000Z","alertIdentifier":"a1","interruptionLevel":1,"issuedDate":"2100-01-02T03:08:00.000Z","managerIdentifier":"m1","modificationCounter":1,"triggerType":0},
+{"acknowledgedDate":"2100-01-02T03:04:00.000Z","alertIdentifier":"a3","interruptionLevel":1,"issuedDate":"2100-01-02T03:04:00.000Z","managerIdentifier":"m3","modificationCounter":3,"triggerType":0},
+{"acknowledgedDate":"2100-01-02T03:06:00.000Z","alertIdentifier":"a4","interruptionLevel":1,"issuedDate":"2100-01-02T03:06:00.000Z","managerIdentifier":"m4","modificationCounter":4,"triggerType":0}
 ]
 """
         )

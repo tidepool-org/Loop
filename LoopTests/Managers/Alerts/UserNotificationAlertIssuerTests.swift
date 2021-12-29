@@ -47,7 +47,7 @@ class UserNotificationAlertIssuerTests: XCTestCase {
     }
     
     func testIssueImmediateCriticalAlert() {
-        let backgroundContent = Alert.Content(title: "BACKGROUND", body: "background", acknowledgeActionButtonLabel: "", isCritical: true)
+        let backgroundContent = Alert.Content(title: "BACKGROUND", body: "background", acknowledgeActionButtonLabel: "", interruptionLevel: .critical)
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .immediate)
         userNotificationAlertIssuer.issueAlert(alert, timestamp: Date.distantPast)
 
