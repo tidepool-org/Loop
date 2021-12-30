@@ -414,12 +414,8 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
              LoopNotificationCategory.pumpFault.rawValue:
             completionHandler([.badge, .sound, .list, .banner])
         default:
-            if #available(iOS 15.0, *), notification.request.content.interruptionLevel == .critical {
-                completionHandler([.badge, .sound, .list, .banner])
-            } else {
-                // All other userNotifications are not to be displayed while in the foreground
-                completionHandler([])
-            }
+            // All other userNotifications are not to be displayed while in the foreground
+            completionHandler([])
         }
     }
 
