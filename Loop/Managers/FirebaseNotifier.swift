@@ -61,17 +61,6 @@ final class FirebaseNotifier: FollowerNotifier {
     }
     
     // HACKORAMA
-    // ICK ICK ICK ICK this stores ALL data so it ALL can be published at once.
-//    private var cache: [AnyHashable : Any] = [:]
-//    private func sendToFirebase(_ new: [AnyHashable : Any]) {
-//        guard let id = id else {
-//            return
-//        }
-//        DispatchQueue.main.async { [self] in
-//            cache.merge(new) { (_, new) in new }
-//            ref.child("followees").child(id).updateChildValues(cache)
-//        }
-//    }
     
     private var followee: DocumentReference {
         db.collection("followees").document(id)
@@ -141,25 +130,6 @@ extension FirebaseNotifier {
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateStyle = .none
                 dateFormatter.timeStyle = .short
-                
-                // Unfortunately, we only have an image here.  We can't really introspect it, so here we hack away!
-//                let badge: String? = {
-//                    switch cgmStatusBadge?.image?.accessibilityIdentifier {
-//                    case "drop.circle.fill": return "calibration"
-//                    case "battery.circle.fill": return "battery"
-//                    case .some(let thing): return thing
-//                    default: return nil
-//                    }
-//                }()
-//                sendToFirebase([
-//                    "name": name as Any,
-//                    "date": dateFormatter.string(from: lastGlucose.date),
-//                    "glucose": lastGlucose.quantity.doubleValue(for: .milligramsPerDeciliter, withRounding: true),
-//                    "glucoseCategory": glucoseDisplayFunc(lastGlucose.quantitySample)?.glucoseRangeCategory?.glucoseCategoryColor.rawValue as Any,
-//                    "trendCategory": glucoseDisplayFunc(lastGlucose.quantitySample)?.glucoseRangeCategory?.trendCategoryColor.rawValue as Any,
-//                    "trend": glucoseDisplayFunc(lastGlucose.quantitySample)?.trendType?.arrows as Any,
-//                    "badge": badge as Any
-//                ])
                 let glucoseData = GlucoseData(value: lastGlucose.quantity.doubleValue(for: .milligramsPerDeciliter, withRounding: true),
                                               unit: .mgdL,
                                               date: lastGlucose.date,
@@ -182,16 +152,6 @@ extension FirebaseNotifier {
             if case .success(let iobValue) = result {
                 let activeInsulin = iobValue.value
                 let activeCarbs = carbsOnBoard.map { $0.quantity.doubleValue(for: .gram(), withRounding: true) } ?? 0
-//                self.sendToFirebase([
-//                    "name": self.name as Any,
-//                    "isClosedLoop": isClosedLoop as Any,
-//                    "loopCompletionFreshness": LoopCompletionFreshness(lastCompletion: lastLoopCompleted).description,
-//                    "netBasalRate": netBasal.map { $0.rate } as Any,
-//                    "netBasalPercent": netBasal.map { $0.percent } as Any,
-//                    "activeCarbs": activeCarbs,
-//                    "reservoir": reservoirVolume as Any,
-//                    "activeInsulin": activeInsulin
-//                ])
                 self.updateFollowee([
                     "name": self.name as Any,
                     "isClosedLoop": isClosedLoop as Any,
@@ -254,7 +214,6 @@ struct Followee {
     // (Can/should these come from some identity database? From Tidepool Service?  Or...?)
     let id: Id
     let name: String
-
     let data: FolloweeData
 }
 enum GlucoseUnit: Int, Codable {
@@ -265,28 +224,18 @@ enum CarbUnit: Int, Codable {
 }
 
 struct FolloweeData: Codable {
-    // Probably won't need, but this comes from cgmStatusBadge out of DeviceDataManager
-//    let badge: String?
-    
     let lastUpdate: Date?
-
-    // From DoseStore: (?)
-//    let reservoir: Double  // DoseStore.lastReservoirValue.unitVolume
-    
     // This one is tricky: LoopDataManager has basalDeliveryState (which, I *think* comes from
     // PumpManagerStatus via DeviceManager...sigh), which has `getNetBasal()` function on it,
     // which provides these (double sigh)
     let netBasalRate: Double? // U/hr
-//    let netBasalPercent: Double
-    
     // This comes from a policy implemented in a separate functional class, LoopCompletionFreshness,
     // which computes it based on `lastLoopCompleted` (which comes from LoopDataManager)
-//    let loopCompletionFreshness: String?
     let lastLoopCompleted: Date?
     // This is directly from LoopDataManager.automaticDosingStatus.isClosedLoop:
     let isClosedLoop: Bool
 
-    let activeInsulin: Double // DoesStore.insulinOnBoard (at: now)
+    let activeInsulin: Double // DoseStore.insulinOnBoard (at: now)
     let lastBolus: Date?
 
     let activeCarbs: Double // LoopDataManager.carbsOnBoard.quantity.doubleValue(for: gram(), withRounding: true)
@@ -303,11 +252,6 @@ struct GlucoseData: Codable {
     let date: Date//String // StoredGlucoseSample.startDate
     let trendRate: Double?//String // StoredGlucoseSample.trend
 }
-//let glucose: [GlucoseData]?
-//let predictedGlucose: [GlucoseData]
-// Note: DeviceDataManager has policy for these:
-//    let glucoseCategory: String // GlucoseDisplayable.glucoseRangeCategory.glucoseCategoryColor
-//    let trendCategory: String // GlucoseDisplayable.glucoseRangeCategory.trendCategoryColor
 
 struct Follower: Codable {
     let followees: [Followee.Id]
