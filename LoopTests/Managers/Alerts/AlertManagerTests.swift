@@ -84,7 +84,7 @@ class AlertManagerTests: XCTestCase {
     class MockAlertStore: AlertStore {
         
         var issuedAlert: Alert?
-        override public func recordIssued(alert: Alert, at date: Date = Date(), completion: ((Result<Void, Error>) -> Void)? = nil) {
+        override public func recordIssued(alert: Alert, at date: Date = Date(), isAppInBackground: Bool? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
             issuedAlert = alert
             completion?(.success)
         }
@@ -207,7 +207,7 @@ class AlertManagerTests: XCTestCase {
             let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
             let alert = Alert(identifier: Self.mockIdentifier,
                               foregroundContent: content, backgroundContent: content, trigger: .immediate)
-            mockAlertStore.storedAlerts = [StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)]
+            mockAlertStore.storedAlerts = [StoredAlert(from: alert, context: mockAlertStore.managedObjectContext, isAppInBackground: false)]
 
             alertManager = AlertManager(alertPresenter: mockPresenter,
                                         handlers: [mockIssuer],
@@ -225,7 +225,7 @@ class AlertManagerTests: XCTestCase {
             let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
             let alert = Alert(identifier: Self.mockIdentifier,
                               foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
-            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext, isAppInBackground: false)
             storedAlert.issuedDate = date
             mockAlertStore.storedAlerts = [storedAlert]
             alertManager = AlertManager(alertPresenter: mockPresenter,
@@ -245,7 +245,7 @@ class AlertManagerTests: XCTestCase {
             let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
             let alert = Alert(identifier: Self.mockIdentifier,
                               foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
-            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext, isAppInBackground: false)
             storedAlert.issuedDate = date
             mockAlertStore.storedAlerts = [storedAlert]
             alertManager = AlertManager(alertPresenter: mockPresenter,
@@ -274,7 +274,7 @@ class AlertManagerTests: XCTestCase {
             let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
             let alert = Alert(identifier: Self.mockIdentifier,
                               foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
-            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext, isAppInBackground: false)
             storedAlert.issuedDate = date
             mockAlertStore.storedAlerts = [storedAlert]
             alertManager = AlertManager(alertPresenter: mockPresenter,

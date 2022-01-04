@@ -28,7 +28,7 @@ extension StoredAlert {
     @NSManaged public var sound: String?
     @NSManaged public var triggerInterval: NSNumber?
     @NSManaged public var triggerType: Int16
-
+    @NSManaged public var wasIssuedInBackground: Bool
 }
 
 extension StoredAlert: Encodable {
@@ -45,6 +45,7 @@ extension StoredAlert: Encodable {
         try container.encodeIfPresent(sound, forKey: .sound)
         try container.encodeIfPresent(triggerInterval?.doubleValue, forKey: .triggerInterval)
         try container.encode(triggerType, forKey: .triggerType)
+        try container.encode(wasIssuedInBackground, forKey: .wasIssuedInBackground)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -59,5 +60,6 @@ extension StoredAlert: Encodable {
         case sound
         case triggerInterval
         case triggerType
+        case wasIssuedInBackground
     }
 }

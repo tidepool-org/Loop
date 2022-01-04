@@ -12,11 +12,12 @@
         <attribute name="sound" optional="YES" attributeType="String"/>
         <attribute name="triggerInterval" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
         <attribute name="triggerType" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="wasIssuedInBackground" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <fetchIndex name="byModificationCounter">
             <fetchIndexElement property="modificationCounter" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
     <elements>
-        <element name="StoredAlert" positionX="-63" positionY="-18" width="128" height="194"/>
+        <element name="StoredAlert" positionX="-63" positionY="-18" width="128" height="209"/>
     </elements>
 </model>

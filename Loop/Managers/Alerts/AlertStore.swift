@@ -8,6 +8,7 @@
 
 import CoreData
 import LoopKit
+import UIKit
 
 public class AlertStore {
 
@@ -37,6 +38,10 @@ public class AlertStore {
     private let predicateExpressionNotYetExpiredInMemory = "CAST(issuedDate, 'NSNumber') + triggerInterval < CAST(%@, 'NSNumber')"
     private let predicateExpressionNotYetExpired: String
     
+    private static var isAppInBackground: Bool {
+        return UIApplication.shared.applicationState == UIApplication.State.background
+    }
+
     public init(storageDirectoryURL: URL? = nil, expireAfter: TimeInterval = 24 /* hours */ * 60 /* minutes */ * 60 /* seconds */) {
         managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         managedObjectContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
@@ -72,9 +77,10 @@ public class AlertStore {
         self.expireAfter = expireAfter
     }
 
-    public func recordIssued(alert: Alert, at date: Date = Date(), completion: ((Result<Void, Error>) -> Void)? = nil) {
+    public func recordIssued(alert: Alert, at date: Date = Date(), isAppInBackground: Bool? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
+        let isAppInBackground = isAppInBackground ?? Self.isAppInBackground
         self.managedObjectContext.perform {
-            _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
+            _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date, isAppInBackground: isAppInBackground)
             do {
                 try self.managedObjectContext.save()
                 self.log.default("Recorded alert: %{public}@", alert.identifier.value)
@@ -522,10 +528,12 @@ extension AlertStore {
         }
 
         var error: Error?
+        
+        let isAppInBackground = Self.isAppInBackground
 
         self.managedObjectContext.performAndWait {
             for alert in alerts {
-                let storedAlert = StoredAlert(from: alert.alert, context: self.managedObjectContext, issuedDate: alert.date)
+                let storedAlert = StoredAlert(from: alert.alert, context: self.managedObjectContext, issuedDate: alert.date, isAppInBackground: isAppInBackground)
                 storedAlert.acknowledgedDate = alert.date
             }
 

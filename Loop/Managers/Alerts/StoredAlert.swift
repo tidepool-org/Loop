@@ -13,8 +13,8 @@ extension StoredAlert {
     
     static var encoder = JSONEncoder()
     static var decoder = JSONDecoder()
-          
-    convenience init(from alert: Alert, context: NSManagedObjectContext, issuedDate: Date = Date()) {
+    
+    convenience init(from alert: Alert, context: NSManagedObjectContext, issuedDate: Date = Date(), isAppInBackground: Bool) {
         do {
             self.init(context: context)
             self.issuedDate = issuedDate
@@ -27,6 +27,7 @@ extension StoredAlert {
             sound = try encoder.encodeToStringIfPresent(alert.sound)
             foregroundContent = try encoder.encodeToStringIfPresent(alert.foregroundContent)
             backgroundContent = try encoder.encodeToStringIfPresent(alert.backgroundContent)
+            wasIssuedInBackground = isAppInBackground
         } catch {
             fatalError("Failed to encode: \(error)")
         }

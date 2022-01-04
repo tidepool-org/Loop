@@ -240,6 +240,7 @@ extension AlertManager {
                     * foregroundContent: \(storedAlert.foregroundContent ?? "n/a")
                     * backgroundContent: \(storedAlert.backgroundContent ?? "n/a")
                     * sound: \(storedAlert.sound ?? "n/a")
+                    * wasIssuedInBackground: \(storedAlert.wasIssuedInBackground)
 
                     """
                 }.joined(separator: "\n")

@@ -68,7 +68,7 @@ class AlertStoreTests: XCTestCase {
     
     func testStoredAlertSerialization() {
         alertStore.managedObjectContext.performAndWait {
-            let object = StoredAlert(from: alert2, context: alertStore.managedObjectContext, issuedDate: Self.historicDate)
+            let object = StoredAlert(from: alert2, context: alertStore.managedObjectContext, issuedDate: Self.historicDate, isAppInBackground: true)
             XCTAssertNil(object.acknowledgedDate)
             XCTAssertNil(object.retractedDate)
             XCTAssertEqual("{\"body\":\"body\",\"acknowledgeActionButtonLabel\":\"label\",\"title\":\"title\",\"interruptionLevel\":\"critical\"}", object.backgroundContent)
@@ -78,6 +78,7 @@ class AlertStoreTests: XCTestCase {
             XCTAssertEqual(1, object.modificationCounter)
             XCTAssertEqual("{\"sound\":{\"name\":\"soundName\"}}", object.sound)
             XCTAssertEqual(Alert.Trigger.immediate, object.trigger)
+            XCTAssertTrue(object.wasIssuedInBackground)
         }
     }
     
@@ -656,7 +657,7 @@ class AlertStoreTests: XCTestCase {
     private func fillWith(startDate: Date, data: [(alert: Alert, acknowledged: Bool, retracted: Bool)], _ completion: @escaping () -> Void) {
         let increment = 1.0
         if let value = data.first {
-            alertStore.recordIssued(alert: value.alert, at: startDate, completion: self.expectSuccess {
+            alertStore.recordIssued(alert: value.alert, at: startDate, isAppInBackground: false, completion: self.expectSuccess {
                 var next = startDate.addingTimeInterval(increment)
                 self.maybeRecordAcknowledge(acknowledged: value.acknowledged, identifier: value.alert.identifier, at: next) {
                     next = next.addingTimeInterval(increment)
@@ -759,9 +760,9 @@ class AlertStoreLogCriticalEventLogTests: XCTestCase {
                                        progress: progress))
         XCTAssertEqual(outputStream.string, """
 [
-{"acknowledgedDate":"2100-01-02T03:08:00.000Z","alertIdentifier":"a1","issuedDate":"2100-01-02T03:08:00.000Z","managerIdentifier":"m1","modificationCounter":1,"triggerType":0},
-{"acknowledgedDate":"2100-01-02T03:04:00.000Z","alertIdentifier":"a3","issuedDate":"2100-01-02T03:04:00.000Z","managerIdentifier":"m3","modificationCounter":3,"triggerType":0},
-{"acknowledgedDate":"2100-01-02T03:06:00.000Z","alertIdentifier":"a4","issuedDate":"2100-01-02T03:06:00.000Z","managerIdentifier":"m4","modificationCounter":4,"triggerType":0}
+{"acknowledgedDate":"2100-01-02T03:08:00.000Z","alertIdentifier":"a1","issuedDate":"2100-01-02T03:08:00.000Z","managerIdentifier":"m1","modificationCounter":1,"triggerType":0,"wasIssuedInBackground":false},
+{"acknowledgedDate":"2100-01-02T03:04:00.000Z","alertIdentifier":"a3","issuedDate":"2100-01-02T03:04:00.000Z","managerIdentifier":"m3","modificationCounter":3,"triggerType":0,"wasIssuedInBackground":false},
+{"acknowledgedDate":"2100-01-02T03:06:00.000Z","alertIdentifier":"a4","issuedDate":"2100-01-02T03:06:00.000Z","managerIdentifier":"m4","modificationCounter":4,"triggerType":0,"wasIssuedInBackground":false}
 ]
 """
         )
