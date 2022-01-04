@@ -74,7 +74,6 @@ class AlertStoreTests: XCTestCase {
             XCTAssertEqual("{\"body\":\"body\",\"acknowledgeActionButtonLabel\":\"label\",\"title\":\"title\",\"interruptionLevel\":\"critical\"}", object.backgroundContent)
             XCTAssertEqual("{\"body\":\"body\",\"acknowledgeActionButtonLabel\":\"label\",\"title\":\"title\",\"interruptionLevel\":\"critical\"}", object.foregroundContent)
             XCTAssertEqual("managerIdentifier2.alertIdentifier2", object.identifier.value)
-            XCTAssertEqual(2, object.interruptionLevel)
             XCTAssertEqual(Self.historicDate, object.issuedDate)
             XCTAssertEqual(1, object.modificationCounter)
             XCTAssertEqual("{\"sound\":{\"name\":\"soundName\"}}", object.sound)
@@ -760,9 +759,9 @@ class AlertStoreLogCriticalEventLogTests: XCTestCase {
                                        progress: progress))
         XCTAssertEqual(outputStream.string, """
 [
-{"acknowledgedDate":"2100-01-02T03:08:00.000Z","alertIdentifier":"a1","interruptionLevel":1,"issuedDate":"2100-01-02T03:08:00.000Z","managerIdentifier":"m1","modificationCounter":1,"triggerType":0},
-{"acknowledgedDate":"2100-01-02T03:04:00.000Z","alertIdentifier":"a3","interruptionLevel":1,"issuedDate":"2100-01-02T03:04:00.000Z","managerIdentifier":"m3","modificationCounter":3,"triggerType":0},
-{"acknowledgedDate":"2100-01-02T03:06:00.000Z","alertIdentifier":"a4","interruptionLevel":1,"issuedDate":"2100-01-02T03:06:00.000Z","managerIdentifier":"m4","modificationCounter":4,"triggerType":0}
+{"acknowledgedDate":"2100-01-02T03:08:00.000Z","alertIdentifier":"a1","issuedDate":"2100-01-02T03:08:00.000Z","managerIdentifier":"m1","modificationCounter":1,"triggerType":0},
+{"acknowledgedDate":"2100-01-02T03:04:00.000Z","alertIdentifier":"a3","issuedDate":"2100-01-02T03:04:00.000Z","managerIdentifier":"m3","modificationCounter":3,"triggerType":0},
+{"acknowledgedDate":"2100-01-02T03:06:00.000Z","alertIdentifier":"a4","issuedDate":"2100-01-02T03:06:00.000Z","managerIdentifier":"m4","modificationCounter":4,"triggerType":0}
 ]
 """
         )

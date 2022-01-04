@@ -21,7 +21,6 @@ extension StoredAlert {
     @NSManaged public var alertIdentifier: String
     @NSManaged public var backgroundContent: String?
     @NSManaged public var foregroundContent: String?
-    @NSManaged public var interruptionLevel: Int16
     @NSManaged public var issuedDate: Date
     @NSManaged public var managerIdentifier: String
     @NSManaged public var modificationCounter: Int64
@@ -39,7 +38,6 @@ extension StoredAlert: Encodable {
         try container.encode(alertIdentifier, forKey: .alertIdentifier)
         try container.encodeIfPresent(backgroundContent, forKey: .backgroundContent)
         try container.encodeIfPresent(foregroundContent, forKey: .foregroundContent)
-        try container.encode(interruptionLevel, forKey: .interruptionLevel)
         try container.encode(issuedDate, forKey: .issuedDate)
         try container.encode(managerIdentifier, forKey: .managerIdentifier)
         try container.encode(modificationCounter, forKey: .modificationCounter)
@@ -54,7 +52,6 @@ extension StoredAlert: Encodable {
         case alertIdentifier
         case backgroundContent
         case foregroundContent
-        case interruptionLevel
         case issuedDate
         case managerIdentifier
         case modificationCounter

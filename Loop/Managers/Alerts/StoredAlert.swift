@@ -22,9 +22,6 @@ extension StoredAlert {
             managerIdentifier = alert.identifier.managerIdentifier
             triggerType = alert.trigger.storedType
             triggerInterval = alert.trigger.storedInterval
-            interruptionLevel = alert.backgroundContent?.interruptionLevel.storedValue ??
-                alert.foregroundContent?.interruptionLevel.storedValue ??
-                Alert.InterruptionLevel.timeSensitive.storedValue
             // Encode as JSON strings
             let encoder = StoredAlert.encoder
             sound = try encoder.encodeToStringIfPresent(alert.sound)
@@ -159,32 +156,5 @@ fileprivate extension JSONEncoder {
             throw JSONEncoderError.stringEncodingError
         }
         return result
-    }
-}
-
-public extension Alert.InterruptionLevel {
-    
-    init?(from: UInt16) {
-        switch from {
-        case 0:
-            self = .active
-        case 1:
-            self = .timeSensitive
-        case 2:
-            self = .critical
-        default:
-            return nil
-        }
-    }
-    
-    var storedValue: Int16 {
-        switch self {
-        case .active:
-            return 0
-        case .timeSensitive:
-            return 1
-        case .critical:
-            return 2
-        }
     }
 }

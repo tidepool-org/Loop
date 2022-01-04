@@ -45,7 +45,6 @@ class StoredAlertEncodableTests: XCTestCase {
             storedAlert.alertIdentifier = "Alert Identifier 1"
             storedAlert.backgroundContent = "Background Content 1"
             storedAlert.foregroundContent = "Foreground Content 1"
-            storedAlert.interruptionLevel = 1
             storedAlert.issuedDate = dateFormatter.date(from: "2020-05-14T21:00:12Z")!
             storedAlert.managerIdentifier = "Manager Identifier 1"
             storedAlert.modificationCounter = 123
@@ -59,7 +58,6 @@ class StoredAlertEncodableTests: XCTestCase {
   "alertIdentifier" : "Alert Identifier 1",
   "backgroundContent" : "Background Content 1",
   "foregroundContent" : "Foreground Content 1",
-  "interruptionLevel" : 1,
   "issuedDate" : "2020-05-14T21:00:12Z",
   "managerIdentifier" : "Manager Identifier 1",
   "modificationCounter" : 123,
@@ -77,7 +75,6 @@ class StoredAlertEncodableTests: XCTestCase {
         managedObjectContext.performAndWait {
             let storedAlert = StoredAlert(context: managedObjectContext)
             storedAlert.alertIdentifier = "Alert Identifier 2"
-            storedAlert.interruptionLevel = Alert.InterruptionLevel.timeSensitive.storedValue
             storedAlert.issuedDate = dateFormatter.date(from: "2020-05-14T21:00:12Z")!
             storedAlert.managerIdentifier = "Manager Identifier 2"
             storedAlert.modificationCounter = 234
@@ -85,7 +82,6 @@ class StoredAlertEncodableTests: XCTestCase {
             try! assertStoredAlertEncodable(storedAlert, encodesJSON: """
 {
   "alertIdentifier" : "Alert Identifier 2",
-  "interruptionLevel" : 1,
   "issuedDate" : "2020-05-14T21:00:12Z",
   "managerIdentifier" : "Manager Identifier 2",
   "modificationCounter" : 234,
