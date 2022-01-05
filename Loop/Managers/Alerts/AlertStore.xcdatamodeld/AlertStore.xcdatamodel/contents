@@ -5,6 +5,7 @@
         <attribute name="alertIdentifier" attributeType="String"/>
         <attribute name="backgroundContent" optional="YES" attributeType="String"/>
         <attribute name="foregroundContent" optional="YES" attributeType="String"/>
+        <attribute name="interruptionLevel" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="issuedDate" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="managerIdentifier" attributeType="String"/>
         <attribute name="modificationCounter" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
@@ -17,6 +18,6 @@
         </fetchIndex>
     </entity>
     <elements>
-        <element name="StoredAlert" positionX="-63" positionY="-18" width="128" height="194"/>
+        <element name="StoredAlert" positionX="-63" positionY="-18" width="128" height="209"/>
     </elements>
 </model>

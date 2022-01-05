@@ -58,6 +58,7 @@ class StoredAlertEncodableTests: XCTestCase {
   "alertIdentifier" : "Alert Identifier 1",
   "backgroundContent" : "Background Content 1",
   "foregroundContent" : "Foreground Content 1",
+  "interruptionLevel" : "timeSensitive",
   "issuedDate" : "2020-05-14T21:00:12Z",
   "managerIdentifier" : "Manager Identifier 1",
   "modificationCounter" : 123,
@@ -82,6 +83,7 @@ class StoredAlertEncodableTests: XCTestCase {
             try! assertStoredAlertEncodable(storedAlert, encodesJSON: """
 {
   "alertIdentifier" : "Alert Identifier 2",
+  "interruptionLevel" : "timeSensitive",
   "issuedDate" : "2020-05-14T21:00:12Z",
   "managerIdentifier" : "Manager Identifier 2",
   "modificationCounter" : 234,

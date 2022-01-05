@@ -9,9 +9,23 @@
 
 import Foundation
 import CoreData
-
+import LoopKit
 
 public class StoredAlert: NSManagedObject {
+    
+    var interruptionLevel: Alert.InterruptionLevel {
+        get {
+            willAccessValue(forKey: "interruptionLevel")
+            defer { didAccessValue(forKey: "interruptionLevel") }
+            return (try? Alert.InterruptionLevel(storedValue: primitiveInterruptionLevel)) ?? .timeSensitive
+        }
+        set {
+            willChangeValue(forKey: "interruptionLevel")
+            defer { didChangeValue(forKey: "interruptionLevel") }
+            primitiveInterruptionLevel = newValue.storedValue
+        }
+    }
+    
     var hasUpdatedModificationCounter: Bool { changedValues().keys.contains("modificationCounter") }
 
     func updateModificationCounter() { setPrimitiveValue(managedObjectContext!.modificationCounter!, forKey: "modificationCounter") }

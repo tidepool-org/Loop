@@ -21,6 +21,7 @@ extension StoredAlert {
     @NSManaged public var alertIdentifier: String
     @NSManaged public var backgroundContent: String?
     @NSManaged public var foregroundContent: String?
+    @NSManaged public var primitiveInterruptionLevel: Int16
     @NSManaged public var issuedDate: Date
     @NSManaged public var managerIdentifier: String
     @NSManaged public var modificationCounter: Int64
@@ -45,6 +46,7 @@ extension StoredAlert: Encodable {
         try container.encodeIfPresent(sound, forKey: .sound)
         try container.encodeIfPresent(triggerInterval?.doubleValue, forKey: .triggerInterval)
         try container.encode(triggerType, forKey: .triggerType)
+        try container.encode(interruptionLevel, forKey: .interruptionLevel)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -52,6 +54,7 @@ extension StoredAlert: Encodable {
         case alertIdentifier
         case backgroundContent
         case foregroundContent
+        case interruptionLevel
         case issuedDate
         case managerIdentifier
         case modificationCounter

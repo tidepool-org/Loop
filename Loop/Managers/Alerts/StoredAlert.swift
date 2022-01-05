@@ -8,6 +8,7 @@
 
 import CoreData
 import LoopKit
+import UIKit
 
 extension StoredAlert {
     
@@ -22,6 +23,7 @@ extension StoredAlert {
             managerIdentifier = alert.identifier.managerIdentifier
             triggerType = alert.trigger.storedType
             triggerInterval = alert.trigger.storedInterval
+            interruptionLevel = alert.interruptionLevel
             // Encode as JSON strings
             let encoder = StoredAlert.encoder
             sound = try encoder.encodeToStringIfPresent(alert.sound)
@@ -63,6 +65,7 @@ extension Alert {
                   foregroundContent: fgContent,
                   backgroundContent: bgContent,
                   trigger: trigger,
+                  interruptionLevel: storedAlert.interruptionLevel,
                   sound: sound)
     }
 }
@@ -143,6 +146,48 @@ extension Alert.Trigger {
         }
     }
 }
+
+extension Alert.InterruptionLevel {
+    enum StorageError: Error {
+        case invalidStoredLevel
+    }
+    
+    var storedValue: Int16 {
+        // Since this is arbitrary anyway, might as well make it match iOS's values
+        switch self {
+        case .active:
+            if #available(iOS 15.0, *) {
+                return Int16(UNNotificationInterruptionLevel.active.rawValue)
+            } else {
+                return 1
+            }
+        case .timeSensitive:
+            if #available(iOS 15.0, *) {
+                return Int16(UNNotificationInterruptionLevel.timeSensitive.rawValue)
+            } else {
+                return 2
+            }
+        case .critical:
+            if #available(iOS 15.0, *) {
+                return Int16(UNNotificationInterruptionLevel.critical.rawValue)
+            } else {
+                return 3
+            }
+        }
+    }
+    
+    init(storedValue: Int16) throws {
+        switch storedValue {
+        case Self.active.storedValue: self = .active
+        case Self.timeSensitive.storedValue: self = .timeSensitive
+        case Self.critical.storedValue: self = .critical
+        default:
+            throw StorageError.invalidStoredLevel
+        }
+    }
+}
+
+
 
 enum JSONEncoderError: Swift.Error {
     case stringEncodingError

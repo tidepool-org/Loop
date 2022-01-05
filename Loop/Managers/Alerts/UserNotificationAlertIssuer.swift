@@ -70,7 +70,7 @@ fileprivate extension Alert {
         userNotificationContent.body = content.body
         userNotificationContent.sound = userNotificationSound
         if #available(iOS 15.0, *) {
-            userNotificationContent.interruptionLevel = content.interruptionLevel.userNotificationInterruptLevel
+            userNotificationContent.interruptionLevel = interruptionLevel.userNotificationInterruptLevel
         }
         // TODO: Once we have a final design and approval for custom UserNotification buttons, we'll need to set categoryIdentifier
 //        userNotificationContent.categoryIdentifier = LoopNotificationCategory.alert.rawValue
@@ -97,12 +97,12 @@ fileprivate extension Alert {
             default:
                 if let actualFileName = AlertManager.soundURL(for: self)?.lastPathComponent {
                     let unname = UNNotificationSoundName(rawValue: actualFileName)
-                    return content.interruptionLevel == .critical ? UNNotificationSound.criticalSoundNamed(unname) : UNNotificationSound(named: unname)
+                    return interruptionLevel == .critical ? UNNotificationSound.criticalSoundNamed(unname) : UNNotificationSound(named: unname)
                 }
             }
         }
 
-        return content.interruptionLevel == .critical ? .defaultCritical : .default
+        return interruptionLevel == .critical ? .defaultCritical : .default
     }
 }
 
