@@ -17,7 +17,9 @@ extension StoredAlert {
           
     convenience init(from alert: Alert, context: NSManagedObjectContext, issuedDate: Date = Date()) {
         do {
-            self.init(context: context)
+            let name = String(describing: type(of: self))
+            let entity = NSEntityDescription.entity(forEntityName: name, in: context)!
+            self.init(entity: entity, insertInto: context)
             self.issuedDate = issuedDate
             alertIdentifier = alert.identifier.alertIdentifier
             managerIdentifier = alert.identifier.managerIdentifier

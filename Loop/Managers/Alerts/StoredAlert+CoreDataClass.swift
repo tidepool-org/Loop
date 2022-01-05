@@ -17,12 +17,12 @@ public class StoredAlert: NSManagedObject {
         get {
             willAccessValue(forKey: "interruptionLevel")
             defer { didAccessValue(forKey: "interruptionLevel") }
-            return (try? Alert.InterruptionLevel(storedValue: primitiveInterruptionLevel)) ?? .timeSensitive
+            return try! Alert.InterruptionLevel(storedValue: primitiveValue(forKey: "interruptionLevel") as! Int16)
         }
         set {
             willChangeValue(forKey: "interruptionLevel")
             defer { didChangeValue(forKey: "interruptionLevel") }
-            primitiveInterruptionLevel = newValue.storedValue
+            setPrimitiveValue(newValue.storedValue, forKey: "interruptionLevel") 
         }
     }
     

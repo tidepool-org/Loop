@@ -21,7 +21,6 @@ extension StoredAlert {
     @NSManaged public var alertIdentifier: String
     @NSManaged public var backgroundContent: String?
     @NSManaged public var foregroundContent: String?
-    @NSManaged public var primitiveInterruptionLevel: Int16
     @NSManaged public var issuedDate: Date
     @NSManaged public var managerIdentifier: String
     @NSManaged public var modificationCounter: Int64
