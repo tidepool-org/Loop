@@ -17,6 +17,9 @@ extension StoredAlert {
           
     convenience init(from alert: Alert, context: NSManagedObjectContext, issuedDate: Date = Date()) {
         do {
+            /// This code, using the `init(entity:insertInto:)` instead of the `init(context:)` avoids warnings during unit testing that look like this:
+            /// `CoreData: warning: Multiple NSEntityDescriptions claim the NSManagedObject subclass 'Loop.StoredAlert' so +entity is unable to disambiguate.`
+            /// This mitigates that.  See https://stackoverflow.com/a/54126839 for more info.
             let name = String(describing: type(of: self))
             let entity = NSEntityDescription.entity(forEntityName: name, in: context)!
             self.init(entity: entity, insertInto: context)
@@ -150,41 +153,41 @@ extension Alert.Trigger {
 }
 
 extension Alert.InterruptionLevel {
-    enum StorageError: Error {
-        case invalidStoredLevel
-    }
     
-    var storedValue: Int16 {
+    var storedValue: NSNumber {
         // Since this is arbitrary anyway, might as well make it match iOS's values
         switch self {
         case .active:
             if #available(iOS 15.0, *) {
-                return Int16(UNNotificationInterruptionLevel.active.rawValue)
+                return NSNumber(value: UNNotificationInterruptionLevel.active.rawValue)
             } else {
+                // https://developer.apple.com/documentation/usernotifications/unnotificationinterruptionlevel/active
                 return 1
             }
         case .timeSensitive:
             if #available(iOS 15.0, *) {
-                return Int16(UNNotificationInterruptionLevel.timeSensitive.rawValue)
+                return NSNumber(value: UNNotificationInterruptionLevel.timeSensitive.rawValue)
             } else {
+                // https://developer.apple.com/documentation/usernotifications/unnotificationinterruptionlevel/timesensitive
                 return 2
             }
         case .critical:
             if #available(iOS 15.0, *) {
-                return Int16(UNNotificationInterruptionLevel.critical.rawValue)
+                return NSNumber(value: UNNotificationInterruptionLevel.critical.rawValue)
             } else {
+                // https://developer.apple.com/documentation/usernotifications/unnotificationinterruptionlevel/critical
                 return 3
             }
         }
     }
     
-    init(storedValue: Int16) throws {
+    init?(storedValue: NSNumber) {
         switch storedValue {
         case Self.active.storedValue: self = .active
         case Self.timeSensitive.storedValue: self = .timeSensitive
         case Self.critical.storedValue: self = .critical
         default:
-            throw StorageError.invalidStoredLevel
+            return nil
         }
     }
 }

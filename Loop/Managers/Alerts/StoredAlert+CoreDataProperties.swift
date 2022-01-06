@@ -28,7 +28,8 @@ extension StoredAlert {
     @NSManaged public var sound: String?
     @NSManaged public var triggerInterval: NSNumber?
     @NSManaged public var triggerType: Int16
-
+    @NSManaged public var primitiveInterruptionLevel: NSNumber
+    
 }
 
 extension StoredAlert: Encodable {
