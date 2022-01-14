@@ -1096,12 +1096,8 @@ extension DeviceDataManager: CarbStoreDelegate {
 // MARK: - DoseStoreDelegate
 extension DeviceDataManager: DoseStoreDelegate {
 
-    func doseStoreHasUpdatedDoseData(_ doseStore: DoseStore) {
-        remoteDataServicesManager.doseStoreHasUpdatedDoseData(doseStore)
-    }
-
-    func doseStoreHasUpdatedPumpEventData(_ doseStore: DoseStore) {
-        remoteDataServicesManager.doseStoreHasUpdatedPumpEventData(doseStore)
+    func doseStoreHasUpdatedPumpData(_ doseStore: DoseStore) {
+        remoteDataServicesManager.doseStoreHasUpdatedPumpData(doseStore)
     }
 
 }

@@ -468,8 +468,8 @@ class LoopDataManagerDosingTests: XCTestCase {
         let exp = expectation(description: #function)
         var recommendedBolus: (recommendation: ManualBolusRecommendation, date: Date)?
         loopDataManager.getLoopState { (_, loopState) in
-            exp.fulfill()
             recommendedBolus = loopState.recommendedBolus
+            exp.fulfill()
         }
         wait(for: [exp], timeout: 1.0)
         XCTAssertEqual(recommendedBolus?.recommendation.amount, 1.7888738147050955)
