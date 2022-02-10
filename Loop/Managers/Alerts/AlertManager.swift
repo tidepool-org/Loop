@@ -241,7 +241,7 @@ extension AlertManager {
                     * foregroundContent: \((try? encoder.encodeToStringIfPresent(object.foregroundContent)) ?? "n/a")
                     * backgroundContent: \((try? encoder.encodeToStringIfPresent(object.backgroundContent)) ?? "n/a")
                     * sound: \((try? encoder.encodeToStringIfPresent(object.sound)) ?? "n/a")
-                    * parameters: \(object.parameters ?? "n/a")
+                    * metadata: \((try? encoder.encodeToStringIfPresent(object.metadata)) ?? "n/a")
 
                     """
                 }.joined(separator: "\n")

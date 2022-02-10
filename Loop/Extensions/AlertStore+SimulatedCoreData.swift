@@ -58,7 +58,7 @@ fileprivate extension AlertStore.DatedAlert {
                                                            acknowledgeActionButtonLabel: "Acknowledged"),
                           trigger: .delayed(interval: 60),
                           sound: .sound(name: "simulated"),
-                          parameters: "simulated")
+                          metadata: ["simulated": Alert.MetadataValue("simulated")])
         return AlertStore.DatedAlert(date: date, alert: alert, syncIdentifier: UUID())
     }
 }

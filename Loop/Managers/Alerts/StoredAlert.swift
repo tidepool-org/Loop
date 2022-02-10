@@ -29,13 +29,13 @@ extension StoredAlert {
             self.triggerType = alert.trigger.storedType
             self.triggerInterval = alert.trigger.storedInterval
             self.interruptionLevel = alert.interruptionLevel
-            self.parameters = alert.parameters
             self.syncIdentifier = syncIdentifier
             // Encode as JSON strings
             let encoder = StoredAlert.encoder
             self.sound = try encoder.encodeToStringIfPresent(alert.sound)
             self.foregroundContent = try encoder.encodeToStringIfPresent(alert.foregroundContent)
             self.backgroundContent = try encoder.encodeToStringIfPresent(alert.backgroundContent)
+            self.metadata = try encoder.encodeToStringIfPresent(alert.metadata)
         } catch {
             fatalError("Failed to encode: \(error)")
         }
@@ -65,6 +65,7 @@ extension Alert {
         let fgContent = try Alert.Content(contentString: storedAlert.foregroundContent)
         let bgContent = try Alert.Content(contentString: storedAlert.backgroundContent)
         let sound = try Alert.Sound(soundString: storedAlert.sound)
+        let metadata = try Alert.Metadata(metadataString: storedAlert.metadata)
         let trigger = try Alert.Trigger(storedType: storedAlert.triggerType,
                                         storedInterval: storedAlert.triggerInterval,
                                         storageDate: adjustedForStorageTime ? storedAlert.issuedDate : nil)
@@ -74,7 +75,7 @@ extension Alert {
                   trigger: trigger,
                   interruptionLevel: storedAlert.interruptionLevel,
                   sound: sound,
-                  parameters: storedAlert.parameters)
+                  metadata: metadata)
     }
 }
 
@@ -99,6 +100,18 @@ extension Alert.Sound {
             throw JSONEncoderError.stringEncodingError
         }
         self = try StoredAlert.decoder.decode(Alert.Sound.self, from: soundData)
+    }
+}
+
+extension Alert.Metadata {
+    init?(metadataString: String?) throws {
+        guard let metadataString = metadataString else {
+            return nil
+        }
+        guard let metadataData = metadataString.data(using: .utf8) else {
+            throw JSONEncoderError.stringEncodingError
+        }
+        self = try StoredAlert.decoder.decode(Alert.Metadata.self, from: metadataData)
     }
 }
 
@@ -223,7 +236,7 @@ extension SyncAlertObject {
                   foregroundContent: try Alert.Content(contentString: managedObject.foregroundContent),
                   backgroundContent: try Alert.Content(contentString: managedObject.backgroundContent),
                   sound: try Alert.Sound(soundString: managedObject.sound),
-                  parameters: managedObject.parameters,
+                  metadata: try Alert.Metadata(metadataString: managedObject.metadata),
                   issuedDate: managedObject.issuedDate,
                   acknowledgedDate: managedObject.acknowledgedDate,
                   retractedDate: managedObject.retractedDate,

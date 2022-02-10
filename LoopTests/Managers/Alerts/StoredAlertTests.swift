@@ -88,7 +88,7 @@ class StoredAlertEncodableTests: XCTestCase {
             storedAlert.sound = "Sound 1"
             storedAlert.triggerInterval = 900
             storedAlert.triggerType = Alert.Trigger.delayed(interval: .minutes(15)).storedType
-            storedAlert.parameters = "{\"one\": 1}"
+            storedAlert.metadata = "{\"one\": 1}"
             try! assertStoredAlertEncodable(storedAlert, encodesJSON: """
             {
               "acknowledgedDate" : "2020-05-14T22:38:14Z",
@@ -98,8 +98,8 @@ class StoredAlertEncodableTests: XCTestCase {
               "interruptionLevel" : "timeSensitive",
               "issuedDate" : "2020-05-14T21:00:12Z",
               "managerIdentifier" : "Manager Identifier 1",
+              "metadata" : "{\\\"one\\\": 1}",
               "modificationCounter" : 123,
-              "parameters" : "{\\\"one\\\": 1}",
               "retractedDate" : "2020-05-14T23:34:07Z",
               "sound" : "Sound 1",
               "triggerInterval" : 900,

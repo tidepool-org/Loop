@@ -24,8 +24,8 @@ extension StoredAlert {
     @NSManaged public var primitiveInterruptionLevel: NSNumber
     @NSManaged public var issuedDate: Date
     @NSManaged public var managerIdentifier: String
+    @NSManaged public var metadata: String?
     @NSManaged public var modificationCounter: Int64
-    @NSManaged public var parameters: String?
     @NSManaged public var retractedDate: Date?
     @NSManaged public var sound: String?
     @NSManaged public var syncIdentifier: UUID?
@@ -44,8 +44,8 @@ extension StoredAlert: Encodable {
         try container.encode(interruptionLevel, forKey: .interruptionLevel)
         try container.encode(issuedDate, forKey: .issuedDate)
         try container.encode(managerIdentifier, forKey: .managerIdentifier)
+        try container.encodeIfPresent(metadata, forKey: .metadata)
         try container.encode(modificationCounter, forKey: .modificationCounter)
-        try container.encodeIfPresent(parameters, forKey: .parameters)
         try container.encodeIfPresent(retractedDate, forKey: .retractedDate)
         try container.encodeIfPresent(sound, forKey: .sound)
         try container.encodeIfPresent(syncIdentifier, forKey: .syncIdentifier)
@@ -61,8 +61,8 @@ extension StoredAlert: Encodable {
         case interruptionLevel
         case issuedDate
         case managerIdentifier
+        case metadata
         case modificationCounter
-        case parameters
         case retractedDate
         case sound
         case syncIdentifier
