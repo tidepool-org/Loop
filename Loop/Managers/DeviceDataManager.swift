@@ -310,6 +310,7 @@ final class DeviceDataManager {
             doseStore: doseStore,
             dosingDecisionStore: dosingDecisionStore,
             glucoseStore: glucoseStore,
+            insulinDeliveryStore: doseStore.insulinDeliveryStore,
             settingsStore: settingsStore
         )
         
@@ -335,6 +336,7 @@ final class DeviceDataManager {
         doseStore.delegate = self
         dosingDecisionStore.delegate = self
         glucoseStore.delegate = self
+        doseStore.insulinDeliveryStore.delegate = self
         settingsStore.delegate = self
 
         setupPump()
@@ -1096,8 +1098,8 @@ extension DeviceDataManager: CarbStoreDelegate {
 // MARK: - DoseStoreDelegate
 extension DeviceDataManager: DoseStoreDelegate {
 
-    func doseStoreHasUpdatedPumpData(_ doseStore: DoseStore) {
-        remoteDataServicesManager.doseStoreHasUpdatedPumpData(doseStore)
+    func doseStoreHasUpdatedPumpEventData(_ doseStore: DoseStore) {
+        remoteDataServicesManager.doseStoreHasUpdatedPumpEventData(doseStore)
     }
 
 }
@@ -1116,6 +1118,15 @@ extension DeviceDataManager: GlucoseStoreDelegate {
 
     func glucoseStoreHasUpdatedGlucoseData(_ glucoseStore: GlucoseStore) {
         remoteDataServicesManager.glucoseStoreHasUpdatedGlucoseData(glucoseStore)
+    }
+
+}
+
+// MARK: - InsulinDeliveryStoreDelegate
+extension DeviceDataManager: InsulinDeliveryStoreDelegate {
+
+    func insulinDeliveryStoreHasUpdatedDoseData(_ insulinDeliveryStore: InsulinDeliveryStore) {
+        remoteDataServicesManager.insulinDeliveryStoreHasUpdatedDoseData(insulinDeliveryStore)
     }
 
 }

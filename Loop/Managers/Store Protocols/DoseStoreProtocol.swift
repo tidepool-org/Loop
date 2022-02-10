@@ -50,7 +50,7 @@ protocol DoseStoreProtocol: AnyObject {
     
     func getNormalizedDoseEntries(start: Date, end: Date?, completion: @escaping (_ result: DoseStoreResult<[DoseEntry]>) -> Void)
     
-    func executePumpQuery(fromQueryAnchor queryAnchor: DoseStore.QueryAnchor?, limit: Int, completion: @escaping (DoseStore.PumpQueryResult) -> Void)
+    func executePumpEventQuery(fromQueryAnchor queryAnchor: DoseStore.QueryAnchor?, limit: Int, completion: @escaping (DoseStore.PumpEventQueryResult) -> Void)
     
     func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void)
     

@@ -83,7 +83,7 @@ class MockDoseStore: DoseStoreProtocol {
         completion(.failure(.configurationError))
     }
     
-    func executePumpQuery(fromQueryAnchor queryAnchor: DoseStore.QueryAnchor?, limit: Int, completion: @escaping (DoseStore.PumpQueryResult) -> Void) {
+    func executePumpEventQuery(fromQueryAnchor queryAnchor: DoseStore.QueryAnchor?, limit: Int, completion: @escaping (DoseStore.PumpEventQueryResult) -> Void) {
         completion(.failure(DoseStore.DoseStoreError.configurationError))
     }
     
