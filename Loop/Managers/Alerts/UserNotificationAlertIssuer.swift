@@ -83,7 +83,7 @@ fileprivate extension Alert {
     }
     
     private var userNotificationSound: UNNotificationSound? {
-        guard let content = backgroundContent else {
+        guard backgroundContent != nil else {
             return nil
         }
         if let sound = sound {
@@ -125,19 +125,23 @@ fileprivate extension UNNotificationRequest {
         let content = try alert.getUserNotificationContent(timestamp: timestamp)
         self.init(identifier: alert.identifier.value,
                   content: content,
-                  trigger: UNTimeIntervalNotificationTrigger(from: alert.trigger))
+                  trigger: UNNotificationTrigger.create(from: alert.trigger))
     }
 }
 
-fileprivate extension UNTimeIntervalNotificationTrigger {
-    convenience init?(from alertTrigger: Alert.Trigger) {
+fileprivate extension UNNotificationTrigger {
+    static func create(from alertTrigger: Alert.Trigger) -> UNNotificationTrigger? {
         switch alertTrigger {
         case .immediate:
             return nil
         case .delayed(let timeInterval):
-            self.init(timeInterval: timeInterval, repeats: false)
+            return UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
         case .repeating(let repeatInterval):
-            self.init(timeInterval: repeatInterval, repeats: true)
+            return UNTimeIntervalNotificationTrigger(timeInterval: repeatInterval, repeats: true)
+        case .nextDate(let matching):
+            return UNCalendarNotificationTrigger(dateMatching: matching, repeats: false)
+        case .nextDateRepeating(let matching):
+            return UNCalendarNotificationTrigger(dateMatching: matching, repeats: true)
         }
     }
 }

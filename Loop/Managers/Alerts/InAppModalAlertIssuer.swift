@@ -23,13 +23,18 @@ public class InAppModalAlertIssuer: AlertIssuer {
     typealias TimerFactoryFunction = (TimeInterval, Bool, (() -> Void)?) -> Timer
     private let newTimerFunc: TimerFactoryFunction
 
+    typealias TimerAtNextDateMatchingFactoryFunction = (DateComponents, Bool, (() -> Void)?) -> Timer?
+    private let newTimerAtNextDateMatchingFunc: TimerAtNextDateMatchingFactoryFunction
+
     private let soundPlayer: AlertSoundPlayer
 
     init(alertPresenter: AlertPresenter?,
          alertManagerResponder: AlertManagerResponder,
          soundPlayer: AlertSoundPlayer = DeviceAVSoundPlayer(),
          newActionFunc: @escaping ActionFactoryFunction = UIAlertAction.init,
-         newTimerFunc: TimerFactoryFunction? = nil)
+         newTimerFunc: TimerFactoryFunction? = nil,
+         newTimerAtNextDateMatchingFunc: TimerAtNextDateMatchingFactoryFunction? = nil,
+         now: @escaping () -> Date = Date.init)
     {
         self.alertPresenter = alertPresenter
         self.alertManagerResponder = alertManagerResponder
@@ -38,6 +43,24 @@ public class InAppModalAlertIssuer: AlertIssuer {
         self.newTimerFunc = newTimerFunc ?? { timeInterval, repeats, block in
             return Timer.scheduledTimer(withTimeInterval: timeInterval, repeats: repeats) { _ in block?() }
         }
+        self.newTimerAtNextDateMatchingFunc = newTimerAtNextDateMatchingFunc ?? { dateComponents, repeats, block in
+            func next() -> Date? {
+                return Calendar.current.nextDate(after: now(), matching: dateComponents, matchingPolicy: .nextTime)
+            }
+            guard let nextDate = next() else {
+                return nil
+            }
+            let timer = Timer(fire: nextDate, interval: 0, repeats: repeats) { t in
+                if repeats, let fireDate = next() {
+                    // Apparently, if you make a repeating timer, setting the fire date again will reschedule it
+                    // for that date.  Cool.
+                    t.fireDate = fireDate
+                }
+                block?()
+            }
+            RunLoop.current.add(timer, forMode: .default)
+            return timer
+        }
     }
 
     public func issueAlert(_ alert: Alert) {
@@ -45,9 +68,23 @@ public class InAppModalAlertIssuer: AlertIssuer {
         case .immediate:
             show(alert: alert)
         case .delayed(let interval):
-            schedule(alert: alert, interval: interval, repeats: false)
+            schedule(alert: alert, repeats: false) { [weak self] in
+                self?.newTimerFunc(interval, $0, $1)
+            }
         case .repeating(let interval):
-            schedule(alert: alert, interval: interval, repeats: true)
+            schedule(alert: alert, repeats: true) { [weak self] in
+                self?.newTimerFunc(interval, $0, $1)
+            }
+        case .nextDate(let matching):
+            schedule(alert: alert, repeats: false) { [weak self] in
+                self?.newTimerAtNextDateMatchingFunc(matching, $0, $1)
+            }
+            break
+        case .nextDateRepeating(let matching):
+            schedule(alert: alert, repeats: true) { [weak self] in
+                self?.newTimerAtNextDateMatchingFunc(matching, $0, $1)
+            }
+            break
         }
     }
     
@@ -74,10 +111,17 @@ public class InAppModalAlertIssuer: AlertIssuer {
     }
 }
 
+/// For testing only
+extension InAppModalAlertIssuer {
+    func getPendingAlerts() -> [Alert.Identifier: (Timer, Alert)] {
+        return alertsPending
+    }
+}
+
 /// Private functions
 extension InAppModalAlertIssuer {
 
-    private func schedule(alert: Alert, interval: TimeInterval, repeats: Bool) {
+    private func schedule(alert: Alert, repeats: Bool, newTimer: @escaping (Bool, @escaping () -> Void) -> Timer?) {
         guard alert.foregroundContent != nil else {
             return
         }
@@ -85,13 +129,14 @@ extension InAppModalAlertIssuer {
             if self.isAlertPending(identifier: alert.identifier) {
                 return
             }
-            let timer = self.newTimerFunc(interval, repeats) { [weak self] in
+            if let timer = newTimer(repeats, { [weak self] in
                 self?.show(alert: alert)
                 if !repeats {
                     self?.clearPendingAlert(identifier: alert.identifier)
                 }
+            }) {
+                self.addPendingAlert(alert: alert, timer: timer)
             }
-            self.addPendingAlert(alert: alert, timer: timer)
         }
     }
     

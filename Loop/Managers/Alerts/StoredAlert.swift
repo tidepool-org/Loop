@@ -28,6 +28,7 @@ extension StoredAlert {
             self.managerIdentifier = alert.identifier.managerIdentifier
             self.triggerType = alert.trigger.storedType
             self.triggerInterval = alert.trigger.storedInterval
+            self.triggerDateMatching = alert.trigger.storedDateMatching
             self.interruptionLevel = alert.interruptionLevel
             self.syncIdentifier = syncIdentifier
             // Encode as JSON strings
@@ -44,7 +45,7 @@ extension StoredAlert {
     public var trigger: Alert.Trigger {
         get {
             do {
-                return try Alert.Trigger(storedType: triggerType, storedInterval: triggerInterval)
+                return try Alert.Trigger(storedType: triggerType, storedInterval: triggerInterval, storedDateMatching: triggerDateMatching)
             } catch {
                 fatalError("\(error): \(triggerType) \(String(describing: triggerInterval))")
             }
@@ -68,6 +69,7 @@ extension Alert {
         let metadata = try Alert.Metadata(metadataString: storedAlert.metadata)
         let trigger = try Alert.Trigger(storedType: storedAlert.triggerType,
                                         storedInterval: storedAlert.triggerInterval,
+                                        storedDateMatching: storedAlert.triggerDateMatching,
                                         storageDate: adjustedForStorageTime ? storedAlert.issuedDate : nil)
         self.init(identifier: storedAlert.identifier,
                   foregroundContent: fgContent,
@@ -117,7 +119,7 @@ extension Alert.Metadata {
 
 extension Alert.Trigger {
     enum StorageError: Error {
-        case invalidStoredInterval, invalidStoredType
+        case invalidStoredInterval, invalidStoredType, invalidStoredDateMatching
     }
     
     var storedType: Int16 {
@@ -125,17 +127,27 @@ extension Alert.Trigger {
         case .immediate: return 0
         case .delayed: return 1
         case .repeating: return 2
+        case .nextDate: return 3
+        case .nextDateRepeating: return 4
         }
     }
     var storedInterval: NSNumber? {
         switch self {
-        case .immediate: return nil
+        case .immediate, .nextDate, .nextDateRepeating: return nil
         case .delayed(let interval): return NSNumber(value: interval)
         case .repeating(let repeatInterval): return NSNumber(value: repeatInterval)
         }
     }
     
-    init(storedType: Int16, storedInterval: NSNumber?, storageDate: Date? = nil, now: Date = Date()) throws {
+    var storedDateMatching: DateComponents? {
+        switch self {
+        case .immediate, .delayed, .repeating: return nil
+        case .nextDate(let matching): return matching
+        case .nextDateRepeating(let matching): return matching
+        }
+    }
+
+    init(storedType: Int16, storedInterval: NSNumber?, storedDateMatching: DateComponents?, storageDate: Date? = nil, now: Date = Date()) throws {
         switch storedType {
         case 0: self = .immediate
         case 1:
@@ -161,6 +173,29 @@ extension Alert.Trigger {
                 self = .repeating(repeatInterval: storedInterval.doubleValue)
             } else {
                 throw StorageError.invalidStoredInterval
+            }
+        case 3:
+            if let storedDateMatching = storedDateMatching {
+                if let storageDate = storageDate,
+                   let nextDate = Calendar.current.nextDate(after: storageDate, matching: storedDateMatching, matchingPolicy: .nextTime),
+                   // Interesting case here, and I'm not exactly sure what to do.
+                   // If the "next matching date" after storage date is in the past, that means we've past the time when the alert should have shown
+                    // So... make it .immediate?? (TODO: Or, maybe we should throw an error?  Not clear...)
+                   now > nextDate
+                {
+                    self = .immediate
+                } else {
+                    self = .nextDate(matching: storedDateMatching)
+                }
+            } else {
+                throw StorageError.invalidStoredDateMatching
+            }
+        case 4:
+            // Fortunately for repeating "next date" alerts, there's no "expiration"
+            if let storedDateMatching = storedDateMatching {
+                self = .nextDateRepeating(matching: storedDateMatching)
+            } else {
+                throw StorageError.invalidStoredDateMatching
             }
         default:
             throw StorageError.invalidStoredType
@@ -231,7 +266,9 @@ extension SyncAlertObject {
             return nil
         }
         self.init(identifier: managedObject.identifier,
-                  trigger: try Alert.Trigger(storedType: managedObject.triggerType, storedInterval: managedObject.triggerInterval),
+                  trigger: try Alert.Trigger(storedType: managedObject.triggerType,
+                                             storedInterval: managedObject.triggerInterval,
+                                             storedDateMatching: managedObject.triggerDateMatching),
                   interruptionLevel: managedObject.interruptionLevel,
                   foregroundContent: try Alert.Content(contentString: managedObject.foregroundContent),
                   backgroundContent: try Alert.Content(contentString: managedObject.backgroundContent),

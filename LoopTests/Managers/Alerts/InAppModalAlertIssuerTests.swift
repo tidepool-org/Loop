@@ -96,12 +96,17 @@ class InAppModalAlertIssuerTests: XCTestCase {
     var mockTimer: Timer?
     var mockTimerTimeInterval: TimeInterval?
     var mockTimerRepeats: Bool?
+    var mockDateMatchingTimer: Timer?
+    var mockDateMatchingTimerComponents: DateComponents?
+    var mockDateMatchingTimerRepeats: Bool?
     var mockAlertManagerResponder: MockAlertManagerResponder!
     var mockViewController: MockViewController!
     var mockSoundPlayer: MockSoundPlayer!
     var inAppModalAlertIssuer: InAppModalAlertIssuer!
+    var now: ()->Date = Date.init
     
-    override func setUp() {
+    override func setUpWithError() throws {
+        now = Date.init
         mockAlertManagerResponder = MockAlertManagerResponder()
         mockViewController = MockViewController()
         mockSoundPlayer = MockSoundPlayer()
@@ -113,11 +118,33 @@ class InAppModalAlertIssuerTests: XCTestCase {
             self.mockTimerRepeats = repeats
             return timer
         }
+        let newTimerAtNextDateMatchingFunc: InAppModalAlertIssuer.TimerAtNextDateMatchingFactoryFunction = { dateComponents, repeats, block in
+            func next() -> Date? {
+                return Calendar.current.nextDate(after: self.now(), matching: dateComponents, matchingPolicy: .nextTime)
+            }
+            guard let nextDate = next() else {
+                return nil
+            }
+            let timer = Timer(fire: nextDate, interval: 0, repeats: repeats) { t in
+                if repeats, let fireDate = next() {
+                    // Apparently, if you make a repeating timer, setting the fire date again will reschedule it
+                    // for that date.  Cool.
+                    t.fireDate = fireDate
+                }
+                block?()
+            }
+            self.mockDateMatchingTimer = timer
+            self.mockDateMatchingTimerComponents = dateComponents
+            self.mockDateMatchingTimerRepeats = repeats
+            return timer
+        }
         inAppModalAlertIssuer = InAppModalAlertIssuer(alertPresenter: mockViewController,
                                                       alertManagerResponder: mockAlertManagerResponder,
                                                       soundPlayer: mockSoundPlayer,
                                                       newActionFunc: MockAlertAction.init,
-                                                      newTimerFunc: newTimerFunc)
+                                                      newTimerFunc: newTimerFunc,
+                                                      newTimerAtNextDateMatchingFunc: newTimerAtNextDateMatchingFunc
+        )
     }
     
     func testIssueImmediateAlert() {
@@ -231,7 +258,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
         XCTAssertEqual(alertIdentifier, mockAlertManagerResponder.identifierAcknowledged)
     }
     
-    func testIssueDelayedAlert() {
+    func testIssueDelayedAlert() throws {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .delayed(interval: 0.1))
         mockViewController.autoComplete = false
         inAppModalAlertIssuer.issueAlert(alert)
@@ -239,18 +266,19 @@ class InAppModalAlertIssuerTests: XCTestCase {
         waitOnMain()
         // Timer should be created but won't fire yet
         XCTAssertNil(mockViewController.viewControllerPresented)
-        XCTAssertNotNil(mockTimer)
         XCTAssertEqual(0.1, mockTimerTimeInterval)
         XCTAssert(mockTimerRepeats == false)
-        mockTimer?.fire()
+        XCTAssertFalse(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
+        try XCTUnwrap(mockTimer).fire()
         
         waitOnMain()
+        XCTAssertTrue(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
         let alertController = mockViewController.viewControllerPresented as? UIAlertController
         XCTAssertNotNil(alertController)
         XCTAssertEqual("FOREGROUND", alertController?.title)
     }
     
-    func testIssueDelayedAlertTwiceOnlyOneWorks() {
+    func testIssueDelayedAlertTwiceOnlyOneWorks() throws {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .delayed(interval: 0.1))
         mockViewController.autoComplete = false
         inAppModalAlertIssuer.issueAlert(alert)
@@ -271,7 +299,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
         XCTAssertNotNil(mockViewController.viewControllerPresented)
     }
     
-    func testIssueDelayedAlertWithoutForegroundContentDoesNothing() {
+    func testIssueDelayedAlertWithoutForegroundContentDoesNothing() throws {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: nil, backgroundContent: backgroundContent, trigger: .delayed(interval: 0.1))
         inAppModalAlertIssuer.issueAlert(alert)
         
@@ -279,7 +307,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
         XCTAssertNil(mockViewController.viewControllerPresented)
     }
     
-    func testRetractAlert() {
+    func testRetractAlert() throws {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .delayed(interval: 0.1))
         inAppModalAlertIssuer.issueAlert(alert)
         
@@ -291,7 +319,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
         XCTAssert(mockTimer?.isValid == false)
     }
     
-    func testIssueRepeatingAlert() {
+    func testIssueRepeatingAlert() throws {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .repeating(repeatInterval: 0.1))
         mockViewController.autoComplete = false
         inAppModalAlertIssuer.issueAlert(alert)
@@ -299,14 +327,65 @@ class InAppModalAlertIssuerTests: XCTestCase {
         waitOnMain()
         // Timer should be created but won't fire yet
         XCTAssertNil(mockViewController.viewControllerPresented)
-        XCTAssertNotNil(mockTimer)
         XCTAssertEqual(0.1, mockTimerTimeInterval)
         XCTAssert(mockTimerRepeats == true)
-        mockTimer?.fire()
+        XCTAssertFalse(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
+        try XCTUnwrap(mockTimer).fire()
         
         waitOnMain()
+        XCTAssertFalse(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
         let alertController = mockViewController.viewControllerPresented as? UIAlertController
         XCTAssertNotNil(alertController)
         XCTAssertEqual("FOREGROUND", alertController?.title)
     }
+    
+    func testIssueNextDateMatchingAlert() throws {
+        let noon = DateComponents(hour: 12, minute: 0)
+        let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDate(matching: noon))
+        mockViewController.autoComplete = false
+        inAppModalAlertIssuer.issueAlert(alert)
+        
+        waitOnMain()
+        // Timer should be created but won't fire yet
+        XCTAssertNil(mockViewController.viewControllerPresented)
+        XCTAssertNil(mockTimer)
+        XCTAssertNotNil(mockDateMatchingTimer)
+        XCTAssertEqual(noon, mockDateMatchingTimerComponents)
+        XCTAssertEqual(false, mockDateMatchingTimerRepeats)
+        XCTAssertFalse(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
+        try XCTUnwrap(mockDateMatchingTimer).fire()
+
+        waitOnMain()
+        
+        XCTAssertTrue(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
+        let alertController = mockViewController.viewControllerPresented as? UIAlertController
+        XCTAssertNotNil(alertController)
+        XCTAssertEqual("FOREGROUND", alertController?.title)
+    }
+    
+    func testIssueNextDateMatchingRepeatingAlert() throws {
+        let noon = DateComponents(hour: 12, minute: 0)
+        let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDateRepeating(matching: noon))
+        mockViewController.autoComplete = false
+        inAppModalAlertIssuer.issueAlert(alert)
+        
+        waitOnMain()
+        // Timer should be created but won't fire yet
+        XCTAssertNil(mockViewController.viewControllerPresented)
+        XCTAssertNil(mockTimer)
+        XCTAssertNotNil(mockDateMatchingTimer)
+        XCTAssertEqual(noon, mockDateMatchingTimerComponents)
+        XCTAssertEqual(true, mockDateMatchingTimerRepeats)
+        XCTAssertFalse(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
+        try XCTUnwrap(mockDateMatchingTimer).fire()
+
+        waitOnMain()
+        
+        XCTAssertFalse(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
+        let alertController = mockViewController.viewControllerPresented as? UIAlertController
+        XCTAssertNotNil(alertController)
+        XCTAssertEqual("FOREGROUND", alertController?.title)
+    }
+    
+
 }

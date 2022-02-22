@@ -115,8 +115,12 @@ public class AlertStore {
                              addingPredicate: NSPredicate(format: "retractedDate == nil"),
                              with: {
                                 // if the alert was retracted before it was ever shown, delete it.
-                                // Note: this only applies to .delayed or .repeating alerts!
+                                // Note: this only applies to .delayed, .repeating, .daily, or .once alerts!
                                 if let delay = $0.trigger.interval, $0.issuedDate + delay >= date {
+                                    return .delete
+                                } else if let matching = $0.trigger.matching,
+                                          let nextDate = Calendar.current.nextDate(after: $0.issuedDate, matching: matching, matchingPolicy: .nextTime),
+                                          nextDate >= date {
                                     return .delete
                                 } else {
                                     $0.retractedDate = date
@@ -151,7 +155,7 @@ public class AlertStore {
                 fetchRequest.predicate =  NSCompoundPredicate(andPredicateWithSubpredicates: [
                     NSPredicate(format: "acknowledgedDate != nil"),
                     NSPredicate(format: "retractedDate == nil"),
-                    NSPredicate(format: "triggerType == \(repeatingTrigger.storedType)")
+                    NSPredicate(format: "triggerType == %d", repeatingTrigger.storedType)
                 ])
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
                 let result = try self.managedObjectContext.fetch(fetchRequest)
@@ -435,7 +439,13 @@ extension Alert.Trigger {
         switch self {
         case .delayed(let interval): return interval
         case .repeating(let repeatInterval): return repeatInterval
-        case .immediate: return nil
+        case .immediate, .nextDate, .nextDateRepeating: return nil
+        }
+    }
+    var matching: DateComponents? {
+        switch self {
+        case .delayed, .repeating, .immediate: return nil
+        case .nextDate(let matching), .nextDateRepeating(let matching): return matching
         }
     }
 }

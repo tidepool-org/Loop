@@ -110,6 +110,41 @@ class StoredAlertEncodableTests: XCTestCase {
         }
     }
 
+    func testEncodableDateMatching() throws {
+        managedObjectContext.performAndWait {
+            let storedAlert = StoredAlert(context: managedObjectContext)
+            storedAlert.acknowledgedDate = dateFormatter.date(from: "2020-05-14T22:38:14Z")!
+            storedAlert.alertIdentifier = "Alert Identifier 1"
+            storedAlert.backgroundContent = "Background Content 1"
+            storedAlert.foregroundContent = "Foreground Content 1"
+            storedAlert.issuedDate = dateFormatter.date(from: "2020-05-14T21:00:12Z")!
+            storedAlert.managerIdentifier = "Manager Identifier 1"
+            storedAlert.modificationCounter = 123
+            storedAlert.retractedDate = dateFormatter.date(from: "2020-05-14T23:34:07Z")!
+            storedAlert.sound = "Sound 1"
+            let matching = DateComponents(day: 5, hour: 12, minute: 0)
+            storedAlert.triggerDateMatching = matching
+            storedAlert.triggerType = Alert.Trigger.nextDate(matching: matching).storedType
+            try! assertStoredAlertEncodable(storedAlert, encodesJSON: """
+            {
+              "acknowledgedDate" : "2020-05-14T22:38:14Z",
+              "alertIdentifier" : "Alert Identifier 1",
+              "backgroundContent" : "Background Content 1",
+              "foregroundContent" : "Foreground Content 1",
+              "interruptionLevel" : "timeSensitive",
+              "issuedDate" : "2020-05-14T21:00:12Z",
+              "managerIdentifier" : "Manager Identifier 1",
+              "modificationCounter" : 123,
+              "retractedDate" : "2020-05-14T23:34:07Z",
+              "sound" : "Sound 1",
+              "triggerDateMatching" : {\n    "day" : 5,\n    "hour" : 12,\n    "minute" : 0\n  },
+              "triggerType" : 3
+            }
+            """
+            )
+        }
+    }
+
     func testEncodableOptional() throws {
         managedObjectContext.performAndWait {
             let storedAlert = StoredAlert(context: managedObjectContext)
