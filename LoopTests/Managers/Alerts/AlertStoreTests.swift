@@ -18,6 +18,7 @@ class AlertStoreTests: XCTestCase {
     static let defaultTimeout: TimeInterval = 1.5
     static let expiryInterval: TimeInterval = 24 /* hours */ * 60 /* minutes */ * 60 /* seconds */
     static let historicDate = Date(timeIntervalSinceNow: -expiryInterval + TimeInterval.hours(4))  // Within default 24 hour expiration
+    static let longTimeAgo = Date().addingTimeInterval(.days(-30))
     
     static let identifier1 = Alert.Identifier(managerIdentifier: "managerIdentifier1", alertIdentifier: "alertIdentifier1")
     let alert1 = Alert(identifier: identifier1, foregroundContent: nil, backgroundContent: nil, trigger: .immediate, sound: nil)
@@ -82,7 +83,7 @@ class AlertStoreTests: XCTestCase {
         XCTAssertEqual(matchingRepeating, try? Alert.Trigger(storedType: matchingRepeating.storedType, storedInterval: matchingRepeating.storedInterval, storedDateMatching: matchingRepeating.storedDateMatching))
         XCTAssertEqual(matchingRepeating, try? Alert.Trigger(storedType: matchingRepeating.storedType, storedInterval: matchingRepeating.storedInterval, storedDateMatching: matchingRepeating.storedDateMatching, storageDate: Self.historicDate))
         // An "expired" next matching alert become "immediate"
-        XCTAssertEqual(immediate, try? Alert.Trigger(storedType: matching.storedType, storedInterval: matching.storedInterval, storedDateMatching: matching.storedDateMatching, storageDate: Self.historicDate))
+        XCTAssertEqual(immediate, try? Alert.Trigger(storedType: matching.storedType, storedInterval: matching.storedInterval, storedDateMatching: matching.storedDateMatching, storageDate: Self.longTimeAgo))
         // An "unexpired" next matching alert is "preserved"
         XCTAssertEqual(matching, try? Alert.Trigger(storedType: matching.storedType, storedInterval: matching.storedInterval, storedDateMatching: matching.storedDateMatching, storageDate: Date(timeIntervalSinceNow: -5.0)))
     }
