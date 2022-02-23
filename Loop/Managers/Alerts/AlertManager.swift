@@ -251,6 +251,28 @@ extension AlertManager {
     }
 }
 
+// MARK: AlertSearcher
+extension AlertManager: AlertSearcher {
+    public func lookupOutstandingAlerts(managerIdentifier: String, completion: @escaping (Result<[Alert], Error>) -> Void) {
+        alertStore.lookupAllUnacknowledged(managerIdentifier: managerIdentifier) {
+            switch $0 {
+            case .failure(let error):
+                completion(.failure(error))
+            case .success(let alerts):
+                do {
+                    let result = try alerts.map {
+                        try Alert(from: $0, adjustedForStorageTime: false)
+                    }
+                    completion(.success(result))
+                } catch {
+                    completion(.failure(error))
+                }
+            }
+        }
+    }
+
+}
+
 // MARK: Extensions
 
 fileprivate extension SyncAlertObject {

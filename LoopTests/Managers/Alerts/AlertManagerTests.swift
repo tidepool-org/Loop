@@ -108,7 +108,7 @@ class AlertManagerTests: XCTestCase {
         }
 
         var storedAlerts = [StoredAlert]()
-        override public func lookupAllUnacknowledged(completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+        override public func lookupAllUnacknowledged(managerIdentifier: String?, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
             completion(.success(storedAlerts))
         }
     }

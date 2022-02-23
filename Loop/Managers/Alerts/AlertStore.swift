@@ -126,14 +126,18 @@ public class AlertStore {
                              completion: completion)
     }
     
-    public func lookupAllUnacknowledged(completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+    public func lookupAllUnacknowledged(managerIdentifier: String? = nil, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
         managedObjectContext.perform {
             do {
                 let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                fetchRequest.predicate =  NSCompoundPredicate(andPredicateWithSubpredicates: [
+                var predicates = [
                     NSPredicate(format: "acknowledgedDate == nil"),
                     NSPredicate(format: "retractedDate == nil"),
-                ])
+                ]
+                if let managerIdentifier = managerIdentifier {
+                    predicates.insert(NSPredicate(format: "managerIdentifier = %@", managerIdentifier), at: 0)
+                }
+                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
                 let result = try self.managedObjectContext.fetch(fetchRequest)
                 completion(.success(result))
