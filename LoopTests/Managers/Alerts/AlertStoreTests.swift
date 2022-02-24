@@ -31,10 +31,10 @@ class AlertStoreTests: XCTestCase {
     static let repeatingAlertDelay = 30.0 // seconds
     static let repeatingAlertIdentifier = Alert.Identifier(managerIdentifier: "managerIdentifier4", alertIdentifier: "alertIdentifier4")
     let repeatingAlert = Alert(identifier: repeatingAlertIdentifier, foregroundContent: nil, backgroundContent: nil, trigger: .repeating(repeatInterval: repeatingAlertDelay), sound: nil)
-    static let matching = DateComponents(hour: 1, minute: 2)
+    static let matching = Alert.Trigger.TimeSpec(hourOfDay: 1, minuteOfHour: 2)
     static let dateMatchingAlertIdentifier = Alert.Identifier(managerIdentifier: "managerIdentifier5", alertIdentifier: "alertIdentifier5")
     let dateMatchingAlert = Alert(identifier: dateMatchingAlertIdentifier, foregroundContent: nil, backgroundContent: nil, trigger: .nextDate(matching: matching), sound: nil)
-    static let repeatMatching = DateComponents(hour: 3, minute: 4)
+    static let repeatMatching = Alert.Trigger.TimeSpec(hourOfDay: 3, minuteOfHour: 4)
     static let dateMatchingAlertRepeatingIdentifier = Alert.Identifier(managerIdentifier: "managerIdentifier6", alertIdentifier: "alertIdentifier6")
     let dateMatchingAlertRepeating = Alert(identifier: dateMatchingAlertRepeatingIdentifier, foregroundContent: nil, backgroundContent: nil, trigger: .nextDateRepeating(matching: repeatMatching), sound: nil)
 
@@ -50,8 +50,8 @@ class AlertStoreTests: XCTestCase {
         let immediate = Alert.Trigger.immediate
         let delayed = Alert.Trigger.delayed(interval: 1.0)
         let repeating = Alert.Trigger.repeating(repeatInterval: 2.0)
-        let matching = Alert.Trigger.nextDate(matching: DateComponents(hour: 1, minute: 2))
-        let matchingRepeating = Alert.Trigger.nextDateRepeating(matching: DateComponents(hour: 3, minute: 4))
+        let matching = Alert.Trigger.nextDate(matching: Alert.Trigger.TimeSpec(hourOfDay: 1, minuteOfHour: 2))
+        let matchingRepeating = Alert.Trigger.nextDateRepeating(matching: Alert.Trigger.TimeSpec(hourOfDay: 3, minuteOfHour: 4))
         XCTAssertEqual(immediate, try? Alert.Trigger(storedType: immediate.storedType, storedInterval: immediate.storedInterval, storedDateMatching: immediate.storedDateMatching))
         XCTAssertEqual(delayed, try? Alert.Trigger(storedType: delayed.storedType, storedInterval: delayed.storedInterval, storedDateMatching: delayed.storedDateMatching))
         XCTAssertEqual(repeating, try? Alert.Trigger(storedType: repeating.storedType, storedInterval: repeating.storedInterval, storedDateMatching: repeating.storedDateMatching))
@@ -64,8 +64,8 @@ class AlertStoreTests: XCTestCase {
         let immediate = Alert.Trigger.immediate
         let delayed = Alert.Trigger.delayed(interval: 10.0)
         let repeating = Alert.Trigger.repeating(repeatInterval: 20.0)
-        let matching = Alert.Trigger.nextDate(matching: DateComponents(hour: 1, minute: 2))
-        let matchingRepeating = Alert.Trigger.nextDateRepeating(matching: DateComponents(hour: 3, minute: 4))
+        let matching = Alert.Trigger.nextDate(matching: Alert.Trigger.TimeSpec(hourOfDay: 1, minuteOfHour: 2))
+        let matchingRepeating = Alert.Trigger.nextDateRepeating(matching: Alert.Trigger.TimeSpec(hourOfDay: 3, minuteOfHour: 4))
         XCTAssertEqual(immediate, try? Alert.Trigger(storedType: immediate.storedType, storedInterval: immediate.storedInterval, storedDateMatching: immediate.storedDateMatching))
         XCTAssertEqual(immediate, try? Alert.Trigger(storedType: immediate.storedType, storedInterval: immediate.storedInterval, storedDateMatching: immediate.storedDateMatching, storageDate: Self.historicDate))
         XCTAssertEqual(delayed, try? Alert.Trigger(storedType: delayed.storedType, storedInterval: delayed.storedInterval, storedDateMatching: delayed.storedDateMatching))
@@ -248,7 +248,7 @@ class AlertStoreTests: XCTestCase {
     func testRecordRetractedBeforeDateMatchingShouldDelete() throws {
         let expect = self.expectation(description: #function)
         let issuedDate = Self.historicDate
-        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlert.trigger.matching), matchingPolicy: .nextTime)?.addingTimeInterval(-(.minutes(1))))
+        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlert.trigger.matching).dateComponents, matchingPolicy: .nextTime)?.addingTimeInterval(-(.minutes(1))))
         alertStore.recordIssued(alert: dateMatchingAlert, at: issuedDate, completion: self.expectSuccess {
             self.alertStore.recordRetraction(of: Self.dateMatchingAlertIdentifier, at: retractedDate, completion: self.expectSuccess {
                 self.alertStore.fetch(identifier: Self.dateMatchingAlertIdentifier, completion: self.expectSuccess { storedAlerts in
@@ -263,7 +263,7 @@ class AlertStoreTests: XCTestCase {
     func testRecordRetractedBeforeRepeatDateMatchingShouldDelete() throws {
         let expect = self.expectation(description: #function)
         let issuedDate = Self.historicDate
-        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlertRepeating.trigger.matching), matchingPolicy: .nextTime)?.addingTimeInterval(-(.minutes(1))))
+        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlertRepeating.trigger.matching).dateComponents, matchingPolicy: .nextTime)?.addingTimeInterval(-(.minutes(1))))
         alertStore.recordIssued(alert: dateMatchingAlertRepeating, at: issuedDate, completion: self.expectSuccess {
             self.alertStore.recordRetraction(of: Self.dateMatchingAlertRepeatingIdentifier, at: retractedDate, completion: self.expectSuccess {
                 self.alertStore.fetch(identifier: Self.dateMatchingAlertRepeatingIdentifier, completion: self.expectSuccess { storedAlerts in
@@ -308,7 +308,7 @@ class AlertStoreTests: XCTestCase {
     func testRecordRetractedExactlyAtDateMatchingShouldDelete() throws {
         let expect = self.expectation(description: #function)
         let issuedDate = Self.historicDate
-        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlert.trigger.matching), matchingPolicy: .nextTime))
+        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlert.trigger.matching).dateComponents, matchingPolicy: .nextTime))
         alertStore.recordIssued(alert: dateMatchingAlert, at: issuedDate, completion: self.expectSuccess {
             self.alertStore.recordRetraction(of: Self.dateMatchingAlertIdentifier, at: retractedDate, completion: self.expectSuccess {
                 self.alertStore.fetch(identifier: Self.dateMatchingAlertIdentifier, completion: self.expectSuccess { storedAlerts in
@@ -323,7 +323,7 @@ class AlertStoreTests: XCTestCase {
     func testRecordRetractedExactlyAtRepeatDateMatchingShouldDelete() throws {
         let expect = self.expectation(description: #function)
         let issuedDate = Self.historicDate
-        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlertRepeating.trigger.matching), matchingPolicy: .nextTime))
+        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlertRepeating.trigger.matching).dateComponents, matchingPolicy: .nextTime))
         alertStore.recordIssued(alert: dateMatchingAlertRepeating, at: issuedDate, completion: self.expectSuccess {
             self.alertStore.recordRetraction(of: Self.dateMatchingAlertRepeatingIdentifier, at: retractedDate, completion: self.expectSuccess {
                 self.alertStore.fetch(identifier: Self.dateMatchingAlertRepeatingIdentifier, completion: self.expectSuccess { storedAlerts in
@@ -357,7 +357,7 @@ class AlertStoreTests: XCTestCase {
     func testRecordRetractedAfterDateMatchingShouldRetract() throws {
         let expect = self.expectation(description: #function)
         let issuedDate = Self.historicDate
-        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlert.trigger.matching), matchingPolicy: .nextTime)?.addingTimeInterval(.minutes(1)))
+        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlert.trigger.matching).dateComponents, matchingPolicy: .nextTime)?.addingTimeInterval(.minutes(1)))
         alertStore.recordIssued(alert: dateMatchingAlert, at: issuedDate, completion: self.expectSuccess {
             self.alertStore.recordRetraction(of: Self.dateMatchingAlertIdentifier, at: retractedDate, completion: self.expectSuccess {
                 self.alertStore.fetch(identifier: Self.dateMatchingAlertIdentifier, completion: self.expectSuccess { storedAlerts in
@@ -376,7 +376,7 @@ class AlertStoreTests: XCTestCase {
     func testRecordRetractedAfterRepeatDateMatchingShouldRetract() throws {
         let expect = self.expectation(description: #function)
         let issuedDate = Self.historicDate
-        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlertRepeating.trigger.matching), matchingPolicy: .nextTime)?.addingTimeInterval(.minutes(1)))
+        let retractedDate = try XCTUnwrap(Calendar.current.nextDate(after: issuedDate, matching: try XCTUnwrap(dateMatchingAlertRepeating.trigger.matching).dateComponents, matchingPolicy: .nextTime)?.addingTimeInterval(.minutes(1)))
         alertStore.recordIssued(alert: dateMatchingAlertRepeating, at: issuedDate, completion: self.expectSuccess {
             self.alertStore.recordRetraction(of: Self.dateMatchingAlertRepeatingIdentifier, at: retractedDate, completion: self.expectSuccess {
                 self.alertStore.fetch(identifier: Self.dateMatchingAlertRepeatingIdentifier, completion: self.expectSuccess { storedAlerts in

@@ -77,12 +77,12 @@ public class InAppModalAlertIssuer: AlertIssuer {
             }
         case .nextDate(let matching):
             schedule(alert: alert, repeats: false) { [weak self] in
-                self?.newTimerAtNextDateMatchingFunc(matching, $0, $1)
+                self?.newTimerAtNextDateMatchingFunc(matching.dateComponents, $0, $1)
             }
             break
         case .nextDateRepeating(let matching):
             schedule(alert: alert, repeats: true) { [weak self] in
-                self?.newTimerAtNextDateMatchingFunc(matching, $0, $1)
+                self?.newTimerAtNextDateMatchingFunc(matching.dateComponents, $0, $1)
             }
             break
         }

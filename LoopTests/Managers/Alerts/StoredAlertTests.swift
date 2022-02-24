@@ -122,7 +122,7 @@ class StoredAlertEncodableTests: XCTestCase {
             storedAlert.modificationCounter = 123
             storedAlert.retractedDate = dateFormatter.date(from: "2020-05-14T23:34:07Z")!
             storedAlert.sound = "Sound 1"
-            let matching = DateComponents(day: 5, hour: 12, minute: 0)
+            let matching = Alert.Trigger.TimeSpec(dayOfMonth: 5, hourOfDay: 12, minuteOfHour: 0)
             storedAlert.triggerDateMatching = matching
             storedAlert.triggerType = Alert.Trigger.nextDate(matching: matching).storedType
             try! assertStoredAlertEncodable(storedAlert, encodesJSON: """
@@ -137,7 +137,11 @@ class StoredAlertEncodableTests: XCTestCase {
               "modificationCounter" : 123,
               "retractedDate" : "2020-05-14T23:34:07Z",
               "sound" : "Sound 1",
-              "triggerDateMatching" : {\n    "day" : 5,\n    "hour" : 12,\n    "minute" : 0\n  },
+              "triggerDateMatching" : {
+                "dayOfMonth" : 5,
+                "hourOfDay" : 12,
+                "minuteOfHour" : 0
+              },
               "triggerType" : 3
             }
             """

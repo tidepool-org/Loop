@@ -340,7 +340,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
     }
     
     func testIssueNextDateMatchingAlert() throws {
-        let noon = DateComponents(hour: 12, minute: 0)
+        let noon = Alert.Trigger.TimeSpec(hourOfDay: 12, minuteOfHour: 0)
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDate(matching: noon))
         mockViewController.autoComplete = false
         inAppModalAlertIssuer.issueAlert(alert)
@@ -350,7 +350,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
         XCTAssertNil(mockViewController.viewControllerPresented)
         XCTAssertNil(mockTimer)
         XCTAssertNotNil(mockDateMatchingTimer)
-        XCTAssertEqual(noon, mockDateMatchingTimerComponents)
+        XCTAssertEqual(noon.dateComponents, mockDateMatchingTimerComponents)
         XCTAssertEqual(false, mockDateMatchingTimerRepeats)
         XCTAssertFalse(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
         try XCTUnwrap(mockDateMatchingTimer).fire()
@@ -364,7 +364,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
     }
     
     func testIssueNextDateMatchingRepeatingAlert() throws {
-        let noon = DateComponents(hour: 12, minute: 0)
+        let noon = Alert.Trigger.TimeSpec(hourOfDay: 12, minuteOfHour: 0)
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDateRepeating(matching: noon))
         mockViewController.autoComplete = false
         inAppModalAlertIssuer.issueAlert(alert)
@@ -374,7 +374,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
         XCTAssertNil(mockViewController.viewControllerPresented)
         XCTAssertNil(mockTimer)
         XCTAssertNotNil(mockDateMatchingTimer)
-        XCTAssertEqual(noon, mockDateMatchingTimerComponents)
+        XCTAssertEqual(noon.dateComponents, mockDateMatchingTimerComponents)
         XCTAssertEqual(true, mockDateMatchingTimerRepeats)
         XCTAssertFalse(inAppModalAlertIssuer.getPendingAlerts().isEmpty)
         try XCTUnwrap(mockDateMatchingTimer).fire()

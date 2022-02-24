@@ -139,7 +139,7 @@ extension Alert.Trigger {
         }
     }
     
-    var storedDateMatching: DateComponents? {
+    var storedDateMatching: TimeSpec? {
         switch self {
         case .immediate, .delayed, .repeating: return nil
         case .nextDate(let matching): return matching
@@ -147,7 +147,7 @@ extension Alert.Trigger {
         }
     }
 
-    init(storedType: Int16, storedInterval: NSNumber?, storedDateMatching: DateComponents?, storageDate: Date? = nil, now: Date = Date()) throws {
+    init(storedType: Int16, storedInterval: NSNumber?, storedDateMatching: TimeSpec?, storageDate: Date? = nil, now: Date = Date()) throws {
         switch storedType {
         case 0: self = .immediate
         case 1:
@@ -177,7 +177,7 @@ extension Alert.Trigger {
         case 3:
             if let storedDateMatching = storedDateMatching {
                 if let storageDate = storageDate,
-                   let nextDate = Calendar.current.nextDate(after: storageDate, matching: storedDateMatching, matchingPolicy: .nextTime),
+                   let nextDate = Calendar.current.nextDate(after: storageDate, matching: storedDateMatching.dateComponents, matchingPolicy: .nextTime),
                    // Interesting case here, and I'm not exactly sure what to do.
                    // If the "next matching date" after storage date is in the past, that means we've past the time when the alert should have shown
                     // So... make it .immediate?? (TODO: Or, maybe we should throw an error?  Not clear...)

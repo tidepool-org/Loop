@@ -139,9 +139,9 @@ fileprivate extension UNNotificationTrigger {
         case .repeating(let repeatInterval):
             return UNTimeIntervalNotificationTrigger(timeInterval: repeatInterval, repeats: true)
         case .nextDate(let matching):
-            return UNCalendarNotificationTrigger(dateMatching: matching, repeats: false)
+            return UNCalendarNotificationTrigger(dateMatching: matching.dateComponents, repeats: false)
         case .nextDateRepeating(let matching):
-            return UNCalendarNotificationTrigger(dateMatching: matching, repeats: true)
+            return UNCalendarNotificationTrigger(dateMatching: matching.dateComponents, repeats: true)
         }
     }
 }

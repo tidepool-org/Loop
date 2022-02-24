@@ -17,7 +17,7 @@ class UserNotificationAlertIssuerTests: XCTestCase {
     let alertIdentifier = Alert.Identifier(managerIdentifier: "foo", alertIdentifier: "bar")
     let foregroundContent = Alert.Content(title: "FOREGROUND", body: "foreground", acknowledgeActionButtonLabel: "")
     let backgroundContent = Alert.Content(title: "BACKGROUND", body: "background", acknowledgeActionButtonLabel: "")
-    let dateComponents = DateComponents(day: 1, hour: 2, minute: 3)
+    let timeSpec = Alert.Trigger.TimeSpec(dayOfMonth: 1, hourOfDay: 2, minuteOfHour: 3)
     
     var mockUserNotificationCenter: MockUserNotificationCenter!
     
@@ -111,7 +111,7 @@ class UserNotificationAlertIssuerTests: XCTestCase {
     }
     
     func testIssueDateMatchingAlert() {
-        let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDate(matching: dateComponents))
+        let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDate(matching: timeSpec))
         userNotificationAlertIssuer.issueAlert(alert, timestamp: Date.distantPast)
 
         waitOnMain()
@@ -126,13 +126,13 @@ class UserNotificationAlertIssuerTests: XCTestCase {
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
                 LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier,
             ], request.content.userInfo as? [String: String])
-            XCTAssertEqual(dateComponents, (request.trigger as? UNCalendarNotificationTrigger)?.dateComponents)
+            XCTAssertEqual(timeSpec.dateComponents, (request.trigger as? UNCalendarNotificationTrigger)?.dateComponents)
             XCTAssertEqual(false, (request.trigger as? UNCalendarNotificationTrigger)?.repeats)
         }
     }
     
     func testIssueDateMatchingRepeatingAlert() {
-        let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDateRepeating(matching: dateComponents))
+        let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDateRepeating(matching: timeSpec))
         userNotificationAlertIssuer.issueAlert(alert, timestamp: Date.distantPast)
 
         waitOnMain()
@@ -147,7 +147,7 @@ class UserNotificationAlertIssuerTests: XCTestCase {
                 LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
                 LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier,
             ], request.content.userInfo as? [String: String])
-            XCTAssertEqual(dateComponents, (request.trigger as? UNCalendarNotificationTrigger)?.dateComponents)
+            XCTAssertEqual(timeSpec.dateComponents, (request.trigger as? UNCalendarNotificationTrigger)?.dateComponents)
             XCTAssertEqual(true, (request.trigger as? UNCalendarNotificationTrigger)?.repeats)
         }
     }

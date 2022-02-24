@@ -119,7 +119,7 @@ public class AlertStore {
                                 if let delay = $0.trigger.interval, $0.issuedDate + delay >= date {
                                     return .delete
                                 } else if let matching = $0.trigger.matching,
-                                          let nextDate = Calendar.current.nextDate(after: $0.issuedDate, matching: matching, matchingPolicy: .nextTime),
+                                          let nextDate = Calendar.current.nextDate(after: $0.issuedDate, matching: matching.dateComponents, matchingPolicy: .nextTime),
                                           nextDate >= date {
                                     return .delete
                                 } else {
@@ -442,7 +442,7 @@ extension Alert.Trigger {
         case .immediate, .nextDate, .nextDateRepeating: return nil
         }
     }
-    var matching: DateComponents? {
+    var matching: TimeSpec? {
         switch self {
         case .delayed, .repeating, .immediate: return nil
         case .nextDate(let matching), .nextDateRepeating(let matching): return matching

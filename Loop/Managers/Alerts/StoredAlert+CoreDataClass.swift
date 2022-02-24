@@ -26,11 +26,11 @@ public class StoredAlert: NSManagedObject {
         }
     }
       
-    var triggerDateMatching: DateComponents? {
+    var triggerDateMatching: Alert.Trigger.TimeSpec? {
         get {
             willAccessValue(forKey: "triggerDateMatching")
             defer { didAccessValue(forKey: "triggerDateMatching") }
-            return primitiveTriggerDateMatching.map { try! Self.decoder.decode(DateComponents.self, from: $0) }
+            return primitiveTriggerDateMatching.map { try! Self.decoder.decode( Alert.Trigger.TimeSpec.self, from: $0) }
         }
         set {
             willChangeValue(forKey: "triggerDateMatching")
