@@ -191,7 +191,6 @@ fileprivate extension PersistedPumpEvent {
                                   raw: Data(UUID().uuidString.utf8),
                                   title: UUID().uuidString,
                                   type: type,
-                                  isMutable: false,
                                   automatic: nil,
                                   alarmType: alarmType)
     }
@@ -205,7 +204,6 @@ fileprivate extension PersistedPumpEvent {
                                   raw: Data(UUID().uuidString.utf8),
                                   title: String(describing: dose),
                                   type: dose.type.pumpEventType,
-                                  isMutable: false,
                                   automatic: nil)
     }
 }

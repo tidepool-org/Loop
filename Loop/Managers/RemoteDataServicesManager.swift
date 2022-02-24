@@ -183,8 +183,8 @@ extension RemoteDataServicesManager {
                 case .failure(let error):
                     self.log.error("Error querying dose data: %{public}@", String(describing: error))
                     semaphore.signal()
-                case .success(let queryAnchor, let data):
-                    remoteDataService.uploadDoseData(data) { result in
+                case .success(let queryAnchor, let created, let deleted):
+                    remoteDataService.uploadDoseData(created: created, deleted: deleted) { result in
                         switch result {
                         case .failure(let error):
                             self.log.error("Error synchronizing dose data: %{public}@", String(describing: error))
