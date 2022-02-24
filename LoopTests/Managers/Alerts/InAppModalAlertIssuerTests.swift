@@ -340,7 +340,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
     }
     
     func testIssueNextDateMatchingAlert() throws {
-        let noon = Alert.Trigger.TimeSpec(hourOfDay: 12, minuteOfHour: 0)
+        let noon = Alert.Trigger.TimeSpec(dayOfMonth: 1, hourOfDay: 12, minuteOfHour: 0)
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDate(matching: noon))
         mockViewController.autoComplete = false
         inAppModalAlertIssuer.issueAlert(alert)
@@ -364,7 +364,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
     }
     
     func testIssueNextDateMatchingRepeatingAlert() throws {
-        let noon = Alert.Trigger.TimeSpec(hourOfDay: 12, minuteOfHour: 0)
+        let noon = Alert.Trigger.TimeSpec(dayOfMonth: 1, hourOfDay: 12, minuteOfHour: 0)
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .nextDateRepeating(matching: noon))
         mockViewController.autoComplete = false
         inAppModalAlertIssuer.issueAlert(alert)

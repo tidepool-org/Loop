@@ -178,9 +178,6 @@ extension Alert.Trigger {
             if let storedDateMatching = storedDateMatching {
                 if let storageDate = storageDate,
                    let nextDate = Calendar.current.nextDate(after: storageDate, matching: storedDateMatching.dateComponents, matchingPolicy: .nextTime),
-                   // Interesting case here, and I'm not exactly sure what to do.
-                   // If the "next matching date" after storage date is in the past, that means we've past the time when the alert should have shown
-                    // So... make it .immediate?? (TODO: Or, maybe we should throw an error?  Not clear...)
                    now > nextDate
                 {
                     self = .immediate
