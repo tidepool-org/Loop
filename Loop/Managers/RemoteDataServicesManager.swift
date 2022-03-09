@@ -11,6 +11,7 @@ import Foundation
 import LoopKit
 
 enum RemoteDataType: String {
+    case alert = "Alert"
     case carb = "Carb"
     case dose = "Dose"
     case dosingDecision = "DosingDecision"
@@ -31,6 +32,8 @@ final class RemoteDataServicesManager {
 
     private let log = OSLog(category: "RemoteDataServicesManager")
     
+    private var alertStore: AlertStore
+
     private var carbStore: CarbStore
 
     private var doseStore: DoseStore
@@ -44,6 +47,7 @@ final class RemoteDataServicesManager {
     private var settingsStore: SettingsStore
 
     init(
+        alertStore: AlertStore,
         carbStore: CarbStore,
         doseStore: DoseStore,
         dosingDecisionStore: DosingDecisionStore,
@@ -51,6 +55,7 @@ final class RemoteDataServicesManager {
         insulinDeliveryStore: InsulinDeliveryStore,
         settingsStore: SettingsStore
     ) {
+        self.alertStore = alertStore
         self.carbStore = carbStore
         self.doseStore = doseStore
         self.dosingDecisionStore = dosingDecisionStore
@@ -80,6 +85,7 @@ final class RemoteDataServicesManager {
     }
 
     private func uploadExistingData(to remoteDataService: RemoteDataService) {
+        uploadAlertData(to: remoteDataService)
         uploadCarbData(to: remoteDataService)
         uploadDoseData(to: remoteDataService)
         uploadDosingDecisionData(to: remoteDataService)
@@ -89,6 +95,7 @@ final class RemoteDataServicesManager {
     }
 
     private func clearQueryAnchors(for remoteDataService: RemoteDataService) {
+        clearAlertQueryAnchor(for: remoteDataService)
         clearCarbQueryAnchor(for: remoteDataService)
         clearDoseQueryAnchor(for: remoteDataService)
         clearDosingDecisionQueryAnchor(for: remoteDataService)
@@ -115,6 +122,47 @@ final class RemoteDataServicesManager {
 
     private func dispatchQueueName(for remoteDataService: RemoteDataService, withRemoteDataType remoteDataType: RemoteDataType) -> String {
         return "com.loopkit.Loop.RemoteDataServicesManager.\(remoteDataService.serviceIdentifier).\(remoteDataType.rawValue)DispatchQueue"
+    }
+
+}
+
+extension RemoteDataServicesManager {
+
+    public func alertStoreHasUpdatedAlertData(_ alertStore: AlertStore) {
+        remoteDataServices.forEach { self.uploadAlertData(to: $0) }
+    }
+
+    private func uploadAlertData(to remoteDataService: RemoteDataService) {
+        dispatchQueue(for: remoteDataService, withRemoteDataType: .alert).async {
+            let semaphore = DispatchSemaphore(value: 0)
+            let queryAnchor = UserDefaults.appGroup?.getQueryAnchor(for: remoteDataService, withRemoteDataType: .alert) ?? AlertStore.QueryAnchor()
+
+            self.alertStore.executeAlertQuery(fromQueryAnchor: queryAnchor, limit: remoteDataService.alertDataLimit ?? Int.max) { result in
+                switch result {
+                case .failure(let error):
+                    self.log.error("Error querying alert data: %{public}@", String(describing: error))
+                    semaphore.signal()
+                case .success(let queryAnchor, let data):
+                    remoteDataService.uploadAlertData(data) { result in
+                        switch result {
+                        case .failure(let error):
+                            self.log.error("Error synchronizing alert data: %{public}@", String(describing: error))
+                        case .success:
+                            UserDefaults.appGroup?.setQueryAnchor(for: remoteDataService, withRemoteDataType: .alert, queryAnchor)
+                        }
+                        semaphore.signal()
+                    }
+                }
+            }
+
+            semaphore.wait()
+        }
+    }
+
+    private func clearAlertQueryAnchor(for remoteDataService: RemoteDataService) {
+        dispatchQueue(for: remoteDataService, withRemoteDataType: .alert).async {
+            UserDefaults.appGroup?.deleteQueryAnchor(for: remoteDataService, withRemoteDataType: .alert)
+        }
     }
 
 }
