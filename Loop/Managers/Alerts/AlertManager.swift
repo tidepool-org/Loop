@@ -251,8 +251,8 @@ extension AlertManager {
     }
 }
 
-// MARK: AlertSearcher
-extension AlertManager: AlertSearcher {
+// MARK: AlertQuerier
+extension AlertManager: AlertQuerier {
     public func lookupOutstandingAlerts(managerIdentifier: String, completion: @escaping (Result<[Alert], Error>) -> Void) {
         alertStore.lookupAllUnacknowledged(managerIdentifier: managerIdentifier) {
             switch $0 {

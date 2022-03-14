@@ -790,6 +790,13 @@ extension DeviceDataManager: AlertIssuer {
     }
 }
 
+// MARK: - AlertQuerier
+extension DeviceDataManager: AlertQuerier {
+    func lookupOutstandingAlerts(managerIdentifier: String, completion: @escaping (Swift.Result<[Alert], Error>) -> Void) {
+        alertManager?.lookupOutstandingAlerts(managerIdentifier: managerIdentifier, completion: completion)
+    }
+}
+
 // MARK: - CGMManagerDelegate
 extension DeviceDataManager: CGMManagerDelegate {
     func cgmManagerWantsDeletion(_ manager: CGMManager) {
