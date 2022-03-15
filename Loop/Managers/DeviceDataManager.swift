@@ -790,9 +790,9 @@ extension DeviceDataManager: AlertIssuer {
     }
 }
 
-// MARK: - AlertQuerier
-extension DeviceDataManager: AlertQuerier {
-    func lookupOutstandingAlerts(managerIdentifier: String, completion: @escaping (Swift.Result<[Alert], Error>) -> Void) {
+// MARK: - PersistedAlertStore
+extension DeviceDataManager: PersistedAlertStore {
+    func lookupOutstandingAlerts(managerIdentifier: String, completion: @escaping (Swift.Result<[PersistedAlert], Error>) -> Void) {
         alertManager?.lookupOutstandingAlerts(managerIdentifier: managerIdentifier, completion: completion)
     }
 }

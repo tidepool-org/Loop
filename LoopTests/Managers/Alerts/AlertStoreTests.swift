@@ -554,7 +554,7 @@ class AlertStoreTests: XCTestCase {
     
     func testLookupAllUnacknowledgedEmpty() {
         let expect = self.expectation(description: #function)
-        alertStore.lookupAllUnacknowledged(completion: expectSuccess { alerts in
+        alertStore.lookupAllUnacknowledgedUnretracted(completion: expectSuccess { alerts in
             XCTAssertTrue(alerts.isEmpty)
             expect.fulfill()
         })
@@ -564,7 +564,7 @@ class AlertStoreTests: XCTestCase {
     func testLookupAllUnacknowledgedOne() {
         let expect = self.expectation(description: #function)
         fillWith(startDate: Self.historicDate, data: [(alert1, false, false)]) {
-            self.alertStore.lookupAllUnacknowledged(completion: self.expectSuccess { alerts in
+            self.alertStore.lookupAllUnacknowledgedUnretracted(completion: self.expectSuccess { alerts in
                 self.assertEqual([self.alert1], alerts)
                 expect.fulfill()
             })
@@ -576,7 +576,7 @@ class AlertStoreTests: XCTestCase {
     func testLookupAllUnacknowledgedOneAcknowledged() {
         let expect = self.expectation(description: #function)
         fillWith(startDate: Self.historicDate, data: [(alert1, true, false)]) {
-            self.alertStore.lookupAllUnacknowledged(completion: self.expectSuccess { alerts in
+            self.alertStore.lookupAllUnacknowledgedUnretracted(completion: self.expectSuccess { alerts in
                 self.assertEqual([], alerts)
                 expect.fulfill()
             })
@@ -591,7 +591,7 @@ class AlertStoreTests: XCTestCase {
             (alert2, false, false),
             (alert1, false, false),
         ]) {
-            self.alertStore.lookupAllUnacknowledged(completion: self.expectSuccess { alerts in
+            self.alertStore.lookupAllUnacknowledgedUnretracted(completion: self.expectSuccess { alerts in
                 self.assertEqual([self.alert2, self.alert1], alerts)
                 expect.fulfill()
             })
@@ -606,7 +606,7 @@ class AlertStoreTests: XCTestCase {
             (alert2, false, false),
             (alert1, false, true)
         ]) {
-            self.alertStore.lookupAllUnacknowledged(completion: self.expectSuccess { alerts in
+            self.alertStore.lookupAllUnacknowledgedUnretracted(completion: self.expectSuccess { alerts in
                 self.assertEqual([self.alert2], alerts)
                 expect.fulfill()
             })
