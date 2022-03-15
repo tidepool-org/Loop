@@ -552,7 +552,7 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: Self.defaultTimeout)
     }
     
-    func testLookupAllUnacknowledgedEmpty() {
+    func testLookupAllUnacknowledgedUnretractedEmpty() {
         let expect = self.expectation(description: #function)
         alertStore.lookupAllUnacknowledgedUnretracted(completion: expectSuccess { alerts in
             XCTAssertTrue(alerts.isEmpty)
@@ -561,7 +561,7 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: Self.defaultTimeout)
     }
     
-    func testLookupAllUnacknowledgedOne() {
+    func testLookupAllUnacknowledgedUnretractedOne() {
         let expect = self.expectation(description: #function)
         fillWith(startDate: Self.historicDate, data: [(alert1, false, false)]) {
             self.alertStore.lookupAllUnacknowledgedUnretracted(completion: self.expectSuccess { alerts in
@@ -573,7 +573,7 @@ class AlertStoreTests: XCTestCase {
     }
     
     
-    func testLookupAllUnacknowledgedOneAcknowledged() {
+    func testLookupAllUnacknowledgedUnretractedOneAcknowledged() {
         let expect = self.expectation(description: #function)
         fillWith(startDate: Self.historicDate, data: [(alert1, true, false)]) {
             self.alertStore.lookupAllUnacknowledgedUnretracted(completion: self.expectSuccess { alerts in
@@ -584,7 +584,7 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: Self.defaultTimeout)
     }
     
-    func testLookupAllUnacknowledgedSomeNot() {
+    func testLookupAllUnacknowledgedUnretractedSomeNot() {
         let expect = self.expectation(description: #function)
         fillWith(startDate: Self.historicDate, data: [
             (alert1, true, false),
@@ -599,7 +599,7 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: Self.defaultTimeout)
     }
     
-    func testLookupAllUnacknowledgedSomeRetracted() {
+    func testLookupAllUnacknowledgedUnretractedSomeRetracted() {
         let expect = self.expectation(description: #function)
         fillWith(startDate: Self.historicDate, data: [
             (alert1, false, true),
@@ -614,6 +614,68 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: Self.defaultTimeout)
     }
     
+    func testLookupAllUnretractedEmpty() {
+        let expect = self.expectation(description: #function)
+        alertStore.lookupAllUnretracted(completion: expectSuccess { alerts in
+            XCTAssertTrue(alerts.isEmpty)
+            expect.fulfill()
+        })
+        wait(for: [expect], timeout: Self.defaultTimeout)
+    }
+    
+    func testLookupAllUnretractedOne() {
+        let expect = self.expectation(description: #function)
+        fillWith(startDate: Self.historicDate, data: [(alert1, false, false)]) {
+            self.alertStore.lookupAllUnretracted(completion: self.expectSuccess { alerts in
+                self.assertEqual([self.alert1], alerts)
+                expect.fulfill()
+            })
+        }
+        wait(for: [expect], timeout: Self.defaultTimeout)
+    }
+    
+    
+    func testLookupAllUnretractedOneAcknowledged() {
+        let expect = self.expectation(description: #function)
+        fillWith(startDate: Self.historicDate, data: [(alert1, true, false)]) {
+            self.alertStore.lookupAllUnretracted(completion: self.expectSuccess { alerts in
+                self.assertEqual([self.alert1], alerts)
+                expect.fulfill()
+            })
+        }
+        wait(for: [expect], timeout: Self.defaultTimeout)
+    }
+    
+    func testLookupAllUnretractedSomeAcknowledgedSomeNot() {
+        let expect = self.expectation(description: #function)
+        fillWith(startDate: Self.historicDate, data: [
+            (alert1, true, false),
+            (alert2, false, false),
+            (alert1, false, false),
+        ]) {
+            self.alertStore.lookupAllUnretracted(completion: self.expectSuccess { alerts in
+                self.assertEqual([self.alert1, self.alert2, self.alert1], alerts)
+                expect.fulfill()
+            })
+        }
+        wait(for: [expect], timeout: Self.defaultTimeout)
+    }
+    
+    func testLookupAllUnretractedSomeRetracted() {
+        let expect = self.expectation(description: #function)
+        fillWith(startDate: Self.historicDate, data: [
+            (alert1, false, true),
+            (alert2, false, false),
+            (alert1, false, true)
+        ]) {
+            self.alertStore.lookupAllUnretracted(completion: self.expectSuccess { alerts in
+                self.assertEqual([self.alert2], alerts)
+                expect.fulfill()
+            })
+        }
+        wait(for: [expect], timeout: Self.defaultTimeout)
+    }
+
     func testLookupAllAcknowledgedUnretractedRepeatingAlertsAll() {
         let expect = self.expectation(description: #function)
         fillWith(startDate: Self.historicDate, data: [

@@ -111,6 +111,10 @@ class AlertManagerTests: XCTestCase {
         override public func lookupAllUnacknowledgedUnretracted(managerIdentifier: String?, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
             completion(.success(storedAlerts))
         }
+        
+        override public func lookupAllUnretracted(managerIdentifier: String?, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+            completion(.success(storedAlerts))
+        }
     }
     
     static let mockManagerIdentifier = "mockManagerIdentifier"
@@ -287,6 +291,36 @@ class AlertManagerTests: XCTestCase {
             XCTAssertEqual(alert, mockIssuer.issuedAlert)
         }
     }
+    
+    func testPersistedAlertStore() throws {
+        mockAlertStore.managedObjectContext.performAndWait {
+            let date = Date.distantPast
+            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+            let alert = Alert(identifier: Self.mockIdentifier,
+                              foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
+            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+            storedAlert.issuedDate = date
+            mockAlertStore.storedAlerts = [storedAlert]
+            alertManager = AlertManager(alertPresenter: mockPresenter,
+                                        handlers: [mockIssuer],
+                                        userNotificationCenter: mockUserNotificationCenter,
+                                        fileManager: mockFileManager,
+                                        alertStore: mockAlertStore)
+            alertManager.lookupOutstandingAlerts(managerIdentifier: Self.mockManagerIdentifier) { result in
+                try? XCTAssertEqual([PersistedAlert(alert: alert, issuedDate: date, retractedDate: nil, acknowledgedDate: nil)],
+                                    try XCTUnwrap(result.successValue))
+            }
+        }
+    }
+}
+
+extension Swift.Result {
+    var successValue: Success? {
+        switch self {
+        case .failure: return nil
+        case .success(let s): return s
+        }
+    }
 }
 
 class MockUserNotificationCenter: UserNotificationCenter {
@@ -324,4 +358,3 @@ class MockUserNotificationCenter: UserNotificationCenter {
         completionHandler(pendingRequests)
     }
 }
-
