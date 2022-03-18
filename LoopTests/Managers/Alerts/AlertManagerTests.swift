@@ -292,7 +292,7 @@ class AlertManagerTests: XCTestCase {
         }
     }
     
-    func testPersistedAlertStore() throws {
+    func testPersistedAlertStoreLookupAllUnretracted() throws {
         mockAlertStore.managedObjectContext.performAndWait {
             let date = Date.distantPast
             let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
@@ -306,12 +306,34 @@ class AlertManagerTests: XCTestCase {
                                         userNotificationCenter: mockUserNotificationCenter,
                                         fileManager: mockFileManager,
                                         alertStore: mockAlertStore)
-            alertManager.lookupOutstandingAlerts(managerIdentifier: Self.mockManagerIdentifier) { result in
+            alertManager.lookupAllUnretracted(managerIdentifier: Self.mockManagerIdentifier) { result in
                 try? XCTAssertEqual([PersistedAlert(alert: alert, issuedDate: date, retractedDate: nil, acknowledgedDate: nil)],
                                     try XCTUnwrap(result.successValue))
             }
         }
     }
+
+    func testPersistedAlertStoreLookupAllUnacknowledgedUnretracted() throws {
+        mockAlertStore.managedObjectContext.performAndWait {
+            let date = Date.distantPast
+            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+            let alert = Alert(identifier: Self.mockIdentifier,
+                              foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
+            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+            storedAlert.issuedDate = date
+            mockAlertStore.storedAlerts = [storedAlert]
+            alertManager = AlertManager(alertPresenter: mockPresenter,
+                                        handlers: [mockIssuer],
+                                        userNotificationCenter: mockUserNotificationCenter,
+                                        fileManager: mockFileManager,
+                                        alertStore: mockAlertStore)
+            alertManager.lookupAllUnacknowledgedUnretracted(managerIdentifier: Self.mockManagerIdentifier) { result in
+                try? XCTAssertEqual([PersistedAlert(alert: alert, issuedDate: date, retractedDate: nil, acknowledgedDate: nil)],
+                                    try XCTUnwrap(result.successValue))
+            }
+        }
+    }
+
 }
 
 extension Swift.Result {
