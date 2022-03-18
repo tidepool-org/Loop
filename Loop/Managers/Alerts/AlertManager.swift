@@ -128,16 +128,12 @@ extension AlertManager: AlertIssuer {
 
     public func issueAlert(_ alert: Alert) {
         handlers.forEach { $0.issueAlert(alert) }
-        let sema = DispatchSemaphore(value: 0)
-        alertStore.recordIssued(alert: alert) { _ in sema.signal() }
-        _ = sema.wait(timeout: DispatchTime.now() + 1)
+        alertStore.recordIssued(alert: alert)
     }
 
     public func retractAlert(identifier: Alert.Identifier) {
         handlers.forEach { $0.retractAlert(identifier: identifier) }
-        let sema = DispatchSemaphore(value: 0)
-        alertStore.recordRetraction(of: identifier) { _ in sema.signal() }
-        _ = sema.wait(timeout: DispatchTime.now() + 1)
+        alertStore.recordRetraction(of: identifier)
     }
 
     private func replayAlert(_ alert: Alert) {

@@ -83,7 +83,7 @@ public class AlertStore {
     }
 
     public func recordIssued(alert: Alert, at date: Date = Date(), completion: ((Result<Void, Error>) -> Void)? = nil) {
-        self.managedObjectContext.perform {
+        self.managedObjectContext.performAndWait {
             _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
             do {
                 try self.managedObjectContext.save()
@@ -196,7 +196,7 @@ extension AlertStore {
                                    addingPredicate predicate: NSPredicate,
                                    with updateBlock: @escaping ManagedObjectUpdateBlock,
                                    completion: ((Result<Void, Error>) -> Void)?) {
-        managedObjectContext.perform {
+        managedObjectContext.performAndWait {
             self.lookupAll(identifier: identifier, predicate: predicate) {
                 switch $0 {
                 case .success(let objects):
@@ -218,7 +218,7 @@ extension AlertStore {
                                       addingPredicate predicate: NSPredicate,
                                       with updateBlock: @escaping ManagedObjectUpdateBlock,
                                       completion: ((Result<Void, Error>) -> Void)?) {
-        managedObjectContext.perform {
+        managedObjectContext.performAndWait {
             self.lookupLatest(identifier: identifier, predicate: predicate) {
                 switch $0 {
                 case .success(let object):
