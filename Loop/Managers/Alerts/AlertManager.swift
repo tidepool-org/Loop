@@ -257,7 +257,7 @@ extension AlertManager {
 
 // MARK: PersistedAlertStore
 extension AlertManager: PersistedAlertStore {
-    public func doesPersistedAlertExist(identifier: Alert.Identifier, completion: @escaping (Result<Bool, Error>) -> Void) {
+    public func doesIssuedAlertExist(identifier: Alert.Identifier, completion: @escaping (Result<Bool, Error>) -> Void) {
         alertStore.lookupAllMatching(identifier: identifier) { result in
             switch result {
             case .success(let storedAlerts):

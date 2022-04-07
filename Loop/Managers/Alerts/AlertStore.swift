@@ -104,12 +104,12 @@ public class AlertStore {
             storedAlert.retractedDate = date
             do {
                 try self.managedObjectContext.save()
-                self.log.default("Recorded alert: %{public}@", alert.identifier.value)
+                self.log.default("Recorded retracted alert: %{public}@", alert.identifier.value)
                 self.purgeExpired()
                 self.delegate?.alertStoreHasUpdatedAlertData(self)
                 completion?(.success)
             } catch {
-                self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
+                self.log.error("Could not store retracted alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
                 completion?(.failure(error))
             }
         }

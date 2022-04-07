@@ -792,9 +792,9 @@ extension DeviceDataManager: AlertIssuer {
 
 // MARK: - PersistedAlertStore
 extension DeviceDataManager: PersistedAlertStore {
-    func doesPersistedAlertExist(identifier: Alert.Identifier, completion: @escaping (Swift.Result<Bool, Error>) -> Void) {
+    func doesIssuedAlertExist(identifier: Alert.Identifier, completion: @escaping (Swift.Result<Bool, Error>) -> Void) {
         precondition(alertManager != nil)
-        alertManager.doesPersistedAlertExist(identifier: identifier, completion: completion)
+        alertManager.doesIssuedAlertExist(identifier: identifier, completion: completion)
     }
     func lookupAllUnretracted(managerIdentifier: String, completion: @escaping (Swift.Result<[PersistedAlert], Error>) -> Void) {
         precondition(alertManager != nil)

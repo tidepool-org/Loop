@@ -341,7 +341,7 @@ class AlertManagerTests: XCTestCase {
         }
     }
 
-    func testPersistedAlertStoreDoesAlertExist() throws {
+    func testPersistedAlertStoreDoesIssuedAlertExist() throws {
         mockAlertStore.managedObjectContext.performAndWait {
             let date = Date.distantPast
             let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
@@ -357,10 +357,10 @@ class AlertManagerTests: XCTestCase {
                                         alertStore: mockAlertStore)
             let identifierExists = Self.mockIdentifier
             let identifierDoesNotExist = Alert.Identifier(managerIdentifier: "TestManagerIdentifier", alertIdentifier: "TestAlertIdentifier")
-            alertManager.doesPersistedAlertExist(identifier: identifierExists) { result in
+            alertManager.doesIssuedAlertExist(identifier: identifierExists) { result in
                 try? XCTAssertEqual(true, try XCTUnwrap(result.successValue))
             }
-            alertManager.doesPersistedAlertExist(identifier: identifierDoesNotExist) { result in
+            alertManager.doesIssuedAlertExist(identifier: identifierDoesNotExist) { result in
                 try? XCTAssertEqual(false, try XCTUnwrap(result.successValue))
             }
         }
