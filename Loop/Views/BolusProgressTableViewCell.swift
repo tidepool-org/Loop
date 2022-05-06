@@ -105,6 +105,8 @@ public class BolusProgressTableViewCell: UITableViewCell {
 
             progressLabel.text = String(format: NSLocalizedString("Bolused %1$@ of %2$@", comment: "The format string for bolus progress. (1: delivered volume)(2: total volume)"), deliveredUnitsString, totalUnitsString)
 
+            print("******************** \(progressLabel.text)")
+
             let progress = deliveredUnits / totalUnits
             UIView.animate(withDuration: 0.3) {
                 self.progressIndicator.progress = progress
