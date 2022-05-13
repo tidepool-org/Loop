@@ -13,5 +13,6 @@ struct StoredLoopNotRunningNotification: Codable {
     var title: String
     var body: String
     var timeInterval: TimeInterval
+    var isCritical: Bool
 }
 

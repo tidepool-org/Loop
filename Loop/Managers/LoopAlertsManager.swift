@@ -122,7 +122,8 @@ public class LoopAlertsManager {
                     alertAt: nextTriggerDate,
                     title: notification.title,
                     body: notification.body,
-                    timeInterval: failureInterval)
+                    timeInterval: failureInterval,
+                    isCritical: isCritical)
                 scheduledNotifications.append(scheduledNotification)
             }
             UNUserNotificationCenter.current().add(request)
@@ -138,7 +139,8 @@ public class LoopAlertsManager {
             if notification.alertAt < now {
                 let alertIdentifier = Alert.Identifier(managerIdentifier: "Loop", alertIdentifier: "loopNotLooping")
                 let content = Alert.Content(title: notification.title, body: notification.body, acknowledgeActionButtonLabel: "ios-notification-default")
-                let alert = Alert(identifier: alertIdentifier, foregroundContent: nil, backgroundContent: content, trigger: .immediate)
+                let interruptionLevel: Alert.InterruptionLevel = notification.isCritical ? .critical : .timeSensitive
+                let alert = Alert(identifier: alertIdentifier, foregroundContent: nil, backgroundContent: content, trigger: .immediate, interruptionLevel: interruptionLevel)
                 alertStore.recordIssued(alert: alert, at: notification.alertAt)
             }
         }
