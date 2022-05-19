@@ -68,7 +68,7 @@ public class LoopAlertsManager {
     }
 
     func loopDidComplete() {
-        clearLoopNotRunningNotifications(alertStore: alertManager.alertStore)
+        clearLoopNotRunningNotifications(alertManager: alertManager)
         scheduleLoopNotRunningNotifications()
     }
 
@@ -131,7 +131,7 @@ public class LoopAlertsManager {
         UserDefaults.appGroup?.loopNotRunningNotifications = scheduledNotifications
     }
 
-    func clearLoopNotRunningNotifications(alertStore: AlertStore) {
+    func clearLoopNotRunningNotifications(alertManager: AlertManager) {
 
         // Any past alerts have been delivered at this point
         let now = Date()
@@ -141,7 +141,7 @@ public class LoopAlertsManager {
                 let content = Alert.Content(title: notification.title, body: notification.body, acknowledgeActionButtonLabel: "ios-notification-default")
                 let interruptionLevel: Alert.InterruptionLevel = notification.isCritical ? .critical : .timeSensitive
                 let alert = Alert(identifier: alertIdentifier, foregroundContent: nil, backgroundContent: content, trigger: .immediate, interruptionLevel: interruptionLevel)
-                alertStore.recordIssued(alert: alert, at: notification.alertAt)
+                alertManager.recordIssued(alert: alert, at: notification.alertAt)
             }
         }
 
