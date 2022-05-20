@@ -22,6 +22,9 @@ public class LoopAlertsManager {
     private let bluetoothPoweredOffIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "bluetoothPoweredOff")
 
     lazy private var cancellables = Set<AnyCancellable>()
+
+    // For testing
+    var getCurrentDate = { return Date() }
     
     init(alertManager: AlertManager, bluetoothProvider: BluetoothProvider) {
         self.alertManager = alertManager
@@ -68,7 +71,7 @@ public class LoopAlertsManager {
     }
 
     func loopDidComplete() {
-        clearLoopNotRunningNotifications(alertManager: alertManager)
+        clearLoopNotRunningNotifications()
         scheduleLoopNotRunningNotifications()
     }
 
@@ -131,11 +134,12 @@ public class LoopAlertsManager {
         UserDefaults.appGroup?.loopNotRunningNotifications = scheduledNotifications
     }
 
-    func clearLoopNotRunningNotifications(alertManager: AlertManager) {
+    func clearLoopNotRunningNotifications() {
 
         // Any past alerts have been delivered at this point
-        let now = Date()
+        let now = getCurrentDate()
         for notification in UserDefaults.appGroup?.loopNotRunningNotifications ?? [] {
+            print("Comparing alert \(notification.alertAt) to \(now) (real date = \(Date())")
             if notification.alertAt < now {
                 let alertIdentifier = Alert.Identifier(managerIdentifier: "Loop", alertIdentifier: "loopNotLooping")
                 let content = Alert.Content(title: notification.title, body: notification.body, acknowledgeActionButtonLabel: "ios-notification-default")
