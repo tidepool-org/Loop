@@ -1763,7 +1763,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
 
-        presentActivityIndicator(title: "Simulated Core Data", message: "Generating simulated historical...") { dismissActivityIndicator in
+        presentActivityIndicator(title: "Simulated Core Data", message: "Generating simulated historical...\n\n The app must stay in the foreground. If the app enters the background before this action completes, a crash will occur. This action will take 15-30 mins.") { dismissActivityIndicator in
             self.deviceManager.purgeHistoricalCoreData() { error in
                 DispatchQueue.main.async {
                     if let error = error {

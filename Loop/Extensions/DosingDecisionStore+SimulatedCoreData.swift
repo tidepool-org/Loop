@@ -16,7 +16,7 @@ extension DosingDecisionStore {
     private var historicalEndDate: Date { Date(timeIntervalSinceNow: -.hours(24)) }
 
     private var simulatedStartDateInterval: TimeInterval { .minutes(5) }
-    private var simulatedLimit: Int { 10000 }
+    private var simulatedLimit: Int { 100 }
 
     func generateSimulatedHistoricalDosingDecisionObjects(completion: @escaping (Error?) -> Void) {
         var startDate = Calendar.current.startOfDay(for: expireDate)

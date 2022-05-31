@@ -18,7 +18,7 @@ extension DoseStore {
     private var simulatedBolusPerDay: Int { 8 }
     private var simulatedBasalStartDateInterval: TimeInterval { .minutes(5) }
     private var simulatedOtherPerDay: Int { 1 }
-    private var simulatedLimit: Int { 10000 }
+    private var simulatedLimit: Int { 100 }
 
     func generateSimulatedHistoricalPumpEvents(completion: @escaping (Error?) -> Void) {
         generatedSimulatedHistoricalBasalPumpEvents() { error in
