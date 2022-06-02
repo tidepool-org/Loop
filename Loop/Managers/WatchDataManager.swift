@@ -369,7 +369,7 @@ final class WatchDataManager: NSObject {
                 return
             }
 
-            deviceManager.enactBolus(units: bolus.value, automatic: false) { (error) in
+            deviceManager.enactBolus(units: bolus.value, activationSource: .noRecommendationUserDefined) { (error) in
                 if error == nil {
                     self.deviceManager.analyticsServicesManager.didSetBolusFromWatch(bolus.value)
                 }
