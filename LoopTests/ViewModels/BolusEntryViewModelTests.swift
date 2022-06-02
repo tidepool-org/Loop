@@ -409,7 +409,7 @@ class BolusEntryViewModelTests: XCTestCase {
         authenticateOverrideCompletion(.success(()))
         
         XCTAssertEqual(1.0, delegate.enactedBolusUnits)
-        XCTAssertEqual(.recommendationUserAdjusted, delegate.enactedBolusActivationSource)
+        XCTAssertEqual(.manualRecommendationChanged, delegate.enactedBolusActivationType)
         XCTAssertTrue(success)
         XCTAssertTrue(delegate.glucoseSamplesAdded.isEmpty)
         XCTAssertTrue(delegate.carbEntriesAdded.isEmpty)
@@ -431,7 +431,7 @@ class BolusEntryViewModelTests: XCTestCase {
         authenticateOverrideCompletion(.failure(MockError()))
         
         XCTAssertNil(delegate.enactedBolusUnits)
-        XCTAssertNil(delegate.enactedBolusActivationSource)
+        XCTAssertNil(delegate.enactedBolusActivationType)
         XCTAssertFalse(success)
         XCTAssertTrue(delegate.glucoseSamplesAdded.isEmpty)
         XCTAssertTrue(delegate.carbEntriesAdded.isEmpty)
@@ -473,7 +473,7 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.0.manualBolusRequested, 0.0)
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.1, now)
         XCTAssertNil(delegate.enactedBolusUnits)
-        XCTAssertNil(delegate.enactedBolusActivationSource)
+        XCTAssertNil(delegate.enactedBolusActivationType)
         XCTAssertTrue(saveAndDeliverSuccess)
     }
     
@@ -498,7 +498,7 @@ class BolusEntryViewModelTests: XCTestCase {
 
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.1, now)
         XCTAssertNil(delegate.enactedBolusUnits)
-        XCTAssertNil(delegate.enactedBolusActivationSource)
+        XCTAssertNil(delegate.enactedBolusActivationType)
         XCTAssertTrue(saveAndDeliverSuccess)
     }
     
@@ -528,7 +528,7 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.0.manualBolusRequested, 1.0)
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.1, now)
         XCTAssertEqual(1.0, delegate.enactedBolusUnits)
-        XCTAssertEqual(.recommendationUserAdjusted, delegate.enactedBolusActivationSource)
+        XCTAssertEqual(.manualRecommendationChanged, delegate.enactedBolusActivationType)
         XCTAssertTrue(saveAndDeliverSuccess)
     }
     
@@ -560,7 +560,7 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.0.manualBolusRequested, 1.0)
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.1, now)
         XCTAssertEqual(1.0, delegate.enactedBolusUnits)
-        XCTAssertEqual(.recommendationUserAdjusted, delegate.enactedBolusActivationSource)
+        XCTAssertEqual(.manualRecommendationChanged, delegate.enactedBolusActivationType)
         XCTAssertTrue(saveAndDeliverSuccess)
     }
     
@@ -631,7 +631,7 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.0.manualBolusRequested, 1.0)
         XCTAssertEqual(delegate.bolusDosingDecisionsAdded.first?.1, now)
         XCTAssertEqual(1.0, delegate.enactedBolusUnits)
-        XCTAssertEqual(.recommendationUserAdjusted, delegate.enactedBolusActivationSource)
+        XCTAssertEqual(.manualRecommendationChanged, delegate.enactedBolusActivationType)
         XCTAssertTrue(saveAndDeliverSuccess)
     }
     
@@ -904,10 +904,10 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     }
 
     var enactedBolusUnits: Double?
-    var enactedBolusActivationSource: DoseActivationSource?
-    func enactBolus(units: Double, activationSource: DoseActivationSource, completion: @escaping (Error?) -> Void) {
+    var enactedBolusActivationType: BolusActivationType?
+    func enactBolus(units: Double, activationType: BolusActivationType, completion: @escaping (Error?) -> Void) {
         enactedBolusUnits = units
-        enactedBolusActivationSource = activationSource
+        enactedBolusActivationType = activationType
     }
     
     var getGlucoseSamplesResponse: [StoredGlucoseSample] = []

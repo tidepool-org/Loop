@@ -25,7 +25,7 @@ protocol SimpleBolusViewModelDelegate: AnyObject {
 
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
     
-    func enactBolus(units: Double, activationSource: DoseActivationSource)
+    func enactBolus(units: Double, activationType: BolusActivationType)
 
     func insulinOnBoard(at date: Date, completion: @escaping (_ result: DoseStoreResult<InsulinValue>) -> Void)
 
@@ -409,13 +409,13 @@ class SimpleBolusViewModel: ObservableObject {
             }
         }
 
-        func activationSource(for bolusVolume: Double) -> DoseActivationSource {
-            return recommendation == nil ? .noRecommendationUserDefined : recommendation == bolusVolume ? .recommendationUserConfirmed : .recommendationUserAdjusted
+        func activationType(for bolusVolume: Double) -> BolusActivationType {
+            return recommendation == nil ? .manualNoRecommendation : recommendation == bolusVolume ? .manualRecommendationAccepted : .manualRecommendationChanged
         }
 
         func enactBolus() {
             if let bolusVolume = bolus?.doubleValue(for: .internationalUnit()), bolusVolume > 0 {
-                delegate.enactBolus(units: bolusVolume, activationSource: activationSource(for: bolusVolume))
+                delegate.enactBolus(units: bolusVolume, activationType: activationType(for: bolusVolume))
                 dosingDecision?.manualBolusRequested = bolusVolume
             }
         }
