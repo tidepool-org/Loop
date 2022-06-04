@@ -690,7 +690,7 @@ extension DeviceDataManager {
                     break
                 default:
                     // Do not generate notifications for automatic boluses that fail.
-                    if activationType.isAutomatic {
+                    if !activationType.isAutomatic {
                         NotificationManager.sendBolusFailureNotification(for: error, units: units, at: Date(), activationType: activationType)
                     }
                 }

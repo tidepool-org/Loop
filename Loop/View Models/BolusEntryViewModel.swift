@@ -405,7 +405,8 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func activationType(for bolusVolume: Double) -> BolusActivationType {
-        return recommendedBolus == nil ? .manualNoRecommendation : recommendedBolus!.doubleValue(for: .internationalUnit()) == bolusVolume ? .manualRecommendationAccepted : .manualRecommendationChanged
+        guard let recommendedBolusVolume = recommendedBolus?.doubleValue(for: .internationalUnit()) else { return .manualNoRecommendation }
+        return recommendedBolusVolume =~ bolusVolume ? .manualRecommendationAccepted : .manualRecommendationChanged
     }
 
     private func deliverBolus(onSuccess completion: @escaping () -> Void) {

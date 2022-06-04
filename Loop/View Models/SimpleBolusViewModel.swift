@@ -410,7 +410,8 @@ class SimpleBolusViewModel: ObservableObject {
         }
 
         func activationType(for bolusVolume: Double) -> BolusActivationType {
-            return recommendation == nil ? .manualNoRecommendation : recommendation == bolusVolume ? .manualRecommendationAccepted : .manualRecommendationChanged
+            guard let recommendedBolusVolume = recommendation else { return .manualNoRecommendation }
+            return recommendedBolusVolume =~ bolusVolume ? .manualRecommendationAccepted : .manualRecommendationChanged
         }
 
         func enactBolus() {
