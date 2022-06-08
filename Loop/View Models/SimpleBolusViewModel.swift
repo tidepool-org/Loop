@@ -409,14 +409,9 @@ class SimpleBolusViewModel: ObservableObject {
             }
         }
 
-        func activationType(for bolusVolume: Double) -> BolusActivationType {
-            guard let recommendedBolusVolume = recommendation else { return .manualNoRecommendation }
-            return recommendedBolusVolume =~ bolusVolume ? .manualRecommendationAccepted : .manualRecommendationChanged
-        }
-
         func enactBolus() {
             if let bolusVolume = bolus?.doubleValue(for: .internationalUnit()), bolusVolume > 0 {
-                delegate.enactBolus(units: bolusVolume, activationType: activationType(for: bolusVolume))
+                delegate.enactBolus(units: bolusVolume, activationType: .activationTypeFor(recommendedAmount: recommendation, bolusAmount: bolusVolume))
                 dosingDecision?.manualBolusRequested = bolusVolume
             }
         }

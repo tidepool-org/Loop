@@ -404,11 +404,6 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func activationType(for bolusVolume: Double) -> BolusActivationType {
-        guard let recommendedBolusVolume = recommendedBolus?.doubleValue(for: .internationalUnit()) else { return .manualNoRecommendation }
-        return recommendedBolusVolume =~ bolusVolume ? .manualRecommendationAccepted : .manualRecommendationChanged
-    }
-
     private func deliverBolus(onSuccess completion: @escaping () -> Void) {
         let now = self.now()
         let bolusVolume = enteredBolus.doubleValue(for: .internationalUnit())
@@ -424,7 +419,7 @@ final class BolusEntryViewModel: ObservableObject {
         isInitiatingSaveOrBolus = true
         savedPreMealOverride = nil
         // TODO: should we pass along completion or not???
-        delegate?.enactBolus(units: bolusVolume, activationType: activationType(for: bolusVolume), completion: { _ in })
+        delegate?.enactBolus(units: bolusVolume, activationType: .activationTypeFor(recommendedAmount: recommendedBolus?.doubleValue(for: .internationalUnit()), bolusAmount: bolusVolume), completion: { _ in })
         completion()
     }
 

@@ -31,10 +31,4 @@ struct BolusDosingDecision {
     init(for reason: Reason) {
         self.reason = reason
     }
-
-    var activationType: BolusActivationType? {
-        guard let manualBolusRequested = manualBolusRequested else { return nil }
-        guard let manualBolusRecommendation = manualBolusRecommendation else { return .manualNoRecommendation }
-        return manualBolusRecommendation.recommendation.amount =~ manualBolusRequested ? .manualRecommendationAccepted : .manualRecommendationChanged
-    }
 }
