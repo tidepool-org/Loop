@@ -354,6 +354,22 @@ class AlertStoreTests: XCTestCase {
         wait(for: [expect], timeout: Self.defaultTimeout)
     }
 
+    func testRecordAcknowledgedAlert() {
+        let expect = self.expectation(description: #function)
+        let alertDate = Self.historicDate
+        alertStore.recordAcknowledgedAlert(alert1, at: alertDate, completion: self.expectSuccess {
+            self.alertStore.fetch(identifier: Self.identifier1, completion: self.expectSuccess { storedAlerts in
+                XCTAssertEqual(1, storedAlerts.count)
+                XCTAssertEqual(Self.identifier1, storedAlerts.first?.identifier)
+                XCTAssertEqual(alertDate, storedAlerts.first?.issuedDate)
+                XCTAssertNil(storedAlerts.first?.retractedDate)
+                XCTAssertEqual(alertDate, storedAlerts.first?.acknowledgedDate)
+                expect.fulfill()
+            })
+        })
+        wait(for: [expect], timeout: Self.defaultTimeout)
+    }
+
     func testEmptyQuery() {
         let expect = self.expectation(description: #function)
         alertStore.recordIssued(alert: alert1, at: Self.historicDate, completion: self.expectSuccess {

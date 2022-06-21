@@ -810,6 +810,11 @@ extension DeviceDataManager: PersistedAlertStore {
         precondition(alertManager != nil)
         alertManager.recordRetractedAlert(alert, at: date)
     }
+
+    func recordAcknowledgedAlert(_ alert: Alert, at date: Date) {
+        precondition(alertManager != nil)
+        alertManager.recordAcknowledgedAlert(alert, at: date)
+    }
 }
 
 // MARK: - CGMManagerDelegate
