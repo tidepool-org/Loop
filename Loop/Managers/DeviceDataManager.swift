@@ -875,9 +875,9 @@ extension DeviceDataManager: PersistedAlertStore {
         alertManager.recordRetractedAlert(alert, at: date)
     }
 
-    func recordAcknowledgedAlert(_ alert: Alert, at date: Date) {
+    func recordIssued(alert: Alert, at date: Date, completion: ((Swift.Result<Void, Error>) -> Void)? = nil) {
         precondition(alertManager != nil)
-        alertManager.recordAcknowledgedAlert(alert, at: date)
+        alertManager.recordIssued(alert: alert, at: date, completion: completion)
     }
 }
 

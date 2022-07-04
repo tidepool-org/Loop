@@ -114,23 +114,6 @@ public class AlertStore {
             }
         }
     }
-
-    public func recordAcknowledgedAlert(_ alert: Alert, at date: Date, completion: ((Result<Void, Error>) -> Void)? = nil) {
-        self.managedObjectContext.performAndWait {
-            let storedAlert = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
-            storedAlert.acknowledgedDate = date
-            do {
-                try self.managedObjectContext.save()
-                self.log.default("Recorded acknowledged alert: %{public}@", alert.identifier.value)
-                self.purgeExpired()
-                self.delegate?.alertStoreHasUpdatedAlertData(self)
-                completion?(.success)
-            } catch {
-                self.log.error("Could not store acknowledged alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
-                completion?(.failure(error))
-            }
-        }
-    }
     
     public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date(),
                                       completion: ((Result<Void, Error>) -> Void)? = nil) {
