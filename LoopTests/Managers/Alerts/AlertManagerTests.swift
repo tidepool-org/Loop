@@ -96,12 +96,6 @@ class AlertManagerTests: XCTestCase {
             retractedAlertDate = date
             completion?(.success)
         }
-
-        override public func recordAcknowledgedAlert(_ alert: Alert, at date: Date, completion: ((Result<Void, Error>) -> Void)? = nil) {
-            acknowledgedAlertIdentifier = alert.identifier
-            acknowledgedAlertDate = date
-            completion?(.success)
-        }
         
         var acknowledgedAlertIdentifier: Alert.Identifier?
         var acknowledgedAlertDate: Date?
@@ -387,24 +381,6 @@ class AlertManagerTests: XCTestCase {
             alertManager.recordRetractedAlert(alert, at: now)
             XCTAssertEqual(mockAlertStore.retractedAlert, alert)
             XCTAssertEqual(mockAlertStore.retractedAlertDate, now)
-        }
-    }
-
-    func testReportAcknowledgedAlert() throws {
-        mockAlertStore.managedObjectContext.performAndWait {
-            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
-            let alert = Alert(identifier: Self.mockIdentifier,
-                              foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
-            mockAlertStore.storedAlerts = []
-            alertManager = AlertManager(alertPresenter: mockPresenter,
-                                        handlers: [mockIssuer],
-                                        userNotificationCenter: mockUserNotificationCenter,
-                                        fileManager: mockFileManager,
-                                        alertStore: mockAlertStore)
-            let now = Date()
-            alertManager.recordAcknowledgedAlert(alert, at: now)
-            XCTAssertEqual(mockAlertStore.acknowledgedAlertIdentifier, alert.identifier)
-            XCTAssertEqual(mockAlertStore.acknowledgedAlertDate, now)
         }
     }
 }
