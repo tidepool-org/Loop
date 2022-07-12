@@ -211,6 +211,8 @@ final class DeviceDataManager {
 
     private(set) var pumpManagerHUDProvider: HUDProvider?
 
+    private var systemTimeOffsetDetector: SystemTimeOffsetDetector
+
     // MARK: - WatchKit
 
     private var watchManager: WatchDataManager!
@@ -231,7 +233,8 @@ final class DeviceDataManager {
          closedLoopStatus: ClosedLoopStatus,
          cacheStore: PersistenceController,
          localCacheDuration: TimeInterval,
-         overrideHistory: TemporaryScheduleOverrideHistory)
+         overrideHistory: TemporaryScheduleOverrideHistory,
+         systemTimeOffsetDetector: SystemTimeOffsetDetector)
     {
 
         let fileManager = FileManager.default
@@ -309,6 +312,8 @@ final class DeviceDataManager {
 
         // HealthStorePreferredGlucoseUnitDidChange will be notified once the user completes the health access form. Set to .milligramsPerDeciliter until then
         displayGlucoseUnitObservable = DisplayGlucoseUnitObservable(displayGlucoseUnit: glucoseStore.preferredUnit ?? .milligramsPerDeciliter)
+
+        self.systemTimeOffsetDetector = systemTimeOffsetDetector
 
         if let pumpManagerRawValue = rawPumpManager ?? UserDefaults.appGroup?.legacyPumpManagerRawValue {
             pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
@@ -1681,3 +1686,7 @@ extension DeviceDataManager {
 }
 
 extension DeviceDataManager: DeviceStatusProvider {}
+
+extension DeviceDataManager: SystemTimeOffsetDetector {
+    var detectedSystemTimeOffset: Bool { systemTimeOffsetDetector.detectedSystemTimeOffset }
+}

@@ -10,6 +10,10 @@ import LoopKit
 import TrueTime
 import UIKit
 
+protocol SystemTimeOffsetDetector {
+    var detectedSystemTimeOffset: Bool { get }
+}
+
 fileprivate extension UserDefaults {
     private enum Key: String {
         case lastSignificantTimeChangeAlert = "com.loopkit.Loop.LastSignificantTimeChangeAlert"
@@ -25,7 +29,7 @@ fileprivate extension UserDefaults {
     }
 }
 
-class TrustedTimeChecker {
+class TrustedTimeChecker: SystemTimeOffsetDetector {
     private let acceptableTimeDelta = TimeInterval.seconds(120)
     private let minimumAlertFrequency = TimeInterval.minutes(30)
 
@@ -33,6 +37,8 @@ class TrustedTimeChecker {
     private var ntpClient: TrueTimeClient
     private weak var alertManager: AlertManager?
     private lazy var log = DiagnosticLog(category: "TrustedTimeChecker")
+
+    var detectedSystemTimeOffset: Bool = false
 
     init(alertManager: AlertManager) {
         ntpClient = TrueTimeClient.sharedInstance
@@ -58,7 +64,8 @@ class TrustedTimeChecker {
                 let ntpNow = referenceTime.now()
                 let timeDelta = abs(ntpNow.timeIntervalSince(deviceNow))
                 let timeSinceLastAlert = abs(ntpNow.timeIntervalSince(UserDefaults.standard.lastSignificantTimeChangeAlert ?? Date.distantPast))
-                if timeDelta > self.acceptableTimeDelta, timeSinceLastAlert > self.minimumAlertFrequency {
+                self.detectedSystemTimeOffset = timeDelta > self.acceptableTimeDelta
+                if self.detectedSystemTimeOffset, timeSinceLastAlert > self.minimumAlertFrequency {
                     self.log.info("applicationSignificantTimeChange: ntpNow = %@, deviceNow = %@", ntpNow.debugDescription, deviceNow.debugDescription)
                     self.issueTimeChangedAlert()
                     UserDefaults.standard.lastSignificantTimeChangeAlert = ntpNow
