@@ -10,10 +10,6 @@ import LoopKit
 import TrueTime
 import UIKit
 
-protocol SystemTimeOffsetDetector {
-    var detectedSystemTimeOffset: Bool { get }
-}
-
 fileprivate extension UserDefaults {
     private enum Key: String {
         case lastSignificantTimeChangeAlert = "com.loopkit.Loop.LastSignificantTimeChangeAlert"
@@ -29,7 +25,7 @@ fileprivate extension UserDefaults {
     }
 }
 
-class TrustedTimeChecker: SystemTimeOffsetDetector {
+class TrustedTimeChecker {
     private let acceptableTimeDelta = TimeInterval.seconds(120)
     private let minimumAlertFrequency = TimeInterval.minutes(30)
 
