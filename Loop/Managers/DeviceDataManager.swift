@@ -1688,5 +1688,5 @@ extension DeviceDataManager {
 extension DeviceDataManager: DeviceStatusProvider {}
 
 extension DeviceDataManager {
-    var detectedSystemTimeOffset: Bool { trustedTimeChecker.detectedSystemTimeOffset }
+    var detectedSystemTimeOffset: TimeInterval { trustedTimeChecker.detectedSystemTimeOffset }
 }

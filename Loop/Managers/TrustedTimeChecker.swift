@@ -13,6 +13,7 @@ import UIKit
 fileprivate extension UserDefaults {
     private enum Key: String {
         case lastSignificantTimeChangeAlert = "com.loopkit.Loop.LastSignificantTimeChangeAlert"
+        case detectedSystemTimeOffset = "com.loopkit.Loop.DetectedSystemTimeOffset"
     }
     
     var lastSignificantTimeChangeAlert: Date? {
@@ -21,6 +22,15 @@ fileprivate extension UserDefaults {
         }
         set {
             set(newValue, forKey: Key.lastSignificantTimeChangeAlert.rawValue)
+        }
+    }
+
+    var detectedSystemTimeOffset: TimeInterval? {
+        get {
+            return object(forKey: Key.detectedSystemTimeOffset.rawValue) as? TimeInterval
+        }
+        set {
+            set(newValue, forKey: Key.detectedSystemTimeOffset.rawValue)
         }
     }
 }
@@ -34,7 +44,11 @@ class TrustedTimeChecker {
     private weak var alertManager: AlertManager?
     private lazy var log = DiagnosticLog(category: "TrustedTimeChecker")
 
-    var detectedSystemTimeOffset: Bool = false
+    var detectedSystemTimeOffset: TimeInterval {
+        didSet {
+            UserDefaults.standard.detectedSystemTimeOffset = detectedSystemTimeOffset
+        }
+    }
 
     init(alertManager: AlertManager) {
         ntpClient = TrueTimeClient.sharedInstance
@@ -45,6 +59,7 @@ class TrustedTimeChecker {
         #endif
         ntpClient.start()
         self.alertManager = alertManager
+        self.detectedSystemTimeOffset = UserDefaults.standard.detectedSystemTimeOffset ?? 0
         NotificationCenter.default.addObserver(forName: UIApplication.significantTimeChangeNotification,
                                                object: nil, queue: nil) { [weak self] _ in self?.checkTrustedTime() }
         NotificationCenter.default.addObserver(forName: .LoopRunning,
@@ -58,13 +73,16 @@ class TrustedTimeChecker {
             case let .success(referenceTime):
                 let deviceNow = Date()
                 let ntpNow = referenceTime.now()
-                let timeDelta = abs(ntpNow.timeIntervalSince(deviceNow))
+                let timeDelta = ntpNow.timeIntervalSince(deviceNow)
                 let timeSinceLastAlert = abs(ntpNow.timeIntervalSince(UserDefaults.standard.lastSignificantTimeChangeAlert ?? Date.distantPast))
-                self.detectedSystemTimeOffset = timeDelta > self.acceptableTimeDelta
-                if self.detectedSystemTimeOffset, timeSinceLastAlert > self.minimumAlertFrequency {
+
+                if abs(timeDelta) > self.acceptableTimeDelta, timeSinceLastAlert > self.minimumAlertFrequency {
                     self.log.info("applicationSignificantTimeChange: ntpNow = %@, deviceNow = %@", ntpNow.debugDescription, deviceNow.debugDescription)
                     self.issueTimeChangedAlert()
+                    self.detectedSystemTimeOffset = timeDelta
                     UserDefaults.standard.lastSignificantTimeChangeAlert = ntpNow
+                } else {
+                    self.detectedSystemTimeOffset = 0
                 }
             case let .failure(error):
                 self.log.error("applicationSignificantTimeChange: Error getting NTP time: %@", error.localizedDescription)
