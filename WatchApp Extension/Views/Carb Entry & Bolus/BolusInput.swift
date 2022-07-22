@@ -42,7 +42,7 @@ struct BolusInput: View {
             DoseVolumeInput(
                 volume: amount,
                 isEditable: isEditable,
-                increment: { self.amount = self.pickerValues.incrementing(self.amount, by: 10) },
+                increment: { self.amount = self.pickerValues.incrementing(self.amount, by: self.amount == 0 ? 1 : 10) }, // when amount is 0, choose the smallest possible bolus value first, then move by 10
                 decrement: { self.amount = self.pickerValues.decrementing(self.amount, by: 10) },
                 formatVolume: formatVolume
             )
