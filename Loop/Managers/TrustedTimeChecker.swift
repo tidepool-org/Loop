@@ -76,7 +76,7 @@ class TrustedTimeChecker {
                 let timeDelta = ntpNow.timeIntervalSince(deviceNow)
 
                 if abs(timeDelta) > self.acceptableTimeDelta {
-                    self.log.info("applicationSignificantTimeChange: ntpNow = %@, deviceNow = %@", ntpNow.debugDescription, deviceNow.debugDescription)
+                    self.log.default("applicationSignificantTimeChange: ntpNow = %@, deviceNow = %@", ntpNow.debugDescription, deviceNow.debugDescription)
                     self.detectedSystemTimeOffset = timeDelta
                     let timeSinceLastAlert = abs(ntpNow.timeIntervalSince(UserDefaults.standard.lastSignificantTimeChangeAlert ?? Date.distantPast))
 
