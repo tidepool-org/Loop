@@ -134,7 +134,7 @@ public final class AlertManager {
                          foregroundContent: fgcontent,
                          backgroundContent: bgcontent,
                          trigger: .immediate,
-                         interruptionLevel: .critical)),
+                         interruptionLevel: .critical))
     }
 
     // MARK: - Loop Not Running alerts
@@ -593,7 +593,11 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
                            alreadyIssued: UserDefaults.standard.hasIssuedRiskMitigatingAlert,
                            setAlreadyIssued: { UserDefaults.standard.hasIssuedRiskMitigatingAlert = $0 },
                            issueHandler: { alert in
-            // the risk mitigation alert is presented with a button to navigate to settings
+            guard !isAppInBackground else {
+                issueAlert(alert)
+                return
+            }
+            // the risk mitigation in-app alert is presented with a button to navigate to settings
             recordIssued(alert: alert)
             let alertController = constructRiskMitigationAlert()
             alertPresenter.present(alertController, animated: true)
@@ -640,7 +644,7 @@ fileprivate extension AlertManager {
     )
 
     private static let riskMitigatingAlert = Alert(identifier: riskMitigatingAlertIdentifier,
-                                                   foregroundContent: riskMitigatingAlertContent,
+                                                   foregroundContent: nil,
                                                    backgroundContent: riskMitigatingAlertContent,
                                                    trigger: .immediate)
 
@@ -677,6 +681,10 @@ fileprivate extension AlertManager {
                                                              foregroundContent: scheduledDeliveryEnabledAlertContent,
                                                              backgroundContent: scheduledDeliveryEnabledAlertContent,
                                                              trigger: .immediate)
+
+    private var isAppInBackground: Bool {
+        return UIApplication.shared.applicationState == UIApplication.State.background
+    }
 }
 
 fileprivate extension UserDefaults {
