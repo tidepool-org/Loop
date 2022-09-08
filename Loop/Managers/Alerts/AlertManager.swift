@@ -131,10 +131,10 @@ public final class AlertManager {
                                       body: fgBody,
                                       acknowledgeActionButtonLabel: NSLocalizedString("Dismiss", comment: "Default alert dismissal"))
         issueAlert(Alert(identifier: bluetoothPoweredOffIdentifier,
-                                       foregroundContent: fgcontent,
-                                       backgroundContent: bgcontent,
-                                       trigger: .immediate,
-                                       interruptionLevel: .critical))
+                         foregroundContent: fgcontent,
+                         backgroundContent: bgcontent,
+                         trigger: .immediate,
+                         interruptionLevel: .critical)),
     }
 
     // MARK: - Loop Not Running alerts
@@ -581,6 +581,125 @@ extension AlertManager: PresetActivationObserver {
             retractWorkoutOverrideReminder()
         default:
             break
+        }
+    }
+}
+
+// MARK: - Issue/Retract Alert Permissions Warning
+extension AlertManager: AlertPermissionsCheckerDelegate {
+    func alertPermissions(requiresRiskMitigation: Bool, scheduledDeliveryEnabled: Bool) {
+        if !issueOrRetract(alert: Self.riskMitigatingAlert,
+                           condition: requiresRiskMitigation,
+                           alreadyIssued: UserDefaults.standard.hasIssuedRiskMitigatingAlert,
+                           setAlreadyIssued: { UserDefaults.standard.hasIssuedRiskMitigatingAlert = $0 },
+                           issueHandler: { alert in
+            // the risk mitigation alert is presented with a button to navigate to settings
+            recordIssued(alert: alert)
+            let alertController = constructRiskMitigationAlert()
+            alertPresenter.present(alertController, animated: true)
+        }) {
+            _ = issueOrRetract(alert: Self.scheduledDeliveryEnabledAlert,
+                               condition: scheduledDeliveryEnabled,
+                               alreadyIssued: UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert,
+                               setAlreadyIssued: { UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = $0 }, issueHandler: { alert in issueAlert(alert) })
+        }
+    }
+
+    private func issueOrRetract(alert: LoopKit.Alert,
+                                condition: Bool,
+                                alreadyIssued: Bool,
+                                setAlreadyIssued: (Bool) -> Void,
+                                issueHandler: (LoopKit.Alert) -> Void) -> Bool {
+        if condition {
+            if !alreadyIssued {
+                issueHandler(alert)
+                setAlreadyIssued(true)
+            }
+            return true
+        } else {
+            if alreadyIssued {
+                setAlreadyIssued(false)
+                retractAlert(identifier: alert.identifier)
+            }
+            return false
+        }
+    }
+}
+
+fileprivate extension AlertManager {
+    // MARK: Risk Mitigating Alert
+    private static let riskMitigatingAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager", alertIdentifier: "riskMitigatingAlert")
+
+    private static let riskMitigatingAlertContent = Alert.Content(
+        title: NSLocalizedString("Alert Permissions Need Attention",
+                                 comment: "Alert Permissions Need Attention alert title"),
+        body: String(format: NSLocalizedString("It is important that you always keep %1$@ Notifications, Critical Alerts, and Time Sensitive Notifications turned ON in your phone’s settings to ensure that you get notified by the app.",
+                                               comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
+                     Bundle.main.bundleDisplayName),
+        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
+    )
+
+    private static let riskMitigatingAlert = Alert(identifier: riskMitigatingAlertIdentifier,
+                                                   foregroundContent: riskMitigatingAlertContent,
+                                                   backgroundContent: riskMitigatingAlertContent,
+                                                   trigger: .immediate)
+
+    private func constructRiskMitigationAlert() -> UIAlertController {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let alertController = UIAlertController(title: Self.riskMitigatingAlertContent.title,
+                                                message: Self.riskMitigatingAlertContent.body,
+                                                preferredStyle: .alert)
+        alertController.addAction(UIAlertAction.init(title: NSLocalizedString("Go To Setting", comment: "Label of button that navigation user to iOS Settings"),
+                                                     style: .default,
+                                                     handler: { _ in
+            AlertPermissionsChecker.gotoSettings()
+            self.acknowledgeAlert(identifier: Self.riskMitigatingAlertIdentifier)
+        }))
+        return alertController
+    }
+
+    // MARK: Scheduled Delivery Enabled Alert
+    private static let scheduledDeliveryEnabledAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
+                                                                                  alertIdentifier: "scheduledDeliveryEnabledAlert")
+    private static let scheduledDeliveryEnabledAlertContent = Alert.Content(
+        title: NSLocalizedString("Notifications Delayed",
+                                 comment: "Scheduled Delivery Enabled alert title"),
+        body: String(format: NSLocalizedString("""
+                Notification delivery is set to Scheduled Summary in your phone’s settings.
+
+                To avoid delay in receiving notifications from %1$@, we recommend notification delivery be set to Immediate Delivery.
+                """,
+                                               comment: "Format for Critical Alerts permissions disabled alert body. (1: app name)"),
+                     Bundle.main.bundleDisplayName),
+        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert permissions disabled alert button")
+    )
+    private static let scheduledDeliveryEnabledAlert = Alert(identifier: scheduledDeliveryEnabledAlertIdentifier,
+                                                             foregroundContent: scheduledDeliveryEnabledAlertContent,
+                                                             backgroundContent: scheduledDeliveryEnabledAlertContent,
+                                                             trigger: .immediate)
+}
+
+fileprivate extension UserDefaults {
+    private enum Key: String {
+        case hasIssuedRiskMitigatingAlert = "com.loopkit.Loop.HasIssuedRiskMitigatingAlert"
+        case hasIssuedScheduledDeliveryEnabledAlert = "com.loopkit.Loop.HasIssuedScheduledDeliveryEnabledAlert"
+    }
+
+    var hasIssuedRiskMitigatingAlert: Bool {
+        get {
+            return object(forKey: Key.hasIssuedRiskMitigatingAlert.rawValue) as? Bool ?? false
+        }
+        set {
+            set(newValue, forKey: Key.hasIssuedRiskMitigatingAlert.rawValue)
+        }
+    }
+
+    var hasIssuedScheduledDeliveryEnabledAlert: Bool {
+        get {
+            return object(forKey: Key.hasIssuedScheduledDeliveryEnabledAlert.rawValue) as? Bool ?? false
+        }
+        set {
+            set(newValue, forKey: Key.hasIssuedScheduledDeliveryEnabledAlert.rawValue)
         }
     }
 }
