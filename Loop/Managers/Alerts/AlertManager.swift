@@ -593,13 +593,9 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
                            alreadyIssued: UserDefaults.standard.hasIssuedRiskMitigatingAlert,
                            setAlreadyIssued: { UserDefaults.standard.hasIssuedRiskMitigatingAlert = $0 },
                            issueHandler: { alert in
-            guard !self.isAppInBackground else {
-                self.issueAlert(alert)
-                return
-            }
             // the risk mitigation in-app alert is presented with a button to navigate to settings
             self.recordIssued(alert: alert)
-            let alertController = self.constructRiskMitigationAlert()
+            let alertController = self.constructRiskMitigationInAppAlert()
             self.alertPresenter.present(alertController, animated: true)
         }) {
             _ = issueOrRetract(alert: Self.scheduledDeliveryEnabledAlert,
@@ -644,21 +640,23 @@ fileprivate extension AlertManager {
     )
 
     private static let riskMitigatingAlert = Alert(identifier: riskMitigatingAlertIdentifier,
-                                                   foregroundContent: nil,
+                                                   foregroundContent: riskMitigatingAlertContent,
                                                    backgroundContent: riskMitigatingAlertContent,
                                                    trigger: .immediate)
 
-    private func constructRiskMitigationAlert() -> UIAlertController {
+    private func constructRiskMitigationInAppAlert() -> UIAlertController {
         dispatchPrecondition(condition: .onQueue(.main))
         let alertController = UIAlertController(title: Self.riskMitigatingAlertContent.title,
                                                 message: Self.riskMitigatingAlertContent.body,
                                                 preferredStyle: .alert)
-        alertController.addAction(UIAlertAction.init(title: NSLocalizedString("Go To Setting", comment: "Label of button that navigation user to iOS Settings"),
-                                                     style: .default,
-                                                     handler: { _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Setting", comment: "Label of button that navigation user to iOS Settings"),
+                                                style: .default,
+                                                handler: { _ in
             AlertPermissionsChecker.gotoSettings()
             self.acknowledgeAlert(identifier: Self.riskMitigatingAlertIdentifier)
         }))
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Close", comment: "The button label of the action used to dismiss the risk mitigation alert"),
+                                                style: .cancel))
         return alertController
     }
 
