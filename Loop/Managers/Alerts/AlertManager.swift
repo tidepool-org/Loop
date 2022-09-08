@@ -593,19 +593,19 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
                            alreadyIssued: UserDefaults.standard.hasIssuedRiskMitigatingAlert,
                            setAlreadyIssued: { UserDefaults.standard.hasIssuedRiskMitigatingAlert = $0 },
                            issueHandler: { alert in
-            guard !isAppInBackground else {
-                issueAlert(alert)
+            guard !self.isAppInBackground else {
+                self.issueAlert(alert)
                 return
             }
             // the risk mitigation in-app alert is presented with a button to navigate to settings
-            recordIssued(alert: alert)
-            let alertController = constructRiskMitigationAlert()
-            alertPresenter.present(alertController, animated: true)
+            self.recordIssued(alert: alert)
+            let alertController = self.constructRiskMitigationAlert()
+            self.alertPresenter.present(alertController, animated: true)
         }) {
             _ = issueOrRetract(alert: Self.scheduledDeliveryEnabledAlert,
                                condition: scheduledDeliveryEnabled,
                                alreadyIssued: UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert,
-                               setAlreadyIssued: { UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = $0 }, issueHandler: { alert in issueAlert(alert) })
+                               setAlreadyIssued: { UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = $0 }, issueHandler: { alert in self.issueAlert(alert) })
         }
     }
 
@@ -613,7 +613,7 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
                                 condition: Bool,
                                 alreadyIssued: Bool,
                                 setAlreadyIssued: (Bool) -> Void,
-                                issueHandler: (LoopKit.Alert) -> Void) -> Bool {
+                                issueHandler: @escaping (LoopKit.Alert) -> Void) -> Bool {
         if condition {
             if !alreadyIssued {
                 issueHandler(alert)

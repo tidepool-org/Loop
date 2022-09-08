@@ -835,6 +835,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             contentConfig.textProperties.adjustsFontSizeToFitWidth = true
             contentConfig.image = UIImage(systemName: "exclamationmark.triangle.fill")?.withTintColor(.red)
             contentConfig.imageProperties.tintColor = .red
+            contentConfig.secondaryText = "Enable Critical Alerts\nMore text to see how line wrapping works\nEven more text"
+            contentConfig.secondaryTextProperties.font = .systemFont(ofSize: 13, weight: .semibold)
             contentConfiguration = contentConfig
             var backgroundConfig = backgroundConfiguration?.updated(for: state)
             backgroundConfig?.backgroundColor = .secondarySystemBackground
@@ -1071,7 +1073,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         switch Section(rawValue: indexPath.section)! {
         case .alertPermissionsDisabledWarning:
             tableView.deselectRow(at: indexPath, animated: true)
-            presentSettings()
+            AlertPermissionsChecker.gotoSettings()
         case .hud:
             break
         case .status:
