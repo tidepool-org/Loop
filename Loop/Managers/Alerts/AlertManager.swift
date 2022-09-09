@@ -651,12 +651,14 @@ fileprivate extension AlertManager {
                                                 preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: NSLocalizedString("Setting", comment: "Label of button that navigation user to iOS Settings"),
                                                 style: .default,
-                                                handler: { _ in
+                                                handler: { [weak self] _ in
             AlertPermissionsChecker.gotoSettings()
-            self.acknowledgeAlert(identifier: Self.riskMitigatingAlertIdentifier)
+            self?.acknowledgeAlert(identifier: Self.riskMitigatingAlertIdentifier)
         }))
         alertController.addAction(UIAlertAction(title: NSLocalizedString("Close", comment: "The button label of the action used to dismiss the risk mitigation alert"),
-                                                style: .cancel))
+                                                style: .cancel,
+                                                handler: { [weak self] _ in self?.acknowledgeAlert(identifier: Self.riskMitigatingAlertIdentifier)
+        }))
         return alertController
     }
 
