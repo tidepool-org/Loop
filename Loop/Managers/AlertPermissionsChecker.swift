@@ -93,7 +93,7 @@ public class AlertPermissionsChecker: ObservableObject {
     }
 }
 
-fileprivate extension AlertPermissionsChecker {
+extension AlertPermissionsChecker {
     private func listenToNotificationCenter() {
         if !listeningToNotificationCenter {
             $notificationCenterSettings
