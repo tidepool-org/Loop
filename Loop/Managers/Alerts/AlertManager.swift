@@ -588,17 +588,19 @@ extension AlertManager: PresetActivationObserver {
 // MARK: - Issue/Retract Alert Permissions Warning
 extension AlertManager: AlertPermissionsCheckerDelegate {
     func alertPermissions(requiresRiskMitigation: Bool, scheduledDeliveryEnabled: Bool) {
-        if !issueOrRetract(alert: Self.riskMitigatingAlert,
+        if !issueOrRetract(alert: AlertPermissionsChecker.unsafeNotificationPermissionsAlert,
                            condition: requiresRiskMitigation,
                            alreadyIssued: UserDefaults.standard.hasIssuedRiskMitigatingAlert,
                            setAlreadyIssued: { UserDefaults.standard.hasIssuedRiskMitigatingAlert = $0 },
                            issueHandler: { alert in
             // the risk mitigation in-app alert is presented with a button to navigate to settings
             self.recordIssued(alert: alert)
-            let alertController = self.constructRiskMitigationInAppAlert()
+            let alertController = AlertPermissionsChecker.constructUnsafeNotificationPermissionsInAppAlert() { [weak self] in
+                self?.acknowledgeAlert(identifier: AlertPermissionsChecker.unsafeNotificationPermissionsAlertIdentifier)
+            }
             self.alertPresenter.present(alertController, animated: true)
         }) {
-            _ = issueOrRetract(alert: Self.scheduledDeliveryEnabledAlert,
+            _ = issueOrRetract(alert: AlertPermissionsChecker.scheduledDeliveryEnabledAlert,
                                condition: scheduledDeliveryEnabled,
                                alreadyIssued: UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert,
                                setAlreadyIssued: { UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = $0 }, issueHandler: { alert in self.issueAlert(alert) })
@@ -627,61 +629,6 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
 }
 
 fileprivate extension AlertManager {
-    // MARK: Risk Mitigating Alert
-    private static let riskMitigatingAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager", alertIdentifier: "riskMitigatingAlert")
-
-    private static let riskMitigatingAlertContent = Alert.Content(
-        title: NSLocalizedString("Alert Permissions Need Attention",
-                                 comment: "Alert Permissions Need Attention alert title"),
-        body: String(format: NSLocalizedString("It is important that you always keep %1$@ Notifications, Critical Alerts, and Time Sensitive Notifications turned ON in your phone’s settings to ensure that you get notified by the app.",
-                                               comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
-                     Bundle.main.bundleDisplayName),
-        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
-    )
-
-    private static let riskMitigatingAlert = Alert(identifier: riskMitigatingAlertIdentifier,
-                                                   foregroundContent: riskMitigatingAlertContent,
-                                                   backgroundContent: riskMitigatingAlertContent,
-                                                   trigger: .immediate)
-
-    private func constructRiskMitigationInAppAlert() -> UIAlertController {
-        dispatchPrecondition(condition: .onQueue(.main))
-        let alertController = UIAlertController(title: Self.riskMitigatingAlertContent.title,
-                                                message: Self.riskMitigatingAlertContent.body,
-                                                preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Setting", comment: "Label of button that navigation user to iOS Settings"),
-                                                style: .default,
-                                                handler: { [weak self] _ in
-            AlertPermissionsChecker.gotoSettings()
-            self?.acknowledgeAlert(identifier: Self.riskMitigatingAlertIdentifier)
-        }))
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Close", comment: "The button label of the action used to dismiss the risk mitigation alert"),
-                                                style: .cancel,
-                                                handler: { [weak self] _ in self?.acknowledgeAlert(identifier: Self.riskMitigatingAlertIdentifier)
-        }))
-        return alertController
-    }
-
-    // MARK: Scheduled Delivery Enabled Alert
-    private static let scheduledDeliveryEnabledAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
-                                                                                  alertIdentifier: "scheduledDeliveryEnabledAlert")
-    private static let scheduledDeliveryEnabledAlertContent = Alert.Content(
-        title: NSLocalizedString("Notifications Delayed",
-                                 comment: "Scheduled Delivery Enabled alert title"),
-        body: String(format: NSLocalizedString("""
-                Notification delivery is set to Scheduled Summary in your phone’s settings.
-
-                To avoid delay in receiving notifications from %1$@, we recommend notification delivery be set to Immediate Delivery.
-                """,
-                                               comment: "Format for Critical Alerts permissions disabled alert body. (1: app name)"),
-                     Bundle.main.bundleDisplayName),
-        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert permissions disabled alert button")
-    )
-    private static let scheduledDeliveryEnabledAlert = Alert(identifier: scheduledDeliveryEnabledAlertIdentifier,
-                                                             foregroundContent: scheduledDeliveryEnabledAlertContent,
-                                                             backgroundContent: scheduledDeliveryEnabledAlertContent,
-                                                             trigger: .immediate)
-
     private var isAppInBackground: Bool {
         return UIApplication.shared.applicationState == UIApplication.State.background
     }
