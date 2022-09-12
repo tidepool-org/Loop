@@ -109,16 +109,16 @@ extension AlertPermissionsChecker {
     static let unsafeNotificationPermissionsAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager", alertIdentifier: "unsafeNotificationPermissionsAlert")
 
     private static let unsafeNotificationPermissionsAlertContent = Alert.Content(
-        title: NSLocalizedString("Alert Permissions Need Attention",
+        title: NSLocalizedString("Warning! Critical safety notifications are turned OFF",
                                  comment: "Alert Permissions Need Attention alert title"),
-        body: String(format: NSLocalizedString("It is important that you always keep %1$@ Notifications, Critical Alerts, and Time Sensitive Notifications turned ON in your phone’s settings to ensure that you get notified by the app.",
+        body: String(format: NSLocalizedString("Tidepool Loop alerts and alarms will display without sounds and you may miss critical safety notifications. \n\nTo fix the issue, tap ‘Settings’ and make sure Notifications, Critical Alerts and Time Sensitive Notifications are turned ON.",
                                                comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
                      Bundle.main.bundleDisplayName),
         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
     )
 
     static let unsafeNotificationPermissionsAlert = Alert(identifier: unsafeNotificationPermissionsAlertIdentifier,
-                                                          foregroundContent: unsafeNotificationPermissionsAlertContent,
+                                                          foregroundContent: nil,
                                                           backgroundContent: unsafeNotificationPermissionsAlertContent,
                                                           trigger: .immediate)
 
@@ -127,6 +127,23 @@ extension AlertPermissionsChecker {
         let alertController = UIAlertController(title: Self.unsafeNotificationPermissionsAlertContent.title,
                                                 message: Self.unsafeNotificationPermissionsAlertContent.body,
                                                 preferredStyle: .alert)
+        let titleImageAttachment = NSTextAttachment()
+        titleImageAttachment.image = UIImage(systemName: "exclamationmark.triangle.fill")?.withTintColor(.critical)
+        titleImageAttachment.bounds = CGRect(x: titleImageAttachment.bounds.origin.x, y: -10, width: 40, height: 35)
+        let titleWithImage = NSMutableAttributedString(attachment: titleImageAttachment)
+        titleWithImage.append(NSMutableAttributedString(string: "\n\n", attributes: [.font: UIFont.systemFont(ofSize: 8)]))
+        titleWithImage.append(NSMutableAttributedString(string: Self.unsafeNotificationPermissionsAlertContent.title, attributes: [.font: UIFont.preferredFont(forTextStyle: .headline)]))
+        alertController.setValue(titleWithImage, forKey: "attributedTitle")
+
+        let messageImageAttachment = NSTextAttachment()
+        messageImageAttachment.image = UIImage(named: "notification-permissions-on")
+        messageImageAttachment.bounds = CGRect(x: messageImageAttachment.bounds.origin.x, y: messageImageAttachment.bounds.origin.y, width: 228, height: 126)
+        let messageWithImageAttributed = NSMutableAttributedString(string: "\n", attributes: [.font: UIFont.systemFont(ofSize: 4)])
+        messageWithImageAttributed.append(NSMutableAttributedString(string: Self.unsafeNotificationPermissionsAlertContent.body, attributes: [.font: UIFont.preferredFont(forTextStyle: .footnote)]))
+        messageWithImageAttributed.append(NSMutableAttributedString(string: "\n\n", attributes: [.font: UIFont.systemFont(ofSize: 8)]))
+        messageWithImageAttributed.append(NSMutableAttributedString(attachment: messageImageAttachment))
+        alertController.setValue(messageWithImageAttributed, forKey: "attributedMessage")
+
         alertController.addAction(UIAlertAction(title: NSLocalizedString("Setting", comment: "Label of button that navigation user to iOS Settings"),
                                                 style: .default,
                                                 handler: { _ in
