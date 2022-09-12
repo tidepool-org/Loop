@@ -105,6 +105,61 @@ fileprivate extension AlertPermissionsChecker {
         }
     }
 
+    // MARK: Risk Mitigating Alert
+    static let unsafeNotificationPermissionsAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager", alertIdentifier: "unsafeNotificationPermissionsAlert")
+
+    private static let unsafeNotificationPermissionsAlertContent = Alert.Content(
+        title: NSLocalizedString("Alert Permissions Need Attention",
+                                 comment: "Alert Permissions Need Attention alert title"),
+        body: String(format: NSLocalizedString("It is important that you always keep %1$@ Notifications, Critical Alerts, and Time Sensitive Notifications turned ON in your phone’s settings to ensure that you get notified by the app.",
+                                               comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
+                     Bundle.main.bundleDisplayName),
+        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
+    )
+
+    static let unsafeNotificationPermissionsAlert = Alert(identifier: unsafeNotificationPermissionsAlertIdentifier,
+                                           foregroundContent: unsafeNotificationPermissionsAlertContent,
+                                           backgroundContent: unsafeNotificationPermissionsAlertContent,
+                                           trigger: .immediate)
+
+    static func constructUnsafeNotificationPermissionsInAppAlert(acknowledgementCompletion: @escaping () -> Void ) -> UIAlertController {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let alertController = UIAlertController(title: Self.unsafeNotificationPermissionsAlertContent.title,
+                                                message: Self.unsafeNotificationPermissionsAlertContent.body,
+                                                preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Setting", comment: "Label of button that navigation user to iOS Settings"),
+                                                style: .default,
+                                                handler: { _ in
+            AlertPermissionsChecker.gotoSettings()
+            acknowledgementCompletion()
+        }))
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Close", comment: "The button label of the action used to dismiss the risk mitigation alert"),
+                                                style: .cancel,
+                                                handler: { _ in acknowledgementCompletion()
+        }))
+        return alertController
+    }
+
+    // MARK: Scheduled Delivery Enabled Alert
+    private static let scheduledDeliveryEnabledAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
+                                                                                  alertIdentifier: "scheduledDeliveryEnabledAlert")
+    private static let scheduledDeliveryEnabledAlertContent = Alert.Content(
+        title: NSLocalizedString("Notifications Delayed",
+                                 comment: "Scheduled Delivery Enabled alert title"),
+        body: String(format: NSLocalizedString("""
+                Notification delivery is set to Scheduled Summary in your phone’s settings.
+
+                To avoid delay in receiving notifications from %1$@, we recommend notification delivery be set to Immediate Delivery.
+                """,
+                                               comment: "Format for Critical Alerts permissions disabled alert body. (1: app name)"),
+                     Bundle.main.bundleDisplayName),
+        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert permissions disabled alert button")
+    )
+    static let scheduledDeliveryEnabledAlert = Alert(identifier: scheduledDeliveryEnabledAlertIdentifier,
+                                                     foregroundContent: scheduledDeliveryEnabledAlertContent,
+                                                     backgroundContent: scheduledDeliveryEnabledAlertContent,
+                                                     trigger: .immediate)
+
     private func notificationCenterSettingsChanged(_ newValue: NotificationCenterSettingsFlags) {
         delegate?.alertPermissions(requiresRiskMitigation: newValue.requiresRiskMitigation, scheduledDeliveryEnabled: newValue.scheduledDeliveryEnabled)
     }
@@ -168,61 +223,4 @@ fileprivate extension OptionSet {
             remove(element)
         }
     }
-}
-
-extension AlertPermissionsChecker {
-    // MARK: Risk Mitigating Alert
-    static let unsafeNotificationPermissionsAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager", alertIdentifier: "unsafeNotificationPermissionsAlert")
-
-    private static let unsafeNotificationPermissionsAlertContent = Alert.Content(
-        title: NSLocalizedString("Alert Permissions Need Attention",
-                                 comment: "Alert Permissions Need Attention alert title"),
-        body: String(format: NSLocalizedString("It is important that you always keep %1$@ Notifications, Critical Alerts, and Time Sensitive Notifications turned ON in your phone’s settings to ensure that you get notified by the app.",
-                                               comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
-                     Bundle.main.bundleDisplayName),
-        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
-    )
-
-    static let unsafeNotificationPermissionsAlert = Alert(identifier: unsafeNotificationPermissionsAlertIdentifier,
-                                           foregroundContent: unsafeNotificationPermissionsAlertContent,
-                                           backgroundContent: unsafeNotificationPermissionsAlertContent,
-                                           trigger: .immediate)
-
-    static func constructUnsafeNotificationPermissionsInAppAlert(acknowledgementCompletion: @escaping () -> Void ) -> UIAlertController {
-        dispatchPrecondition(condition: .onQueue(.main))
-        let alertController = UIAlertController(title: Self.unsafeNotificationPermissionsAlertContent.title,
-                                                message: Self.unsafeNotificationPermissionsAlertContent.body,
-                                                preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Setting", comment: "Label of button that navigation user to iOS Settings"),
-                                                style: .default,
-                                                handler: { _ in
-            AlertPermissionsChecker.gotoSettings()
-            acknowledgementCompletion()
-        }))
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Close", comment: "The button label of the action used to dismiss the risk mitigation alert"),
-                                                style: .cancel,
-                                                handler: { _ in acknowledgementCompletion()
-        }))
-        return alertController
-    }
-
-    // MARK: Scheduled Delivery Enabled Alert
-    private static let scheduledDeliveryEnabledAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager",
-                                                                                  alertIdentifier: "scheduledDeliveryEnabledAlert")
-    private static let scheduledDeliveryEnabledAlertContent = Alert.Content(
-        title: NSLocalizedString("Notifications Delayed",
-                                 comment: "Scheduled Delivery Enabled alert title"),
-        body: String(format: NSLocalizedString("""
-                Notification delivery is set to Scheduled Summary in your phone’s settings.
-
-                To avoid delay in receiving notifications from %1$@, we recommend notification delivery be set to Immediate Delivery.
-                """,
-                                               comment: "Format for Critical Alerts permissions disabled alert body. (1: app name)"),
-                     Bundle.main.bundleDisplayName),
-        acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Critical Alert permissions disabled alert button")
-    )
-    static let scheduledDeliveryEnabledAlert = Alert(identifier: scheduledDeliveryEnabledAlertIdentifier,
-                                                     foregroundContent: scheduledDeliveryEnabledAlertContent,
-                                                     backgroundContent: scheduledDeliveryEnabledAlertContent,
-                                                     trigger: .immediate)
 }
