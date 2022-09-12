@@ -118,9 +118,9 @@ fileprivate extension AlertPermissionsChecker {
     )
 
     static let unsafeNotificationPermissionsAlert = Alert(identifier: unsafeNotificationPermissionsAlertIdentifier,
-                                           foregroundContent: unsafeNotificationPermissionsAlertContent,
-                                           backgroundContent: unsafeNotificationPermissionsAlertContent,
-                                           trigger: .immediate)
+                                                          foregroundContent: unsafeNotificationPermissionsAlertContent,
+                                                          backgroundContent: unsafeNotificationPermissionsAlertContent,
+                                                          trigger: .immediate)
 
     static func constructUnsafeNotificationPermissionsInAppAlert(acknowledgementCompletion: @escaping () -> Void ) -> UIAlertController {
         dispatchPrecondition(condition: .onQueue(.main))
