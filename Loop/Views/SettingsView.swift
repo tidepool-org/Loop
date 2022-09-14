@@ -123,8 +123,7 @@ extension SettingsView {
 
     private var alertManagementSection: some View {
         Section {
-            NavigationLink(destination:
-                            AlertManagementView(mode: .flow, checker: viewModel.alertPermissionsChecker))
+            NavigationLink(destination: AlertManagementView(checker: viewModel.alertPermissionsChecker, alertMuter: viewModel.alertMuter))
             {
                 HStack {
                     Text(NSLocalizedString("Alert Management", comment: "Alert Permissions button text"))

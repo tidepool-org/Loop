@@ -98,11 +98,12 @@ fileprivate extension Alert {
         if let sound = sound {
             switch sound {
             case .vibrate:
-                // TODO: Not sure how to "force" UNNotificationSound to "vibrate only"...so for now we just do the default
-                break
+                // setting the audio volume of critical alert to 0 only vibrates
+                //TODO need to test returning `nil` for non-critical alerts
+                return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil
             case .silence:
-                // TODO: Not sure how to "force" UNNotificationSound to "silence"...so for now we just do the default
-                break
+                // setting the audio volume of critical alert to 0 only vibrates
+                return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil
             default:
                 if let actualFileName = AlertManager.soundURL(for: self)?.lastPathComponent {
                     let unname = UNNotificationSoundName(rawValue: actualFileName)

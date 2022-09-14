@@ -10,18 +10,7 @@ import Foundation
 import LoopKit
 
 class AlertManagementViewModel: ObservableObject {
-    private let alertMuter: AlertMuter
-
-    var alertMuterConfiguration: AlertMuterConfiguration {
-        get {
-            alertMuter.alertMuterConfiguration
-        }
-        set {
-            if alertMuter.alertMuterConfiguration != newValue {
-                alertMuter.alertMuterConfiguration = newValue
-            }
-        }
-    }
+    private var alertMuter: AlertMuter
 
     @Published var selectedDuration: TimeInterval {
         didSet {
@@ -35,14 +24,9 @@ class AlertManagementViewModel: ObservableObject {
         }
     }
 
-    let allowedDurations: [TimeInterval] = [.minutes(30), .hours(1), .hours(2), .hours(4)]
-
-    private var formatter: DateComponentsFormatter = {
-        let formatter = DateComponentsFormatter()
-        formatter.unitsStyle = .full
-        formatter.allowedUnits = [.hour, .minute]
-        return formatter
-    }()
+    var allowedDurations: [TimeInterval] {
+        alertMuter.allowedDurations
+    }
 
     init(alertMuter: AlertMuter) {
         self.alertMuter = alertMuter

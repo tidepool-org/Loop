@@ -1418,6 +1418,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                                   delegate: self)
         let versionUpdateViewModel = VersionUpdateViewModel(supportManager: supportManager, guidanceColors: .default)
         let viewModel = SettingsViewModel(alertPermissionsChecker: alertPermissionsChecker,
+                                          alertMuter: deviceManager.alertManager,
                                           versionUpdateViewModel: versionUpdateViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,

@@ -47,6 +47,15 @@ public final class AlertManager {
 
     lazy private var cancellables = Set<AnyCancellable>()
 
+    // TODO when muting duration is set, all scheduled alerts (overrides and loop not looping) need to be rescheduled respecting the mute configuration
+    // TODO need to store and restore this value
+    public var alertMuterConfiguration = AlertMuterConfiguration(enabled: false, duration: .minutes(30)) {
+        didSet {
+            print("!!!! alertMuterConfiguration updated: \(alertMuterConfiguration)")
+            print("!!!! should mute alerts: \(shouldMuteAlerts)")
+        }
+    }
+
     // For testing
     var getCurrentDate = { return Date() }
     
@@ -143,6 +152,7 @@ public final class AlertManager {
         scheduleLoopNotRunningNotifications()
     }
 
+    //TODO need to re-schedule respecting shouldMuteAlerts
     func scheduleLoopNotRunningNotifications() {
         // Give a little extra time for a loop-in-progress to complete
         let gracePeriod = TimeInterval(minutes: 0.5)
@@ -236,6 +246,7 @@ public final class AlertManager {
     }
 
     // MARK: - Workout reminder
+    // TODO scheduled alerts need to be re-scheduled respecting shouldMuteAlerts
     private func scheduleWorkoutOverrideReminder() {
         issueAlert(workoutOverrideReminderAlert)
     }
@@ -303,7 +314,7 @@ extension AlertManager: AlertManagerResponder {
 extension AlertManager: AlertIssuer {
 
     public func issueAlert(_ alert: Alert) {
-        handlers.forEach { $0.issueAlert(alert) }
+        handlers.forEach { $0.issueAlert(shouldMuteAlerts ? alert.mutedAlert() : alert) }
         alertStore.recordIssued(alert: alert)
     }
 
@@ -315,7 +326,7 @@ extension AlertManager: AlertIssuer {
     private func replayAlert(_ alert: Alert) {
         // Only alerts with foreground content are replayed
         if alert.foregroundContent != nil {
-            modalAlertIssuer?.issueAlert(alert)
+            modalAlertIssuer?.issueAlert(shouldMuteAlerts ? alert.mutedAlert() : alert)
         }
     }
 }
@@ -657,3 +668,5 @@ fileprivate extension UserDefaults {
         }
     }
 }
+
+extension AlertManager: AlertMuter { }

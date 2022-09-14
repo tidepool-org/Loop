@@ -7,19 +7,14 @@
 //
 
 import SwiftUI
+import LoopKit
 import LoopKitUI
 
 struct AlertManagementView: View {
-//    @Environment(\.dismissAction) private var dismiss
     @Environment(\.appName) private var appName
 
-    private let backButtonText: String
-    private let mode: NotificationsCriticalAlertPermissionsView.PresentationMode
     @ObservedObject private var checker: AlertPermissionsChecker
-
-    @State private var tempMuteAllAlerts: Bool = false
-    @State private var selectedDuration: TimeInterval
-    private let allowedDurations: [TimeInterval] = [.minutes(30), .hours(1), .hours(2), .hours(4)]
+    @ObservedObject private var viewModel: AlertManagementViewModel
 
     private var formatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
@@ -30,26 +25,22 @@ struct AlertManagementView: View {
 
     private var formattedSelectedDuration: Binding<String> {
         Binding(
-            get: { formatter.string(from: selectedDuration)! },
+            get: { formatter.string(from: viewModel.selectedDuration)! },
             set: { newValue in
                 guard let selectedDurationIndex = formatterDurations.firstIndex(of: newValue)
                 else { return }
-                selectedDuration = allowedDurations[selectedDurationIndex]
+                viewModel.selectedDuration = viewModel.allowedDurations[selectedDurationIndex]
             }
         )
     }
 
     private var formatterDurations: [String] {
-        allowedDurations.compactMap { formatter.string(from: $0) }
+        viewModel.allowedDurations.compactMap { formatter.string(from: $0) }
     }
 
-    public init(backButtonText: String = "", mode: NotificationsCriticalAlertPermissionsView.PresentationMode = .topLevel, checker: AlertPermissionsChecker) {
-        self.backButtonText = backButtonText
+    public init(checker: AlertPermissionsChecker, alertMuter: AlertMuter) {
         self.checker = checker
-        self.mode = mode
-
-        // this should be inputted
-        self._selectedDuration = State(initialValue: .minutes(30))
+        self.viewModel = AlertManagementViewModel(alertMuter: alertMuter)
     }
 
     var body: some View {
@@ -57,7 +48,7 @@ struct AlertManagementView: View {
             alertPermissionsSection
             muteAlertsSection
 
-            if tempMuteAllAlerts {
+            if viewModel.enabled {
                 mutePeriodSection
             }
         }
@@ -85,7 +76,7 @@ struct AlertManagementView: View {
     @ViewBuilder
     private var muteAlertsSection: some View {
         Section(footer: muteAlertsSectionFooter) {
-            Toggle(NSLocalizedString("Mute All Alerts", comment: "Label for toggle to mute all alerts"), isOn: $tempMuteAllAlerts)
+            Toggle(NSLocalizedString("Mute All Alerts", comment: "Label for toggle to mute all alerts"), isOn: $viewModel.enabled)
         }
     }
 
@@ -95,7 +86,7 @@ struct AlertManagementView: View {
 
     @ViewBuilder
     private var muteAlertsSectionFooter: some View {
-        if !tempMuteAllAlerts {
+        if !viewModel.enabled {
             DescriptiveText(label: muteAlertsFooterString)
         }
     }
@@ -107,6 +98,11 @@ struct AlertManagementView: View {
 
 struct AlertManagementView_Previews: PreviewProvider {
     static var previews: some View {
-        AlertManagementView(checker: AlertPermissionsChecker())
+        AlertManagementView(checker: AlertPermissionsChecker(), alertMuter: TestingAlertMuter())
     }
 }
+
+class TestingAlertMuter: AlertMuter {
+    var alertMuterConfiguration = AlertMuterConfiguration(enabled: false, duration: .minutes(30))
+}
+
