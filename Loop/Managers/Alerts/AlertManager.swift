@@ -82,7 +82,6 @@ public final class AlertManager {
                 self?.loopDidComplete()
             }
             .store(in: &cancellables)
-
     }
 
     public func addAlertResponder(managerIdentifier: String, alertResponder: AlertResponder) {
@@ -587,11 +586,11 @@ extension AlertManager: PresetActivationObserver {
 
 // MARK: - Issue/Retract Alert Permissions Warning
 extension AlertManager: AlertPermissionsCheckerDelegate {
-    func alertPermissions(requiresRiskMitigation: Bool, scheduledDeliveryEnabled: Bool) {
+    func notificationsPermissions(requiresRiskMitigation: Bool, scheduledDeliveryEnabled: Bool) {
         if !issueOrRetract(alert: AlertPermissionsChecker.unsafeNotificationPermissionsAlert,
                            condition: requiresRiskMitigation,
-                           alreadyIssued: UserDefaults.standard.hasIssuedRiskMitigatingAlert,
-                           setAlreadyIssued: { UserDefaults.standard.hasIssuedRiskMitigatingAlert = $0 },
+                           alreadyIssued: UserDefaults.standard.hasIssuedNotificationPermissionsAlert,
+                           setAlreadyIssued: { UserDefaults.standard.hasIssuedNotificationPermissionsAlert = $0 },
                            issueHandler: { alert in
             // the risk mitigation in-app alert is presented with a button to navigate to settings
             self.recordIssued(alert: alert)
@@ -636,16 +635,16 @@ fileprivate extension AlertManager {
 
 fileprivate extension UserDefaults {
     private enum Key: String {
-        case hasIssuedRiskMitigatingAlert = "com.loopkit.Loop.HasIssuedRiskMitigatingAlert"
+        case hasIssuedNotificationPermissionsAlert = "com.loopkit.Loop.HasIssuedNotificationPermissionsAlert"
         case hasIssuedScheduledDeliveryEnabledAlert = "com.loopkit.Loop.HasIssuedScheduledDeliveryEnabledAlert"
     }
 
-    var hasIssuedRiskMitigatingAlert: Bool {
+    var hasIssuedNotificationPermissionsAlert: Bool {
         get {
-            return object(forKey: Key.hasIssuedRiskMitigatingAlert.rawValue) as? Bool ?? false
+            return object(forKey: Key.hasIssuedNotificationPermissionsAlert.rawValue) as? Bool ?? false
         }
         set {
-            set(newValue, forKey: Key.hasIssuedRiskMitigatingAlert.rawValue)
+            set(newValue, forKey: Key.hasIssuedNotificationPermissionsAlert.rawValue)
         }
     }
 

@@ -831,7 +831,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             var contentConfig = defaultContentConfiguration().updated(for: state)
             let titleImageAttachment = NSTextAttachment()
             titleImageAttachment.image = UIImage(systemName: "exclamationmark.triangle.fill")?.withTintColor(.white)
-            let title = NSMutableAttributedString(string: NSLocalizedString(" Critical Safety Alerts are OFF", comment: "Warning text for when Notifications or Critical Alerts Permissions is disabled"))
+            let title = NSMutableAttributedString(string: NSLocalizedString(" Safety Notifications are OFF", comment: "Warning text for when Notifications or Critical Alerts Permissions is disabled"))
             let titleWithImage = NSMutableAttributedString(attachment: titleImageAttachment)
             titleWithImage.append(title)
             contentConfig.attributedText = titleWithImage

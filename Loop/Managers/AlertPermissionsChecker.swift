@@ -12,7 +12,7 @@ import LoopKit
 import SwiftUI
 
 protocol AlertPermissionsCheckerDelegate: AnyObject {
-    func alertPermissions(requiresRiskMitigation: Bool, scheduledDeliveryEnabled: Bool)
+    func notificationsPermissions(requiresRiskMitigation: Bool, scheduledDeliveryEnabled: Bool)
 }
 
 public class AlertPermissionsChecker: ObservableObject {
@@ -109,9 +109,9 @@ extension AlertPermissionsChecker {
     static let unsafeNotificationPermissionsAlertIdentifier = Alert.Identifier(managerIdentifier: "LoopAppManager", alertIdentifier: "unsafeNotificationPermissionsAlert")
 
     private static let unsafeNotificationPermissionsAlertContent = Alert.Content(
-        title: NSLocalizedString("Warning! Critical safety notifications are turned OFF",
+        title: NSLocalizedString("Warning! Safety notifications are turned OFF",
                                  comment: "Alert Permissions Need Attention alert title"),
-        body: String(format: NSLocalizedString("Tidepool Loop alerts and alarms will display without sounds and you may miss critical safety notifications. \n\nTo fix the issue, tap ‘Settings’ and make sure Notifications, Critical Alerts and Time Sensitive Notifications are turned ON.",
+        body: String(format: NSLocalizedString("You may not get sound, visual or vibration alerts regarding critical safety information.\n\nTo fix the issue, tap ‘Settings’ and make sure Notifications, Critical Alerts and Time Sensitive Notifications are turned ON.",
                                                comment: "Format for Notifications permissions disabled alert body. (1: app name)"),
                      Bundle.main.bundleDisplayName),
         acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Notifications permissions disabled alert button")
@@ -137,14 +137,14 @@ extension AlertPermissionsChecker {
 
         let messageImageAttachment = NSTextAttachment()
         messageImageAttachment.image = UIImage(named: "notification-permissions-on")
-        messageImageAttachment.bounds = CGRect(x: messageImageAttachment.bounds.origin.x, y: messageImageAttachment.bounds.origin.y, width: 228, height: 126)
-        let messageWithImageAttributed = NSMutableAttributedString(string: "\n", attributes: [.font: UIFont.systemFont(ofSize: 4)])
+        messageImageAttachment.bounds = CGRect(x: 0, y: -12, width: 228, height: 126)
+        let messageWithImageAttributed = NSMutableAttributedString(string: "\n", attributes: [.font: UIFont.systemFont(ofSize: 8)])
         messageWithImageAttributed.append(NSMutableAttributedString(string: Self.unsafeNotificationPermissionsAlertContent.body, attributes: [.font: UIFont.preferredFont(forTextStyle: .footnote)]))
-        messageWithImageAttributed.append(NSMutableAttributedString(string: "\n\n", attributes: [.font: UIFont.systemFont(ofSize: 8)]))
+        messageWithImageAttributed.append(NSMutableAttributedString(string: "\n\n", attributes: [.font: UIFont.systemFont(ofSize: 12)]))
         messageWithImageAttributed.append(NSMutableAttributedString(attachment: messageImageAttachment))
         alertController.setValue(messageWithImageAttributed, forKey: "attributedMessage")
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Setting", comment: "Label of button that navigation user to iOS Settings"),
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Settings", comment: "Label of button that navigation user to iOS Settings"),
                                                 style: .default,
                                                 handler: { _ in
             AlertPermissionsChecker.gotoSettings()
@@ -178,7 +178,7 @@ extension AlertPermissionsChecker {
                                                      trigger: .immediate)
 
     private func notificationCenterSettingsChanged(_ newValue: NotificationCenterSettingsFlags) {
-        delegate?.alertPermissions(requiresRiskMitigation: newValue.requiresRiskMitigation, scheduledDeliveryEnabled: newValue.scheduledDeliveryEnabled)
+        delegate?.notificationsPermissions(requiresRiskMitigation: newValue.requiresRiskMitigation, scheduledDeliveryEnabled: newValue.scheduledDeliveryEnabled)
     }
 }
 
