@@ -95,7 +95,7 @@ fileprivate extension Alert {
         guard backgroundContent != nil else {
             return nil
         }
-        if let sound = sound {
+        if let sound = soundToPlay() {
             switch sound {
             case .vibrate:
                 // setting the audio volume of critical alert to 0 only vibrates

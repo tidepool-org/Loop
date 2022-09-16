@@ -35,6 +35,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var closedLoopStatus: ClosedLoopStatus!
     
     var alertPermissionsChecker: AlertPermissionsChecker!
+
+    var alertMuter: AlertMuter!
     
     var supportManager: SupportManager!
 
@@ -151,6 +153,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         navigationController?.setToolbarHidden(false, animated: animated)
 
         alertPermissionsChecker.checkNow()
+
+        alertMuter.check()
         
         updateBolusProgress()
 
@@ -1418,7 +1422,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                                   delegate: self)
         let versionUpdateViewModel = VersionUpdateViewModel(supportManager: supportManager, guidanceColors: .default)
         let viewModel = SettingsViewModel(alertPermissionsChecker: alertPermissionsChecker,
-                                          alertMuter: deviceManager.alertManager,
+                                          alertMuter: alertMuter,
                                           versionUpdateViewModel: versionUpdateViewModel,
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,

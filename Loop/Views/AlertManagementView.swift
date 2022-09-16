@@ -14,7 +14,7 @@ struct AlertManagementView: View {
     @Environment(\.appName) private var appName
 
     @ObservedObject private var checker: AlertPermissionsChecker
-    @ObservedObject private var viewModel: AlertManagementViewModel
+    @ObservedObject private var alertMuter: AlertMuter
 
     private var formatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
@@ -25,22 +25,22 @@ struct AlertManagementView: View {
 
     private var formattedSelectedDuration: Binding<String> {
         Binding(
-            get: { formatter.string(from: viewModel.selectedDuration)! },
+            get: { formatter.string(from: alertMuter.configuration.duration ?? .minutes(30))! },
             set: { newValue in
                 guard let selectedDurationIndex = formatterDurations.firstIndex(of: newValue)
                 else { return }
-                viewModel.selectedDuration = viewModel.allowedDurations[selectedDurationIndex]
+                alertMuter.configuration.duration = alertMuter.allowedDurations[selectedDurationIndex]
             }
         )
     }
 
     private var formatterDurations: [String] {
-        viewModel.allowedDurations.compactMap { formatter.string(from: $0) }
+        alertMuter.allowedDurations.compactMap { formatter.string(from: $0) }
     }
 
-    public init(checker: AlertPermissionsChecker, alertMuter: AlertMuter) {
+    public init(checker: AlertPermissionsChecker, alertMuter: AlertMuter = AlertMuter()) {
         self.checker = checker
-        self.viewModel = AlertManagementViewModel(alertMuter: alertMuter)
+        self.alertMuter = alertMuter
     }
 
     var body: some View {
@@ -48,7 +48,7 @@ struct AlertManagementView: View {
             alertPermissionsSection
             muteAlertsSection
 
-            if viewModel.enabled {
+            if alertMuter.configuration.enabled {
                 mutePeriodSection
             }
         }
@@ -76,7 +76,7 @@ struct AlertManagementView: View {
     @ViewBuilder
     private var muteAlertsSection: some View {
         Section(footer: muteAlertsSectionFooter) {
-            Toggle(NSLocalizedString("Mute All Alerts", comment: "Label for toggle to mute all alerts"), isOn: $viewModel.enabled)
+            Toggle(NSLocalizedString("Mute All Alerts", comment: "Label for toggle to mute all alerts"), isOn: $alertMuter.configuration.enabled)
         }
     }
 
@@ -86,7 +86,7 @@ struct AlertManagementView: View {
 
     @ViewBuilder
     private var muteAlertsSectionFooter: some View {
-        if !viewModel.enabled {
+        if !alertMuter.configuration.enabled {
             DescriptiveText(label: muteAlertsFooterString)
         }
     }
@@ -98,11 +98,6 @@ struct AlertManagementView: View {
 
 struct AlertManagementView_Previews: PreviewProvider {
     static var previews: some View {
-        AlertManagementView(checker: AlertPermissionsChecker(), alertMuter: TestingAlertMuter())
+        AlertManagementView(checker: AlertPermissionsChecker(), alertMuter: AlertMuter())
     }
 }
-
-class TestingAlertMuter: AlertMuter {
-    var alertMuterConfiguration = AlertMuterConfiguration(enabled: false, duration: .minutes(30))
-}
-

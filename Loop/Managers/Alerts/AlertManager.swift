@@ -47,14 +47,7 @@ public final class AlertManager {
 
     lazy private var cancellables = Set<AnyCancellable>()
 
-    // TODO when muting duration is set, all scheduled alerts (overrides and loop not looping) need to be rescheduled respecting the mute configuration
-    // TODO need to store and restore this value
-    public var alertMuterConfiguration = AlertMuterConfiguration(enabled: false, duration: .minutes(30)) {
-        didSet {
-            print("!!!! alertMuterConfiguration updated: \(alertMuterConfiguration)")
-            print("!!!! should mute alerts: \(shouldMuteAlerts)")
-        }
-    }
+    var alertMuter: AlertMuter
 
     // For testing
     var getCurrentDate = { return Date() }
@@ -80,6 +73,7 @@ public final class AlertManager {
         }
         self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: alertStoreDirectory, expireAfter: expireAfter)
         self.alertPresenter = alertPresenter
+        self.alertMuter = AlertMuter(configuration: UserDefaults.standard.alertMuterConfiguration)
         self.modalAlertIssuer = modalAlertIssuer ?? InAppModalAlertIssuer(alertPresenter: alertPresenter, alertManagerResponder: self)
         self.userNotificationAlertIssuer = userNotificationAlertIssuer
         handlers = [self.modalAlertIssuer, userNotificationAlertIssuer]
@@ -90,6 +84,10 @@ public final class AlertManager {
             .sink { [weak self] _ in
                 self?.loopDidComplete()
             }
+            .store(in: &cancellables)
+
+        alertMuter.$configuration
+            .sink(receiveValue: rescheduleMutedAlerts)
             .store(in: &cancellables)
     }
 
@@ -148,11 +146,14 @@ public final class AlertManager {
     // MARK: - Loop Not Running alerts
 
     func loopDidComplete() {
+        rescheduleLoopNotRunningNotifications()
+    }
+
+    func rescheduleLoopNotRunningNotifications() {
         clearLoopNotRunningNotifications()
         scheduleLoopNotRunningNotifications()
     }
 
-    //TODO need to re-schedule respecting shouldMuteAlerts
     func scheduleLoopNotRunningNotifications() {
         // Give a little extra time for a loop-in-progress to complete
         let gracePeriod = TimeInterval(minutes: 0.5)
@@ -173,16 +174,17 @@ public final class AlertManager {
             }
 
             notification.title = NSLocalizedString("Loop Failure", comment: "The notification title for a loop failure")
+            let shouldMuteAlert = alertMuter.shouldMuteAlert(failureInterval)
             if isCritical, FeatureFlags.criticalAlertsEnabled {
                 if #available(iOS 15.0, *) {
                     notification.interruptionLevel = .critical
                 }
-                notification.sound = .defaultCritical
+                notification.sound = shouldMuteAlert ? .defaultCriticalSound(withAudioVolume: 0.0) : .defaultCritical
             } else {
                 if #available(iOS 15.0, *) {
                     notification.interruptionLevel = .timeSensitive
                 }
-                notification.sound = .default
+                notification.sound = shouldMuteAlert ? nil : .default
             }
             notification.categoryIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
             notification.threadIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
@@ -246,7 +248,6 @@ public final class AlertManager {
     }
 
     // MARK: - Workout reminder
-    // TODO scheduled alerts need to be re-scheduled respecting shouldMuteAlerts
     private func scheduleWorkoutOverrideReminder() {
         issueAlert(workoutOverrideReminderAlert)
     }
@@ -255,11 +256,11 @@ public final class AlertManager {
         retractAlert(identifier: AlertManager.workoutOverrideReminderAlertIdentifier)
     }
 
-    public static var workoutOverrideReminderAlertIdentifier: Alert.Identifier {
+    private static var workoutOverrideReminderAlertIdentifier: Alert.Identifier {
         return Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "WorkoutOverrideReminder")
     }
 
-    public var workoutOverrideReminderAlert: Alert {
+    private var workoutOverrideReminderAlert: Alert {
         let title = NSLocalizedString("Workout Temp Adjust Still On", comment: "Workout override still on reminder alert title")
         let body = NSLocalizedString("Workout Temp Adjust has been turned on for more than 24 hours. Make sure you still want it enabled, or turn it off in the app.", comment: "Workout override still on reminder alert body.")
         let content = Alert.Content(title: title,
@@ -271,6 +272,43 @@ public final class AlertManager {
                      trigger: .delayed(interval: .hours(24)))
     }
 
+    // MARK: - Rescheduling Muted Alerts
+
+    func rescheduleMutedAlerts(_ newValue: AlertMuter.Configuration) {
+        UserDefaults.standard.alertMuterConfiguration = newValue
+
+        rescheduleLoopNotRunningNotifications()
+
+        let shouldMuteAlerts = newValue.shouldMuteAlerts
+        lookupAllPendingDelayedOrRepeatingAlerts() { [weak self] result in
+            switch result {
+            case .success(let persistedAlerts):
+                for persistedAlert in persistedAlerts {
+                    if shouldMuteAlerts {
+                        // reschedule a muted alert, if needed
+                        switch persistedAlert.alert.trigger {
+                        case .delayed(let interval), .repeating(let interval):
+                            let timeFromNow = persistedAlert.issuedDate.advanced(by: interval).timeIntervalSinceNow
+                            if newValue.shouldMuteAlert(timeFromNow) {
+                                self?.retractAlert(identifier: persistedAlert.alert.identifier)
+                                self?.issueAlert(persistedAlert.alert.makeMutedAlert(shouldMuteAlerts))
+                            }
+                        default:
+                            break
+                        }
+                    } else {
+                        // reschedule an unmuted alert
+                        if persistedAlert.alert.isMuted {
+                            self?.retractAlert(identifier: persistedAlert.alert.identifier)
+                            self?.issueAlert(persistedAlert.alert.makeMutedAlert(shouldMuteAlerts))
+                        }
+                    }
+                }
+            case .failure(let error):
+                self?.log.error("error looking up all delayed or repeating alerts: %{public}@", String(describing: error))
+            }
+        }
+    }
 }
 
 // MARK: AlertManagerResponder implementation
@@ -314,7 +352,7 @@ extension AlertManager: AlertManagerResponder {
 extension AlertManager: AlertIssuer {
 
     public func issueAlert(_ alert: Alert) {
-        handlers.forEach { $0.issueAlert(shouldMuteAlerts ? alert.mutedAlert() : alert) }
+        handlers.forEach { $0.issueAlert(alertMuter.processAlert(alert)) }
         alertStore.recordIssued(alert: alert)
     }
 
@@ -326,7 +364,7 @@ extension AlertManager: AlertIssuer {
     private func replayAlert(_ alert: Alert) {
         // Only alerts with foreground content are replayed
         if alert.foregroundContent != nil {
-            modalAlertIssuer?.issueAlert(shouldMuteAlerts ? alert.mutedAlert() : alert)
+            modalAlertIssuer?.issueAlert(alertMuter.processAlert(alert))
         }
     }
 }
@@ -336,7 +374,7 @@ extension AlertManager: AlertIssuer {
 extension AlertManager {
 
     public static func soundURL(for alert: Alert) -> URL? {
-        guard let sound = alert.sound else { return nil }
+        guard let sound = alert.soundToPlay() else { return nil }
         return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: sound)
     }
 
@@ -479,6 +517,30 @@ extension AlertManager: PersistedAlertStore {
 
     public func lookupAllUnacknowledgedUnretracted(managerIdentifier: String, completion: @escaping (Result<[PersistedAlert], Error>) -> Void) {
         alertStore.lookupAllUnacknowledgedUnretracted(managerIdentifier: managerIdentifier) {
+            switch $0 {
+            case .success(let alerts):
+                do {
+                    let result = try alerts.map {
+                        PersistedAlert(
+                            alert: try Alert(from: $0, adjustedForStorageTime: false),
+                            issuedDate: $0.issuedDate,
+                            retractedDate: $0.retractedDate,
+                            acknowledgedDate: $0.acknowledgedDate
+                        )
+                    }
+                    completion(.success(result))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
+    private func lookupAllPendingDelayedOrRepeatingAlerts(completion: @escaping (Result<[PersistedAlert], Error>) -> Void) {
+        // the interval provided is not used in the search. Just the trigger stored type value
+        alertStore.lookupAllUnacknowledgedUnretracted(filteredByTriggers: [Alert.Trigger.delayed(interval: 0).storedType, Alert.Trigger.repeating(repeatInterval: 0).storedType]) {
             switch $0 {
             case .success(let alerts):
                 do {
@@ -646,8 +708,9 @@ fileprivate extension AlertManager {
 
 fileprivate extension UserDefaults {
     private enum Key: String {
-        case hasIssuedNotificationPermissionsAlert = "com.loopkit.Loop.HasIssuedNotificationPermissionsAlert"
-        case hasIssuedScheduledDeliveryEnabledAlert = "com.loopkit.Loop.HasIssuedScheduledDeliveryEnabledAlert"
+        case hasIssuedNotificationPermissionsAlert = "com.loop.Loop.HasIssuedNotificationPermissionsAlert"
+        case hasIssuedScheduledDeliveryEnabledAlert = "com.loop.Loop.HasIssuedScheduledDeliveryEnabledAlert"
+        case alertMuterConfiguration = "com.loop.Loop.alertMuterConfiguration"
     }
 
     var hasIssuedNotificationPermissionsAlert: Bool {
@@ -667,6 +730,19 @@ fileprivate extension UserDefaults {
             set(newValue, forKey: Key.hasIssuedScheduledDeliveryEnabledAlert.rawValue)
         }
     }
-}
 
-extension AlertManager: AlertMuter { }
+    var alertMuterConfiguration: AlertMuter.Configuration {
+        get {
+            if let alertMuterConfigurationRawValue = object(forKey: Key.alertMuterConfiguration.rawValue) as? AlertMuter.Configuration.RawValue,
+               let alertMuterConfiguration = AlertMuter.Configuration(rawValue: alertMuterConfigurationRawValue)
+            {
+                return alertMuterConfiguration
+            } else {
+                return AlertMuter().configuration
+            }
+        }
+        set {
+            set(newValue.rawValue, forKey: Key.alertMuterConfiguration.rawValue)
+        }
+    }
+}

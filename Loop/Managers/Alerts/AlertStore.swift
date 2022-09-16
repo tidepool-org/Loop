@@ -181,7 +181,7 @@ public class AlertStore {
         }
     }
 
-    public func lookupAllUnacknowledgedUnretracted(managerIdentifier: String? = nil, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+    public func lookupAllUnacknowledgedUnretracted(managerIdentifier: String? = nil, filteredByTriggers triggersStoredType: [AlertTriggerStoredType]? = nil, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
         managedObjectContext.perform {
             do {
                 let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
@@ -191,6 +191,18 @@ public class AlertStore {
                 ]
                 if let managerIdentifier = managerIdentifier {
                     predicates.insert(NSPredicate(format: "managerIdentifier = %@", managerIdentifier), at: 0)
+                }
+                if let triggersStoredType = triggersStoredType {
+                    var triggerPredicates = ""
+                    for triggerStoredType in triggersStoredType {
+                        let predicateString = "triggerType == \(triggerStoredType)"
+                        if triggerPredicates.isEmpty {
+                            triggerPredicates.append(predicateString)
+                        } else {
+                            triggerPredicates.append(" OR \(predicateString)")
+                        }
+                    }
+                    predicates.append(NSPredicate(format: "%@", triggerPredicates))
                 }
                 fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]

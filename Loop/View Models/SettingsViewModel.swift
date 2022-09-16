@@ -182,7 +182,7 @@ extension SettingsViewModel {
 
     static var preview: SettingsViewModel {
         return SettingsViewModel(alertPermissionsChecker: AlertPermissionsChecker(),
-                                 alertMuter: TestingAlertMuter(),
+                                 alertMuter: AlertMuter(),
                                  versionUpdateViewModel: VersionUpdateViewModel(supportManager: nil, guidanceColors: GuidanceColors()),
                                  pumpManagerSettingsViewModel: DeviceViewModel<PumpManagerDescriptor>(),
                                  cgmManagerSettingsViewModel: DeviceViewModel<CGMManagerDescriptor>(),

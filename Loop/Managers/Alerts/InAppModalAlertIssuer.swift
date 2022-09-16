@@ -158,7 +158,7 @@ extension InAppModalAlertIssuer {
     }
 
     private func playSound(for alert: Alert) {
-        guard let sound = alert.sound else { return }
+        guard let sound = alert.soundToPlay() else { return }
         switch sound {
         case .vibrate:
             soundPlayer.vibrate()

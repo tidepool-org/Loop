@@ -115,12 +115,14 @@ extension Alert.Metadata {
     }
 }
 
+public typealias AlertTriggerStoredType = Int16
+
 extension Alert.Trigger {
     enum StorageError: Error {
         case invalidStoredInterval, invalidStoredType
     }
     
-    var storedType: Int16 {
+    var storedType: AlertTriggerStoredType {
         switch self {
         case .immediate: return 0
         case .delayed: return 1
