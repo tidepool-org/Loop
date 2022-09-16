@@ -97,11 +97,7 @@ fileprivate extension Alert {
         }
         if let sound = soundToPlay() {
             switch sound {
-            case .vibrate:
-                // setting the audio volume of critical alert to 0 only vibrates
-                //TODO need to test returning `nil` for non-critical alerts
-                return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil
-            case .silence:
+            case .vibrate, .silence:
                 // setting the audio volume of critical alert to 0 only vibrates
                 return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil
             default:

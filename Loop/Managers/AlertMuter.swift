@@ -108,6 +108,7 @@ public class AlertMuter: ObservableObject {
     }
 
     func check() {
+        // this is enabled by user action, so only need to check if the duration has elapsed and then disable
         guard !configuration.shouldMuteAlerts else { return }
         configuration.enabled = false
     }
