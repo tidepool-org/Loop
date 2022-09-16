@@ -193,16 +193,12 @@ public class AlertStore {
                     predicates.insert(NSPredicate(format: "managerIdentifier = %@", managerIdentifier), at: 0)
                 }
                 if let triggersStoredType = triggersStoredType {
-                    var triggerPredicate = ""
+                    var triggerPredicates: [NSPredicate] = []
                     for triggerStoredType in triggersStoredType {
-                        let predicateString = "triggerType == \(triggerStoredType)"
-                        if triggerPredicate.isEmpty {
-                            triggerPredicate.append(predicateString)
-                        } else {
-                            triggerPredicate.append(" OR \(predicateString)")
-                        }
+                        triggerPredicates.append(NSPredicate(format: "triggerType == %d", triggerStoredType))
                     }
-                    predicates.append(NSPredicate(format: "%@", triggerPredicate))
+                    let triggerFilterPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: triggerPredicates)
+                    predicates.append(triggerFilterPredicate)
                 }
                 fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
                 fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
