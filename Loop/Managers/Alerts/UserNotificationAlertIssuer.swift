@@ -95,16 +95,15 @@ fileprivate extension Alert {
         guard backgroundContent != nil else {
             return nil
         }
-        if let sound = soundToPlay() {
-            switch sound {
-            case .vibrate, .silence:
-                // setting the audio volume of critical alert to 0 only vibrates
-                return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil
-            default:
-                if let actualFileName = AlertManager.soundURL(for: self)?.lastPathComponent {
-                    let unname = UNNotificationSoundName(rawValue: actualFileName)
-                    return interruptionLevel == .critical ? UNNotificationSound.criticalSoundNamed(unname) : UNNotificationSound(named: unname)
-                }
+        
+        switch soundToPlay() {
+        case .vibrate, .silence:
+            // setting the audio volume of critical alert to 0 only vibrates
+            return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil
+        default:
+            if let actualFileName = AlertManager.soundURL(for: self)?.lastPathComponent {
+                let unname = UNNotificationSoundName(rawValue: actualFileName)
+                return interruptionLevel == .critical ? UNNotificationSound.criticalSoundNamed(unname) : UNNotificationSound(named: unname)
             }
         }
 

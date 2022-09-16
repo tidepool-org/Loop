@@ -374,8 +374,7 @@ extension AlertManager: AlertIssuer {
 extension AlertManager {
 
     public static func soundURL(for alert: Alert) -> URL? {
-        guard let sound = alert.soundToPlay() else { return nil }
-        return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: sound)
+        return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: alert.soundToPlay())
     }
 
     private static func soundURL(managerIdentifier: String, sound: Alert.Sound) -> URL? {

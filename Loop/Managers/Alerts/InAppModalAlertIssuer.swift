@@ -158,12 +158,9 @@ extension InAppModalAlertIssuer {
     }
 
     private func playSound(for alert: Alert) {
-        guard let sound = alert.soundToPlay() else { return }
-        switch sound {
-        case .vibrate:
+        switch alert.soundToPlay() {
+        case .vibrate, .silence:
             soundPlayer.vibrate()
-        case .silence:
-            break
         default:
             // Assuming in-app alerts should also vibrate.  That way, if the user has "silent mode" on, they still get
             // some kind of haptic feedback
