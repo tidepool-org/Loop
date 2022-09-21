@@ -660,12 +660,6 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
     }
 }
 
-fileprivate extension AlertManager {
-    private var isAppInBackground: Bool {
-        return UIApplication.shared.applicationState == UIApplication.State.background
-    }
-}
-
 fileprivate extension UserDefaults {
     private enum Key: String {
         case hasIssuedNotificationPermissionsAlert = "com.loop.Loop.HasIssuedNotificationPermissionsAlert"
