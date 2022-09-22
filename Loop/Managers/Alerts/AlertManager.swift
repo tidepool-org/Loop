@@ -662,8 +662,8 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
 
 fileprivate extension UserDefaults {
     private enum Key: String {
-        case hasIssuedNotificationPermissionsAlert = "com.loop.Loop.HasIssuedNotificationPermissionsAlert"
-        case hasIssuedScheduledDeliveryEnabledAlert = "com.loop.Loop.HasIssuedScheduledDeliveryEnabledAlert"
+        case hasIssuedNotificationPermissionsAlert = "com.loopkit.Loop.HasIssuedNotificationPermissionsAlert"
+        case hasIssuedScheduledDeliveryEnabledAlert = "com.loopkit.Loop.HasIssuedScheduledDeliveryEnabledAlert"
     }
 
     var hasIssuedNotificationPermissionsAlert: Bool {
