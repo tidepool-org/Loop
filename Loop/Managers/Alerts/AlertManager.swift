@@ -87,6 +87,9 @@ public final class AlertManager {
             .store(in: &cancellables)
 
         alertMuter.$configuration
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .dropFirst()
             .sink(receiveValue: rescheduleMutedAlerts)
             .store(in: &cancellables)
     }
@@ -174,7 +177,7 @@ public final class AlertManager {
             }
 
             notification.title = NSLocalizedString("Loop Failure", comment: "The notification title for a loop failure")
-            let shouldMuteAlert = alertMuter.shouldMuteAlert(failureInterval)
+            let shouldMuteAlert = alertMuter.shouldMuteAlertIssuedFromNow(failureInterval)
             if isCritical, FeatureFlags.criticalAlertsEnabled {
                 if #available(iOS 15.0, *) {
                     notification.interruptionLevel = .critical
@@ -276,7 +279,6 @@ public final class AlertManager {
 
     func rescheduleMutedAlerts(_ newValue: AlertMuter.Configuration) {
         UserDefaults.standard.alertMuterConfiguration = newValue
-
         rescheduleLoopNotRunningNotifications()
 
         let shouldMuteAlerts = newValue.shouldMuteAlerts
@@ -284,25 +286,7 @@ public final class AlertManager {
             switch result {
             case .success(let persistedAlerts):
                 for persistedAlert in persistedAlerts {
-                    if shouldMuteAlerts {
-                        // reschedule a muted alert, if needed
-                        switch persistedAlert.alert.trigger {
-                        case .delayed(let interval), .repeating(let interval):
-                            let timeFromNow = persistedAlert.issuedDate.advanced(by: interval).timeIntervalSinceNow
-                            if newValue.shouldMuteAlert(timeFromNow) {
-                                self?.retractAlert(identifier: persistedAlert.alert.identifier)
-                                self?.issueAlert(persistedAlert.alert.makeMutedAlert(shouldMuteAlerts))
-                            }
-                        default:
-                            break
-                        }
-                    } else {
-                        // reschedule an unmuted alert
-                        if persistedAlert.alert.isMuted {
-                            self?.retractAlert(identifier: persistedAlert.alert.identifier)
-                            self?.issueAlert(persistedAlert.alert.makeMutedAlert(shouldMuteAlerts))
-                        }
-                    }
+                    self?.rescheduleAlertWithHandlers(persistedAlert.alert, issuedDate: persistedAlert.issuedDate)
                 }
             case .failure(let error):
                 self?.log.error("error looking up all delayed or repeating alerts: %{public}@", String(describing: error))
@@ -352,20 +336,35 @@ extension AlertManager: AlertManagerResponder {
 extension AlertManager: AlertIssuer {
 
     public func issueAlert(_ alert: Alert) {
-        handlers.forEach { $0.issueAlert(alertMuter.processAlert(alert)) }
+        issueAlertWithHandlers(alert)
         alertStore.recordIssued(alert: alert)
     }
 
     public func retractAlert(identifier: Alert.Identifier) {
-        handlers.forEach { $0.retractAlert(identifier: identifier) }
+        retractAlertWithHandlers(identifier: identifier)
         alertStore.recordRetraction(of: identifier)
     }
 
     private func replayAlert(_ alert: Alert) {
         // Only alerts with foreground content are replayed
         if alert.foregroundContent != nil {
-            modalAlertIssuer?.issueAlert(alertMuter.processAlert(alert))
+            modalAlertIssuer?.issueAlert(alert)
         }
+    }
+
+    private func issueAlertWithHandlers(_ alert: Alert, issuedDate: Date = Date()) {
+        // alert may need to be muted
+        let processedAlert = alertMuter.processAlert(alert, issuedDate: issuedDate)
+        handlers.forEach { $0.issueAlert(processedAlert) }
+    }
+
+    private func retractAlertWithHandlers(identifier: Alert.Identifier) {
+        handlers.forEach { $0.retractAlert(identifier: identifier) }
+    }
+
+    private func rescheduleAlertWithHandlers(_ alert: Alert, issuedDate: Date) {
+        retractAlertWithHandlers(identifier: alert.identifier)
+        issueAlertWithHandlers(alert, issuedDate: issuedDate)
     }
 }
 
@@ -374,7 +373,7 @@ extension AlertManager: AlertIssuer {
 extension AlertManager {
 
     public static func soundURL(for alert: Alert) -> URL? {
-        return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: alert.soundToPlay())
+        return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: alert.sound)
     }
 
     private static func soundURL(managerIdentifier: String, sound: Alert.Sound) -> URL? {
@@ -420,7 +419,9 @@ extension AlertManager {
             case .success(let alerts):
                 alerts.forEach { alert in
                     do {
-                        self.replayAlert(try Alert(from: alert, adjustedForStorageTime: true))
+                        if let alert = try Alert(from: alert, adjustedForStorageTime: true) {
+                            self.replayAlert(alert)
+                        }
                     } catch {
                         self.log.error("Error decoding alert from persistent storage: %@", error.localizedDescription)
                     }
@@ -434,7 +435,9 @@ extension AlertManager {
             case .success(let alerts):
                 alerts.forEach { alert in
                     do {
-                        self.replayAlert(try Alert(from: alert, adjustedForStorageTime: true))
+                        if let alert = try Alert(from: alert, adjustedForStorageTime: true) {
+                            self.replayAlert(alert)
+                        }
                     } catch {
                         self.log.error("Error decoding alert from persistent storage: %@", error.localizedDescription)
                     }
@@ -496,13 +499,17 @@ extension AlertManager: PersistedAlertStore {
             switch $0 {
             case .success(let alerts):
                 do {
-                    let result = try alerts.map {
-                        PersistedAlert(
-                            alert: try Alert(from: $0, adjustedForStorageTime: false),
-                            issuedDate: $0.issuedDate,
-                            retractedDate: $0.retractedDate,
-                            acknowledgedDate: $0.acknowledgedDate
-                        )
+                    let result = try alerts.compactMap {
+                        if let alert = try Alert(from: $0, adjustedForStorageTime: false) {
+                            return PersistedAlert(
+                                alert: alert,
+                                issuedDate: $0.issuedDate,
+                                retractedDate: $0.retractedDate,
+                                acknowledgedDate: $0.acknowledgedDate
+                            )
+                        } else {
+                            return nil
+                        }
                     }
                     completion(.success(result))
                 } catch {
@@ -519,13 +526,17 @@ extension AlertManager: PersistedAlertStore {
             switch $0 {
             case .success(let alerts):
                 do {
-                    let result = try alerts.map {
-                        PersistedAlert(
-                            alert: try Alert(from: $0, adjustedForStorageTime: false),
-                            issuedDate: $0.issuedDate,
-                            retractedDate: $0.retractedDate,
-                            acknowledgedDate: $0.acknowledgedDate
-                        )
+                    let result = try alerts.compactMap {
+                        if let alert = try Alert(from: $0, adjustedForStorageTime: false) {
+                            return PersistedAlert(
+                                alert: alert,
+                                issuedDate: $0.issuedDate,
+                                retractedDate: $0.retractedDate,
+                                acknowledgedDate: $0.acknowledgedDate
+                            )
+                        } else {
+                            return nil
+                        }
                     }
                     completion(.success(result))
                 } catch {
@@ -543,13 +554,17 @@ extension AlertManager: PersistedAlertStore {
             switch $0 {
             case .success(let alerts):
                 do {
-                    let result = try alerts.map {
-                        PersistedAlert(
-                            alert: try Alert(from: $0, adjustedForStorageTime: false),
-                            issuedDate: $0.issuedDate,
-                            retractedDate: $0.retractedDate,
-                            acknowledgedDate: $0.acknowledgedDate
-                        )
+                    let result = try alerts.compactMap {
+                        if let alert = try Alert(from: $0, adjustedForStorageTime: false) {
+                            return PersistedAlert(
+                                alert: alert,
+                                issuedDate: $0.issuedDate,
+                                retractedDate: $0.retractedDate,
+                                acknowledgedDate: $0.acknowledgedDate
+                            )
+                        } else {
+                            return nil
+                        }
                     }
                     completion(.success(result))
                 } catch {
@@ -707,9 +722,9 @@ fileprivate extension AlertManager {
 
 fileprivate extension UserDefaults {
     private enum Key: String {
-        case hasIssuedNotificationPermissionsAlert = "com.loop.Loop.HasIssuedNotificationPermissionsAlert"
-        case hasIssuedScheduledDeliveryEnabledAlert = "com.loop.Loop.HasIssuedScheduledDeliveryEnabledAlert"
-        case alertMuterConfiguration = "com.loop.Loop.alertMuterConfiguration"
+        case hasIssuedNotificationPermissionsAlert = "com.loopkit.Loop.HasIssuedNotificationPermissionsAlert"
+        case hasIssuedScheduledDeliveryEnabledAlert = "com.loopkit.Loop.HasIssuedScheduledDeliveryEnabledAlert"
+        case alertMuterConfiguration = "com.loopkit.Loop.alertMuterConfiguration"
     }
 
     var hasIssuedNotificationPermissionsAlert: Bool {

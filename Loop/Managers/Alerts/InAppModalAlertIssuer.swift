@@ -23,17 +23,13 @@ public class InAppModalAlertIssuer: AlertIssuer {
     typealias TimerFactoryFunction = (TimeInterval, Bool, (() -> Void)?) -> Timer
     private let newTimerFunc: TimerFactoryFunction
 
-    private let soundPlayer: AlertSoundPlayer
-
     init(alertPresenter: AlertPresenter?,
          alertManagerResponder: AlertManagerResponder,
-         soundPlayer: AlertSoundPlayer = DeviceAVSoundPlayer(),
          newActionFunc: @escaping ActionFactoryFunction = UIAlertAction.init,
          newTimerFunc: TimerFactoryFunction? = nil)
     {
         self.alertPresenter = alertPresenter
         self.alertManagerResponder = alertManagerResponder
-        self.soundPlayer = soundPlayer
         self.newActionFunc = newActionFunc
         self.newTimerFunc = newTimerFunc ?? { timeInterval, repeats, block in
             return Timer.scheduledTimer(withTimeInterval: timeInterval, repeats: repeats) { _ in block?() }
@@ -113,7 +109,6 @@ extension InAppModalAlertIssuer {
             }
             self.alertPresenter?.present(alertController, animated: true) { [weak self] in
                 // the completion is called after the alert is presented
-                self?.playSound(for: alert)
                 self?.addPresentedAlert(alert: alert, controller: alertController)
             }
         }
@@ -155,18 +150,5 @@ extension InAppModalAlertIssuer {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alertController.addAction(newActionFunc(action, .default, { _ in acknowledgeCompletion() }))
         return alertController
-    }
-
-    private func playSound(for alert: Alert) {
-        switch alert.soundToPlay() {
-        case .vibrate, .silence:
-            soundPlayer.vibrate()
-        default:
-            // Assuming in-app alerts should also vibrate.  That way, if the user has "silent mode" on, they still get
-            // some kind of haptic feedback
-            soundPlayer.vibrate()
-            guard let url = AlertManager.soundURL(for: alert) else { return }
-            soundPlayer.play(url: url)
-        }
     }
 }

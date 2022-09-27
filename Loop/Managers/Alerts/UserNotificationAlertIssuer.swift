@@ -71,12 +71,9 @@ fileprivate extension Alert {
     }
 
     func getUserNotificationContent(timestamp: Date) throws -> UNNotificationContent {
-        guard let content = backgroundContent else {
-            throw Error.noBackgroundContent
-        }
         let userNotificationContent = UNMutableNotificationContent()
-        userNotificationContent.title = content.title
-        userNotificationContent.body = content.body
+        userNotificationContent.title = backgroundContent.title
+        userNotificationContent.body = backgroundContent.body
         userNotificationContent.sound = userNotificationSound
         if #available(iOS 15.0, *) {
             userNotificationContent.interruptionLevel = interruptionLevel.userNotificationInterruptLevel
@@ -92,11 +89,7 @@ fileprivate extension Alert {
     }
     
     private var userNotificationSound: UNNotificationSound? {
-        guard backgroundContent != nil else {
-            return nil
-        }
-        
-        switch soundToPlay() {
+        switch sound {
         case .vibrate, .silence:
             // setting the audio volume of critical alert to 0 only vibrates
             return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil

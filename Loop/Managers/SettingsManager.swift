@@ -30,6 +30,8 @@ class SettingsManager {
 
     var deviceStatusProvider: DeviceStatusProvider?
 
+    var alertMuter: AlertMuter
+
     var displayGlucoseUnitObservable: DisplayGlucoseUnitObservable?
 
     public var latestSettings: StoredSettings
@@ -40,9 +42,10 @@ class SettingsManager {
 
     private let log = OSLog(category: "SettingsManager")
 
-    init(cacheStore: PersistenceController, expireAfter: TimeInterval)
+    init(cacheStore: PersistenceController, expireAfter: TimeInterval, alertMuter: AlertMuter)
     {
         settingsStore = SettingsStore(store: cacheStore, expireAfter: expireAfter)
+        self.alertMuter = alertMuter
 
         if let storedSettings = settingsStore.latestSettings {
             latestSettings = storedSettings
@@ -76,6 +79,14 @@ class SettingsManager {
                 }
             }
             .store(in: &cancellables)
+
+        self.alertMuter.$configuration
+            .sink { [weak self] alertMuterConfiguration in
+                guard var notificationSettings = self?.latestSettings.notificationSettings else { return }
+                notificationSettings.temporaryMuteAlertsSettings = alertMuterConfiguration.enabled ? .enabled : .disabled
+                self?.storeSettings(notificationSettings: notificationSettings)
+            }
+            .store(in: &cancellables)
     }
 
     var loopSettings: LoopSettings {
@@ -105,28 +116,28 @@ class SettingsManager {
         let newNotificationSettings = notificationSettings ?? settingsStore.latestSettings?.notificationSettings
 
         return StoredSettings(date: Date(),
-                                      dosingEnabled: newLoopSettings.dosingEnabled,
-                                      glucoseTargetRangeSchedule: newLoopSettings.glucoseTargetRangeSchedule,
-                                      preMealTargetRange: newLoopSettings.preMealTargetRange,
-                                      workoutTargetRange: newLoopSettings.legacyWorkoutTargetRange,
-                                      overridePresets: newLoopSettings.overridePresets,
-                                      scheduleOverride: newLoopSettings.scheduleOverride,
-                                      preMealOverride: newLoopSettings.preMealOverride,
-                                      maximumBasalRatePerHour: newLoopSettings.maximumBasalRatePerHour,
-                                      maximumBolus: newLoopSettings.maximumBolus,
-                                      suspendThreshold: newLoopSettings.suspendThreshold,
-                                      deviceToken: deviceToken,
-                                      insulinType: deviceStatusProvider?.pumpManagerStatus?.insulinType,
-                                      defaultRapidActingModel: newLoopSettings.defaultRapidActingModel.map(StoredInsulinModel.init),
-                                      basalRateSchedule: newLoopSettings.basalRateSchedule,
-                                      insulinSensitivitySchedule: newLoopSettings.insulinSensitivitySchedule,
-                                      carbRatioSchedule: newLoopSettings.carbRatioSchedule,
-                                      notificationSettings: newNotificationSettings,
-                                      controllerDevice: UIDevice.current.controllerDevice,
-                                      cgmDevice: deviceStatusProvider?.cgmManagerStatus?.device,
-                                      pumpDevice: deviceStatusProvider?.pumpManagerStatus?.device,
-                                      bloodGlucoseUnit: displayGlucoseUnitObservable?.displayGlucoseUnit,
-                                      automaticDosingStrategy: newLoopSettings.automaticDosingStrategy)
+                              dosingEnabled: newLoopSettings.dosingEnabled,
+                              glucoseTargetRangeSchedule: newLoopSettings.glucoseTargetRangeSchedule,
+                              preMealTargetRange: newLoopSettings.preMealTargetRange,
+                              workoutTargetRange: newLoopSettings.legacyWorkoutTargetRange,
+                              overridePresets: newLoopSettings.overridePresets,
+                              scheduleOverride: newLoopSettings.scheduleOverride,
+                              preMealOverride: newLoopSettings.preMealOverride,
+                              maximumBasalRatePerHour: newLoopSettings.maximumBasalRatePerHour,
+                              maximumBolus: newLoopSettings.maximumBolus,
+                              suspendThreshold: newLoopSettings.suspendThreshold,
+                              deviceToken: deviceToken,
+                              insulinType: deviceStatusProvider?.pumpManagerStatus?.insulinType,
+                              defaultRapidActingModel: newLoopSettings.defaultRapidActingModel.map(StoredInsulinModel.init),
+                              basalRateSchedule: newLoopSettings.basalRateSchedule,
+                              insulinSensitivitySchedule: newLoopSettings.insulinSensitivitySchedule,
+                              carbRatioSchedule: newLoopSettings.carbRatioSchedule,
+                              notificationSettings: newNotificationSettings,
+                              controllerDevice: UIDevice.current.controllerDevice,
+                              cgmDevice: deviceStatusProvider?.cgmManagerStatus?.device,
+                              pumpDevice: deviceStatusProvider?.pumpManagerStatus?.device,
+                              bloodGlucoseUnit: displayGlucoseUnitObservable?.displayGlucoseUnit,
+                              automaticDosingStrategy: newLoopSettings.automaticDosingStrategy)
     }
 
     func storeSettings(newLoopSettings: LoopSettings? = nil, notificationSettings: NotificationSettings? = nil) {
@@ -169,7 +180,7 @@ class SettingsManager {
                     return
                 }
 
-                let notificationSettings = NotificationSettings(notificationSettings)
+                let notificationSettings = NotificationSettings(notificationSettings, areAlertsTemporaryMuted: self.alertMuter.configuration.enabled)
 
                 if notificationSettings != latestSettings.notificationSettings
                 {
@@ -202,7 +213,7 @@ extension SettingsManager: SettingsStoreDelegate {
 
 private extension NotificationSettings {
 
-    init(_ notificationSettings: UNNotificationSettings) {
+    init(_ notificationSettings: UNNotificationSettings, areAlertsTemporaryMuted: Bool) {
         let timeSensitiveSetting: NotificationSettings.NotificationSetting
         let scheduledDeliverySetting: NotificationSettings.NotificationSetting
 
@@ -227,7 +238,8 @@ private extension NotificationSettings {
                   providesAppNotificationSettings: notificationSettings.providesAppNotificationSettings,
                   announcementSetting: NotificationSettings.NotificationSetting(notificationSettings.announcementSetting),
                   timeSensitiveSetting: timeSensitiveSetting,
-                  scheduledDeliverySetting: scheduledDeliverySetting
+                  scheduledDeliverySetting: scheduledDeliverySetting,
+                  temporaryMuteAlertsSettings: areAlertsTemporaryMuted ? .enabled : .disabled
         )
     }
 }

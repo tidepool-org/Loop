@@ -25,17 +25,20 @@ struct AlertManagementView: View {
 
     private var formattedSelectedDuration: Binding<String> {
         Binding(
-            get: { formatter.string(from: alertMuter.configuration.duration ?? .minutes(30))! },
+            get: { formatter.string(from: alertMuter.configuration.duration)! },
             set: { newValue in
                 guard let selectedDurationIndex = formatterDurations.firstIndex(of: newValue)
                 else { return }
-                alertMuter.configuration.duration = alertMuter.allowedDurations[selectedDurationIndex]
+                DispatchQueue.main.async {
+                    // avoid publishing during view update
+                    alertMuter.configuration.duration = AlertMuter.allowedDurations[selectedDurationIndex]
+                }
             }
         )
     }
 
     private var formatterDurations: [String] {
-        alertMuter.allowedDurations.compactMap { formatter.string(from: $0) }
+        AlertMuter.allowedDurations.compactMap { formatter.string(from: $0) }
     }
 
     public init(checker: AlertPermissionsChecker, alertMuter: AlertMuter = AlertMuter()) {

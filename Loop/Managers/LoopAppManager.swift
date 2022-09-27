@@ -166,7 +166,8 @@ class LoopAppManager: NSObject {
         self.trustedTimeChecker = TrustedTimeChecker(alertManager: alertManager)
 
         self.settingsManager = SettingsManager(cacheStore: cacheStore,
-                                               expireAfter: localCacheDuration)
+                                               expireAfter: localCacheDuration,
+                                               alertMuter: alertManager.alertMuter)
 
         self.deviceDataManager = DeviceDataManager(pluginManager: pluginManager,
                                                    alertManager: alertManager,
@@ -443,8 +444,8 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
              LoopNotificationCategory.remoteCarbsFailure.rawValue:
             completionHandler([.badge, .sound, .list, .banner])
         default:
-            // All other userNotifications are not to be displayed while in the foreground
-            completionHandler([])
+            // For all others, banners are not to be displayed while in the foreground
+            completionHandler([.badge, .sound, .list])
         }
     }
 

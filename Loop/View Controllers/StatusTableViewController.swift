@@ -832,6 +832,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         override func updateConfiguration(using state: UICellConfigurationState) {
             super.updateConfiguration(using: state)
 
+            let adjustViewForNarrowDisplay = bounds.width < 350
+
             var contentConfig = defaultContentConfiguration().updated(for: state)
             let titleImageAttachment = NSTextAttachment()
             titleImageAttachment.image = UIImage(systemName: "exclamationmark.triangle.fill")?.withTintColor(.white)
@@ -840,11 +842,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             titleWithImage.append(title)
             contentConfig.attributedText = titleWithImage
             contentConfig.textProperties.color = .white
-            contentConfig.textProperties.font = .systemFont(ofSize: 18, weight: .bold)
+            contentConfig.textProperties.font =  .systemFont(ofSize: adjustViewForNarrowDisplay ? 16 : 18, weight: .bold)
             contentConfig.textProperties.adjustsFontSizeToFitWidth = true
             contentConfig.secondaryText = "Fix now by turning Notifications, Critical Alerts and Time Sensitive Notifications ON."
             contentConfig.secondaryTextProperties.color = .white
-            contentConfig.secondaryTextProperties.font = .systemFont(ofSize: 15)
+            contentConfig.secondaryTextProperties.font =  .systemFont(ofSize: adjustViewForNarrowDisplay ? 13 : 15, weight: .bold)
             contentConfiguration = contentConfig
 
             var backgroundConfig = backgroundConfiguration?.updated(for: state)
