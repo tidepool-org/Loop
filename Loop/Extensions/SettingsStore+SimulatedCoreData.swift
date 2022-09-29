@@ -126,7 +126,7 @@ fileprivate extension StoredSettings {
                                                         announcementSetting: .enabled,
                                                         timeSensitiveSetting: .enabled,
                                                         scheduledDeliverySetting: .disabled,
-                                                        temporaryMuteAlertsSettings: .disabled)
+                                                        temporaryMuteAlertsSettings: false)
         let controllerDevice = StoredSettings.ControllerDevice(name: "Controller Name",
                                                                systemName: "Controller System Name",
                                                                systemVersion: "Controller System Version",

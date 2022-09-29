@@ -83,7 +83,7 @@ class SettingsManager {
         self.alertMuter.$configuration
             .sink { [weak self] alertMuterConfiguration in
                 guard var notificationSettings = self?.latestSettings.notificationSettings else { return }
-                notificationSettings.temporaryMuteAlertsSettings = alertMuterConfiguration.enabled ? .enabled : .disabled
+                notificationSettings.temporaryMuteAlertsSettings = alertMuterConfiguration.enabled
                 self?.storeSettings(notificationSettings: notificationSettings)
             }
             .store(in: &cancellables)
@@ -239,7 +239,7 @@ private extension NotificationSettings {
                   announcementSetting: NotificationSettings.NotificationSetting(notificationSettings.announcementSetting),
                   timeSensitiveSetting: timeSensitiveSetting,
                   scheduledDeliverySetting: scheduledDeliverySetting,
-                  temporaryMuteAlertsSettings: areAlertsTemporaryMuted ? .enabled : .disabled
+                  temporaryMuteAlertsSettings: areAlertsTemporaryMuted
         )
     }
 }

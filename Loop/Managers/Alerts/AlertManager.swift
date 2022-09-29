@@ -259,7 +259,7 @@ public final class AlertManager {
         retractAlert(identifier: AlertManager.workoutOverrideReminderAlertIdentifier)
     }
 
-    private static var workoutOverrideReminderAlertIdentifier: Alert.Identifier {
+    static var workoutOverrideReminderAlertIdentifier: Alert.Identifier {
         return Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "WorkoutOverrideReminder")
     }
 
@@ -376,8 +376,8 @@ extension AlertManager {
         return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: alert.sound)
     }
 
-    private static func soundURL(managerIdentifier: String, sound: Alert.Sound) -> URL? {
-        guard let soundFileName = sound.filename else { return nil }
+    private static func soundURL(managerIdentifier: String, sound: Alert.Sound?) -> URL? {
+        guard let soundFileName = sound?.filename else { return nil }
 
         // Seems all the sound files need to be in the sounds directory, so we namespace the filenames
         return soundsDirectoryURL.appendingPathComponent("\(managerIdentifier)-\(soundFileName)")

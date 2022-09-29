@@ -122,14 +122,4 @@ class UserNotificationAlertIssuerTests: XCTestCase {
         XCTAssertTrue(mockUserNotificationCenter.pendingRequests.isEmpty)
         XCTAssertTrue(mockUserNotificationCenter.deliveredRequests.isEmpty)
     }
-
-    
-    func testDoesNotShowIfNoBackgroundContent() {
-        let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: nil, trigger: .immediate)
-        userNotificationAlertIssuer.issueAlert(alert)
-
-        waitOnMain()
-        
-        XCTAssertTrue(mockUserNotificationCenter.pendingRequests.isEmpty)
-    }
 }

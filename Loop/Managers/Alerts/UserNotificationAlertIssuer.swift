@@ -33,17 +33,13 @@ class UserNotificationAlertIssuer: AlertIssuer {
 
     func issueAlert(_ alert: Alert, timestamp: Date) {
         DispatchQueue.main.async {
-            do {
-                let request = try UNNotificationRequest(from: alert, timestamp: timestamp)
-                self.userNotificationCenter.add(request) { error in
-                    if let error = error {
-                        self.log.error("Something went wrong posting the user notification: %@", error.localizedDescription)
-                    }
+            let request = UNNotificationRequest(from: alert, timestamp: timestamp)
+            self.userNotificationCenter.add(request) { error in
+                if let error = error {
+                    self.log.error("Something went wrong posting the user notification: %@", error.localizedDescription)
                 }
-                // For now, UserNotifications do not not acknowledge...not yet at least
-            } catch {
-                self.log.error("Error issuing alert: %@", error.localizedDescription)
             }
+            // For now, UserNotifications do not not acknowledge...not yet at least
         }
     }
     
@@ -65,12 +61,7 @@ extension UserNotificationAlertIssuer: AlertManagerResponder {
 }
 
 fileprivate extension Alert {
-
-    enum Error: String, Swift.Error {
-        case noBackgroundContent
-    }
-
-    func getUserNotificationContent(timestamp: Date) throws -> UNNotificationContent {
+    func getUserNotificationContent(timestamp: Date) -> UNNotificationContent {
         let userNotificationContent = UNMutableNotificationContent()
         userNotificationContent.title = backgroundContent.title
         userNotificationContent.body = backgroundContent.body
@@ -90,7 +81,7 @@ fileprivate extension Alert {
     
     private var userNotificationSound: UNNotificationSound? {
         switch sound {
-        case .vibrate, .silence:
+        case .vibrate:
             // setting the audio volume of critical alert to 0 only vibrates
             return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil
         default:
@@ -119,8 +110,8 @@ fileprivate extension Alert.InterruptionLevel {
 }
 
 fileprivate extension UNNotificationRequest {
-    convenience init(from alert: Alert, timestamp: Date) throws {
-        let content = try alert.getUserNotificationContent(timestamp: timestamp)
+    convenience init(from alert: Alert, timestamp: Date) {
+        let content = alert.getUserNotificationContent(timestamp: timestamp)
         self.init(identifier: alert.identifier.value,
                   content: content,
                   trigger: UNTimeIntervalNotificationTrigger(from: alert.trigger))

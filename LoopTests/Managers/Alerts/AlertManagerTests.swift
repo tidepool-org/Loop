@@ -131,7 +131,7 @@ class AlertManagerTests: XCTestCase {
         }
 
         var storedAlerts = [StoredAlert]()
-        override public func lookupAllUnacknowledgedUnretracted(managerIdentifier: String?, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
+        override public func lookupAllUnacknowledgedUnretracted(managerIdentifier: String? = nil, filteredByTriggers triggersStoredType: [AlertTriggerStoredType]? = nil, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
             completion(.success(storedAlerts))
         }
         
@@ -143,7 +143,8 @@ class AlertManagerTests: XCTestCase {
     static let mockManagerIdentifier = "mockManagerIdentifier"
     static let mockTypeIdentifier = "mockTypeIdentifier"
     static let mockIdentifier = Alert.Identifier(managerIdentifier: mockManagerIdentifier, alertIdentifier: mockTypeIdentifier)
-    let mockAlert = Alert(identifier: mockIdentifier, foregroundContent: nil, backgroundContent: nil, trigger: .immediate)
+    static let backgroundContent = Alert.Content(title: "BACKGROUND", body: "background", acknowledgeActionButtonLabel: "")
+    let mockAlert = Alert(identifier: mockIdentifier, foregroundContent: nil, backgroundContent: backgroundContent, trigger: .immediate)
     
     var mockFileManager: MockFileManager!
     var mockPresenter: MockPresenter!
