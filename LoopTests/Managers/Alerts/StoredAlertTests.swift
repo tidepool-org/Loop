@@ -48,6 +48,7 @@ class StoredAlertEncodableTests: XCTestCase {
             try! assertStoredAlertEncodable(storedAlert, encodesJSON: """
             {
               "alertIdentifier" : "bar",
+              "backgroundContent" : "{\\\"title\\\":\\\"BACKGROUND\\\",\\\"acknowledgeActionButtonLabel\\\":\\\"OK\\\",\\\"body\\\":\\\"background\\\"}",
               "interruptionLevel" : "active",
               "issuedDate" : "2020-05-14T21:00:12Z",
               "managerIdentifier" : "foo",
@@ -63,6 +64,7 @@ class StoredAlertEncodableTests: XCTestCase {
             try! assertStoredAlertEncodable(storedAlert, encodesJSON: """
             {
               "alertIdentifier" : "bar",
+              "backgroundContent" : "{\\\"title\\\":\\\"BACKGROUND\\\",\\\"acknowledgeActionButtonLabel\\\":\\\"OK\\\",\\\"body\\\":\\\"background\\\"}",
               "interruptionLevel" : "critical",
               "issuedDate" : "2020-05-14T21:00:12Z",
               "managerIdentifier" : "foo",

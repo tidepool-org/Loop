@@ -842,11 +842,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             titleWithImage.append(title)
             contentConfig.attributedText = titleWithImage
             contentConfig.textProperties.color = .white
-            contentConfig.textProperties.font =  .systemFont(ofSize: adjustViewForNarrowDisplay ? 16 : 18, weight: .bold)
+            contentConfig.textProperties.font = .systemFont(ofSize: adjustViewForNarrowDisplay ? 16 : 18, weight: .bold)
             contentConfig.textProperties.adjustsFontSizeToFitWidth = true
             contentConfig.secondaryText = "Fix now by turning Notifications, Critical Alerts and Time Sensitive Notifications ON."
             contentConfig.secondaryTextProperties.color = .white
-            contentConfig.secondaryTextProperties.font =  .systemFont(ofSize: adjustViewForNarrowDisplay ? 13 : 15, weight: .bold)
+            contentConfig.secondaryTextProperties.font = .systemFont(ofSize: adjustViewForNarrowDisplay ? 13 : 15)
             contentConfiguration = contentConfig
 
             var backgroundConfig = backgroundConfiguration?.updated(for: state)
@@ -859,6 +859,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let imageView = UIImageView(image: disclosureIndicator)
             imageView.tintColor = .white
             accessoryView = imageView
+
+            contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 6, leading: 0, bottom: 13, trailing: 0)
         }
     }
     
