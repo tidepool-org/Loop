@@ -16,58 +16,54 @@ public class AlertMuter: ObservableObject {
         typealias RawValue = [String: Any]
 
         enum ConfigurationKey: String {
-            case enabled
             case duration
             case startTime
         }
 
         init?(rawValue: [String : Any]) {
-            guard let enabled = rawValue[ConfigurationKey.enabled.rawValue] as? Bool,
-                  let duration = rawValue[ConfigurationKey.duration.rawValue] as? TimeInterval
+            guard let duration = rawValue[ConfigurationKey.duration.rawValue] as? TimeInterval
             else { return nil }
 
-            self.enabled = enabled
             self.duration = duration
             self.startTime = rawValue[ConfigurationKey.startTime.rawValue] as? Date
         }
 
         var rawValue: [String : Any] {
             var rawValue: [String : Any] = [:]
-            rawValue[ConfigurationKey.enabled.rawValue] = enabled
             rawValue[ConfigurationKey.duration.rawValue] = duration
             rawValue[ConfigurationKey.startTime.rawValue] = startTime
             return rawValue
         }
 
-        var enabled: Bool {
-            didSet {
-                guard enabled else { return }
-                startTime = Date()
-            }
-        }
         var duration: TimeInterval
-        private(set) var startTime: Date?
 
-        init(enabled: Bool, duration: TimeInterval = AlertMuter.allowedDurations[0]) {
-            self.enabled = enabled
+        var startTime: Date?
+
+        var enabled: Bool {
+            guard let mutingEndTime = mutingEndTime else { return false }
+            return mutingEndTime >= Date()
+        }
+
+        var mutingEndTime: Date? {
+            startTime?.addingTimeInterval(duration)
+        }
+
+        init(startTime: Date? = nil, duration: TimeInterval = AlertMuter.allowedDurations[0]) {
             self.duration = duration
-            self.startTime = enabled ? Date() : nil
+            self.startTime = startTime
         }
 
         var shouldMuteAlerts: Bool {
-            shouldMuteAlertIssuedFromNow()
+            shouldMuteAlert()
         }
 
-        func shouldMuteAlertIssuedFromNow(_ fromNow: TimeInterval = 0) -> Bool {
-            guard fromNow >= 0 else { return false }
+        func shouldMuteAlert(scheduledAt timeFromNow: TimeInterval = 0, now: Date = Date()) -> Bool {
+            guard timeFromNow >= 0 else { return false }
 
-            guard enabled else { return false }
+            guard let mutingEndTime = mutingEndTime else { return false }
 
-            guard let startTime = startTime else { return false }
-
-            let alertTriggerTime = Date().advanced(by: fromNow)
-            let endMutingTime = startTime.addingTimeInterval(duration)
-            guard alertTriggerTime < endMutingTime
+            let alertTriggerTime = now.advanced(by: timeFromNow)
+            guard alertTriggerTime < mutingEndTime
             else { return false }
 
             return true
@@ -78,12 +74,12 @@ public class AlertMuter: ObservableObject {
 
     private lazy var cancellables = Set<AnyCancellable>()
 
-    static var allowedDurations: [TimeInterval] { [.minutes(30), .hours(1), .hours(2), .hours(4)] }
+    static var allowedDurations: [TimeInterval] { [.seconds(5), .minutes(30), .hours(1), .hours(2), .hours(4)] }
 
-    init(configuration: Configuration = Configuration(enabled: false)) {
+    init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
 
-        // This could be off by ~5 minutes.
+        // Checks triggered by looping may disable the muting of alert up to an additional loop interval (currently 5 minutes) after the actual duration
         NotificationCenter.default.publisher(for: .LoopCompleted)
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
@@ -104,31 +100,30 @@ public class AlertMuter: ObservableObject {
             .store(in: &cancellables)
     }
 
-    convenience init(enabled: Bool = false, duration: TimeInterval = AlertMuter.allowedDurations[0]) {
-        self.init(configuration: Configuration(enabled: enabled, duration: duration))
+    convenience init(startTime: Date? = nil, duration: TimeInterval = AlertMuter.allowedDurations[0]) {
+        self.init(configuration: Configuration(startTime: startTime, duration: duration))
     }
 
-    func check() {
-        // this is enabled by user action, so only need to check if the duration has elapsed and then disable
-        guard !configuration.shouldMuteAlerts,
-              configuration.enabled
+    func check(_ now: Date = Date()) {
+        // this is enabled by user action, so only need to check if the duration has elapsed and remove the startTime
+        guard let startTime = configuration.startTime,
+              startTime.addingTimeInterval(configuration.duration) < now
         else { return }
 
-        configuration.enabled = false
+        configuration.startTime = nil
     }
 
-    func shouldMuteAlertIssuedFromNow(_ fromNow: TimeInterval = 0) -> Bool {
-        check()
-        return configuration.shouldMuteAlertIssuedFromNow(fromNow)
+    func shouldMuteAlert(scheduledAt timeFromNow: TimeInterval = 0) -> Bool {
+        return configuration.shouldMuteAlert(scheduledAt: timeFromNow)
     }
 
     private func shouldMuteAlert(_ alert: LoopKit.Alert, issuedDate: Date) -> Bool {
         switch alert.trigger {
         case .immediate:
-            return shouldMuteAlertIssuedFromNow()
+            return shouldMuteAlert()
         case .delayed(let interval), .repeating(let interval):
             let triggerInterval = (issuedDate + interval).timeIntervalSinceNow
-            return shouldMuteAlertIssuedFromNow(triggerInterval)
+            return shouldMuteAlert(scheduledAt: triggerInterval)
         }
     }
 

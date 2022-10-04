@@ -178,7 +178,7 @@ public final class AlertManager {
             }
 
             notification.title = NSLocalizedString("Loop Failure", comment: "The notification title for a loop failure")
-            let shouldMuteAlert = alertMuter.shouldMuteAlertIssuedFromNow(failureInterval)
+            let shouldMuteAlert = alertMuter.shouldMuteAlert(scheduledAt: failureInterval)
             if isCritical, FeatureFlags.criticalAlertsEnabled {
                 if #available(iOS 15.0, *) {
                     notification.interruptionLevel = .critical
@@ -282,7 +282,6 @@ public final class AlertManager {
         UserDefaults.standard.alertMuterConfiguration = newValue
         rescheduleLoopNotRunningNotifications()
 
-        let shouldMuteAlerts = newValue.shouldMuteAlerts
         lookupAllPendingDelayedOrRepeatingAlerts() { [weak self] result in
             switch result {
             case .success(let persistedAlerts):

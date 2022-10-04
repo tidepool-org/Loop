@@ -16,12 +16,23 @@ struct AlertManagementView: View {
     @ObservedObject private var checker: AlertPermissionsChecker
     @ObservedObject private var alertMuter: AlertMuter
 
+    private let muteCheckerTimer: Timer
+
     private var formatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
         formatter.unitsStyle = .full
         formatter.allowedUnits = [.hour, .minute]
         return formatter
     }()
+
+    private var enabled: Binding<Bool> {
+        Binding(
+            get: { alertMuter.configuration.enabled },
+            set: { enabled in
+                alertMuter.configuration.startTime = enabled ? Date() : nil
+            }
+        )
+    }
 
     private var formattedSelectedDuration: Binding<String> {
         Binding(
@@ -44,6 +55,10 @@ struct AlertManagementView: View {
     public init(checker: AlertPermissionsChecker, alertMuter: AlertMuter = AlertMuter()) {
         self.checker = checker
         self.alertMuter = alertMuter
+        muteCheckerTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            alertMuter.check()
+        }
+
     }
 
     var body: some View {
@@ -79,7 +94,7 @@ struct AlertManagementView: View {
     @ViewBuilder
     private var muteAlertsSection: some View {
         Section(footer: muteAlertsSectionFooter) {
-            Toggle(NSLocalizedString("Mute All Alerts", comment: "Label for toggle to mute all alerts"), isOn: $alertMuter.configuration.enabled)
+            Toggle(NSLocalizedString("Mute All Alerts", comment: "Label for toggle to mute all alerts"), isOn: enabled)
         }
     }
 
