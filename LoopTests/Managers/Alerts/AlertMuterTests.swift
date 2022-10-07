@@ -20,21 +20,22 @@ final class AlertMuterTests: XCTestCase {
     }
 
     func testInitialization() {
-        var alertMuter = AlertMuter(enabled: false, duration: AlertMuter.allowedDurations[1])
+        var alertMuter = AlertMuter(duration: AlertMuter.allowedDurations[1])
         XCTAssertFalse(alertMuter.configuration.enabled)
         XCTAssertEqual(alertMuter.configuration.duration, AlertMuter.allowedDurations[1])
         XCTAssertNil(alertMuter.configuration.startTime)
 
-        alertMuter = AlertMuter(enabled: true)
+        let now = Date()
+        alertMuter = AlertMuter(startTime: now)
         XCTAssertTrue(alertMuter.configuration.enabled)
         XCTAssertEqual(alertMuter.configuration.duration, AlertMuter.allowedDurations[0])
-        XCTAssertNotNil(alertMuter.configuration.startTime)
+        XCTAssertEqual(alertMuter.configuration.startTime, now)
     }
 
     func testRawValue() {
-        let alertMuter = AlertMuter(enabled: true)
+        let now = Date()
+        let alertMuter = AlertMuter(startTime: now)
         let rawValue = alertMuter.configuration.rawValue
-        XCTAssertEqual(rawValue["enabled"] as? Bool, alertMuter.configuration.enabled)
         XCTAssertEqual(rawValue["duration"] as? TimeInterval, alertMuter.configuration.duration)
         XCTAssertEqual(rawValue["startTime"] as? Date, alertMuter.configuration.startTime)
     }
@@ -56,10 +57,6 @@ final class AlertMuterTests: XCTestCase {
     }
 
     func testShouldMuteAlertIssuedFromNow() {
-
-    }
-
-    func testProcessAlert() {
 
     }
 }

@@ -31,16 +31,16 @@ public final class AlertManager {
 
     static let managerIdentifier = "Loop"
 
-    private var handlers: [AlertIssuer] = []
     private var responders: [String: Weak<AlertResponder>] = [:]
     private var soundVendors: [String: Weak<AlertSoundVendor>] = [:]
 
     private let fileManager: FileManager
     private let alertPresenter: AlertPresenter
 
-    private var modalAlertIssuer: AlertIssuer!
-    private var userNotificationAlertIssuer: AlertIssuer?
+    private var modalAlertIssuer: InAppModalAlertIssuer!
+    private var userNotificationAlertIssuer: UserNotificationAlertIssuer
     private var unsafeNotificationPermissionsAlertController: UIAlertController?
+    var alertMuter: AlertMuter
 
     let alertStore: AlertStore
 
@@ -48,14 +48,12 @@ public final class AlertManager {
 
     lazy private var cancellables = Set<AnyCancellable>()
 
-    var alertMuter: AlertMuter
-
     // For testing
     var getCurrentDate = { return Date() }
     
     public init(alertPresenter: AlertPresenter,
-                modalAlertIssuer: AlertIssuer? = nil,
-                userNotificationAlertIssuer: AlertIssuer,
+                modalAlertIssuer: InAppModalAlertIssuer? = nil,
+                userNotificationAlertIssuer: UserNotificationAlertIssuer,
                 fileManager: FileManager = FileManager.default,
                 alertStore: AlertStore? = nil,
                 expireAfter: TimeInterval = 24 /* hours */ * 60 /* minutes */ * 60 /* seconds */,
@@ -75,9 +73,8 @@ public final class AlertManager {
         self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: alertStoreDirectory, expireAfter: expireAfter)
         self.alertPresenter = alertPresenter
         self.alertMuter = AlertMuter(configuration: UserDefaults.standard.alertMuterConfiguration)
-        self.modalAlertIssuer = modalAlertIssuer ?? InAppModalAlertIssuer(alertPresenter: alertPresenter, alertManagerResponder: self)
         self.userNotificationAlertIssuer = userNotificationAlertIssuer
-        handlers = [self.modalAlertIssuer, userNotificationAlertIssuer]
+        self.modalAlertIssuer = modalAlertIssuer ?? InAppModalAlertIssuer(alertPresenter: alertPresenter, alertManagerResponder: self)
 
         bluetoothProvider.addBluetoothObserver(self, queue: .main)
 
@@ -306,7 +303,7 @@ extension AlertManager: AlertManagerResponder {
                 }
             }
         }
-        handlers.map { $0 as? AlertManagerResponder }.forEach { $0?.acknowledgeAlert(identifier: identifier) }
+        userNotificationAlertIssuer.acknowledgeAlert(identifier: identifier)
         alertStore.recordAcknowledgement(of: identifier)
     }
     
@@ -354,18 +351,18 @@ extension AlertManager: AlertIssuer {
 
         // Only alerts with foreground content are replayed
         if alert.foregroundContent != nil {
-            modalAlertIssuer?.issueAlert(alert)
+            modalAlertIssuer.issueAlert(alert)
         }
     }
 
     private func issueAlertWithHandlers(_ alert: Alert, issuedDate: Date = Date()) {
-        // alert may need to be muted
-        let processedAlert = alertMuter.processAlert(alert, issuedDate: issuedDate)
-        handlers.forEach { $0.issueAlert(processedAlert) }
+        modalAlertIssuer.issueAlert(alert)
+        userNotificationAlertIssuer.issueAlert(alert, muted: alertMuter.shouldMuteAlert(alert, issuedDate: issuedDate))
     }
 
     private func retractAlertWithHandlers(identifier: Alert.Identifier) {
-        handlers.forEach { $0.retractAlert(identifier: identifier) }
+        modalAlertIssuer.retractAlert(identifier: identifier)
+        userNotificationAlertIssuer.retractAlert(identifier: identifier)
     }
 
     private func rescheduleAlertWithHandlers(_ alert: Alert, issuedDate: Date) {
@@ -687,7 +684,7 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
                            issueHandler: { alert in
             // in-app modal is presented with a button to navigate to settings
             self.presentUnsafeNotificationPermissionsInAppAlert()
-            self.userNotificationAlertIssuer?.issueAlert(alert)
+            self.userNotificationAlertIssuer.issueAlert(alert, muted: self.alertMuter.shouldMuteAlert(alert))
             self.recordIssued(alert: alert)
         },
                            retractionHandler: { alert in

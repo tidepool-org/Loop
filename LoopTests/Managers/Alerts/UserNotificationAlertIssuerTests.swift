@@ -122,4 +122,45 @@ class UserNotificationAlertIssuerTests: XCTestCase {
         XCTAssertTrue(mockUserNotificationCenter.pendingRequests.isEmpty)
         XCTAssertTrue(mockUserNotificationCenter.deliveredRequests.isEmpty)
     }
+
+    func testIssueMutedAlert() {
+        let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .immediate)
+        userNotificationAlertIssuer.issueAlert(alert, timestamp: Date.distantPast, muted: true)
+
+        waitOnMain()
+
+        XCTAssertEqual(1, mockUserNotificationCenter.pendingRequests.count)
+        if let request = mockUserNotificationCenter.pendingRequests.first {
+            XCTAssertEqual(self.backgroundContent.title, request.content.title)
+            XCTAssertEqual(self.backgroundContent.body, request.content.body)
+            XCTAssertNil(request.content.sound)
+            XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
+            XCTAssertEqual([
+                LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier,
+            ], request.content.userInfo as? [String: String])
+            XCTAssertNil(request.trigger)
+        }
+    }
+
+    func testIssueMutedCriticalAlert() {
+        let backgroundContent = Alert.Content(title: "BACKGROUND", body: "background", acknowledgeActionButtonLabel: "")
+        let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .immediate, interruptionLevel: .critical)
+        userNotificationAlertIssuer.issueAlert(alert, timestamp: Date.distantPast, muted: true)
+
+        waitOnMain()
+
+        XCTAssertEqual(1, mockUserNotificationCenter.pendingRequests.count)
+        if let request = mockUserNotificationCenter.pendingRequests.first {
+            XCTAssertEqual(self.backgroundContent.title, request.content.title)
+            XCTAssertEqual(self.backgroundContent.body, request.content.body)
+            XCTAssertEqual(UNNotificationSound.defaultCriticalSound(withAudioVolume: 0), request.content.sound)
+            XCTAssertEqual(alertIdentifier.value, request.content.threadIdentifier)
+            XCTAssertEqual([
+                LoopNotificationUserInfoKey.managerIDForAlert.rawValue: alertIdentifier.managerIdentifier,
+                LoopNotificationUserInfoKey.alertTypeID.rawValue: alertIdentifier.alertIdentifier,
+            ], request.content.userInfo as? [String: String])
+            XCTAssertNil(request.trigger)
+        }
+    }
 }

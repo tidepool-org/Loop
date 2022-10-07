@@ -18,7 +18,7 @@ public protocol UserNotificationCenter {
 }
 extension UNUserNotificationCenter: UserNotificationCenter {}
 
-class UserNotificationAlertIssuer: AlertIssuer {
+public class UserNotificationAlertIssuer {
     
     let userNotificationCenter: UserNotificationCenter
     let log = DiagnosticLog(category: "UserNotificationAlertIssuer")
@@ -27,13 +27,13 @@ class UserNotificationAlertIssuer: AlertIssuer {
         self.userNotificationCenter = userNotificationCenter
     }
     
-    func issueAlert(_ alert: Alert) {
-        issueAlert(alert, timestamp: Date())
+    func issueAlert(_ alert: Alert, muted: Bool = false) {
+        issueAlert(alert, timestamp: Date(), muted: muted)
     }
 
-    func issueAlert(_ alert: Alert, timestamp: Date) {
+    func issueAlert(_ alert: Alert, timestamp: Date, muted: Bool = false) {
         DispatchQueue.main.async {
-            let request = UNNotificationRequest(from: alert, timestamp: timestamp)
+            let request = UNNotificationRequest(from: alert, timestamp: timestamp, muted: muted)
             self.userNotificationCenter.add(request) { error in
                 if let error = error {
                     self.log.error("Something went wrong posting the user notification: %@", error.localizedDescription)
@@ -61,11 +61,11 @@ extension UserNotificationAlertIssuer: AlertManagerResponder {
 }
 
 fileprivate extension Alert {
-    func getUserNotificationContent(timestamp: Date) -> UNNotificationContent {
+    func getUserNotificationContent(timestamp: Date, muted: Bool) -> UNNotificationContent {
         let userNotificationContent = UNMutableNotificationContent()
         userNotificationContent.title = backgroundContent.title
         userNotificationContent.body = backgroundContent.body
-        userNotificationContent.sound = userNotificationSound
+        userNotificationContent.sound = userNotificationSound(muted: muted)
         if #available(iOS 15.0, *) {
             userNotificationContent.interruptionLevel = interruptionLevel.userNotificationInterruptLevel
         }
@@ -79,7 +79,9 @@ fileprivate extension Alert {
         return userNotificationContent
     }
     
-    private var userNotificationSound: UNNotificationSound? {
+    private func userNotificationSound(muted: Bool) -> UNNotificationSound? {
+        guard !muted else { return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil }
+        
         switch sound {
         case .vibrate:
             // setting the audio volume of critical alert to 0 only vibrates
@@ -110,8 +112,8 @@ fileprivate extension Alert.InterruptionLevel {
 }
 
 fileprivate extension UNNotificationRequest {
-    convenience init(from alert: Alert, timestamp: Date) {
-        let content = alert.getUserNotificationContent(timestamp: timestamp)
+    convenience init(from alert: Alert, timestamp: Date, muted: Bool) {
+        let content = alert.getUserNotificationContent(timestamp: timestamp, muted: muted)
         self.init(identifier: alert.identifier.value,
                   content: content,
                   trigger: UNTimeIntervalNotificationTrigger(from: alert.trigger))

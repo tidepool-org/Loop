@@ -29,13 +29,27 @@ class AlertManagerTests: XCTestCase {
         }
     }
     
-    class MockIssuer: AlertIssuer {
+    class MockModalAlertIssuer: InAppModalAlertIssuer {
         var issuedAlert: Alert?
-        func issueAlert(_ alert: Alert) {
+        override func issueAlert(_ alert: Alert) {
             issuedAlert = alert
         }
         var retractedAlertIdentifier: Alert.Identifier?
-        func retractAlert(identifier: Alert.Identifier) {
+        override func retractAlert(identifier: Alert.Identifier) {
+            retractedAlertIdentifier = identifier
+        }
+    }
+
+    class MockUserNotificationAlertIssuer: UserNotificationAlertIssuer {
+        var issuedAlert: Alert?
+        var muted: Bool?
+
+        override func issueAlert(_ alert: Alert, muted: Bool) {
+            issuedAlert = alert
+            self.muted = muted
+        }
+        var retractedAlertIdentifier: Alert.Identifier?
+        override func retractAlert(identifier: Alert.Identifier) {
             retractedAlertIdentifier = identifier
         }
     }
@@ -84,6 +98,10 @@ class AlertManagerTests: XCTestCase {
         func present(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (() -> Void)?) { completion?() }
         func dismissTopMost(animated: Bool, completion: (() -> Void)?) { completion?() }
         func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool, completion: (() -> Void)?) { completion?() }
+    }
+
+    class MockAlertManagerResponder: AlertManagerResponder {
+        func acknowledgeAlert(identifier: LoopKit.Alert.Identifier) { }
     }
 
     class MockSoundVendor: AlertSoundVendor {
@@ -148,8 +166,8 @@ class AlertManagerTests: XCTestCase {
     
     var mockFileManager: MockFileManager!
     var mockPresenter: MockPresenter!
-    var mockModalIssuer: MockIssuer!
-    var mockUserNotificationIssuer: MockIssuer!
+    var mockModalIssuer: MockModalAlertIssuer!
+    var mockUserNotificationIssuer: MockUserNotificationAlertIssuer!
     var mockAlertStore: MockAlertStore!
     var alertManager: AlertManager!
     var isInBackground = true
@@ -162,8 +180,8 @@ class AlertManagerTests: XCTestCase {
     override func setUp() {
         mockFileManager = MockFileManager()
         mockPresenter = MockPresenter()
-        mockModalIssuer = MockIssuer()
-        mockUserNotificationIssuer = MockIssuer()
+        mockModalIssuer = MockModalAlertIssuer(alertPresenter: mockPresenter, alertManagerResponder: MockAlertManagerResponder())
+        mockUserNotificationIssuer = MockUserNotificationAlertIssuer(userNotificationCenter: MockUserNotificationCenter())
         mockAlertStore = MockAlertStore()
         alertManager = AlertManager(alertPresenter: mockPresenter,
                                     modalAlertIssuer: mockModalIssuer,

@@ -117,7 +117,7 @@ public class AlertMuter: ObservableObject {
         return configuration.shouldMuteAlert(scheduledAt: timeFromNow)
     }
 
-    private func shouldMuteAlert(_ alert: LoopKit.Alert, issuedDate: Date) -> Bool {
+    func shouldMuteAlert(_ alert: LoopKit.Alert, issuedDate: Date = Date()) -> Bool {
         switch alert.trigger {
         case .immediate:
             return shouldMuteAlert()
@@ -125,19 +125,5 @@ public class AlertMuter: ObservableObject {
             let triggerInterval = (issuedDate + interval).timeIntervalSinceNow
             return shouldMuteAlert(scheduledAt: triggerInterval)
         }
-    }
-
-    func processAlert(_ alert: LoopKit.Alert, issuedDate: Date) -> LoopKit.Alert {
-        guard alert.sound != .vibrate else { return alert }
-
-        guard shouldMuteAlert(alert, issuedDate: issuedDate) else { return alert }
-
-        return LoopKit.Alert(identifier: alert.identifier,
-                             foregroundContent: alert.foregroundContent,
-                             backgroundContent: alert.backgroundContent,
-                             trigger: alert.trigger,
-                             interruptionLevel: alert.interruptionLevel,
-                             sound: .vibrate,
-                             metadata: alert.metadata)
     }
 }
