@@ -37,6 +37,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var alertPermissionsChecker: AlertPermissionsChecker!
 
     var alertMuter: AlertMuter!
+    var mutedAlertTimer: Timer?
     
     var supportManager: SupportManager!
 
@@ -154,8 +155,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         alertPermissionsChecker.checkNow()
 
-        alertMuter.check()
-        
+        checkMutedAlerts()
+
         updateBolusProgress()
 
         onboardingManager.$isComplete
@@ -167,6 +168,20 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self?.updateToolbarItems()
             }
             .store(in: &cancellables)
+    }
+
+    private func checkMutedAlerts() {
+        //TODO need to trigger display of the temporary muted alerts banner
+        alertMuter.check()
+        mutedAlertTimer?.invalidate()
+
+        if alertMuter.shouldMuteAlert(),
+           let remainingMuteDuration = alertMuter.remainingMuteDuration()
+        {
+            mutedAlertTimer = Timer.scheduledTimer(withTimeInterval: remainingMuteDuration + 1, repeats: false) { [weak self] _ in
+                self?.alertMuter.check()
+            }
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {

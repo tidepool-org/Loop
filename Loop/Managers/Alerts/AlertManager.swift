@@ -147,48 +147,57 @@ public final class AlertManager {
     // MARK: - Loop Not Running alerts
 
     func loopDidComplete() {
-        rescheduleLoopNotRunningNotifications()
+        rescheduleLoopNotRunningNotifications(Date())
     }
 
-    func rescheduleLoopNotRunningNotifications() {
+    private func rescheduleLoopNotRunningNotifications() {
+        getLastLoopDate() { [weak self] lastLoopDate in
+            guard let lastLoopDate = lastLoopDate else { return }
+            self?.rescheduleLoopNotRunningNotifications(lastLoopDate)
+        }
+    }
+
+    func rescheduleLoopNotRunningNotifications(_ lastLoopDate: Date) {
         clearLoopNotRunningNotifications()
-        scheduleLoopNotRunningNotifications()
+        scheduleLoopNotRunningNotifications(lastLoopDate)
     }
 
-    func scheduleLoopNotRunningNotifications() {
+    func scheduleLoopNotRunningNotifications(_ lastLoopDate: Date) {
         // Give a little extra time for a loop-in-progress to complete
         let gracePeriod = TimeInterval(minutes: 0.5)
 
         var scheduledNotifications: [StoredLoopNotRunningNotification] = []
 
         for (minutes, isCritical) in [(20.0, false), (40.0, false), (60.0, true), (120.0, true)] {
-            let notification = UNMutableNotificationContent()
-            let failureInterval = TimeInterval(minutes: minutes)
+            let failureInterval = lastLoopDate.addingTimeInterval(.minutes(minutes)).timeIntervalSinceNow
+            guard failureInterval >= 0 else { break }
 
             let formatter = DateComponentsFormatter()
             formatter.maximumUnitCount = 1
             formatter.allowedUnits = [.hour, .minute]
             formatter.unitsStyle = .full
 
+            let notificationContent = UNMutableNotificationContent()
             if let failureIntervalString = formatter.string(from: failureInterval)?.localizedLowercase {
-                notification.body = String(format: NSLocalizedString("Loop has not completed successfully in %@", comment: "The notification alert describing a long-lasting loop failure. The substitution parameter is the time interval since the last loop"), failureIntervalString)
+                notificationContent.body = String(format: NSLocalizedString("Loop has not completed successfully in %@", comment: "The notification alert describing a long-lasting loop failure. The substitution parameter is the time interval since the last loop"), failureIntervalString)
             }
 
-            notification.title = NSLocalizedString("Loop Failure", comment: "The notification title for a loop failure")
+            notificationContent.title = NSLocalizedString("Loop Failure", comment: "The notification title for a loop failure")
             let shouldMuteAlert = alertMuter.shouldMuteAlert(scheduledAt: failureInterval)
             if isCritical, FeatureFlags.criticalAlertsEnabled {
                 if #available(iOS 15.0, *) {
-                    notification.interruptionLevel = .critical
+                    notificationContent.interruptionLevel = .critical
                 }
-                notification.sound = shouldMuteAlert ? .defaultCriticalSound(withAudioVolume: 0.0) : .defaultCritical
+                notificationContent.sound = shouldMuteAlert ? .defaultCriticalSound(withAudioVolume: 0.0) : .defaultCritical
             } else {
                 if #available(iOS 15.0, *) {
-                    notification.interruptionLevel = .timeSensitive
+                    notificationContent.interruptionLevel = .timeSensitive
                 }
-                notification.sound = shouldMuteAlert ? nil : .default
+                notificationContent.sound = shouldMuteAlert ? nil : .default
             }
-            notification.categoryIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
-            notification.threadIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
+            notificationContent.categoryIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
+            notificationContent.threadIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
+            notificationContent.userInfo = ["lastLoopDate": Date()]
 
             let trigger = UNTimeIntervalNotificationTrigger(
                 timeInterval: failureInterval + gracePeriod,
@@ -197,15 +206,15 @@ public final class AlertManager {
 
             let request = UNNotificationRequest(
                 identifier: "\(LoopNotificationCategory.loopNotRunning.rawValue)\(failureInterval)",
-                content: notification,
+                content: notificationContent,
                 trigger: trigger
             )
 
             if let nextTriggerDate = trigger.nextTriggerDate() {
                 let scheduledNotification = StoredLoopNotRunningNotification(
                     alertAt: nextTriggerDate,
-                    title: notification.title,
-                    body: notification.body,
+                    title: notificationContent.title,
+                    body: notificationContent.body,
                     timeInterval: failureInterval,
                     isCritical: isCritical)
                 scheduledNotifications.append(scheduledNotification)
@@ -245,6 +254,17 @@ public final class AlertManager {
             })
 
             UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: loopNotRunningIdentifiers)
+        }
+    }
+
+    private func getLastLoopDate(completion: @escaping (Date?) -> Void) {
+        UNUserNotificationCenter.current().getPendingNotificationRequests() { (notificationRequests) in
+            guard !notificationRequests.isEmpty else {
+                completion(nil)
+                return
+            }
+
+            completion(notificationRequests.first?.content.userInfo["lastLoopDate"] as? Date)
         }
     }
 

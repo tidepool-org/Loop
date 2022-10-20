@@ -57,6 +57,10 @@ public class AlertMuter: ObservableObject {
             shouldMuteAlert()
         }
 
+        func remainingMuteDuration(from now: Date = Date()) -> TimeInterval? {
+            startTime?.addingTimeInterval(duration).timeIntervalSince(now)
+        }
+
         func shouldMuteAlert(scheduledAt timeFromNow: TimeInterval = 0, now: Date = Date()) -> Bool {
             guard timeFromNow >= 0 else { return false }
 
@@ -125,5 +129,9 @@ public class AlertMuter: ObservableObject {
             let triggerInterval = (issuedDate + interval).timeIntervalSinceNow
             return shouldMuteAlert(scheduledAt: triggerInterval)
         }
+    }
+
+    func remainingMuteDuration(from now: Date = Date()) -> TimeInterval? {
+        configuration.remainingMuteDuration(from: now)
     }
 }

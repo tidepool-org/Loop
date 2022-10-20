@@ -58,7 +58,6 @@ struct AlertManagementView: View {
         muteCheckerTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             alertMuter.check()
         }
-
     }
 
     var body: some View {
