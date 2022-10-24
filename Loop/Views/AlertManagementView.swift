@@ -28,7 +28,6 @@ struct AlertManagementView: View {
             get: { alertMuter.configuration.isMuting },
             set: { enabled in
                 alertMuter.configuration.startTime = enabled ? Date() : nil
-
             }
         )
     }

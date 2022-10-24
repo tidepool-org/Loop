@@ -77,7 +77,7 @@ public class AlertMuter: ObservableObject {
     @Published var configuration: Configuration {
         didSet {
             if oldValue != configuration {
-                updateMutePeriondEndingWatcher()
+                updateMutePeriodEndingWatcher()
             }
         }
     }
@@ -94,7 +94,7 @@ public class AlertMuter: ObservableObject {
 
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
             .sink { [weak self] _ in
-                self?.updateMutePeriondEndingWatcher()
+                self?.updateMutePeriodEndingWatcher()
             }
             .store(in: &cancellables)
     }
@@ -103,7 +103,7 @@ public class AlertMuter: ObservableObject {
         self.init(configuration: Configuration(startTime: startTime, duration: duration))
     }
 
-    private func updateMutePeriondEndingWatcher(_ now: Date = Date()) {
+    private func updateMutePeriodEndingWatcher(_ now: Date = Date()) {
         mutePeriodEndingTimer?.invalidate()
 
         guard let mutingEndTime = configuration.mutingEndTime else { return }
