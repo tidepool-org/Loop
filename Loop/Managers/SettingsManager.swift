@@ -83,7 +83,7 @@ class SettingsManager {
         self.alertMuter.$configuration
             .sink { [weak self] alertMuterConfiguration in
                 guard var notificationSettings = self?.latestSettings.notificationSettings else { return }
-                notificationSettings.temporaryMuteAlertsSettings = alertMuterConfiguration.enabled
+                notificationSettings.temporaryMuteAlertsSettings = alertMuterConfiguration.isMuting
                 self?.storeSettings(notificationSettings: notificationSettings)
             }
             .store(in: &cancellables)
@@ -180,7 +180,7 @@ class SettingsManager {
                     return
                 }
 
-                let notificationSettings = NotificationSettings(notificationSettings, areAlertsTemporaryMuted: self.alertMuter.configuration.enabled)
+                let notificationSettings = NotificationSettings(notificationSettings, areAlertsTemporaryMuted: self.alertMuter.configuration.isMuting)
 
                 if notificationSettings != latestSettings.notificationSettings
                 {

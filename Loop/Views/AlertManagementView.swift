@@ -16,8 +16,6 @@ struct AlertManagementView: View {
     @ObservedObject private var checker: AlertPermissionsChecker
     @ObservedObject private var alertMuter: AlertMuter
 
-    private let muteCheckerTimer: Timer
-
     private var formatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
         formatter.unitsStyle = .full
@@ -27,9 +25,10 @@ struct AlertManagementView: View {
 
     private var enabled: Binding<Bool> {
         Binding(
-            get: { alertMuter.configuration.enabled },
+            get: { alertMuter.configuration.isMuting },
             set: { enabled in
                 alertMuter.configuration.startTime = enabled ? Date() : nil
+
             }
         )
     }
@@ -55,9 +54,6 @@ struct AlertManagementView: View {
     public init(checker: AlertPermissionsChecker, alertMuter: AlertMuter = AlertMuter()) {
         self.checker = checker
         self.alertMuter = alertMuter
-        muteCheckerTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            alertMuter.check()
-        }
     }
 
     var body: some View {
@@ -65,7 +61,7 @@ struct AlertManagementView: View {
             alertPermissionsSection
             muteAlertsSection
 
-            if alertMuter.configuration.enabled {
+            if alertMuter.configuration.isMuting {
                 mutePeriodSection
             }
         }
@@ -103,7 +99,7 @@ struct AlertManagementView: View {
 
     @ViewBuilder
     private var muteAlertsSectionFooter: some View {
-        if !alertMuter.configuration.enabled {
+        if !alertMuter.configuration.isMuting {
             DescriptiveText(label: muteAlertsFooterString)
         }
     }

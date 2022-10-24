@@ -39,7 +39,7 @@ public class AlertMuter: ObservableObject {
 
         var startTime: Date?
 
-        var enabled: Bool {
+        var isMuting: Bool {
             guard let mutingEndTime = mutingEndTime else { return false }
             return mutingEndTime >= Date()
         }
@@ -74,32 +74,27 @@ public class AlertMuter: ObservableObject {
         }
     }
 
-    @Published var configuration: Configuration
+    @Published var configuration: Configuration {
+        didSet {
+            if oldValue != configuration {
+                updateMutePeriondEndingWatcher()
+            }
+        }
+    }
+
+    private var mutePeriodEndingTimer: Timer?
 
     private lazy var cancellables = Set<AnyCancellable>()
 
-    static var allowedDurations: [TimeInterval] { [.seconds(5), .minutes(30), .hours(1), .hours(2), .hours(4)] }
+    //TODO testing (remove 10 secs)
+    static var allowedDurations: [TimeInterval] { [.seconds(10), .minutes(30), .hours(1), .hours(2), .hours(4)] }
 
     init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
 
-        // Checks triggered by looping may disable the muting of alert up to an additional loop interval (currently 5 minutes) after the actual duration
-        NotificationCenter.default.publisher(for: .LoopCompleted)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.check()
-            }
-            .store(in: &cancellables)
-
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
             .sink { [weak self] _ in
-                self?.check()
-            }
-            .store(in: &cancellables)
-
-        NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
-            .sink { [weak self] _ in
-                self?.check()
+                self?.updateMutePeriondEndingWatcher()
             }
             .store(in: &cancellables)
     }
@@ -108,13 +103,20 @@ public class AlertMuter: ObservableObject {
         self.init(configuration: Configuration(startTime: startTime, duration: duration))
     }
 
-    func check(_ now: Date = Date()) {
-        // this is enabled by user action, so only need to check if the duration has elapsed and remove the startTime
-        guard let startTime = configuration.startTime,
-              startTime.addingTimeInterval(configuration.duration) < now
-        else { return }
+    private func updateMutePeriondEndingWatcher(_ now: Date = Date()) {
+        mutePeriodEndingTimer?.invalidate()
 
-        configuration.startTime = nil
+        guard let mutingEndTime = configuration.mutingEndTime else { return }
+
+        guard mutingEndTime > now else {
+            configuration.startTime = nil
+            return
+        }
+
+        let timeInterval = mutingEndTime.timeIntervalSince(now)
+        mutePeriodEndingTimer = Timer.scheduledTimer(withTimeInterval: timeInterval, repeats: false) { [weak self] _ in
+            self?.configuration.startTime = nil
+        }
     }
 
     func shouldMuteAlert(scheduledAt timeFromNow: TimeInterval = 0) -> Bool {

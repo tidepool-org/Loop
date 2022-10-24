@@ -37,8 +37,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var alertPermissionsChecker: AlertPermissionsChecker!
 
     var alertMuter: AlertMuter!
-    var mutedAlertTimer: Timer?
-    
+
     var supportManager: SupportManager!
 
     lazy private var cancellables = Set<AnyCancellable>()
@@ -114,6 +113,16 @@ final class StatusTableViewController: LoopChartsTableViewController {
             .sink { self.closedLoopStatusChanged($0) }
             .store(in: &cancellables)
 
+        alertMuter.$configuration
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .dropFirst()
+            .sink { _ in
+                self.refreshContext.update(with: .status)
+                self.reloadData(animated: true)
+            }
+            .store(in: &cancellables)
+
         if let gestureRecognizer = charts.gestureRecognizer {
             tableView.addGestureRecognizer(gestureRecognizer)
         }
@@ -155,8 +164,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         alertPermissionsChecker.checkNow()
 
-        checkMutedAlerts()
-
         updateBolusProgress()
 
         onboardingManager.$isComplete
@@ -168,20 +175,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self?.updateToolbarItems()
             }
             .store(in: &cancellables)
-    }
-
-    private func checkMutedAlerts() {
-        //TODO need to trigger display of the temporary muted alerts banner
-        alertMuter.check()
-        mutedAlertTimer?.invalidate()
-
-        if alertMuter.shouldMuteAlert(),
-           let remainingMuteDuration = alertMuter.remainingMuteDuration()
-        {
-            mutedAlertTimer = Timer.scheduledTimer(withTimeInterval: remainingMuteDuration + 1, repeats: false) { [weak self] _ in
-                self?.alertMuter.check()
-            }
-        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -663,6 +656,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case pumpSuspended(resuming: Bool)
         case onboardingSuspended
         case recommendManualGlucoseEntry
+        case tempMuteAlerts
 
         var hasRow: Bool {
             switch self {
@@ -679,7 +673,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private func determineStatusRowMode() -> StatusRowMode {
         let statusRowMode: StatusRowMode
 
-        if case .initiating = bolusState {
+        //TODO testing (need design to make the correct status row)
+        if alertMuter.shouldMuteAlert() {
+            statusRowMode = .tempMuteAlerts
+        } else if case .initiating = bolusState {
             statusRowMode = .enactingBolus
         } else if case .canceling = bolusState {
             statusRowMode = .cancelingBolus
@@ -939,6 +936,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
             switch StatusRow(rawValue: indexPath.row)! {
             case .status:
                 switch statusRowMode {
+                case .tempMuteAlerts:
+                    let cell = getTitleSubtitleCell()
+                    cell.titleLabel.text = NSLocalizedString("Temp Mute Alerts", comment: "The title of the cell indicating alerts are temporarily muted")
+                    return cell
                 case .hidden:
                     let cell = getTitleSubtitleCell()
                     return cell
