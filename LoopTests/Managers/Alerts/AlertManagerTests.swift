@@ -172,12 +172,9 @@ class AlertManagerTests: XCTestCase {
     var alertManager: AlertManager!
     var isInBackground = true
     
-    override class func setUp() {
+    override func setUp() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-    }
-    
-    override func setUp() {
         mockFileManager = MockFileManager()
         mockPresenter = MockPresenter()
         mockModalIssuer = MockModalAlertIssuer(alertPresenter: mockPresenter, alertManagerResponder: MockAlertManagerResponder())
@@ -479,7 +476,26 @@ class AlertManagerTests: XCTestCase {
         XCTAssertEqual(.critical, mockAlertStore.issuedAlert!.interruptionLevel)
     }
 
+    func testRescheduleMutedAlerts() {
+        let lastLoopDate = Date()
+        alertManager.loopDidComplete(now: lastLoopDate)
+        alertManager.alertMuter.configuration.startTime = Date()
+        alertManager.alertMuter.configuration.duration = .hours(4)
 
+        let testExpectation = expectation(description: #function)
+        var loopNotRunningRequests: [UNNotificationRequest] = []
+        UNUserNotificationCenter.current().getPendingNotificationRequests() { notificationRequests in
+            loopNotRunningRequests = notificationRequests.filter({
+                $0.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
+            })
+            testExpectation.fulfill()
+        }
+
+        wait(for: [testExpectation], timeout: 1)
+        XCTAssertEqual(loopNotRunningRequests.first?.content.userInfo["lastLoopDate"] as? Date, lastLoopDate)
+        XCTAssertNil(loopNotRunningRequests.first?.content.sound)
+        XCTAssertEqual(loopNotRunningRequests.last?.content.sound, .defaultCriticalSound(withAudioVolume: 0))
+    }
 }
 
 extension Swift.Result {

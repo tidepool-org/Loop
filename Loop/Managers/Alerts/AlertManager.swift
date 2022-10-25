@@ -146,8 +146,8 @@ public final class AlertManager {
 
     // MARK: - Loop Not Running alerts
 
-    func loopDidComplete() {
-        rescheduleLoopNotRunningNotifications(Date())
+    func loopDidComplete(now: Date = Date()) {
+        rescheduleLoopNotRunningNotifications(now)
     }
 
     private func rescheduleLoopNotRunningNotifications() {
@@ -197,7 +197,7 @@ public final class AlertManager {
             }
             notificationContent.categoryIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
             notificationContent.threadIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
-            notificationContent.userInfo = ["lastLoopDate": Date()]
+            notificationContent.userInfo = ["lastLoopDate": lastLoopDate]
 
             let trigger = UNTimeIntervalNotificationTrigger(
                 timeInterval: failureInterval + gracePeriod,
@@ -258,13 +258,18 @@ public final class AlertManager {
     }
 
     private func getLastLoopDate(completion: @escaping (Date?) -> Void) {
-        UNUserNotificationCenter.current().getPendingNotificationRequests() { (notificationRequests) in
-            guard !notificationRequests.isEmpty else {
+        UNUserNotificationCenter.current().getPendingNotificationRequests() { notificationRequests in
+
+            let loopNotRunningRequests = notificationRequests.filter({
+                $0.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
+            })
+
+            guard !loopNotRunningRequests.isEmpty else {
                 completion(nil)
                 return
             }
 
-            completion(notificationRequests.first?.content.userInfo["lastLoopDate"] as? Date)
+            completion(loopNotRunningRequests.first?.content.userInfo["lastLoopDate"] as? Date)
         }
     }
 

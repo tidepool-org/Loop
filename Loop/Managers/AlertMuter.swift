@@ -39,7 +39,7 @@ public class AlertMuter: ObservableObject {
 
         var startTime: Date?
 
-        var isMuting: Bool {
+        var shouldMute: Bool {
             guard let mutingEndTime = mutingEndTime else { return false }
             return mutingEndTime >= Date()
         }
@@ -51,14 +51,6 @@ public class AlertMuter: ObservableObject {
         init(startTime: Date? = nil, duration: TimeInterval = AlertMuter.allowedDurations[0]) {
             self.duration = duration
             self.startTime = startTime
-        }
-
-        var shouldMuteAlerts: Bool {
-            shouldMuteAlert()
-        }
-
-        func remainingMuteDuration(from now: Date = Date()) -> TimeInterval? {
-            startTime?.addingTimeInterval(duration).timeIntervalSince(now)
         }
 
         func shouldMuteAlert(scheduledAt timeFromNow: TimeInterval = 0, now: Date = Date()) -> Bool {
@@ -86,8 +78,7 @@ public class AlertMuter: ObservableObject {
 
     private lazy var cancellables = Set<AnyCancellable>()
 
-    //TODO testing (remove 10 secs)
-    static var allowedDurations: [TimeInterval] { [.seconds(10), .minutes(30), .hours(1), .hours(2), .hours(4)] }
+    static var allowedDurations: [TimeInterval] { [.minutes(30), .hours(1), .hours(2), .hours(4)] }
 
     init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
@@ -123,17 +114,13 @@ public class AlertMuter: ObservableObject {
         return configuration.shouldMuteAlert(scheduledAt: timeFromNow)
     }
 
-    func shouldMuteAlert(_ alert: LoopKit.Alert, issuedDate: Date = Date()) -> Bool {
+    func shouldMuteAlert(_ alert: LoopKit.Alert, issuedDate: Date? = nil, now: Date = Date()) -> Bool {
         switch alert.trigger {
         case .immediate:
-            return shouldMuteAlert()
+            return shouldMuteAlert(scheduledAt: (issuedDate ?? now).timeIntervalSince(now))
         case .delayed(let interval), .repeating(let interval):
-            let triggerInterval = (issuedDate + interval).timeIntervalSinceNow
+            let triggerInterval = ((issuedDate ?? now) + interval).timeIntervalSince(now)
             return shouldMuteAlert(scheduledAt: triggerInterval)
         }
-    }
-
-    func remainingMuteDuration(from now: Date = Date()) -> TimeInterval? {
-        configuration.remainingMuteDuration(from: now)
     }
 }

@@ -673,10 +673,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private func determineStatusRowMode() -> StatusRowMode {
         let statusRowMode: StatusRowMode
 
-        //TODO testing (need design to make the correct status row)
-        if alertMuter.shouldMuteAlert() {
-            statusRowMode = .tempMuteAlerts
-        } else if case .initiating = bolusState {
+        if case .initiating = bolusState {
             statusRowMode = .enactingBolus
         } else if case .canceling = bolusState {
             statusRowMode = .cancelingBolus
@@ -698,6 +695,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             !premealOverride.hasFinished()
         {
             statusRowMode = .scheduleOverrideEnabled(premealOverride)
+        } else if alertMuter.shouldMuteAlert() {
+            statusRowMode = .tempMuteAlerts
         } else {
             statusRowMode = .hidden
         }
@@ -937,6 +936,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             case .status:
                 switch statusRowMode {
                 case .tempMuteAlerts:
+                    //TODO testing (need design to make the correct status row)
                     let cell = getTitleSubtitleCell()
                     cell.titleLabel.text = NSLocalizedString("Temp Mute Alerts", comment: "The title of the cell indicating alerts are temporarily muted")
                     return cell

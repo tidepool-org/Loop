@@ -25,7 +25,7 @@ struct AlertManagementView: View {
 
     private var enabled: Binding<Bool> {
         Binding(
-            get: { alertMuter.configuration.isMuting },
+            get: { alertMuter.configuration.shouldMute },
             set: { enabled in
                 alertMuter.configuration.startTime = enabled ? Date() : nil
             }
@@ -60,7 +60,7 @@ struct AlertManagementView: View {
             alertPermissionsSection
             muteAlertsSection
 
-            if alertMuter.configuration.isMuting {
+            if alertMuter.configuration.shouldMute {
                 mutePeriodSection
             }
         }
@@ -98,7 +98,7 @@ struct AlertManagementView: View {
 
     @ViewBuilder
     private var muteAlertsSectionFooter: some View {
-        if !alertMuter.configuration.isMuting {
+        if !alertMuter.configuration.shouldMute {
             DescriptiveText(label: muteAlertsFooterString)
         }
     }
