@@ -83,8 +83,11 @@ class SettingsManager {
         self.alertMuter.$configuration
             .sink { [weak self] alertMuterConfiguration in
                 guard var notificationSettings = self?.latestSettings.notificationSettings else { return }
-                notificationSettings.temporaryMuteAlertsSettings = alertMuterConfiguration.shouldMute
-                self?.storeSettings(notificationSettings: notificationSettings)
+                let newTemporaryMuteAlertsSetting = NotificationSettings.TemporaryMuteAlertSetting(enabled: alertMuterConfiguration.shouldMute, duration: alertMuterConfiguration.duration)
+                if notificationSettings.temporaryMuteAlertsSetting != newTemporaryMuteAlertsSetting {
+                    notificationSettings.temporaryMuteAlertsSetting = newTemporaryMuteAlertsSetting
+                    self?.storeSettings(notificationSettings: notificationSettings)
+                }
             }
             .store(in: &cancellables)
     }
@@ -180,7 +183,8 @@ class SettingsManager {
                     return
                 }
 
-                let notificationSettings = NotificationSettings(notificationSettings, areAlertsTemporaryMuted: self.alertMuter.configuration.shouldMute)
+                let temporaryMuteAlertSetting = NotificationSettings.TemporaryMuteAlertSetting(enabled: self.alertMuter.configuration.shouldMute, duration: self.alertMuter.configuration.duration)
+                let notificationSettings = NotificationSettings(notificationSettings, temporaryMuteAlertsSetting: temporaryMuteAlertSetting)
 
                 if notificationSettings != latestSettings.notificationSettings
                 {
@@ -213,7 +217,7 @@ extension SettingsManager: SettingsStoreDelegate {
 
 private extension NotificationSettings {
 
-    init(_ notificationSettings: UNNotificationSettings, areAlertsTemporaryMuted: Bool) {
+    init(_ notificationSettings: UNNotificationSettings, temporaryMuteAlertsSetting: TemporaryMuteAlertSetting) {
         let timeSensitiveSetting: NotificationSettings.NotificationSetting
         let scheduledDeliverySetting: NotificationSettings.NotificationSetting
 
@@ -239,7 +243,7 @@ private extension NotificationSettings {
                   announcementSetting: NotificationSettings.NotificationSetting(notificationSettings.announcementSetting),
                   timeSensitiveSetting: timeSensitiveSetting,
                   scheduledDeliverySetting: scheduledDeliverySetting,
-                  temporaryMuteAlertsSettings: areAlertsTemporaryMuted
+                  temporaryMuteAlertsSetting: temporaryMuteAlertsSetting
         )
     }
 }
