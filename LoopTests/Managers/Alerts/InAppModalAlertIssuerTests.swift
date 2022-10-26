@@ -73,21 +73,6 @@ class InAppModalAlertIssuerTests: XCTestCase {
         }
     }
 
-//    class MockSoundPlayer: AlertSoundPlayer {
-//        var vibrateCalled = false
-//        func vibrate() {
-//            vibrateCalled = true
-//        }
-//        var urlPlayed: URL?
-//        func play(url: URL) {
-//            urlPlayed = url
-//        }
-//        var stopAllCalled = false
-//        func stopAll() {
-//            stopAllCalled = true
-//        }
-//    }
-    
     static let managerIdentifier = "managerIdentifier"
     let alertIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "bar")
     let foregroundContent = Alert.Content(title: "FOREGROUND", body: "foreground", acknowledgeActionButtonLabel: "")

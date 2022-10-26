@@ -264,11 +264,6 @@ public final class AlertManager {
                 $0.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
             })
 
-            guard !loopNotRunningRequests.isEmpty else {
-                completion(nil)
-                return
-            }
-
             completion(loopNotRunningRequests.first?.content.userInfo["lastLoopDate"] as? Date)
         }
     }

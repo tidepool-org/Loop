@@ -88,6 +88,8 @@ public class AlertMuter: ObservableObject {
                 self?.updateMutePeriodEndingWatcher()
             }
             .store(in: &cancellables)
+
+        updateMutePeriodEndingWatcher()
     }
 
     convenience init(startTime: Date? = nil, duration: TimeInterval = AlertMuter.allowedDurations[0]) {
