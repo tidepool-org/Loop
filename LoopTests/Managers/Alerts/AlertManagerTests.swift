@@ -476,9 +476,9 @@ class AlertManagerTests: XCTestCase {
         XCTAssertEqual(.critical, mockAlertStore.issuedAlert!.interruptionLevel)
     }
 
-    func testRescheduleMutedAlerts() {
+    func testRescheduleMutedLoopNotLoopingAlerts() {
         let lastLoopDate = Date()
-        alertManager.loopDidComplete(now: lastLoopDate)
+        alertManager.loopDidComplete(lastLoopDate)
         alertManager.alertMuter.configuration.startTime = Date()
         alertManager.alertMuter.configuration.duration = .hours(4)
 
@@ -492,9 +492,8 @@ class AlertManagerTests: XCTestCase {
         }
 
         wait(for: [testExpectation], timeout: 1)
-        XCTAssertEqual(loopNotRunningRequests.first?.content.userInfo["lastLoopDate"] as? Date, lastLoopDate)
-        XCTAssertNil(loopNotRunningRequests.first?.content.sound)
-        XCTAssertEqual(loopNotRunningRequests.last?.content.sound, .defaultCriticalSound(withAudioVolume: 0))
+        XCTAssertNil(loopNotRunningRequests.first(where: { $0.content.interruptionLevel == .timeSensitive })!.content.sound)
+        XCTAssertEqual(loopNotRunningRequests.first(where: { $0.content.interruptionLevel == .critical })!.content.sound, .defaultCriticalSound(withAudioVolume: 0))
     }
 }
 

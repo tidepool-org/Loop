@@ -80,7 +80,7 @@ public final class AlertManager {
 
         NotificationCenter.default.publisher(for: .LoopCompleted)
             .sink { [weak self] _ in
-                self?.loopDidComplete()
+                self?.loopDidComplete(self?.getLastLoopDate())
             }
             .store(in: &cancellables)
 
@@ -146,15 +146,14 @@ public final class AlertManager {
 
     // MARK: - Loop Not Running alerts
 
-    func loopDidComplete(now: Date = Date()) {
-        rescheduleLoopNotRunningNotifications(now)
+    func loopDidComplete(_ lastLoopDate: Date? = nil) {
+        // use now if there is no lastLoopDate
+        rescheduleLoopNotRunningNotifications(lastLoopDate ?? Date())
     }
 
     private func rescheduleLoopNotRunningNotifications() {
-        getLastLoopDate() { [weak self] lastLoopDate in
-            guard let lastLoopDate = lastLoopDate else { return }
-            self?.rescheduleLoopNotRunningNotifications(lastLoopDate)
-        }
+        guard let lastLoopDate = getLastLoopDate() else { return }
+        rescheduleLoopNotRunningNotifications(lastLoopDate)
     }
 
     func rescheduleLoopNotRunningNotifications(_ lastLoopDate: Date) {
@@ -197,7 +196,6 @@ public final class AlertManager {
             }
             notificationContent.categoryIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
             notificationContent.threadIdentifier = LoopNotificationCategory.loopNotRunning.rawValue
-            notificationContent.userInfo = ["lastLoopDate": lastLoopDate]
 
             let trigger = UNTimeIntervalNotificationTrigger(
                 timeInterval: failureInterval + gracePeriod,
@@ -257,15 +255,8 @@ public final class AlertManager {
         }
     }
 
-    private func getLastLoopDate(completion: @escaping (Date?) -> Void) {
-        UNUserNotificationCenter.current().getPendingNotificationRequests() { notificationRequests in
-
-            let loopNotRunningRequests = notificationRequests.filter({
-                $0.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
-            })
-
-            completion(loopNotRunningRequests.first?.content.userInfo["lastLoopDate"] as? Date)
-        }
+    private func getLastLoopDate() -> Date? {
+        ExtensionDataManager.lastLoopCompleted
     }
 
     // MARK: - Workout reminder
