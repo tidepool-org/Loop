@@ -1,5 +1,5 @@
 //
-//  InAppModalAlertIssuerTests.swift
+//  InAppModalAlertSchedulerTests.swift
 //  LoopTests
 //
 //  Created by Rick Pasetto on 4/15/20.
@@ -10,7 +10,7 @@ import LoopKit
 import XCTest
 @testable import Loop
 
-class InAppModalAlertIssuerTests: XCTestCase {
+class InAppModalAlertSchedulerTests: XCTestCase {
     
     class MockAlertAction: UIAlertAction {
         typealias Handler = ((UIAlertAction) -> Void)
@@ -83,28 +83,28 @@ class InAppModalAlertIssuerTests: XCTestCase {
     var mockTimerRepeats: Bool?
     var mockAlertManagerResponder: MockAlertManagerResponder!
     var mockViewController: MockViewController!
-    var inAppModalAlertIssuer: InAppModalAlertIssuer!
+    var inAppModalAlertScheduler: InAppModalAlertScheduler!
     
     override func setUp() {
         mockAlertManagerResponder = MockAlertManagerResponder()
         mockViewController = MockViewController()
 
-        let newTimerFunc: InAppModalAlertIssuer.TimerFactoryFunction = { timeInterval, repeats, block in
+        let newTimerFunc: InAppModalAlertScheduler.TimerFactoryFunction = { timeInterval, repeats, block in
             let timer = Timer(timeInterval: timeInterval, repeats: repeats) { _ in block?() }
             self.mockTimer = timer
             self.mockTimerTimeInterval = timeInterval
             self.mockTimerRepeats = repeats
             return timer
         }
-        inAppModalAlertIssuer = InAppModalAlertIssuer(alertPresenter: mockViewController,
-                                                      alertManagerResponder: mockAlertManagerResponder,
-                                                      newActionFunc: MockAlertAction.init,
-                                                      newTimerFunc: newTimerFunc)
+        inAppModalAlertScheduler = InAppModalAlertScheduler(alertPresenter: mockViewController,
+                                                            alertManagerResponder: mockAlertManagerResponder,
+                                                            newActionFunc: MockAlertAction.init,
+                                                            newTimerFunc: newTimerFunc)
     }
     
     func testIssueImmediateAlert() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .immediate)
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         let alertController = mockViewController.viewControllerPresented as? UIAlertController
@@ -119,7 +119,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
                           backgroundContent: backgroundContent,
                           trigger: .immediate,
                           sound: .sound(name: soundName))
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         let alertController = mockViewController.viewControllerPresented as? UIAlertController
@@ -133,7 +133,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
                           backgroundContent: backgroundContent,
                           trigger: .immediate,
                           sound: .vibrate)
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         let alertController = mockViewController.viewControllerPresented as? UIAlertController
@@ -143,14 +143,14 @@ class InAppModalAlertIssuerTests: XCTestCase {
 
     func testRemoveImmediateAlert() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .immediate)
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         let alertControllerPresented = mockViewController.viewControllerPresented as? UIAlertController
         XCTAssertNotNil(alertControllerPresented)
 
         var dismissed = false
-        inAppModalAlertIssuer.removePresentedAlert(identifier: alert.identifier) {
+        inAppModalAlertScheduler.removePresentedAlert(identifier: alert.identifier) {
             dismissed = true
         }
 
@@ -164,17 +164,17 @@ class InAppModalAlertIssuerTests: XCTestCase {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger:
             .immediate)
         mockViewController.autoComplete = false
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         mockViewController.viewControllerPresented = nil
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         XCTAssertNil(mockViewController.viewControllerPresented)
     }
     
     func testIssueImmediateAlertWithoutForegroundContentDoesNothing() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: nil, backgroundContent: backgroundContent, trigger: .immediate)
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         XCTAssertNil(mockViewController.viewControllerPresented)
@@ -182,7 +182,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
     
     func testIssueImmediateAlertAcknowledgement() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .immediate)
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         waitOnMain()
         let action = (mockViewController.viewControllerPresented as? UIAlertController)?.actions[0] as? MockAlertAction
         XCTAssertNotNil(action)
@@ -194,7 +194,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
     func testIssueDelayedAlert() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .delayed(interval: 0.1))
         mockViewController.autoComplete = false
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         // Timer should be created but won't fire yet
@@ -213,13 +213,13 @@ class InAppModalAlertIssuerTests: XCTestCase {
     func testIssueDelayedAlertTwiceOnlyOneWorks() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .delayed(interval: 0.1))
         mockViewController.autoComplete = false
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         guard let firstTimer = mockTimer else { XCTFail(); return }
         mockTimer = nil
         // This should not schedule another timer
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         XCTAssertNil(mockTimer)
@@ -233,7 +233,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
     
     func testIssueDelayedAlertWithoutForegroundContentDoesNothing() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: nil, backgroundContent: backgroundContent, trigger: .delayed(interval: 0.1))
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         XCTAssertNil(mockViewController.viewControllerPresented)
@@ -241,11 +241,11 @@ class InAppModalAlertIssuerTests: XCTestCase {
     
     func testRetractAlert() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .delayed(interval: 0.1))
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         XCTAssert(mockTimer?.isValid == true)
-        inAppModalAlertIssuer.retractAlert(identifier: alert.identifier)
+        inAppModalAlertScheduler.unscheduleAlert(identifier: alert.identifier)
         
         waitOnMain()
         XCTAssert(mockTimer?.isValid == false)
@@ -254,7 +254,7 @@ class InAppModalAlertIssuerTests: XCTestCase {
     func testIssueRepeatingAlert() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .repeating(repeatInterval: 0.1))
         mockViewController.autoComplete = false
-        inAppModalAlertIssuer.issueAlert(alert)
+        inAppModalAlertScheduler.scheduleAlert(alert)
         
         waitOnMain()
         // Timer should be created but won't fire yet

@@ -156,7 +156,7 @@ class LoopAppManager: NSObject {
         self.pluginManager = PluginManager()
         self.bluetoothStateManager = BluetoothStateManager()
         self.alertManager = AlertManager(alertPresenter: self,
-                                         userNotificationAlertIssuer: UserNotificationAlertIssuer(userNotificationCenter: UNUserNotificationCenter.current()),
+                                         userNotificationAlertScheduler: UserNotificationAlertScheduler(userNotificationCenter: UNUserNotificationCenter.current()),
                                          expireAfter: Bundle.main.localCacheDuration,
                                          bluetoothProvider: bluetoothStateManager)
 

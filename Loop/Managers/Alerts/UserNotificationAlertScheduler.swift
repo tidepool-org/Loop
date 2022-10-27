@@ -1,5 +1,5 @@
 //
-//  UserNotificationAlertIssuer.swift
+//  UserNotificationAlertScheduler.swift
 //  LoopKit
 //
 //  Created by Rick Pasetto on 4/9/20.
@@ -18,20 +18,20 @@ public protocol UserNotificationCenter {
 }
 extension UNUserNotificationCenter: UserNotificationCenter {}
 
-public class UserNotificationAlertIssuer {
+public class UserNotificationAlertScheduler {
     
     let userNotificationCenter: UserNotificationCenter
-    let log = DiagnosticLog(category: "UserNotificationAlertIssuer")
+    let log = DiagnosticLog(category: "UserNotificationAlertScheduler")
     
     init(userNotificationCenter: UserNotificationCenter) {
         self.userNotificationCenter = userNotificationCenter
     }
     
-    func issueAlert(_ alert: Alert, muted: Bool = false) {
-        issueAlert(alert, timestamp: Date(), muted: muted)
+    func scheduleAlert(_ alert: Alert, muted: Bool = false) {
+        scheduleAlert(alert, timestamp: Date(), muted: muted)
     }
 
-    func issueAlert(_ alert: Alert, timestamp: Date, muted: Bool = false) {
+    func scheduleAlert(_ alert: Alert, timestamp: Date, muted: Bool = false) {
         DispatchQueue.main.async {
             let request = UNNotificationRequest(from: alert, timestamp: timestamp, muted: muted)
             self.userNotificationCenter.add(request) { error in
@@ -43,7 +43,7 @@ public class UserNotificationAlertIssuer {
         }
     }
     
-    func retractAlert(identifier: Alert.Identifier) {
+    func unscheduleAlert(identifier: Alert.Identifier) {
         DispatchQueue.main.async {
             self.userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier.value])
             self.userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
@@ -51,7 +51,7 @@ public class UserNotificationAlertIssuer {
     }
 }
 
-extension UserNotificationAlertIssuer: AlertManagerResponder {
+extension UserNotificationAlertScheduler: AlertManagerResponder {
     func acknowledgeAlert(identifier: Alert.Identifier) {
         DispatchQueue.main.async {
             self.log.debug("Removing notification %@ from delivered notifications", identifier.value)

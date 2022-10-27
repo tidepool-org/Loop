@@ -1,5 +1,5 @@
 //
-//  InAppModalAlertIssuer.swift
+//  InAppModalAlertScheduler.swift
 //  LoopKit
 //
 //  Created by Rick Pasetto on 4/9/20.
@@ -9,7 +9,7 @@
 import UIKit
 import LoopKit
 
-public class InAppModalAlertIssuer: AlertIssuer {
+public class InAppModalAlertScheduler {
 
     private weak var alertPresenter: AlertPresenter?
     private weak var alertManagerResponder: AlertManagerResponder?
@@ -36,7 +36,7 @@ public class InAppModalAlertIssuer: AlertIssuer {
         }
     }
 
-    public func issueAlert(_ alert: Alert) {
+    public func scheduleAlert(_ alert: Alert) {
         switch alert.trigger {
         case .immediate:
             show(alert: alert)
@@ -47,7 +47,7 @@ public class InAppModalAlertIssuer: AlertIssuer {
         }
     }
     
-    public func retractAlert(identifier: Alert.Identifier) {
+    public func unscheduleAlert(identifier: Alert.Identifier) {
         DispatchQueue.main.async {
             self.removePendingAlert(identifier: identifier)
             self.removePresentedAlert(identifier: identifier)
@@ -71,7 +71,7 @@ public class InAppModalAlertIssuer: AlertIssuer {
 }
 
 /// Private functions
-extension InAppModalAlertIssuer {
+extension InAppModalAlertScheduler {
 
     private func schedule(alert: Alert, interval: TimeInterval, repeats: Bool) {
         guard alert.foregroundContent != nil else {

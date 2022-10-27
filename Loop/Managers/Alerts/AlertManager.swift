@@ -37,8 +37,8 @@ public final class AlertManager {
     private let fileManager: FileManager
     private let alertPresenter: AlertPresenter
 
-    private var modalAlertIssuer: InAppModalAlertIssuer!
-    private var userNotificationAlertIssuer: UserNotificationAlertIssuer
+    private var modalAlertScheduler: InAppModalAlertScheduler!
+    private var userNotificationAlertScheduler: UserNotificationAlertScheduler
     private var unsafeNotificationPermissionsAlertController: UIAlertController?
     var alertMuter: AlertMuter
 
@@ -52,8 +52,8 @@ public final class AlertManager {
     var getCurrentDate = { return Date() }
     
     public init(alertPresenter: AlertPresenter,
-                modalAlertIssuer: InAppModalAlertIssuer? = nil,
-                userNotificationAlertIssuer: UserNotificationAlertIssuer,
+                modalAlertScheduler: InAppModalAlertScheduler? = nil,
+                userNotificationAlertScheduler: UserNotificationAlertScheduler,
                 fileManager: FileManager = FileManager.default,
                 alertStore: AlertStore? = nil,
                 expireAfter: TimeInterval = 24 /* hours */ * 60 /* minutes */ * 60 /* seconds */,
@@ -73,8 +73,8 @@ public final class AlertManager {
         self.alertStore = alertStore ?? AlertStore(storageDirectoryURL: alertStoreDirectory, expireAfter: expireAfter)
         self.alertPresenter = alertPresenter
         self.alertMuter = AlertMuter(configuration: UserDefaults.standard.alertMuterConfiguration)
-        self.userNotificationAlertIssuer = userNotificationAlertIssuer
-        self.modalAlertIssuer = modalAlertIssuer ?? InAppModalAlertIssuer(alertPresenter: alertPresenter, alertManagerResponder: self)
+        self.userNotificationAlertScheduler = userNotificationAlertScheduler
+        self.modalAlertScheduler = modalAlertScheduler ?? InAppModalAlertScheduler(alertPresenter: alertPresenter, alertManagerResponder: self)
 
         bluetoothProvider.addBluetoothObserver(self, queue: .main)
 
@@ -294,7 +294,7 @@ public final class AlertManager {
             switch result {
             case .success(let persistedAlerts):
                 for persistedAlert in persistedAlerts {
-                    self?.rescheduleAlertWithHandlers(persistedAlert.alert, issuedDate: persistedAlert.issuedDate)
+                    self?.rescheduleAlertWithSchedulers(persistedAlert.alert, issuedDate: persistedAlert.issuedDate)
                 }
             case .failure(let error):
                 self?.log.error("error looking up all delayed or repeating alerts: %{public}@", String(describing: error))
@@ -314,7 +314,7 @@ extension AlertManager: AlertManagerResponder {
                 }
             }
         }
-        userNotificationAlertIssuer.acknowledgeAlert(identifier: identifier)
+        userNotificationAlertScheduler.acknowledgeAlert(identifier: identifier)
         alertStore.recordAcknowledgement(of: identifier)
     }
     
@@ -344,12 +344,12 @@ extension AlertManager: AlertManagerResponder {
 extension AlertManager: AlertIssuer {
 
     public func issueAlert(_ alert: Alert) {
-        issueAlertWithHandlers(alert)
+        scheduleAlertWithSchedulers(alert)
         alertStore.recordIssued(alert: alert)
     }
 
     public func retractAlert(identifier: Alert.Identifier) {
-        retractAlertWithHandlers(identifier: identifier)
+        unscheduleAlertWithSchedulers(identifier: identifier)
         alertStore.recordRetraction(of: identifier)
     }
 
@@ -362,23 +362,23 @@ extension AlertManager: AlertIssuer {
 
         // Only alerts with foreground content are replayed
         if alert.foregroundContent != nil {
-            modalAlertIssuer.issueAlert(alert)
+            modalAlertScheduler.scheduleAlert(alert)
         }
     }
 
-    private func issueAlertWithHandlers(_ alert: Alert, issuedDate: Date = Date()) {
-        modalAlertIssuer.issueAlert(alert)
-        userNotificationAlertIssuer.issueAlert(alert, muted: alertMuter.shouldMuteAlert(alert, issuedDate: issuedDate))
+    private func scheduleAlertWithSchedulers(_ alert: Alert, issuedDate: Date = Date()) {
+        modalAlertScheduler.scheduleAlert(alert)
+        userNotificationAlertScheduler.scheduleAlert(alert, muted: alertMuter.shouldMuteAlert(alert, issuedDate: issuedDate))
     }
 
-    private func retractAlertWithHandlers(identifier: Alert.Identifier) {
-        modalAlertIssuer.retractAlert(identifier: identifier)
-        userNotificationAlertIssuer.retractAlert(identifier: identifier)
+    private func unscheduleAlertWithSchedulers(identifier: Alert.Identifier) {
+        modalAlertScheduler.unscheduleAlert(identifier: identifier)
+        userNotificationAlertScheduler.unscheduleAlert(identifier: identifier)
     }
 
-    private func rescheduleAlertWithHandlers(_ alert: Alert, issuedDate: Date) {
-        retractAlertWithHandlers(identifier: alert.identifier)
-        issueAlertWithHandlers(alert, issuedDate: issuedDate)
+    private func rescheduleAlertWithSchedulers(_ alert: Alert, issuedDate: Date) {
+        unscheduleAlertWithSchedulers(identifier: alert.identifier)
+        scheduleAlertWithSchedulers(alert, issuedDate: issuedDate)
     }
 }
 
@@ -695,7 +695,7 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
                            issueHandler: { alert in
             // in-app modal is presented with a button to navigate to settings
             self.presentUnsafeNotificationPermissionsInAppAlert()
-            self.userNotificationAlertIssuer.issueAlert(alert, muted: self.alertMuter.shouldMuteAlert(alert))
+            self.userNotificationAlertScheduler.scheduleAlert(alert, muted: self.alertMuter.shouldMuteAlert(alert))
             self.recordIssued(alert: alert)
         },
                            retractionHandler: { alert in
