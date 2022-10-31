@@ -276,7 +276,9 @@ extension OnboardingManager: CompletionDelegate {
 
             self.log.debug("completionNotifyingDidComplete during activeOnboarding", activeOnboarding.onboardingIdentifier)
 
-            // An unfinished onboarding can still notify complete. For example, if pausing.
+            // The `completionNotifyingDidComplete` callback can be called by an onboarding plugin to signal that the user is done with
+            // the onboarding UI, like when pausing, so the onboarding UI can be dismissed. This doesn't necessarily mean that the
+            // onboarding is finished/complete. So we check to see if onboarding is finished here before calling `completeActiveOnboarding`
             if activeOnboarding.isOnboarded {
                 self.completeActiveOnboarding()
             }
