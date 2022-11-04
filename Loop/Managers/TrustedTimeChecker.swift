@@ -84,8 +84,8 @@ class TrustedTimeChecker {
     }
 
     private func issueTimeChangedAlert() {
-        let alertTitle = NSLocalizedString("Time Change Detected", comment: "Time change alert title")
-        let alertBody = String(format: NSLocalizedString("Your phone’s time has been changed. %1$@ needs accurate time records to make predictions about your glucose and adjust your insulin accordingly.\n\nCheck in your iPhone Settings (General / Date & Time) and verify that Set Automatically is enabled. Failure to resolve could lead to serious under-delivery or over-delivery of insulin.", comment: "Time change alert body. (1: app name)"), Bundle.main.bundleDisplayName)
+        let alertTitle = NSLocalizedString("iPhone Time Settings Need Attention", comment: "Time change alert title")
+        let alertBody = String(format: NSLocalizedString("Your iPhone’s time has been changed. %1$@ needs accurate time records to make predictions about your glucose and adjust your insulin accordingly.\n\nCheck in your iPhone Settings (General / Date & Time) and verify that 'Set Automatically' is turned ON. Failure to resolve could lead to serious under-delivery or over-delivery of insulin.", comment: "Time change alert body. (1: app name)"), Bundle.main.bundleDisplayName)
         let content = Alert.Content(title: alertTitle, body: alertBody, acknowledgeActionButtonLabel: NSLocalizedString("OK", comment: "Alert acknowledgment OK button"))
         alertManager?.issueAlert(Alert(identifier: alertIdentifier, foregroundContent: content, backgroundContent: content, trigger: .immediate))
     }
