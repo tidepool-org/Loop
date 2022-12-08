@@ -12,6 +12,7 @@ import LoopKitUI
 
 struct AlertManagementView: View {
     @Environment(\.appName) private var appName
+    @Environment(\.guidanceColors) private var guidanceColors
 
     @ObservedObject private var checker: AlertPermissionsChecker
     @ObservedObject private var alertMuter: AlertMuter
