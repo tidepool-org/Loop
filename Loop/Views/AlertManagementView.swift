@@ -17,6 +17,8 @@ struct AlertManagementView: View {
     @ObservedObject private var checker: AlertPermissionsChecker
     @ObservedObject private var alertMuter: AlertMuter
 
+    @State private var showHowMuteAlertWork: Bool = false
+
     private var formatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
         formatter.unitsStyle = .full
@@ -89,7 +91,26 @@ struct AlertManagementView: View {
     @ViewBuilder
     private var muteAlertsSection: some View {
         Section(footer: muteAlertsSectionFooter) {
+            if !alertMuter.configuration.shouldMute {
+                howMuteAlertsWork
+            }
             Toggle(NSLocalizedString("Mute All Alerts", comment: "Label for toggle to mute all alerts"), isOn: enabled)
+        }
+    }
+
+    private var howMuteAlertsWork: some View {
+        Button(action: { showHowMuteAlertWork = true }) {
+            HStack {
+                Text(NSLocalizedString("Take a closer look at how mute alerts works", comment: "Label for link to learn how mute alerts work"))
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Image(systemName: "info.circle")
+                    .font(.body)
+            }
+        }
+        .sheet(isPresented: $showHowMuteAlertWork) {
+            HowMuteAlertWorkView()
         }
     }
 
@@ -105,7 +126,7 @@ struct AlertManagementView: View {
     }
 
     private var muteAlertsFooterString: String {
-        NSLocalizedString("No alerts will sound while muted. Once this period ends, your alerts and alarms will resume as normal.", comment: "Description of temporary mute alerts")
+        NSLocalizedString("When muted, Tidepool Loop alerts will temporarily display without sounds and will vibrate only. Once the mute period ends, your alerts will resume as normal.", comment: "Description of temporary mute alerts")
     }
 }
 
