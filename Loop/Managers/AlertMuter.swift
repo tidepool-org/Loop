@@ -125,4 +125,8 @@ public class AlertMuter: ObservableObject {
             return shouldMuteAlert(scheduledAt: triggerInterval)
         }
     }
+
+    func unmuteAlerts() {
+        configuration.startTime = nil
+    }
 }
