@@ -912,7 +912,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let title = NSMutableAttributedString(string: NSLocalizedString("All Alerts Muted", comment: "Warning text for when alerts are muted"))
             contentConfig.image = UIImage(systemName: "speaker.slash.fill")
             contentConfig.imageProperties.tintColor = .white
-            contentConfig.attributedText = title//titleWithImage
+            contentConfig.attributedText = title
             contentConfig.textProperties.color = .white
             contentConfig.textProperties.font = .systemFont(ofSize: adjustViewForNarrowDisplay ? 16 : 18, weight: .bold)
             contentConfig.textProperties.adjustsFontSizeToFitWidth = true
