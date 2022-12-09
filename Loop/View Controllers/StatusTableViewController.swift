@@ -735,6 +735,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             tableView.deleteRows(at: [IndexPath(row: 0, section: Section.alertWarning.rawValue)], with: animated ? .top : .none)
         } else if shouldShowBannerWarning && !warningWasVisible {
             tableView.insertRows(at: [IndexPath(row: 0, section: Section.alertWarning.rawValue)], with: animated ? .top : .none)
+        } else {
+            tableView.reloadRows(at: [IndexPath(row: 0, section: Section.alertWarning.rawValue)], with: .none)
         }
     }
 
