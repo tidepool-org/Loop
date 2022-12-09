@@ -101,19 +101,11 @@ struct AlertManagementView: View {
                 HStack {
                     Text(NSLocalizedString("All alerts muted until", comment: "Label for when mute alert will end"))
                     Spacer()
-                    Text(formattedEndingTime)
+                    Text(alertMuter.formattedEndTime)
                         .foregroundColor(.secondary)
                 }
             }
         }
-    }
-
-    private var formattedEndingTime: String {
-        guard let endTime = alertMuter.configuration.mutingEndTime else { return NSLocalizedString("Unknown", comment: "result when time cannot be formatted") }
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        formatter.dateStyle = .none
-        return formatter.string(from: endTime)
     }
 
     private var muteAlertIcon: some View {
