@@ -1276,7 +1276,8 @@ extension DeviceDataManager: LoopDataManagerDelegate {
             return units
         }
 
-        let rounded = ([0.0] + pumpManager.supportedBolusVolumes).enumerated().min( by: { abs($0.1 - units) < abs($1.1 - units) } )!.1
+        // only allow volumes that are rounded down
+        let rounded = ([0.0] + pumpManager.supportedBolusVolumes).enumerated().min( by: { abs($0.1 - units) < abs($1.1 - units) && $0.1 < units } )!.1
         self.log.default("Rounded %{public}@ to %{public}@", String(describing: units), String(describing: rounded))
 
         return rounded
