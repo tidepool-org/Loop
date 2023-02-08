@@ -52,8 +52,8 @@ class HUDInterfaceController: WKInterfaceController {
         loopHUDImage.setHidden(false)
 
         let date = activeContext.loopLastRunDate
-        let isClosedLoop = activeContext.isClosedLoop ?? false
-        loopHUDImage.setLoopImage(isClosedLoop: isClosedLoop, {
+        let automaticDosingEnabled = activeContext.automaticDosingEnabled ?? false
+        loopHUDImage.setLoopImage(isClosedLoop: automaticDosingEnabled, {
             if let date = date {
                 switch date.timeIntervalSinceNow {
                 case let t where t > .minutes(-6):

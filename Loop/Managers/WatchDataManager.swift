@@ -261,7 +261,7 @@ final class WatchDataManager: NSObject {
         
             let settings = self.deviceManager.loopManager.settings
 
-            context.isClosedLoop = settings.dosingEnabled
+            context.automaticDosingEnabled = settings.dosingEnabled
 
             context.potentialCarbEntry = potentialCarbEntry
             if let recommendedBolus = try? state.recommendBolus(consideringPotentialCarbEntry: potentialCarbEntry, replacingCarbEntry: nil, considerPositiveVelocityAndRC: FeatureFlags.usePositiveMomentumAndRCForManualBoluses)

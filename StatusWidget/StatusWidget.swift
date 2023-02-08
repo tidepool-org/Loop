@@ -123,7 +123,7 @@ class StatusWidgetProvider: TimelineProvider {
             
             let lastCompleted = context.lastLoopCompleted
             
-            let closeLoop = context.isClosedLoop ?? false
+            let closeLoop = context.automaticDosingEnabled ?? false
             
             let netBasal = context.netBasal
             

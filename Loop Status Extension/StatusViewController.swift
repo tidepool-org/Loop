@@ -249,8 +249,8 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                 self.hudView.loopCompletionHUD.lastLoopCompleted = lastCompleted
             }
             
-            if let isClosedLoop = context.isClosedLoop {
-                self.hudView.loopCompletionHUD.loopIconClosed = isClosedLoop
+            if let automaticDosingEnabled = context.automaticDosingEnabled {
+                self.hudView.loopCompletionHUD.loopIconClosed = automaticDosingEnabled
             }
 
             let insulinFormatter: NumberFormatter = {
@@ -313,7 +313,7 @@ class StatusViewController: UIViewController, NCWidgetProviding {
             self.charts.predictedGlucose.glucoseUnit = unit
             self.charts.predictedGlucose.setGlucoseValues(glucose)
 
-            if let predictedGlucose = context.predictedGlucose?.samples, context.isClosedLoop == true {
+            if let predictedGlucose = context.predictedGlucose?.samples, context.automaticDosingEnabled == true {
                 self.charts.predictedGlucose.setPredictedGlucoseValues(predictedGlucose)
             } else {
                 self.charts.predictedGlucose.setPredictedGlucoseValues([])
