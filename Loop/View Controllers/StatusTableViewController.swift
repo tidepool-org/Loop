@@ -554,8 +554,19 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self.statusCharts.preMealOverride = self.deviceManager.loopManager.settings.preMealOverride
                 self.statusCharts.scheduleOverride = self.deviceManager.loopManager.settings.scheduleOverride
             }
-            if self.statusCharts.scheduleOverride?.hasFinished() == true {
+            if let scheduleOverride = self.statusCharts.scheduleOverride,
+               scheduleOverride.hasFinished() == true
+            {
+                self.deviceManager.loopManager.mutateSettings { settings in
+                    settings.clearOverride(matching: scheduleOverride.context)
+                }
                 self.statusCharts.scheduleOverride = nil
+            }
+            if self.statusCharts.preMealOverride?.hasFinished() == true {
+                self.statusCharts.preMealOverride = nil
+                self.deviceManager.loopManager.mutateSettings { settings in
+                    settings.clearOverride(matching: .preMeal)
+                }
             }
 
             let charts = self.statusCharts
