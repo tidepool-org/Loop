@@ -1241,6 +1241,14 @@ extension DeviceDataManager {
                 return
             }
 
+            guard !self.doseStore.sharingDenied else {
+                // only clear cache since access to health kit is denied
+                insulinDeliveryStore.purgeCachedInsulinDeliveryObjects() { error in
+                    completion?(error)
+                }
+                return
+            }
+            
             healthStore.deleteObjects(of: self.doseStore.sampleType, predicate: devicePredicate) { success, deletedObjectCount, error in
                 if success {
                     insulinDeliveryStore.test_lastImmutableBasalEndDate = nil
@@ -1254,6 +1262,14 @@ extension DeviceDataManager {
         
         guard let testingCGMManager = cgmManager as? TestingCGMManager else {
             assertionFailure("\(#function) should be invoked only when a testing CGM manager is in use")
+            return
+        }
+        
+        guard !glucoseStore.sharingDenied else {
+            // only clear cache since access to health kit is denied
+            glucoseStore.purgeCachedGlucoseObjects() { error in
+                completion?(error)
+            }
             return
         }
 
