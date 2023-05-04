@@ -1225,7 +1225,6 @@ extension DeviceDataManager: InsulinDeliveryStoreDelegate {
 // MARK: - TestingPumpManager
 extension DeviceDataManager {
     func deleteTestingPumpData(completion: ((Error?) -> Void)? = nil) {
-
         guard let testingPumpManager = pumpManager as? TestingPumpManager else {
             completion?(nil)
             return
@@ -1249,8 +1248,8 @@ extension DeviceDataManager {
                 return
             }
             
-            healthStore.deleteObjects(of: self.doseStore.sampleType, predicate: devicePredicate) { success, deletedObjectCount, error in
-                if success {
+            insulinDeliveryStore.purgeAllDoseEntries(healthKitPredicate: devicePredicate) { error in
+                if error == nil {
                     insulinDeliveryStore.test_lastImmutableBasalEndDate = nil
                 }
                 completion?(error)
@@ -1259,7 +1258,6 @@ extension DeviceDataManager {
     }
 
     func deleteTestingCGMData(completion: ((Error?) -> Void)? = nil) {
-        
         guard let testingCGMManager = cgmManager as? TestingCGMManager else {
             assertionFailure("\(#function) should be invoked only when a testing CGM manager is in use")
             return
