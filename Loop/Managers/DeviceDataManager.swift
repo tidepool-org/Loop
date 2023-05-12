@@ -29,8 +29,6 @@ final class DeviceDataManager {
     /// Remember the launch date of the app for diagnostic reporting
     private let launchDate = Date()
 
-    private(set) var testingScenariosManager: TestingScenariosManager?
-
     /// The last error recorded by a device manager
     /// Should be accessed only on the main queue
     private(set) var lastError: (date: Date, error: Error)?
@@ -416,10 +414,6 @@ final class DeviceDataManager {
         criticalEventLogExportManager = CriticalEventLogExportManager(logs: criticalEventLogs,
                                                                       directory: FileManager.default.exportsDirectoryURL,
                                                                       historicalDuration: Bundle.main.localCacheDuration)
-
-        if FeatureFlags.scenariosEnabled {
-            testingScenariosManager = LocalTestingScenariosManager(deviceManager: self)
-        }
 
         loopManager.delegate = self
 
@@ -1655,40 +1649,6 @@ fileprivate extension FileManager {
 
 extension GlucoseStore : CGMStalenessMonitorDelegate { }
 
-
-//MARK: - SupportInfoProvider protocol conformance
-
-extension DeviceDataManager: SupportInfoProvider {
-
-    private var branchNameIfNotReleaseBranch: String? {
-        return Bundle.main.gitBranch.filter { branch in
-            return branch != "" &&
-                branch != "main" &&
-                branch != "master" &&
-                !branch.starts(with: "release/")
-        }
-    }
-    
-    public var localizedAppNameAndVersion: String {
-        if let branch = branchNameIfNotReleaseBranch {
-            return Bundle.main.localizedNameAndVersion + " (\(branch))"
-        }
-        return Bundle.main.localizedNameAndVersion
-    }
-    
-    public var pumpStatus: PumpManagerStatus? {
-        return pumpManager?.status
-    }
-    
-    public var cgmStatus: CGMManagerStatus? {
-        return cgmManager?.cgmManagerStatus
-    }
-    
-    public func generateIssueReport(completion: @escaping (String) -> Void) {
-        generateDiagnosticReport(completion)
-    }
-    
-}
 
 //MARK: TherapySettingsViewModelDelegate
 struct CancelTempBasalFailedError: LocalizedError {

@@ -81,6 +81,7 @@ class LoopAppManager: NSObject {
     private var settingsManager: SettingsManager!
     private var loggingServicesManager = LoggingServicesManager()
     private var analyticsServicesManager = AnalyticsServicesManager()
+    private(set) var testingScenariosManager: TestingScenariosManager?
 
     private var overrideHistory = UserDefaults.appGroup?.overrideHistory ?? TemporaryScheduleOverrideHistory.init()
 
@@ -169,11 +170,6 @@ class LoopAppManager: NSObject {
 
         pluginManager = PluginManager()
 
-        for support in pluginManager.availableSupports {
-            if let analyticsService = support as? AnalyticsService {
-                analyticsServicesManager.addService(analyticsService)
-            }
-        }
 
         bluetoothStateManager = BluetoothStateManager()
         alertManager = AlertManager(alertPresenter: self,
@@ -214,13 +210,30 @@ class LoopAppManager: NSObject {
 
         scheduleBackgroundTasks()
 
+        supportManager = SupportManager(pluginManager: pluginManager,
+                                        deviceDataManager: deviceDataManager,
+                                        servicesManager: deviceDataManager.servicesManager,
+                                        alertIssuer: alertManager)
+
         onboardingManager = OnboardingManager(pluginManager: pluginManager,
                                               bluetoothProvider: bluetoothStateManager,
                                               deviceDataManager: deviceDataManager,
                                               servicesManager: deviceDataManager.servicesManager,
                                               loopDataManager: deviceDataManager.loopManager,
+                                              supportManager: supportManager,
                                               windowProvider: windowProvider,
                                               userDefaults: UserDefaults.appGroup!)
+
+
+        for support in supportManager.availableSupports {
+            if let analyticsService = support as? AnalyticsService {
+                analyticsServicesManager.addService(analyticsService)
+            }
+        }
+        for support in supportManager.availableSupports {
+            support.initializationComplete(for: deviceDataManager.servicesManager.activeServices)
+        }
+
 
         deviceDataManager.onboardingManager = onboardingManager
 
@@ -230,12 +243,12 @@ class LoopAppManager: NSObject {
             analyticsServicesManager.identifyWorkspaceGitRevision(workspaceGitRevision)
         }
 
+        if FeatureFlags.scenariosEnabled {
+            testingScenariosManager = LocalTestingScenariosManager(deviceManager: deviceDataManager, supportManager: supportManager)
+        }
+
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
-        supportManager = SupportManager(pluginManager: pluginManager,
-                                        deviceDataManager: deviceDataManager,
-                                        servicesManager: deviceDataManager.servicesManager,
-                                        alertIssuer: alertManager)
 
         automaticDosingStatus.$isAutomaticDosingAllowed
             .combineLatest(deviceDataManager.loopManager.$dosingEnabled)
@@ -401,7 +414,7 @@ class LoopAppManager: NSObject {
     }
     
     func askUserToConfirmCrashIfNecessary() {
-        deviceDataManager.pluginManager.availableSupports.forEach { supportUI in
+        supportManager.availableSupports.forEach { supportUI in
             if supportUI.loopNeedsReset {
                 alertManager.presentConfirmCrashAlert() { [weak self] completion in
                     guard let pumpManager = self?.deviceDataManager.pumpManager else {

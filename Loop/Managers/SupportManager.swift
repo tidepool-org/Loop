@@ -28,19 +28,21 @@ public final class SupportManager {
     }
     
     private let alertIssuer: AlertIssuer
-    private let pluginManager: PluginManager?
+    private let deviceDataManager: DeviceDataManager
+    private let pluginManager: PluginManager
     private let staticSupportTypes: [SupportUI.Type]
     private let staticSupportTypesByIdentifier: [String: SupportUI.Type]
 
     lazy private var cancellables = Set<AnyCancellable>()
 
-    init(pluginManager: PluginManager? = nil,
-         deviceDataManager: DeviceDataManager? = nil,
+    init(pluginManager: PluginManager,
+         deviceDataManager: DeviceDataManager,
          servicesManager: ServicesManager? = nil,
          staticSupportTypes: [SupportUI.Type]? = nil,
          alertIssuer: AlertIssuer) {
         
         self.alertIssuer = alertIssuer
+        self.deviceDataManager = deviceDataManager
         self.pluginManager = pluginManager
         self.staticSupportTypes = []
         staticSupportTypesByIdentifier = self.staticSupportTypes.reduce(into: [:]) { (map, type) in
@@ -49,8 +51,32 @@ public final class SupportManager {
 
         restoreState()
 
-        let availablePluginSupports = pluginManager?.availableSupports ?? [SupportUI]()
-        let availableDeviceSupports = deviceDataManager?.availableSupports ?? [SupportUI]()
+        // Any supports that we don't have state for, we still initialize.
+        let existingIds = supports.value.keys
+        let remainingSupportBundles = pluginManager.pluginBundles.filter { bundle in
+            guard bundle.isSupportPlugin || bundle.isAppExtension else {
+                return false
+            }
+            guard let identifier = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.supportIdentifier.rawValue) as? String else {
+                return false
+            }
+            return !existingIds.contains(identifier)
+        }
+
+
+        for bundle in remainingSupportBundles {
+            do {
+                if let support = try bundle.loadAndInstantiateSupport() {
+                    log.debug("Loaded support plugin: %{public}@", support.identifier)
+                    addSupport(support)
+                }
+            } catch {
+                log.error("Error loading plugin: %{public}@", String(describing: error))
+            }
+        }
+
+        let availablePluginSupports = [SupportUI]()
+        let availableDeviceSupports = deviceDataManager.availableSupports
         let availableServiceSupports = servicesManager?.availableSupports ?? [SupportUI]()
         let staticSupports = self.staticSupportTypes.map { $0.init(rawState: [:]) }.compactMap { $0 }
         let allSupports = availablePluginSupports + availableDeviceSupports + availableServiceSupports + staticSupports
@@ -180,6 +206,38 @@ extension SupportManager {
 
 // MARK: SupportUIDelegate
 extension SupportManager: SupportUIDelegate {
+    public func openURL(url: URL) {
+        UIApplication.shared.open(url)
+    }
+    
+    public var pumpStatus: LoopKit.PumpManagerStatus? {
+        deviceDataManager.pumpManagerStatus
+    }
+    
+    public var cgmStatus: LoopKit.CGMManagerStatus? {
+        deviceDataManager.cgmManagerStatus
+    }
+    
+    private var branchNameIfNotReleaseBranch: String? {
+        return Bundle.main.gitBranch.filter { branch in
+            return branch != "" &&
+                branch != "main" &&
+                branch != "master" &&
+                !branch.starts(with: "release/")
+        }
+    }
+
+    public var localizedAppNameAndVersion: String {
+        if let branch = branchNameIfNotReleaseBranch {
+            return Bundle.main.localizedNameAndVersion + " (\(branch))"
+        }
+        return Bundle.main.localizedNameAndVersion
+    }
+
+    public func generateIssueReport(completion: @escaping (String) -> Void) {
+        deviceDataManager.generateDiagnosticReport(completion)
+    }
+    
     public func issueAlert(_ alert: LoopKit.Alert) {
         alertIssuer.issueAlert(alert)
     }
@@ -217,7 +275,7 @@ extension SupportManager {
 
     private func supportTypeFromRawValue(_ rawValue: [String: Any]) -> SupportUI.Type? {
         guard let supportIdentifier = rawValue["supportIdentifier"] as? String,
-              let supportType = pluginManager?.getSupportUITypeByIdentifier(supportIdentifier) ?? staticSupportTypesByIdentifier[supportIdentifier]
+              let supportType = pluginManager.getSupportUITypeByIdentifier(supportIdentifier) ?? staticSupportTypesByIdentifier[supportIdentifier]
         else {
             return nil
         }
@@ -263,7 +321,6 @@ fileprivate extension UserDefaults {
 }
 
 extension SupportUI {
-
     var rawValue: RawStateValue {
         return [
             "supportIdentifier": Self.supportIdentifier,
@@ -271,4 +328,17 @@ extension SupportUI {
         ]
     }
 
+}
+
+extension Bundle {
+    fileprivate func loadAndInstantiateSupport() throws -> SupportUI? {
+        try loadAndReturnError()
+
+        guard let principalClass = principalClass as? NSObject.Type,
+              let supportUIPlugin = principalClass.init() as? SupportUIPlugin else {
+            return nil
+        }
+
+        return supportUIPlugin.support
+    }
 }
