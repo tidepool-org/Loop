@@ -440,10 +440,10 @@ class LoopAppManager: NSObject {
     }
     
     private func resetLoop() {
-        deviceDataManager.pluginManager.availableSupports.enumerated().forEach { index, supportUI in
+        supportManager.availableSupports.enumerated().forEach { index, supportUI in
             supportUI.loopWillReset()
             
-            if index == deviceDataManager.pluginManager.availableSupports.count - 1 {
+            if index == supportManager.availableSupports.count - 1 {
                 resetLoopDocuments()
                 resetLoopUserDefaults()
             }
