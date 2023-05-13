@@ -211,7 +211,7 @@ class LoopAppManager: NSObject {
         scheduleBackgroundTasks()
 
         supportManager = SupportManager(pluginManager: pluginManager,
-                                        deviceDataManager: deviceDataManager,
+                                        deviceSupportDelegate: deviceDataManager,
                                         servicesManager: deviceDataManager.servicesManager,
                                         alertIssuer: alertManager)
 

@@ -12,6 +12,14 @@ import LoopKit
 import LoopKitUI
 import SwiftUI
 
+public protocol DeviceSupportDelegate {
+    var availableSupports: [SupportUI] { get }
+    var pumpManagerStatus: LoopKit.PumpManagerStatus? { get }
+    var cgmManagerStatus: LoopKit.CGMManagerStatus? { get }
+
+    func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void)
+}
+
 public final class SupportManager {
     
     private lazy var log = DiagnosticLog(category: "SupportManager")
@@ -28,7 +36,7 @@ public final class SupportManager {
     }
     
     private let alertIssuer: AlertIssuer
-    private let deviceDataManager: DeviceDataManager
+    private let deviceSupportDelegate: DeviceSupportDelegate
     private let pluginManager: PluginManager
     private let staticSupportTypes: [SupportUI.Type]
     private let staticSupportTypesByIdentifier: [String: SupportUI.Type]
@@ -36,13 +44,13 @@ public final class SupportManager {
     lazy private var cancellables = Set<AnyCancellable>()
 
     init(pluginManager: PluginManager,
-         deviceDataManager: DeviceDataManager,
+         deviceSupportDelegate: DeviceSupportDelegate,
          servicesManager: ServicesManager? = nil,
          staticSupportTypes: [SupportUI.Type]? = nil,
          alertIssuer: AlertIssuer) {
         
         self.alertIssuer = alertIssuer
-        self.deviceDataManager = deviceDataManager
+        self.deviceSupportDelegate = deviceSupportDelegate
         self.pluginManager = pluginManager
         self.staticSupportTypes = []
         staticSupportTypesByIdentifier = self.staticSupportTypes.reduce(into: [:]) { (map, type) in
@@ -76,7 +84,7 @@ public final class SupportManager {
         }
 
         let availablePluginSupports = [SupportUI]()
-        let availableDeviceSupports = deviceDataManager.availableSupports
+        let availableDeviceSupports = deviceSupportDelegate.availableSupports
         let availableServiceSupports = servicesManager?.availableSupports ?? [SupportUI]()
         let staticSupports = self.staticSupportTypes.map { $0.init(rawState: [:]) }.compactMap { $0 }
         let allSupports = availablePluginSupports + availableDeviceSupports + availableServiceSupports + staticSupports
@@ -211,11 +219,11 @@ extension SupportManager: SupportUIDelegate {
     }
     
     public var pumpStatus: LoopKit.PumpManagerStatus? {
-        deviceDataManager.pumpManagerStatus
+        deviceSupportDelegate.pumpManagerStatus
     }
     
     public var cgmStatus: LoopKit.CGMManagerStatus? {
-        deviceDataManager.cgmManagerStatus
+        deviceSupportDelegate.cgmManagerStatus
     }
     
     private var branchNameIfNotReleaseBranch: String? {
@@ -235,7 +243,7 @@ extension SupportManager: SupportUIDelegate {
     }
 
     public func generateIssueReport(completion: @escaping (String) -> Void) {
-        deviceDataManager.generateDiagnosticReport(completion)
+        deviceSupportDelegate.generateDiagnosticReport(completion)
     }
     
     public func issueAlert(_ alert: LoopKit.Alert) {

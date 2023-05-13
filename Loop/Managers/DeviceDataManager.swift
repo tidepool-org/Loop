@@ -652,64 +652,6 @@ final class DeviceDataManager {
             self.getHealthStoreAuthorization(completion)
         }
     }
-
-    func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
-        self.loopManager.generateDiagnosticReport { (loopReport) in
-
-            let logDurationHours = 84.0
-
-            self.alertManager.getStoredEntries(startDate: Date() - .hours(logDurationHours)) { (alertReport) in
-                self.deviceLog.getLogEntries(startDate: Date() - .hours(logDurationHours)) { (result) in
-                    let deviceLogReport: String
-                    switch result {
-                    case .failure(let error):
-                        deviceLogReport = "Error fetching entries: \(error)"
-                    case .success(let entries):
-                        deviceLogReport = entries.map { "* \($0.timestamp) \($0.managerIdentifier) \($0.deviceIdentifier ?? "") \($0.type) \($0.message)" }.joined(separator: "\n")
-                    }
-
-                    let report = [
-                        "## Build Details",
-                        "* appNameAndVersion: \(Bundle.main.localizedNameAndVersion)",
-                        "* profileExpiration: \(Bundle.main.profileExpirationString)",
-                        "* gitRevision: \(Bundle.main.gitRevision ?? "N/A")",
-                        "* gitBranch: \(Bundle.main.gitBranch ?? "N/A")",
-                        "* workspaceGitRevision: \(Bundle.main.workspaceGitRevision ?? "N/A")",
-                        "* workspaceGitBranch: \(Bundle.main.workspaceGitBranch ?? "N/A")",
-                        "* sourceRoot: \(Bundle.main.sourceRoot ?? "N/A")",
-                        "* buildDateString: \(Bundle.main.buildDateString ?? "N/A")",
-                        "* xcodeVersion: \(Bundle.main.xcodeVersion ?? "N/A")",
-                        "",
-                        "## FeatureFlags",
-                        "\(FeatureFlags)",
-                        "",
-                        alertReport,
-                        "",
-                        "## DeviceDataManager",
-                        "* launchDate: \(self.launchDate)",
-                        "* lastError: \(String(describing: self.lastError))",
-                        "",
-                        "cacheStore: \(String(reflecting: self.cacheStore))",
-                        "",
-                        self.cgmManager != nil ? String(reflecting: self.cgmManager!) : "cgmManager: nil",
-                        "",
-                        self.pumpManager != nil ? String(reflecting: self.pumpManager!) : "pumpManager: nil",
-                        "",
-                        "## Device Communication Log",
-                        deviceLogReport,
-                        "",
-                        String(reflecting: self.watchManager!),
-                        "",
-                        String(reflecting: self.statusExtensionManager!),
-                        "",
-                        loopReport,
-                        ].joined(separator: "\n")
-
-                    completion(report)
-                }
-            }
-        }
-    }
 }
 
 private extension DeviceDataManager {
@@ -1750,8 +1692,66 @@ extension DeviceDataManager {
     }
 }
 
-extension DeviceDataManager {
+extension DeviceDataManager: DeviceSupportDelegate {
     var availableSupports: [SupportUI] { [cgmManager, pumpManager].compactMap { $0 as? SupportUI } }
+
+    func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void) {
+        self.loopManager.generateDiagnosticReport { (loopReport) in
+
+            let logDurationHours = 84.0
+
+            self.alertManager.getStoredEntries(startDate: Date() - .hours(logDurationHours)) { (alertReport) in
+                self.deviceLog.getLogEntries(startDate: Date() - .hours(logDurationHours)) { (result) in
+                    let deviceLogReport: String
+                    switch result {
+                    case .failure(let error):
+                        deviceLogReport = "Error fetching entries: \(error)"
+                    case .success(let entries):
+                        deviceLogReport = entries.map { "* \($0.timestamp) \($0.managerIdentifier) \($0.deviceIdentifier ?? "") \($0.type) \($0.message)" }.joined(separator: "\n")
+                    }
+
+                    let report = [
+                        "## Build Details",
+                        "* appNameAndVersion: \(Bundle.main.localizedNameAndVersion)",
+                        "* profileExpiration: \(Bundle.main.profileExpirationString)",
+                        "* gitRevision: \(Bundle.main.gitRevision ?? "N/A")",
+                        "* gitBranch: \(Bundle.main.gitBranch ?? "N/A")",
+                        "* workspaceGitRevision: \(Bundle.main.workspaceGitRevision ?? "N/A")",
+                        "* workspaceGitBranch: \(Bundle.main.workspaceGitBranch ?? "N/A")",
+                        "* sourceRoot: \(Bundle.main.sourceRoot ?? "N/A")",
+                        "* buildDateString: \(Bundle.main.buildDateString ?? "N/A")",
+                        "* xcodeVersion: \(Bundle.main.xcodeVersion ?? "N/A")",
+                        "",
+                        "## FeatureFlags",
+                        "\(FeatureFlags)",
+                        "",
+                        alertReport,
+                        "",
+                        "## DeviceDataManager",
+                        "* launchDate: \(self.launchDate)",
+                        "* lastError: \(String(describing: self.lastError))",
+                        "",
+                        "cacheStore: \(String(reflecting: self.cacheStore))",
+                        "",
+                        self.cgmManager != nil ? String(reflecting: self.cgmManager!) : "cgmManager: nil",
+                        "",
+                        self.pumpManager != nil ? String(reflecting: self.pumpManager!) : "pumpManager: nil",
+                        "",
+                        "## Device Communication Log",
+                        deviceLogReport,
+                        "",
+                        String(reflecting: self.watchManager!),
+                        "",
+                        String(reflecting: self.statusExtensionManager!),
+                        "",
+                        loopReport,
+                        ].joined(separator: "\n")
+
+                    completion(report)
+                }
+            }
+        }
+    }
 }
 
 extension DeviceDataManager: DeviceStatusProvider {}
