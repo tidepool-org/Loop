@@ -137,7 +137,6 @@ final class DeviceDataManager {
 
             rawPumpManager = pumpManager?.rawValue
             UserDefaults.appGroup?.clearLegacyPumpManagerRawValue()
-
         }
     }
 
@@ -474,11 +473,18 @@ final class DeviceDataManager {
         }
     }
 
-    struct UnknownPumpManagerIdentifierError: Error {}
-
     func setupPumpManagerUI(withIdentifier identifier: String, initialSettings settings: PumpManagerSetupSettings, prefersToSkipUserInteraction: Bool = false) -> Swift.Result<SetupUIResult<PumpManagerViewController, PumpManagerUI>, Error> {
         guard let pumpManagerUIType = pumpManagerTypeByIdentifier(identifier) else {
-            return .failure(UnknownPumpManagerIdentifierError())
+            return .failure(SetupPumpManagerError(type: .unknownPumpManager))
+        }
+        
+        let hasUnsupportedBasalRate = !settings.basalSchedule.items.filter { repeatingScheduleValue in
+            !pumpManagerUIType.onboardingSupportedBasalRates.contains(repeatingScheduleValue.value)
+        }
+        .isEmpty
+        
+        guard !hasUnsupportedBasalRate else {
+            return .failure(SetupPumpManagerError(type: .unsupportedBasalRate))
         }
 
         let result = pumpManagerUIType.setupViewController(initialSettings: settings, bluetoothProvider: bluetoothProvider, colorPalette: .default, allowDebugFeatures: FeatureFlags.allowDebugFeatures, prefersToSkipUserInteraction: prefersToSkipUserInteraction, allowedInsulinTypes: allowedInsulinTypes)

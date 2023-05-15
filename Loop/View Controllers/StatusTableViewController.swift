@@ -2109,7 +2109,22 @@ extension StatusTableViewController {
                                                 basalSchedule: basalSchedule)
         switch deviceManager.setupPumpManagerUI(withIdentifier: identifier, initialSettings: settings) {
         case .failure(let error):
-            log.error("Failure to setup pump manager with identifier '%{public}@': %{public}@", identifier, String(describing: error))
+            guard let setupPumpManagerError = error as? SetupPumpManagerError else {
+                log.error("Failure to setup pump manager with identifier '%{public}@': %{public}@", identifier, String(describing: error))
+                return
+            }
+            
+            if setupPumpManagerError.type == .unknownPumpManager {
+                log.error("Failure to setup pump manager with identifier '%{public}@': %{public}@", identifier, String(describing: error))
+            } else if setupPumpManagerError.type == .unsupportedBasalRate {
+                let hostingController = DismissibleHostingController(
+                    rootView: basalRateScheduleEditor(basalSchedule, for: identifier)
+                        .environmentObject(deviceManager.displayGlucoseUnitObservable)
+                        .environment(\.appName, Bundle.main.bundleDisplayName)
+                        .navigationTitle("Confirm Basal Schedule"),
+                    isModalInPresentation: false)
+                present(hostingController, animated: true)
+            }
         case .success(let success):
             switch success {
             case .userInteractionRequired(var setupViewController):
@@ -2121,6 +2136,38 @@ extension StatusTableViewController {
             }
         }
     }
+    
+    fileprivate func basalRateScheduleEditor(_ basalSchedule: BasalRateSchedule, for pumpManagerIdentifier: String) -> BasalRateScheduleEditor {
+        let pumpManagerType = deviceManager.pumpManagerTypeByIdentifier(pumpManagerIdentifier)!
+        var therapySettings = deviceManager.loopManager.therapySettings
+        return BasalRateScheduleEditor(schedule: basalSchedule,
+                                       supportedBasalRates: pumpManagerType.onboardingSupportedBasalRates,
+                                       maximumBasalRate: therapySettings.maximumBasalRatePerHour,
+                                       maximumScheduleEntryCount: pumpManagerType.onboardingMaximumBasalScheduleEntryCount,
+                                       syncBasalRateSchedule: { items, completion in
+            guard let basalRateSchedule = BasalRateSchedule(dailyItems: items) else {
+                completion(.failure(SetupPumpManagerError(type: .unsupportedBasalRate)))
+                return
+            }
+            completion(.success(basalRateSchedule))
+        },
+                                       onSave: { [weak self] basalRateSchedule in
+            therapySettings.basalRateSchedule = basalRateSchedule
+            self?.deviceManager.saveCompletion(therapySettings: therapySettings)
+            self?.topmostViewController.dismiss(animated: true) {
+                self?.addPumpManager(withIdentifier: pumpManagerIdentifier)
+            }
+        })
+    }
+}
+
+struct SetupPumpManagerError: Error {
+    enum SetupPumpManagerErrorType {
+        case unknownPumpManager
+        case unsupportedBasalRate
+    }
+    
+    let type: SetupPumpManagerErrorType
 }
 
 extension StatusTableViewController: BluetoothObserver {
