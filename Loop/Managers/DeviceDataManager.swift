@@ -473,32 +473,27 @@ final class DeviceDataManager {
         }
     }
 
+    struct UnknownPumpManagerIdentifierError: Error {}
+
     func setupPumpManagerUI(withIdentifier identifier: String, initialSettings settings: PumpManagerSetupSettings, prefersToSkipUserInteraction: Bool = false) -> Swift.Result<SetupUIResult<PumpManagerViewController, PumpManagerUI>, Error> {
         guard let pumpManagerUIType = pumpManagerTypeByIdentifier(identifier) else {
-            return .failure(SetupPumpManagerError(type: .unknownPumpManager))
-        }
-        
-        let hasUnsupportedBasalRate = !settings.basalSchedule.items.filter { repeatingScheduleValue in
-            !pumpManagerUIType.onboardingSupportedBasalRates.contains(repeatingScheduleValue.value)
-        }
-        .isEmpty
-        
-        guard !hasUnsupportedBasalRate else {
-            return .failure(SetupPumpManagerError(type: .unsupportedBasalRate))
+            return .failure(UnknownPumpManagerIdentifierError())
         }
 
-        let result = pumpManagerUIType.setupViewController(initialSettings: settings, bluetoothProvider: bluetoothProvider, colorPalette: .default, allowDebugFeatures: FeatureFlags.allowDebugFeatures, prefersToSkipUserInteraction: prefersToSkipUserInteraction, allowedInsulinTypes: allowedInsulinTypes) { [weak self] basalRateSchedule in
-            guard let self = self else { return }
-            var therapySettings = self.loopManager.therapySettings
-            therapySettings.basalRateSchedule = basalRateSchedule
-            self.saveCompletion(therapySettings: therapySettings)
-        }
+        let result = pumpManagerUIType.setupViewController(initialSettings: settings, bluetoothProvider: bluetoothProvider, colorPalette: .default, allowDebugFeatures: FeatureFlags.allowDebugFeatures, prefersToSkipUserInteraction: prefersToSkipUserInteraction, allowedInsulinTypes: allowedInsulinTypes)
+        
         if case .createdAndOnboarded(let pumpManagerUI) = result {
             pumpManagerOnboarding(didCreatePumpManager: pumpManagerUI)
             pumpManagerOnboarding(didOnboardPumpManager: pumpManagerUI)
         }
 
         return .success(result)
+    }
+    
+    public func saveUpdatedBasalRateSchedule(_ basalRateSchedule: BasalRateSchedule) {
+        var therapySettings = self.loopManager.therapySettings
+        therapySettings.basalRateSchedule = basalRateSchedule
+        self.saveCompletion(therapySettings: therapySettings)
     }
 
     public func pumpManagerTypeByIdentifier(_ identifier: String) -> PumpManagerUI.Type? {
@@ -1022,6 +1017,10 @@ extension DeviceDataManager: PumpManagerDelegate {
         log.default("PumpManager:%{public}@ did update state", String(describing: type(of: pumpManager)))
 
         rawPumpManager = pumpManager.rawValue
+    }
+    
+    func pumpManager(_ pumpManager: PumpManager, didUpdateBasalRateSchedule basalRateSchedule: BasalRateSchedule) {
+        saveUpdatedBasalRateSchedule(basalRateSchedule)
     }
 
     func pumpManagerBLEHeartbeatDidFire(_ pumpManager: PumpManager) {
