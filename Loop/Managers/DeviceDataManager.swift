@@ -487,7 +487,12 @@ final class DeviceDataManager {
             return .failure(SetupPumpManagerError(type: .unsupportedBasalRate))
         }
 
-        let result = pumpManagerUIType.setupViewController(initialSettings: settings, bluetoothProvider: bluetoothProvider, colorPalette: .default, allowDebugFeatures: FeatureFlags.allowDebugFeatures, prefersToSkipUserInteraction: prefersToSkipUserInteraction, allowedInsulinTypes: allowedInsulinTypes)
+        let result = pumpManagerUIType.setupViewController(initialSettings: settings, bluetoothProvider: bluetoothProvider, colorPalette: .default, allowDebugFeatures: FeatureFlags.allowDebugFeatures, prefersToSkipUserInteraction: prefersToSkipUserInteraction, allowedInsulinTypes: allowedInsulinTypes) { [weak self] basalRateSchedule in
+            guard let self = self else { return }
+            var therapySettings = self.loopManager.therapySettings
+            therapySettings.basalRateSchedule = basalRateSchedule
+            self.saveCompletion(therapySettings: therapySettings)
+        }
         if case .createdAndOnboarded(let pumpManagerUI) = result {
             pumpManagerOnboarding(didCreatePumpManager: pumpManagerUI)
             pumpManagerOnboarding(didOnboardPumpManager: pumpManagerUI)
