@@ -82,6 +82,7 @@ class LoopAppManager: NSObject {
     private var loggingServicesManager = LoggingServicesManager()
     private var analyticsServicesManager = AnalyticsServicesManager()
     private(set) var testingScenariosManager: TestingScenariosManager?
+    private var resetLoopManager: ResetLoopManager!
 
     private var overrideHistory = UserDefaults.appGroup?.overrideHistory ?? TemporaryScheduleOverrideHistory.init()
 
@@ -143,6 +144,8 @@ class LoopAppManager: NSObject {
         if state == .launchHomeScreen {
             launchHomeScreen()
         }
+        
+        askUserToConfirmLoopReset()
     }
 
     private func checkProtectedDataAvailable() {
@@ -164,6 +167,8 @@ class LoopAppManager: NSObject {
         windowProvider?.window?.tintColor = .loopAccent
         OrientationLock.deviceOrientationController = self
         UNUserNotificationCenter.current().delegate = self
+
+        resetLoopManager = ResetLoopManager(delegate: self)
 
         let localCacheDuration = Bundle.main.localCacheDuration
         let cacheStore = PersistenceController.controllerInAppGroupDirectory()
@@ -302,8 +307,6 @@ class LoopAppManager: NSObject {
         self.state = state.next
 
         alertManager.playbackAlertsFromPersistence()
-        
-        askUserToConfirmLoopReset()
     }
 
     // MARK: - Life Cycle
@@ -487,7 +490,9 @@ class LoopAppManager: NSObject {
 
 extension LoopAppManager: AlertPresenter {
     func present(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (() -> Void)?) {
-        rootViewController?.topmostViewController.present(viewControllerToPresent, animated: animated, completion: completion)
+        DispatchQueue.main.async {
+            self.rootViewController?.topmostViewController.present(viewControllerToPresent, animated: animated, completion: completion)
+        }
     }
 
     func dismissTopMost(animated: Bool, completion: (() -> Void)?) {
@@ -638,3 +643,33 @@ extension LoopAppManager: TemporaryScheduleOverrideHistoryDelegate {
     }
 }
 
+extension LoopAppManager: ResetLoopManagerDelegate {
+    func askUserToConfirmLoopReset() {
+        resetLoopManager.askUserToConfirmLoopReset()
+    }
+    
+    func presentConfirmationAlert(confirmAction: @escaping (PumpManager?, @escaping () -> Void) -> Void, cancelAction: @escaping () -> Void) {
+        alertManager.presentLoopResetConfirmationAlert(
+            confirmAction: { [weak self] completion in
+                confirmAction(self?.deviceDataManager.pumpManager, completion)
+            },
+            cancelAction: cancelAction
+        )
+    }
+    
+    func loopWillReset() {
+        deviceDataManager.pluginManager.availableSupports.forEach { supportUI in
+            supportUI.loopWillReset()
+        }
+    }
+    
+    func loopDidReset() {
+        deviceDataManager.pluginManager.availableSupports.forEach { supportUI in
+            supportUI.loopDidReset()
+        }
+    }
+    
+    func presentCouldNotResetLoopAlert(error: Error) {
+        alertManager.presentCouldNotResetLoopAlert(error: error)
+    }
+}
