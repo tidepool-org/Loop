@@ -15,9 +15,14 @@ class BuildDetails {
     let dict: [String: Any]
 
     init() {
-        let url = Bundle.main.url(forResource: "BuildDetails", withExtension: ".plist")!
-        let data = try! Data(contentsOf: url)
-        dict = try! PropertyListSerialization.propertyList(from: data, format: nil) as! [String: Any]
+        guard let url = Bundle.main.url(forResource: "BuildDetails", withExtension: ".plist"),
+           let data = try? Data(contentsOf: url),
+           let parsed = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else
+        {
+            dict = [:]
+            return
+        }
+        dict = parsed
     }
 
     var buildDateString: String? {
