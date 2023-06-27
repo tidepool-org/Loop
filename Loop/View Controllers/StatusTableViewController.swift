@@ -116,6 +116,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     self?.reloadData(animated: true)
                 }
             },
+            notificationCenter.addObserver(forName: .init("showScenarioSelector"), object: nil, queue: nil, using: { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.presentScenarioSelector()
+                }
+            })
         ]
 
         automaticDosingStatus.$automaticDosingEnabled
@@ -1860,7 +1865,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         let vc = TestingScenariosTableViewController(scenariosManager: testingScenariosManager)
-        present(UINavigationController(rootViewController: vc), animated: true)
+        topmostViewController.present(UINavigationController(rootViewController: vc), animated: true)
     }
 
     private func addScenarioStepGestureRecognizers() {
