@@ -411,7 +411,7 @@ extension OnboardingManager: PumpManagerProvider {
 
 extension OnboardingManager: SecurityProvider {
     func security(withIdentifier identifier: String) -> Security? {
-        securitiesManager.setupSecurity(withIdentifier: identifier) }
+        securitiesManager.security(withIdentifier: identifier) }
 }
 
 // MARK: - ServiceProvider
