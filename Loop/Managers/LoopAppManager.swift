@@ -255,7 +255,7 @@ class LoopAppManager: NSObject {
         }
 
         analyticsServicesManager.identify("Dosing Strategy", value: settingsManager.loopSettings.automaticDosingStrategy.analyticsValue)
-        let serviceNames = deviceDataManager.servicesManager.activeServices.map { $0.serviceIdentifier }
+        let serviceNames = deviceDataManager.servicesManager.activeServices.map { $0.pluginIdentifier }
         analyticsServicesManager.identify("Services", array: serviceNames)
 
         if FeatureFlags.scenariosEnabled {

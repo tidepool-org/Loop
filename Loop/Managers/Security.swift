@@ -13,6 +13,6 @@ extension Security {
     typealias RawValue = [String: Any]
 
     var rawValue: RawValue {
-        return ["securityIdentifier": identifier]
+        return ["securityIdentifier": pluginIdentifier]
     }
 }

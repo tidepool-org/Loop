@@ -133,7 +133,7 @@ class OnboardingManager {
 
             let onboarding = onboardingType.createOnboarding()
             guard !onboarding.isOnboarded else {
-                completedOnboardingIdentifiers.append(onboarding.onboardingIdentifier)
+                completedOnboardingIdentifiers.append(onboarding.pluginIdentifier)
                 continue
             }
 
@@ -166,7 +166,7 @@ class OnboardingManager {
         dispatchPrecondition(condition: .onQueue(.main))
 
         if let activeOnboarding = self.activeOnboarding, !isSuspended {
-            completedOnboardingIdentifiers.append(activeOnboarding.onboardingIdentifier)
+            completedOnboardingIdentifiers.append(activeOnboarding.pluginIdentifier)
             self.activeOnboarding = nil
         }
         continueOnboarding()
@@ -249,25 +249,25 @@ class OnboardingManager {
 
 extension OnboardingManager: OnboardingDelegate {
     func onboardingDidUpdateState(_ onboarding: OnboardingUI) {
-        guard onboarding.onboardingIdentifier == activeOnboarding?.onboardingIdentifier else { return }
+        guard onboarding.pluginIdentifier == activeOnboarding?.pluginIdentifier else { return }
         userDefaults.onboardingManagerActiveOnboardingRawValue = onboarding.rawValue
     }
 
     func onboarding(_ onboarding: OnboardingUI, hasNewTherapySettings therapySettings: TherapySettings) {
-        guard onboarding.onboardingIdentifier == activeOnboarding?.onboardingIdentifier else { return }
+        guard onboarding.pluginIdentifier == activeOnboarding?.pluginIdentifier else { return }
         loopDataManager.therapySettings = therapySettings
     }
 
     func onboarding(_ onboarding: OnboardingUI, hasNewDosingEnabled dosingEnabled: Bool) {
-        guard onboarding.onboardingIdentifier == activeOnboarding?.onboardingIdentifier else { return }
+        guard onboarding.pluginIdentifier == activeOnboarding?.pluginIdentifier else { return }
         loopDataManager.mutateSettings { settings in
             settings.dosingEnabled = dosingEnabled
         }
     }
 
     func onboardingDidSuspend(_ onboarding: OnboardingUI) {
-        log.debug("OnboardingUI %@ did suspend", onboarding.onboardingIdentifier)
-        guard onboarding.onboardingIdentifier == activeOnboarding?.onboardingIdentifier else { return }
+        log.debug("OnboardingUI %@ did suspend", onboarding.pluginIdentifier)
+        guard onboarding.pluginIdentifier == activeOnboarding?.pluginIdentifier else { return }
         self.isSuspended = true
     }
 }
@@ -281,7 +281,7 @@ extension OnboardingManager: CompletionDelegate {
                 return
             }
 
-            self.log.debug("completionNotifyingDidComplete during activeOnboarding", activeOnboarding.onboardingIdentifier)
+            self.log.debug("completionNotifyingDidComplete during activeOnboarding", activeOnboarding.pluginIdentifier)
 
             // The `completionNotifyingDidComplete` callback can be called by an onboarding plugin to signal that the user is done with
             // the onboarding UI, like when pausing, so the onboarding UI can be dismissed. This doesn't necessarily mean that the
@@ -351,7 +351,7 @@ extension OnboardingManager: CGMManagerProvider {
         guard let cgmManager = deviceDataManager.cgmManager else {
             return deviceDataManager.setupCGMManager(withIdentifier: identifier, prefersToSkipUserInteraction: prefersToSkipUserInteraction)
         }
-        guard cgmManager.identifier == identifier else {
+        guard cgmManager.pluginIdentifier == identifier else {
             return .failure(OnboardingError.invalidState)
         }
 
@@ -395,7 +395,7 @@ extension OnboardingManager: PumpManagerProvider {
         guard let pumpManager = deviceDataManager.pumpManager else {
             return deviceDataManager.setupPumpManager(withIdentifier: identifier, initialSettings: settings, prefersToSkipUserInteraction: prefersToSkipUserInteraction)
         }
-        guard pumpManager.identifier == identifier else {
+        guard pumpManager.pluginIdentifier == identifier else {
             return .failure(OnboardingError.invalidState)
         }
 
@@ -422,7 +422,7 @@ extension OnboardingManager: ServiceProvider {
     var availableServices: [ServiceDescriptor] { servicesManager.availableServices }
 
     func onboardService(withIdentifier identifier: String) -> Swift.Result<OnboardingResult<ServiceViewController, Service>, Error> {
-        guard let service = activeServices.first(where: { $0.serviceIdentifier == identifier }) else {
+        guard let service = activeServices.first(where: { $0.pluginIdentifier == identifier }) else {
             return servicesManager.setupService(withIdentifier: identifier)
         }
 
@@ -465,7 +465,7 @@ fileprivate extension OnboardingUI {
 
     var rawValue: RawValue {
         return [
-            "onboardingIdentifier": onboardingIdentifier,
+            "onboardingIdentifier": pluginIdentifier,
             "state": rawState
         ]
     }

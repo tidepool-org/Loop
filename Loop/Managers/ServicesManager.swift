@@ -153,7 +153,7 @@ class ServicesManager {
                 analyticsServicesManager.removeService(analyticsService)
             }
 
-            services.removeAll { $0.serviceIdentifier == service.serviceIdentifier }
+            services.removeAll { $0.pluginIdentifier == service.pluginIdentifier }
 
             service.serviceDelegate = nil
 
@@ -262,7 +262,7 @@ extension ServicesManager: ServiceDelegate {
     }
 
     func serviceWantsDeletion(_ service: Service) {
-        log.default("Service with identifier '%{public}@' deleted", service.serviceIdentifier)
+        log.default("Service with identifier '%{public}@' deleted", service.pluginIdentifier)
         removeActiveService(service)
     }
     
@@ -380,13 +380,13 @@ extension ServicesManager: AlertIssuer {
 
 extension ServicesManager: ServiceOnboardingDelegate {
     func serviceOnboarding(didCreateService service: Service) {
-        log.default("Service with identifier '%{public}@' created", service.serviceIdentifier)
+        log.default("Service with identifier '%{public}@' created", service.pluginIdentifier)
         addActiveService(service)
     }
 
     func serviceOnboarding(didOnboardService service: Service) {
         precondition(service.isOnboarded)
-        log.default("Service with identifier '%{public}@' onboarded", service.serviceIdentifier)
+        log.default("Service with identifier '%{public}@' onboarded", service.pluginIdentifier)
     }
 }
 

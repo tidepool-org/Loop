@@ -38,7 +38,7 @@ class SecuritiesManager: SecurityProvider {
 
     func security(withIdentifier identifier: String) -> Security? {
         for security in securities {
-            if security.identifier == identifier {
+            if security.pluginIdentifier == identifier {
                 return security
             }
         }
@@ -74,7 +74,7 @@ class SecuritiesManager: SecurityProvider {
 
     public func removeActiveSecurity(_ security: Security) {
         securitiesLock.withLock {
-            securities.removeAll { $0.identifier == security.identifier }
+            securities.removeAll { $0.pluginIdentifier == security.pluginIdentifier }
             saveState()
         }
     }

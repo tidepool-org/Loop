@@ -13,11 +13,11 @@ import MockKit
 let staticServices: [Service.Type] = [MockService.self]
 
 let staticServicesByIdentifier: [String: Service.Type] = staticServices.reduce(into: [:]) { (map, Type) in
-    map[Type.serviceIdentifier] = Type
+    map[Type.pluginIdentifier] = Type
 }
 
 let availableStaticServices = staticServices.map { (Type) -> ServiceDescriptor in
-    return ServiceDescriptor(identifier: Type.serviceIdentifier, localizedTitle: Type.localizedTitle)
+    return ServiceDescriptor(identifier: Type.pluginIdentifier, localizedTitle: Type.localizedTitle)
 }
 
 func ServiceFromRawValue(_ rawValue: [String: Any]) -> Service? {
@@ -37,7 +37,7 @@ extension Service {
 
     var rawValue: RawValue {
         return [
-            "serviceIdentifier": serviceIdentifier,
+            "serviceIdentifier": pluginIdentifier,
             "state": rawState
         ]
     }
