@@ -12,13 +12,13 @@ import MockKit
 import MockKitUI
 
 let staticPumpManagersByIdentifier: [String: PumpManagerUI.Type] = [
-    MockPumpManager.managerIdentifier : MockPumpManager.self
+    MockPumpManager.identifier : MockPumpManager.self
 ]
 
 var availableStaticPumpManagers: [PumpManagerDescriptor] {
     if FeatureFlags.allowSimulators {
         return [
-            PumpManagerDescriptor(identifier: MockPumpManager.managerIdentifier, localizedTitle: MockPumpManager.localizedTitle)
+            PumpManagerDescriptor(identifier: MockPumpManager.identifier, localizedTitle: MockPumpManager.localizedTitle)
         ]
     } else {
         return []
@@ -31,7 +31,7 @@ extension PumpManager {
     
     var rawValue: RawValue {
         return [
-            "managerIdentifier": self.managerIdentifier,
+            "managerIdentifier": self.identifier,
             "state": self.rawState
         ]
     }

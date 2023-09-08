@@ -351,7 +351,7 @@ extension OnboardingManager: CGMManagerProvider {
         guard let cgmManager = deviceDataManager.cgmManager else {
             return deviceDataManager.setupCGMManager(withIdentifier: identifier, prefersToSkipUserInteraction: prefersToSkipUserInteraction)
         }
-        guard cgmManager.managerIdentifier == identifier else {
+        guard cgmManager.identifier == identifier else {
             return .failure(OnboardingError.invalidState)
         }
 
@@ -395,7 +395,7 @@ extension OnboardingManager: PumpManagerProvider {
         guard let pumpManager = deviceDataManager.pumpManager else {
             return deviceDataManager.setupPumpManager(withIdentifier: identifier, initialSettings: settings, prefersToSkipUserInteraction: prefersToSkipUserInteraction)
         }
-        guard pumpManager.managerIdentifier == identifier else {
+        guard pumpManager.identifier == identifier else {
             return .failure(OnboardingError.invalidState)
         }
 

@@ -46,8 +46,8 @@ class PluginManager {
 
                     if let principalClass = bundle.principalClass as? NSObject.Type {
 
-                        if let pluginProvider = principalClass.init() as? PumpManagerUIPluginProvider {
-                            return pluginProvider.pumpManagerType
+                        if let plugin = principalClass.init() as? PumpManagerUIPlugin {
+                            return plugin.pumpManagerType
                         } else {
                             fatalError("PrincipalClass does not conform to PumpManagerUIPlugin")
                         }
@@ -82,8 +82,8 @@ class PluginManager {
                     
                     if let principalClass = bundle.principalClass as? NSObject.Type {
                         
-                        if let pluginProvider = principalClass.init() as? CGMManagerUIPluginProvider {
-                            return pluginProvider.cgmManagerType
+                        if let plugin = principalClass.init() as? CGMManagerUIPlugin {
+                            return plugin.cgmManagerType
                         } else {
                             fatalError("PrincipalClass does not conform to CGMManagerUIPlugin")
                         }
@@ -118,8 +118,8 @@ class PluginManager {
 
                     if let principalClass = bundle.principalClass as? NSObject.Type {
 
-                        if let pluginProvider = principalClass.init() as? ServiceUIPluginProvider {
-                            return pluginProvider.serviceType
+                        if let plugin = principalClass.init() as? ServiceUIPlugin {
+                            return plugin.serviceType
                         } else {
                             fatalError("PrincipalClass does not conform to ServiceUIPlugin")
                         }
@@ -154,8 +154,8 @@ class PluginManager {
 
                     if let principalClass = bundle.principalClass as? NSObject.Type {
 
-                        if let pluginProvider = principalClass.init() as? SecurityPluginProvider {
-                            return pluginProvider.security
+                        if let plugin = principalClass.init() as? SecurityPlugin {
+                            return plugin.security
                         } else {
                             fatalError("PrincipalClass does not conform to SecurityPlugin")
                         }
@@ -185,8 +185,8 @@ class PluginManager {
 
                     if let principalClass = bundle.principalClass as? NSObject.Type {
 
-                        if let pluginProvider = principalClass.init() as? OnboardingUIPluginProvider {
-                            return pluginProvider.onboardingType
+                        if let plugin = principalClass.init() as? OnboardingUIPlugin {
+                            return plugin.onboardingType
                         } else {
                             fatalError("PrincipalClass does not conform to OnboardingUIPlugin")
                         }
@@ -216,8 +216,8 @@ class PluginManager {
 
                     if let principalClass = bundle.principalClass as? NSObject.Type {
 
-                        if let pluginProvider = principalClass.init() as? SupportUIPluginProvider {
-                            return type(of: pluginProvider.support)
+                        if let plugin = principalClass.init() as? SupportUIPlugin {
+                            return type(of: plugin.support)
                         } else {
                             fatalError("PrincipalClass does not conform to SupportUIPlugin")
                         }

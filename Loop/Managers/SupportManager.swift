@@ -343,10 +343,10 @@ extension Bundle {
         try loadAndReturnError()
 
         guard let principalClass = principalClass as? NSObject.Type,
-              let supportUIPluginProvider = principalClass.init() as? SupportUIPluginProvider else {
+              let supportUIPlugin = principalClass.init() as? SupportUIPlugin else {
             return nil
         }
 
-        return supportUIPluginProvider.support
+        return supportUIPlugin.support
     }
 }
