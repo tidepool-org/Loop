@@ -54,7 +54,7 @@ public class ServicesViewModel: ObservableObject {
 extension ServicesViewModel {
     fileprivate class FakeService1: Service {
         static var localizedTitle: String = "Service 1"
-        static var serviceIdentifier: String = "FakeService1"
+        static var identifier: String = "FakeService1"
         var serviceDelegate: ServiceDelegate?
         var rawState: RawStateValue = [:]
         required init() {}
@@ -64,7 +64,7 @@ extension ServicesViewModel {
     }
     fileprivate class FakeService2: Service {
         static var localizedTitle: String = "Service 2"
-        static var serviceIdentifier: String = "FakeService2"
+        static var identifier: String = "FakeService2"
         var serviceDelegate: ServiceDelegate?
         var rawState: RawStateValue = [:]
         required init() {}
