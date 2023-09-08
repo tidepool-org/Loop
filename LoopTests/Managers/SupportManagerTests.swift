@@ -34,7 +34,7 @@ class SupportManagerTests: XCTestCase {
         weak var delegate: SupportUIDelegate?
     }
     class MockSupport: Mixin, SupportUI {
-        static var identifier: String { "SupportManagerTestsMockSupport" }
+        static var pluginIdentifier: String { "SupportManagerTestsMockSupport" }
         override init() { super.init() }
         required init?(rawState: RawStateValue) { super.init() }
         var rawState: RawStateValue = [:]
@@ -46,7 +46,7 @@ class SupportManagerTests: XCTestCase {
     }
 
     class AnotherMockSupport: Mixin, SupportUI {
-        static var identifier: String { "SupportManagerTestsAnotherMockSupport" }
+        static var pluginIdentifier: String { "SupportManagerTestsAnotherMockSupport" }
         override init() { super.init() }
         required init?(rawState: RawStateValue) { super.init() }
         var rawState: RawStateValue = [:]
