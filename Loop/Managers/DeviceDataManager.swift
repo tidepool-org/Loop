@@ -205,7 +205,7 @@ final class DeviceDataManager {
                sleepDataAuthorizationRequired
     }
 
-    private(set) var securitiesManager: SecuritiesManager!
+    private(set) var statefulPluginManager: StatefulPluginManager!
     
     // MARK: Services
 
@@ -425,8 +425,8 @@ final class DeviceDataManager {
             servicesManagerDosingDelegate: self
         )
         
-        securitiesManager = SecuritiesManager(pluginManager: pluginManager, servicesManager: servicesManager)
-
+        statefulPluginManager = StatefulPluginManager(pluginManager: pluginManager, servicesManager: servicesManager)
+        
         let criticalEventLogs: [CriticalEventLog] = [settingsManager.settingsStore, glucoseStore, carbStore, dosingDecisionStore, doseStore, deviceLog, alertManager.alertStore]
         criticalEventLogExportManager = CriticalEventLogExportManager(logs: criticalEventLogs,
                                                                       directory: FileManager.default.exportsDirectoryURL,
@@ -702,7 +702,7 @@ private extension DeviceDataManager {
 
         cgmManager?.cgmManagerDelegate = self
         cgmManager?.delegateQueue = queue
-        cgmManager?.initializationComplete(for: allActivePlugins)
+        reportPluginInitializationComplete()
 
         glucoseStore.managedDataInterval = cgmManager?.managedDataInterval
         glucoseStore.healthKitStorageDelay = cgmManager.map{ type(of: $0).healthKitStorageDelay } ?? 0
@@ -728,7 +728,7 @@ private extension DeviceDataManager {
 
         pumpManager?.pumpManagerDelegate = self
         pumpManager?.delegateQueue = queue
-        pumpManager?.initializationComplete(for: allActivePlugins)
+        reportPluginInitializationComplete()
 
         doseStore.device = pumpManager?.status.device
         pumpManagerHUDProvider = pumpManager?.hudProvider(bluetoothProvider: bluetoothProvider, colorPalette: .default, allowedInsulinTypes: allowedInsulinTypes)
@@ -754,13 +754,54 @@ private extension DeviceDataManager {
             self.lastError = (date: Date(), error: error)
         }
     }
+}
+
+// MARK: - Plugins
+extension DeviceDataManager {
+    func reportPluginInitializationComplete() {
+        let allActivePlugins = self.allActivePlugins
+        
+        for plugin in servicesManager.activeServices {
+            plugin.initializationComplete(for: allActivePlugins)
+        }
+        
+        for plugin in statefulPluginManager.activeStatefulPlugins {
+            plugin.initializationComplete(for: allActivePlugins)
+        }
+        
+        for plugin in availableSupports {
+            plugin.initializationComplete(for: allActivePlugins)
+        }
+        
+        cgmManager?.initializationComplete(for: allActivePlugins)
+        pumpManager?.initializationComplete(for: allActivePlugins)
+    }
     
     var allActivePlugins: [Pluggable] {
         var allActivePlugins: [Pluggable] = servicesManager.activeServices
-        allActivePlugins.append(contentsOf: securitiesManager.activeSecurities)
-        allActivePlugins.append(contentsOf: availableSupports)
-        if let onboardingManager = onboardingManager {
-            allActivePlugins.append(contentsOf: onboardingManager.availableSupports)
+        
+        for plugin in statefulPluginManager.activeStatefulPlugins {
+            if !allActivePlugins.contains(where: { $0.pluginIdentifier == plugin.pluginIdentifier }) {
+                allActivePlugins.append(plugin)
+            }
+        }
+        
+        for plugin in availableSupports {
+            if !allActivePlugins.contains(where: { $0.pluginIdentifier == plugin.pluginIdentifier }) {
+                allActivePlugins.append(plugin)
+            }
+        }
+        
+        if let cgmManager = cgmManager {
+            if !allActivePlugins.contains(where: { $0.pluginIdentifier == cgmManager.pluginIdentifier }) {
+                allActivePlugins.append(cgmManager)
+            }
+        }
+        
+        if let pumpManager = pumpManager {
+            if !allActivePlugins.contains(where: { $0.pluginIdentifier == pumpManager.pluginIdentifier }) {
+                allActivePlugins.append(pumpManager)
+            }
         }
         
         return allActivePlugins

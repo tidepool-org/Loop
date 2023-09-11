@@ -15,7 +15,7 @@ class OnboardingManager {
     private let pluginManager: PluginManager
     private let bluetoothProvider: BluetoothProvider
     private let deviceDataManager: DeviceDataManager
-    private let securitiesManager: SecuritiesManager
+    private let statefulPluginManager: StatefulPluginManager
     private let servicesManager: ServicesManager
     private let loopDataManager: LoopDataManager
     private let supportManager: SupportManager
@@ -43,7 +43,7 @@ class OnboardingManager {
     init(pluginManager: PluginManager,
          bluetoothProvider: BluetoothProvider,
          deviceDataManager: DeviceDataManager,
-         securitiesManager: SecuritiesManager,
+         statefulPluginManager: StatefulPluginManager,
          servicesManager: ServicesManager,
          loopDataManager: LoopDataManager,
          supportManager: SupportManager,
@@ -53,7 +53,7 @@ class OnboardingManager {
         self.pluginManager = pluginManager
         self.bluetoothProvider = bluetoothProvider
         self.deviceDataManager = deviceDataManager
-        self.securitiesManager = securitiesManager
+        self.statefulPluginManager = statefulPluginManager
         self.servicesManager = servicesManager
         self.loopDataManager = loopDataManager
         self.supportManager = supportManager
@@ -407,11 +407,11 @@ extension OnboardingManager: PumpManagerProvider {
     }
 }
 
-// MARK: - SecurityProvider
+// MARK: - StatefulPluggableProvider
 
-extension OnboardingManager: SecurityProvider {
-    func security(withIdentifier identifier: String) -> Security? {
-        securitiesManager.security(withIdentifier: identifier) }
+extension OnboardingManager: StatefulPluggableProvider {
+    func statefulPlugin(withIdentifier identifier: String) -> StatefulPluggable? {
+        statefulPluginManager.statefulPlugin(withIdentifier: identifier) }
 }
 
 // MARK: - ServiceProvider

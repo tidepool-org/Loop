@@ -1,5 +1,5 @@
 //
-//  SecuritiesManager.swift
+//  StatefulPluginManager.swift
 //  Loop
 //
 //  Created by Nathaniel Hamming on 2023-09-06.
@@ -11,18 +11,18 @@ import LoopKitUI
 import LoopCore
 import Combine
 
-class SecuritiesManager: SecurityProvider {
+class StatefulPluginManager: StatefulPluggableProvider {
 
     private let pluginManager: PluginManager
     
     private let servicesManager: ServicesManager
     
-    private var securities = [Security]()
+    private var statefulPlugins = [StatefulPluggable]()
 
-    private let securitiesLock = UnfairLock()
+    private let statefulPluginLock = UnfairLock()
 
-    @PersistedProperty(key: "Securities")
-    var rawSecurities: [Security.RawValue]?
+    @PersistedProperty(key: "StatefulPlugins")
+    var rawStatefulPlugins: [StatefulPluggable.RawStateValue]?
     
     init(pluginManager: PluginManager,
          servicesManager: ServicesManager)
@@ -32,64 +32,94 @@ class SecuritiesManager: SecurityProvider {
         restoreState()
     }
 
-    public var availableSecurityIdentifiers: [String] {
-        return pluginManager.availableSecurityIdentifiers
+    public var availableStatefulPluginIdentifiers: [String] {
+        return pluginManager.availableStatefulPluginIdentifiers
     }
 
-    func security(withIdentifier identifier: String) -> Security? {
-        for security in securities {
-            if security.pluginIdentifier == identifier {
-                return security
+    func statefulPlugin(withIdentifier identifier: String) -> StatefulPluggable? {
+        for plugin in statefulPlugins {
+            if plugin.pluginIdentifier == identifier {
+                return plugin
             }
         }
         
-        return setupSecurity(withIdentifier: identifier)
+        return setupStatefulPlugin(withIdentifier: identifier)
     }
     
-    func setupSecurity(withIdentifier identifier: String) -> Security? {
-        guard let security = pluginManager.getSecurityByIdentifier(identifier) else { return nil }
-        security.initializationComplete(for: servicesManager.activeServices)
-        addActiveSecurity(security)
-        return security
+    func statefulPluginType(withIdentifier identifier: String) -> StatefulPluggable.Type? {
+        pluginManager.getStatefulPluginTypeByIdentifier(identifier)
     }
-    
-    private func securityFromRawValue(_ rawValue: Security.RawValue) -> Security? {
-        guard let identifier = rawValue["securityIdentifier"] as? String else {
+
+    func setupStatefulPlugin(withIdentifier identifier: String) -> StatefulPluggable? {
+        guard let statefulPluinType = pluginManager.getStatefulPluginTypeByIdentifier(identifier) else { return nil }
+        
+        // init without raw value
+        let statefulPlugin = statefulPluinType.init(rawState: [:])
+        statefulPlugin?.initializationComplete(for: servicesManager.activeServices)
+        addActiveStatefulPlugin(statefulPlugin)
+        
+        return statefulPlugin
+    }
+        
+    private func statefulPluginTypeFromRawValue(_ rawValue: StatefulPluggable.RawStateValue) -> StatefulPluggable.Type? {
+        guard let identifier = rawValue["statefulPluginIdentifier"] as? String else {
             return nil
         }
 
-        return setupSecurity(withIdentifier: identifier)
+        return statefulPluginType(withIdentifier: identifier)
     }
     
-    public var activeSecurities: [Security] {
-        return securitiesLock.withLock { securities }
+    private func statefulPluginFromRawValue(_ rawValue: StatefulPluggable.RawStateValue) -> StatefulPluggable? {
+        guard let statefulPluginType = statefulPluginTypeFromRawValue(rawValue),
+            let rawState = rawValue["state"] as? StatefulPluggable.RawStateValue
+        else {
+            return nil
+        }
+
+        return statefulPluginType.init(rawState: rawState)
+    }
+    
+    public var activeStatefulPlugins: [StatefulPluggable] {
+        return statefulPluginLock.withLock { statefulPlugins }
     }
 
-    public func addActiveSecurity(_ security: Security) {
-        securitiesLock.withLock {
-            securities.append(security)
+    public func addActiveStatefulPlugin(_ statefulPlugin: StatefulPluggable?) {
+        guard let statefulPlugin = statefulPlugin else { return }
+        statefulPluginLock.withLock {
+            statefulPlugin.stateDelegate = self
+            statefulPlugins.append(statefulPlugin)
             saveState()
         }
     }
 
-    public func removeActiveSecurity(_ security: Security) {
-        securitiesLock.withLock {
-            securities.removeAll { $0.pluginIdentifier == security.pluginIdentifier }
+    public func removeActiveStatefulPlugin(_ statefulPlugin: StatefulPluggable) {
+        statefulPluginLock.withLock {
+            statefulPlugins.removeAll { $0.pluginIdentifier == statefulPlugin.pluginIdentifier }
             saveState()
         }
     }
     
     private func saveState() {
-        rawSecurities = securities.compactMap { $0.rawValue }
+        rawStatefulPlugins = statefulPlugins.compactMap { $0.rawValue }
     }
     
     private func restoreState() {
-        let rawServices = rawSecurities ?? []
-        rawServices.forEach { rawValue in
-            if let security = securityFromRawValue(rawValue) {
-                security.initializationComplete(for: servicesManager.activeServices)
-                securities.append(security)
+        let rawStatefulPlugins = rawStatefulPlugins ?? []
+        rawStatefulPlugins.forEach { rawValue in
+            if let statefulPlugin = statefulPluginFromRawValue(rawValue) {
+                statefulPlugin.initializationComplete(for: servicesManager.activeServices)
+                statefulPlugins.append(statefulPlugin)
             }
         }
+    }
+}
+
+extension StatefulPluginManager: StatefulPluggableDelegate {
+    func pluginDidUpdateState(_ plugin: StatefulPluggable) {
+        saveState()
+    }
+    
+    func pluginWantsDeletion(_ plugin: LoopKit.StatefulPluggable) {
+        removeActiveStatefulPlugin(plugin)
     }
 }

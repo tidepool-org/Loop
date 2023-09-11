@@ -30,16 +30,3 @@ func ServiceFromRawValue(_ rawValue: [String: Any]) -> Service? {
 
     return ServiceType.init(rawState: rawState)
 }
-
-extension Service {
-
-    typealias RawValue = [String: Any]
-
-    var rawValue: RawValue {
-        return [
-            "serviceIdentifier": pluginIdentifier,
-            "state": rawState
-        ]
-    }
-
-}

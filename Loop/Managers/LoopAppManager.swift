@@ -226,7 +226,7 @@ class LoopAppManager: NSObject {
         onboardingManager = OnboardingManager(pluginManager: pluginManager,
                                               bluetoothProvider: bluetoothStateManager,
                                               deviceDataManager: deviceDataManager,
-                                              securitiesManager: deviceDataManager.securitiesManager,
+                                              statefulPluginManager: deviceDataManager.statefulPluginManager,
                                               servicesManager: deviceDataManager.servicesManager,
                                               loopDataManager: deviceDataManager.loopManager,
                                               supportManager: supportManager,
@@ -239,11 +239,8 @@ class LoopAppManager: NSObject {
             if let analyticsService = support as? AnalyticsService {
                 analyticsServicesManager.addService(analyticsService)
             }
+            support.initializationComplete(for: deviceDataManager.allActivePlugins)
         }
-        for support in supportManager.availableSupports {
-            support.initializationComplete(for: deviceDataManager.servicesManager.activeServices)
-        }
-
 
         deviceDataManager.onboardingManager = onboardingManager
 

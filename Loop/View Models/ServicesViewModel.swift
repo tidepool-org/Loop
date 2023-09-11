@@ -55,6 +55,7 @@ extension ServicesViewModel {
     fileprivate class FakeService1: Service {
         static var localizedTitle: String = "Service 1"
         static var pluginIdentifier: String = "FakeService1"
+        var stateDelegate: StatefulPluggableDelegate?
         var serviceDelegate: ServiceDelegate?
         var rawState: RawStateValue = [:]
         required init() {}
@@ -65,6 +66,7 @@ extension ServicesViewModel {
     fileprivate class FakeService2: Service {
         static var localizedTitle: String = "Service 2"
         static var pluginIdentifier: String = "FakeService2"
+        var stateDelegate: StatefulPluggableDelegate?
         var serviceDelegate: ServiceDelegate?
         var rawState: RawStateValue = [:]
         required init() {}
