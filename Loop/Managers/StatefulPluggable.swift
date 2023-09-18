@@ -13,7 +13,7 @@ extension StatefulPluggable {
 
     var rawValue: RawValue {
         return [
-            "serviceIdentifier": pluginIdentifier,
+            "statefulPluginIdentifier": pluginIdentifier,
             "state": rawState
         ]
     }
