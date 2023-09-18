@@ -388,7 +388,7 @@
 		B4CAD8792549D2540057946B /* LoopCompletionFreshnessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CAD8782549D2540057946B /* LoopCompletionFreshnessTests.swift */; };
 		B4D4534128E5CA7900F1A8D9 /* AlertMuterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D4534028E5CA7900F1A8D9 /* AlertMuterTests.swift */; };
 		B4D620D424D9EDB900043B3C /* GuidanceColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D620D324D9EDB900043B3C /* GuidanceColors.swift */; };
-		B4D904412AA8989100CBD826 /* SecuritiesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D904402AA8989100CBD826 /* SecuritiesManager.swift */; };
+		B4D904412AA8989100CBD826 /* StatefulPluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D904402AA8989100CBD826 /* StatefulPluginManager.swift */; };
 		B4E202302661063E009421B5 /* AutomaticDosingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E2022F2661063E009421B5 /* AutomaticDosingStatus.swift */; };
 		B4E96D4B248A6B6E002DABAD /* DeviceStatusHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E96D4A248A6B6E002DABAD /* DeviceStatusHUDView.swift */; };
 		B4E96D4F248A6E20002DABAD /* CGMStatusHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E96D4E248A6E20002DABAD /* CGMStatusHUDView.swift */; };
@@ -1310,7 +1310,7 @@
 		B4CAD8782549D2540057946B /* LoopCompletionFreshnessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopCompletionFreshnessTests.swift; sourceTree = "<group>"; };
 		B4D4534028E5CA7900F1A8D9 /* AlertMuterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertMuterTests.swift; sourceTree = "<group>"; };
 		B4D620D324D9EDB900043B3C /* GuidanceColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidanceColors.swift; sourceTree = "<group>"; };
-		B4D904402AA8989100CBD826 /* SecuritiesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecuritiesManager.swift; sourceTree = "<group>"; };
+		B4D904402AA8989100CBD826 /* StatefulPluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatefulPluginManager.swift; sourceTree = "<group>"; };
 		B4E2022F2661063E009421B5 /* AutomaticDosingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomaticDosingStatus.swift; sourceTree = "<group>"; };
 		B4E96D4A248A6B6E002DABAD /* DeviceStatusHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceStatusHUDView.swift; sourceTree = "<group>"; };
 		B4E96D4E248A6E20002DABAD /* CGMStatusHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMStatusHUDView.swift; sourceTree = "<group>"; };
@@ -2297,7 +2297,7 @@
 				43C094491CACCC73001F6403 /* NotificationManager.swift */,
 				A97F250725E056D500F0EE19 /* OnboardingManager.swift */,
 				432E73CA1D24B3D6009AD15D /* RemoteDataServicesManager.swift */,
-				B4D904402AA8989100CBD826 /* SecuritiesManager.swift */,
+				B4D904402AA8989100CBD826 /* StatefulPluginManager.swift */,
 				A9C62D852331703000535612 /* Service.swift */,
 				A9C62D872331703000535612 /* ServicesManager.swift */,
 				C1F7822527CC056900C0919A /* SettingsManager.swift */,
@@ -3664,7 +3664,7 @@
 				C1FB428F217921D600FAB378 /* PumpManagerUI.swift in Sources */,
 				A9B996F227238705002DC09C /* DosingDecisionStore.swift in Sources */,
 				43C513191E864C4E001547C7 /* GlucoseRangeSchedule.swift in Sources */,
-				B4D904412AA8989100CBD826 /* SecuritiesManager.swift in Sources */,
+				B4D904412AA8989100CBD826 /* StatefulPluginManager.swift in Sources */,
 				E9B355292935919E0076AB04 /* MissedMealSettings.swift in Sources */,
 				43A51E1F1EB6D62A000736CC /* CarbAbsorptionViewController.swift in Sources */,
 				43776F901B8022E90074EA36 /* AppDelegate.swift in Sources */,
