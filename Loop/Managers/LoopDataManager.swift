@@ -1541,16 +1541,18 @@ extension LoopDataManager {
         
         let model = doseStore.insulinModelProvider.model(for: pumpInsulinType)
 
-        return predictedGlucose.recommendedManualBolus(
+        var recommendation = predictedGlucose.recommendedManualBolus(
             to: glucoseTargetRange,
             at: now(),
             suspendThreshold: settings.suspendThreshold?.quantity,
             sensitivity: insulinSensitivity,
             model: model,
-            pendingInsulin: 0, // Pending insulin is already reflected in the prediction
-            maxBolus: maxBolus,
-            volumeRounder: volumeRounder
+            maxBolus: maxBolus
         )
+
+        // Round to pump precision
+        recommendation.amount = volumeRounder(recommendation.amount)
+        return recommendation
     }
 
     /// Generates a correction effect based on how large the discrepancy is between the current glucose and its model predicted value.
@@ -2176,7 +2178,7 @@ extension LoopDataManager {
             sensitivitySchedule: sensitivitySchedule,
             at: date)
         
-        dosingDecision.manualBolusRecommendation = ManualBolusRecommendationWithDate(recommendation: ManualBolusRecommendation(amount: bolusAmount.doubleValue(for: .internationalUnit()), pendingInsulin: 0, notice: notice),
+        dosingDecision.manualBolusRecommendation = ManualBolusRecommendationWithDate(recommendation: ManualBolusRecommendation(amount: bolusAmount.doubleValue(for: .internationalUnit()), notice: notice),
                                                                                      date: Date())
         
         return dosingDecision
