@@ -964,7 +964,7 @@ extension LoopDataManager {
         let updateGroup = DispatchGroup()
 
         let historicalGlucoseStartDate = Date(timeInterval: -LoopCoreConstants.dosingDecisionHistoricalGlucoseInterval, since: now())
-        let inputDataRecencyStartDate = Date(timeInterval: -LoopCoreConstants.inputDataRecencyInterval, since: now())
+        let inputDataRecencyStartDate = Date(timeInterval: -LoopAlgorithm.inputDataRecencyInterval, since: now())
 
         // Fetch glucose effects as far back as we want to make retroactive analysis and historical glucose for dosing decision
         var historicalGlucose: [HistoricalGlucoseValue]?
@@ -1227,7 +1227,7 @@ extension LoopDataManager {
         let pumpStatusDate = doseStore.lastAddedPumpData
         let lastGlucoseDate = glucose.startDate
 
-        guard now().timeIntervalSince(lastGlucoseDate) <= LoopCoreConstants.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(lastGlucoseDate) <= LoopAlgorithm.inputDataRecencyInterval else {
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
 
@@ -1235,7 +1235,7 @@ extension LoopDataManager {
             throw LoopError.invalidFutureGlucose(date: lastGlucoseDate)
         }
 
-        guard now().timeIntervalSince(pumpStatusDate) <= LoopCoreConstants.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(pumpStatusDate) <= LoopAlgorithm.inputDataRecencyInterval else {
             throw LoopError.pumpDataTooOld(date: pumpStatusDate)
         }
 
@@ -1487,15 +1487,15 @@ extension LoopDataManager {
         let pumpStatusDate = doseStore.lastAddedPumpData
         let lastGlucoseDate = glucose.startDate
 
-        guard now().timeIntervalSince(lastGlucoseDate) <= LoopCoreConstants.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(lastGlucoseDate) <= LoopAlgorithm.inputDataRecencyInterval else {
             throw LoopError.glucoseTooOld(date: glucose.startDate)
         }
 
-        guard lastGlucoseDate.timeIntervalSince(now()) <= LoopCoreConstants.inputDataRecencyInterval else {
+        guard lastGlucoseDate.timeIntervalSince(now()) <= LoopAlgorithm.inputDataRecencyInterval else {
             throw LoopError.invalidFutureGlucose(date: lastGlucoseDate)
         }
 
-        guard now().timeIntervalSince(pumpStatusDate) <= LoopCoreConstants.inputDataRecencyInterval else {
+        guard now().timeIntervalSince(pumpStatusDate) <= LoopAlgorithm.inputDataRecencyInterval else {
             throw LoopError.pumpDataTooOld(date: pumpStatusDate)
         }
 
@@ -1580,7 +1580,7 @@ extension LoopDataManager {
         retrospectiveGlucoseEffect = retrospectiveCorrection.computeEffect(
             startingAt: glucose,
             retrospectiveGlucoseDiscrepanciesSummed: retrospectiveGlucoseDiscrepanciesSummed,
-            recencyInterval: LoopCoreConstants.inputDataRecencyInterval,
+            recencyInterval: LoopAlgorithm.inputDataRecencyInterval,
             retrospectiveCorrectionGroupingInterval: LoopMath.retrospectiveCorrectionGroupingInterval
         )
     }
@@ -1592,7 +1592,7 @@ extension LoopDataManager {
         return retrospectiveCorrection.computeEffect(
             startingAt: glucose,
             retrospectiveGlucoseDiscrepanciesSummed: retrospectiveGlucoseDiscrepanciesSummed,
-            recencyInterval: LoopCoreConstants.inputDataRecencyInterval,
+            recencyInterval: LoopAlgorithm.inputDataRecencyInterval,
             retrospectiveCorrectionGroupingInterval: LoopMath.retrospectiveCorrectionGroupingInterval
         )
     }
@@ -1677,17 +1677,17 @@ extension LoopDataManager {
 
         var errors = [LoopError]()
 
-        if startDate.timeIntervalSince(glucose.startDate) > LoopCoreConstants.inputDataRecencyInterval {
+        if startDate.timeIntervalSince(glucose.startDate) > LoopAlgorithm.inputDataRecencyInterval {
             errors.append(.glucoseTooOld(date: glucose.startDate))
         }
 
-        if glucose.startDate.timeIntervalSince(startDate) > LoopCoreConstants.inputDataRecencyInterval {
+        if glucose.startDate.timeIntervalSince(startDate) > LoopAlgorithm.inputDataRecencyInterval {
             errors.append(.invalidFutureGlucose(date: glucose.startDate))
         }
 
         let pumpStatusDate = doseStore.lastAddedPumpData
 
-        if startDate.timeIntervalSince(pumpStatusDate) > LoopCoreConstants.inputDataRecencyInterval {
+        if startDate.timeIntervalSince(pumpStatusDate) > LoopAlgorithm.inputDataRecencyInterval {
             errors.append(.pumpDataTooOld(date: pumpStatusDate))
         }
 
