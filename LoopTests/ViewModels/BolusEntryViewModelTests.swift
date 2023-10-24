@@ -960,7 +960,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         suspendThreshold: GlucoseThreshold(unit: .internationalUnit(), value: 75)) {
             didSet {
                 NotificationCenter.default.post(name: .LoopDataUpdated, object: nil, userInfo: [
-                    LoopDataManager.LoopUpdateContextKey: LoopDataManager.LoopUpdateContext.preferences.rawValue
+                    LoopDataManagerOld.LoopUpdateContextKey: LoopDataManagerOld.LoopUpdateContext.preferences.rawValue
                 ])
             }
         }

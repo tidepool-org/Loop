@@ -73,8 +73,8 @@ class SettingsManager {
             .publisher(for: .LoopDataUpdated)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] note in
-                let context = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopDataManager.LoopUpdateContext.RawValue
-                if case .preferences = LoopDataManager.LoopUpdateContext(rawValue: context), let loopDataManager = note.object as? LoopDataManager {
+                let context = note.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as! LoopDataManagerOld.LoopUpdateContext.RawValue
+                if case .preferences = LoopDataManagerOld.LoopUpdateContext(rawValue: context), let loopDataManager = note.object as? LoopDataManagerOld {
                     self?.storeSettings(newLoopSettings: loopDataManager.settings)
                 }
             }

@@ -100,8 +100,8 @@ final class WatchDataManager: NSObject {
 
     @objc private func updateWatch(_ notification: Notification) {
         guard
-            let rawUpdateContext = notification.userInfo?[LoopDataManager.LoopUpdateContextKey] as? LoopDataManager.LoopUpdateContext.RawValue,
-            let updateContext = LoopDataManager.LoopUpdateContext(rawValue: rawUpdateContext)
+            let rawUpdateContext = notification.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as? LoopDataManagerOld.LoopUpdateContext.RawValue,
+            let updateContext = LoopDataManagerOld.LoopUpdateContext(rawValue: rawUpdateContext)
         else {
             return
         }

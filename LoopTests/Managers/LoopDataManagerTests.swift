@@ -121,7 +121,7 @@ class LoopDataManagerTests: XCTestCase {
     var now: Date!
     var dosingDecisionStore: MockDosingDecisionStore!
     var automaticDosingStatus: AutomaticDosingStatus!
-    var loopDataManager: LoopDataManager!
+    var loopDataManager: LoopDataManagerOld!
     
     func setUp(for test: DosingTestScenario,
                basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil,
@@ -172,7 +172,7 @@ class LoopDataManagerTests: XCTestCase {
         
         dosingDecisionStore = MockDosingDecisionStore()
         automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
-        loopDataManager = LoopDataManager(
+        loopDataManager = LoopDataManagerOld(
             lastLoopCompleted: currentDate,
             basalDeliveryState: basalDeliveryState ?? .active(currentDate),
             settings: settings,

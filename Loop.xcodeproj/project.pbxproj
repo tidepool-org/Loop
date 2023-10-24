@@ -137,7 +137,7 @@
 		439BED2A1E76093C00B0AED5 /* CGMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439BED291E76093C00B0AED5 /* CGMManager.swift */; };
 		43A51E1F1EB6D62A000736CC /* CarbAbsorptionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A51E1E1EB6D62A000736CC /* CarbAbsorptionViewController.swift */; };
 		43A51E211EB6DBDD000736CC /* LoopChartsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A51E201EB6DBDD000736CC /* LoopChartsTableViewController.swift */; };
-		43A567691C94880B00334FAC /* LoopDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A567681C94880B00334FAC /* LoopDataManager.swift */; };
+		43A567691C94880B00334FAC /* LoopDataManagerOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A567681C94880B00334FAC /* LoopDataManagerOld.swift */; };
 		43A943761B926B7B0051FA24 /* Interface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 43A943741B926B7B0051FA24 /* Interface.storyboard */; };
 		43A9437F1B926B7B0051FA24 /* WatchApp Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 43A9437E1B926B7B0051FA24 /* WatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		43A943881B926B7B0051FA24 /* ExtensionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A943871B926B7B0051FA24 /* ExtensionDelegate.swift */; };
@@ -461,6 +461,7 @@
 		C19E96DF23D275F8003F79B0 /* LoopCompletionFreshness.swift in Sources */ = {isa = PBXBuildFile; fileRef = C19E96DD23D2733F003F79B0 /* LoopCompletionFreshness.swift */; };
 		C19E96E023D275FA003F79B0 /* LoopCompletionFreshness.swift in Sources */ = {isa = PBXBuildFile; fileRef = C19E96DD23D2733F003F79B0 /* LoopCompletionFreshness.swift */; };
 		C19F48742560ABFB003632D7 /* NSBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430DA58D1D4AEC230097D1CA /* NSBundle.swift */; };
+		C1A25D9F2AE8623E0003C080 /* LoopDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A25D9E2AE8623E0003C080 /* LoopDataManager.swift */; };
 		C1AD4200256D61E500164DDD /* Comparable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1AD41FF256D61E500164DDD /* Comparable.swift */; };
 		C1AF062329426300002C1B19 /* ManualGlucoseEntryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1AF062229426300002C1B19 /* ManualGlucoseEntryRow.swift */; };
 		C1C660D1252E4DD5009B5C32 /* LoopConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C660D0252E4DD5009B5C32 /* LoopConstants.swift */; };
@@ -863,7 +864,7 @@
 		439BED291E76093C00B0AED5 /* CGMManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGMManager.swift; sourceTree = "<group>"; };
 		43A51E1E1EB6D62A000736CC /* CarbAbsorptionViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarbAbsorptionViewController.swift; sourceTree = "<group>"; };
 		43A51E201EB6DBDD000736CC /* LoopChartsTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoopChartsTableViewController.swift; sourceTree = "<group>"; };
-		43A567681C94880B00334FAC /* LoopDataManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = LoopDataManager.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		43A567681C94880B00334FAC /* LoopDataManagerOld.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = LoopDataManagerOld.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		43A8EC6E210E622600A81379 /* CGMBLEKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CGMBLEKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		43A943721B926B7B0051FA24 /* WatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		43A943751B926B7B0051FA24 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Interface.storyboard; sourceTree = "<group>"; };
@@ -1490,6 +1491,7 @@
 		C19E387E298638CE00851444 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C19E96DD23D2733F003F79B0 /* LoopCompletionFreshness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopCompletionFreshness.swift; sourceTree = "<group>"; };
 		C19F496225630504003632D7 /* Minizip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Minizip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1A25D9E2AE8623E0003C080 /* LoopDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopDataManager.swift; sourceTree = "<group>"; };
 		C1AD41FF256D61E500164DDD /* Comparable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comparable.swift; sourceTree = "<group>"; };
 		C1AD48CE298639890013B994 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C1AD62FE29BBFAA80002685D /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -2294,7 +2296,7 @@
 				89CA2B3C226E6B13004D9350 /* LocalTestingScenariosManager.swift */,
 				A9C62D862331703000535612 /* LoggingServicesManager.swift */,
 				A9D5C5B525DC6C6A00534873 /* LoopAppManager.swift */,
-				43A567681C94880B00334FAC /* LoopDataManager.swift */,
+				43A567681C94880B00334FAC /* LoopDataManagerOld.swift */,
 				43C094491CACCC73001F6403 /* NotificationManager.swift */,
 				A97F250725E056D500F0EE19 /* OnboardingManager.swift */,
 				432E73CA1D24B3D6009AD15D /* RemoteDataServicesManager.swift */,
@@ -2317,6 +2319,7 @@
 				A96DAC2B2838F31200D94E38 /* SharedLogging.swift */,
 				7E69CFFB2A16A77E00203CBD /* ResetLoopManager.swift */,
 				84AA81E42A4A3981000B658B /* DeeplinkManager.swift */,
+				C1A25D9E2AE8623E0003C080 /* LoopDataManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -3688,7 +3691,7 @@
 				149A28BD2A853E6C00052EDF /* CarbEntryView.swift in Sources */,
 				4F11D3C020DCBEEC006E072C /* GlucoseBackfillRequestUserInfo.swift in Sources */,
 				89E267FC2292456700A3F2AF /* FeatureFlags.swift in Sources */,
-				43A567691C94880B00334FAC /* LoopDataManager.swift in Sources */,
+				43A567691C94880B00334FAC /* LoopDataManagerOld.swift in Sources */,
 				1DA649A9244126DA00F61E75 /* InAppModalAlertScheduler.swift in Sources */,
 				43B260491ED248FB008CAA77 /* CarbEntryTableViewCell.swift in Sources */,
 				142CB75B2A60BFC30075748A /* FavoriteFoodsView.swift in Sources */,
@@ -3774,6 +3777,7 @@
 				84AA81E52A4A3981000B658B /* DeeplinkManager.swift in Sources */,
 				1D6B1B6726866D89009AC446 /* AlertPermissionsChecker.swift in Sources */,
 				4F08DE8F1E7BB871006741EA /* CollectionType+Loop.swift in Sources */,
+				C1A25D9F2AE8623E0003C080 /* LoopDataManager.swift in Sources */,
 				A9F703772489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift in Sources */,
 				E9B080B1253BDA6300BAD8F8 /* UserDefaults+LoopIntents.swift in Sources */,
 				C1AF062329426300002C1B19 /* ManualGlucoseEntryRow.swift in Sources */,

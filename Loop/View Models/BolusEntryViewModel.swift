@@ -215,8 +215,8 @@ final class BolusEntryViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] note in
                 Task {
-                    if let rawContext = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as? LoopDataManager.LoopUpdateContext.RawValue,
-                       let context = LoopDataManager.LoopUpdateContext(rawValue: rawContext),
+                    if let rawContext = note.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as? LoopDataManagerOld.LoopUpdateContext.RawValue,
+                       let context = LoopDataManagerOld.LoopUpdateContext(rawValue: rawContext),
                        context == .preferences
                     {
                         self?.updateSettings()

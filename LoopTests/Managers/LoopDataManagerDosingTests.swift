@@ -16,14 +16,14 @@ class MockDelegate: LoopDataManagerDelegate {
     let pumpManager = MockPumpManager()
     
     var bolusUnits: Double?
-    func loopDataManager(_ manager: Loop.LoopDataManager, estimateBolusDuration units: Double) -> TimeInterval? {
+    func loopDataManager(_ manager: Loop.LoopDataManagerOld, estimateBolusDuration units: Double) -> TimeInterval? {
         self.bolusUnits = units
         return pumpManager.estimatedDuration(toBolus: units)
     }
     
     var recommendation: AutomaticDoseRecommendation?
     var error: LoopError?
-    func loopDataManager(_ manager: LoopDataManager, didRecommend automaticDose: (recommendation: AutomaticDoseRecommendation, date: Date), completion: @escaping (LoopError?) -> Void) {
+    func loopDataManager(_ manager: LoopDataManagerOld, didRecommend automaticDose: (recommendation: AutomaticDoseRecommendation, date: Date), completion: @escaping (LoopError?) -> Void) {
         self.recommendation = automaticDose.recommendation
         completion(error)
     }
@@ -114,7 +114,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
 
         dosingDecisionStore = MockDosingDecisionStore()
         automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
-        loopDataManager = LoopDataManager(
+        loopDataManager = LoopDataManagerOld(
             lastLoopCompleted: currentDate,
             basalDeliveryState: .active(currentDate),
             settings: settings,
@@ -543,7 +543,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             automatic: true,
             manuallyEntered: false,
             isMutable: true)
-        loopDataManager = LoopDataManager(
+        loopDataManager = LoopDataManagerOld(
             lastLoopCompleted: currentDate.addingTimeInterval(-.minutes(5)),
             basalDeliveryState: .tempBasal(existingTempBasal),
             settings: settings,

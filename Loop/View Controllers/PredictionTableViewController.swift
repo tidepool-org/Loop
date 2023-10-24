@@ -35,9 +35,9 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
 
         notificationObservers += [
             notificationCenter.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] note in
-                let context = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopDataManager.LoopUpdateContext.RawValue
+                let context = note.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as! LoopDataManagerOld.LoopUpdateContext.RawValue
                 DispatchQueue.main.async {
-                    switch LoopDataManager.LoopUpdateContext(rawValue: context) {
+                    switch LoopDataManagerOld.LoopUpdateContext(rawValue: context) {
                     case .preferences?:
                         self?.refreshContext.formUnion([.status, .targets])
                     case .glucose?:

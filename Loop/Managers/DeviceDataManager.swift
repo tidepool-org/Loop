@@ -237,7 +237,7 @@ final class DeviceDataManager {
 
     // MARK: - Initialization
 
-    private(set) var loopManager: LoopDataManager!
+    private(set) var loopManager: LoopDataManagerOld!
 
     init(pluginManager: PluginManager,
          alertManager: AlertManager,
@@ -383,7 +383,7 @@ final class DeviceDataManager {
         //TODO The instantiation of these non-device related managers should be moved to LoopAppManager, and then LoopAppManager can wire up the connections between them.
         statusExtensionManager = ExtensionDataManager(deviceDataManager: self, automaticDosingStatus: automaticDosingStatus)
 
-        loopManager = LoopDataManager(
+        loopManager = LoopDataManagerOld(
             lastLoopCompleted: ExtensionDataManager.lastLoopCompleted,
             basalDeliveryState: pumpManager?.status.basalDeliveryState,
             settings: settingsManager.loopSettings,
@@ -1396,12 +1396,12 @@ extension DeviceDataManager: LoopDataManagerDelegate {
         return rounded
     }
     
-    func loopDataManager(_ manager: LoopDataManager, estimateBolusDuration units: Double) -> TimeInterval? {
+    func loopDataManager(_ manager: LoopDataManagerOld, estimateBolusDuration units: Double) -> TimeInterval? {
         pumpManager?.estimatedDuration(toBolus: units)
     }
 
     func loopDataManager(
-        _ manager: LoopDataManager,
+        _ manager: LoopDataManagerOld,
         didRecommend automaticDose: (recommendation: AutomaticDoseRecommendation, date: Date),
         completion: @escaping (LoopError?) -> Void
     ) {

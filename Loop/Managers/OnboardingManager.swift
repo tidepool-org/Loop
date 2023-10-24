@@ -17,7 +17,7 @@ class OnboardingManager {
     private let deviceDataManager: DeviceDataManager
     private let statefulPluginManager: StatefulPluginManager
     private let servicesManager: ServicesManager
-    private let loopDataManager: LoopDataManager
+    private let loopDataManager: LoopDataManagerOld
     private let supportManager: SupportManager
     private weak var windowProvider: WindowProvider?
     private let userDefaults: UserDefaults
@@ -45,7 +45,7 @@ class OnboardingManager {
          deviceDataManager: DeviceDataManager,
          statefulPluginManager: StatefulPluginManager,
          servicesManager: ServicesManager,
-         loopDataManager: LoopDataManager,
+         loopDataManager: LoopDataManagerOld,
          supportManager: SupportManager,
          windowProvider: WindowProvider?,
          userDefaults: UserDefaults = .standard)

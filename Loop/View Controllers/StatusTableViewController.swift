@@ -68,8 +68,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         notificationObservers += [
             notificationCenter.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] note in
-                let rawContext = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopDataManager.LoopUpdateContext.RawValue
-                let context = LoopDataManager.LoopUpdateContext(rawValue: rawContext)
+                let rawContext = note.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as! LoopDataManagerOld.LoopUpdateContext.RawValue
+                let context = LoopDataManagerOld.LoopUpdateContext(rawValue: rawContext)
                 DispatchQueue.main.async {
                     switch context {
                     case .none, .insulin?:
