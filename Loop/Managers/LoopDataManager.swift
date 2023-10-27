@@ -12,25 +12,39 @@ import HealthKit
 
 actor LoopDataManager {
 
+    private let logger = DiagnosticLog(category: "LoopDataManager")
+
     var pumpInsulinType: InsulinType?
 
-    private var doseStore: DoseStore
-    private var settingsStore: SettingsStore
-    private var carbStore: CarbStore
-    private var glucoseStore: GlucoseStore
+    private let doseStore: DoseStore
+    private let settingsStore: SettingsStore
+    private let carbStore: CarbStore
+    private let glucoseStore: GlucoseStore
+    private let overrideHistory: TemporaryScheduleOverrideHistory
+    private let dosingDecisionStore: DosingDecisionStore
 
-    init(doseStore: DoseStore, settingsStore: SettingsStore, carbStore: CarbStore, glucoseStore: GlucoseStore) {
+    init(
+        doseStore: DoseStore,
+        settingsStore: SettingsStore,
+        carbStore: CarbStore,
+        glucoseStore: GlucoseStore,
+        overrideHistory: TemporaryScheduleOverrideHistory,
+        dosingDecisionStore: DosingDecisionStore
+    ) {
         self.doseStore = doseStore
         self.settingsStore = settingsStore
         self.carbStore = carbStore
         self.glucoseStore = glucoseStore
+        self.overrideHistory = overrideHistory
+        self.dosingDecisionStore = dosingDecisionStore
     }
 
     func loop() async {
         let baseTime = Date()
 
-        do {
+        var dosingDecision = StoredDosingDecision(date: baseTime, reason: "loop")
 
+        do {
             // Need to fetch doses back as far as t - (DIA + DCA) for Dynamic carbs
             let dosesInputHistory = CarbMath.maximumAbsorptionTimeInterval + InsulinMath.defaultInsulinActivityDuration
 
@@ -77,28 +91,55 @@ actor LoopDataManager {
 
             let dosingStrategy = settingsStore.latestSettings?.automaticDosingStrategy ?? .tempBasalOnly
 
-            // TODO: overlay overrides
+            let overrides = overrideHistory.getOverrideHistory(startDate: sensitivityStart, endDate: forecastEndTime)
+
+            let sensitivityWithOverrides = overrides.apply(over: sensitivity) { (quantity, override) in
+                let value = quantity.doubleValue(for: .milligramsPerDeciliter)
+                return HKQuantity(
+                    unit: .milligramsPerDeciliter,
+                    doubleValue: value / override.settings.effectiveInsulinNeedsScaleFactor
+                )
+            }
+
+            let basalWithOverrides = overrides.apply(over: basal) { (value, override) in
+                value * override.settings.effectiveInsulinNeedsScaleFactor
+            }
+
+            let carbRatioWithOverrides = overrides.apply(over: carbRatio) { (value, override) in
+                value * override.settings.effectiveInsulinNeedsScaleFactor
+            }
+
+            let targetWithOverrides = overrides.apply(over: target) { (range, override) in
+                override.settings.targetRange ?? range
+            }
+
+            let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
 
             let input = LoopAlgorithmInput(
                 predictionStart: baseTime,
                 glucoseHistory: glucose,
                 doses: doses,
                 carbEntries: carbEntries,
-                basal: basal,
-                sensitivity: sensitivity,
-                carbRatio: carbRatio,
-                target: target,
+                basal: basalWithOverrides,
+                sensitivity: sensitivityWithOverrides,
+                carbRatio: carbRatioWithOverrides,
+                target: targetWithOverrides,
                 suspendThreshold: dosingLimits.suspendThreshold,
                 maxBolus: maxBolus,
                 maxBasalRate: maxBasalRate,
                 useIntegralRetrospectiveCorrection: UserDefaults.standard.integralRetrospectiveCorrectionEnabled,
+                carbAbsorptionModel: carbModel,
                 recommendationInsulinType: pumpInsulinType ?? .novolog,
                 recommendationType: dosingStrategy.recommendationType
             )
+            let output = try LoopAlgorithm.run(input: input)
+            dosingDecision.automaticDoseRecommendation = output.doseRecommendation.automatic
         } catch {
-            print("error looping: \(error)")
+            let loopError = error as? LoopError ?? .unknownError(error)
+            logger.error("Error looping: %{public}@", String(describing: loopError))
+            dosingDecision.appendError(loopError)
         }
-
+        dosingDecisionStore.storeDosingDecision(dosingDecision) {}
     }
 }
 
@@ -112,3 +153,4 @@ extension AutomaticDosingStrategy {
         }
     }
 }
+

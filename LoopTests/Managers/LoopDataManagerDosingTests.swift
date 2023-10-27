@@ -149,6 +149,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         XCTAssertNotNil(predictedGlucose)
 
         XCTAssertEqual(expectedPredictedGlucose.count, predictedGlucose!.count)
+        XCTAssertEqual(0, recommendedBasal!.unitsPerHour)
 
         for (expected, calculated) in zip(expectedPredictedGlucose, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
