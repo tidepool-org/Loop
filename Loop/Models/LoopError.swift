@@ -45,7 +45,7 @@ enum MissingDataErrorDetail: String, Codable {
     case insulinEffect
     case activeInsulin
     case insulinEffectIncludingPendingInsulin
-    
+
     var localizedDetail: String {
         switch self {
         case .glucose:
@@ -105,6 +105,15 @@ enum LoopError: Error {
     // Pump Manager Error
     case pumpManagerError(PumpManagerError)
 
+    // Loop State uninitialized
+    case uninitialized
+
+    // Loop State update in progress
+    case updateInProgress
+
+    // Loop State loop in progress
+    case loopInProgress
+
     // Some other error
     case unknownError(Error)
 }
@@ -134,6 +143,12 @@ extension LoopError {
             return "pumpSuspended"
         case .pumpManagerError:
             return "pumpManagerError"
+        case .uninitialized:
+            return "uninitialized"
+        case .updateInProgress:
+            return "updateInProgress"
+        case .loopInProgress:
+            return "loopInProgress"
         case .unknownError:
             return "unknownError"
         }
@@ -201,11 +216,17 @@ extension LoopError: LocalizedError {
             let minutes = formatter.string(from: -date.timeIntervalSinceNow) ?? ""
             return String(format: NSLocalizedString("Recommendation expired: %1$@ old", comment: "The error message when a recommendation has expired. (1: age of recommendation in minutes)"), minutes)
         case .pumpSuspended:
-            return NSLocalizedString("Pump Suspended. Automatic dosing is disabled.", comment: "The error message displayed for pumpSuspended errors.")
+            return NSLocalizedString("Pump Suspended. Automatic dosing is disabled.", comment: "The error message displayed for LoopError.pumpSuspended errors.")
         case .pumpManagerError(let pumpManagerError):
             return String(format: NSLocalizedString("Pump Manager Error: %1$@", comment: "The error message displayed for pump manager errors. (1: pump manager error)"), pumpManagerError.errorDescription!)
+        case .uninitialized:
+            return NSLocalizedString("Loop state is uninitialized.", comment: "The error message displayed for LoopError.uninitialized errors.")
+        case .updateInProgress:
+            return NSLocalizedString("Loop state is being updated.", comment: "The error message displayed for LoopError.updateInProgress errors.")
+        case .loopInProgress:
+            return NSLocalizedString("Loop is already looping.", comment: "The error message displayed for LoopError.loopInProgress errors.")
         case .unknownError(let error):
-            return String(format: NSLocalizedString("Unknown Error: %1$@", comment: "The error message displayed for unknown errors. (1: unknown error)"), error.localizedDescription)
+            return String(format: NSLocalizedString("Unknown Error: %1$@", comment: "The error message displayed for unknown LoopError errors. (1: unknown error)"), error.localizedDescription)
         }
     }
 }

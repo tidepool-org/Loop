@@ -1,5 +1,5 @@
 //
-//  LoopDataManager.swift
+//  LoopDosingManager.swift
 //  WatchApp Extension
 //
 //  Created by Bharat Mediratta on 6/21/18.
@@ -40,7 +40,7 @@ class LoopDataManager {
         }
     }
 
-    private let log = OSLog(category: "LoopDataManager")
+    private let log = OSLog(category: "LoopDosingManager")
 
     // Main queue only
     private(set) var activeContext: WatchContext? {
