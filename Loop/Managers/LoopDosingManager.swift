@@ -201,10 +201,10 @@ actor LoopDosingManager {
 
                 let basalAdjustment = recommendation.basalAdjustment?.ifNecessary(
                     at: loopBaseTime,
-                    scheduledBasalRate: scheduledBasalRate,
+                    neutralBasalRate: scheduledBasalRate,
                     lastTempBasal: lastTempBasal,
                     continuationInterval: .minutes(11),
-                    scheduledBasalRateMatchesPump: activeOverride == nil
+                    neutralBasalRateMatchesPump: activeOverride == nil
                 )
             }
 
