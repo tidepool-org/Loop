@@ -18,7 +18,6 @@ enum AlgorithmDisplayState {
 
 protocol DosingDelegate {
     var isSuspended: Bool { get }
-    var manualTempBasalRunning: Bool { get }
     var pumpInsulinType: InsulinType? { get }
 
     func enact(_ recommendation: AutomaticDoseRecommendation) async throws
@@ -175,6 +174,7 @@ actor LoopDosingManager {
 
         do {
             let loopBaseTime = Date()
+            logger.debug("Running Loop at %{public}@", String(describing: loopBaseTime))
 
             var input = try await fetchData(for: loopBaseTime)
 

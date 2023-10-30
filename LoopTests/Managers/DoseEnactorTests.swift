@@ -150,7 +150,7 @@ class MockPumpManager: PumpManager {
 }
 
 class DoseEnactorTests: XCTestCase {
-    func testBasalAndBolusDosedSerially() {
+    func testBasalAndBolusDosedSerially() async throws {
         let enactor = DoseEnactor()
         let tempBasalRecommendation = TempBasalRecommendation(unitsPerHour: 0, duration: 0) // Cancel
         let recommendation = AutomaticDoseRecommendation(basalAdjustment: tempBasalRecommendation, bolusUnits: 1.5)
@@ -165,12 +165,10 @@ class DoseEnactorTests: XCTestCase {
         pumpManager.enactBolusCalled = { (amount, automatic) in
             bolusExpectation.fulfill()
         }
-        
-        enactor.enact(recommendation: recommendation, with: pumpManager) { error in
-            XCTAssertNil(error)
-        }
-        
-        wait(for: [tempBasalExpectation, bolusExpectation], timeout: 5, enforceOrder: true)
+
+        try await enactor.enact(recommendation: recommendation, with: pumpManager)
+
+        await fulfillment(of: [tempBasalExpectation, bolusExpectation], timeout: 5, enforceOrder: true)
     }
     
     func testBolusDoesNotIssueIfTempBasalAdjustmentFailed() {

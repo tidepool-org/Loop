@@ -239,6 +239,8 @@ final class DeviceDataManager {
 
     private(set) var loopManager: LoopDataManagerOld!
 
+    private(set) var loopDosingManager: LoopDosingManager!
+
     init(pluginManager: PluginManager,
          alertManager: AlertManager,
          settingsManager: SettingsManager,
@@ -403,6 +405,16 @@ final class DeviceDataManager {
         loopManager.presetActivationObservers.append(alertManager)
         loopManager.presetActivationObservers.append(analyticsServicesManager)
 
+        loopDosingManager = LoopDosingManager(
+            doseStore: doseStore,
+            settingsStore: settingsManager.settingsStore,
+            carbStore: carbStore,
+            glucoseStore: glucoseStore,
+            overrideHistory: overrideHistory,
+            dosingDecisionStore: dosingDecisionStore,
+            dosingDelegate: self
+        )
+
         watchManager = WatchDataManager(deviceManager: self, healthStore: healthStore)
 
         let remoteDataServicesManager = RemoteDataServicesManager(
@@ -548,7 +560,7 @@ final class DeviceDataManager {
         return Manager.init(rawState: rawState) as? PumpManagerUI
     }
     
-    private func checkPumpDataAndLoop() {
+    private func checkPumpDataAndLoop() async {
         guard !crashRecoveryManager.pendingCrashRecovery else {
             self.log.default("Loop paused pending crash recovery acknowledgement.")
             return
@@ -557,13 +569,12 @@ final class DeviceDataManager {
         self.log.default("Asserting current pump data")
         guard let pumpManager = pumpManager else {
             // Run loop, even if pump is missing, to ensure stored dosing decision
-            self.loopManager.loop()
+            await self.loopDosingManager.loop()
             return
         }
 
-        pumpManager.ensureCurrentPumpData() { (lastSync) in
-            self.loopManager.loop()
-        }
+        let _ = await pumpManager.ensureCurrentPumpData()
+        await self.loopDosingManager.loop()
     }
 
     private func processCGMReadingResult(_ manager: CGMManager, readingResult: CGMReadingResult, completion: @escaping () -> Void) {
@@ -993,7 +1004,9 @@ extension DeviceDataManager: CGMManagerDelegate {
             if case .newData = readingResult, now.timeIntervalSince(self.lastCGMLoopTrigger) > .minutes(4.2) {
                 self.log.default("Triggering loop from new CGM data at %{public}@", String(describing: now))
                 self.lastCGMLoopTrigger = now
-                self.checkPumpDataAndLoop()
+                Task {
+                    await self.checkPumpDataAndLoop()
+                }
             }
         }
     }
@@ -1093,7 +1106,9 @@ extension DeviceDataManager: PumpManagerDelegate {
                 self.processCGMReadingResult(cgmManager, readingResult: result) {
                     if self.loopManager.lastLoopCompleted == nil || self.loopManager.lastLoopCompleted!.timeIntervalSinceNow < -.minutes(4.2) {
                         self.log.default("Triggering Loop from refreshCGM()")
-                        self.checkPumpDataAndLoop()
+                        Task {
+                            await self.checkPumpDataAndLoop()
+                        }
                     }
                     completion?()
                 }
@@ -1399,31 +1414,6 @@ extension DeviceDataManager: LoopDataManagerDelegate {
     func loopDataManager(_ manager: LoopDataManagerOld, estimateBolusDuration units: Double) -> TimeInterval? {
         pumpManager?.estimatedDuration(toBolus: units)
     }
-
-    func loopDataManager(
-        _ manager: LoopDataManagerOld,
-        didRecommend automaticDose: (recommendation: AutomaticDoseRecommendation, date: Date),
-        completion: @escaping (LoopError?) -> Void
-    ) {
-        guard let pumpManager = pumpManager else {
-            completion(LoopError.configurationError(.pumpManager))
-            return
-        }
-        
-        guard !pumpManager.status.deliveryIsUncertain else {
-            completion(LoopError.connectionError)
-            return
-        }
-
-        log.default("LoopManager did recommend dose: %{public}@", String(describing: automaticDose.recommendation))
-
-        crashRecoveryManager.dosingStarted(dose: automaticDose.recommendation)
-        doseEnactor.enact(recommendation: automaticDose.recommendation, with: pumpManager) { pumpManagerError in
-            completion(pumpManagerError.map { .pumpManagerError($0) })
-            self.crashRecoveryManager.dosingFinished()
-        }
-    }
-
 }
 
 extension Notification.Name {
@@ -1739,6 +1729,29 @@ extension DeviceDataManager: DeviceSupportDelegate {
                 }
             }
         }
+    }
+}
+
+extension DeviceDataManager: DosingDelegate {
+    var isSuspended: Bool {
+        return pumpManager?.status.basalDeliveryState?.isSuspended ?? false
+    }
+    
+    func enact(_ recommendation: LoopKit.AutomaticDoseRecommendation) async throws {
+        guard let pumpManager = pumpManager else {
+            throw LoopError.configurationError(.pumpManager)
+        }
+
+        guard !pumpManager.status.deliveryIsUncertain else {
+            throw LoopError.connectionError
+        }
+
+        log.default("Enacting recommended dose: %{public}@", String(describing: recommendation))
+
+        crashRecoveryManager.dosingStarted(dose: recommendation)
+        defer { self.crashRecoveryManager.dosingFinished() }
+
+        try await doseEnactor.enact(recommendation: recommendation, with: pumpManager)
     }
 }
 
