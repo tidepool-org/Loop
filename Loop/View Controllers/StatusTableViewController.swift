@@ -43,6 +43,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     var temporaryPresetsManager: TemporaryPresetsManager!
 
+    var loopManager: LoopDataManager!
+
     var alertMuter: AlertMuter!
 
     var supportManager: SupportManager!
@@ -727,11 +729,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             statusRowMode = .onboardingSuspended
         } else if onboardingManager.isComplete, deviceManager.isGlucoseValueStale {
             statusRowMode = .recommendManualGlucoseEntry
-        } else if let scheduleOverride = deviceManager.loopManager.settings.scheduleOverride,
+        } else if let scheduleOverride = temporaryPresetsManager.scheduleOverride,
             !scheduleOverride.hasFinished()
         {
             statusRowMode = .scheduleOverrideEnabled(scheduleOverride)
-        } else if let premealOverride = deviceManager.loopManager.settings.preMealOverride,
+        } else if let premealOverride = temporaryPresetsManager.preMealOverride,
             !premealOverride.hasFinished()
         {
             statusRowMode = .scheduleOverrideEnabled(premealOverride)
@@ -841,14 +843,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
     private lazy var preMealModeAllowed: Bool = {
         onboardingManager.isComplete &&
-                (automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled)
-                && deviceManager.loopManager.settings.preMealTargetRange != nil
+        (automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled)
+        && settingsManager.latestSettings.preMealTargetRange != nil
     }()
 
     private func updatePresetModeAvailability(automaticDosingEnabled: Bool) {
         preMealModeAllowed = onboardingManager.isComplete &&
-                (automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled)
-                && deviceManager.loopManager.settings.preMealTargetRange != nil
+        (automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled)
+        && settingsManager.latestSettings.preMealTargetRange != nil
         workoutModeAllowed = onboardingManager.isComplete && workoutMode != nil
         updateToolbarItems()
     }

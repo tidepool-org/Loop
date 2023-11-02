@@ -155,8 +155,6 @@ fileprivate extension StoredSettings {
                               preMealTargetRange: DoubleRange(minValue: 80.0, maxValue: 90.0).quantityRange(for: .milligramsPerDeciliter),
                               workoutTargetRange: DoubleRange(minValue: 150.0, maxValue: 160.0).quantityRange(for: .milligramsPerDeciliter),
                               overridePresets: nil,
-                              scheduleOverride: nil,
-                              preMealOverride: preMealOverride,
                               maximumBasalRatePerHour: 3.5,
                               maximumBolus: 10.0,
                               suspendThreshold: GlucoseThreshold(unit: .milligramsPerDeciliter, value: 75.0),

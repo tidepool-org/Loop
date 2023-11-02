@@ -38,7 +38,6 @@ actor LoopDosingManager {
         case loopFinished
     }
 
-
     // Represents the current state of the loop algorithm for display
     var displayState: AlgorithmDisplayState = .uninitialized
 
@@ -81,7 +80,7 @@ actor LoopDosingManager {
     }
 
 
-    func fetchData(for baseTime: Date = Date()) async throws -> LoopAlgorithmInput {
+    private func fetchData(for baseTime: Date = Date()) async throws -> LoopAlgorithmInput {
         // Need to fetch doses back as far as t - (DIA + DCA) for Dynamic carbs
         let dosesInputHistory = CarbMath.maximumAbsorptionTimeInterval + InsulinMath.defaultInsulinActivityDuration
 
@@ -280,6 +279,7 @@ actor LoopDosingManager {
 
             let output = try LoopAlgorithm.run(input: input)
 
+            // Update display state with each automatic loop
             displayState = .ready(input: input, output: output)
 
             var recommendation = output.doseRecommendation.automatic!

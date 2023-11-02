@@ -19,7 +19,7 @@ import SwiftUI
 
 protocol ManualDoseViewModelDelegate: AnyObject {
     
-    func withLoopState(do block: @escaping (LoopState) -> Void)
+    var algorithmDisplayState: AlgorithmDisplayState { get async }
 
     func addManuallyEnteredDose(startDate: Date, units: Double, insulinType: InsulinType?)
 

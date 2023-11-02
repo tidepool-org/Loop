@@ -165,7 +165,7 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
 
         tableView.endEditing(true)
 
-        let viewModel = ManualEntryDoseViewModel(delegate: deviceManager)
+        let viewModel = ManualEntryDoseViewModel(delegate: deviceManager.loopManager)
         let bolusEntryView = ManualEntryDoseView(viewModel: viewModel)
         let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         let navigationWrapper = UINavigationController(rootViewController: hostingController)

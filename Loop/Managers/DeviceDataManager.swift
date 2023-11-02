@@ -217,6 +217,8 @@ final class DeviceDataManager {
 
     var settingsManager: SettingsManager
 
+    var temporaryPresetsManager: TemporaryPresetsManager
+
     var remoteDataServicesManager: RemoteDataServicesManager { return servicesManager.remoteDataServicesManager }
 
     var criticalEventLogExportManager: CriticalEventLogExportManager!
@@ -258,6 +260,7 @@ final class DeviceDataManager {
          cacheStore: PersistenceController,
          localCacheDuration: TimeInterval,
          overrideHistory: TemporaryScheduleOverrideHistory,
+         temporaryPresetsManager: TemporaryPresetsManager,
          trustedTimeChecker: TrustedTimeChecker)
     {
 
@@ -286,6 +289,7 @@ final class DeviceDataManager {
         self.settingsManager = settingsManager
         self.analyticsServicesManager = analyticsServicesManager
         self.loopDosingManager = loopDosingManager
+        self.temporaryPresetsManager = temporaryPresetsManager
 
         cgmStalenessMonitor = CGMStalenessMonitor()
         cgmStalenessMonitor.delegate = glucoseStore
@@ -304,22 +308,12 @@ final class DeviceDataManager {
         crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
         alertManager.addAlertResponder(managerIdentifier: crashRecoveryManager.managerIdentifier, alertResponder: crashRecoveryManager)
 
-        statusExtensionManager = ExtensionDataManager(deviceDataManager: self, automaticDosingStatus: automaticDosingStatus)
-
-        loopManager = LoopDataManager(
-            lastLoopCompleted: ExtensionDataManager.lastLoopCompleted,
-            overrideHistory: overrideHistory,
-            analyticsServicesManager: analyticsServicesManager,
-            localCacheDuration: localCacheDuration,
-            doseStore: doseStore,
-            glucoseStore: glucoseStore,
-            carbStore: carbStore,
-            dosingDecisionStore: dosingDecisionStore,
-            latestStoredSettingsProvider: settingsManager,
+        statusExtensionManager = ExtensionDataManager(
+            deviceDataManager: self,
             automaticDosingStatus: automaticDosingStatus,
-            trustedTimeOffset: { trustedTimeChecker.detectedSystemTimeOffset }
+            settingsManager: settingsManager,
+            temporaryPresetsManager: temporaryPresetsManager
         )
-        cacheStore.delegate = loopManager
 
         // Turn off preMeal when going into closed loop off mode
         // Cancel any active temp basal when going into closed loop off mode
@@ -339,7 +333,12 @@ final class DeviceDataManager {
             .store(in: &cancellables)
 
 
-        watchManager = WatchDataManager(deviceManager: self, healthStore: healthStore)
+        watchManager = WatchDataManager(
+            deviceManager: self,
+            settingsManager: settingsManager,
+            temporaryPresetsManager: temporaryPresetsManager,
+            healthStore: healthStore
+        )
 
         let remoteDataServicesManager = RemoteDataServicesManager(
             alertStore: alertManager.alertStore,
@@ -1122,8 +1121,8 @@ extension DeviceDataManager: PumpManagerDelegate {
         updatePumpIsAllowingAutomation(status: status)
 
         // Update the pump-schedule based settings
-        loopManager.setScheduleTimeZone(status.timeZone)
-        
+        settingsManager.setScheduleTimeZone(status.timeZone)
+
         if status.deliveryIsUncertain != oldStatus.deliveryIsUncertain {
             DispatchQueue.main.async {
                 if status.deliveryIsUncertain {
@@ -1588,8 +1587,7 @@ extension DeviceDataManager: TherapySettingsViewModelDelegate {
     }
 
     func saveCompletion(therapySettings: TherapySettings) {
-
-        loopManager.mutateSettings { settings in
+        settingsManager.mutateLoopSettings { settings in
             settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule
             settings.preMealTargetRange = therapySettings.correctionRangeOverrides?.preMeal
             settings.legacyWorkoutTargetRange = therapySettings.correctionRangeOverrides?.workout
@@ -1696,6 +1694,10 @@ extension DeviceDataManager: DeviceSupportDelegate {
 }
 
 extension DeviceDataManager: DosingDelegate {
+    var pumpInsulinType: LoopKit.InsulinType? {
+        return pumpManager?.status.insulinType
+    }
+    
     var isSuspended: Bool {
         return pumpManager?.status.basalDeliveryState?.isSuspended ?? false
     }

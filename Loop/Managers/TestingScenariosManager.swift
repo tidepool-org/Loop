@@ -253,9 +253,9 @@ extension TestingScenariosManagerRequirements {
     
     private func reloadPumpManager(withIdentifier pumpManagerIdentifier: String) -> TestingPumpManager {
         deviceManager.pumpManager = nil
-        guard let maximumBasalRate = deviceManager.loopManager.settings.maximumBasalRatePerHour,
-              let maxBolus = deviceManager.loopManager.settings.maximumBolus,
-              let basalSchedule = deviceManager.loopManager.settings.basalRateSchedule else
+        guard let maximumBasalRate = deviceManager.settingsManager.latestSettings.maximumBasalRatePerHour,
+              let maxBolus = deviceManager.settingsManager.latestSettings.maximumBolus,
+              let basalSchedule = deviceManager.settingsManager.latestSettings.basalRateSchedule else
         {
             fatalError("Failed to reload pump manager. Missing initial settings")
         }

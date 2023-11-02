@@ -9,6 +9,7 @@
 import Foundation
 import LoopKit
 import os.log
+import LoopCore
 
 class TemporaryPresetsManager {
 
@@ -24,6 +25,8 @@ class TemporaryPresetsManager {
 
     init(settingsManager: SettingsManager) {
         self.settingsManager = settingsManager
+
+        self.overrideHistory.relevantTimeWindow = LoopCoreConstants.defaultCarbAbsorptionTimes.slow * 2
 
         overrideIntentObserver = UserDefaults.appGroup?.observe(
             \.intentExtensionOverrideToSet,

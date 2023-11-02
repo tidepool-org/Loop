@@ -92,6 +92,7 @@ class LoopAppManager: NSObject {
     private var resetLoopManager: ResetLoopManager!
     private var deeplinkManager: DeeplinkManager!
     private var temporaryPresetsManager: TemporaryPresetsManager!
+    private var loopDataManager: LoopDataManager!
 
     private var state: State = .initialize
 
@@ -215,6 +216,7 @@ class LoopAppManager: NSObject {
         let sensitivitySchedule = settingsManager.latestSettings.insulinSensitivitySchedule
 
         temporaryPresetsManager = TemporaryPresetsManager(settingsManager: settingsManager)
+        temporaryPresetsManager.overrideHistory.delegate = self
 
         temporaryPresetsManager.addTemporaryPresetObserver(alertManager)
         temporaryPresetsManager.addTemporaryPresetObserver(analyticsServicesManager)
@@ -279,6 +281,21 @@ class LoopAppManager: NSObject {
             analyticsServicesManager: analyticsServicesManager
         )
 
+        loopDataManager = LoopDataManager(
+            lastLoopCompleted: ExtensionDataManager.lastLoopCompleted,
+            overrideHistory: temporaryPresetsManager.overrideHistory,
+            analyticsServicesManager: analyticsServicesManager,
+            localCacheDuration: localCacheDuration,
+            doseStore: doseStore,
+            glucoseStore: glucoseStore,
+            carbStore: carbStore,
+            dosingDecisionStore: dosingDecisionStore,
+            latestStoredSettingsProvider: settingsManager,
+            automaticDosingStatus: automaticDosingStatus,
+            trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset }
+        )
+        cacheStore.delegate = loopDataManager
+
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager,
                                               alertManager: alertManager,
                                               settingsManager: settingsManager,
@@ -295,7 +312,7 @@ class LoopAppManager: NSObject {
                                               automaticDosingStatus: automaticDosingStatus,
                                               cacheStore: cacheStore,
                                               localCacheDuration: localCacheDuration,
-                                              overrideHistory: overrideHistory,
+                                              overrideHistory: temporaryPresetsManager.overrideHistory,
                                               trustedTimeChecker: trustedTimeChecker
         )
 
@@ -307,9 +324,6 @@ class LoopAppManager: NSObject {
 
         settingsManager.deviceStatusProvider = deviceDataManager
         settingsManager.displayGlucosePreference = deviceDataManager.displayGlucosePreference
-
-
-        overrideHistory.delegate = self
 
         SharedLogging.instance = loggingServicesManager
 
@@ -324,7 +338,8 @@ class LoopAppManager: NSObject {
 
         onboardingManager = OnboardingManager(pluginManager: pluginManager,
                                               bluetoothProvider: bluetoothStateManager,
-                                              deviceDataManager: deviceDataManager,
+                                              deviceDataManager: deviceDataManager, 
+                                              settingsManager: settingsManager,
                                               statefulPluginManager: deviceDataManager.statefulPluginManager,
                                               servicesManager: deviceDataManager.servicesManager,
                                               loopDataManager: deviceDataManager.loopManager,
@@ -397,6 +412,7 @@ class LoopAppManager: NSObject {
         statusTableViewController.testingScenariosManager = testingScenariosManager
         statusTableViewController.settingsManager = settingsManager
         statusTableViewController.temporaryPresetsManager = temporaryPresetsManager
+        statusTableViewController.loopManager = deviceDataManager.loopManager
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 
         var rootNavigationController = rootViewController as? RootNavigationController
