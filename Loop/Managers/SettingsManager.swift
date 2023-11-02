@@ -28,6 +28,8 @@ class SettingsManager {
 
     var remoteDataServicesManager: RemoteDataServicesManager?
 
+    var analyticsServicesManager: AnalyticsServicesManager
+
     var deviceStatusProvider: DeviceStatusProvider?
 
     var alertMuter: AlertMuter
@@ -42,8 +44,12 @@ class SettingsManager {
 
     private let log = OSLog(category: "SettingsManager")
 
-    init(cacheStore: PersistenceController, expireAfter: TimeInterval, alertMuter: AlertMuter)
+    private var loopSettingsLock = UnfairLock()
+
+    init(cacheStore: PersistenceController, expireAfter: TimeInterval, alertMuter: AlertMuter, analyticsServicesManager: AnalyticsServicesManager)
     {
+        self.analyticsServicesManager = analyticsServicesManager
+
         settingsStore = SettingsStore(store: cacheStore, expireAfter: expireAfter)
         self.alertMuter = alertMuter
 
@@ -69,17 +75,6 @@ class SettingsManager {
             UserDefaults.appGroup?.removeLegacyLoopSettings()
         }
 
-        NotificationCenter.default
-            .publisher(for: .LoopDataUpdated)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] note in
-                let context = note.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as! LoopDataManagerOld.LoopUpdateContext.RawValue
-                if case .preferences = LoopDataManagerOld.LoopUpdateContext(rawValue: context), let loopDataManager = note.object as? LoopDataManagerOld {
-                    self?.storeSettings(newLoopSettings: loopDataManager.settings)
-                }
-            }
-            .store(in: &cancellables)
-
         self.alertMuter.$configuration
             .sink { [weak self] alertMuterConfiguration in
                 guard var notificationSettings = self?.latestSettings.notificationSettings else { return }
@@ -103,8 +98,6 @@ class SettingsManager {
                 preMealTargetRange: latestSettings.preMealTargetRange,
                 legacyWorkoutTargetRange: latestSettings.workoutTargetRange,
                 overridePresets: latestSettings.overridePresets,
-                scheduleOverride: latestSettings.scheduleOverride,
-                preMealOverride: latestSettings.preMealOverride,
                 maximumBasalRatePerHour: latestSettings.maximumBasalRatePerHour,
                 maximumBolus: latestSettings.maximumBolus,
                 suspendThreshold: latestSettings.suspendThreshold,
@@ -124,8 +117,6 @@ class SettingsManager {
                               preMealTargetRange: newLoopSettings.preMealTargetRange,
                               workoutTargetRange: newLoopSettings.legacyWorkoutTargetRange,
                               overridePresets: newLoopSettings.overridePresets,
-                              scheduleOverride: newLoopSettings.scheduleOverride,
-                              preMealOverride: newLoopSettings.preMealOverride,
                               maximumBasalRatePerHour: newLoopSettings.maximumBasalRatePerHour,
                               maximumBolus: newLoopSettings.maximumBolus,
                               suspendThreshold: newLoopSettings.suspendThreshold,
@@ -172,6 +163,51 @@ class SettingsManager {
         settingsStore.storeSettings(latestSettings) { error in
             if let error = error {
                 self.log.error("Error storing settings: %{public}@", error.localizedDescription)
+            }
+        }
+    }
+
+    /// Sets a new time zone for a the schedule-based settings
+    ///
+    /// - Parameter timeZone: The time zone
+    func setScheduleTimeZone(_ timeZone: TimeZone) {
+        self.mutateLoopSettings { settings in
+            settings.basalRateSchedule?.timeZone = timeZone
+            settings.carbRatioSchedule?.timeZone = timeZone
+            settings.insulinSensitivitySchedule?.timeZone = timeZone
+            settings.glucoseTargetRangeSchedule?.timeZone = timeZone
+        }
+    }
+
+
+    func mutateLoopSettings(_ changes: (_ settings: inout LoopSettings) -> Void) {
+        loopSettingsLock.withLock {
+            let oldValue = loopSettings
+            var newValue = oldValue
+            changes(&newValue)
+
+            guard oldValue != newValue else {
+                return
+            }
+
+            storeSettings(newLoopSettings: newValue)
+
+            if newValue.insulinSensitivitySchedule != oldValue.insulinSensitivitySchedule {
+                analyticsServicesManager.didChangeInsulinSensitivitySchedule()
+            }
+
+            if newValue.basalRateSchedule != oldValue.basalRateSchedule {
+                if let newValue = newValue.basalRateSchedule, let oldValue = oldValue.basalRateSchedule, newValue.items != oldValue.items {
+                    analyticsServicesManager.didChangeBasalRateSchedule()
+                }
+            }
+
+            if newValue.carbRatioSchedule != oldValue.carbRatioSchedule {
+                analyticsServicesManager.didChangeCarbRatioSchedule()
+            }
+
+            if newValue.defaultRapidActingModel != oldValue.defaultRapidActingModel {
+                analyticsServicesManager.didChangeInsulinModel()
             }
         }
     }
@@ -247,3 +283,5 @@ private extension NotificationSettings {
         )
     }
 }
+
+

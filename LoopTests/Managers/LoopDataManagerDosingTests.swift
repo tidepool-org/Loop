@@ -16,14 +16,14 @@ class MockDelegate: LoopDataManagerDelegate {
     let pumpManager = MockPumpManager()
     
     var bolusUnits: Double?
-    func loopDataManager(_ manager: Loop.LoopDataManagerOld, estimateBolusDuration units: Double) -> TimeInterval? {
+    func loopDataManager(_ manager: Loop.LoopDataManager, estimateBolusDuration units: Double) -> TimeInterval? {
         self.bolusUnits = units
         return pumpManager.estimatedDuration(toBolus: units)
     }
     
     var recommendation: AutomaticDoseRecommendation?
     var error: LoopError?
-    func loopDataManager(_ manager: LoopDataManagerOld, didRecommend automaticDose: (recommendation: AutomaticDoseRecommendation, date: Date), completion: @escaping (LoopError?) -> Void) {
+    func loopDataManager(_ manager: LoopDataManager, didRecommend automaticDose: (recommendation: AutomaticDoseRecommendation, date: Date), completion: @escaping (LoopError?) -> Void) {
         self.recommendation = automaticDose.recommendation
         completion(error)
     }
@@ -114,9 +114,8 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
 
         dosingDecisionStore = MockDosingDecisionStore()
         automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
-        loopDataManager = LoopDataManagerOld(
+        loopDataManager = LoopDataManager(
             lastLoopCompleted: currentDate,
-            basalDeliveryState: .active(currentDate),
             settings: settings,
             overrideHistory: TemporaryScheduleOverrideHistory(),
             analyticsServicesManager: AnalyticsServicesManager(),
@@ -127,7 +126,6 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             dosingDecisionStore: dosingDecisionStore,
             latestStoredSettingsProvider: MockLatestStoredSettingsProvider(),
             now: { currentDate },
-            pumpInsulinType: .novolog,
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { 0 }
         )
@@ -330,52 +328,6 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         wait(for: [e], timeout: timeout)
     }
     
-    func testValidateMaxTempBasalDoesntCancelTempBasalIfHigher() {
-        let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 3.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
-        setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
-        // This wait is working around the issue presented by LoopDataManager.init().  It cancels the temp basal if
-        // `isClosedLoop` is false (which it is from `setUp` above). When that happens, it races with
-        // `maxTempBasalSavePreflight` below.  This ensures only one happens at a time.
-        waitOnDataQueue()
-        let delegate = MockDelegate()
-        loopDataManager.delegate = delegate
-        var error: Error?
-        let exp = expectation(description: #function)
-        XCTAssertNil(delegate.recommendation)
-        loopDataManager.maxTempBasalSavePreflight(unitsPerHour: 5.0) {
-            error = $0
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: 1.0)
-        XCTAssertNil(error)
-        XCTAssertNil(delegate.recommendation)
-        XCTAssertTrue(dosingDecisionStore.dosingDecisions.isEmpty)
-    }
-    
-    func testValidateMaxTempBasalCancelsTempBasalIfLower() {
-        let dose = DoseEntry(type: .tempBasal, startDate: Date(), endDate: nil, value: 5.0, unit: .unitsPerHour, deliveredUnits: nil, description: nil, syncIdentifier: nil, scheduledBasalRate: nil)
-        setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
-        // This wait is working around the issue presented by LoopDataManager.init().  It cancels the temp basal if
-        // `isClosedLoop` is false (which it is from `setUp` above). When that happens, it races with
-        // `maxTempBasalSavePreflight` below.  This ensures only one happens at a time.
-        waitOnDataQueue()
-        let delegate = MockDelegate()
-        loopDataManager.delegate = delegate
-        var error: Error?
-        let exp = expectation(description: #function)
-        XCTAssertNil(delegate.recommendation)
-        loopDataManager.maxTempBasalSavePreflight(unitsPerHour: 3.0) {
-            error = $0
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: 1.0)
-        XCTAssertNil(error)
-        XCTAssertEqual(delegate.recommendation, AutomaticDoseRecommendation(basalAdjustment: .cancel))
-        XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
-        XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "maximumBasalRateChanged")
-        XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].automaticDoseRecommendation, AutomaticDoseRecommendation(basalAdjustment: .cancel))
-    }
-    
     func testChangingMaxBasalUpdatesLoopData() {
         setUp(for: .highAndStable)
         waitOnDataQueue()
@@ -408,26 +360,6 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         XCTAssertEqual(delegate.recommendation, expectedAutomaticDoseRecommendation)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "automaticDosingDisabled")
-        XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].automaticDoseRecommendation, expectedAutomaticDoseRecommendation)
-        NotificationCenter.default.removeObserver(observer)
-    }
-
-    func testReceivedUnreliableCGMReadingCancelsTempBasal() {
-        let dose = DoseEntry(type: .tempBasal, startDate: Date(), value: 5.0, unit: .unitsPerHour)
-        setUp(for: .highAndStable, basalDeliveryState: .tempBasal(dose))
-        waitOnDataQueue()
-        let delegate = MockDelegate()
-        loopDataManager.delegate = delegate
-        let exp = expectation(description: #function)
-        let observer = NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: nil, queue: nil) { _ in
-            exp.fulfill()
-        }
-        loopDataManager.receivedUnreliableCGMReading()
-        wait(for: [exp], timeout: 1.0)
-        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel)
-        XCTAssertEqual(delegate.recommendation, expectedAutomaticDoseRecommendation)
-        XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
-        XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "unreliableCGMData")
         XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].automaticDoseRecommendation, expectedAutomaticDoseRecommendation)
         NotificationCenter.default.removeObserver(observer)
     }
@@ -501,18 +433,6 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         XCTAssertEqual(recommendedBolus!.amount, 1.62, accuracy: 0.01)
     }
 
-    func testLoopGetStateRecommendsManualBolusWithoutMomentum() {
-        setUp(for: .highAndRisingWithCOB)
-        let exp = expectation(description: #function)
-        var recommendedBolus: ManualBolusRecommendation?
-        loopDataManager.getLoopState { (_, loopState) in
-            recommendedBolus = try? loopState.recommendBolus(consideringPotentialCarbEntry: nil, replacingCarbEntry: nil, considerPositiveVelocityAndRC: false)
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(recommendedBolus!.amount, 1.52, accuracy: 0.01)
-    }
-
     func testIsClosedLoopAvoidsTriggeringTempBasalCancelOnCreation() {
         let settings = LoopSettings(
             dosingEnabled: false,
@@ -544,9 +464,8 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             automatic: true,
             manuallyEntered: false,
             isMutable: true)
-        loopDataManager = LoopDataManagerOld(
+        loopDataManager = LoopDataManager(
             lastLoopCompleted: currentDate.addingTimeInterval(-.minutes(5)),
-            basalDeliveryState: .tempBasal(existingTempBasal),
             settings: settings,
             overrideHistory: TemporaryScheduleOverrideHistory(),
             analyticsServicesManager: AnalyticsServicesManager(),
@@ -557,7 +476,6 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
             dosingDecisionStore: dosingDecisionStore,
             latestStoredSettingsProvider: MockLatestStoredSettingsProvider(),
             now: { currentDate },
-            pumpInsulinType: .novolog,
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { 0 }
         )

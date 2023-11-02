@@ -90,7 +90,7 @@ public final class AlertManager {
 
         NotificationCenter.default.publisher(for: .LoopCompleted)
             .sink { [weak self] publisher in
-                if let loopDataManager = publisher.object as? LoopDataManagerOld {
+                if let loopDataManager = publisher.object as? LoopDataManager {
                     self?.loopDidComplete(loopDataManager.lastLoopCompleted)
                 }
             }

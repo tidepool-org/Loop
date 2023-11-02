@@ -21,7 +21,7 @@ protocol SimpleBolusViewModelDelegate: AnyObject {
     func addGlucose(_ samples: [NewGlucoseSample], completion: @escaping (Swift.Result<[StoredGlucoseSample], Error>) -> Void)
     
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry? ,
-                      completion: @escaping (_ result: Result<StoredCarbEntry>) -> Void)
+                      completion: @escaping (_ result: Result<StoredCarbEntry,Error>) -> Void)
 
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
     

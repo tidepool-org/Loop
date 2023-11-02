@@ -290,7 +290,7 @@ extension SimpleBolusViewModelTests: SimpleBolusViewModelDelegate {
         completion(.success([]))
     }
     
-    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<StoredCarbEntry>) -> Void) {
+    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<StoredCarbEntry,Error>) -> Void) {
         
         addedCarbEntry = carbEntry
         let storedCarbEntry = StoredCarbEntry(

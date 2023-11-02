@@ -126,7 +126,7 @@ final class RemoteDataServicesManager {
 
     private let doseStore: DoseStore
 
-    private let dosingDecisionStore: DosingDecisionStore
+    private let dosingDecisionStore: DosingDecisionStoreProtocol
 
     private let glucoseStore: GlucoseStore
 
@@ -142,7 +142,7 @@ final class RemoteDataServicesManager {
         alertStore: AlertStore,
         carbStore: CarbStore,
         doseStore: DoseStore,
-        dosingDecisionStore: DosingDecisionStore,
+        dosingDecisionStore: DosingDecisionStoreProtocol,
         glucoseStore: GlucoseStore,
         cgmEventStore: CgmEventStore,
         settingsStore: SettingsStore,

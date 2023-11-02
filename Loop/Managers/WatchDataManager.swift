@@ -15,9 +15,18 @@ import LoopCore
 final class WatchDataManager: NSObject {
 
     private unowned let deviceManager: DeviceDataManager
-    
-    init(deviceManager: DeviceDataManager, healthStore: HKHealthStore) {
+    private unowned let settingsManager: SettingsManager
+    private unowned let temporaryPresetsManager: TemporaryPresetsManager
+
+    init(
+        deviceManager: DeviceDataManager,
+        settingsManager: SettingsManager,
+        temporaryPresetsManager: TemporaryPresetsManager,
+        healthStore: HKHealthStore
+    ) {
         self.deviceManager = deviceManager
+        self.settingsManager = settingsManager
+        self.temporaryPresetsManager = temporaryPresetsManager
         self.sleepStore = SleepStore(healthStore: healthStore)
         self.lastBedtimeQuery = UserDefaults.appGroup?.lastBedtimeQuery ?? .distantPast
         self.bedtime = UserDefaults.appGroup?.bedtime
@@ -41,7 +50,7 @@ final class WatchDataManager: NSObject {
         }
     }()
 
-    private var lastSentSettings: LoopSettings?
+    private var lastSentUserInfo: LoopSettingsUserInfo?
     private var lastSentBolusVolumes: [Double]?
 
     private var contextDosingDecisions: [Date: BolusDosingDecision] {
@@ -100,8 +109,8 @@ final class WatchDataManager: NSObject {
 
     @objc private func updateWatch(_ notification: Notification) {
         guard
-            let rawUpdateContext = notification.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as? LoopDataManagerOld.LoopUpdateContext.RawValue,
-            let updateContext = LoopDataManagerOld.LoopUpdateContext(rawValue: rawUpdateContext)
+            let rawUpdateContext = notification.userInfo?[LoopDataManager.LoopUpdateContextKey] as? LoopDataManager.LoopUpdateContext.RawValue,
+            let updateContext = LoopDataManager.LoopUpdateContext(rawValue: rawUpdateContext)
         else {
             return
         }
@@ -120,7 +129,10 @@ final class WatchDataManager: NSObject {
     private lazy var minTrendUnit = HKUnit.milligramsPerDeciliter
 
     private func sendSettingsIfNeeded() {
-        let settings = deviceManager.loopManager.settings
+        let userInfo = LoopSettingsUserInfo(
+            loopSettings: settingsManager.loopSettings,
+            scheduleOverride: temporaryPresetsManager.scheduleOverride,
+            preMealOverride: temporaryPresetsManager.preMealOverride)
 
         guard let session = watchSession, session.isPaired, session.isWatchAppInstalled else {
             return
@@ -131,12 +143,12 @@ final class WatchDataManager: NSObject {
             return
         }
 
-        guard settings != lastSentSettings else {
+        guard userInfo != lastSentUserInfo else {
             log.default("Skipping settings transfer due to no changes")
             return
         }
 
-        lastSentSettings = settings
+        lastSentUserInfo = userInfo
 
         // clear any old pending settings transfers
         for transfer in session.outstandingUserInfoTransfers {
@@ -146,9 +158,9 @@ final class WatchDataManager: NSObject {
             }
         }
 
-        let userInfo = LoopSettingsUserInfo(settings: settings).rawValue
-        log.default("Transferring LoopSettingsUserInfo: %{public}@", userInfo)
-        session.transferUserInfo(userInfo)
+        let rawUserInfo = userInfo.rawValue
+        log.default("Transferring LoopSettingsUserInfo: %{public}@", rawUserInfo)
+        session.transferUserInfo(rawUserInfo)
     }
 
     @objc private func sendSupportedBolusVolumesIfNeeded() {
@@ -245,7 +257,7 @@ final class WatchDataManager: NSObject {
 
             let carbsOnBoard = state.carbsOnBoard
 
-            let context = WatchContext(glucose: glucose, glucoseUnit: self.deviceManager.preferredGlucoseUnit)
+            let context = WatchContext(glucose: glucose, glucoseUnit: self.deviceManager.displayGlucosePreference.unit)
             context.reservoir = reservoir?.unitVolume
             context.loopLastRunDate = manager.lastLoopCompleted
             context.cob = carbsOnBoard?.quantity.doubleValue(for: HKUnit.gram())
@@ -259,7 +271,7 @@ final class WatchDataManager: NSObject {
 
             context.cgmManagerState = self.deviceManager.cgmManager?.rawValue
         
-            let settings = self.deviceManager.loopManager.settings
+            let settings = self.settingsManager.loopSettings
 
             context.isClosedLoop = settings.dosingEnabled
 
@@ -313,8 +325,8 @@ final class WatchDataManager: NSObject {
             dosingDecision.insulinOnBoard = insulinOnBoard
 
             if let basalDeliveryState = basalDeliveryState,
-                let basalSchedule = manager.basalRateScheduleApplyingOverrideHistory,
-                let netBasal = basalDeliveryState.getNetBasal(basalSchedule: basalSchedule, settings: manager.settings)
+               let basalSchedule = self.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory,
+               let netBasal = basalDeliveryState.getNetBasal(basalSchedule: basalSchedule, maximumBasalRatePerHour: self.settingsManager.latestSettings.maximumBasalRatePerHour)
             {
                 context.lastNetTempBasalDose = netBasal.rate
             }
@@ -329,12 +341,12 @@ final class WatchDataManager: NSObject {
 
             dosingDecision.predictedGlucose = state.predictedGlucoseIncludingPendingInsulin ?? state.predictedGlucose
 
-            var preMealOverride = settings.preMealOverride
+            var preMealOverride = self.temporaryPresetsManager.preMealOverride
             if preMealOverride?.hasFinished() == true {
                 preMealOverride = nil
             }
 
-            var scheduleOverride = settings.scheduleOverride
+            var scheduleOverride = self.temporaryPresetsManager.scheduleOverride
             if scheduleOverride?.hasFinished() == true {
                 scheduleOverride = nil
             }
@@ -342,7 +354,7 @@ final class WatchDataManager: NSObject {
             dosingDecision.scheduleOverride = scheduleOverride
 
             if scheduleOverride != nil || preMealOverride != nil {
-                dosingDecision.glucoseTargetRangeSchedule = settings.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: potentialCarbEntry != nil)
+                dosingDecision.glucoseTargetRangeSchedule = self.temporaryPresetsManager.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: potentialCarbEntry != nil)
             } else {
                 dosingDecision.glucoseTargetRangeSchedule = settings.glucoseTargetRangeSchedule
             }
@@ -434,17 +446,14 @@ extension WatchDataManager: WCSessionDelegate {
             // Reply immediately
             replyHandler([:])
         case LoopSettingsUserInfo.name?:
-            if let watchSettings = LoopSettingsUserInfo(rawValue: message)?.settings {
+            if let userInfo = LoopSettingsUserInfo(rawValue: message) {
                 // So far we only support watch changes of temporary schedule overrides
-                var loopSettings = deviceManager.loopManager.settings
-                loopSettings.preMealOverride = watchSettings.preMealOverride
-                loopSettings.scheduleOverride = watchSettings.scheduleOverride
+                temporaryPresetsManager.preMealOverride = userInfo.preMealOverride
+                temporaryPresetsManager.scheduleOverride = userInfo.scheduleOverride
 
                 // Prevent re-sending these updated settings back to the watch
-                lastSentSettings = loopSettings
-                deviceManager.loopManager.mutateSettings { settings in
-                    settings = loopSettings
-                }
+                lastSentUserInfo?.preMealOverride = userInfo.preMealOverride
+                lastSentUserInfo?.scheduleOverride = userInfo.scheduleOverride
             }
 
             // Since target range affects recommended bolus, send back a new one
@@ -517,12 +526,12 @@ extension WatchDataManager: WCSessionDelegate {
             // This might be useless, as userInfoTransfer.userInfo seems to be nil when error is non-nil.
             switch userInfoTransfer.userInfo["name"] as? String {
             case nil:
-                lastSentSettings = nil
+                lastSentUserInfo = nil
                 sendSettingsIfNeeded()
                 lastSentBolusVolumes = nil
                 sendSupportedBolusVolumesIfNeeded()
             case LoopSettingsUserInfo.name:
-                lastSentSettings = nil
+                lastSentUserInfo = nil
                 sendSettingsIfNeeded()
             case SupportedBolusVolumesUserInfo.name:
                 lastSentBolusVolumes = nil
@@ -538,7 +547,7 @@ extension WatchDataManager: WCSessionDelegate {
     }
 
     func sessionDidDeactivate(_ session: WCSession) {
-        lastSentSettings = nil
+        lastSentUserInfo = nil
         watchSession = WCSession.default
         watchSession?.delegate = self
         watchSession?.activate()
@@ -555,7 +564,7 @@ extension WatchDataManager {
     override var debugDescription: String {
         var items = [
             "## WatchDataManager",
-            "lastSentSettings: \(String(describing: lastSentSettings))",
+            "lastSentUserInfo: \(String(describing: lastSentUserInfo))",
             "lastComplicationContext: \(String(describing: lastComplicationContext))",
             "lastBedtimeQuery: \(String(describing: lastBedtimeQuery))",
             "bedtime: \(String(describing: bedtime))",

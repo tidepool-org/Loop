@@ -23,6 +23,8 @@ private extension RefreshContext {
 class PredictionTableViewController: LoopChartsTableViewController, IdentifiableClass {
     private let log = OSLog(category: "PredictionTableViewController")
 
+    var settingsManager: SettingsManager!
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -35,9 +37,9 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
 
         notificationObservers += [
             notificationCenter.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] note in
-                let context = note.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as! LoopDataManagerOld.LoopUpdateContext.RawValue
+                let context = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopDataManager.LoopUpdateContext.RawValue
                 DispatchQueue.main.async {
-                    switch LoopDataManagerOld.LoopUpdateContext(rawValue: context) {
+                    switch LoopDataManager.LoopUpdateContext(rawValue: context) {
                     case .preferences?:
                         self?.refreshContext.formUnion([.status, .targets])
                     case .glucose?:
@@ -149,7 +151,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
             }
 
             if self.refreshContext.remove(.targets) != nil {
-                self.glucoseChart.targetGlucoseSchedule = manager.settings.glucoseTargetRangeSchedule
+                self.glucoseChart.targetGlucoseSchedule = self.settingsManager.latestSettings.glucoseTargetRangeSchedule
             }
 
             reloadGroup.leave()

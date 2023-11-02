@@ -8,8 +8,11 @@
 
 import LoopKit
 
-protocol DosingDecisionStoreProtocol: AnyObject {
+protocol DosingDecisionStoreProtocol: CriticalEventLog {
+    var delegate: DosingDecisionStoreDelegate? { get set }
+
     func storeDosingDecision(_ dosingDecision: StoredDosingDecision, completion: @escaping () -> Void)
+    func executeDosingDecisionQuery(fromQueryAnchor queryAnchor: DosingDecisionStore.QueryAnchor?, limit: Int, completion: @escaping (DosingDecisionStore.DosingDecisionQueryResult) -> Void)
 }
 
 extension DosingDecisionStore: DosingDecisionStoreProtocol { }

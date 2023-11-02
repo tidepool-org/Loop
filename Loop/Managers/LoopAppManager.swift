@@ -14,6 +14,7 @@ import LoopKitUI
 import MockKit
 import HealthKit
 import WidgetKit
+import LoopCore
 
 #if targetEnvironment(simulator)
 enum SimulatorError: Error {
@@ -74,6 +75,12 @@ class LoopAppManager: NSObject {
     private var bluetoothStateManager: BluetoothStateManager!
     private var alertManager: AlertManager!
     private var trustedTimeChecker: TrustedTimeChecker!
+    private var healthStore: HKHealthStore!
+    private var carbStore: CarbStore!
+    private var doseStore: DoseStore!
+    private var glucoseStore: GlucoseStore!
+    private var dosingDecisionStore: DosingDecisionStore!
+    private var loopDosingManager: LoopDosingManager!
     private var deviceDataManager: DeviceDataManager!
     private var onboardingManager: OnboardingManager!
     private var alertPermissionsChecker: AlertPermissionsChecker!
@@ -84,8 +91,7 @@ class LoopAppManager: NSObject {
     private(set) var testingScenariosManager: TestingScenariosManager?
     private var resetLoopManager: ResetLoopManager!
     private var deeplinkManager: DeeplinkManager!
-
-    private var overrideHistory = UserDefaults.appGroup?.overrideHistory ?? TemporaryScheduleOverrideHistory.init()
+    private var temporaryPresetsManager: TemporaryPresetsManager!
 
     private var state: State = .initialize
 
@@ -187,16 +193,102 @@ class LoopAppManager: NSObject {
         alertPermissionsChecker = AlertPermissionsChecker()
         alertPermissionsChecker.delegate = alertManager
         
-        trustedTimeChecker = TrustedTimeChecker(alertManager: alertManager)
+        trustedTimeChecker = LoopTrustedTimeChecker(alertManager: alertManager)
 
-        settingsManager = SettingsManager(cacheStore: cacheStore,
-                                               expireAfter: localCacheDuration,
-                                               alertMuter: alertManager.alertMuter)
+        settingsManager = SettingsManager(
+            cacheStore: cacheStore,
+            expireAfter: localCacheDuration,
+            alertMuter: alertManager.alertMuter,
+            analyticsServicesManager: analyticsServicesManager
+        )
+
+        healthStore = HKHealthStore()
+
+        let carbHealthStore = HealthKitSampleStore(
+            healthStore: healthStore,
+            observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitCarbSamplesFromOtherApps, // At some point we should let the user decide which apps they would like to import from.
+            type: HealthKitSampleStore.carbType,
+            observationStart: Date().addingTimeInterval(-CarbMath.maximumAbsorptionTimeInterval)
+        )
+
+        let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
+        let sensitivitySchedule = settingsManager.latestSettings.insulinSensitivitySchedule
+
+        temporaryPresetsManager = TemporaryPresetsManager(settingsManager: settingsManager)
+
+        temporaryPresetsManager.addTemporaryPresetObserver(alertManager)
+        temporaryPresetsManager.addTemporaryPresetObserver(analyticsServicesManager)
+
+        self.carbStore = CarbStore(
+            healthKitSampleStore: carbHealthStore,
+            cacheStore: cacheStore,
+            cacheLength: localCacheDuration,
+            defaultAbsorptionTimes: absorptionTimes,
+            carbAbsorptionModel: FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
+        )
+
+        let insulinHealthStore = HealthKitSampleStore(
+            healthStore: healthStore,
+            observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitDoseSamplesFromOtherApps,
+            type: HealthKitSampleStore.insulinQuantityType,
+            observationStart: Date().addingTimeInterval(-CarbMath.maximumAbsorptionTimeInterval)
+        )
+
+        let insulinModelProvider: InsulinModelProvider
+
+        if FeatureFlags.adultChildInsulinModelSelectionEnabled {
+            insulinModelProvider = PresetInsulinModelProvider(defaultRapidActingModel: settingsManager.latestSettings.defaultRapidActingModel?.presetForRapidActingInsulin)
+        } else {
+            insulinModelProvider = PresetInsulinModelProvider(defaultRapidActingModel: nil)
+        }
+
+        self.doseStore = DoseStore(
+            healthKitSampleStore: insulinHealthStore,
+            cacheStore: cacheStore,
+            cacheLength: localCacheDuration,
+            insulinModelProvider: insulinModelProvider,
+            longestEffectDuration: ExponentialInsulinModelPreset.rapidActingAdult.effectDuration,
+            basalProfile: settingsManager.latestSettings.basalRateSchedule,
+            lastPumpEventsReconciliation: nil // PumpManager is nil at this point. Will update this via addPumpEvents below
+        )
+
+        let glucoseHealthStore = HealthKitSampleStore(
+            healthStore: healthStore,
+            observeHealthKitSamplesFromOtherApps:  FeatureFlags.observeHealthKitGlucoseSamplesFromOtherApps,
+            type: HealthKitSampleStore.glucoseType,
+            observationStart: Date().addingTimeInterval(-.hours(24))
+        )
+
+        self.glucoseStore = GlucoseStore(
+            healthKitSampleStore: glucoseHealthStore,
+            cacheStore: cacheStore,
+            cacheLength: localCacheDuration,
+            provenanceIdentifier: HKSource.default().bundleIdentifier
+        )
+
+        dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
+
+        loopDosingManager = LoopDosingManager(
+            doseStore: doseStore,
+            settingsStore: settingsManager.settingsStore,
+            carbStore: carbStore,
+            glucoseStore: glucoseStore,
+            overrideHistory: temporaryPresetsManager.overrideHistory,
+            dosingDecisionStore: dosingDecisionStore,
+            automaticDosingStatus: automaticDosingStatus,
+            analyticsServicesManager: analyticsServicesManager
+        )
 
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager,
                                               alertManager: alertManager,
                                               settingsManager: settingsManager,
                                               loggingServicesManager: loggingServicesManager,
+                                              healthStore: healthStore,
+                                              carbStore: carbStore,
+                                              doseStore: doseStore,
+                                              glucoseStore: glucoseStore,
+                                              dosingDecisionStore: dosingDecisionStore,
+                                              loopDosingManager: loopDosingManager,
                                               analyticsServicesManager: analyticsServicesManager,
                                               bluetoothProvider: bluetoothStateManager,
                                               alertPresenter: self,
@@ -206,6 +298,13 @@ class LoopAppManager: NSObject {
                                               overrideHistory: overrideHistory,
                                               trustedTimeChecker: trustedTimeChecker
         )
+
+        Task {
+            await loopDosingManager.setDosingDelegate(deviceDataManager)
+        }
+
+        deviceDataManager.instantiateDeviceManagers()
+
         settingsManager.deviceStatusProvider = deviceDataManager
         settingsManager.displayGlucosePreference = deviceDataManager.displayGlucosePreference
 
@@ -296,6 +395,8 @@ class LoopAppManager: NSObject {
         statusTableViewController.onboardingManager = onboardingManager
         statusTableViewController.supportManager = supportManager
         statusTableViewController.testingScenariosManager = testingScenariosManager
+        statusTableViewController.settingsManager = settingsManager
+        statusTableViewController.temporaryPresetsManager = temporaryPresetsManager
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 
         var rootNavigationController = rootViewController as? RootNavigationController
@@ -325,7 +426,7 @@ class LoopAppManager: NSObject {
         }
         settingsManager?.didBecomeActive()
         deviceDataManager?.didBecomeActive()
-        alertManager.inferDeliveredLoopNotRunningNotifications()
+        alertManager?.inferDeliveredLoopNotRunningNotifications()
         
         widgetLog.default("Refreshing widget. Reason: App didBecomeActive")
         WidgetCenter.shared.reloadAllTimelines()
@@ -333,7 +434,7 @@ class LoopAppManager: NSObject {
 
     // MARK: - Remote Notification
     
-    func remoteNotificationRegistrationDidFinish(_ result: Result<Data,Error>) {
+    func remoteNotificationRegistrationDidFinish(_ result: Swift.Result<Data,Error>) {
         if case .success(let token) = result {
             log.default("DeviceToken: %{public}@", token.hexadecimalString)
         }

@@ -121,7 +121,7 @@ class LoopDataManagerTests: XCTestCase {
     var now: Date!
     var dosingDecisionStore: MockDosingDecisionStore!
     var automaticDosingStatus: AutomaticDosingStatus!
-    var loopDataManager: LoopDataManagerOld!
+    var loopDataManager: LoopDataManager!
     
     func setUp(for test: DosingTestScenario,
                basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil,
@@ -172,9 +172,8 @@ class LoopDataManagerTests: XCTestCase {
         
         dosingDecisionStore = MockDosingDecisionStore()
         automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
-        loopDataManager = LoopDataManagerOld(
+        loopDataManager = LoopDataManager(
             lastLoopCompleted: currentDate,
-            basalDeliveryState: basalDeliveryState ?? .active(currentDate),
             settings: settings,
             overrideHistory: TemporaryScheduleOverrideHistory(),
             analyticsServicesManager: AnalyticsServicesManager(),
@@ -185,7 +184,6 @@ class LoopDataManagerTests: XCTestCase {
             dosingDecisionStore: dosingDecisionStore,
             latestStoredSettingsProvider: MockLatestStoredSettingsProvider(),
             now: { currentDate },
-            pumpInsulinType: .novolog,
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { 0 }
         )

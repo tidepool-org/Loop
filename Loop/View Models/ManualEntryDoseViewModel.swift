@@ -42,7 +42,10 @@ protocol ManualDoseViewModelDelegate: AnyObject {
     var pumpInsulinType: InsulinType? { get }
 
     var settings: LoopSettings { get }
+
+    var scheduleOverride: TemporaryScheduleOverride? { get }
 }
+
 
 final class ManualEntryDoseViewModel: ObservableObject {
 
@@ -328,7 +331,7 @@ final class ManualEntryDoseViewModel: ObservableObject {
         glucoseUnit = delegate.preferredGlucoseUnit
 
         targetGlucoseSchedule = delegate.settings.glucoseTargetRangeSchedule
-        scheduleOverride = delegate.settings.scheduleOverride
+        scheduleOverride = delegate.scheduleOverride
 
         if preMealOverride?.hasFinished() == true {
             preMealOverride = nil

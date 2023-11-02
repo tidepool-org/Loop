@@ -116,7 +116,7 @@ final class DeviceDataManager {
 
     // MARK: - Pump
 
-    var pumpManager: PumpManagerUI? {
+    var pumpManager: PumpManager? {
         didSet {
             dispatchPrecondition(condition: .onQueue(.main))
 
@@ -161,8 +161,8 @@ final class DeviceDataManager {
 
     private let cacheStore: PersistenceController
 
-    let dosingDecisionStore: DosingDecisionStore
-    
+    var dosingDecisionStore: DosingDecisionStoreProtocol
+
     /// All the HealthKit types to be read by stores
     private var readTypes: Set<HKSampleType> {
         var readTypes: Set<HKSampleType> = []
@@ -237,14 +237,20 @@ final class DeviceDataManager {
 
     // MARK: - Initialization
 
-    private(set) var loopManager: LoopDataManagerOld!
+    private(set) var loopManager: LoopDataManager!
 
-    private(set) var loopDosingManager: LoopDosingManager!
+    private(set) var loopDosingManager: LoopDosingManagerProtocol
 
     init(pluginManager: PluginManager,
          alertManager: AlertManager,
          settingsManager: SettingsManager,
          loggingServicesManager: LoggingServicesManager,
+         healthStore: HKHealthStore,
+         carbStore: CarbStore,
+         doseStore: DoseStore,
+         glucoseStore: GlucoseStore,
+         dosingDecisionStore: DosingDecisionStoreProtocol,
+         loopDosingManager: LoopDosingManagerProtocol,
          analyticsServicesManager: AnalyticsServicesManager,
          bluetoothProvider: BluetoothProvider,
          alertPresenter: AlertPresenter,
@@ -271,83 +277,21 @@ final class DeviceDataManager {
         self.alertManager = alertManager
         self.bluetoothProvider = bluetoothProvider
         self.alertPresenter = alertPresenter
-        
-        self.healthStore = HKHealthStore()
+        self.healthStore = healthStore
+        self.carbStore = carbStore
+        self.doseStore = doseStore
+        self.glucoseStore = glucoseStore
         self.cacheStore = cacheStore
+        self.dosingDecisionStore = dosingDecisionStore
         self.settingsManager = settingsManager
-
-        let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
-        let sensitivitySchedule = settingsManager.latestSettings.insulinSensitivitySchedule
-
-        let carbHealthStore = HealthKitSampleStore(
-            healthStore: healthStore,
-            observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitCarbSamplesFromOtherApps, // At some point we should let the user decide which apps they would like to import from.
-            type: HealthKitSampleStore.carbType,
-            observationStart: Date().addingTimeInterval(-absorptionTimes.slow * 2)
-        )
-        
-        self.carbStore = CarbStore(
-            healthKitSampleStore: carbHealthStore,
-            cacheStore: cacheStore,
-            cacheLength: localCacheDuration,
-            defaultAbsorptionTimes: absorptionTimes,
-            carbRatioSchedule: settingsManager.latestSettings.carbRatioSchedule,
-            insulinSensitivitySchedule: sensitivitySchedule,
-            overrideHistory: overrideHistory,
-            carbAbsorptionModel: FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear,
-            provenanceIdentifier: HKSource.default().bundleIdentifier
-        )
-
-        let insulinModelProvider: InsulinModelProvider
-        if FeatureFlags.adultChildInsulinModelSelectionEnabled {
-            insulinModelProvider = PresetInsulinModelProvider(defaultRapidActingModel: settingsManager.latestSettings.defaultRapidActingModel?.presetForRapidActingInsulin)
-        } else {
-            insulinModelProvider = PresetInsulinModelProvider(defaultRapidActingModel: nil)
-        }
-
         self.analyticsServicesManager = analyticsServicesManager
+        self.loopDosingManager = loopDosingManager
 
-        let insulinHealthStore = HealthKitSampleStore(
-            healthStore: healthStore,
-            observeHealthKitSamplesFromOtherApps: FeatureFlags.observeHealthKitDoseSamplesFromOtherApps,
-            type: HealthKitSampleStore.insulinQuantityType,
-            observationStart: Date().addingTimeInterval(-absorptionTimes.slow * 2)
-        )
-
-        self.doseStore = DoseStore(
-            healthKitSampleStore: insulinHealthStore,
-            cacheStore: cacheStore,
-            cacheLength: localCacheDuration,
-            insulinModelProvider: insulinModelProvider,
-            longestEffectDuration: ExponentialInsulinModelPreset.rapidActingAdult.effectDuration,
-            basalProfile: settingsManager.latestSettings.basalRateSchedule,
-            insulinSensitivitySchedule: sensitivitySchedule,
-            overrideHistory: overrideHistory,
-            lastPumpEventsReconciliation: nil, // PumpManager is nil at this point. Will update this via addPumpEvents below
-            provenanceIdentifier: HKSource.default().bundleIdentifier
-        )
-
-        let glucoseHealthStore = HealthKitSampleStore(
-            healthStore: healthStore,
-            observeHealthKitSamplesFromOtherApps:  FeatureFlags.observeHealthKitGlucoseSamplesFromOtherApps,
-            type: HealthKitSampleStore.glucoseType,
-            observationStart: Date().addingTimeInterval(-.hours(24))
-        )
-        
-        self.glucoseStore = GlucoseStore(
-            healthKitSampleStore: glucoseHealthStore,
-            cacheStore: cacheStore,
-            cacheLength: localCacheDuration,
-            provenanceIdentifier: HKSource.default().bundleIdentifier
-        )
-        
         cgmStalenessMonitor = CGMStalenessMonitor()
         cgmStalenessMonitor.delegate = glucoseStore
 
         cgmEventStore = CgmEventStore(cacheStore: cacheStore, cacheLength: localCacheDuration)
 
-        dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
-        
         cgmHasValidSensorSession = false
         pumpIsAllowingAutomation = true
         self.automaticDosingStatus = automaticDosingStatus
@@ -360,35 +304,10 @@ final class DeviceDataManager {
         crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
         alertManager.addAlertResponder(managerIdentifier: crashRecoveryManager.managerIdentifier, alertResponder: crashRecoveryManager)
 
-        if let pumpManagerRawValue = rawPumpManager ?? UserDefaults.appGroup?.legacyPumpManagerRawValue {
-            pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
-            // Update lastPumpEventsReconciliation on DoseStore
-            if let lastSync = pumpManager?.lastSync {
-                doseStore.addPumpEvents([], lastReconciliation: lastSync) { _ in }
-            }
-            if let status = pumpManager?.status {
-                updatePumpIsAllowingAutomation(status: status)
-            }
-        } else {
-            pumpManager = nil
-        }
-
-        if let cgmManagerRawValue = rawCGMManager ?? UserDefaults.appGroup?.legacyCGMManagerRawValue {
-            cgmManager = cgmManagerFromRawValue(cgmManagerRawValue)
-
-            // Handle case of PumpManager providing CGM
-            if cgmManager == nil && pumpManagerTypeFromRawValue(cgmManagerRawValue) != nil {
-                cgmManager = pumpManager as? CGMManager
-            }
-        }
-
-        //TODO The instantiation of these non-device related managers should be moved to LoopAppManager, and then LoopAppManager can wire up the connections between them.
         statusExtensionManager = ExtensionDataManager(deviceDataManager: self, automaticDosingStatus: automaticDosingStatus)
 
-        loopManager = LoopDataManagerOld(
+        loopManager = LoopDataManager(
             lastLoopCompleted: ExtensionDataManager.lastLoopCompleted,
-            basalDeliveryState: pumpManager?.status.basalDeliveryState,
-            settings: settingsManager.loopSettings,
             overrideHistory: overrideHistory,
             analyticsServicesManager: analyticsServicesManager,
             localCacheDuration: localCacheDuration,
@@ -397,23 +316,28 @@ final class DeviceDataManager {
             carbStore: carbStore,
             dosingDecisionStore: dosingDecisionStore,
             latestStoredSettingsProvider: settingsManager,
-            pumpInsulinType: pumpManager?.status.insulinType,
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { trustedTimeChecker.detectedSystemTimeOffset }
         )
         cacheStore.delegate = loopManager
-        loopManager.presetActivationObservers.append(alertManager)
-        loopManager.presetActivationObservers.append(analyticsServicesManager)
 
-        loopDosingManager = LoopDosingManager(
-            doseStore: doseStore,
-            settingsStore: settingsManager.settingsStore,
-            carbStore: carbStore,
-            glucoseStore: glucoseStore,
-            overrideHistory: overrideHistory,
-            dosingDecisionStore: dosingDecisionStore,
-            dosingDelegate: self
-        )
+        // Turn off preMeal when going into closed loop off mode
+        // Cancel any active temp basal when going into closed loop off mode
+        // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
+        self.automaticDosingStatus.$automaticDosingEnabled
+            .removeDuplicates()
+            .dropFirst()
+            .sink { if !$0 {
+                // TODO: update settings
+//                self.mutateSettings { settings in
+//                    settings.clearOverride(matching: .preMeal)
+//                }
+                Task {
+                    await self.loopDosingManager.cancelActiveTempBasal(for: .automaticDosingDisabled)
+                }
+            } }
+            .store(in: &cancellables)
+
 
         watchManager = WatchDataManager(deviceManager: self, healthStore: healthStore)
 
@@ -454,7 +378,7 @@ final class DeviceDataManager {
         alertManager.alertStore.delegate = self
         carbStore.delegate = self
         doseStore.delegate = self
-        dosingDecisionStore.delegate = self
+        self.dosingDecisionStore.delegate = self
         glucoseStore.delegate = self
         cgmEventStore.delegate = self
         doseStore.insulinDeliveryStore.delegate = self
@@ -462,7 +386,7 @@ final class DeviceDataManager {
         
         setupPump()
         setupCGM()
-                
+
         cgmStalenessMonitor.$cgmDataIsStale
             .combineLatest($cgmHasValidSensorSession)
             .map { $0 == false || $1 }
@@ -483,6 +407,30 @@ final class DeviceDataManager {
                     self.displayGlucosePreference.unitDidChange(to: unit)
                     self.notifyObserversOfDisplayGlucoseUnitChange(to: unit)
                 }
+            }
+        }
+    }
+
+    func instantiateDeviceManagers() {
+        if let pumpManagerRawValue = rawPumpManager ?? UserDefaults.appGroup?.legacyPumpManagerRawValue {
+            pumpManager = pumpManagerFromRawValue(pumpManagerRawValue)
+            // Update lastPumpEventsReconciliation on DoseStore
+            if let lastSync = pumpManager?.lastSync {
+                doseStore.addPumpEvents([], lastReconciliation: lastSync) { _ in }
+            }
+            if let status = pumpManager?.status {
+                updatePumpIsAllowingAutomation(status: status)
+            }
+        } else {
+            pumpManager = nil
+        }
+
+        if let cgmManagerRawValue = rawCGMManager ?? UserDefaults.appGroup?.legacyCGMManagerRawValue {
+            cgmManager = cgmManagerFromRawValue(cgmManagerRawValue)
+
+            // Handle case of PumpManager providing CGM
+            if cgmManager == nil && pumpManagerTypeFromRawValue(cgmManagerRawValue) != nil {
+                cgmManager = pumpManager as? CGMManager
             }
         }
     }
@@ -577,6 +525,23 @@ final class DeviceDataManager {
         await self.loopDosingManager.loop()
     }
 
+
+    /// An active high temp basal (greater than the basal schedule) is cancelled when the CGM data is unreliable.
+    private func receivedUnreliableCGMReading() async {
+        guard case .tempBasal(let tempBasal) = pumpManager?.status.basalDeliveryState else {
+            return
+        }
+
+        guard let scheduledBasalRate = settingsManager.latestSettings.basalRateSchedule?.value(at: tempBasal.startDate),
+              tempBasal.unitsPerHour > scheduledBasalRate else
+        {
+            return
+        }
+
+        // Cancel active high temp basal
+        await loopDosingManager.cancelActiveTempBasal(for: .unreliableCGMData)
+    }
+
     private func processCGMReadingResult(_ manager: CGMManager, readingResult: CGMReadingResult, completion: @escaping () -> Void) {
         switch readingResult {
         case .newData(let values):
@@ -589,8 +554,10 @@ final class DeviceDataManager {
                 completion()
             }
         case .unreliableData:
-            loopManager.receivedUnreliableCGMReading()
-            completion()
+            Task {
+                await self.receivedUnreliableCGMReading()
+                completion()
+            }
         case .noData:
             completion()
         case .error(let error):
@@ -748,13 +715,13 @@ private extension DeviceDataManager {
         reportPluginInitializationComplete()
 
         doseStore.device = pumpManager?.status.device
-        pumpManagerHUDProvider = pumpManager?.hudProvider(bluetoothProvider: bluetoothProvider, colorPalette: .default, allowedInsulinTypes: allowedInsulinTypes)
+        pumpManagerHUDProvider = (pumpManager as? PumpManagerUI)?.hudProvider(bluetoothProvider: bluetoothProvider, colorPalette: .default, allowedInsulinTypes: allowedInsulinTypes)
 
         // Proliferate PumpModel preferences to DoseStore
         if let pumpRecordsBasalProfileStartEvents = pumpManager?.pumpRecordsBasalProfileStartEvents {
             doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
         }
-        if let pumpManager = pumpManager {
+        if let pumpManager = pumpManager as? PumpManagerUI {
             alertManager?.addAlertResponder(managerIdentifier: pumpManager.pluginIdentifier,
                                                   alertResponder: pumpManager)
             alertManager?.addAlertSoundVendor(managerIdentifier: pumpManager.pluginIdentifier,
@@ -1152,18 +1119,10 @@ extension DeviceDataManager: PumpManagerDelegate {
             analyticsServicesManager.pumpBatteryWasReplaced()
         }
 
-        if status.basalDeliveryState != oldStatus.basalDeliveryState {
-            loopManager.basalDeliveryState = status.basalDeliveryState
-        }
-
         updatePumpIsAllowingAutomation(status: status)
 
         // Update the pump-schedule based settings
         loopManager.setScheduleTimeZone(status.timeZone)
-        
-        if status.insulinType != oldStatus.insulinType {
-            loopManager.pumpInsulinType = status.insulinType
-        }
         
         if status.deliveryIsUncertain != oldStatus.deliveryIsUncertain {
             DispatchQueue.main.async {
@@ -1411,7 +1370,7 @@ extension DeviceDataManager: LoopDataManagerDelegate {
         return rounded
     }
     
-    func loopDataManager(_ manager: LoopDataManagerOld, estimateBolusDuration units: Double) -> TimeInterval? {
+    func loopDataManager(_ manager: LoopDataManager, estimateBolusDuration units: Double) -> TimeInterval? {
         pumpManager?.estimatedDuration(toBolus: units)
     }
 }
@@ -1611,19 +1570,23 @@ extension DeviceDataManager: TherapySettingsViewModelDelegate {
         pumpManager?.syncBasalRateSchedule(items: items, completion: completion)
     }
     
-    func syncDeliveryLimits(deliveryLimits: DeliveryLimits, completion: @escaping (Swift.Result<DeliveryLimits, Error>) -> Void) {
-        // FIRST we need to check to make sure if we have to cancel temp basal first
-        loopManager.maxTempBasalSavePreflight(unitsPerHour: deliveryLimits.maximumBasalRate?.doubleValue(for: .internationalUnitsPerHour)) { [weak self] error in
-            if let error = error {
-                completion(.failure(CancelTempBasalFailedError(reason: error)))
-            } else if let pumpManager = self?.pumpManager {
-                pumpManager.syncDeliveryLimits(limits: deliveryLimits, completion: completion)
-            } else {
-                completion(.success(deliveryLimits))
+    func syncDeliveryLimits(deliveryLimits: DeliveryLimits) async throws -> DeliveryLimits
+    {
+        do {
+            // FIRST we need to check to make sure if we have to cancel temp basal first
+            if let maxRate = deliveryLimits.maximumBasalRate?.doubleValue(for: .internationalUnitsPerHour),
+               case .tempBasal(let dose) = basalDeliveryState,
+               dose.unitsPerHour > maxRate
+            {
+                // Temp basal is higher than proposed rate, so should cancel
+                await self.loopDosingManager.cancelActiveTempBasal(for: .maximumBasalRateChanged)
             }
+            return try await pumpManager?.syncDeliveryLimits(limits: deliveryLimits) ?? deliveryLimits
+        } catch {
+            throw CancelTempBasalFailedError(reason: error)
         }
     }
-    
+
     func saveCompletion(therapySettings: TherapySettings) {
 
         loopManager.mutateSettings { settings in
@@ -1752,6 +1715,10 @@ extension DeviceDataManager: DosingDelegate {
         defer { self.crashRecoveryManager.dosingFinished() }
 
         try await doseEnactor.enact(recommendation: recommendation, with: pumpManager)
+    }
+
+    var basalDeliveryState: PumpManagerStatus.BasalDeliveryState? {
+        return pumpManager?.status.basalDeliveryState
     }
 }
 

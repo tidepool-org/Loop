@@ -13,12 +13,18 @@ import LoopKit
 
 final class ExtensionDataManager {
     unowned let deviceManager: DeviceDataManager
+    unowned let settingsManager: SettingsManager
+    unowned let temporaryPresetsManager: TemporaryPresetsManager
     private let automaticDosingStatus: AutomaticDosingStatus
 
     init(deviceDataManager: DeviceDataManager,
-         automaticDosingStatus: AutomaticDosingStatus)
-    {
+         automaticDosingStatus: AutomaticDosingStatus,
+         settingsManager: SettingsManager,
+         temporaryPresetsManager: TemporaryPresetsManager
+    ) {
         self.deviceManager = deviceDataManager
+        self.settingsManager = settingsManager
+        self.temporaryPresetsManager = temporaryPresetsManager
         self.automaticDosingStatus = automaticDosingStatus
 
         NotificationCenter.default.addObserver(self, selector: #selector(notificationReceived(_:)), name: .LoopDataUpdated, object: deviceDataManager.loopManager)
@@ -61,7 +67,7 @@ final class ExtensionDataManager {
     }
     
     private func update() {
-        createStatusContext(glucoseUnit:  deviceManager.preferredGlucoseUnit) { (context) in
+        createStatusContext(glucoseUnit:  deviceManager.displayGlucosePreference.unit) { (context) in
             if let context = context {
                 ExtensionDataManager.context = context
             }
@@ -75,7 +81,7 @@ final class ExtensionDataManager {
     }
     
     private func createIntentsContext(_ completion: @escaping (_ context: IntentExtensionInfo?) -> Void) {
-        let presets = deviceManager.loopManager.settings.overridePresets
+        let presets = settingsManager.latestSettings.overridePresets ?? []
         let info = IntentExtensionInfo(overridePresetNames: presets.map { $0.name })
         completion(info)
     }
@@ -117,9 +123,9 @@ final class ExtensionDataManager {
             
             context.isClosedLoop = self.automaticDosingStatus.automaticDosingEnabled
             
-            context.preMealPresetAllowed = self.automaticDosingStatus.automaticDosingEnabled && manager.settings.preMealTargetRange != nil
-            context.preMealPresetActive = manager.settings.preMealTargetEnabled()
-            context.customPresetActive = manager.settings.nonPreMealOverrideEnabled()
+            context.preMealPresetAllowed = self.automaticDosingStatus.automaticDosingEnabled && self.settingsManager.latestSettings.preMealTargetRange != nil
+            context.preMealPresetActive = self.temporaryPresetsManager.preMealTargetEnabled()
+            context.customPresetActive = self.temporaryPresetsManager.nonPreMealOverrideEnabled()
 
             // Drop the first element in predictedGlucose because it is the currentGlucose
             // and will have a different interval to the next element
@@ -135,8 +141,8 @@ final class ExtensionDataManager {
             }
 
             if let basalDeliveryState = basalDeliveryState,
-                let basalSchedule = manager.basalRateScheduleApplyingOverrideHistory,
-                let netBasal = basalDeliveryState.getNetBasal(basalSchedule: basalSchedule, settings: manager.settings)
+                let basalSchedule = self.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory,
+               let netBasal = basalDeliveryState.getNetBasal(basalSchedule: basalSchedule, maximumBasalRatePerHour: self.settingsManager.latestSettings.maximumBasalRatePerHour)
             {
                 context.netBasal = NetBasalContext(rate: netBasal.rate, percentage: netBasal.percent, start: netBasal.start, end: netBasal.end)
             }

@@ -39,6 +39,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     var alertPermissionsChecker: AlertPermissionsChecker!
 
+    var settingsManager: SettingsManager!
+
+    var temporaryPresetsManager: TemporaryPresetsManager!
+
     var alertMuter: AlertMuter!
 
     var supportManager: SupportManager!
@@ -68,8 +72,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         notificationObservers += [
             notificationCenter.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] note in
-                let rawContext = note.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as! LoopDataManagerOld.LoopUpdateContext.RawValue
-                let context = LoopDataManagerOld.LoopUpdateContext(rawValue: rawContext)
+                let rawContext = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopDataManager.LoopUpdateContext.RawValue
+                let context = LoopDataManager.LoopUpdateContext(rawValue: rawContext)
                 DispatchQueue.main.async {
                     switch context {
                     case .none, .insulin?:
@@ -433,8 +437,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
             // Net basal rate HUD
             let netBasal: NetBasal?
-            if let basalSchedule = manager.basalRateScheduleApplyingOverrideHistory {
-                netBasal = basalDeliveryState?.getNetBasal(basalSchedule: basalSchedule, settings: manager.settings)
+            if let basalSchedule = temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory {
+                netBasal = basalDeliveryState?.getNetBasal(basalSchedule: basalSchedule, maximumBasalRatePerHour: settingsManager.latestSettings.maximumBasalRatePerHour)
             } else {
                 netBasal = nil
             }
@@ -1344,6 +1348,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             vc.delegate = self
         case let vc as PredictionTableViewController:
             vc.deviceManager = deviceManager
+            vc.settingsManager = settingsManager
         default:
             break
         }
@@ -1585,7 +1590,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 } : nil
         }
         let pumpViewModel = PumpManagerViewModel(
-            image: { [weak self] in self?.deviceManager.pumpManager?.smallImage },
+            image: { [weak self] in (self?.deviceManager.pumpManager as? PumpManagerUI)?.smallImage },
             name: { [weak self] in self?.deviceManager.pumpManager?.localizedTitle ?? "" },
             isSetUp: { [weak self] in self?.deviceManager.pumpManager?.isOnboarded == true },
             availableDevices: deviceManager.availablePumpManagers,
@@ -1639,10 +1644,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func onPumpTapped() {
-        guard var settingsViewController = deviceManager.pumpManager?.settingsViewController(bluetoothProvider: deviceManager.bluetoothProvider, colorPalette: .default, allowDebugFeatures: FeatureFlags.allowDebugFeatures, allowedInsulinTypes: deviceManager.allowedInsulinTypes) else {
-            // assert?
+        guard let pumpManager = deviceManager.pumpManager as? PumpManagerUI else {
             return
         }
+
+        var settingsViewController = pumpManager.settingsViewController(bluetoothProvider: deviceManager.bluetoothProvider, colorPalette: .default, allowDebugFeatures: FeatureFlags.allowDebugFeatures, allowedInsulinTypes: deviceManager.allowedInsulinTypes)
         settingsViewController.pumpManagerOnboardingDelegate = deviceManager
         settingsViewController.completionDelegate = self
         show(settingsViewController, sender: self)

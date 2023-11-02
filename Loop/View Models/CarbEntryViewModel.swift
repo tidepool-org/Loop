@@ -12,7 +12,6 @@ import HealthKit
 import Combine
 
 protocol CarbEntryViewModelDelegate: AnyObject, BolusEntryViewModelDelegate {
-    var analyticsServicesManager: AnalyticsServicesManager { get }
     var defaultAbsorptionTimes: CarbStore.DefaultAbsorptionTimes { get }
 }
 

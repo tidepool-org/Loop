@@ -898,8 +898,8 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     }
     
     var carbEntriesAdded = [(NewCarbEntry, StoredCarbEntry?)]()
-    var addCarbEntryResult: Result<StoredCarbEntry> = .failure(BolusEntryViewTestError.responseUndefined)
-    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<StoredCarbEntry>) -> Void) {
+    var addCarbEntryResult: Result<StoredCarbEntry,Error> = .failure(BolusEntryViewTestError.responseUndefined)
+    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<StoredCarbEntry,Error>) -> Void) {
         carbEntriesAdded.append((carbEntry, replacingEntry))
         completion(addCarbEntryResult)
     }
@@ -960,7 +960,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         suspendThreshold: GlucoseThreshold(unit: .internationalUnit(), value: 75)) {
             didSet {
                 NotificationCenter.default.post(name: .LoopDataUpdated, object: nil, userInfo: [
-                    LoopDataManagerOld.LoopUpdateContextKey: LoopDataManagerOld.LoopUpdateContext.preferences.rawValue
+                    LoopDataManager.LoopUpdateContextKey: LoopDataManager.LoopUpdateContext.preferences.rawValue
                 ])
             }
         }

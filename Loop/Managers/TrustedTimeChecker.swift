@@ -25,7 +25,12 @@ fileprivate extension UserDefaults {
     }
 }
 
-class TrustedTimeChecker {
+protocol TrustedTimeChecker {
+    var detectedSystemTimeOffset: TimeInterval { get }
+}
+
+
+class LoopTrustedTimeChecker: TrustedTimeChecker {
     private let acceptableTimeDelta = TimeInterval.seconds(120)
 
     // For NTP time checking

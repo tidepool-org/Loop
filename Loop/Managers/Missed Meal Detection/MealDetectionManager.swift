@@ -19,12 +19,9 @@ enum MissedMealStatus: Equatable {
 
 class MealDetectionManager {
     private let log = OSLog(category: "MealDetectionManager")
+
     // All math for meal detection occurs in mg/dL, with settings being converted if in mmol/L
     private let unit = HKUnit.milligramsPerDeciliter
-    
-    public var carbRatioScheduleApplyingOverrideHistory: CarbRatioSchedule?
-    public var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule?
-    public var maximumBolus: Double?
     
     /// The last missed meal notification that was sent
     /// Internal for unit testing
@@ -40,39 +37,23 @@ class MealDetectionManager {
     
     /// Timeline from the most recent detection of an missed meal
     private var lastDetectedMissedMealTimeline: [(date: Date, unexpectedDeviation: Double?, mealThreshold: Double?, rateOfChangeThreshold: Double?)] = []
-    
-    /// Allows for controlling uses of the system date in unit testing
-    internal var test_currentDate: Date?
-    
-    /// Current date. Will return the unit-test configured date if set, or the current date otherwise.
-    internal var currentDate: Date {
-        test_currentDate ?? Date()
-    }
 
-    internal func currentDate(timeIntervalSinceNow: TimeInterval = 0) -> Date {
-        return currentDate.addingTimeInterval(timeIntervalSinceNow)
-    }
-    
-    public init(
-        carbRatioScheduleApplyingOverrideHistory: CarbRatioSchedule?,
-        insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule?,
-        maximumBolus: Double?,
-        test_currentDate: Date? = nil
-    ) {
-        self.carbRatioScheduleApplyingOverrideHistory = carbRatioScheduleApplyingOverrideHistory
-        self.insulinSensitivityScheduleApplyingOverrideHistory = insulinSensitivityScheduleApplyingOverrideHistory
-        self.maximumBolus = maximumBolus
-        self.test_currentDate = test_currentDate
-    }
-    
     // MARK: Meal Detection
-    func hasMissedMeal(glucoseSamples: [some GlucoseSampleValue], insulinCounteractionEffects: [GlucoseEffectVelocity], carbEffects: [GlucoseEffect], completion: @escaping (MissedMealStatus) -> Void) {
+    func hasMissedMeal(
+        at date: Date,
+        glucoseSamples: [some GlucoseSampleValue],
+        insulinCounteractionEffects: [GlucoseEffectVelocity],
+        carbEffects: [GlucoseEffect],
+        sensitivitySchedule: InsulinSensitivitySchedule,
+        carbRatioSchedule: CarbRatioSchedule,
+        completion: @escaping (MissedMealStatus) -> Void
+    ) {
         let delta = TimeInterval(minutes: 5)
 
-        let intervalStart = currentDate(timeIntervalSinceNow: -MissedMealSettings.maxRecency)
-        let intervalEnd = currentDate(timeIntervalSinceNow: -MissedMealSettings.minRecency)
-        let now = self.currentDate
-        
+        let intervalStart = date.addingTimeInterval(-MissedMealSettings.maxRecency)
+        let intervalEnd = date.addingTimeInterval(-MissedMealSettings.minRecency)
+        let now = date
+
         let filteredGlucoseValues = glucoseSamples.filter { intervalStart <= $0.startDate && $0.startDate <= now }
         
         /// Only try to detect if there's a missed meal if there are no calibration/user-entered BGs,
@@ -155,9 +136,16 @@ class MealDetectionManager {
             /// Find the threshold based on a minimum of `missedMealGlucoseRiseThreshold` of change per minute
             let minutesAgo = now.timeIntervalSince(pastTime).minutes
             let rateThreshold = MissedMealSettings.glucoseRiseThreshold * minutesAgo
-            
+           
+            let carbRatio = carbRatioSchedule.value(at: pastTime)
+            let insulinSensitivity = sensitivitySchedule.value(for: unit, at: pastTime)
+
             /// Find the total effect we'd expect to see for a meal with `carbThreshold`-worth of carbs that started at `pastTime`
-            guard let mealThreshold = self.effectThreshold(mealStart: pastTime, carbsInGrams: MissedMealSettings.minCarbThreshold) else {
+            guard let mealThreshold = self.effectThreshold(
+                carbRatio: carbRatio,
+                insulinSensitivity: insulinSensitivity,
+                carbsInGrams: MissedMealSettings.minCarbThreshold
+            ) else {
                 continue
             }
             
@@ -180,19 +168,26 @@ class MealDetectionManager {
         }
 
         self.lastDetectedMissedMealTimeline = missedMealTimeline.reversed()
-        
-        let carbAmount = self.determineCarbs(mealtime: mealTime, unexpectedDeviation: unexpectedDeviation)
+
+        let carbRatio = carbRatioSchedule.value(at: mealTime)
+        let insulinSensitivity = sensitivitySchedule.value(for: unit, at: mealTime)
+
+        let carbAmount = self.determineCarbs(
+            carbRatio: carbRatio,
+            insulinSensitivity: insulinSensitivity,
+            unexpectedDeviation: unexpectedDeviation
+        )
         completion(.hasMissedMeal(startTime: mealTime, carbAmount: carbAmount ?? MissedMealSettings.minCarbThreshold))
     }
     
-    private func determineCarbs(mealtime: Date, unexpectedDeviation: Double) -> Double? {
+    private func determineCarbs(carbRatio: Double, insulinSensitivity: Double, unexpectedDeviation: Double) -> Double? {
         var mealCarbs: Double? = nil
         
         /// Search `carbAmount`s from `minCarbThreshold` to `maxCarbThreshold` in 5-gram increments,
         /// seeing if the deviation is at least `carbAmount` of carbs
         for carbAmount in stride(from: MissedMealSettings.minCarbThreshold, through: MissedMealSettings.maxCarbThreshold, by: 5) {
             if
-                let modeledCarbEffect = effectThreshold(mealStart: mealtime, carbsInGrams: carbAmount),
+                let modeledCarbEffect = effectThreshold(carbRatio: carbRatio, insulinSensitivity: insulinSensitivity, carbsInGrams: carbAmount),
                 unexpectedDeviation >= modeledCarbEffect
             {
                 mealCarbs = carbAmount
@@ -202,14 +197,14 @@ class MealDetectionManager {
         return mealCarbs
     }
     
-    private func effectThreshold(mealStart: Date, carbsInGrams: Double) -> Double? {
-        guard
-            let carbRatio = carbRatioScheduleApplyingOverrideHistory?.value(at: mealStart),
-            let insulinSensitivity = insulinSensitivityScheduleApplyingOverrideHistory?.value(for: unit, at: mealStart)
-        else {
-            return nil
-        }
-        
+
+    /// Calculates effect threshold.
+    ///
+    /// - Parameters:
+    ///    - carbRatio: Carb ratio in grams per unit in effect at the start of the meal.
+    ///    - insulinSensitivity: Insulin sensitivity in mg/dL/U in effect at the start of the meal.
+    ///    - carbsInGrams: Carbohydrate amount for the meal in grams
+    private func effectThreshold(carbRatio: Double, insulinSensitivity: Double, carbsInGrams: Double) -> Double? {
         return carbsInGrams / carbRatio * insulinSensitivity
     }
     
@@ -223,25 +218,50 @@ class MealDetectionManager {
     ///    - pendingAutobolusUnits: any autobolus units that are still being delivered. Used to delay the missed meal notification to avoid notifying during an autobolus.
     ///    - bolusDurationEstimator: estimator of bolus duration that takes the units of the bolus as an input. Used to delay the missed meal notification to avoid notifying during an autobolus.
     func generateMissedMealNotificationIfNeeded(
+        at date: Date,
         glucoseSamples: [some GlucoseSampleValue],
         insulinCounteractionEffects: [GlucoseEffectVelocity],
         carbEffects: [GlucoseEffect],
         pendingAutobolusUnits: Double? = nil,
+        sensitivitySchedule: InsulinSensitivitySchedule,
+        carbRatioSchedule: CarbRatioSchedule,
+        maxBolus: Double,
         bolusDurationEstimator: @escaping (Double) -> TimeInterval?
     ) {
-        hasMissedMeal(glucoseSamples: glucoseSamples, insulinCounteractionEffects: insulinCounteractionEffects, carbEffects: carbEffects) {[weak self] status in
-            self?.manageMealNotifications(for: status, pendingAutobolusUnits: pendingAutobolusUnits, bolusDurationEstimator: bolusDurationEstimator)
+        hasMissedMeal(
+            at: date,
+            glucoseSamples: glucoseSamples,
+            insulinCounteractionEffects: insulinCounteractionEffects,
+            carbEffects: carbEffects,
+            sensitivitySchedule: sensitivitySchedule,
+            carbRatioSchedule: carbRatioSchedule
+        ) {[weak self] status in
+            self?.manageMealNotifications(
+                at: date,
+                for: status,
+                pendingAutobolusUnits: pendingAutobolusUnits,
+                maxBolus: maxBolus,
+                carbRatio: carbRatioSchedule,
+                bolusDurationEstimator: bolusDurationEstimator
+            )
         }
     }
     
     
     // Internal for unit testing
-    func manageMealNotifications(for status: MissedMealStatus, pendingAutobolusUnits: Double? = nil, bolusDurationEstimator getBolusDuration: (Double) -> TimeInterval?) {
+    func manageMealNotifications(
+        at date: Date,
+        for status: MissedMealStatus,
+        pendingAutobolusUnits: Double? = nil,
+        maxBolus: Double,
+        carbRatio: CarbRatioSchedule,
+        bolusDurationEstimator getBolusDuration: (Double) -> TimeInterval?
+    ) {
         // We should remove expired notifications regardless of whether or not there was a meal
         NotificationManager.removeExpiredMealNotifications()
         
         // Figure out if we should deliver a notification
-        let now = self.currentDate
+        let now = date
         let notificationTimeTooRecent = now.timeIntervalSince(lastMissedMealNotification?.deliveryTime ?? .distantPast) < (MissedMealSettings.maxRecency - MissedMealSettings.minRecency)
         
         guard
@@ -253,15 +273,10 @@ class MealDetectionManager {
             return
         }
         
-        var clampedCarbAmount = carbAmount
-        if
-            let maxBolus = maximumBolus,
-            let currentCarbRatio = carbRatioScheduleApplyingOverrideHistory?.quantity(at: now).doubleValue(for: .gram())
-        {
-            let maxAllowedCarbAutofill = maxBolus * currentCarbRatio
-            clampedCarbAmount = min(clampedCarbAmount, maxAllowedCarbAutofill)
-        }
-        
+        let currentCarbRatio = carbRatio.quantity(at: now).doubleValue(for: .gram())
+        let maxAllowedCarbAutofill = maxBolus * currentCarbRatio
+        let clampedCarbAmount = min(carbAmount, maxAllowedCarbAutofill)
+
         log.debug("Delivering a missed meal notification")
 
         /// Coordinate the missed meal notification time with any pending autoboluses that `update` may have started

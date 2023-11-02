@@ -41,9 +41,9 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
 
         notificationObservers += [
             notificationCenter.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] note in
-                let context = note.userInfo?[LoopDataManagerOld.LoopUpdateContextKey] as! LoopDataManagerOld.LoopUpdateContext.RawValue
+                let context = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopDataManager.LoopUpdateContext.RawValue
                 DispatchQueue.main.async {
-                    switch LoopDataManagerOld.LoopUpdateContext(rawValue: context) {
+                    switch LoopDataManager.LoopUpdateContext(rawValue: context) {
                     case .carbs?:
                         self?.refreshContext.formUnion([.carbs, .glucose])
                     case .glucose?:

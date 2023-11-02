@@ -17,10 +17,6 @@ protocol DoseStoreProtocol: AnyObject {
     
     var longestEffectDuration: TimeInterval { get set }
 
-    var insulinSensitivitySchedule: LoopKit.InsulinSensitivitySchedule? { get set }
-    
-    var basalProfileApplyingOverrideHistory: BasalRateSchedule? { get }
-    
     // MARK: store information
     var lastReservoirValue: LoopKit.ReservoirValue? { get }
     
@@ -48,14 +44,6 @@ protocol DoseStoreProtocol: AnyObject {
     func addDoses(_ doses: [DoseEntry], from device: HKDevice?, completion: @escaping (_ error: Error?) -> Void)
     
     // MARK: IOB and insulin effect
-    func insulinOnBoard(at date: Date, completion: @escaping (_ result: DoseStoreResult<InsulinValue>) -> Void)
-    
-    func getGlucoseEffects(start: Date, end: Date?, basalDosingEnd: Date?, completion: @escaping (_ result: DoseStoreResult<[GlucoseEffect]>) -> Void)
-    
-    func getInsulinOnBoardValues(start: Date, end: Date? , basalDosingEnd: Date?, completion: @escaping (_ result: DoseStoreResult<[InsulinValue]>) -> Void)
-    
     func getTotalUnitsDelivered(since startDate: Date, completion: @escaping (_ result: DoseStoreResult<InsulinValue>) -> Void)
     
 }
-
-extension DoseStore: DoseStoreProtocol { }

@@ -17,7 +17,8 @@ class OnboardingManager {
     private let deviceDataManager: DeviceDataManager
     private let statefulPluginManager: StatefulPluginManager
     private let servicesManager: ServicesManager
-    private let loopDataManager: LoopDataManagerOld
+    private let loopDataManager: LoopDataManager
+    private let settingsManager: SettingsManager
     private let supportManager: SupportManager
     private weak var windowProvider: WindowProvider?
     private let userDefaults: UserDefaults
@@ -43,9 +44,10 @@ class OnboardingManager {
     init(pluginManager: PluginManager,
          bluetoothProvider: BluetoothProvider,
          deviceDataManager: DeviceDataManager,
+         settingsManager: SettingsManager,
          statefulPluginManager: StatefulPluginManager,
          servicesManager: ServicesManager,
-         loopDataManager: LoopDataManagerOld,
+         loopDataManager: LoopDataManager,
          supportManager: SupportManager,
          windowProvider: WindowProvider?,
          userDefaults: UserDefaults = .standard)
@@ -53,6 +55,7 @@ class OnboardingManager {
         self.pluginManager = pluginManager
         self.bluetoothProvider = bluetoothProvider
         self.deviceDataManager = deviceDataManager
+        self.settingsManager = settingsManager
         self.statefulPluginManager = statefulPluginManager
         self.servicesManager = servicesManager
         self.loopDataManager = loopDataManager
@@ -260,7 +263,7 @@ extension OnboardingManager: OnboardingDelegate {
 
     func onboarding(_ onboarding: OnboardingUI, hasNewDosingEnabled dosingEnabled: Bool) {
         guard onboarding.pluginIdentifier == activeOnboarding?.pluginIdentifier else { return }
-        loopDataManager.mutateSettings { settings in
+        settingsManager.mutateLoopSettings { settings in
             settings.dosingEnabled = dosingEnabled
         }
     }
@@ -395,6 +398,11 @@ extension OnboardingManager: PumpManagerProvider {
         guard let pumpManager = deviceDataManager.pumpManager else {
             return deviceDataManager.setupPumpManager(withIdentifier: identifier, initialSettings: settings, prefersToSkipUserInteraction: prefersToSkipUserInteraction)
         }
+
+        guard let pumpManager = pumpManager as? PumpManagerUI else {
+            return .failure(OnboardingError.invalidState)
+        }
+
         guard pumpManager.pluginIdentifier == identifier else {
             return .failure(OnboardingError.invalidState)
         }

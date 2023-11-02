@@ -366,7 +366,7 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
             completion(.success([]))
         }
         
-        func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<StoredCarbEntry>) -> Void) {
+        func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?, completion: @escaping (Result<StoredCarbEntry,Error>) -> Void) {
             
             let storedCarbEntry = StoredCarbEntry(
                 startDate: carbEntry.startDate,

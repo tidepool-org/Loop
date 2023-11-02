@@ -17,7 +17,7 @@ enum ConfigurationErrorDetail: String, Codable {
     case insulinSensitivitySchedule
     case maximumBasalRatePerHour
     case maximumBolus
-    
+
     func localized() -> String {
         switch self {
         case .pumpManager:
