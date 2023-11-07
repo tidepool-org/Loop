@@ -11,12 +11,18 @@ import HealthKit
 import OSLog
 import LoopCore
 import LoopKit
+import Combine
 
 enum MissedMealStatus: Equatable {
     case hasMissedMeal(startTime: Date, carbAmount: Double)
     case noMissedMeal
 }
 
+protocol AlgorithmDisplayStateProvider {
+    var algorithmState: AlgorithmDisplayState { get async }
+}
+
+@MainActor
 class MealDetectionManager {
     private let log = OSLog(category: "MealDetectionManager")
 
@@ -37,6 +43,61 @@ class MealDetectionManager {
     
     /// Timeline from the most recent detection of an missed meal
     private var lastDetectedMissedMealTimeline: [(date: Date, unexpectedDeviation: Double?, mealThreshold: Double?, rateOfChangeThreshold: Double?)] = []
+
+    private var algorithmStateProvider: AlgorithmDisplayStateProvider
+    private var settingsProvider: LoopSettingsProvider
+    private var bolusDurationEstimator: BolusDurationEstimator
+
+    private lazy var cancellables = Set<AnyCancellable>()
+
+    init(
+        algorithmStateProvider: AlgorithmDisplayStateProvider,
+        settingsProvider: LoopSettingsProvider,
+        bolusDurationEstimator: BolusDurationEstimator
+    ) {
+        self.algorithmStateProvider = algorithmStateProvider
+        self.settingsProvider = settingsProvider
+        self.bolusDurationEstimator = bolusDurationEstimator
+
+        if FeatureFlags.missedMealNotifications {
+            NotificationCenter.default.publisher(for: .LoopCycleCompleted)
+                .sink { _ in
+                    Task { @MainActor in
+                        if case .ready(let input, let output) = await algorithmStateProvider.algorithmState {
+                            await self.run(input: input, output: output)
+                        }
+                    }
+                }
+                .store(in: &cancellables)
+        }
+    }
+
+    func run(input: LoopAlgorithmInput, output: LoopAlgorithmOutput) async {
+
+        let date = Date()
+        let samplesStart = date.addingTimeInterval(-MissedMealSettings.maxRecency)
+
+        guard let sensitivitySchedule = settingsProvider.insulinSensitivitySchedule,
+              let carbRatioSchedule = settingsProvider.carbRatioSchedule,
+              let maxBolus = settingsProvider.maximumBolus else
+        {
+            return
+        }
+
+        generateMissedMealNotificationIfNeeded(
+            at: date,
+            glucoseSamples: input.glucoseHistory,
+            insulinCounteractionEffects: output.effects.insulinCounteraction,
+            carbEffects: output.effects.carbs,
+            pendingAutobolusUnits: 0,
+            sensitivitySchedule: sensitivitySchedule,
+            carbRatioSchedule: carbRatioSchedule,
+            maxBolus: maxBolus,
+            bolusDurationEstimator: { amount in
+                return self.bolusDurationEstimator.estimateBolusDuration(bolusUnits: amount)
+            }
+        )
+    }
 
     // MARK: Meal Detection
     func hasMissedMeal(
@@ -301,23 +362,25 @@ class MealDetectionManager {
     /// Generates a diagnostic report about the current state
     ///
     /// - parameter completionHandler: A closure called once the report has been generated. The closure takes a single argument of the report string.
-    func generateDiagnosticReport(_ completionHandler: @escaping (_ report: String) -> Void) {
-        let report = [
-            "## MealDetectionManager",
-            "",
-            "* lastMissedMealNotificationTime: \(String(describing: lastMissedMealNotification?.deliveryTime))",
-            "* lastMissedMealCarbEstimate: \(String(describing: lastMissedMealNotification?.carbAmount))",
-            "* lastEvaluatedMissedMealTimeline:",
-            lastEvaluatedMissedMealTimeline.reduce(into: "", { (entries, entry) in
-                entries.append("  * date: \(entry.date), unexpectedDeviation: \(entry.unexpectedDeviation ?? -1), meal-based threshold: \(entry.mealThreshold ?? -1), change-based threshold: \(entry.rateOfChangeThreshold ?? -1) \n")
-            }),
-            "* lastDetectedMissedMealTimeline:",
-            lastDetectedMissedMealTimeline.reduce(into: "", { (entries, entry) in
-                entries.append("  * date: \(entry.date), unexpectedDeviation: \(entry.unexpectedDeviation ?? -1), meal-based threshold: \(entry.mealThreshold ?? -1), change-based threshold: \(entry.rateOfChangeThreshold ?? -1) \n")
-            })
-        ]
-        
-        completionHandler(report.joined(separator: "\n"))
+    func generateDiagnosticReport() async -> String {
+        await withCheckedContinuation { continuation in
+            let report = [
+                "## MealDetectionManager",
+                "",
+                "* lastMissedMealNotificationTime: \(String(describing: lastMissedMealNotification?.deliveryTime))",
+                "* lastMissedMealCarbEstimate: \(String(describing: lastMissedMealNotification?.carbAmount))",
+                "* lastEvaluatedMissedMealTimeline:",
+                lastEvaluatedMissedMealTimeline.reduce(into: "", { (entries, entry) in
+                    entries.append("  * date: \(entry.date), unexpectedDeviation: \(entry.unexpectedDeviation ?? -1), meal-based threshold: \(entry.mealThreshold ?? -1), change-based threshold: \(entry.rateOfChangeThreshold ?? -1) \n")
+                }),
+                "* lastDetectedMissedMealTimeline:",
+                lastDetectedMissedMealTimeline.reduce(into: "", { (entries, entry) in
+                    entries.append("  * date: \(entry.date), unexpectedDeviation: \(entry.unexpectedDeviation ?? -1), meal-based threshold: \(entry.mealThreshold ?? -1), change-based threshold: \(entry.rateOfChangeThreshold ?? -1) \n")
+                })
+            ]
+
+            continuation.resume(returning: report.joined(separator: "\n"))
+        }
     }
 }
 

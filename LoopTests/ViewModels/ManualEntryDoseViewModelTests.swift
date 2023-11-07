@@ -48,7 +48,6 @@ class ManualEntryDoseViewModelTests: XCTestCase {
     func setUpViewModel() {
         manualEntryDoseViewModel = ManualEntryDoseViewModel(delegate: delegate,
                                                   now: { self.now },
-                                                  screenWidth: 512,
                                                   debounceIntervalMilliseconds: 0,
                                                   uuidProvider: { self.mockUUID },
                                                   timeZone: TimeZone(abbreviation: "GMT")!)

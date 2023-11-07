@@ -24,6 +24,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
     private let log = OSLog(category: "PredictionTableViewController")
 
     var settingsManager: SettingsManager!
+    var loopDataManager: LoopDataManager!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,7 +37,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         let notificationCenter = NotificationCenter.default
 
         notificationObservers += [
-            notificationCenter.addObserver(forName: .LoopDataUpdated, object: deviceManager.loopManager, queue: nil) { [weak self] note in
+            notificationCenter.addObserver(forName: .LoopDataUpdated, object: nil, queue: nil) { [weak self] note in
                 let context = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopDataManager.LoopUpdateContext.RawValue
                 DispatchQueue.main.async {
                     switch LoopDataManager.LoopUpdateContext(rawValue: context) {
@@ -48,7 +49,9 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
                         break
                     }
 
-                    self?.reloadData(animated: true)
+                    Task {
+                        await self?.reloadData(animated: true)
+                    }
                 }
             },
         ]
@@ -100,7 +103,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         refreshContext = RefreshContext.all
     }
 
-    override func reloadData(animated: Bool = false) {
+    override func reloadData(animated: Bool = false) async {
         guard active && visible && !refreshContext.isEmpty else { return }
 
         refreshContext.remove(.size(.zero))
@@ -110,84 +113,74 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         let date = Date(timeIntervalSinceNow: -TimeInterval(hours: 1))
         chartStartDate = calendar.nextDate(after: date, matching: components, matchingPolicy: .strict, direction: .backward) ?? date
 
-        let reloadGroup = DispatchGroup()
         var glucoseSamples: [StoredGlucoseSample]?
         var totalRetrospectiveCorrection: HKQuantity?
 
         if self.refreshContext.remove(.glucose) != nil {
-            reloadGroup.enter()
-            deviceManager.glucoseStore.getGlucoseSamples(start: self.chartStartDate, end: nil) { (result) -> Void in
-                switch result {
-                case .failure(let error):
-                    self.log.error("Failure getting glucose samples: %{public}@", String(describing: error))
-                    glucoseSamples = nil
-                case .success(let samples):
-                    glucoseSamples = samples
-                }
-                reloadGroup.leave()
+            do {
+                glucoseSamples = try await deviceManager.glucoseStore.getGlucoseSamples(start: self.chartStartDate, end: nil)
+            } catch {
+                self.log.error("Failure getting glucose samples: %{public}@", String(describing: error))
+                glucoseSamples = nil
             }
         }
 
         // For now, do this every time
         _ = self.refreshContext.remove(.status)
-        reloadGroup.enter()
-        deviceManager.loopManager.getLoopState { (manager, state) in
-            self.retrospectiveGlucoseDiscrepancies = state.retrospectiveGlucoseDiscrepancies
-            totalRetrospectiveCorrection = state.totalRetrospectiveCorrection
-            self.glucoseChart.setPredictedGlucoseValues(state.predictedGlucoseIncludingPendingInsulin ?? [])
+        let (algoInput, algoOutput) = await loopDataManager.algorithmDisplayState.asTuple
 
-            do {
-                let glucose = try state.predictGlucose(using: self.selectedInputs, includingPendingInsulin: true)
-                self.glucoseChart.setAlternatePredictedGlucoseValues(glucose)
-            } catch {
-                self.refreshContext.update(with: .status)
-                self.glucoseChart.setAlternatePredictedGlucoseValues([])
-            }
+        self.retrospectiveGlucoseDiscrepancies = algoOutput?.effects.retrospectiveGlucoseDiscrepancies
+        totalRetrospectiveCorrection = algoOutput?.effects.totalGlucoseCorrectionEffect
 
-            if let lastPoint = self.glucoseChart.alternatePredictedGlucosePoints?.last?.y {
-                self.eventualGlucoseDescription = String(describing: lastPoint)
-            } else {
-                self.eventualGlucoseDescription = nil
-            }
+        self.glucoseChart.setPredictedGlucoseValues(algoOutput?.predictedGlucose ?? [])
 
-            if self.refreshContext.remove(.targets) != nil {
-                self.glucoseChart.targetGlucoseSchedule = self.settingsManager.latestSettings.glucoseTargetRangeSchedule
-            }
-
-            reloadGroup.leave()
+        do {
+            let glucose = try algoInput?.predictGlucose(effectsOptions: self.selectedInputs.algorithmEffectOptions) ?? []
+            self.glucoseChart.setAlternatePredictedGlucoseValues(glucose)
+        } catch {
+            self.refreshContext.update(with: .status)
+            self.glucoseChart.setAlternatePredictedGlucoseValues([])
         }
 
-        reloadGroup.notify(queue: .main) {
-            if let glucoseSamples = glucoseSamples {
-                self.glucoseChart.setGlucoseValues(glucoseSamples)
-            }
-            self.charts.invalidateChart(atIndex: 0)
+        if let lastPoint = self.glucoseChart.alternatePredictedGlucosePoints?.last?.y {
+            self.eventualGlucoseDescription = String(describing: lastPoint)
+        } else {
+            self.eventualGlucoseDescription = nil
+        }
 
-            if let totalRetrospectiveCorrection = totalRetrospectiveCorrection {
-                self.totalRetrospectiveCorrection = totalRetrospectiveCorrection
-            }
+        if self.refreshContext.remove(.targets) != nil {
+            self.glucoseChart.targetGlucoseSchedule = self.settingsManager.latestSettings.glucoseTargetRangeSchedule
+        }
 
-            self.charts.prerender()
+        if let glucoseSamples = glucoseSamples {
+            self.glucoseChart.setGlucoseValues(glucoseSamples)
+        }
+        self.charts.invalidateChart(atIndex: 0)
 
-            self.tableView.beginUpdates()
-            for cell in self.tableView.visibleCells {
-                switch cell {
-                case let cell as ChartTableViewCell:
-                    cell.reloadChart()
+        if let totalRetrospectiveCorrection = totalRetrospectiveCorrection {
+            self.totalRetrospectiveCorrection = totalRetrospectiveCorrection
+        }
 
-                    if let indexPath = self.tableView.indexPath(for: cell) {
-                        self.tableView(self.tableView, updateTitleFor: cell, at: indexPath)
-                    }
-                case let cell as PredictionInputEffectTableViewCell:
-                    if let indexPath = self.tableView.indexPath(for: cell) {
-                        self.tableView(self.tableView, updateTextFor: cell, at: indexPath)
-                    }
-                default:
-                    break
+        self.charts.prerender()
+
+        self.tableView.beginUpdates()
+        for cell in self.tableView.visibleCells {
+            switch cell {
+            case let cell as ChartTableViewCell:
+                cell.reloadChart()
+
+                if let indexPath = self.tableView.indexPath(for: cell) {
+                    self.tableView(self.tableView, updateTitleFor: cell, at: indexPath)
                 }
+            case let cell as PredictionInputEffectTableViewCell:
+                if let indexPath = self.tableView.indexPath(for: cell) {
+                    self.tableView(self.tableView, updateTextFor: cell, at: indexPath)
+                }
+            default:
+                break
             }
-            self.tableView.endUpdates()
         }
+        self.tableView.endUpdates()
     }
 
     // MARK: - UITableViewDataSource
@@ -328,6 +321,9 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         tableView.deselectRow(at: indexPath, animated: true)
 
         refreshContext.update(with: .status)
-        reloadData()
+
+        Task {
+            await reloadData()
+        }
     }
 }

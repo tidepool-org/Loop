@@ -47,9 +47,9 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
     
     public var enableEntryDeletion: Bool = true
     
-    var deviceManager: DeviceDataManager? {
+    var loopDataManager: LoopDataManager? {
         didSet {
-            doseStore = deviceManager?.doseStore
+            doseStore = loopDataManager?.doseStore
         }
     }
 
@@ -159,13 +159,13 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
     }
     
     @objc func didTapEnterDoseButton(sender: AnyObject){
-        guard let deviceManager = deviceManager else {
+        guard let loopDataManager = loopDataManager else {
             return
         }
 
         tableView.endEditing(true)
 
-        let viewModel = ManualEntryDoseViewModel(delegate: deviceManager.loopManager)
+        let viewModel = ManualEntryDoseViewModel(delegate: loopDataManager)
         let bolusEntryView = ManualEntryDoseView(viewModel: viewModel)
         let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
         let navigationWrapper = UINavigationController(rootViewController: hostingController)

@@ -244,6 +244,41 @@ class SettingsManager {
     }
 }
 
+extension SettingsManager {
+    public var therapySettings: TherapySettings {
+        get {
+            let settings = self.latestSettings
+            return TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
+                            correctionRangeOverrides: CorrectionRangeOverrides(preMeal: settings.preMealTargetRange, workout: settings.workoutTargetRange),
+                            overridePresets: settings.overridePresets,
+                            maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
+                            maximumBolus: settings.maximumBolus,
+                            suspendThreshold: settings.suspendThreshold,
+                            insulinSensitivitySchedule: settings.insulinSensitivitySchedule,
+                            carbRatioSchedule: settings.carbRatioSchedule,
+                            basalRateSchedule: settings.basalRateSchedule,
+                            defaultRapidActingModel: settings.defaultRapidActingModel?.presetForRapidActingInsulin)
+        }
+
+        set {
+            mutateLoopSettings { settings in
+                settings.defaultRapidActingModel = newValue.defaultRapidActingModel
+                settings.insulinSensitivitySchedule = newValue.insulinSensitivitySchedule
+                settings.carbRatioSchedule = newValue.carbRatioSchedule
+                settings.basalRateSchedule = newValue.basalRateSchedule
+                settings.glucoseTargetRangeSchedule = newValue.glucoseTargetRangeSchedule
+                settings.preMealTargetRange = newValue.correctionRangeOverrides?.preMeal
+                settings.legacyWorkoutTargetRange = newValue.correctionRangeOverrides?.workout
+                settings.suspendThreshold = newValue.suspendThreshold
+                settings.maximumBolus = newValue.maximumBolus
+                settings.maximumBasalRatePerHour = newValue.maximumBasalRatePerHour
+                settings.overridePresets = newValue.overridePresets ?? []
+            }
+        }
+    }
+}
+
+
 // MARK: - SettingsStoreDelegate
 extension SettingsManager: SettingsStoreDelegate {
     func settingsStoreHasUpdatedSettingsData(_ settingsStore: SettingsStore) {

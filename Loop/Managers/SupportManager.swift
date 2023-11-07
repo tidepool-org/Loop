@@ -91,7 +91,7 @@ public final class SupportManager {
             }
             .store(in: &cancellables)
         
-        NotificationCenter.default.publisher(for: .LoopCompleted)
+        NotificationCenter.default.publisher(for: .LoopCycleCompleted)
             .sink { [weak self] _ in
                 self?.performCheck()
             }

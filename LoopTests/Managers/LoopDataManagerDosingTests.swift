@@ -370,7 +370,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
         let exp = expectation(description: #function)
-        let observer = NotificationCenter.default.addObserver(forName: .LoopCompleted, object: nil, queue: nil) { _ in
+        let observer = NotificationCenter.default.addObserver(forName: .LoopCycleCompleted, object: nil, queue: nil) { _ in
             exp.fulfill()
         }
         loopDataManager.loop()
@@ -394,7 +394,7 @@ class LoopDataManagerDosingTests: LoopDataManagerTests {
         let delegate = MockDelegate()
         loopDataManager.delegate = delegate
         let exp = expectation(description: #function)
-        let observer = NotificationCenter.default.addObserver(forName: .LoopCompleted, object: nil, queue: nil) { _ in
+        let observer = NotificationCenter.default.addObserver(forName: .LoopCycleCompleted, object: nil, queue: nil) { _ in
             exp.fulfill()
         }
         loopDataManager.loop()

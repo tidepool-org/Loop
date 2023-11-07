@@ -24,6 +24,7 @@ public enum AlertUserNotificationUserInfoKey: String {
 /// - managing the different responders that might acknowledge the alert
 /// - serializing alerts to storage
 /// - etc.
+@MainActor
 public final class AlertManager {
     private static let soundsDirectoryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).last!.appendingPathComponent("Sounds")
 
@@ -88,10 +89,12 @@ public final class AlertManager {
 
         bluetoothProvider.addBluetoothObserver(self, queue: .main)
 
-        NotificationCenter.default.publisher(for: .LoopCompleted)
+        NotificationCenter.default.publisher(for: .LoopCycleCompleted)
             .sink { [weak self] publisher in
                 if let loopDataManager = publisher.object as? LoopDataManager {
-                    self?.loopDidComplete(loopDataManager.lastLoopCompleted)
+                    Task { @MainActor in
+                        self?.loopDidComplete(loopDataManager.lastLoopCompleted)
+                    }
                 }
             }
             .store(in: &cancellables)

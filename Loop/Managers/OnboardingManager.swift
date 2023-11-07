@@ -65,9 +65,9 @@ class OnboardingManager {
 
         self.isSuspended = userDefaults.onboardingManagerIsSuspended
 
-        self.isComplete = userDefaults.onboardingManagerIsComplete && loopDataManager.therapySettings.isComplete
+        self.isComplete = userDefaults.onboardingManagerIsComplete && settingsManager.therapySettings.isComplete
         if !isComplete {
-            if loopDataManager.therapySettings.isComplete {
+            if settingsManager.therapySettings.isComplete {
                 self.completedOnboardingIdentifiers = userDefaults.onboardingManagerCompletedOnboardingIdentifiers
             }
             if let activeOnboardingRawValue = userDefaults.onboardingManagerActiveOnboardingRawValue {
@@ -258,7 +258,7 @@ extension OnboardingManager: OnboardingDelegate {
 
     func onboarding(_ onboarding: OnboardingUI, hasNewTherapySettings therapySettings: TherapySettings) {
         guard onboarding.pluginIdentifier == activeOnboarding?.pluginIdentifier else { return }
-        loopDataManager.therapySettings = therapySettings
+        settingsManager.therapySettings = therapySettings
     }
 
     func onboarding(_ onboarding: OnboardingUI, hasNewDosingEnabled dosingEnabled: Bool) {
@@ -450,7 +450,7 @@ extension OnboardingManager: ServiceProvider {
 
 extension OnboardingManager: TherapySettingsProvider {
     var onboardingTherapySettings: TherapySettings {
-        return loopDataManager.therapySettings
+        return settingsManager.therapySettings
     }
 }
 

@@ -9,6 +9,7 @@
 import LoopKit
 import TrueTime
 import UIKit
+import Combine
 
 fileprivate extension UserDefaults {
     private enum Key: String {
@@ -26,10 +27,10 @@ fileprivate extension UserDefaults {
 }
 
 protocol TrustedTimeChecker {
-    var detectedSystemTimeOffset: TimeInterval { get }
+    var detectedSystemTimeOffset: TimeInterval { get async }
 }
 
-
+@MainActor
 class LoopTrustedTimeChecker: TrustedTimeChecker {
     private let acceptableTimeDelta = TimeInterval.seconds(120)
 
@@ -37,6 +38,8 @@ class LoopTrustedTimeChecker: TrustedTimeChecker {
     private var ntpClient: TrueTimeClient
     private weak var alertManager: AlertManager?
     private lazy var log = DiagnosticLog(category: "TrustedTimeChecker")
+
+    lazy private var cancellables = Set<AnyCancellable>()
 
     var detectedSystemTimeOffset: TimeInterval {
         didSet {
@@ -54,10 +57,23 @@ class LoopTrustedTimeChecker: TrustedTimeChecker {
         ntpClient.start()
         self.alertManager = alertManager
         self.detectedSystemTimeOffset = UserDefaults.standard.detectedSystemTimeOffset ?? 0
-        NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification,
-                                               object: nil, queue: nil) { [weak self] _ in self?.checkTrustedTime() }
-        NotificationCenter.default.addObserver(forName: .LoopRunning,
-                                               object: nil, queue: nil) { [weak self] _ in self?.checkTrustedTime() }
+        
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { [weak self] _ in
+                Task {
+                    self?.checkTrustedTime()
+                }
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .LoopRunning)
+            .sink { [weak self] _ in
+                Task {
+                    self?.checkTrustedTime()
+                }
+            }
+            .store(in: &cancellables)
+
         checkTrustedTime()
     }
     

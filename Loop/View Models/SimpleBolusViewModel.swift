@@ -18,24 +18,23 @@ import LocalAuthentication
 
 protocol SimpleBolusViewModelDelegate: AnyObject {
     
-    func addGlucose(_ samples: [NewGlucoseSample], completion: @escaping (Swift.Result<[StoredGlucoseSample], Error>) -> Void)
-    
-    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry? ,
-                      completion: @escaping (_ result: Result<StoredCarbEntry,Error>) -> Void)
+    func addGlucose(_ samples: [NewGlucoseSample]) async throws -> [StoredGlucoseSample]
+
+    func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?) async throws -> StoredCarbEntry
 
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
     
-    func enactBolus(units: Double, activationType: BolusActivationType)
+    func enactBolus(units: Double, activationType: BolusActivationType) async throws
 
-    func insulinOnBoard(at date: Date, completion: @escaping (_ result: DoseStoreResult<InsulinValue>) -> Void)
+    func insulinOnBoard(at date: Date) async -> InsulinValue?
 
     func computeSimpleBolusRecommendation(at date: Date, mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> BolusDosingDecision?
 
     var displayGlucosePreference: DisplayGlucosePreference { get }
     
-    var maximumBolus: Double { get }
+    var maximumBolus: Double? { get }
 
-    var suspendThreshold: HKQuantity { get }
+    var suspendThreshold: HKQuantity? { get }
 }
 
 class SimpleBolusViewModel: ObservableObject {
@@ -104,7 +103,11 @@ class SimpleBolusViewModel: ObservableObject {
     }
     
     private func updateNotice() {
-        
+
+        guard let maxBolus = delegate.maximumBolus, let suspendThreshold = delegate.suspendThreshold else {
+            return
+        }
+
         if let carbs = self.carbQuantity {
             guard carbs <= LoopConstants.maxCarbEntryQuantity else {
                 activeNotice = .carbohydrateEntryTooLarge
@@ -113,7 +116,7 @@ class SimpleBolusViewModel: ObservableObject {
         }
         
         if let bolus = bolus {
-            guard bolus.doubleValue(for: .internationalUnit()) <= delegate.maximumBolus else {
+            guard bolus.doubleValue(for: .internationalUnit()) <= maxBolus else {
                 activeNotice = .maxBolusExceeded
                 return
             }
@@ -141,7 +144,7 @@ class SimpleBolusViewModel: ObservableObject {
         case let g? where g < suspendThreshold:
             activeNotice = .glucoseBelowSuspendThreshold
         default:
-            if let recommendation = recommendation, recommendation > delegate.maximumBolus {
+            if let recommendation = recommendation, recommendation > maxBolus {
                 activeNotice = .recommendationExceedsMaxBolus
             } else {
                 activeNotice = nil
@@ -198,13 +201,13 @@ class SimpleBolusViewModel: ObservableObject {
     
     var displayGlucoseUnit: HKUnit { return delegate.displayGlucosePreference.unit }
     
-    var suspendThreshold: HKQuantity { return delegate.suspendThreshold }
+    var suspendThreshold: HKQuantity? { return delegate.suspendThreshold }
 
     private var recommendation: Double? = nil {
         didSet {
-            if let recommendation = recommendation {
+            if let recommendation = recommendation, let maxBolus = delegate.maximumBolus {
                 recommendedBolus = Self.doseAmountFormatter.string(from: recommendation)!
-                enteredBolusString = Self.doseAmountFormatter.string(from: min(recommendation, delegate.maximumBolus))!
+                enteredBolusString = Self.doseAmountFormatter.string(from: min(recommendation, maxBolus))!
             } else {
                 recommendedBolus = NSLocalizedString("–", comment: "String denoting lack of a recommended bolus amount in the simple bolus calculator")
                 enteredBolusString = Self.doseAmountFormatter.string(from: 0.0)!
@@ -271,7 +274,10 @@ class SimpleBolusViewModel: ObservableObject {
     private lazy var bolusVolumeFormatter = QuantityFormatter(for: .internationalUnit())
 
     var maximumBolusAmountString: String {
-        let maxBolusQuantity = HKQuantity(unit: .internationalUnit(), doubleValue: delegate.maximumBolus)
+        guard let maxBolus = delegate.maximumBolus else {
+            return ""
+        }
+        let maxBolusQuantity = HKQuantity(unit: .internationalUnit(), doubleValue: maxBolus)
         return bolusVolumeFormatter.string(from: maxBolusQuantity)!
     }
 
@@ -323,28 +329,30 @@ class SimpleBolusViewModel: ObservableObject {
         }
     }
     
-    func saveAndDeliver(completion: @escaping (Bool) -> Void) {
-        
+    func saveAndDeliver() async -> Bool {
+
         let saveDate = Date()
 
         // Authenticate the bolus before saving anything
-        func authenticateIfNeeded(_ completion: @escaping (Bool) -> Void) {
-            if let bolus = bolus, bolus.doubleValue(for: .internationalUnit()) > 0 {
-                let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusString)
-                authenticate(message) {
-                    switch $0 {
-                    case .success:
-                        completion(true)
-                    case .failure:
-                        completion(false)
+        func authenticateIfNeeded() async -> Bool {
+            await withCheckedContinuation { continuation in
+                if let bolus = bolus, bolus.doubleValue(for: .internationalUnit()) > 0 {
+                    let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusString)
+                    authenticate(message) {
+                        switch $0 {
+                        case .success:
+                            continuation.resume(returning: true)
+                        case .failure:
+                            continuation.resume(returning: false)
+                        }
                     }
+                } else {
+                    continuation.resume(returning: true)
                 }
-            } else {
-                completion(true)
             }
         }
         
-        func saveManualGlucose(_ completion: @escaping (Bool) -> Void) {
+        func saveManualGlucose() async -> Bool {
             if let manualGlucoseQuantity = manualGlucoseQuantity {
                 let manualGlucoseSample = NewGlucoseSample(date: saveDate,
                                                            quantity: manualGlucoseQuantity,
@@ -354,58 +362,54 @@ class SimpleBolusViewModel: ObservableObject {
                                                            isDisplayOnly: false,
                                                            wasUserEntered: true,
                                                            syncIdentifier: UUID().uuidString)
-                delegate.addGlucose([manualGlucoseSample]) { result in
-                    DispatchQueue.main.async {
-                        switch result {
-                        case .failure(let error):
-                            self.presentAlert(.manualGlucoseEntryPersistenceFailure)
-                            self.log.error("Failed to add manual glucose entry: %{public}@", String(describing: error))
-                            completion(false)
-                        case .success(let storedSamples):
-                            self.dosingDecision?.manualGlucoseSample = storedSamples.first
-                            completion(true)
-                        }
-                    }
+                do {
+                    let storedSamples = try await delegate.addGlucose([manualGlucoseSample])
+                    self.dosingDecision?.manualGlucoseSample = storedSamples.first
+                    return true
+                } catch {
+                    self.presentAlert(.manualGlucoseEntryPersistenceFailure)
+                    self.log.error("Failed to add manual glucose entry: %{public}@", String(describing: error))
+                    return false
                 }
             } else {
-                completion(true)
+                return true
             }
         }
         
-        func saveCarbs(_ completion: @escaping (Bool) -> Void) {
+        func saveCarbs() async -> Bool {
             if let carbs = carbQuantity {
-                
                 let interaction = INInteraction(intent: NewCarbEntryIntent(), response: nil)
-                interaction.donate { [weak self] (error) in
-                    if let error = error {
-                        self?.log.error("Failed to donate intent: %{public}@", String(describing: error))
-                    }
+                do {
+                    try await interaction.donate()
+                } catch {
+                    log.error("Failed to donate intent: %{public}@", String(describing: error))
                 }
-                
+
                 let carbEntry = NewCarbEntry(date: saveDate, quantity: carbs, startDate: saveDate, foodType: nil, absorptionTime: nil)
                 
-                delegate.addCarbEntry(carbEntry, replacing: nil) { result in
-                    DispatchQueue.main.async {
-                        switch result {
-                        case .failure(let error):
-                            self.presentAlert(.carbEntryPersistenceFailure)
-                            self.log.error("Failed to add carb entry: %{public}@", String(describing: error))
-                            completion(false)
-                        case .success(let storedEntry):
-                            self.dosingDecision?.carbEntry = storedEntry
-                            completion(true)
-                        }
-                    }
+                do {
+                    self.dosingDecision?.carbEntry = try await delegate.addCarbEntry(carbEntry, replacing: nil)
+                    return true
+                } catch {
+                    self.presentAlert(.carbEntryPersistenceFailure)
+                    self.log.error("Failed to add carb entry: %{public}@", String(describing: error))
+                    return false
                 }
             } else {
-                completion(true)
+                return true
             }
         }
 
         func enactBolus() {
             if let bolusVolume = bolus?.doubleValue(for: .internationalUnit()), bolusVolume > 0 {
-                delegate.enactBolus(units: bolusVolume, activationType: .activationTypeFor(recommendedAmount: recommendation, bolusAmount: bolusVolume))
-                dosingDecision?.manualBolusRequested = bolusVolume
+                Task { @MainActor in
+                    do {
+                        try await delegate.enactBolus(units: bolusVolume, activationType: .activationTypeFor(recommendedAmount: recommendation, bolusAmount: bolusVolume))
+                        dosingDecision?.manualBolusRequested = bolusVolume
+                    } catch {
+                        log.error("Unable to enact bolus: %{public}@", String(describing: error))
+                    }
+                }
             }
         }
         
@@ -415,28 +419,13 @@ class SimpleBolusViewModel: ObservableObject {
             }
         }
         
-        func finishWithResult(_ success: Bool) {
+        if await authenticateIfNeeded(), await saveManualGlucose(), await saveCarbs() {
+            enactBolus()
             saveBolusDecision()
-            completion(success)
-        }
-        
-        authenticateIfNeeded { (success) in
-            if success {
-                saveManualGlucose { (success) in
-                    if success {
-                        saveCarbs { (success) in
-                            if success {
-                                enactBolus()
-                            }
-                            finishWithResult(success)
-                        }
-                    } else {
-                        finishWithResult(false)
-                    }
-                }
-            } else {
-                finishWithResult(false)
-            }
+            return true
+        } else {
+            saveBolusDecision()
+            return false
         }
     }
     

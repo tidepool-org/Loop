@@ -10,6 +10,12 @@ import Foundation
 import LoopKit
 import os.log
 import LoopCore
+import HealthKit
+
+protocol PresetActivationObserver: AnyObject {
+    func presetActivated(context: TemporaryScheduleOverride.Context, duration: TemporaryScheduleOverride.Duration)
+    func presetDeactivated(context: TemporaryScheduleOverride.Context)
+}
 
 class TemporaryPresetsManager {
 
@@ -45,8 +51,7 @@ class TemporaryPresetsManager {
             return
         }
 
-        guard let presets = settingsManager.latestSettings.overridePresets,
-              let preset = presets.first(where: {$0.name.lowercased() == name}) else
+        guard let preset = settingsManager.latestSettings.overridePresets.first(where: {$0.name.lowercased() == name}) else
         {
             log.error("Override Intent: Unable to find override named '%s'", String(describing: name))
             return
@@ -219,5 +224,66 @@ class TemporaryPresetsManager {
             return nil
         }
     }
+
+    /// The insulin sensitivity schedule, applying recent overrides relative to the current moment in time.
+    public var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule? {
+        if let insulinSensitivitySchedule = settingsManager.latestSettings.insulinSensitivitySchedule {
+            return overrideHistory.resolvingRecentInsulinSensitivitySchedule(insulinSensitivitySchedule)
+        } else {
+            return nil
+        }
+    }
+
+    public var carbRatioScheduleApplyingOverrideHistory: CarbRatioSchedule? {
+        if let carbRatioSchedule = carbRatioSchedule {
+            return overrideHistory.resolvingRecentCarbRatioSchedule(carbRatioSchedule)
+        } else {
+            return nil
+        }
+    }
+
+}
+
+extension TemporaryPresetsManager : LoopSettingsProvider {
+    var glucoseTargetRangeSchedule: LoopKit.GlucoseRangeSchedule? {
+        effectiveGlucoseTargetRangeSchedule()
+    }
+    
+    var insulinSensitivitySchedule: LoopKit.InsulinSensitivitySchedule? {
+        insulinSensitivityScheduleApplyingOverrideHistory
+    }
+    
+    var basalRateSchedule: LoopKit.BasalRateSchedule? {
+        basalRateScheduleApplyingOverrideHistory
+    }
+    
+    var carbRatioSchedule: LoopKit.CarbRatioSchedule? {
+        settingsManager.latestSettings.carbRatioSchedule
+    }
+
+    var preMealTargetRange: ClosedRange<HKQuantity>? {
+        settingsManager.latestSettings.preMealTargetRange
+    }
+    
+    var legacyWorkoutTargetRange: ClosedRange<HKQuantity>? {
+        settingsManager.latestSettings.workoutTargetRange
+    }
+    
+    var overridePresets: [LoopKit.TemporaryScheduleOverridePreset] {
+        settingsManager.latestSettings.overridePresets
+    }
+    
+    var maximumBasalRatePerHour: Double? {
+        settingsManager.latestSettings.maximumBasalRatePerHour
+    }
+    
+    var maximumBolus: Double? {
+        settingsManager.latestSettings.maximumBolus
+    }
+    
+    var suspendThreshold: LoopKit.GlucoseThreshold? {
+        settingsManager.latestSettings.suspendThreshold
+    }
+    
 
 }

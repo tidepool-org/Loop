@@ -82,7 +82,8 @@ final class CarbEntryViewModel: ObservableObject {
     @Published var selectedFavoriteFoodIndex = -1
     
     weak var delegate: CarbEntryViewModelDelegate?
-    
+    weak var analyticsServicesManager: AnalyticsServicesManager?
+
     private lazy var cancellables = Set<AnyCancellable>()
     
     /// Initalizer for when`CarbEntryView` is presented from the home screen

@@ -86,8 +86,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         self?.refreshContext.update(with: .carbs)
                     case .glucose?:
                         self?.refreshContext.formUnion([.glucose, .carbs])
-                    case .loopFinished?:
-                        self?.refreshContext.update(with: .insulin)
                     }
 
                     self?.hudView?.loopCompletionHUD.loopInProgress = false
@@ -1334,6 +1332,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
             vc.isOnboardingComplete = onboardingManager.isComplete
             vc.automaticDosingStatus = automaticDosingStatus
             vc.deviceManager = deviceManager
+            vc.loopDataManager = loopManager
+            vc.analyticsServicesManager = deviceManager.analyticsServicesManager
+            vc.carbStore = deviceManager.carbStore
             vc.hidesBottomBarWhenPushed = true
         case let vc as InsulinDeliveryTableViewController:
             vc.deviceManager = deviceManager
@@ -1341,16 +1342,17 @@ final class StatusTableViewController: LoopChartsTableViewController {
             vc.enableEntryDeletion = FeatureFlags.entryDeletionEnabled
             vc.headerValueLabelColor = .insulinTintColor
         case let vc as OverrideSelectionViewController:
-            if deviceManager.loopManager.settings.futureOverrideEnabled() {
-                vc.scheduledOverride = deviceManager.loopManager.settings.scheduleOverride
+            if loopManager.settings.futureOverrideEnabled() {
+                vc.scheduledOverride = loopManager.settings.scheduleOverride
             }
-            vc.presets = deviceManager.loopManager.settings.overridePresets
+            vc.presets = loopManager.settings.overridePresets
             vc.glucoseUnit = statusCharts.glucose.glucoseUnit
-            vc.overrideHistory = deviceManager.loopManager.overrideHistory.getEvents()
+            vc.overrideHistory = loopManager.overrideHistory.getEvents()
             vc.delegate = self
         case let vc as PredictionTableViewController:
             vc.deviceManager = deviceManager
             vc.settingsManager = settingsManager
+            vc.loopDataManager = loopManager
         default:
             break
         }
@@ -1367,7 +1369,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     func presentCarbEntryScreen(_ activity: NSUserActivity?) {
         let navigationWrapper: UINavigationController
         if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingStatus.automaticDosingEnabled {
-            let viewModel = SimpleBolusViewModel(delegate: deviceManager, displayMealEntry: true)
+            let viewModel = SimpleBolusViewModel(delegate: loopManager, displayMealEntry: true)
             if let activity = activity {
                 viewModel.restoreUserActivityState(activity)
             }
@@ -1377,7 +1379,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
             present(navigationWrapper, animated: true)
         } else {
-            let viewModel = CarbEntryViewModel(delegate: deviceManager)
+            let viewModel = CarbEntryViewModel(delegate: loopManager)
+            viewModel.analyticsServicesManager = loopManager.analyticsServicesManager
             if let activity {
                 viewModel.restoreUserActivityState(activity)
             }

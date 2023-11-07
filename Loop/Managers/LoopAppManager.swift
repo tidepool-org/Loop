@@ -56,6 +56,7 @@ protocol WindowProvider: AnyObject {
     var window: UIWindow? { get }
 }
 
+@MainActor
 class LoopAppManager: NSObject {
     private enum State: Int {
         case initialize
@@ -80,7 +81,6 @@ class LoopAppManager: NSObject {
     private var doseStore: DoseStore!
     private var glucoseStore: GlucoseStore!
     private var dosingDecisionStore: DosingDecisionStore!
-    private var loopDosingManager: LoopDosingManager!
     private var deviceDataManager: DeviceDataManager!
     private var onboardingManager: OnboardingManager!
     private var alertPermissionsChecker: AlertPermissionsChecker!
@@ -93,6 +93,15 @@ class LoopAppManager: NSObject {
     private var deeplinkManager: DeeplinkManager!
     private var temporaryPresetsManager: TemporaryPresetsManager!
     private var loopDataManager: LoopDataManager!
+    private var mealDetectionManager: MealDetectionManager!
+    private var statusExtensionManager: ExtensionDataManager!
+    private var watchManager: WatchDataManager!
+
+
+    // HealthStorePreferredGlucoseUnitDidChange will be notified once the user completes the health access form. Set to .milligramsPerDeciliter until then
+    public private(set) var displayGlucosePreference = DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter)
+
+    private var displayGlucoseUnitObservers = WeakSynchronizedSet<DisplayGlucoseUnitObserver>()
 
     private var state: State = .initialize
 
@@ -129,22 +138,23 @@ class LoopAppManager: NSObject {
     }
 
     func launch() {
-        dispatchPrecondition(condition: .onQueue(.main))
         precondition(isLaunchPending)
 
-        resumeLaunch()
+        Task {
+            await resumeLaunch()
+        }
     }
 
     var isLaunchPending: Bool { state == .checkProtectedDataAvailable }
 
     var isLaunchComplete: Bool { state == .launchComplete }
 
-    private func resumeLaunch() {
+    private func resumeLaunch() async {
         if state == .checkProtectedDataAvailable {
             checkProtectedDataAvailable()
         }
         if state == .launchManagers {
-            launchManagers()
+            await launchManagers()
         }
         if state == .launchOnboarding {
             launchOnboarding()
@@ -168,7 +178,7 @@ class LoopAppManager: NSObject {
         self.state = state.next
     }
 
-    private func launchManagers() {
+    private func launchManagers() async {
         dispatchPrecondition(condition: .onQueue(.main))
         precondition(state == .launchManagers)
 
@@ -270,30 +280,33 @@ class LoopAppManager: NSObject {
 
         dosingDecisionStore = DosingDecisionStore(store: cacheStore, expireAfter: localCacheDuration)
 
-        loopDosingManager = LoopDosingManager(
-            doseStore: doseStore,
-            settingsStore: settingsManager.settingsStore,
-            carbStore: carbStore,
-            glucoseStore: glucoseStore,
-            overrideHistory: temporaryPresetsManager.overrideHistory,
-            dosingDecisionStore: dosingDecisionStore,
-            automaticDosingStatus: automaticDosingStatus,
-            analyticsServicesManager: analyticsServicesManager
-        )
+
+        NotificationCenter.default.addObserver(forName: .HealthStorePreferredGlucoseUnitDidChange, object: healthStore, queue: nil) { [weak self] _ in
+            guard let self else {
+                return
+            }
+
+            Task { @MainActor in
+                if let unit = await self.healthStore.cachedPreferredUnits(for: .bloodGlucose) {
+                    self.displayGlucosePreference.unitDidChange(to: unit)
+                    self.notifyObserversOfDisplayGlucoseUnitChange(to: unit)
+                }
+            }
+        }
 
         loopDataManager = LoopDataManager(
-            lastLoopCompleted: ExtensionDataManager.lastLoopCompleted,
-            overrideHistory: temporaryPresetsManager.overrideHistory,
+            temporaryPresetsManager: temporaryPresetsManager,
+            settingsManager: settingsManager,
             analyticsServicesManager: analyticsServicesManager,
-            localCacheDuration: localCacheDuration,
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
             dosingDecisionStore: dosingDecisionStore,
-            latestStoredSettingsProvider: settingsManager,
+            displayGlucosePreference: displayGlucosePreference,
             automaticDosingStatus: automaticDosingStatus,
-            trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset }
+            trustedTimeOffset: { await self.trustedTimeChecker.detectedSystemTimeOffset }
         )
+
         cacheStore.delegate = loopDataManager
 
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager,
@@ -305,7 +318,7 @@ class LoopAppManager: NSObject {
                                               doseStore: doseStore,
                                               glucoseStore: glucoseStore,
                                               dosingDecisionStore: dosingDecisionStore,
-                                              loopDosingManager: loopDosingManager,
+                                              loopDataManager: loopDataManager,
                                               analyticsServicesManager: analyticsServicesManager,
                                               bluetoothProvider: bluetoothStateManager,
                                               alertPresenter: self,
@@ -313,17 +326,40 @@ class LoopAppManager: NSObject {
                                               cacheStore: cacheStore,
                                               localCacheDuration: localCacheDuration,
                                               overrideHistory: temporaryPresetsManager.overrideHistory,
-                                              trustedTimeChecker: trustedTimeChecker
+                                              temporaryPresetsManager: temporaryPresetsManager,
+                                              trustedTimeChecker: trustedTimeChecker,
+                                              displayGlucosePreference: displayGlucosePreference,
+                                              displayGlucoseUnitBroadcaster: self
         )
 
-        Task {
-            await loopDosingManager.setDosingDelegate(deviceDataManager)
-        }
+        statusExtensionManager = ExtensionDataManager(
+            deviceDataManager: deviceDataManager,
+            loopDataManager: loopDataManager,
+            automaticDosingStatus: automaticDosingStatus,
+            settingsManager: settingsManager,
+            temporaryPresetsManager: temporaryPresetsManager
+        )
+
+        watchManager = WatchDataManager(
+            deviceManager: deviceDataManager,
+            settingsManager: settingsManager,
+            loopDataManager: loopDataManager,
+            temporaryPresetsManager: temporaryPresetsManager,
+            healthStore: healthStore
+        )
+
+        self.mealDetectionManager = MealDetectionManager(
+            algorithmStateProvider: loopDataManager,
+            settingsProvider: temporaryPresetsManager,
+            bolusDurationEstimator: deviceDataManager
+        )
+
+        loopDataManager.deliveryDelegate = deviceDataManager
 
         deviceDataManager.instantiateDeviceManagers()
 
         settingsManager.deviceStatusProvider = deviceDataManager
-        settingsManager.displayGlucosePreference = deviceDataManager.displayGlucosePreference
+        settingsManager.displayGlucosePreference = displayGlucosePreference
 
         SharedLogging.instance = loggingServicesManager
 
@@ -342,7 +378,7 @@ class LoopAppManager: NSObject {
                                               settingsManager: settingsManager,
                                               statefulPluginManager: deviceDataManager.statefulPluginManager,
                                               servicesManager: deviceDataManager.servicesManager,
-                                              loopDataManager: deviceDataManager.loopManager,
+                                              loopDataManager: loopDataManager,
                                               supportManager: supportManager,
                                               windowProvider: windowProvider,
                                               userDefaults: UserDefaults.appGroup!)
@@ -375,14 +411,28 @@ class LoopAppManager: NSObject {
 
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
-
         automaticDosingStatus.$isAutomaticDosingAllowed
-            .combineLatest(deviceDataManager.loopManager.$dosingEnabled)
+            .combineLatest(loopDataManager.$dosingEnabled)
             .map { $0 && $1 }
             .assign(to: \.automaticDosingStatus.automaticDosingEnabled, on: self)
             .store(in: &cancellables)
 
         state = state.next
+
+        NotificationCenter.default.publisher(for: .LoopCycleCompleted)
+            .sink { [weak self] _ in
+                Task {
+                    await self?.loopCycleDidComplete()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func loopCycleDidComplete() async {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            self.widgetLog.default("Refreshing widget. Reason: Loop completed")
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 
     private func launchOnboarding() {
@@ -392,7 +442,9 @@ class LoopAppManager: NSObject {
         onboardingManager.launch {
             DispatchQueue.main.async {
                 self.state = self.state.next
-                self.resumeLaunch()
+                Task {
+                    await self.resumeLaunch()
+                }
             }
         }
     }
@@ -412,7 +464,7 @@ class LoopAppManager: NSObject {
         statusTableViewController.testingScenariosManager = testingScenariosManager
         statusTableViewController.settingsManager = settingsManager
         statusTableViewController.temporaryPresetsManager = temporaryPresetsManager
-        statusTableViewController.loopManager = deviceDataManager.loopManager
+        statusTableViewController.loopManager = loopDataManager
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 
         var rootNavigationController = rootViewController as? RootNavigationController
@@ -626,6 +678,33 @@ extension LoopAppManager: AlertPresenter {
     }
 }
 
+protocol DisplayGlucoseUnitBroadcaster: AnyObject {
+    func addDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver)
+    func removeDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver)
+    func notifyObserversOfDisplayGlucoseUnitChange(to displayGlucoseUnit: HKUnit)
+}
+
+extension LoopAppManager: DisplayGlucoseUnitBroadcaster {
+    func addDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver) {
+        let queue = DispatchQueue.main
+        displayGlucoseUnitObservers.insert(observer, queue: queue)
+        queue.async {
+            observer.unitDidChange(to: self.displayGlucosePreference.unit)
+        }
+    }
+
+    func removeDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver) {
+        displayGlucoseUnitObservers.removeElement(observer)
+        displayGlucoseUnitObservers.cleanupDeallocatedElements()
+    }
+
+    func notifyObserversOfDisplayGlucoseUnitChange(to displayGlucoseUnit: HKUnit) {
+        self.displayGlucoseUnitObservers.forEach {
+            $0.unitDidChange(to: displayGlucoseUnit)
+        }
+    }
+}
+
 // MARK: - DeviceOrientationController
 
 extension LoopAppManager: DeviceOrientationController {
@@ -758,5 +837,100 @@ extension LoopAppManager: ResetLoopManagerDelegate {
     
     func presentCouldNotResetLoopAlert(error: Error) {
         alertManager.presentCouldNotResetLoopAlert(error: error)
+    }
+}
+
+protocol DiagnosticReportGenerator: AnyObject {
+    func generateDiagnosticReport() async -> String
+}
+
+
+extension LoopAppManager: DiagnosticReportGenerator {
+    /// Generates a diagnostic report about the current state
+    ///
+    /// This operation is performed asynchronously and the completion will be executed on an arbitrary background queue.
+    ///
+    /// - parameter completion: A closure called once the report has been generated. The closure takes a single argument of the report string.
+    func generateDiagnosticReport() async -> String {
+
+        let (algoInput, algoOutput) = loopDataManager.displayState.asTuple
+
+        var loopError: Error?
+        var doseRecommendation: LoopAlgorithmDoseRecommendation?
+
+        if let algoOutput {
+            switch algoOutput.recommendationResult {
+            case .success(let recommendation):
+                doseRecommendation = recommendation
+            case .failure(let error):
+                loopError = error
+            }
+        }
+
+        var entries: [String] = [
+            "## LoopDataManager",
+            "settings: \(String(reflecting: settingsManager.loopSettings))",
+
+            "insulinCounteractionEffects: [",
+            "* GlucoseEffectVelocity(start, end, mg/dL/min)",
+            (algoOutput?.effects.insulinCounteraction ?? []).reduce(into: "", { (entries, entry) in
+                entries.append("* \(entry.startDate), \(entry.endDate), \(entry.quantity.doubleValue(for: GlucoseEffectVelocity.unit))\n")
+            }),
+            "]",
+
+            "insulinEffect: [",
+            "* GlucoseEffect(start, mg/dL)",
+            (algoOutput?.effects.insulin ?? []).reduce(into: "", { (entries, entry) in
+                entries.append("* \(entry.startDate), \(entry.quantity.doubleValue(for: .milligramsPerDeciliter))\n")
+            }),
+            "]",
+
+            "carbEffect: [",
+            "* GlucoseEffect(start, mg/dL)",
+            (algoOutput?.effects.carbs ?? []).reduce(into: "", { (entries, entry) in
+                entries.append("* \(entry.startDate), \(entry.quantity.doubleValue(for: .milligramsPerDeciliter))\n")
+            }),
+            "]",
+
+            "predictedGlucose: [",
+            "* PredictedGlucoseValue(start, mg/dL)",
+            (algoOutput?.predictedGlucose ?? []).reduce(into: "", { (entries, entry) in
+                entries.append("* \(entry.startDate), \(entry.quantity.doubleValue(for: .milligramsPerDeciliter))\n")
+            }),
+            "]",
+
+            "integralRetrospectiveCorrectionEnabled: \(UserDefaults.standard.integralRetrospectiveCorrectionEnabled)",
+
+            "retrospectiveCorrection: [",
+            "* GlucoseEffect(start, mg/dL)",
+            (algoOutput?.effects.retrospectiveCorrection ?? []).reduce(into: "", { (entries, entry) in
+                entries.append("* \(entry.startDate), \(entry.quantity.doubleValue(for: .milligramsPerDeciliter))\n")
+            }),
+            "]",
+
+            "glucoseMomentumEffect: \(algoOutput?.effects.momentum ?? [])",
+            "recommendedAutomaticDose: \(String(describing: doseRecommendation))",
+            "lastLoopCompleted: \(String(describing: loopDataManager.lastLoopCompleted))",
+            "carbsOnBoard: \(String(describing: algoOutput?.activeCarbs))",
+            "insulinOnBoard: \(String(describing: algoOutput?.activeInsulin))",
+            "error: \(String(describing: loopError))",
+            "overrideInUserDefaults: \(String(describing: UserDefaults.appGroup?.intentExtensionOverrideToSet))",
+            "glucoseBasedApplicationFactorEnabled: \(UserDefaults.standard.glucoseBasedApplicationFactorEnabled)",
+            "integralRetrospectiveCorrectionEanbled: \(String(describing: algoInput?.useIntegralRetrospectiveCorrection))",
+            "",
+            await self.glucoseStore.generateDiagnosticReport(),
+            "",
+            await self.carbStore.generateDiagnosticReport(),
+            "",
+            await self.carbStore.generateDiagnosticReport(),
+            "",
+            await self.mealDetectionManager.generateDiagnosticReport(),
+            "",
+            await UNUserNotificationCenter.current().generateDiagnosticReport(),
+            "",
+            UIDevice.current.generateDiagnosticReport(),
+            ""
+        ]
+        return entries.joined(separator: "\n")
     }
 }
