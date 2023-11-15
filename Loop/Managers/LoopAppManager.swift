@@ -160,7 +160,7 @@ class LoopAppManager: NSObject {
             launchOnboarding()
         }
         if state == .launchHomeScreen {
-            launchHomeScreen()
+            await launchHomeScreen()
         }
         
         askUserToConfirmLoopReset()
@@ -304,7 +304,7 @@ class LoopAppManager: NSObject {
             dosingDecisionStore: dosingDecisionStore,
             displayGlucosePreference: displayGlucosePreference,
             automaticDosingStatus: automaticDosingStatus,
-            trustedTimeOffset: { await self.trustedTimeChecker.detectedSystemTimeOffset }
+            trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset }
         )
 
         cacheStore.delegate = loopDataManager
@@ -406,13 +406,13 @@ class LoopAppManager: NSObject {
         analyticsServicesManager.identify("Services", array: serviceNames)
 
         if FeatureFlags.scenariosEnabled {
-            testingScenariosManager = LocalTestingScenariosManager(deviceManager: deviceDataManager, supportManager: supportManager)
+            testingScenariosManager = TestingScenariosManager(deviceManager: deviceDataManager, supportManager: supportManager, pluginManager: pluginManager)
         }
 
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
         automaticDosingStatus.$isAutomaticDosingAllowed
-            .combineLatest(loopDataManager.$dosingEnabled)
+            .combineLatest(settingsManager.$dosingEnabled)
             .map { $0 && $1 }
             .assign(to: \.automaticDosingStatus.automaticDosingEnabled, on: self)
             .store(in: &cancellables)
@@ -449,7 +449,7 @@ class LoopAppManager: NSObject {
         }
     }
 
-    private func launchHomeScreen() {
+    private func launchHomeScreen() async {
         dispatchPrecondition(condition: .onQueue(.main))
         precondition(state == .launchHomeScreen)
 
@@ -465,6 +465,7 @@ class LoopAppManager: NSObject {
         statusTableViewController.settingsManager = settingsManager
         statusTableViewController.temporaryPresetsManager = temporaryPresetsManager
         statusTableViewController.loopManager = loopDataManager
+        statusTableViewController.diagnosticReportGenerator = self
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 
         var rootNavigationController = rootViewController as? RootNavigationController
@@ -475,7 +476,7 @@ class LoopAppManager: NSObject {
 
         rootNavigationController?.setViewControllers([statusTableViewController], animated: true)
 
-        deviceDataManager.refreshDeviceData()
+        await deviceDataManager.refreshDeviceData()
 
         handleRemoteNotificationFromLaunchOptions()
 
@@ -853,70 +854,29 @@ extension LoopAppManager: DiagnosticReportGenerator {
     /// - parameter completion: A closure called once the report has been generated. The closure takes a single argument of the report string.
     func generateDiagnosticReport() async -> String {
 
-        let (algoInput, algoOutput) = loopDataManager.displayState.asTuple
-
-        var loopError: Error?
-        var doseRecommendation: LoopAlgorithmDoseRecommendation?
-
-        if let algoOutput {
-            switch algoOutput.recommendationResult {
-            case .success(let recommendation):
-                doseRecommendation = recommendation
-            case .failure(let error):
-                loopError = error
-            }
-        }
-
-        var entries: [String] = [
-            "## LoopDataManager",
-            "settings: \(String(reflecting: settingsManager.loopSettings))",
-
-            "insulinCounteractionEffects: [",
-            "* GlucoseEffectVelocity(start, end, mg/dL/min)",
-            (algoOutput?.effects.insulinCounteraction ?? []).reduce(into: "", { (entries, entry) in
-                entries.append("* \(entry.startDate), \(entry.endDate), \(entry.quantity.doubleValue(for: GlucoseEffectVelocity.unit))\n")
-            }),
-            "]",
-
-            "insulinEffect: [",
-            "* GlucoseEffect(start, mg/dL)",
-            (algoOutput?.effects.insulin ?? []).reduce(into: "", { (entries, entry) in
-                entries.append("* \(entry.startDate), \(entry.quantity.doubleValue(for: .milligramsPerDeciliter))\n")
-            }),
-            "]",
-
-            "carbEffect: [",
-            "* GlucoseEffect(start, mg/dL)",
-            (algoOutput?.effects.carbs ?? []).reduce(into: "", { (entries, entry) in
-                entries.append("* \(entry.startDate), \(entry.quantity.doubleValue(for: .milligramsPerDeciliter))\n")
-            }),
-            "]",
-
-            "predictedGlucose: [",
-            "* PredictedGlucoseValue(start, mg/dL)",
-            (algoOutput?.predictedGlucose ?? []).reduce(into: "", { (entries, entry) in
-                entries.append("* \(entry.startDate), \(entry.quantity.doubleValue(for: .milligramsPerDeciliter))\n")
-            }),
-            "]",
-
-            "integralRetrospectiveCorrectionEnabled: \(UserDefaults.standard.integralRetrospectiveCorrectionEnabled)",
-
-            "retrospectiveCorrection: [",
-            "* GlucoseEffect(start, mg/dL)",
-            (algoOutput?.effects.retrospectiveCorrection ?? []).reduce(into: "", { (entries, entry) in
-                entries.append("* \(entry.startDate), \(entry.quantity.doubleValue(for: .milligramsPerDeciliter))\n")
-            }),
-            "]",
-
-            "glucoseMomentumEffect: \(algoOutput?.effects.momentum ?? [])",
-            "recommendedAutomaticDose: \(String(describing: doseRecommendation))",
-            "lastLoopCompleted: \(String(describing: loopDataManager.lastLoopCompleted))",
-            "carbsOnBoard: \(String(describing: algoOutput?.activeCarbs))",
-            "insulinOnBoard: \(String(describing: algoOutput?.activeInsulin))",
-            "error: \(String(describing: loopError))",
-            "overrideInUserDefaults: \(String(describing: UserDefaults.appGroup?.intentExtensionOverrideToSet))",
-            "glucoseBasedApplicationFactorEnabled: \(UserDefaults.standard.glucoseBasedApplicationFactorEnabled)",
-            "integralRetrospectiveCorrectionEanbled: \(String(describing: algoInput?.useIntegralRetrospectiveCorrection))",
+        let entries: [String] = [
+            "## Build Details",
+            "* appNameAndVersion: \(Bundle.main.localizedNameAndVersion)",
+            "* profileExpiration: \(BuildDetails.default.profileExpirationString)",
+            "* gitRevision: \(BuildDetails.default.gitRevision ?? "N/A")",
+            "* gitBranch: \(BuildDetails.default.gitBranch ?? "N/A")",
+            "* workspaceGitRevision: \(BuildDetails.default.workspaceGitRevision ?? "N/A")",
+            "* workspaceGitBranch: \(BuildDetails.default.workspaceGitBranch ?? "N/A")",
+            "* sourceRoot: \(BuildDetails.default.sourceRoot ?? "N/A")",
+            "* buildDateString: \(BuildDetails.default.buildDateString ?? "N/A")",
+            "* xcodeVersion: \(BuildDetails.default.xcodeVersion ?? "N/A")",
+            "",
+            "## FeatureFlags",
+            "\(FeatureFlags)",
+            "",
+            await alertManager.generateDiagnosticReport(),
+            await deviceDataManager.generateDiagnosticReport(),
+            "",
+            String(reflecting: self.watchManager),
+            "",
+            String(reflecting: self.statusExtensionManager),
+            "",
+            await loopDataManager.generateDiagnosticReport(),
             "",
             await self.glucoseStore.generateDiagnosticReport(),
             "",

@@ -33,9 +33,9 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     func insulinActivityDuration(for type: InsulinType?) -> TimeInterval
 
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?) async throws -> StoredCarbEntry
-    func saveGlucose(sample: NewGlucoseSample) async -> StoredGlucoseSample?
+    func saveGlucose(sample: NewGlucoseSample) async throws -> StoredGlucoseSample
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
-    func enactBolus(units: Double, activationType: BolusActivationType, completion: @escaping (_ error: Error?) -> Void)
+    func enactBolus(units: Double, activationType: BolusActivationType) async throws
 }
 
 @MainActor
@@ -133,7 +133,7 @@ final class BolusEntryViewModel: ObservableObject {
 
     // MARK: - Seams
     private weak var delegate: BolusEntryViewModelDelegate?
-    private weak var deliveryDelegate: DeliveryDelegate?
+    weak var deliveryDelegate: DeliveryDelegate?
     private let now: () -> Date
     private let screenWidth: CGFloat
     private let debounceIntervalMilliseconds: Int
@@ -349,10 +349,10 @@ final class BolusEntryViewModel: ObservableObject {
             }
         }
 
-        if let manualGlucoseSample = manualGlucoseSample {
-            if let glucoseValue = await delegate.saveGlucose(sample: manualGlucoseSample) {
-                dosingDecision.manualGlucoseSample = glucoseValue
-            } else {
+        if let manualGlucoseSample {
+            do {
+                dosingDecision.manualGlucoseSample = try await delegate.saveGlucose(sample: manualGlucoseSample)
+            } catch {
                 presentAlert(.manualGlucoseEntryPersistenceFailure)
                 return false
             }
@@ -388,9 +388,12 @@ final class BolusEntryViewModel: ObservableObject {
 
         if amountToDeliver > 0 {
             savedPreMealOverride = nil
-            delegate.enactBolus(units: amountToDeliver, activationType: activationType, completion: { _ in
-                self.analyticsServicesManager?.didBolus(source: "Phone", units: amountToDeliver)
-            })
+            do {
+                try await delegate.enactBolus(units: amountToDeliver, activationType: activationType)
+            } catch {
+                log.error("Failed to store bolus: %{public}@", String(describing: error))
+            }
+            self.analyticsServicesManager?.didBolus(source: "Phone", units: amountToDeliver)
         }
         return true
     }
@@ -524,9 +527,13 @@ final class BolusEntryViewModel: ObservableObject {
     /// - NOTE: `completion` is invoked on the main queue after predicted glucose values are updated
     private func updatePredictedGlucoseValues(state: AlgorithmDisplayState) async {
 
-        let (manualGlucoseSample, enteredBolus, insulinType) = DispatchQueue.main.sync { (self.manualGlucoseSample, self.enteredBolus, deliveryDelegate?.pumpInsulinType) }
-        
-        let enteredBolusDose = DoseEntry(type: .bolus, startDate: Date(), value: enteredBolus.doubleValue(for: .internationalUnit()), unit: .units, insulinType: insulinType)
+        let enteredBolusDose = DoseEntry(
+            type: .bolus,
+            startDate: Date(),
+            value: enteredBolus.doubleValue(for: .internationalUnit()),
+            unit: .units,
+            insulinType: deliveryDelegate?.pumpInsulinType
+        )
 
         if let algoInput = await delegate?.algorithmState.input?
             .addingDose(dose: enteredBolusDose)
@@ -557,7 +564,7 @@ final class BolusEntryViewModel: ObservableObject {
         let state = await delegate.algorithmState
 
         activeCarbs = state.activeCarbs?.quantity
-        activeInsulin = state.activeCarbs?.quantity
+        activeInsulin = state.activeInsulin?.quantity
 
         await updateRecommendedBolusAndNotice(from: state, isUpdatingFromUserInput: false)
         await updatePredictedGlucoseValues(state: state)

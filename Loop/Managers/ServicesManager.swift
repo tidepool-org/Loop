@@ -375,11 +375,15 @@ extension ServicesManager: ServiceDelegate {
 
 extension ServicesManager: AlertIssuer {
     func issueAlert(_ alert: Alert) {
-        alertManager.issueAlert(alert)
+        Task { @MainActor in
+            alertManager.issueAlert(alert)
+        }
     }
 
     func retractAlert(identifier: Alert.Identifier) {
-        alertManager.retractAlert(identifier: identifier)
+        Task { @MainActor in
+            alertManager.retractAlert(identifier: identifier)
+        }
     }
 }
 

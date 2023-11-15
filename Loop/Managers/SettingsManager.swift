@@ -46,6 +46,8 @@ class SettingsManager {
 
     private var loopSettingsLock = UnfairLock()
 
+    @Published private(set) var dosingEnabled: Bool
+
     init(cacheStore: PersistenceController, expireAfter: TimeInterval, alertMuter: AlertMuter, analyticsServicesManager: AnalyticsServicesManager)
     {
         self.analyticsServicesManager = analyticsServicesManager
@@ -59,6 +61,8 @@ class SettingsManager {
             log.default("SettingsStore has no latestSettings: initializing empty StoredSettings.")
             latestSettings = StoredSettings()
         }
+
+        dosingEnabled = latestSettings.dosingEnabled
 
         settingsStore.delegate = self
 
@@ -144,7 +148,7 @@ class SettingsManager {
 
         let mergedSettings = mergeSettings(newLoopSettings: newLoopSettings, notificationSettings: notificationSettings, deviceToken: deviceTokenStr)
 
-        if latestSettings == mergedSettings {
+        guard latestSettings != mergedSettings else {
             // Skipping unchanged settings store
             return
         }
@@ -208,6 +212,10 @@ class SettingsManager {
 
             if newValue.defaultRapidActingModel != oldValue.defaultRapidActingModel {
                 analyticsServicesManager.didChangeInsulinModel()
+            }
+
+            if newValue.dosingEnabled != oldValue.dosingEnabled {
+                self.dosingEnabled = newValue.dosingEnabled
             }
         }
     }

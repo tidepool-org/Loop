@@ -11,6 +11,7 @@ import HealthKit
 import LoopKit
 import LoopKitUI
 
+@MainActor
 class OnboardingManager {
     private let pluginManager: PluginManager
     private let bluetoothProvider: BluetoothProvider

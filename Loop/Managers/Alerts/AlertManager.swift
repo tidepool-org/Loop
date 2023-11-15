@@ -407,10 +407,12 @@ extension AlertManager: AlertIssuer {
 
 extension AlertManager {
 
+    nonisolated
     public static func soundURL(for alert: Alert) -> URL? {
         return soundURL(managerIdentifier: alert.identifier.managerIdentifier, sound: alert.sound)
     }
 
+    nonisolated
     private static func soundURL(managerIdentifier: String, sound: Alert.Sound?) -> URL? {
         guard let soundFileName = sound?.filename else { return nil }
 
@@ -497,31 +499,35 @@ extension AlertManager {
 // MARK: Alert storage access
 extension AlertManager {
 
-    func getStoredEntries(startDate: Date, completion: @escaping (_ report: String) -> Void) {
-        alertStore.executeQuery(since: startDate, limit: 100) { result in
-            switch result {
-            case .failure(let error):
-                completion("Error: \(error)")
-            case .success(_, let objects):
-                let encoder = JSONEncoder()
-                let report = "## Alerts\n" + objects.map { object in
-                    return """
-                    **\(object.title ?? "??")**
+    func generateDiagnosticReport() async -> String {
+        await withCheckedContinuation { continuation in
+            let startDate = Date() - .days(3.5) // Report the last 3 and half days of alerts
+            let header = "## Alerts\n"
+            alertStore.executeQuery(since: startDate, limit: 100) { result in
+                switch result {
+                case .failure:
+                    continuation.resume(returning: header)
+                case .success(_, let objects):
+                    let encoder = JSONEncoder()
+                    let report = header + objects.map { object in
+                        return """
+                        **\(object.title ?? "??")**
 
-                    * identifier: \(object.identifier.value)
-                    * issued: \(object.issuedDate)
-                    * acknowledged: \(object.acknowledgedDate?.description ?? "n/a")
-                    * retracted: \(object.retractedDate?.description ?? "n/a")
-                    * trigger: \(object.trigger)
-                    * interruptionLevel: \(object.interruptionLevel)
-                    * foregroundContent: \((try? encoder.encodeToStringIfPresent(object.foregroundContent)) ?? "n/a")
-                    * backgroundContent: \((try? encoder.encodeToStringIfPresent(object.backgroundContent)) ?? "n/a")
-                    * sound: \((try? encoder.encodeToStringIfPresent(object.sound)) ?? "n/a")
-                    * metadata: \((try? encoder.encodeToStringIfPresent(object.metadata)) ?? "n/a")
+                        * identifier: \(object.identifier.value)
+                        * issued: \(object.issuedDate)
+                        * acknowledged: \(object.acknowledgedDate?.description ?? "n/a")
+                        * retracted: \(object.retractedDate?.description ?? "n/a")
+                        * trigger: \(object.trigger)
+                        * interruptionLevel: \(object.interruptionLevel)
+                        * foregroundContent: \((try? encoder.encodeToStringIfPresent(object.foregroundContent)) ?? "n/a")
+                        * backgroundContent: \((try? encoder.encodeToStringIfPresent(object.backgroundContent)) ?? "n/a")
+                        * sound: \((try? encoder.encodeToStringIfPresent(object.sound)) ?? "n/a")
+                        * metadata: \((try? encoder.encodeToStringIfPresent(object.metadata)) ?? "n/a")
 
-                    """
-                }.joined(separator: "\n")
-                completion(report)
+                        """
+                    }.joined(separator: "\n")
+                    continuation.resume(returning: report)
+                }
             }
         }
     }

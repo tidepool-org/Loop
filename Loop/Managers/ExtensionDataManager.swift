@@ -10,7 +10,7 @@ import HealthKit
 import UIKit
 import LoopKit
 
-
+@MainActor
 final class ExtensionDataManager {
     unowned let deviceManager: DeviceDataManager
     unowned let loopDataManager: LoopDataManager
@@ -91,7 +91,7 @@ final class ExtensionDataManager {
 
         let basalDeliveryState = deviceManager.pumpManager?.status.basalDeliveryState
 
-        let state = await loopDataManager.algorithmState
+        let state = loopDataManager.algorithmState
 
         let dataManager = self.deviceManager
         var context = StatusExtensionContext()

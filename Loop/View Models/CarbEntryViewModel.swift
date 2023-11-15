@@ -13,6 +13,7 @@ import Combine
 
 protocol CarbEntryViewModelDelegate: AnyObject, BolusEntryViewModelDelegate {
     var defaultAbsorptionTimes: CarbStore.DefaultAbsorptionTimes { get }
+    func scheduleOverrideEnabled(at date: Date) -> Bool
 }
 
 final class CarbEntryViewModel: ObservableObject {
@@ -83,6 +84,7 @@ final class CarbEntryViewModel: ObservableObject {
     
     weak var delegate: CarbEntryViewModelDelegate?
     weak var analyticsServicesManager: AnalyticsServicesManager?
+    weak var deliveryDelegate: DeliveryDelegate?
 
     private lazy var cancellables = Set<AnyCancellable>()
     
@@ -193,10 +195,11 @@ final class CarbEntryViewModel: ObservableObject {
             await viewModel.generateRecommendationAndStartObserving()
         }
         
-        viewModel.analyticsServicesManager = delegate?.analyticsServicesManager
+        viewModel.analyticsServicesManager = analyticsServicesManager
+        viewModel.deliveryDelegate = deliveryDelegate
         bolusViewModel = viewModel
         
-        delegate?.analyticsServicesManager.didDisplayBolusScreen()
+        analyticsServicesManager?.didDisplayBolusScreen()
     }
     
     func clearAlert() {
@@ -290,13 +293,16 @@ final class CarbEntryViewModel: ObservableObject {
     }
     
     private func checkIfOverrideEnabled() {
-        if let managerSettings = delegate?.settings,
-           managerSettings.scheduleOverrideEnabled(at: Date()),
-           let overrideSettings = managerSettings.scheduleOverride?.settings,
-           overrideSettings.effectiveInsulinNeedsScaleFactor != 1.0 {
-            self.warnings.insert(.overrideInProgress)
+        guard let delegate else {
+            return
         }
-        else {
+
+        if delegate.scheduleOverrideEnabled(at: Date()),
+           let overrideSettings = delegate.scheduleOverride?.settings,
+           overrideSettings.effectiveInsulinNeedsScaleFactor != 1.0 
+        {
+            self.warnings.insert(.overrideInProgress)
+        } else {
             self.warnings.remove(.overrideInProgress)
         }
     }

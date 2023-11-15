@@ -330,19 +330,16 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
     }
 
     private func updateTotal() {
-        if case .display = state {
-            let midnight = Calendar.current.startOfDay(for: Date())
+        Task { @MainActor in
+            if case .display = state {
+                let midnight = Calendar.current.startOfDay(for: Date())
 
-            doseStore?.getTotalUnitsDelivered(since: midnight) { (result) in
-                DispatchQueue.main.async {
-                    switch result {
-                    case .failure:
-                        self.totalValueLabel.text = "…"
-                        self.totalDateLabel.text = nil
-                    case .success(let result):
-                        self.totalValueLabel.text = NumberFormatter.localizedString(from: NSNumber(value: result.value), number: .none)
-                        self.totalDateLabel.text = String(format: NSLocalizedString("com.loudnate.InsulinKit.totalDateLabel", value: "since %1$@", comment: "The format string describing the starting date of a total value. The first format argument is the localized date."), DateFormatter.localizedString(from: result.startDate, dateStyle: .none, timeStyle: .short))
-                    }
+                if let result = try? await doseStore?.getTotalUnitsDelivered(since: midnight) {
+                    self.totalValueLabel.text = NumberFormatter.localizedString(from: NSNumber(value: result.value), number: .none)
+                    self.totalDateLabel.text = String(format: NSLocalizedString("com.loudnate.InsulinKit.totalDateLabel", value: "since %1$@", comment: "The format string describing the starting date of a total value. The first format argument is the localized date."), DateFormatter.localizedString(from: result.startDate, dateStyle: .none, timeStyle: .short))
+                } else {
+                    self.totalValueLabel.text = "…"
+                    self.totalDateLabel.text = nil
                 }
             }
         }

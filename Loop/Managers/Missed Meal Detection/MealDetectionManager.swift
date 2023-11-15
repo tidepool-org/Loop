@@ -61,18 +61,19 @@ class MealDetectionManager {
 
         if FeatureFlags.missedMealNotifications {
             NotificationCenter.default.publisher(for: .LoopCycleCompleted)
-                .sink { _ in
-                    Task { @MainActor in
-                        if case .ready(let input, let output) = await algorithmStateProvider.algorithmState {
-                            await self.run(input: input, output: output)
-                        }
-                    }
+                .sink { [weak self] _ in
+                    Task { await self?.run() }
                 }
                 .store(in: &cancellables)
         }
     }
 
-    func run(input: LoopAlgorithmInput, output: LoopAlgorithmOutput) async {
+    func run() async {
+        let algoState = await algorithmStateProvider.algorithmState
+        guard let input = algoState.input, let output = algoState.output else {
+            self.log.debug("Skipping run with missing algorithm input/output")
+            return
+        }
 
         let date = Date()
         let samplesStart = date.addingTimeInterval(-MissedMealSettings.maxRecency)

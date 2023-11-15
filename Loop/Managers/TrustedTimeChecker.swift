@@ -11,7 +11,7 @@ import TrueTime
 import UIKit
 import Combine
 
-fileprivate extension UserDefaults {
+extension UserDefaults {
     private enum Key: String {
         case detectedSystemTimeOffset = "com.loopkit.Loop.DetectedSystemTimeOffset"
     }
@@ -27,7 +27,7 @@ fileprivate extension UserDefaults {
 }
 
 protocol TrustedTimeChecker {
-    var detectedSystemTimeOffset: TimeInterval { get async }
+    var detectedSystemTimeOffset: TimeInterval { get }
 }
 
 @MainActor
@@ -41,9 +41,13 @@ class LoopTrustedTimeChecker: TrustedTimeChecker {
 
     lazy private var cancellables = Set<AnyCancellable>()
 
+    nonisolated
     var detectedSystemTimeOffset: TimeInterval {
-        didSet {
-            UserDefaults.standard.detectedSystemTimeOffset = detectedSystemTimeOffset
+        get {
+            UserDefaults.standard.detectedSystemTimeOffset ?? 0
+        }
+        set {
+            UserDefaults.standard.detectedSystemTimeOffset = newValue
         }
     }
 
@@ -56,7 +60,6 @@ class LoopTrustedTimeChecker: TrustedTimeChecker {
         #endif
         ntpClient.start()
         self.alertManager = alertManager
-        self.detectedSystemTimeOffset = UserDefaults.standard.detectedSystemTimeOffset ?? 0
         
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
             .sink { [weak self] _ in

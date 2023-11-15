@@ -19,6 +19,14 @@ struct CarbAbsorptionReview {
 
 extension LoopDataManager {
 
+    func dynamicCarbsOnBoard() async -> [CarbValue] {
+        if let effects = displayState.output?.effects {
+            return effects.carbStatus.dynamicCarbsOnBoard(absorptionModel: Self.carbModel.model)
+        } else {
+            return []
+        }
+    }
+
     func fetchCarbAbsorptionReview(start: Date, end: Date) async throws -> CarbAbsorptionReview {
         // Need to get insulin data from any active doses that might affect this time range
         var dosesStart = start.addingTimeInterval(-InsulinMath.defaultInsulinActivityDuration)
@@ -29,17 +37,17 @@ extension LoopDataManager {
 
         dosesStart = doses.map { $0.startDate }.min() ?? dosesStart
 
-        let basal = try await settingsStore.getBasalHistory(startDate: dosesStart, endDate: end)
+        let basal = try await settingsManager.settingsStore.getBasalHistory(startDate: dosesStart, endDate: end)
 
         let carbEntries = try await carbStore.getCarbEntries(start: start, end: end)
 
-        let carbRatio = try await settingsStore.getCarbRatioHistory(startDate: start, endDate: end)
+        let carbRatio = try await settingsManager.settingsStore.getCarbRatioHistory(startDate: start, endDate: end)
 
         let glucose = try await glucoseStore.getGlucoseSamples(start: start, end: end)
 
         let sensitivityStart = min(start, dosesStart)
 
-        let sensitivity = try await settingsStore.getInsulinSensitivityHistory(startDate: sensitivityStart, endDate: end)
+        let sensitivity = try await settingsManager.settingsStore.getInsulinSensitivityHistory(startDate: sensitivityStart, endDate: end)
 
         var overrides = temporaryPresetsManager.overrideHistory.getOverrideHistory(startDate: sensitivityStart, endDate: end)
 

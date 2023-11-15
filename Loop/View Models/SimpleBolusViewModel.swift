@@ -18,7 +18,7 @@ import LocalAuthentication
 
 protocol SimpleBolusViewModelDelegate: AnyObject {
     
-    func addGlucose(_ samples: [NewGlucoseSample]) async throws -> [StoredGlucoseSample]
+    func saveGlucose(sample: NewGlucoseSample) async throws -> StoredGlucoseSample
 
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?) async throws -> StoredCarbEntry
 
@@ -37,6 +37,7 @@ protocol SimpleBolusViewModelDelegate: AnyObject {
     var suspendThreshold: HKQuantity? { get }
 }
 
+@MainActor
 class SimpleBolusViewModel: ObservableObject {
     
     var authenticate: AuthenticationChallenge = LocalAuthentication.deviceOwnerCheck
@@ -333,100 +334,75 @@ class SimpleBolusViewModel: ObservableObject {
 
         let saveDate = Date()
 
-        // Authenticate the bolus before saving anything
-        func authenticateIfNeeded() async -> Bool {
-            await withCheckedContinuation { continuation in
-                if let bolus = bolus, bolus.doubleValue(for: .internationalUnit()) > 0 {
-                    let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusString)
-                    authenticate(message) {
-                        switch $0 {
-                        case .success:
-                            continuation.resume(returning: true)
-                        case .failure:
-                            continuation.resume(returning: false)
-                        }
-                    }
-                } else {
-                    continuation.resume(returning: true)
-                }
-            }
-        }
-        
-        func saveManualGlucose() async -> Bool {
-            if let manualGlucoseQuantity = manualGlucoseQuantity {
-                let manualGlucoseSample = NewGlucoseSample(date: saveDate,
-                                                           quantity: manualGlucoseQuantity,
-                                                           condition: nil,  // All manual glucose entries are assumed to have no condition.
-                                                           trend: nil,      // All manual glucose entries are assumed to have no trend.
-                                                           trendRate: nil,  // All manual glucose entries are assumed to have no trend rate.
-                                                           isDisplayOnly: false,
-                                                           wasUserEntered: true,
-                                                           syncIdentifier: UUID().uuidString)
-                do {
-                    let storedSamples = try await delegate.addGlucose([manualGlucoseSample])
-                    self.dosingDecision?.manualGlucoseSample = storedSamples.first
-                    return true
-                } catch {
-                    self.presentAlert(.manualGlucoseEntryPersistenceFailure)
-                    self.log.error("Failed to add manual glucose entry: %{public}@", String(describing: error))
-                    return false
-                }
-            } else {
-                return true
-            }
-        }
-        
-        func saveCarbs() async -> Bool {
-            if let carbs = carbQuantity {
-                let interaction = INInteraction(intent: NewCarbEntryIntent(), response: nil)
-                do {
-                    try await interaction.donate()
-                } catch {
-                    log.error("Failed to donate intent: %{public}@", String(describing: error))
-                }
-
-                let carbEntry = NewCarbEntry(date: saveDate, quantity: carbs, startDate: saveDate, foodType: nil, absorptionTime: nil)
-                
-                do {
-                    self.dosingDecision?.carbEntry = try await delegate.addCarbEntry(carbEntry, replacing: nil)
-                    return true
-                } catch {
-                    self.presentAlert(.carbEntryPersistenceFailure)
-                    self.log.error("Failed to add carb entry: %{public}@", String(describing: error))
-                    return false
-                }
-            } else {
-                return true
-            }
-        }
-
-        func enactBolus() {
-            if let bolusVolume = bolus?.doubleValue(for: .internationalUnit()), bolusVolume > 0 {
-                Task { @MainActor in
-                    do {
-                        try await delegate.enactBolus(units: bolusVolume, activationType: .activationTypeFor(recommendedAmount: recommendation, bolusAmount: bolusVolume))
-                        dosingDecision?.manualBolusRequested = bolusVolume
-                    } catch {
-                        log.error("Unable to enact bolus: %{public}@", String(describing: error))
+        // Authenticate if needed
+        if let bolus = bolus, bolus.doubleValue(for: .internationalUnit()) > 0 {
+            let message = String(format: NSLocalizedString("Authenticate to Bolus %@ Units", comment: "The message displayed during a device authentication prompt for bolus specification"), enteredBolusString)
+            let authenticated = await withCheckedContinuation { continuation in
+                authenticate(message) {
+                    switch $0 {
+                    case .success:
+                        continuation.resume(returning: true)
+                    case .failure:
+                        continuation.resume(returning: false)
                     }
                 }
             }
-        }
-        
-        func saveBolusDecision() {
-            if let decision = dosingDecision, let recommendationDate = recommendationDate {
-                delegate.storeManualBolusDosingDecision(decision, withDate: recommendationDate)
+            if !authenticated {
+                return false
             }
         }
-        
-        if await authenticateIfNeeded(), await saveManualGlucose(), await saveCarbs() {
-            enactBolus()
-            saveBolusDecision()
-            return true
-        } else {
-            saveBolusDecision()
-            return false
+
+        if let manualGlucoseQuantity = manualGlucoseQuantity {
+            let manualGlucoseSample = NewGlucoseSample(date: saveDate,
+                                                       quantity: manualGlucoseQuantity,
+                                                       condition: nil,  // All manual glucose entries are assumed to have no condition.
+                                                       trend: nil,      // All manual glucose entries are assumed to have no trend.
+                                                       trendRate: nil,  // All manual glucose entries are assumed to have no trend rate.
+                                                       isDisplayOnly: false,
+                                                       wasUserEntered: true,
+                                                       syncIdentifier: UUID().uuidString)
+            do {
+                self.dosingDecision?.manualGlucoseSample = try await delegate.saveGlucose(sample: manualGlucoseSample)
+            } catch {
+                self.presentAlert(.manualGlucoseEntryPersistenceFailure)
+                self.log.error("Failed to add manual glucose entry: %{public}@", String(describing: error))
+                return false
+            }
         }
+
+        if let carbs = carbQuantity {
+            let interaction = INInteraction(intent: NewCarbEntryIntent(), response: nil)
+            do {
+                try await interaction.donate()
+            } catch {
+                log.error("Failed to donate intent: %{public}@", String(describing: error))
+            }
+
+            let carbEntry = NewCarbEntry(date: saveDate, quantity: carbs, startDate: saveDate, foodType: nil, absorptionTime: nil)
+
+            do {
+                self.dosingDecision?.carbEntry = try await delegate.addCarbEntry(carbEntry, replacing: nil)
+            } catch {
+                self.presentAlert(.carbEntryPersistenceFailure)
+                self.log.error("Failed to add carb entry: %{public}@", String(describing: error))
+                return false
+            }
+        }
+
+        if let bolusVolume = bolus?.doubleValue(for: .internationalUnit()), bolusVolume > 0 {
+            do {
+                try await delegate.enactBolus(units: bolusVolume, activationType: .activationTypeFor(recommendedAmount: recommendation, bolusAmount: bolusVolume))
+                dosingDecision?.manualBolusRequested = bolusVolume
+            } catch {
+                log.error("Unable to enact bolus: %{public}@", String(describing: error))
+                return false
+            }
+        }
+
+        if let decision = dosingDecision, let recommendationDate = recommendationDate {
+            delegate.storeManualBolusDosingDecision(decision, withDate: recommendationDate)
+        }
+        return true
     }
     
     private func presentAlert(_ alert: Alert) {

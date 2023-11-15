@@ -17,7 +17,7 @@ public protocol DeviceSupportDelegate {
     var pumpManagerStatus: LoopKit.PumpManagerStatus? { get }
     var cgmManagerStatus: LoopKit.CGMManagerStatus? { get }
 
-    func generateDiagnosticReport(_ completion: @escaping (_ report: String) -> Void)
+    func generateDiagnosticReport() async -> String
 }
 
 public final class SupportManager {
@@ -234,8 +234,8 @@ extension SupportManager: SupportUIDelegate {
         return Bundle.main.localizedNameAndVersion
     }
 
-    public func generateIssueReport(completion: @escaping (String) -> Void) {
-        deviceSupportDelegate.generateDiagnosticReport(completion)
+    public func generateIssueReport() async -> String {
+        await deviceSupportDelegate.generateDiagnosticReport()
     }
     
     public func issueAlert(_ alert: LoopKit.Alert) {

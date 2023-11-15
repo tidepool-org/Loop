@@ -149,7 +149,6 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
         let midnight = Calendar.current.startOfDay(for: Date())
         let listStart = min(midnight, chartStartDate, Date(timeIntervalSinceNow: -carbStore.maximumAbsorptionTimeInterval))
 
-        let reloadGroup = DispatchGroup()
         let shouldUpdateGlucose = currentContext.contains(.glucose)
         let shouldUpdateCarbs = currentContext.contains(.carbs)
 
@@ -159,7 +158,6 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
         var carbTotal: CarbValue?
         var insulinCounteractionEffects: [GlucoseEffectVelocity]?
 
-        let state = await loopDataManager.algorithmDisplayState
         if shouldUpdateGlucose || shouldUpdateCarbs {
             do {
                 let review = try await loopDataManager.fetchCarbAbsorptionReview(start: listStart, end: Date())
@@ -468,7 +466,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
         
         let originalCarbEntry = carbStatuses[indexPath.row].entry
         
-        let viewModel = CarbEntryViewModel(delegate: deviceManager, originalCarbEntry: originalCarbEntry)
+        let viewModel = CarbEntryViewModel(delegate: loopDataManager, originalCarbEntry: originalCarbEntry)
         viewModel.analyticsServicesManager = analyticsServicesManager
         let carbEntryView = CarbEntryView(viewModel: viewModel)
             .environmentObject(deviceManager.displayGlucosePreference)
@@ -488,14 +486,14 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     // MARK: - Navigation
     @IBAction func presentCarbEntryScreen() {
         if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingStatus.automaticDosingEnabled {
-            let viewModel = SimpleBolusViewModel(delegate: deviceManager, displayMealEntry: true)
+            let viewModel = SimpleBolusViewModel(delegate: loopDataManager, displayMealEntry: true)
             let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter))
             let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
             let navigationWrapper = UINavigationController(rootViewController: hostingController)
             hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
             present(navigationWrapper, animated: true)
         } else {
-            let viewModel = CarbEntryViewModel(delegate: deviceManager)
+            let viewModel = CarbEntryViewModel(delegate: loopDataManager)
             viewModel.analyticsServicesManager = analyticsServicesManager
             let carbEntryView = CarbEntryView(viewModel: viewModel)
                 .environmentObject(deviceManager.displayGlucosePreference)
