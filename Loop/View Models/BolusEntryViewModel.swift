@@ -20,7 +20,6 @@ import SwiftCharts
 
 protocol BolusEntryViewModelDelegate: AnyObject {
 
-    var algorithmState: AlgorithmDisplayState { get async }
     var settings: LoopSettings { get }
     var scheduleOverride: TemporaryScheduleOverride? { get }
     var preMealOverride: TemporaryScheduleOverride? { get }
@@ -217,9 +216,7 @@ final class BolusEntryViewModel: ObservableObject {
             .debounce(for: .milliseconds(debounceIntervalMilliseconds), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 Task {
-                    if let state = await self?.delegate?.algorithmState {
-                        await self?.updatePredictedGlucoseValues(state: state)
-                    }
+                    await self?.updatePredictedGlucoseValues()
                 }
             }
             .store(in: &cancellables)
@@ -234,12 +231,10 @@ final class BolusEntryViewModel: ObservableObject {
                 self.enteredBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0)
 
                 Task {
-                    if let state = await self.delegate?.algorithmState {
-                        await self.updatePredictedGlucoseValues(state: state)
-                        // Ensure the manual glucose entry appears on the chart at the same time as the updated prediction
-                        self.updateGlucoseChartValues()
-                        await self.updateRecommendedBolusAndNotice(from: state, isUpdatingFromUserInput: true)
-                    }
+                    await self.updatePredictedGlucoseValues()
+                    // Ensure the manual glucose entry appears on the chart at the same time as the updated prediction
+                    self.updateGlucoseChartValues()
+                    await self.updateRecommendedBolusAndNotice(isUpdatingFromUserInput: true)
                 }
 
                 if let manualGlucoseQuantity = manualGlucoseQuantity {
@@ -399,8 +394,6 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func presentAlert(_ alert: Alert) {
-        dispatchPrecondition(condition: .onQueue(.main))
-
         // As of iOS 13.6 / Xcode 11.6, swapping out an alert while one is active crashes SwiftUI.
         guard activeAlert == nil else {
             return
@@ -467,8 +460,6 @@ final class BolusEntryViewModel: ObservableObject {
 
     // MARK: - Data upkeep
     func update() async {
-        dispatchPrecondition(condition: .onQueue(.main))
-
         // Prevent any UI updates after a bolus has been initiated.
         guard !enacting else {
             return
@@ -476,21 +467,11 @@ final class BolusEntryViewModel: ObservableObject {
 
         disableManualGlucoseEntryIfNecessary()
         updateChartDateInterval()
-        await updateStoredGlucoseValues()
-        await updatePredictionAndRecommendation()
-
-        if let iob = await getInsulinOnBoard() {
-            self.activeInsulin = HKQuantity(unit: .internationalUnit(), doubleValue: iob.value)
-            self.dosingDecision.insulinOnBoard = iob
-        } else {
-            self.activeInsulin = nil
-            self.dosingDecision.insulinOnBoard = nil
-        }
+        await updateRecommendedBolusAndNotice(isUpdatingFromUserInput: false)
+        await updatePredictedGlucoseValues()
     }
 
     private func disableManualGlucoseEntryIfNecessary() {
-        dispatchPrecondition(condition: .onQueue(.main))
-
         if isManualGlucoseEntryEnabled, !isGlucoseDataStale {
             isManualGlucoseEntryEnabled = false
             manualGlucoseQuantity = nil
@@ -499,22 +480,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func updateStoredGlucoseValues() async {
-        let historicalGlucoseStartDate = Date(timeInterval: -LoopCoreConstants.dosingDecisionHistoricalGlucoseInterval, since: now())
-        let chartStartDate = chartDateInterval.start
-
-        if let samples = await delegate?.algorithmState.input?.glucoseHistory {
-            self.storedGlucoseValues = samples.filter { $0.startDate >= chartStartDate }
-            self.dosingDecision.historicalGlucose = samples.filter { $0.startDate >= historicalGlucoseStartDate }.map { HistoricalGlucoseValue(startDate: $0.startDate, quantity: $0.quantity) }
-        } else {
-            self.storedGlucoseValues = []
-            self.dosingDecision.historicalGlucose = []
-        }
-        self.updateGlucoseChartValues()
-    }
-
     private func updateGlucoseChartValues() {
-        dispatchPrecondition(condition: .onQueue(.main))
 
         var chartGlucoseValues = storedGlucoseValues
         if let manualGlucoseSample = manualGlucoseSample {
@@ -525,52 +491,43 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     /// - NOTE: `completion` is invoked on the main queue after predicted glucose values are updated
-    private func updatePredictedGlucoseValues(state: AlgorithmDisplayState) async {
-
-        let enteredBolusDose = DoseEntry(
-            type: .bolus,
-            startDate: Date(),
-            value: enteredBolus.doubleValue(for: .internationalUnit()),
-            unit: .units,
-            insulinType: deliveryDelegate?.pumpInsulinType
-        )
-
-        if let algoInput = await delegate?.algorithmState.input?
-            .addingDose(dose: enteredBolusDose)
-            .addingGlucoseSample(sample: manualGlucoseSample)
-            .removingCarbEntry(carbEntry: originalCarbEntry)
-            .addingCarbEntry(carbEntry: potentialCarbEntry)
-        {
-            do {
-                let prediction = try algoInput.predictGlucose()
-                predictedGlucoseValues = prediction
-                dosingDecision.predictedGlucose = prediction
-            } catch {
-                predictedGlucoseValues = []
-                dosingDecision.predictedGlucose = []
-            }
-        }
-    }
-
-    private func getInsulinOnBoard() async -> InsulinValue? {
-        return await delegate?.algorithmState.activeInsulin
-    }
-
-    private func updatePredictionAndRecommendation() async {
-        guard let delegate = delegate else {
+    private func updatePredictedGlucoseValues() async {
+        guard let delegate else {
             return
         }
 
-        let state = await delegate.algorithmState
+        do {
+            let startDate = Date()
+            var input = try await delegate.fetchData(for: startDate, disablingPreMeal: potentialCarbEntry != nil)
 
-        activeCarbs = state.activeCarbs?.quantity
-        activeInsulin = state.activeInsulin?.quantity
+            let enteredBolusDose = DoseEntry(
+                type: .bolus,
+                startDate: startDate,
+                value: enteredBolus.doubleValue(for: .internationalUnit()),
+                unit: .units,
+                insulinType: deliveryDelegate?.pumpInsulinType,
+                manuallyEntered: true
+            )
 
-        await updateRecommendedBolusAndNotice(from: state, isUpdatingFromUserInput: false)
-        await updatePredictedGlucoseValues(state: state)
+            // Add potential bolus, carbs, manual glucose
+            input = input
+                .addingDose(dose: enteredBolusDose)
+                .addingGlucoseSample(sample: manualGlucoseSample)
+                .removingCarbEntry(carbEntry: originalCarbEntry)
+                .addingCarbEntry(carbEntry: potentialCarbEntry)
+
+            let prediction = try input.predictGlucose()
+            predictedGlucoseValues = prediction
+            print("Eventual with \(enteredBolus) = \(prediction.last?.quantity)")
+            dosingDecision.predictedGlucose = prediction
+        } catch {
+            predictedGlucoseValues = []
+            dosingDecision.predictedGlucose = []
+        }
+
     }
 
-    private func updateRecommendedBolusAndNotice(from state: AlgorithmDisplayState, isUpdatingFromUserInput: Bool) async {
+    private func updateRecommendedBolusAndNotice(isUpdatingFromUserInput: Bool) async {
 
         guard let delegate = delegate else {
             assertionFailure("Missing BolusEntryViewModelDelegate")
@@ -582,7 +539,7 @@ final class BolusEntryViewModel: ObservableObject {
         let recommendedBolus: HKQuantity?
         let notice: Notice?
         do {
-            recommendation = try await computeBolusRecommendation(from: state)
+            recommendation = try await computeBolusRecommendation()
 
             if let recommendation, let deliveryDelegate {
                 recommendedBolus = HKQuantity(unit: .internationalUnit(), doubleValue: deliveryDelegate.roundBolusVolume(units: recommendation.amount))
@@ -620,35 +577,53 @@ final class BolusEntryViewModel: ObservableObject {
             }
         }
 
-        DispatchQueue.main.async {
-            let priorRecommendedBolus = self.recommendedBolus
-            self.recommendedBolus = recommendedBolus
-            self.dosingDecision.manualBolusRecommendation = recommendation.map { ManualBolusRecommendationWithDate(recommendation: $0, date: now) }
-            self.activeNotice = notice
+        let priorRecommendedBolus = self.recommendedBolus
+        self.recommendedBolus = recommendedBolus
+        self.dosingDecision.manualBolusRecommendation = recommendation.map { ManualBolusRecommendationWithDate(recommendation: $0, date: now) }
+        self.activeNotice = notice
 
-            if priorRecommendedBolus != nil,
-               priorRecommendedBolus != recommendedBolus,
-               !self.enacting,
-               !isUpdatingFromUserInput
-            {
-                self.presentAlert(.recommendationChanged)
-            }
+        if priorRecommendedBolus != nil,
+           priorRecommendedBolus != recommendedBolus,
+           !self.enacting,
+           !isUpdatingFromUserInput
+        {
+            self.presentAlert(.recommendationChanged)
         }
     }
 
-    private func computeBolusRecommendation(from state: AlgorithmDisplayState) async throws -> ManualBolusRecommendation? {
+    private func computeBolusRecommendation() async throws -> ManualBolusRecommendation? {
         guard let delegate else {
             return nil
         }
 
-        var input = try await delegate.fetchData(for: Date(), disablingPreMeal: potentialCarbEntry != nil)
+        let startDate = Date()
+
+        var input = try await delegate.fetchData(for: startDate, disablingPreMeal: potentialCarbEntry != nil)
             .addingGlucoseSample(sample: manualGlucoseSample)
             .removingCarbEntry(carbEntry: originalCarbEntry)
             .addingCarbEntry(carbEntry: potentialCarbEntry)
 
+        let historicalGlucoseStartDate = Date(timeInterval: -LoopCoreConstants.dosingDecisionHistoricalGlucoseInterval, since: now())
+        let chartStartDate = chartDateInterval.start
+
+        let samples = input.glucoseHistory
+        storedGlucoseValues = samples.filter { $0.startDate >= chartStartDate }
+        dosingDecision.historicalGlucose = samples.filter { $0.startDate >= historicalGlucoseStartDate }.map { HistoricalGlucoseValue(startDate: $0.startDate, quantity: $0.quantity) }
+        updateGlucoseChartValues()
+
         input.recommendationType = .manualBolus
 
         let output = LoopAlgorithm.run(input: input)
+
+        if let iob = output.activeInsulin {
+            activeInsulin = HKQuantity(unit: .internationalUnit(), doubleValue: iob)
+            dosingDecision.insulinOnBoard = InsulinValue(startDate: startDate, value: iob)
+        } else {
+            activeInsulin = nil
+            dosingDecision.insulinOnBoard = nil
+            storedGlucoseValues = []
+            dosingDecision.historicalGlucose = []
+        }
 
         switch output.recommendationResult {
         case .success(let prediction):
@@ -659,8 +634,6 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     func updateSettings() {
-        dispatchPrecondition(condition: .onQueue(.main))
-        
         guard let delegate = delegate else {
             return
         }
@@ -692,8 +665,6 @@ final class BolusEntryViewModel: ObservableObject {
     }
 
     private func updateChartDateInterval() {
-        dispatchPrecondition(condition: .onQueue(.main))
-
         // How far back should we show data? Use the screen size as a guide.
         let viewMarginInset: CGFloat = 14
         let availableWidth = screenWidth - chartManager.fixedHorizontalMargin - 2 * viewMarginInset

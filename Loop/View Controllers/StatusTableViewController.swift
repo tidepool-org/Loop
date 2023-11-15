@@ -454,9 +454,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             self.hudView?.pumpStatusHUD.basalRateHUD.setNetBasalRate(netBasal.rate, percent: netBasal.percent, at: netBasal.start)
         }
 
-
         if currentContext.contains(.carbs) {
-            cobValues = await loopManager.dynamicCarbsOnBoard()
+            cobValues = await loopManager.dynamicCarbsOnBoard().filterDateRange(startDate, nil)
         }
 
         // always check for cob
