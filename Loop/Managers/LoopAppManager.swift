@@ -295,6 +295,7 @@ class LoopAppManager: NSObject {
         }
 
         loopDataManager = LoopDataManager(
+            lastLoopCompleted: ExtensionDataManager.context?.lastLoopCompleted,
             temporaryPresetsManager: temporaryPresetsManager,
             settingsManager: settingsManager,
             analyticsServicesManager: analyticsServicesManager,

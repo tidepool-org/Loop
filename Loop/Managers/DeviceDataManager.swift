@@ -304,15 +304,18 @@ final class DeviceDataManager {
         self.automaticDosingStatus.$automaticDosingEnabled
             .removeDuplicates()
             .dropFirst()
-            .sink { if !$0 {
-                // TODO: update settings
-//                self.mutateSettings { settings in
-//                    settings.clearOverride(matching: .preMeal)
-//                }
-                Task {
-                    await self.loopDataManager.cancelActiveTempBasal(for: .automaticDosingDisabled)
+            .sink { 
+                if !$0 {
+                    temporaryPresetsManager.clearOverride(matching: .preMeal)
+                    Task {
+                        await self.loopDataManager.cancelActiveTempBasal(for: .automaticDosingDisabled)
+                    }
+                } else {
+                    Task {
+                        await self.loopDataManager.updateDisplayState()
+                    }
                 }
-            } }
+            }
             .store(in: &cancellables)
 
         let remoteDataServicesManager = RemoteDataServicesManager(

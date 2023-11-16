@@ -88,6 +88,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         self?.refreshContext.update(with: .carbs)
                     case .glucose?:
                         self?.refreshContext.formUnion([.glucose, .carbs])
+                    default:
+                        break
                     }
 
                     self?.hudView?.loopCompletionHUD.loopInProgress = false

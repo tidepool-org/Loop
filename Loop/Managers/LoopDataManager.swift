@@ -92,6 +92,7 @@ final class LoopDataManager {
     var activeCarbs: CarbValue?
 
     init(
+        lastLoopCompleted: Date?,
         temporaryPresetsManager: TemporaryPresetsManager,
         settingsManager: SettingsManager,
         analyticsServicesManager: AnalyticsServicesManager,
@@ -105,6 +106,7 @@ final class LoopDataManager {
         trustedTimeOffset: @escaping () async -> TimeInterval
     ) {
 
+        self.lastLoopCompleted = lastLoopCompleted
         self.temporaryPresetsManager = temporaryPresetsManager
         self.settingsManager = settingsManager
         self.analyticsServicesManager = analyticsServicesManager
@@ -168,6 +170,7 @@ final class LoopDataManager {
         case carbs
         case glucose
         case preferences
+        case forecast
     }
 
     // MARK: - Calculation state
@@ -321,6 +324,11 @@ final class LoopDataManager {
             recommendationType: .manualBolus,
             automaticBolusApplicationFactor: effectiveBolusApplicationFactor
         )
+    }
+
+    func loopingReEnabled() async {
+        await updateDisplayState()
+        self.notify(forChange: .forecast)
     }
 
     func updateDisplayState() async {
@@ -491,7 +499,7 @@ final class LoopDataManager {
     }
 
     var iobValues: [InsulinValue] {
-        displayState.input?.doses.insulinOnBoard() ?? []
+        dosesRelativeToBasal.insulinOnBoard()
     }
 
     var dosesRelativeToBasal: [DoseEntry] {
