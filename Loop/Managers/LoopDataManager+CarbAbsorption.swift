@@ -19,9 +19,9 @@ struct CarbAbsorptionReview {
 
 extension LoopDataManager {
 
-    func dynamicCarbsOnBoard() async -> [CarbValue] {
+    func dynamicCarbsOnBoard(from start: Date? = nil, to end: Date? = nil) async -> [CarbValue] {
         if let effects = displayState.output?.effects {
-            return effects.carbStatus.dynamicCarbsOnBoard(absorptionModel: Self.carbModel.model)
+            return effects.carbStatus.dynamicCarbsOnBoard(from: start, to: end, absorptionModel: Self.carbModel.model)
         } else {
             return []
         }

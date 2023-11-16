@@ -457,7 +457,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         if currentContext.contains(.carbs) {
-            cobValues = await loopManager.dynamicCarbsOnBoard().filterDateRange(startDate, nil)
+            cobValues = await loopManager.dynamicCarbsOnBoard(from: startDate)
         }
 
         // always check for cob
