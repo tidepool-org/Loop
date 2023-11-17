@@ -183,6 +183,14 @@ class SettingsManager {
         }
     }
 
+    private func notify(forChange context: LoopUpdateContext) {
+        NotificationCenter.default.post(name: .LoopDataUpdated,
+            object: self,
+            userInfo: [
+                LoopDataManager.LoopUpdateContextKey: context.rawValue
+            ]
+        )
+    }
 
     func mutateLoopSettings(_ changes: (_ settings: inout LoopSettings) -> Void) {
         loopSettingsLock.withLock {
@@ -218,6 +226,7 @@ class SettingsManager {
                 self.dosingEnabled = newValue.dosingEnabled
             }
         }
+        notify(forChange: .preferences)
     }
 
     func storeSettingsCheckingNotificationPermissions() {

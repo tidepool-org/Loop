@@ -298,26 +298,6 @@ final class DeviceDataManager {
             alertManager.addAlertResponder(managerIdentifier: crashRecoveryManager.managerIdentifier, alertResponder: crashRecoveryManager)
         }
 
-        // Turn off preMeal when going into closed loop off mode
-        // Cancel any active temp basal when going into closed loop off mode
-        // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
-        self.automaticDosingStatus.$automaticDosingEnabled
-            .removeDuplicates()
-            .dropFirst()
-            .sink { 
-                if !$0 {
-                    temporaryPresetsManager.clearOverride(matching: .preMeal)
-                    Task {
-                        await self.loopDataManager.cancelActiveTempBasal(for: .automaticDosingDisabled)
-                    }
-                } else {
-                    Task {
-                        await self.loopDataManager.updateDisplayState()
-                    }
-                }
-            }
-            .store(in: &cancellables)
-
         let remoteDataServicesManager = RemoteDataServicesManager(
             alertStore: alertManager.alertStore,
             carbStore: carbStore,

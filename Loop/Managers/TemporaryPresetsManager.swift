@@ -70,6 +70,10 @@ class TemporaryPresetsManager {
 
     public var scheduleOverride: TemporaryScheduleOverride? {
         didSet {
+            guard oldValue != scheduleOverride else {
+                return
+            }
+
             if let newValue = scheduleOverride, newValue.context == .preMeal {
                 preconditionFailure("The `scheduleOverride` field should not be used for a pre-meal target range override; use `preMealOverride` instead")
             }
@@ -92,11 +96,17 @@ class TemporaryPresetsManager {
             if scheduleOverride?.context == .legacyWorkout {
                 preMealOverride = nil
             }
+
+            notify(forChange: .preferences)
         }
     }
 
     public var preMealOverride: TemporaryScheduleOverride? {
         didSet {
+            guard oldValue != preMealOverride else {
+                return
+            }
+
             if let newValue = preMealOverride, newValue.context != .preMeal || newValue.settings.insulinNeedsScaleFactor != nil {
                 preconditionFailure("The `preMealOverride` field should be used only for a pre-meal target range override")
             }
@@ -104,6 +114,8 @@ class TemporaryPresetsManager {
             if preMealOverride != nil, scheduleOverride?.context == .legacyWorkout {
                 scheduleOverride = nil
             }
+
+            notify(forChange: .preferences)
         }
     }
 
@@ -240,6 +252,15 @@ class TemporaryPresetsManager {
         } else {
             return nil
         }
+    }
+
+    private func notify(forChange context: LoopUpdateContext) {
+        NotificationCenter.default.post(name: .LoopDataUpdated,
+            object: self,
+            userInfo: [
+                LoopDataManager.LoopUpdateContextKey: context.rawValue
+            ]
+        )
     }
 
 }

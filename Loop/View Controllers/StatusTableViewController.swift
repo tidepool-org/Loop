@@ -77,8 +77,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         notificationObservers += [
             notificationCenter.addObserver(forName: .LoopDataUpdated, object: nil, queue: nil) { [weak self] note in
                 Task { @MainActor in
-                    let rawContext = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopDataManager.LoopUpdateContext.RawValue
-                    let context = LoopDataManager.LoopUpdateContext(rawValue: rawContext)
+                    let rawContext = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopUpdateContext.RawValue
+                    let context = LoopUpdateContext(rawValue: rawContext)
                     switch context {
                     case .none, .insulin?:
                         self?.refreshContext.formUnion([.status, .insulin])
@@ -1426,21 +1426,17 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     @IBAction func premealButtonTapped(_ sender: UIBarButtonItem) {
-        togglePreMealMode(confirm: false)
+        togglePreMealMode()
     }
     
-    func togglePreMealMode(confirm: Bool = true) {
+    func togglePreMealMode() {
         if preMealMode == true {
-            if confirm {
-                let alert = UIAlertController(title: "Disable Pre-Meal Preset?", message: "This will remove any currently applied pre-meal preset.", preferredStyle: .alert)
-                alert.addCancelAction()
-                alert.addAction(UIAlertAction(title: "Disable", style: .destructive, handler: { [weak self] _ in
-                    self?.temporaryPresetsManager.preMealOverride = nil
-                }))
-                present(alert, animated: true)
-            } else {
-                self.temporaryPresetsManager.preMealOverride = nil
-            }
+            let alert = UIAlertController(title: "Disable Pre-Meal Preset?", message: "This will remove any currently applied pre-meal preset.", preferredStyle: .alert)
+            alert.addCancelAction()
+            alert.addAction(UIAlertAction(title: "Disable", style: .destructive, handler: { [weak self] _ in
+                self?.temporaryPresetsManager.preMealOverride = nil
+            }))
+            present(alert, animated: true)
         } else {
             presentPreMealModeAlertController()
         }

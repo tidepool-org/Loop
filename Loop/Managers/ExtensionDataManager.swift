@@ -118,7 +118,7 @@ final class ExtensionDataManager {
 
             let lastLoopCompleted = Date(timeIntervalSinceNow: -TimeInterval(minutes: 0))
         #else
-            let lastLoopCompleted = manager.lastLoopCompleted
+            let lastLoopCompleted = loopDataManager.lastLoopCompleted
         #endif
 
         context.lastLoopCompleted = lastLoopCompleted

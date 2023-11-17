@@ -53,6 +53,14 @@ protocol DosingManagerDelegate {
     func didMakeDosingDecision(_ decision: StoredDosingDecision)
 }
 
+enum LoopUpdateContext: Int {
+    case insulin
+    case carbs
+    case glucose
+    case preferences
+    case forecast
+}
+
 @MainActor
 final class LoopDataManager {
     static let LoopUpdateContextKey = "com.loudnate.Loop.LoopDataManager.LoopUpdateContext"
@@ -160,17 +168,11 @@ final class LoopDataManager {
         ]
 
         Task { @MainActor in
+            // Run initial display state update, and notify UI
             await updateDisplayState()
+            self.notify(forChange: .forecast)
         }
 
-    }
-
-    enum LoopUpdateContext: Int {
-        case insulin
-        case carbs
-        case glucose
-        case preferences
-        case forecast
     }
 
     // MARK: - Calculation state
