@@ -1641,7 +1641,7 @@ extension DeviceDataManager: DeliveryDelegate {
             throw LoopError.connectionError
         }
 
-        log.default("Enacting recommended dose: %{public}@", String(describing: recommendation))
+        log.default("Enacting dose: %{public}@", String(describing: recommendation))
 
         crashRecoveryManager.dosingStarted(dose: recommendation)
         defer { self.crashRecoveryManager.dosingFinished() }

@@ -82,35 +82,6 @@ class MockGlucoseStore: GlucoseStoreProtocol {
     func counteractionEffects<Sample>(for samples: [Sample], to effects: [GlucoseEffect]) -> [GlucoseEffectVelocity] where Sample : GlucoseSampleValue {
         samples.counteractionEffects(to: effects)
     }
-    
-    func getRecentMomentumEffect(for date: Date? = nil, _ completion: @escaping (_ effects: Result<[GlucoseEffect], Error>) -> Void) {
-        if let storedGlucose {
-            let samples = storedGlucose.filterDateRange((date ?? Date()).addingTimeInterval(-GlucoseMath.momentumDataInterval), nil)
-            completion(.success(samples.linearMomentumEffect()))
-        } else {
-            let fixture: [JSONDictionary] = loadFixture(momentumEffectToLoad)
-            let dateFormatter = ISO8601DateFormatter.localTimeDate()
-
-            return completion(.success(fixture.map {
-                return GlucoseEffect(startDate: dateFormatter.date(from: $0["date"] as! String)!, quantity: HKQuantity(unit: HKUnit(from: $0["unit"] as! String), doubleValue: $0["amount"] as! Double))
-            }
-                                      ))
-        }
-    }
-    
-    func getCounteractionEffects(start: Date, end: Date? = nil, to effects: [GlucoseEffect], _ completion: @escaping (_ effects: Result<[GlucoseEffectVelocity], Error>) -> Void) {
-        if let storedGlucose {
-            let samples = storedGlucose.filterDateRange(start, end)
-            completion(.success(self.counteractionEffects(for: samples, to: effects)))
-        } else {
-            let fixture: [JSONDictionary] = loadFixture(counteractionEffectToLoad)
-            let dateFormatter = ISO8601DateFormatter.localTimeDate()
-
-            completion(.success(fixture.map {
-                return GlucoseEffectVelocity(startDate: dateFormatter.date(from: $0["startDate"] as! String)!, endDate: dateFormatter.date(from: $0["endDate"] as! String)!, quantity: HKQuantity(unit: HKUnit(from: $0["unit"] as! String), doubleValue:$0["value"] as! Double))
-            }))
-        }
-    }
 }
 
 extension MockGlucoseStore {

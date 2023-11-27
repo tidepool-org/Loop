@@ -173,7 +173,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
 
         if shouldUpdateCarbs {
             do {
-                carbTotal = try await carbStore.getTotalCarbs(since: midnight)
+                self.carbTotal = try await carbStore.getTotalCarbs(since: midnight)
             } catch {
                 log.error("CarbStore failed to get total carbs: %{public}@", String(describing: error))
                 retryContext.update(with: .carbs)
@@ -198,7 +198,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
 
         if shouldUpdateCarbs || shouldUpdateGlucose {
             // Change to descending order for display
-            carbStatuses = carbStatuses?.reversed() ?? []
+            self.carbStatuses = carbStatuses?.reversed() ?? []
 
             if shouldUpdateCarbs {
                 self.carbTotal = carbTotal
@@ -468,6 +468,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
         
         let viewModel = CarbEntryViewModel(delegate: loopDataManager, originalCarbEntry: originalCarbEntry)
         viewModel.analyticsServicesManager = analyticsServicesManager
+        viewModel.deliveryDelegate = deviceManager
         let carbEntryView = CarbEntryView(viewModel: viewModel)
             .environmentObject(deviceManager.displayGlucosePreference)
             .environment(\.dismissAction, carbEditWasCanceled)
