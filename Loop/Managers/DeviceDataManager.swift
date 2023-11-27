@@ -1618,10 +1618,7 @@ extension DeviceDataManager: DeliveryDelegate {
             return units
         }
 
-        let rounded = pumpManager.roundToSupportedBolusVolume(units: units)
-        self.log.default("Rounded %{public}@ to %{public}@", String(describing: units), String(describing: rounded))
-
-        return rounded
+        return pumpManager.roundToSupportedBolusVolume(units: units)
     }
 
     var pumpInsulinType: LoopKit.InsulinType? {

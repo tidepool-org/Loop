@@ -35,6 +35,9 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     func saveGlucose(sample: NewGlucoseSample) async throws -> StoredGlucoseSample
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
     func enactBolus(units: Double, activationType: BolusActivationType) async throws
+
+    var activeInsulin: InsulinValue? { get }
+    var activeCarbs: CarbValue? { get }
 }
 
 @MainActor
@@ -178,6 +181,10 @@ final class BolusEntryViewModel: ObservableObject {
         self.dosingDecision.originalCarbEntry = originalCarbEntry
 
         self.updateSettings()
+
+        Task {
+            await generateRecommendationAndStartObserving()
+        }
     }
 
     public func generateRecommendationAndStartObserving() async {
@@ -465,6 +472,8 @@ final class BolusEntryViewModel: ObservableObject {
             return
         }
 
+        self.activeCarbs = delegate?.activeCarbs?.quantity
+
         disableManualGlucoseEntryIfNecessary()
         updateChartDateInterval()
         await updateRecommendedBolusAndNotice(isUpdatingFromUserInput: false)
@@ -518,7 +527,6 @@ final class BolusEntryViewModel: ObservableObject {
 
             let prediction = try input.predictGlucose()
             predictedGlucoseValues = prediction
-            print("Eventual with \(enteredBolus) = \(prediction.last?.quantity)")
             dosingDecision.predictedGlucose = prediction
         } catch {
             predictedGlucoseValues = []

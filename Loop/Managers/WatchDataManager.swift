@@ -148,7 +148,6 @@ final class WatchDataManager: NSObject {
         }
 
         guard userInfo != lastSentUserInfo else {
-            log.default("Skipping settings transfer due to no changes")
             return
         }
 
@@ -183,7 +182,6 @@ final class WatchDataManager: NSObject {
         }
 
         guard volumes != lastSentBolusVolumes else {
-            log.default("Skipping bolus volumes transfer due to no changes")
             return
         }
 

@@ -96,8 +96,12 @@ final class LoopDataManager {
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
 
-    var activeInsulin: InsulinValue?
-    var activeCarbs: CarbValue?
+    var activeInsulin: InsulinValue? {
+        displayState.activeInsulin
+    }
+    var activeCarbs: CarbValue? {
+        displayState.activeCarbs
+    }
 
     init(
         lastLoopCompleted: Date?,
