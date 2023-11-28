@@ -34,6 +34,11 @@ class TemporaryPresetsManager {
 
         self.overrideHistory.relevantTimeWindow = LoopCoreConstants.defaultCarbAbsorptionTimes.slow * 2
 
+        scheduleOverride = overrideHistory.activeOverride(at: Date())
+
+        // TODO: Pre-meal is not stored in overrideHistory yet. https://tidepool.atlassian.net/browse/LOOP-4759
+        //preMealOverride = overrideHistory.preMealOverride
+
         overrideIntentObserver = UserDefaults.appGroup?.observe(
             \.intentExtensionOverrideToSet,
              options: [.new],

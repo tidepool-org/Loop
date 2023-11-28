@@ -1460,18 +1460,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
         present(vc, animated: true, completion: nil)
     }
 
-    func presentCustomPresets(confirm: Bool = true) {
+    func presentCustomPresets() {
         if workoutMode == true {
-            if confirm {
-                let alert = UIAlertController(title: "Disable Preset?", message: "This will remove any currently applied preset.", preferredStyle: .alert)
-                alert.addCancelAction()
-                alert.addAction(UIAlertAction(title: "Disable", style: .destructive, handler: { [weak self] _ in
-                    self?.temporaryPresetsManager.scheduleOverride = nil
-                }))
-                present(alert, animated: true)
-            } else {
-                self.temporaryPresetsManager.scheduleOverride = nil
-            }
+            let alert = UIAlertController(title: "Disable Preset?", message: "This will remove any currently applied preset.", preferredStyle: .alert)
+            alert.addCancelAction()
+            alert.addAction(UIAlertAction(title: "Disable", style: .destructive, handler: { [weak self] _ in
+                self?.temporaryPresetsManager.scheduleOverride = nil
+            }))
+            present(alert, animated: true)
         } else {
             if FeatureFlags.sensitivityOverridesEnabled {
                 performSegue(withIdentifier: OverrideSelectionViewController.className, sender: toolbarItems![6])
@@ -1501,7 +1497,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     @IBAction func toggleWorkoutMode(_ sender: UIBarButtonItem) {
-        presentCustomPresets(confirm: false)
+        presentCustomPresets()
     }
     
     @IBAction func onSettingsTapped(_ sender: UIBarButtonItem) {
