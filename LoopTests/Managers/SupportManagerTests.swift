@@ -66,14 +66,15 @@ class SupportManagerTests: XCTestCase {
     }
 
     class MockDeviceSupportDelegate: DeviceSupportDelegate {
+
         var availableSupports: [LoopKitUI.SupportUI] = []
 
         var pumpManagerStatus: LoopKit.PumpManagerStatus?
 
         var cgmManagerStatus: LoopKit.CGMManagerStatus?
 
-        func generateDiagnosticReport(_ completion: @escaping (String) -> Void) {
-            completion("Mock Issue Report")
+        func generateDiagnosticReport() async -> String {
+            "Mock Issue Report"
         }
     }
     

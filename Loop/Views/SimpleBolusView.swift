@@ -414,11 +414,15 @@ struct SimpleBolusCalculatorView_Previews: PreviewProvider {
         }
     }
 
-    static var viewModel: SimpleBolusViewModel = SimpleBolusViewModel(delegate: MockSimpleBolusViewDelegate(), displayMealEntry: true)
-    
+    static var previewViewModel: SimpleBolusViewModel = SimpleBolusViewModel(
+        delegate: MockSimpleBolusViewDelegate(),
+        displayMealEntry: true,
+        displayGlucosePreference: DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter)
+    )
+
     static var previews: some View {
         NavigationView {
-            SimpleBolusView(viewModel: viewModel)
+            SimpleBolusView(viewModel: previewViewModel)
         }
         .previewDevice("iPod touch (7th generation)")
         .environmentObject(DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter))

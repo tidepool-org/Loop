@@ -20,6 +20,8 @@ final class TestingScenariosManager: DirectoryObserver {
     unowned let deviceManager: DeviceDataManager
     unowned let supportManager: SupportManager
     unowned let pluginManager: PluginManager
+    unowned let carbStore: CarbStore
+    unowned let settingsManager: SettingsManager
 
     let log = DiagnosticLog(category: "LocalTestingScenariosManager")
 
@@ -37,7 +39,13 @@ final class TestingScenariosManager: DirectoryObserver {
         }
     }
 
-    init(deviceManager: DeviceDataManager, supportManager: SupportManager, pluginManager: PluginManager) {
+    init(
+        deviceManager: DeviceDataManager,
+        supportManager: SupportManager,
+        pluginManager: PluginManager,
+        carbStore: CarbStore,
+        settingsManager: SettingsManager
+    ) {
         guard FeatureFlags.scenariosEnabled else {
             fatalError("\(#function) should be invoked only when scenarios are enabled")
         }
@@ -45,6 +53,8 @@ final class TestingScenariosManager: DirectoryObserver {
         self.deviceManager = deviceManager
         self.supportManager = supportManager
         self.pluginManager = pluginManager
+        self.carbStore = carbStore
+        self.settingsManager = settingsManager
         self.scenariosSource = Bundle.main.bundleURL.appendingPathComponent("Scenarios")
 
         log.debug("Loading testing scenarios from %{public}@", scenariosSource.path)
@@ -261,7 +271,7 @@ extension TestingScenariosManager {
                 return
             }
 
-            self.deviceManager.carbStore.addNewCarbEntries(entries: instance.carbEntries) { error in
+            self.carbStore.addNewCarbEntries(entries: instance.carbEntries) { error in
                 if let error {
                     bail(with: error)
                 } else {
@@ -285,9 +295,9 @@ extension TestingScenariosManager {
     
     private func reloadPumpManager(withIdentifier pumpManagerIdentifier: String) -> TestingPumpManager {
         deviceManager.pumpManager = nil
-        guard let maximumBasalRate = deviceManager.settingsManager.latestSettings.maximumBasalRatePerHour,
-              let maxBolus = deviceManager.settingsManager.latestSettings.maximumBolus,
-              let basalSchedule = deviceManager.settingsManager.latestSettings.basalRateSchedule else
+        guard let maximumBasalRate = settingsManager.settings.maximumBasalRatePerHour,
+              let maxBolus = settingsManager.settings.maximumBolus,
+              let basalSchedule = settingsManager.settings.basalRateSchedule else
         {
             fatalError("Failed to reload pump manager. Missing initial settings")
         }
@@ -343,7 +353,7 @@ extension TestingScenariosManager {
                     return
                 }
 
-                self.deviceManager.carbStore.deleteAllCarbEntries() { error in
+                self.carbStore.deleteAllCarbEntries() { error in
                     guard error == nil else {
                         completion(error!)
                         return

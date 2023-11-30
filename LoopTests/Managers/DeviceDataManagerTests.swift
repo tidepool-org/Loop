@@ -11,17 +11,24 @@ import HealthKit
 import LoopKit
 @testable import Loop
 
-
 final class DeviceDataManagerTests: XCTestCase {
 
     var deviceDataManager: DeviceDataManager!
     let mockDecisionStore = MockDosingDecisionStore()
     let pumpManager: MockPumpManager = MockPumpManager()
     let cgmManager: MockCGMManager = MockCGMManager()
-    let mockDosingManager = MockLoopDosingManager()
     let trustedTimeChecker = MockTrustedTimeChecker()
     var settingsManager: SettingsManager!
 
+    class MockAlertIssuer: AlertIssuer {
+        func issueAlert(_ alert: LoopKit.Alert) {
+        }
+
+        func retractAlert(identifier: LoopKit.Alert.Identifier) {
+        }
+    }
+
+    @MainActor
     override func setUpWithError() throws {
         let mockUserNotificationCenter = MockUserNotificationCenter()
         let mockBluetoothProvider = MockBluetoothProvider()
@@ -54,27 +61,86 @@ final class DeviceDataManagerTests: XCTestCase {
 
         let glucoseStore = GlucoseStore(cacheStore: persistenceController)
 
+        let cgmEventStore = CgmEventStore(cacheStore: persistenceController)
+
+        let alertStore = AlertStore()
+
+        let dosingDecisionStore = DosingDecisionStore(store: persistenceController, expireAfter: .days(1))
+
+        let settingsStore = SettingsStore(store: persistenceController, expireAfter: .days(1))
+
+        let remoteDataServicesManager = RemoteDataServicesManager(
+            alertStore: alertStore,
+            carbStore: carbStore,
+            doseStore: doseStore,
+            dosingDecisionStore: dosingDecisionStore,
+            glucoseStore: glucoseStore,
+            cgmEventStore: cgmEventStore,
+            settingsStore: settingsStore,
+            overrideHistory: TemporaryScheduleOverrideHistory(),
+            insulinDeliveryStore: doseStore.insulinDeliveryStore
+        )
+
         self.settingsManager = SettingsManager(cacheStore: persistenceController, expireAfter: .days(1), alertMuter: AlertMuter())
+
+        let a = DeviceDataManager(
+            pluginManager: <#T##PluginManager#>,
+            alertManager: <#T##AlertManager#>,
+            settingsManager: <#T##SettingsManager#>,
+            healthStore: <#T##HKHealthStore#>,
+            carbStore: <#T##CarbStore#>,
+            doseStore: <#T##DoseStore#>,
+            glucoseStore: <#T##GlucoseStore#>,
+            cgmEventStore: <#T##CgmEventStore#>,
+            remoteDataServicesManager: <#T##RemoteDataServicesManager#>,
+            crashRecoveryManager: <#T##CrashRecoveryManager#>,
+            statefulPluginManager: <#T##StatefulPluginManager#>,
+            loopControl: <#T##LoopControl#>,
+            analyticsServicesManager: <#T##AnalyticsServicesManager#>,
+            servicesManager: <#T##ServicesManager#>,
+            bluetoothProvider: <#T##BluetoothProvider#>,
+            alertPresenter: <#T##AlertPresenter#>,
+            automaticDosingStatus: <#T##AutomaticDosingStatus#>,
+            cacheStore: <#T##PersistenceController#>,
+            localCacheDuration: <#T##TimeInterval#>,
+            displayGlucosePreference: <#T##DisplayGlucosePreference#>,
+            displayGlucoseUnitBroadcaster: <#T##DisplayGlucoseUnitBroadcaster#>
+        )
+
+        let pluginManager = PluginManager()
+        let analyticsServicesManager = AnalyticsServicesManager()
+
+        let servicesManager = ServicesManager(
+            pluginManager: pluginManager,
+            alertManager: alertManager,
+            analyticsServicesManager: analyticsServicesManager,
+            loggingServicesManager: LoggingServicesManager(),
+            remoteDataServicesManager: remoteDataServicesManager,
+            settingsManager: settingsManager,
+            servicesManagerDelegate: <#T##ServicesManagerDelegate#>,
+            servicesManagerDosingDelegate: <#T##ServicesManagerDosingDelegate#>
+        )
+        let statefulPluginManager = StatefulPluginManager(pluginManager: pluginManager, servicesManager: servi)
 
         deviceDataManager = DeviceDataManager(
             pluginManager: PluginManager(),
             alertManager: alertManager,
             settingsManager: settingsManager,
-            loggingServicesManager: LoggingServicesManager(),
             healthStore: healthStore,
             carbStore: carbStore,
             doseStore: doseStore,
             glucoseStore: glucoseStore,
-            dosingDecisionStore: mockDecisionStore,
-            loopDosingManager: mockDosingManager,
+            cgmEventStore: cgmEventStore,
+            remoteDataServicesManager: remoteDataServicesManager,
+            crashRecoveryManager: CrashRecoveryManager(alertIssuer: MockAlertIssuer()),
+            statefulPluginManager: StatefulPluginManager(pluginManager: <#T##PluginManager#>, servicesManager: <#T##ServicesManager#>)
+            loopControl: LoopControlMock(),
             analyticsServicesManager: AnalyticsServicesManager(),
             bluetoothProvider: mockBluetoothProvider,
             alertPresenter: alertPresenter,
             automaticDosingStatus: automaticDosingStatus,
             cacheStore: persistenceController,
-            localCacheDuration: .days(1),
-            overrideHistory: TemporaryScheduleOverrideHistory(),
-            trustedTimeChecker: trustedTimeChecker
+            localCacheDuration: .days(1)
         )
 
         deviceDataManager.pumpManager = pumpManager

@@ -116,18 +116,13 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         var glucoseSamples: [StoredGlucoseSample]?
         var totalRetrospectiveCorrection: HKQuantity?
 
-        if self.refreshContext.remove(.glucose) != nil {
-            do {
-                glucoseSamples = try await deviceManager.glucoseStore.getGlucoseSamples(start: self.chartStartDate, end: nil)
-            } catch {
-                self.log.error("Failure getting glucose samples: %{public}@", String(describing: error))
-                glucoseSamples = nil
-            }
-        }
-
         // For now, do this every time
         _ = self.refreshContext.remove(.status)
         let (algoInput, algoOutput) = await loopDataManager.algorithmDisplayState.asTuple
+
+        if self.refreshContext.remove(.glucose) != nil, let algoInput {
+            glucoseSamples = algoInput.glucoseHistory.filterDateRange(self.chartStartDate, nil)
+        }
 
         self.retrospectiveGlucoseDiscrepancies = algoOutput?.effects.retrospectiveGlucoseDiscrepancies
         totalRetrospectiveCorrection = algoOutput?.effects.totalGlucoseCorrectionEffect
@@ -149,7 +144,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         }
 
         if self.refreshContext.remove(.targets) != nil {
-            self.glucoseChart.targetGlucoseSchedule = self.settingsManager.latestSettings.glucoseTargetRangeSchedule
+            self.glucoseChart.targetGlucoseSchedule = self.settingsManager.settings.glucoseTargetRangeSchedule
         }
 
         if let glucoseSamples = glucoseSamples {
@@ -258,7 +253,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
 
         if input == .retrospection,
             let lastDiscrepancy = retrospectiveGlucoseDiscrepancies?.last,
-            let currentGlucose = deviceManager.glucoseStore.latestGlucose
+            let currentGlucose = loopDataManager.latestGlucose
         {
             let formatter = QuantityFormatter(for: glucoseChart.glucoseUnit)
             let predicted = HKQuantity(unit: glucoseChart.glucoseUnit, doubleValue: currentGlucose.quantity.doubleValue(for: glucoseChart.glucoseUnit) - lastDiscrepancy.quantity.doubleValue(for: glucoseChart.glucoseUnit))

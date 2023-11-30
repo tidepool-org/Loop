@@ -11,12 +11,21 @@ import LoopKit
 @testable import Loop
 
 class MockGlucoseStore: GlucoseStoreProtocol {
-    
+
     init(for scenario: DosingTestScenario = .flatAndStable) {
         self.scenario = scenario // The store returns different effect values based on the scenario
         storedGlucose = loadHistoricGlucose(scenario: scenario)
     }
-    
+
+    func getGlucoseSamples(start: Date?, end: Date?) async throws -> [LoopKit.StoredGlucoseSample] {
+        [latestGlucose as! StoredGlucoseSample]
+    }
+
+    func addGlucoseSamples(_ samples: [LoopKit.NewGlucoseSample]) async throws -> [LoopKit.StoredGlucoseSample] {
+        // Using the dose store error because we don't need to create GlucoseStore errors just for the mock store
+        throw DoseStore.DoseStoreError.configurationError
+    }
+
     let dateFormatter = ISO8601DateFormatter.localTimeDate()
     
     var scenario: DosingTestScenario
@@ -36,51 +45,6 @@ class MockGlucoseStore: GlucoseStoreProtocol {
                 )
             )
         }
-    }
-    
-    var preferredUnit: HKUnit?
-    
-    var sampleType: HKSampleType = HKSampleType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bloodGlucose)!
-    
-    var delegate: GlucoseStoreDelegate?
-    
-    var managedDataInterval: TimeInterval?
-    
-    var healthKitStorageDelay = TimeInterval(0)
-
-    var authorizationRequired: Bool = false
-    
-    var sharingDenied: Bool = false
-    
-    func authorize(toShare: Bool, read: Bool, _ completion: @escaping (HealthKitSampleStoreResult<Bool>) -> Void) {
-        completion(.success(true))
-    }
-    
-    func addGlucoseSamples(_ values: [NewGlucoseSample], completion: @escaping (Result<[StoredGlucoseSample], Error>) -> Void) {
-        // Using the dose store error because we don't need to create GlucoseStore errors just for the mock store
-        completion(.failure(DoseStore.DoseStoreError.configurationError))
-    }
-    
-    func getGlucoseSamples(start: Date?, end: Date?, completion: @escaping (Result<[StoredGlucoseSample], Error>) -> Void) {
-        completion(.success([latestGlucose as! StoredGlucoseSample]))
-    }
-    
-    func generateDiagnosticReport(_ completion: @escaping (String) -> Void) {
-        completion("")
-    }
-    
-    func purgeAllGlucoseSamples(healthKitPredicate: NSPredicate, completion: @escaping (Error?) -> Void) {
-        // Using the dose store error because we don't need to create GlucoseStore errors just for the mock store
-        completion(DoseStore.DoseStoreError.configurationError)
-    }
-    
-    func executeGlucoseQuery(fromQueryAnchor queryAnchor: GlucoseStore.QueryAnchor?, limit: Int, completion: @escaping (GlucoseStore.GlucoseQueryResult) -> Void) {
-        // Using the dose store error because we don't need to create GlucoseStore errors just for the mock store
-        completion(.failure(DoseStore.DoseStoreError.configurationError))
-    }
-    
-    func counteractionEffects<Sample>(for samples: [Sample], to effects: [GlucoseEffect]) -> [GlucoseEffectVelocity] where Sample : GlucoseSampleValue {
-        samples.counteractionEffects(to: effects)
     }
 }
 
@@ -103,44 +67,6 @@ extension MockGlucoseStore {
             return try? decoder.decode([StoredGlucoseSample].self, from: data)
         } else {
             return nil
-        }
-    }
-    
-    var counteractionEffectToLoad: String {
-        switch scenario {
-        case .liveCapture:
-            fatalError("live capture scenario computes counteraction effects from input data, does not used pre-canned effects")
-        case .flatAndStable:
-            return "flat_and_stable_counteraction_effect"
-        case .highAndStable:
-            return "high_and_stable_counteraction_effect"
-        case .highAndRisingWithCOB:
-            return "high_and_rising_with_cob_counteraction_effect"
-        case .lowAndFallingWithCOB:
-            return "low_and_falling_counteraction_effect"
-        case .lowWithLowTreatment:
-            return "low_with_low_treatment_counteraction_effect"
-        case .highAndFalling:
-            return "high_and_falling_counteraction_effect"
-        }
-    }
-    
-    var momentumEffectToLoad: String {
-        switch scenario {
-        case .liveCapture:
-            fatalError("live capture scenario computes momentu effects from input data, does not used pre-canned effects")
-        case .flatAndStable:
-            return "flat_and_stable_momentum_effect"
-        case .highAndStable:
-            return "high_and_stable_momentum_effect"
-        case .highAndRisingWithCOB:
-            return "high_and_rising_with_cob_momentum_effect"
-        case .lowAndFallingWithCOB:
-            return "low_and_falling_momentum_effect"
-        case .lowWithLowTreatment:
-            return "low_with_low_treatment_momentum_effect"
-        case .highAndFalling:
-            return "high_and_falling_momentum_effect"
         }
     }
     

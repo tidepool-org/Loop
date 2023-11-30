@@ -51,6 +51,19 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     var diagnosticReportGenerator: DiagnosticReportGenerator!
 
+    var analyticsServicesManager: AnalyticsServicesManager?
+
+    var servicesManager: ServicesManager!
+
+    var simulatedData: SimulatedData!
+
+    var carbStore: CarbStore!
+
+    var doseStore: DoseStore!
+
+    var criticalEventLogExportManager: CriticalEventLogExportManager!
+
+
     lazy private var cancellables = Set<AnyCancellable>()
 
     override func viewDidLoad() {
@@ -205,7 +218,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         onscreen = true
 
-        deviceManager.analyticsServicesManager.didDisplayStatusScreen()
+        analyticsServicesManager?.didDisplayStatusScreen()
 
         deviceManager.checkDeliveryUncertaintyState()
     }
@@ -373,7 +386,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         let availableWidth = (refreshContext.newSize ?? tableView.bounds.size).width - charts.fixedHorizontalMargin
 
         let totalHours = floor(Double(availableWidth / LoopConstants.minimumChartWidthPerHour))
-        let futureHours = ceil(deviceManager.doseStore.longestEffectDuration.hours)
+        let futureHours = ceil(doseStore.longestEffectDuration.hours)
         let historyHours = max(LoopConstants.statusChartMinimumHistoryDisplay.hours, totalHours - futureHours)
 
         let date = Date(timeIntervalSinceNow: -TimeInterval(hours: historyHours))
@@ -444,7 +457,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         // Net basal rate HUD
         let netBasal: NetBasal?
         if let basalSchedule = temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory {
-            netBasal = basalDeliveryState?.getNetBasal(basalSchedule: basalSchedule, maximumBasalRatePerHour: settingsManager.latestSettings.maximumBasalRatePerHour)
+            netBasal = basalDeliveryState?.getNetBasal(basalSchedule: basalSchedule, maximumBasalRatePerHour: settingsManager.settings.maximumBasalRatePerHour)
         } else {
             netBasal = nil
         }
@@ -480,13 +493,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         updatePresetModeAvailability(automaticDosingEnabled: automaticDosingEnabled)
 
-        if settingsManager.latestSettings.preMealTargetRange == nil {
+        if settingsManager.settings.preMealTargetRange == nil {
             preMealMode = nil
         } else {
             preMealMode = temporaryPresetsManager.preMealTargetEnabled()
         }
 
-        if !FeatureFlags.sensitivityOverridesEnabled, settingsManager.latestSettings.workoutTargetRange == nil {
+        if !FeatureFlags.sensitivityOverridesEnabled, settingsManager.settings.workoutTargetRange == nil {
             workoutMode = nil
         } else {
             workoutMode = temporaryPresetsManager.nonPreMealOverrideEnabled()
@@ -512,7 +525,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             self.eventualGlucoseDescription = nil
         }
         if currentContext.contains(.targets) {
-            self.statusCharts.targetGlucoseSchedule = settingsManager.latestSettings.glucoseTargetRangeSchedule
+            self.statusCharts.targetGlucoseSchedule = settingsManager.settings.glucoseTargetRangeSchedule
             self.statusCharts.preMealOverride = temporaryPresetsManager.preMealOverride
             self.statusCharts.scheduleOverride = temporaryPresetsManager.scheduleOverride
         }
@@ -559,7 +572,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         self.tableView.beginUpdates()
         if let hudView = self.hudView {
             // CGM Status
-            if let glucose = self.deviceManager.glucoseStore.latestGlucose {
+            if let glucose = self.loopManager.latestGlucose {
                 let unit = self.statusCharts.glucose.glucoseUnit
                 hudView.cgmStatusHUD.setGlucoseQuantity(glucose.quantity.doubleValue(for: unit),
                                                         at: glucose.startDate,
@@ -790,13 +803,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private lazy var preMealModeAllowed: Bool = {
         onboardingManager.isComplete &&
         (automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled)
-        && settingsManager.latestSettings.preMealTargetRange != nil
+        && settingsManager.settings.preMealTargetRange != nil
     }()
 
     private func updatePresetModeAvailability(automaticDosingEnabled: Bool) {
         preMealModeAllowed = onboardingManager.isComplete &&
         (automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled)
-        && settingsManager.latestSettings.preMealTargetRange != nil
+        && settingsManager.settings.preMealTargetRange != nil
         workoutModeAllowed = onboardingManager.isComplete && workoutMode != nil
         updateToolbarItems()
     }
@@ -1281,11 +1294,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
             vc.automaticDosingStatus = automaticDosingStatus
             vc.deviceManager = deviceManager
             vc.loopDataManager = loopManager
-            vc.analyticsServicesManager = deviceManager.analyticsServicesManager
-            vc.carbStore = deviceManager.carbStore
+            vc.analyticsServicesManager = analyticsServicesManager
+            vc.carbStore = carbStore
             vc.hidesBottomBarWhenPushed = true
         case let vc as InsulinDeliveryTableViewController:
             vc.loopDataManager = loopManager
+            vc.doseStore = doseStore
             vc.hidesBottomBarWhenPushed = true
             vc.enableEntryDeletion = FeatureFlags.entryDeletionEnabled
             vc.headerValueLabelColor = .insulinTintColor
@@ -1317,7 +1331,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     func presentCarbEntryScreen(_ activity: NSUserActivity?) {
         let navigationWrapper: UINavigationController
         if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingStatus.automaticDosingEnabled {
-            let viewModel = SimpleBolusViewModel(delegate: loopManager, displayMealEntry: true)
+            let viewModel = SimpleBolusViewModel(delegate: loopManager, displayMealEntry: true, displayGlucosePreference: deviceManager.displayGlucosePreference)
             if let activity = activity {
                 viewModel.restoreUserActivityState(activity)
             }
@@ -1338,7 +1352,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let hostingController = DismissibleHostingController(rootView: carbEntryView, isModalInPresentation: false)
             present(hostingController, animated: true)
         }
-        deviceManager.analyticsServicesManager.didDisplayCarbEntryScreen()
+        analyticsServicesManager?.didDisplayCarbEntryScreen()
     }
 
     @IBAction func presentBolusScreen() {
@@ -1351,7 +1365,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             SimpleBolusView(
                 viewModel: SimpleBolusViewModel(
                     delegate: loopManager,
-                    displayMealEntry: false
+                    displayMealEntry: false,
+                    displayGlucosePreference: deviceManager.displayGlucosePreference
                 )
             )
             .environmentObject(deviceManager.displayGlucosePreference)
@@ -1368,7 +1383,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     await viewModel.generateRecommendationAndStartObserving()
                 }
                 
-                viewModel.analyticsServicesManager = deviceManager.analyticsServicesManager
+                viewModel.analyticsServicesManager = analyticsServicesManager
                 
                 return viewModel
             }()
@@ -1388,7 +1403,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         let navigationWrapper = UINavigationController(rootViewController: hostingController)
         hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
         present(navigationWrapper, animated: true)
-        deviceManager.analyticsServicesManager.didDisplayBolusScreen()
+        analyticsServicesManager?.didDisplayBolusScreen()
     }
 
     private func createPreMealButtonItem(selected: Bool, isEnabled: Bool) -> UIBarButtonItem {
@@ -1541,8 +1556,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self?.addCGMManager(withIdentifier: $0.identifier)
         })
         let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
-                                                  availableServices: { [weak self] in self?.deviceManager.servicesManager.availableServices ?? [] },
-                                                  activeServices: { [weak self] in self?.deviceManager.servicesManager.activeServices ?? [] },
+                                                  availableServices: { [weak self] in self?.servicesManager.availableServices ?? [] },
+                                                  activeServices: { [weak self] in self?.servicesManager.activeServices ?? [] },
                                                   delegate: self)
         let versionUpdateViewModel = VersionUpdateViewModel(supportManager: supportManager, guidanceColors: .default)
         let viewModel = SettingsViewModel(alertPermissionsChecker: alertPermissionsChecker,
@@ -1551,12 +1566,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           pumpManagerSettingsViewModel: pumpViewModel,
                                           cgmManagerSettingsViewModel: cgmViewModel,
                                           servicesViewModel: servicesViewModel,
-                                          criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: deviceManager.criticalEventLogExportManager),
+                                          criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: criticalEventLogExportManager),
                                           therapySettings: { [weak self] in self?.settingsManager.therapySettings ?? TherapySettings() },
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
-                                          initialDosingEnabled: self.settingsManager.latestSettings.dosingEnabled,
+                                          initialDosingEnabled: self.settingsManager.settings.dosingEnabled,
                                           isClosedLoopAllowed: automaticDosingStatus.$isAutomaticDosingAllowed,
-                                          automaticDosingStrategy: self.settingsManager.latestSettings.automaticDosingStrategy,
+                                          automaticDosingStrategy: self.settingsManager.settings.automaticDosingStrategy,
                                           availableSupports: supportManager.availableSupports,
                                           isOnboardingComplete: onboardingManager.isComplete,
                                           therapySettingsViewModelDelegate: deviceManager,
@@ -1829,7 +1844,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             })
         }
         actionSheet.addAction(UIAlertAction(title: "Remove Exports Directory", style: .default) { _ in
-            if let error = self.deviceManager.removeExportsDirectory() {
+            if let error = self.criticalEventLogExportManager.removeExportsDirectory() {
                 self.presentError(error)
             }
         })
@@ -1910,7 +1925,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         presentActivityIndicator(title: "Simulated Core Data", message: "Generating simulated historical...") { dismissActivityIndicator in
-            self.deviceManager.purgeHistoricalCoreData() { error in
+            self.simulatedData.purgeHistoricalCoreData() { error in
                 DispatchQueue.main.async {
                     if let error = error {
                         dismissActivityIndicator()
@@ -1918,7 +1933,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         return
                     }
 
-                    self.deviceManager.generateSimulatedHistoricalCoreData() { error in
+                    self.simulatedData.generateSimulatedHistoricalCoreData() { error in
                         DispatchQueue.main.async {
                             dismissActivityIndicator()
                             if let error = error {
@@ -1937,7 +1952,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         presentActivityIndicator(title: "Simulated Core Data", message: "Purging historical...") { dismissActivityIndicator in
-            self.deviceManager.purgeHistoricalCoreData() { error in
+            self.simulatedData.purgeHistoricalCoreData() { error in
                 DispatchQueue.main.async {
                     dismissActivityIndicator()
                     if let error = error {
@@ -2098,9 +2113,9 @@ extension StatusTableViewController {
 
 extension StatusTableViewController {
     fileprivate func addPumpManager(withIdentifier identifier: String) {
-        guard let maximumBasalRate = settingsManager.latestSettings.maximumBasalRatePerHour,
-              let maxBolus = settingsManager.latestSettings.maximumBolus,
-              let basalSchedule = settingsManager.latestSettings.basalRateSchedule else
+        guard let maximumBasalRate = settingsManager.settings.maximumBasalRatePerHour,
+              let maxBolus = settingsManager.settings.maximumBolus,
+              let basalSchedule = settingsManager.settings.basalRateSchedule else
         {
             log.error("Failure to setup pump manager: incomplete settings")
             return
@@ -2165,13 +2180,13 @@ extension StatusTableViewController: SettingsViewModelDelegate {
 
 extension StatusTableViewController: ServicesViewModelDelegate {
     func addService(withIdentifier identifier: String) {
-        switch deviceManager.servicesManager.setupService(withIdentifier: identifier) {
+        switch servicesManager.setupService(withIdentifier: identifier) {
         case .failure(let error):
             log.default("Failure to setup service with identifier '%{public}@': %{public}@", identifier, String(describing: error))
         case .success(let success):
             switch success {
             case .userInteractionRequired(var setupViewController):
-                setupViewController.serviceOnboardingDelegate = deviceManager.servicesManager
+                setupViewController.serviceOnboardingDelegate = servicesManager
                 setupViewController.completionDelegate = self
                 show(setupViewController, sender: self)
             case .createdAndOnboarded:
@@ -2181,7 +2196,7 @@ extension StatusTableViewController: ServicesViewModelDelegate {
     }
 
     func gotoService(withIdentifier identifier: String) {
-        guard let serviceUI = deviceManager.servicesManager.activeServices.first(where: { $0.pluginIdentifier == identifier }) as? ServiceUI else {
+        guard let serviceUI = servicesManager.activeServices.first(where: { $0.pluginIdentifier == identifier }) as? ServiceUI else {
             return
         }
         showServiceSettings(serviceUI)
@@ -2189,7 +2204,7 @@ extension StatusTableViewController: ServicesViewModelDelegate {
 
     fileprivate func showServiceSettings(_ serviceUI: ServiceUI) {
         var settingsViewController = serviceUI.settingsViewController(colorPalette: .default)
-        settingsViewController.serviceOnboardingDelegate = deviceManager.servicesManager
+        settingsViewController.serviceOnboardingDelegate = servicesManager
         settingsViewController.completionDelegate = self
         show(settingsViewController, sender: self)
     }

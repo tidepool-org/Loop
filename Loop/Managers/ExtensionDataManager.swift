@@ -82,7 +82,7 @@ final class ExtensionDataManager {
     }
     
     private func createIntentsContext() -> IntentExtensionInfo? {
-        let presets = settingsManager.latestSettings.overridePresets
+        let presets = settingsManager.settings.overridePresets
         let info = IntentExtensionInfo(overridePresetNames: presets.map { $0.name })
         return info
     }
@@ -125,7 +125,7 @@ final class ExtensionDataManager {
 
         context.isClosedLoop = self.automaticDosingStatus.automaticDosingEnabled
 
-        context.preMealPresetAllowed = self.automaticDosingStatus.automaticDosingEnabled && self.settingsManager.latestSettings.preMealTargetRange != nil
+        context.preMealPresetAllowed = self.automaticDosingStatus.automaticDosingEnabled && self.settingsManager.settings.preMealTargetRange != nil
         context.preMealPresetActive = self.temporaryPresetsManager.preMealTargetEnabled()
         context.customPresetActive = self.temporaryPresetsManager.nonPreMealOverrideEnabled()
 
@@ -144,7 +144,7 @@ final class ExtensionDataManager {
 
         if let basalDeliveryState = basalDeliveryState,
             let basalSchedule = self.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory,
-           let netBasal = basalDeliveryState.getNetBasal(basalSchedule: basalSchedule, maximumBasalRatePerHour: self.settingsManager.latestSettings.maximumBasalRatePerHour)
+           let netBasal = basalDeliveryState.getNetBasal(basalSchedule: basalSchedule, maximumBasalRatePerHour: self.settingsManager.settings.maximumBasalRatePerHour)
         {
             context.netBasal = NetBasalContext(rate: netBasal.rate, percentage: netBasal.percent, start: netBasal.start, end: netBasal.end)
         }
@@ -152,7 +152,7 @@ final class ExtensionDataManager {
         context.batteryPercentage = dataManager.pumpManager?.status.pumpBatteryChargeRemaining
         context.reservoirCapacity = dataManager.pumpManager?.pumpReservoirCapacity
 
-        if let glucoseDisplay = dataManager.glucoseDisplay(for: dataManager.glucoseStore.latestGlucose) {
+        if let glucoseDisplay = dataManager.glucoseDisplay(for: loopDataManager.latestGlucose) {
             context.glucoseDisplay = GlucoseDisplayableContext(
                 isStateValid: glucoseDisplay.isStateValid,
                 stateDescription: glucoseDisplay.stateDescription,

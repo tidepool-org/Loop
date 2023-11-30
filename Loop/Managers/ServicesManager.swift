@@ -387,6 +387,8 @@ extension ServicesManager: AlertIssuer {
     }
 }
 
+extension ServicesManager: ActiveServicesProvider { }
+
 // MARK: - ServiceOnboardingDelegate
 
 extension ServicesManager: ServiceOnboardingDelegate {

@@ -22,7 +22,7 @@ protocol SimpleBolusViewModelDelegate: AnyObject {
 
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?) async throws -> StoredCarbEntry
 
-    func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
+    func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) async
     
     func enactBolus(units: Double, activationType: BolusActivationType) async throws
 
@@ -30,8 +30,6 @@ protocol SimpleBolusViewModelDelegate: AnyObject {
 
     func computeSimpleBolusRecommendation(at date: Date, mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> BolusDosingDecision?
 
-    var displayGlucosePreference: DisplayGlucosePreference { get }
-    
     var maximumBolus: Double? { get }
 
     var suspendThreshold: HKQuantity? { get }
@@ -41,6 +39,11 @@ protocol SimpleBolusViewModelDelegate: AnyObject {
 class SimpleBolusViewModel: ObservableObject {
     
     var authenticate: AuthenticationChallenge = LocalAuthentication.deviceOwnerCheck
+
+    // For testing
+    func setAuthenticationMethdod(_ authenticate: @escaping AuthenticationChallenge) {
+        self.authenticate = authenticate
+    }
 
     enum Alert: Int {
         case carbEntryPersistenceFailure
@@ -93,7 +96,7 @@ class SimpleBolusViewModel: ObservableObject {
                     _manualGlucoseString = ""
                     return _manualGlucoseString
                 }
-                self._manualGlucoseString = delegate.displayGlucosePreference.format(manualGlucoseQuantity, includeUnit: false)
+                self._manualGlucoseString = displayGlucosePreference.format(manualGlucoseQuantity, includeUnit: false)
             }
 
             return _manualGlucoseString
@@ -156,7 +159,7 @@ class SimpleBolusViewModel: ObservableObject {
 
     @Published private var _manualGlucoseString: String = "" {
         didSet {
-            guard let manualGlucoseValue = delegate.displayGlucosePreference.formatter.numberFormatter.number(from: _manualGlucoseString)?.doubleValue
+            guard let manualGlucoseValue = displayGlucosePreference.formatter.numberFormatter.number(from: _manualGlucoseString)?.doubleValue
             else {
                 manualGlucoseQuantity = nil
                 return
@@ -164,7 +167,7 @@ class SimpleBolusViewModel: ObservableObject {
 
             // if needed update manualGlucoseQuantity and related activeNotice
             if manualGlucoseQuantity == nil ||
-                _manualGlucoseString != delegate.displayGlucosePreference.format(manualGlucoseQuantity!, includeUnit: false)
+                _manualGlucoseString != displayGlucosePreference.format(manualGlucoseQuantity!, includeUnit: false)
             {
                 manualGlucoseQuantity = HKQuantity(unit: cachedDisplayGlucoseUnit, doubleValue: manualGlucoseValue)
                 updateNotice()
@@ -199,8 +202,10 @@ class SimpleBolusViewModel: ObservableObject {
         }
         return false
     }
-    
-    var displayGlucoseUnit: HKUnit { return delegate.displayGlucosePreference.unit }
+
+    let displayGlucosePreference: DisplayGlucosePreference
+
+    var displayGlucoseUnit: HKUnit { return displayGlucosePreference.unit }
     
     var suspendThreshold: HKQuantity? { return delegate.suspendThreshold }
 
@@ -282,10 +287,11 @@ class SimpleBolusViewModel: ObservableObject {
         return bolusVolumeFormatter.string(from: maxBolusQuantity)!
     }
 
-    init(delegate: SimpleBolusViewModelDelegate, displayMealEntry: Bool) {
+    init(delegate: SimpleBolusViewModelDelegate, displayMealEntry: Bool, displayGlucosePreference: DisplayGlucosePreference) {
         self.delegate = delegate
         self.displayMealEntry = displayMealEntry
-        cachedDisplayGlucoseUnit = delegate.displayGlucosePreference.unit
+        self.displayGlucosePreference = displayGlucosePreference
+        cachedDisplayGlucoseUnit = displayGlucosePreference.unit
         enteredBolusString = Self.doseAmountFormatter.string(from: 0.0)!
         updateRecommendation()
         dosingDecision = BolusDosingDecision(for: .simpleBolus)
@@ -400,7 +406,7 @@ class SimpleBolusViewModel: ObservableObject {
         }
 
         if let decision = dosingDecision, let recommendationDate = recommendationDate {
-            delegate.storeManualBolusDosingDecision(decision, withDate: recommendationDate)
+            await delegate.storeManualBolusDosingDecision(decision, withDate: recommendationDate)
         }
         return true
     }

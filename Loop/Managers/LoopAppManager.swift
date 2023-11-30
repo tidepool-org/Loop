@@ -16,6 +16,7 @@ import HealthKit
 import WidgetKit
 import LoopCore
 
+
 #if targetEnvironment(simulator)
 enum SimulatorError: Error {
     case remoteNotificationsNotAvailable
@@ -96,7 +97,12 @@ class LoopAppManager: NSObject {
     private var mealDetectionManager: MealDetectionManager!
     private var statusExtensionManager: ExtensionDataManager!
     private var watchManager: WatchDataManager!
-
+    private var crashRecoveryManager: CrashRecoveryManager!
+    private var cgmEventStore: CgmEventStore!
+    private var servicesManager: ServicesManager!
+    private var remoteDataServicesManager: RemoteDataServicesManager!
+    private var statefulPluginManager: StatefulPluginManager!
+    private var criticalEventLogExportManager: CriticalEventLogExportManager!
 
     // HealthStorePreferredGlucoseUnitDidChange will be notified once the user completes the health access form. Set to .milligramsPerDeciliter until then
     public private(set) var displayGlucosePreference = DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter)
@@ -122,8 +128,6 @@ class LoopAppManager: NSObject {
         if FeatureFlags.siriEnabled && INPreferences.siriAuthorizationStatus() == .notDetermined {
             INPreferences.requestSiriAuthorization { _ in }
         }
-
-        registerBackgroundTasks()
 
         if FeatureFlags.remoteCommandsEnabled {
             DispatchQueue.main.async {
@@ -223,9 +227,8 @@ class LoopAppManager: NSObject {
         )
 
         let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
-        let sensitivitySchedule = settingsManager.latestSettings.insulinSensitivitySchedule
 
-        temporaryPresetsManager = TemporaryPresetsManager(settingsManager: settingsManager)
+        temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsManager)
         temporaryPresetsManager.overrideHistory.delegate = self
 
         temporaryPresetsManager.addTemporaryPresetObserver(alertManager)
@@ -249,7 +252,7 @@ class LoopAppManager: NSObject {
         let insulinModelProvider: InsulinModelProvider
 
         if FeatureFlags.adultChildInsulinModelSelectionEnabled {
-            insulinModelProvider = PresetInsulinModelProvider(defaultRapidActingModel: settingsManager.latestSettings.defaultRapidActingModel?.presetForRapidActingInsulin)
+            insulinModelProvider = PresetInsulinModelProvider(defaultRapidActingModel: settingsManager.settings.defaultRapidActingModel?.presetForRapidActingInsulin)
         } else {
             insulinModelProvider = PresetInsulinModelProvider(defaultRapidActingModel: nil)
         }
@@ -260,7 +263,7 @@ class LoopAppManager: NSObject {
             cacheLength: localCacheDuration,
             insulinModelProvider: insulinModelProvider,
             longestEffectDuration: ExponentialInsulinModelPreset.rapidActingAdult.effectDuration,
-            basalProfile: settingsManager.latestSettings.basalRateSchedule,
+            basalProfile: settingsManager.settings.basalRateSchedule,
             lastPumpEventsReconciliation: nil // PumpManager is nil at this point. Will update this via addPumpEvents below
         )
 
@@ -298,40 +301,88 @@ class LoopAppManager: NSObject {
             lastLoopCompleted: ExtensionDataManager.context?.lastLoopCompleted,
             temporaryPresetsManager: temporaryPresetsManager,
             settingsManager: settingsManager,
-            analyticsServicesManager: analyticsServicesManager,
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
             dosingDecisionStore: dosingDecisionStore,
-            displayGlucosePreference: displayGlucosePreference,
             automaticDosingStatus: automaticDosingStatus,
-            trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset }
+            trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset },
+            analyticsServicesManager: analyticsServicesManager
         )
 
         cacheStore.delegate = loopDataManager
 
+        crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
+
+        Task { @MainActor in
+            alertManager.addAlertResponder(managerIdentifier: crashRecoveryManager.managerIdentifier, alertResponder: crashRecoveryManager)
+        }
+
+        cgmEventStore = CgmEventStore(cacheStore: cacheStore, cacheLength: localCacheDuration)
+
+
+        remoteDataServicesManager = RemoteDataServicesManager(
+            alertStore: alertManager.alertStore,
+            carbStore: carbStore,
+            doseStore: doseStore,
+            dosingDecisionStore: dosingDecisionStore,
+            glucoseStore: glucoseStore,
+            cgmEventStore: cgmEventStore,
+            settingsStore: settingsManager.settingsStore,
+            overrideHistory: temporaryPresetsManager.overrideHistory,
+            insulinDeliveryStore: doseStore.insulinDeliveryStore
+        )
+
+        settingsManager.remoteDataServicesManager = remoteDataServicesManager
+
+        servicesManager = ServicesManager(
+            pluginManager: pluginManager,
+            alertManager: alertManager,
+            analyticsServicesManager: analyticsServicesManager,
+            loggingServicesManager: loggingServicesManager,
+            remoteDataServicesManager: remoteDataServicesManager,
+            settingsManager: settingsManager,
+            servicesManagerDelegate: loopDataManager,
+            servicesManagerDosingDelegate: self
+        )
+
+        statefulPluginManager = StatefulPluginManager(pluginManager: pluginManager, servicesManager: servicesManager)
+
         deviceDataManager = DeviceDataManager(pluginManager: pluginManager,
                                               alertManager: alertManager,
                                               settingsManager: settingsManager,
-                                              loggingServicesManager: loggingServicesManager,
                                               healthStore: healthStore,
                                               carbStore: carbStore,
                                               doseStore: doseStore,
                                               glucoseStore: glucoseStore,
-                                              dosingDecisionStore: dosingDecisionStore,
-                                              loopDataManager: loopDataManager,
+                                              cgmEventStore: cgmEventStore,
+                                              uploadEventListener: remoteDataServicesManager,
+                                              crashRecoveryManager: crashRecoveryManager,
+                                              statefulPluginManager: statefulPluginManager,
+                                              loopControl: loopDataManager,
                                               analyticsServicesManager: analyticsServicesManager,
+                                              activeServicesProvider: servicesManager,
                                               bluetoothProvider: bluetoothStateManager,
                                               alertPresenter: self,
                                               automaticDosingStatus: automaticDosingStatus,
                                               cacheStore: cacheStore,
                                               localCacheDuration: localCacheDuration,
-                                              overrideHistory: temporaryPresetsManager.overrideHistory,
-                                              temporaryPresetsManager: temporaryPresetsManager,
-                                              trustedTimeChecker: trustedTimeChecker,
                                               displayGlucosePreference: displayGlucosePreference,
                                               displayGlucoseUnitBroadcaster: self
         )
+
+        dosingDecisionStore.delegate = deviceDataManager
+        remoteDataServicesManager.delegate = deviceDataManager
+
+
+
+        let criticalEventLogs: [CriticalEventLog] = [settingsManager.settingsStore, glucoseStore, carbStore, dosingDecisionStore, doseStore, deviceDataManager.deviceLog, alertManager.alertStore]
+        criticalEventLogExportManager = CriticalEventLogExportManager(logs: criticalEventLogs,
+                                                                      directory: FileManager.default.exportsDirectoryURL,
+                                                                      historicalDuration: localCacheDuration)
+
+        criticalEventLogExportManager.registerBackgroundTasks()
+
 
         statusExtensionManager = ExtensionDataManager(
             deviceDataManager: deviceDataManager,
@@ -345,6 +396,9 @@ class LoopAppManager: NSObject {
             deviceManager: deviceDataManager,
             settingsManager: settingsManager,
             loopDataManager: loopDataManager,
+            carbStore: carbStore,
+            glucoseStore: glucoseStore,
+            analyticsServicesManager: analyticsServicesManager,
             temporaryPresetsManager: temporaryPresetsManager,
             healthStore: healthStore
         )
@@ -364,11 +418,12 @@ class LoopAppManager: NSObject {
 
         SharedLogging.instance = loggingServicesManager
 
-        scheduleBackgroundTasks()
+        criticalEventLogExportManager.scheduleCriticalEventLogHistoricalExportBackgroundTask()
+
 
         supportManager = SupportManager(pluginManager: pluginManager,
                                         deviceSupportDelegate: deviceDataManager,
-                                        servicesManager: deviceDataManager.servicesManager,
+                                        servicesManager: servicesManager,
                                         alertIssuer: alertManager)
         
         setWhitelistedDevices()
@@ -377,8 +432,8 @@ class LoopAppManager: NSObject {
                                               bluetoothProvider: bluetoothStateManager,
                                               deviceDataManager: deviceDataManager, 
                                               settingsManager: settingsManager,
-                                              statefulPluginManager: deviceDataManager.statefulPluginManager,
-                                              servicesManager: deviceDataManager.servicesManager,
+                                              statefulPluginManager: statefulPluginManager,
+                                              servicesManager: servicesManager,
                                               loopDataManager: loopDataManager,
                                               supportManager: supportManager,
                                               windowProvider: windowProvider,
@@ -403,11 +458,17 @@ class LoopAppManager: NSObject {
         }
 
         analyticsServicesManager.identify("Dosing Strategy", value: settingsManager.loopSettings.automaticDosingStrategy.analyticsValue)
-        let serviceNames = deviceDataManager.servicesManager.activeServices.map { $0.pluginIdentifier }
+        let serviceNames = servicesManager.activeServices.map { $0.pluginIdentifier }
         analyticsServicesManager.identify("Services", array: serviceNames)
 
         if FeatureFlags.scenariosEnabled {
-            testingScenariosManager = TestingScenariosManager(deviceManager: deviceDataManager, supportManager: supportManager, pluginManager: pluginManager)
+            testingScenariosManager = TestingScenariosManager(
+                deviceManager: deviceDataManager,
+                supportManager: supportManager,
+                pluginManager: pluginManager,
+                carbStore: carbStore,
+                settingsManager: settingsManager
+            )
         }
 
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
@@ -488,6 +549,12 @@ class LoopAppManager: NSObject {
         statusTableViewController.temporaryPresetsManager = temporaryPresetsManager
         statusTableViewController.loopManager = loopDataManager
         statusTableViewController.diagnosticReportGenerator = self
+        statusTableViewController.simulatedData = self
+        statusTableViewController.analyticsServicesManager = analyticsServicesManager
+        statusTableViewController.servicesManager = servicesManager
+        statusTableViewController.carbStore = carbStore
+        statusTableViewController.doseStore = doseStore
+        statusTableViewController.criticalEventLogExportManager = criticalEventLogExportManager
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
 
         var rootNavigationController = rootViewController as? RootNavigationController
@@ -541,7 +608,7 @@ class LoopAppManager: NSObject {
         guard let notification = notification else {
             return false
         }
-        deviceDataManager?.servicesManager.handleRemoteNotification(notification)
+        servicesManager.handleRemoteNotification(notification)
         return true
     }
     
@@ -585,20 +652,6 @@ class LoopAppManager: NSObject {
                 // Fallback on earlier versions
             }
         }
-    }
-
-    // MARK: - Background Tasks
-
-    private func registerBackgroundTasks() {
-        if DeviceDataManager.registerCriticalEventLogHistoricalExportBackgroundTask({ self.deviceDataManager?.handleCriticalEventLogHistoricalExportBackgroundTask($0) }) {
-            log.debug("Critical event log export background task registered")
-        } else {
-            log.error("Critical event log export background task not registered")
-        }
-    }
-
-    private func scheduleBackgroundTasks() {
-        deviceDataManager?.scheduleCriticalEventLogHistoricalExportBackgroundTask()
     }
 
     // MARK: - Private
@@ -767,7 +820,7 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
                 let activationType = BolusActivationType(rawValue: activationTypeRawValue),
                 startDate.timeIntervalSinceNow >= TimeInterval(minutes: -5)
             {
-                deviceDataManager?.analyticsServicesManager.didRetryBolus()
+                analyticsServicesManager.didRetryBolus()
                 
                 deviceDataManager?.enactBolus(units: units, activationType: activationType) { (_) in
                     DispatchQueue.main.async {
@@ -819,8 +872,7 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
 extension LoopAppManager: TemporaryScheduleOverrideHistoryDelegate {
     func temporaryScheduleOverrideHistoryDidUpdate(_ history: TemporaryScheduleOverrideHistory) {
         UserDefaults.appGroup?.overrideHistory = history
-
-        deviceDataManager.remoteDataServicesManager.triggerUpload(for: .overrides)
+        remoteDataServicesManager.triggerUpload(for: .overrides)
     }
 }
 
@@ -860,6 +912,14 @@ extension LoopAppManager: ResetLoopManagerDelegate {
     
     func presentCouldNotResetLoopAlert(error: Error) {
         alertManager.presentCouldNotResetLoopAlert(error: error)
+    }
+}
+
+// MARK: - ServicesManagerDosingDelegate
+
+extension LoopAppManager: ServicesManagerDosingDelegate {
+    func deliverBolus(amountInUnits: Double) async throws {
+        try await deviceDataManager.enactBolus(units: amountInUnits, activationType: .manualNoRecommendation)
     }
 }
 
@@ -916,3 +976,110 @@ extension LoopAppManager: DiagnosticReportGenerator {
         return entries.joined(separator: "\n")
     }
 }
+
+
+// MARK: SimulatedData
+
+protocol SimulatedData {
+    func generateSimulatedHistoricalCoreData(completion: @escaping (Error?) -> Void)
+    func purgeHistoricalCoreData(completion: @escaping (Error?) -> Void)
+}
+
+extension LoopAppManager: SimulatedData {
+    func generateSimulatedHistoricalCoreData(completion: @escaping (Error?) -> Void) {
+        guard FeatureFlags.simulatedCoreDataEnabled else {
+            fatalError("\(#function) should be invoked only when simulated core data is enabled")
+        }
+
+        settingsManager.settingsStore.generateSimulatedHistoricalSettingsObjects() { error in
+            guard error == nil else {
+                completion(error)
+                return
+            }
+            Task { @MainActor in
+                guard FeatureFlags.simulatedCoreDataEnabled else {
+                    fatalError("\(#function) should be invoked only when simulated core data is enabled")
+                }
+
+                self.glucoseStore.generateSimulatedHistoricalGlucoseObjects() { error in
+                    guard error == nil else {
+                        completion(error)
+                        return
+                    }
+                    self.carbStore.generateSimulatedHistoricalCarbObjects() { error in
+                        guard error == nil else {
+                            completion(error)
+                            return
+                        }
+                        self.dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects() { error in
+                            guard error == nil else {
+                                completion(error)
+                                return
+                            }
+                            self.doseStore.generateSimulatedHistoricalPumpEvents() { error in
+                                guard error == nil else {
+                                    completion(error)
+                                    return
+                                }
+                                self.deviceDataManager.deviceLog.generateSimulatedHistoricalDeviceLogEntries() { error in
+                                    guard error == nil else {
+                                        completion(error)
+                                        return
+                                    }
+                                    self.alertManager.alertStore.generateSimulatedHistoricalStoredAlerts(completion: completion)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    func purgeHistoricalCoreData(completion: @escaping (Error?) -> Void) {
+        guard FeatureFlags.simulatedCoreDataEnabled else {
+            fatalError("\(#function) should be invoked only when simulated core data is enabled")
+        }
+
+        alertManager.alertStore.purgeHistoricalStoredAlerts() { error in
+            guard error == nil else {
+                completion(error)
+                return
+            }
+            self.deviceDataManager.deviceLog.purgeHistoricalDeviceLogEntries() { error in
+                guard error == nil else {
+                    completion(error)
+                    return
+                }
+                Task { @MainActor in
+                    self.doseStore.purgeHistoricalPumpEvents() { error in
+                        guard error == nil else {
+                            completion(error)
+                            return
+                        }
+                        self.dosingDecisionStore.purgeHistoricalDosingDecisionObjects() { error in
+                            guard error == nil else {
+                                completion(error)
+                                return
+                            }
+                            self.carbStore.purgeHistoricalCarbObjects() { error in
+                                guard error == nil else {
+                                    completion(error)
+                                    return
+                                }
+                                self.glucoseStore.purgeHistoricalGlucoseObjects() { error in
+                                    guard error == nil else {
+                                        completion(error)
+                                        return
+                                    }
+                                    self.settingsManager.purgeHistoricalSettingsObjects(completion: completion)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

@@ -155,7 +155,6 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
         var carbEffects: [GlucoseEffect]?
         var carbStatuses: [CarbStatus<StoredCarbEntry>]?
         var carbsOnBoard: CarbValue?
-        var carbTotal: CarbValue?
         var insulinCounteractionEffects: [GlucoseEffectVelocity]?
 
         if shouldUpdateGlucose || shouldUpdateCarbs {
@@ -199,11 +198,6 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
         if shouldUpdateCarbs || shouldUpdateGlucose {
             // Change to descending order for display
             self.carbStatuses = carbStatuses?.reversed() ?? []
-
-            if shouldUpdateCarbs {
-                self.carbTotal = carbTotal
-            }
-
             self.carbsOnBoard = carbsOnBoard
 
             tableView.reloadSections(IndexSet(integer: Section.entries.rawValue), with: .fade)
@@ -487,8 +481,9 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     // MARK: - Navigation
     @IBAction func presentCarbEntryScreen() {
         if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingStatus.automaticDosingEnabled {
-            let viewModel = SimpleBolusViewModel(delegate: loopDataManager, displayMealEntry: true)
-            let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter))
+            let displayGlucosePreference = DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter)
+            let viewModel = SimpleBolusViewModel(delegate: loopDataManager, displayMealEntry: true, displayGlucosePreference: displayGlucosePreference)
+            let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(displayGlucosePreference)
             let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
             let navigationWrapper = UINavigationController(rootViewController: hostingController)
             hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))

@@ -21,7 +21,7 @@ class TemporaryPresetsManager {
 
     private let log = OSLog(category: "TemporaryPresetsManager")
 
-    private var settingsManager: SettingsManager
+    private var settingsProvider: SettingsProvider
 
     var overrideHistory = UserDefaults.appGroup?.overrideHistory ?? TemporaryScheduleOverrideHistory.init()
 
@@ -29,8 +29,8 @@ class TemporaryPresetsManager {
 
     private var overrideIntentObserver: NSKeyValueObservation? = nil
 
-    init(settingsManager: SettingsManager) {
-        self.settingsManager = settingsManager
+    init(settingsProvider: SettingsProvider) {
+        self.settingsProvider = settingsProvider
 
         self.overrideHistory.relevantTimeWindow = LoopCoreConstants.defaultCarbAbsorptionTimes.slow * 2
 
@@ -56,7 +56,7 @@ class TemporaryPresetsManager {
             return
         }
 
-        guard let preset = settingsManager.latestSettings.overridePresets.first(where: {$0.name.lowercased() == name}) else
+        guard let preset = settingsProvider.settings.overridePresets.first(where: {$0.name.lowercased() == name}) else
         {
             log.error("Override Intent: Unable to find override named '%s'", String(describing: name))
             return
@@ -135,7 +135,7 @@ class TemporaryPresetsManager {
 
     public func effectiveGlucoseTargetRangeSchedule(presumingMealEntry: Bool = false) -> GlucoseRangeSchedule?  {
 
-        guard let glucoseTargetRangeSchedule = settingsManager.latestSettings.glucoseTargetRangeSchedule else {
+        guard let glucoseTargetRangeSchedule = settingsProvider.settings.glucoseTargetRangeSchedule else {
             return nil
         }
 
@@ -184,7 +184,7 @@ class TemporaryPresetsManager {
     }
 
     private func makePreMealOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
-        guard let preMealTargetRange = settingsManager.latestSettings.preMealTargetRange else {
+        guard let preMealTargetRange = settingsProvider.settings.preMealTargetRange else {
             return nil
         }
         return TemporaryScheduleOverride(
@@ -203,7 +203,7 @@ class TemporaryPresetsManager {
     }
 
     public func legacyWorkoutOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
-        guard let legacyWorkoutTargetRange = settingsManager.latestSettings.workoutTargetRange else {
+        guard let legacyWorkoutTargetRange = settingsProvider.settings.workoutTargetRange else {
             return nil
         }
 
@@ -235,7 +235,7 @@ class TemporaryPresetsManager {
     }
 
     public var basalRateScheduleApplyingOverrideHistory: BasalRateSchedule? {
-        if let basalSchedule = settingsManager.latestSettings.basalRateSchedule {
+        if let basalSchedule = settingsProvider.settings.basalRateSchedule {
             return overrideHistory.resolvingRecentBasalSchedule(basalSchedule)
         } else {
             return nil
@@ -244,7 +244,7 @@ class TemporaryPresetsManager {
 
     /// The insulin sensitivity schedule, applying recent overrides relative to the current moment in time.
     public var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule? {
-        if let insulinSensitivitySchedule = settingsManager.latestSettings.insulinSensitivitySchedule {
+        if let insulinSensitivitySchedule = settingsProvider.settings.insulinSensitivitySchedule {
             return overrideHistory.resolvingRecentInsulinSensitivitySchedule(insulinSensitivitySchedule)
         } else {
             return nil
@@ -284,31 +284,31 @@ extension TemporaryPresetsManager : LoopSettingsProvider {
     }
     
     var carbRatioSchedule: LoopKit.CarbRatioSchedule? {
-        settingsManager.latestSettings.carbRatioSchedule
+        settingsProvider.settings.carbRatioSchedule
     }
 
     var preMealTargetRange: ClosedRange<HKQuantity>? {
-        settingsManager.latestSettings.preMealTargetRange
+        settingsProvider.settings.preMealTargetRange
     }
     
     var legacyWorkoutTargetRange: ClosedRange<HKQuantity>? {
-        settingsManager.latestSettings.workoutTargetRange
+        settingsProvider.settings.workoutTargetRange
     }
     
     var overridePresets: [LoopKit.TemporaryScheduleOverridePreset] {
-        settingsManager.latestSettings.overridePresets
+        settingsProvider.settings.overridePresets
     }
     
     var maximumBasalRatePerHour: Double? {
-        settingsManager.latestSettings.maximumBasalRatePerHour
+        settingsProvider.settings.maximumBasalRatePerHour
     }
     
     var maximumBolus: Double? {
-        settingsManager.latestSettings.maximumBolus
+        settingsProvider.settings.maximumBolus
     }
     
     var suspendThreshold: LoopKit.GlucoseThreshold? {
-        settingsManager.latestSettings.suspendThreshold
+        settingsProvider.settings.suspendThreshold
     }
     
 

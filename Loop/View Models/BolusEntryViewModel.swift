@@ -33,8 +33,11 @@ protocol BolusEntryViewModelDelegate: AnyObject {
 
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?) async throws -> StoredCarbEntry
     func saveGlucose(sample: NewGlucoseSample) async throws -> StoredGlucoseSample
-    func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date)
+    func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) async
     func enactBolus(units: Double, activationType: BolusActivationType) async throws
+
+    func generatePrediction(input: LoopAlgorithmInput) throws -> [PredictedGlucoseValue]
+    func runAlgorithm(input: LoopAlgorithmInput) -> LoopAlgorithmOutput
 
     var activeInsulin: InsulinValue? { get }
     var activeCarbs: CarbValue? { get }
@@ -386,7 +389,7 @@ final class BolusEntryViewModel: ObservableObject {
         dosingDecision.manualBolusRequested = amountToDeliver
 
         let now = self.now()
-        delegate.storeManualBolusDosingDecision(dosingDecision, withDate: now)
+        await delegate.storeManualBolusDosingDecision(dosingDecision, withDate: now)
 
         if amountToDeliver > 0 {
             savedPreMealOverride = nil

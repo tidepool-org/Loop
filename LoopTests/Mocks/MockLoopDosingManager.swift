@@ -10,19 +10,19 @@ import XCTest
 import Foundation
 @testable import Loop
 
-class MockLoopDosingManager: LoopDosingManagerProtocol {
-    var lastCancelActiveTempBasalReason: CancelActiveTempBasalReason?
-
-    var cancelExpectation: XCTestExpectation?
-
-    func receivedUnreliableCGMReading() async {
-    }
-    
-    func cancelActiveTempBasal(for reason: CancelActiveTempBasalReason) async {
-        lastCancelActiveTempBasalReason = reason
-        cancelExpectation?.fulfill()
-    }
-    
-    func loop() async {
-    }
-}
+//class MockLoopDosingManager: LoopDosingManagerProtocol {
+//    var lastCancelActiveTempBasalReason: CancelActiveTempBasalReason?
+//
+//    var cancelExpectation: XCTestExpectation?
+//
+//    func receivedUnreliableCGMReading() async {
+//    }
+//    
+//    func cancelActiveTempBasal(for reason: CancelActiveTempBasalReason) async {
+//        lastCancelActiveTempBasalReason = reason
+//        cancelExpectation?.fulfill()
+//    }
+//    
+//    func loop() async {
+//    }
+//}

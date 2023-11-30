@@ -24,9 +24,8 @@ class MockDosingDecisionStore: DosingDecisionStoreProtocol {
     
     var dosingDecisions: [StoredDosingDecision] = []
 
-    func storeDosingDecision(_ dosingDecision: StoredDosingDecision, completion: @escaping () -> Void) {
+    func storeDosingDecision(_ dosingDecision: StoredDosingDecision) async {
         dosingDecisions.append(dosingDecision)
-        completion()
     }
 
     func executeDosingDecisionQuery(fromQueryAnchor queryAnchor: LoopKit.DosingDecisionStore.QueryAnchor?, limit: Int, completion: @escaping (LoopKit.DosingDecisionStore.DosingDecisionQueryResult) -> Void) {

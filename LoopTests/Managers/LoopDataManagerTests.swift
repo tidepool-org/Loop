@@ -9,6 +9,7 @@
 import XCTest
 import HealthKit
 import LoopKit
+import HealthKit
 @testable import LoopCore
 @testable import Loop
 
@@ -117,8 +118,9 @@ class LoopDataManagerTests: XCTestCase {
         ], timeZone: .utcTimeZone)!
     }
     
-    // MARK: Mock stores
+    // MARK: Stores
     var now: Date!
+    let persistenceController = PersistenceController.mock()
     var dosingDecisionStore: MockDosingDecisionStore!
     var automaticDosingStatus: AutomaticDosingStatus!
     var loopDataManager: LoopDataManager!
@@ -127,7 +129,7 @@ class LoopDataManagerTests: XCTestCase {
                basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil,
                maxBolus: Double = 10,
                maxBasalRate: Double = 5.0,
-               dosingStrategy: AutomaticDosingStrategy = .tempBasalOnly)
+               dosingStrategy: AutomaticDosingStrategy = .tempBasalOnly) async
     {
         let basalRateSchedule = loadBasalRateScheduleFixture("basal_profile")
         let insulinSensitivitySchedule = InsulinSensitivitySchedule(
@@ -146,46 +148,45 @@ class LoopDataManagerTests: XCTestCase {
             timeZone: .utcTimeZone
         )!
 
-        let settings = LoopSettings(
+        
+
+        let settings = StoredSettings(
             dosingEnabled: false,
             glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
-            insulinSensitivitySchedule: insulinSensitivitySchedule,
-            basalRateSchedule: basalRateSchedule,
-            carbRatioSchedule: carbRatioSchedule,
             maximumBasalRatePerHour: maxBasalRate,
             maximumBolus: maxBolus,
             suspendThreshold: suspendThreshold,
+            basalRateSchedule: basalRateSchedule,
+            insulinSensitivitySchedule: insulinSensitivitySchedule,
+            carbRatioSchedule: carbRatioSchedule,
             automaticDosingStrategy: dosingStrategy
         )
-        
+        let settingsStore = SettingsStore(store: persistenceController, expireAfter: .days(5))
+        let settingsManager = SettingsManager(cacheStore: persistenceController, expireAfter: .days(5), alertMuter: AlertMuter())
+
         let doseStore = MockDoseStore(for: test)
-        doseStore.basalProfile = basalRateSchedule
-        doseStore.basalProfileApplyingOverrideHistory = doseStore.basalProfile
-        doseStore.sensitivitySchedule = insulinSensitivitySchedule
         let glucoseStore = MockGlucoseStore(for: test)
         let carbStore = MockCarbStore(for: test)
-        carbStore.insulinSensitivityScheduleApplyingOverrideHistory = insulinSensitivitySchedule
-        carbStore.carbRatioSchedule = carbRatioSchedule
-        
+
         let currentDate = glucoseStore.latestGlucose!.startDate
         now = currentDate
         
         dosingDecisionStore = MockDosingDecisionStore()
         automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
-        loopDataManager = LoopDataManager(
+
+        let temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsManager)
+        loopDataManager = await LoopDataManager(
             lastLoopCompleted: currentDate,
-            settings: settings,
-            overrideHistory: TemporaryScheduleOverrideHistory(),
-            analyticsServicesManager: AnalyticsServicesManager(),
-            localCacheDuration: .days(1),
+            temporaryPresetsManager: temporaryPresetsManager,
+            settingsManager: settingsManager,
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
             dosingDecisionStore: dosingDecisionStore,
-            latestStoredSettingsProvider: MockLatestStoredSettingsProvider(),
             now: { currentDate },
             automaticDosingStatus: automaticDosingStatus,
-            trustedTimeOffset: { 0 }
+            trustedTimeOffset: { 0 },
+            analyticsServicesManager: nil
         )
     }
     

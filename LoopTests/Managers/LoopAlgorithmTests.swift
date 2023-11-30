@@ -60,6 +60,7 @@ final class LoopAlgorithmTests: XCTestCase {
         let input = try! decoder.decode(LoopPredictionInput.self, from: try! Data(contentsOf: url))
 
         let prediction = LoopAlgorithm.generatePrediction(
+            start: input.glucoseHistory.last?.startDate ?? Date(),
             glucoseHistory: input.glucoseHistory,
             doses: input.doses,
             carbEntries: input.carbEntries,

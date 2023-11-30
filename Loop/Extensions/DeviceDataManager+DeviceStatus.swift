@@ -116,13 +116,7 @@ extension DeviceDataManager {
         } else {
             return .setupNewPump
         }
-    }
-    
-    var isGlucoseValueStale: Bool {
-        guard let latestGlucoseDataDate = glucoseStore.latestGlucose?.startDate else { return true }
-
-        return Date().timeIntervalSince(latestGlucoseDataDate) > LoopAlgorithm.inputDataRecencyInterval
-    }
+    }    
 }
 
 // MARK: - BluetoothState
