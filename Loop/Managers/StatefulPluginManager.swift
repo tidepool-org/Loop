@@ -123,3 +123,5 @@ extension StatefulPluginManager: StatefulPluggableDelegate {
         removeActiveStatefulPlugin(plugin)
     }
 }
+
+extension StatefulPluginManager: ActiveStatefulPluginsProvider { }

@@ -11,6 +11,7 @@ import UserNotifications
 import XCTest
 @testable import Loop
 
+@MainActor
 class AlertManagerTests: XCTestCase {
 
     static let mockManagerIdentifier = "mockManagerIdentifier"

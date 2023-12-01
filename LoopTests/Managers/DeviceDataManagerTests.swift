@@ -9,6 +9,7 @@
 import XCTest
 import HealthKit
 import LoopKit
+import LoopKitUI
 @testable import Loop
 
 final class DeviceDataManagerTests: XCTestCase {
@@ -18,7 +19,9 @@ final class DeviceDataManagerTests: XCTestCase {
     let pumpManager: MockPumpManager = MockPumpManager()
     let cgmManager: MockCGMManager = MockCGMManager()
     let trustedTimeChecker = MockTrustedTimeChecker()
+    let loopControlMock = LoopControlMock()
     var settingsManager: SettingsManager!
+
 
     class MockAlertIssuer: AlertIssuer {
         func issueAlert(_ alert: LoopKit.Alert) {
@@ -69,58 +72,10 @@ final class DeviceDataManagerTests: XCTestCase {
 
         let settingsStore = SettingsStore(store: persistenceController, expireAfter: .days(1))
 
-        let remoteDataServicesManager = RemoteDataServicesManager(
-            alertStore: alertStore,
-            carbStore: carbStore,
-            doseStore: doseStore,
-            dosingDecisionStore: dosingDecisionStore,
-            glucoseStore: glucoseStore,
-            cgmEventStore: cgmEventStore,
-            settingsStore: settingsStore,
-            overrideHistory: TemporaryScheduleOverrideHistory(),
-            insulinDeliveryStore: doseStore.insulinDeliveryStore
-        )
-
         self.settingsManager = SettingsManager(cacheStore: persistenceController, expireAfter: .days(1), alertMuter: AlertMuter())
-
-        let a = DeviceDataManager(
-            pluginManager: <#T##PluginManager#>,
-            alertManager: <#T##AlertManager#>,
-            settingsManager: <#T##SettingsManager#>,
-            healthStore: <#T##HKHealthStore#>,
-            carbStore: <#T##CarbStore#>,
-            doseStore: <#T##DoseStore#>,
-            glucoseStore: <#T##GlucoseStore#>,
-            cgmEventStore: <#T##CgmEventStore#>,
-            remoteDataServicesManager: <#T##RemoteDataServicesManager#>,
-            crashRecoveryManager: <#T##CrashRecoveryManager#>,
-            statefulPluginManager: <#T##StatefulPluginManager#>,
-            loopControl: <#T##LoopControl#>,
-            analyticsServicesManager: <#T##AnalyticsServicesManager#>,
-            servicesManager: <#T##ServicesManager#>,
-            bluetoothProvider: <#T##BluetoothProvider#>,
-            alertPresenter: <#T##AlertPresenter#>,
-            automaticDosingStatus: <#T##AutomaticDosingStatus#>,
-            cacheStore: <#T##PersistenceController#>,
-            localCacheDuration: <#T##TimeInterval#>,
-            displayGlucosePreference: <#T##DisplayGlucosePreference#>,
-            displayGlucoseUnitBroadcaster: <#T##DisplayGlucoseUnitBroadcaster#>
-        )
 
         let pluginManager = PluginManager()
         let analyticsServicesManager = AnalyticsServicesManager()
-
-        let servicesManager = ServicesManager(
-            pluginManager: pluginManager,
-            alertManager: alertManager,
-            analyticsServicesManager: analyticsServicesManager,
-            loggingServicesManager: LoggingServicesManager(),
-            remoteDataServicesManager: remoteDataServicesManager,
-            settingsManager: settingsManager,
-            servicesManagerDelegate: <#T##ServicesManagerDelegate#>,
-            servicesManagerDosingDelegate: <#T##ServicesManagerDosingDelegate#>
-        )
-        let statefulPluginManager = StatefulPluginManager(pluginManager: pluginManager, servicesManager: servi)
 
         deviceDataManager = DeviceDataManager(
             pluginManager: PluginManager(),
@@ -131,16 +86,19 @@ final class DeviceDataManagerTests: XCTestCase {
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             cgmEventStore: cgmEventStore,
-            remoteDataServicesManager: remoteDataServicesManager,
+            uploadEventListener: MockUploadEventListener(),
             crashRecoveryManager: CrashRecoveryManager(alertIssuer: MockAlertIssuer()),
-            statefulPluginManager: StatefulPluginManager(pluginManager: <#T##PluginManager#>, servicesManager: <#T##ServicesManager#>)
-            loopControl: LoopControlMock(),
+            loopControl: loopControlMock,
             analyticsServicesManager: AnalyticsServicesManager(),
+            activeServicesProvider: self,
+            activeStatefulPluginsProvider: self,
             bluetoothProvider: mockBluetoothProvider,
             alertPresenter: alertPresenter,
             automaticDosingStatus: automaticDosingStatus,
             cacheStore: persistenceController,
-            localCacheDuration: .days(1)
+            localCacheDuration: .days(1),
+            displayGlucosePreference: DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter),
+            displayGlucoseUnitBroadcaster: self
         )
 
         deviceDataManager.pumpManager = pumpManager
@@ -182,7 +140,7 @@ final class DeviceDataManagerTests: XCTestCase {
         )
         let limits = try await deviceDataManager.syncDeliveryLimits(deliveryLimits: newLimits)
 
-        XCTAssertNil(mockDosingManager.lastCancelActiveTempBasalReason)
+        XCTAssertNil(loopControlMock.lastCancelActiveTempBasalReason)
         XCTAssertTrue(mockDecisionStore.dosingDecisions.isEmpty)
         XCTAssertEqual(limits.maximumBasalRate, newLimits.maximumBasalRate)
     }
@@ -203,7 +161,7 @@ final class DeviceDataManagerTests: XCTestCase {
         )
         let limits = try await deviceDataManager.syncDeliveryLimits(deliveryLimits: newLimits)
 
-        XCTAssertEqual(.maximumBasalRateChanged, mockDosingManager.lastCancelActiveTempBasalReason)
+        XCTAssertEqual(.maximumBasalRateChanged, loopControlMock.lastCancelActiveTempBasalReason)
         XCTAssertEqual(limits.maximumBasalRate, newLimits.maximumBasalRate)
 
         XCTAssertEqual(mockDecisionStore.dosingDecisions.count, 1)
@@ -224,15 +182,15 @@ final class DeviceDataManagerTests: XCTestCase {
             settings.basalRateSchedule = BasalRateSchedule(dailyItems: [RepeatingScheduleValue(startTime: 0, value: 3.0)])
         }
 
-        mockDosingManager.cancelExpectation = expectation(description: "Temp basal cancel")
+        loopControlMock.cancelExpectation = expectation(description: "Temp basal cancel")
 
         cgmManager.delegateQueue.async {
             self.deviceDataManager.cgmManager(self.cgmManager, hasNew: .unreliableData)
         }
 
-        wait(for: [mockDosingManager.cancelExpectation!], timeout: 1)
+        wait(for: [loopControlMock.cancelExpectation!], timeout: 1)
 
-        XCTAssertEqual(mockDosingManager.lastCancelActiveTempBasalReason, .unreliableCGMData)
+        XCTAssertEqual(loopControlMock.lastCancelActiveTempBasalReason, .unreliableCGMData)
     }
 
     func testLoopGetStateRecommendsManualBolusWithoutMomentum() {
@@ -247,4 +205,29 @@ final class DeviceDataManagerTests: XCTestCase {
 //        XCTAssertEqual(recommendedBolus!.amount, 1.52, accuracy: 0.01)
     }
 
+}
+
+extension DeviceDataManagerTests: ActiveServicesProvider {
+    var activeServices: [LoopKit.Service] {
+        return []
+    }
+    
+
+}
+
+extension DeviceDataManagerTests: ActiveStatefulPluginsProvider {
+    var activeStatefulPlugins: [LoopKit.StatefulPluggable] {
+        return []
+    }
+}
+
+extension DeviceDataManagerTests: DisplayGlucoseUnitBroadcaster {
+    func addDisplayGlucoseUnitObserver(_ observer: LoopKitUI.DisplayGlucoseUnitObserver) {
+    }
+    
+    func removeDisplayGlucoseUnitObserver(_ observer: LoopKitUI.DisplayGlucoseUnitObserver) {
+    }
+    
+    func notifyObserversOfDisplayGlucoseUnitChange(to displayGlucoseUnit: HKUnit) {
+    }
 }

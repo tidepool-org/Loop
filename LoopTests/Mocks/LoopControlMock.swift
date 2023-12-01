@@ -6,16 +6,23 @@
 //  Copyright © 2023 LoopKit Authors. All rights reserved.
 //
 
+import XCTest
 import Foundation
 @testable import Loop
 
 
-struct LoopControlMock: LoopControl {
+class LoopControlMock: LoopControl {
     var lastLoopCompleted: Date?
-    
-    func cancelActiveTempBasal(for reason: Loop.CancelActiveTempBasalReason) async {
-    }
-    
+
+    var lastCancelActiveTempBasalReason: CancelActiveTempBasalReason?
+
+    var cancelExpectation: XCTestExpectation?
+
+    func cancelActiveTempBasal(for reason: CancelActiveTempBasalReason) async {
+        lastCancelActiveTempBasalReason = reason
+        cancelExpectation?.fulfill()
+    }    
+
     func loop() async {
     }
 }

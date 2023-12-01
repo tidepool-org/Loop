@@ -24,6 +24,11 @@ protocol ActiveServicesProvider {
     var activeServices: [Service] { get }
 }
 
+protocol ActiveStatefulPluginsProvider {
+    var activeStatefulPlugins: [StatefulPluggable] { get }
+}
+
+
 protocol UploadEventListener {
     func updateRemoteRecommendation()
     func triggerUpload(for triggeringType: RemoteDataType)
@@ -218,7 +223,7 @@ final class DeviceDataManager {
 
     private let settingsManager: SettingsManager
     private let crashRecoveryManager: CrashRecoveryManager
-    private let statefulPluginManager: StatefulPluginManager
+    private let activeStatefulPluginsProvider: ActiveStatefulPluginsProvider
 
     private(set) var pumpManagerHUDProvider: HUDProvider?
 
@@ -238,10 +243,10 @@ final class DeviceDataManager {
          cgmEventStore: CgmEventStore,
          uploadEventListener: UploadEventListener,
          crashRecoveryManager: CrashRecoveryManager,
-         statefulPluginManager: StatefulPluginManager,
          loopControl: LoopControl,
          analyticsServicesManager: AnalyticsServicesManager,
          activeServicesProvider: ActiveServicesProvider,
+         activeStatefulPluginsProvider: ActiveStatefulPluginsProvider,
          bluetoothProvider: BluetoothProvider,
          alertPresenter: AlertPresenter,
          automaticDosingStatus: AutomaticDosingStatus,
@@ -278,7 +283,7 @@ final class DeviceDataManager {
         self.automaticDosingStatus = automaticDosingStatus
         self.cacheStore = cacheStore
         self.crashRecoveryManager = crashRecoveryManager
-        self.statefulPluginManager = statefulPluginManager
+        self.activeStatefulPluginsProvider = activeStatefulPluginsProvider
         self.uploadEventListener = uploadEventListener
         self.activeServicesProvider = activeServicesProvider
         self.displayGlucosePreference = displayGlucosePreference
@@ -695,7 +700,7 @@ extension DeviceDataManager {
             plugin.initializationComplete(for: allActivePlugins)
         }
         
-        for plugin in statefulPluginManager.activeStatefulPlugins {
+        for plugin in activeStatefulPluginsProvider.activeStatefulPlugins {
             plugin.initializationComplete(for: allActivePlugins)
         }
         
@@ -711,7 +716,7 @@ extension DeviceDataManager {
     var allActivePlugins: [Pluggable] {
         var allActivePlugins: [Pluggable] = activeServicesProvider.activeServices
         
-        for plugin in statefulPluginManager.activeStatefulPlugins {
+        for plugin in activeStatefulPluginsProvider.activeStatefulPlugins {
             if !allActivePlugins.contains(where: { $0.pluginIdentifier == plugin.pluginIdentifier }) {
                 allActivePlugins.append(plugin)
             }

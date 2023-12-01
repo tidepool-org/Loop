@@ -444,7 +444,6 @@
 		C18859A02AF1612B0010F21F /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C188599F2AF1612B0010F21F /* PersistenceController.swift */; };
 		C18859A22AF165130010F21F /* MockPumpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18859A12AF165130010F21F /* MockPumpManager.swift */; };
 		C18859A42AF165330010F21F /* MockCGMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18859A32AF165330010F21F /* MockCGMManager.swift */; };
-		C18859A62AF1A1C00010F21F /* MockLoopDosingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18859A52AF1A1C00010F21F /* MockLoopDosingManager.swift */; };
 		C18859A82AF292D90010F21F /* MockTrustedTimeChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18859A72AF292D90010F21F /* MockTrustedTimeChecker.swift */; };
 		C18859AC2AF29BE50010F21F /* TemporaryPresetsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18859AB2AF29BE50010F21F /* TemporaryPresetsManager.swift */; };
 		C19008FE25225D3900721625 /* SimpleBolusCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C19008FD25225D3900721625 /* SimpleBolusCalculator.swift */; };
@@ -478,6 +477,7 @@
 		C1D6EEA02A06C7270047DE5C /* MKRingProgressView in Frameworks */ = {isa = PBXBuildFile; productRef = C1D6EE9F2A06C7270047DE5C /* MKRingProgressView */; };
 		C1DA434F2B164C6C00CBD33F /* MockSettingsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DA434E2B164C6C00CBD33F /* MockSettingsProvider.swift */; };
 		C1DA43532B19310A00CBD33F /* LoopControlMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DA43522B19310A00CBD33F /* LoopControlMock.swift */; };
+		C1DA43552B193BCB00CBD33F /* MockUploadEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DA43542B193BCB00CBD33F /* MockUploadEventListener.swift */; };
 		C1DE5D23251BFC4D00439E49 /* SimpleBolusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DE5D22251BFC4D00439E49 /* SimpleBolusView.swift */; };
 		C1E2773E224177C000354103 /* ClockKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1E2773D224177C000354103 /* ClockKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		C1E3862628247C6100F561A4 /* StoredLoopNotRunningNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1E3862428247B7100F561A4 /* StoredLoopNotRunningNotification.swift */; };
@@ -1467,7 +1467,6 @@
 		C188599F2AF1612B0010F21F /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		C18859A12AF165130010F21F /* MockPumpManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPumpManager.swift; sourceTree = "<group>"; };
 		C18859A32AF165330010F21F /* MockCGMManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCGMManager.swift; sourceTree = "<group>"; };
-		C18859A52AF1A1C00010F21F /* MockLoopDosingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockLoopDosingManager.swift; sourceTree = "<group>"; };
 		C18859A72AF292D90010F21F /* MockTrustedTimeChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockTrustedTimeChecker.swift; sourceTree = "<group>"; };
 		C18859AB2AF29BE50010F21F /* TemporaryPresetsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryPresetsManager.swift; sourceTree = "<group>"; };
 		C18886E629830A5E004C982D /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -1559,6 +1558,7 @@
 		C1D70F7A2A914F71009FE129 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C1DA434E2B164C6C00CBD33F /* MockSettingsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSettingsProvider.swift; sourceTree = "<group>"; };
 		C1DA43522B19310A00CBD33F /* LoopControlMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopControlMock.swift; sourceTree = "<group>"; };
+		C1DA43542B193BCB00CBD33F /* MockUploadEventListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockUploadEventListener.swift; sourceTree = "<group>"; };
 		C1DA986B2843B6F9001D04CC /* PersistedProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistedProperty.swift; sourceTree = "<group>"; };
 		C1DE5D22251BFC4D00439E49 /* SimpleBolusView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleBolusView.swift; sourceTree = "<group>"; };
 		C1E2773D224177C000354103 /* ClockKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ClockKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS.sdk/System/Library/Frameworks/ClockKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -2792,12 +2792,12 @@
 			children = (
 				C188599D2AF15FAB0010F21F /* AlertMocks.swift */,
 				C18859A32AF165330010F21F /* MockCGMManager.swift */,
-				C18859A52AF1A1C00010F21F /* MockLoopDosingManager.swift */,
 				C18859A12AF165130010F21F /* MockPumpManager.swift */,
 				C18859A72AF292D90010F21F /* MockTrustedTimeChecker.swift */,
 				C188599F2AF1612B0010F21F /* PersistenceController.swift */,
 				C1DA434E2B164C6C00CBD33F /* MockSettingsProvider.swift */,
 				C1DA43522B19310A00CBD33F /* LoopControlMock.swift */,
+				C1DA43542B193BCB00CBD33F /* MockUploadEventListener.swift */,
 			);
 			path = Mocks;
 			sourceTree = "<group>";
@@ -4006,7 +4006,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C18859A62AF1A1C00010F21F /* MockLoopDosingManager.swift in Sources */,
 				A9DF02CB24F72B9E00B7C988 /* CriticalEventLogTests.swift in Sources */,
 				1D80313D24746274002810DF /* AlertStoreTests.swift in Sources */,
 				C1777A6625A125F100595963 /* ManualEntryDoseViewModelTests.swift in Sources */,
@@ -4028,6 +4027,7 @@
 				A9F5F1F5251050EC00E7C8A4 /* ZipArchiveTests.swift in Sources */,
 				E9B3552D293592B40076AB04 /* MealDetectionManagerTests.swift in Sources */,
 				E950CA9129002D9000B5B692 /* LoopDataManagerDosingTests.swift in Sources */,
+				C1DA43552B193BCB00CBD33F /* MockUploadEventListener.swift in Sources */,
 				B4CAD8792549D2540057946B /* LoopCompletionFreshnessTests.swift in Sources */,
 				1D8D55BC252274650044DBB6 /* BolusEntryViewModelTests.swift in Sources */,
 				C188599E2AF15FAB0010F21F /* AlertMocks.swift in Sources */,
