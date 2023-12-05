@@ -20,7 +20,7 @@ import SwiftUI
 protocol ManualDoseViewModelDelegate: AnyObject {
     var algorithmDisplayState: AlgorithmDisplayState { get async }
     var pumpInsulinType: InsulinType? { get }
-    var settings: LoopSettings { get }
+    var settings: StoredSettings { get }
     var scheduleOverride: TemporaryScheduleOverride? { get }
 
     func addManuallyEnteredDose(startDate: Date, units: Double, insulinType: InsulinType?) async

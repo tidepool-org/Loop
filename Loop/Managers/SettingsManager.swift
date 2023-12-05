@@ -259,6 +259,29 @@ class SettingsManager {
     func purgeHistoricalSettingsObjects(completion: @escaping (Error?) -> Void) {
         settingsStore.purgeHistoricalSettingsObjects(completion: completion)
     }
+
+    // MARK: Historical queries
+
+    func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>] {
+        try await settingsStore.getBasalHistory(startDate: startDate, endDate: endDate)
+    }
+
+    func getCarbRatioHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>] {
+        try await settingsStore.getCarbRatioHistory(startDate: startDate, endDate: endDate)
+    }
+
+    func getInsulinSensitivityHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<HKQuantity>] {
+        try await settingsStore.getInsulinSensitivityHistory(startDate: startDate, endDate: endDate)
+    }
+
+    func getTargetRangeHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<ClosedRange<HKQuantity>>] {
+        try await settingsStore.getTargetRangeHistory(startDate: startDate, endDate: endDate)
+    }
+
+    func getDosingLimits(at date: Date) async throws -> DosingLimits {
+        try await settingsStore.getDosingLimits(at: date)
+    }
+
 }
 
 extension SettingsManager {
@@ -295,9 +318,14 @@ extension SettingsManager {
     }
 }
 
-// Users of LoopSettingsProvider should eventually be converted to this.
 protocol SettingsProvider {
     var settings: StoredSettings { get }
+
+    func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>]
+    func getCarbRatioHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>]
+    func getInsulinSensitivityHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<HKQuantity>]
+    func getTargetRangeHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<ClosedRange<HKQuantity>>]
+    func getDosingLimits(at date: Date) async throws -> DosingLimits
 }
 
 extension SettingsManager: SettingsProvider {}

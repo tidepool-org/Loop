@@ -24,98 +24,104 @@ class LoopSettingsTests: XCTestCase {
         )
         return settings
     }()
+
+    // TODO: Implement in presets manager tests
+//    func testPreMealOverride() {
+//        var settings = self.settings
+//        let preMealStart = Date()
+//        settings.enablePreMealOverride(at: preMealStart, for: 1 /* hour */ * 60 * 60)
+//        let actualPreMealRange = settings.effectiveGlucoseTargetRangeSchedule()?.quantityRange(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
+//        XCTAssertEqual(preMealRange, actualPreMealRange)
+//    }
     
-    func testPreMealOverride() {
-        var settings = self.settings
-        let preMealStart = Date()
-        settings.enablePreMealOverride(at: preMealStart, for: 1 /* hour */ * 60 * 60)
-        let actualPreMealRange = settings.effectiveGlucoseTargetRangeSchedule()?.quantityRange(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
-        XCTAssertEqual(preMealRange, actualPreMealRange)
-    }
-    
-    func testPreMealOverrideWithPotentialCarbEntry() {
-        var settings = self.settings
-        let preMealStart = Date()
-        settings.enablePreMealOverride(at: preMealStart, for: 1 /* hour */ * 60 * 60)
-        let actualRange = settings.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: true)?.value(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
-        XCTAssertEqual(targetRange, actualRange)
-    }
+    // TODO: Implement in presets manager tests
+//    func testPreMealOverrideWithPotentialCarbEntry() {
+//        var settings = self.settings
+//        let preMealStart = Date()
+//        settings.enablePreMealOverride(at: preMealStart, for: 1 /* hour */ * 60 * 60)
+//        let actualRange = settings.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: true)?.value(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
+//        XCTAssertEqual(targetRange, actualRange)
+//    }
 
-    func testScheduleOverride() {
-        var settings = self.settings
-        let overrideStart = Date()
-        let overrideTargetRange = DoubleRange(minValue: 130, maxValue: 150)
-        let override = TemporaryScheduleOverride(
-            context: .custom,
-            settings: TemporaryScheduleOverrideSettings(
-                unit: .milligramsPerDeciliter,
-                targetRange: overrideTargetRange
-            ),
-            startDate: overrideStart,
-            duration: .finite(3 /* hours */ * 60 * 60),
-            enactTrigger: .local,
-            syncIdentifier: UUID()
-        )
-        settings.scheduleOverride = override
-        let actualOverrideRange = settings.effectiveGlucoseTargetRangeSchedule()?.value(at: overrideStart.addingTimeInterval(30 /* minutes */ * 60))
-        XCTAssertEqual(actualOverrideRange, overrideTargetRange)
-    }
+    // TODO: Implement in presets manager tests
+//    func testScheduleOverride() {
+//        var settings = self.settings
+//        let overrideStart = Date()
+//        let overrideTargetRange = DoubleRange(minValue: 130, maxValue: 150)
+//        let override = TemporaryScheduleOverride(
+//            context: .custom,
+//            settings: TemporaryScheduleOverrideSettings(
+//                unit: .milligramsPerDeciliter,
+//                targetRange: overrideTargetRange
+//            ),
+//            startDate: overrideStart,
+//            duration: .finite(3 /* hours */ * 60 * 60),
+//            enactTrigger: .local,
+//            syncIdentifier: UUID()
+//        )
+//        settings.scheduleOverride = override
+//        let actualOverrideRange = settings.effectiveGlucoseTargetRangeSchedule()?.value(at: overrideStart.addingTimeInterval(30 /* minutes */ * 60))
+//        XCTAssertEqual(actualOverrideRange, overrideTargetRange)
+//    }
 
-    func testBothPreMealAndScheduleOverride() {
-        var settings = self.settings
-        let preMealStart = Date()
-        settings.enablePreMealOverride(at: preMealStart, for: 1 /* hour */ * 60 * 60)
+    // TODO: Implement in presets manager tests
+//    func testBothPreMealAndScheduleOverride() {
+//        var settings = self.settings
+//        let preMealStart = Date()
+//        settings.enablePreMealOverride(at: preMealStart, for: 1 /* hour */ * 60 * 60)
+//
+//        let overrideStart = Date()
+//        let overrideTargetRange = DoubleRange(minValue: 130, maxValue: 150)
+//        let override = TemporaryScheduleOverride(
+//            context: .custom,
+//            settings: TemporaryScheduleOverrideSettings(
+//                unit: .milligramsPerDeciliter,
+//                targetRange: overrideTargetRange
+//            ),
+//            startDate: overrideStart,
+//            duration: .finite(3 /* hours */ * 60 * 60),
+//            enactTrigger: .local,
+//            syncIdentifier: UUID()
+//        )
+//        settings.scheduleOverride = override
+//
+//        let actualPreMealRange = settings.effectiveGlucoseTargetRangeSchedule()?.quantityRange(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
+//        XCTAssertEqual(actualPreMealRange, preMealRange)
+//
+//        // The pre-meal range should be projected into the future, despite the simultaneous schedule override
+//        let preMealRangeDuringOverride = settings.effectiveGlucoseTargetRangeSchedule()?.quantityRange(at: preMealStart.addingTimeInterval(2 /* hours */ * 60 * 60))
+//        XCTAssertEqual(preMealRangeDuringOverride, preMealRange)
+//    }
 
-        let overrideStart = Date()
-        let overrideTargetRange = DoubleRange(minValue: 130, maxValue: 150)
-        let override = TemporaryScheduleOverride(
-            context: .custom,
-            settings: TemporaryScheduleOverrideSettings(
-                unit: .milligramsPerDeciliter,
-                targetRange: overrideTargetRange
-            ),
-            startDate: overrideStart,
-            duration: .finite(3 /* hours */ * 60 * 60),
-            enactTrigger: .local,
-            syncIdentifier: UUID()
-        )
-        settings.scheduleOverride = override
+    // TODO: Implement in presets manager tests
 
-        let actualPreMealRange = settings.effectiveGlucoseTargetRangeSchedule()?.quantityRange(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
-        XCTAssertEqual(actualPreMealRange, preMealRange)
-
-        // The pre-meal range should be projected into the future, despite the simultaneous schedule override
-        let preMealRangeDuringOverride = settings.effectiveGlucoseTargetRangeSchedule()?.quantityRange(at: preMealStart.addingTimeInterval(2 /* hours */ * 60 * 60))
-        XCTAssertEqual(preMealRangeDuringOverride, preMealRange)
-    }
-
-    func testScheduleOverrideWithExpiredPreMealOverride() {
-        var settings = self.settings
-        settings.preMealOverride = TemporaryScheduleOverride(
-            context: .preMeal,
-            settings: TemporaryScheduleOverrideSettings(targetRange: preMealRange),
-            startDate: Date(timeIntervalSinceNow: -2 /* hours */ * 60 * 60),
-            duration: .finite(1 /* hours */ * 60 * 60),
-            enactTrigger: .local,
-            syncIdentifier: UUID()
-        )
-
-        let overrideStart = Date()
-        let overrideTargetRange = DoubleRange(minValue: 130, maxValue: 150)
-        let override = TemporaryScheduleOverride(
-            context: .custom,
-            settings: TemporaryScheduleOverrideSettings(
-                unit: .milligramsPerDeciliter,
-                targetRange: overrideTargetRange
-            ),
-            startDate: overrideStart,
-            duration: .finite(3 /* hours */ * 60 * 60),
-            enactTrigger: .local,
-            syncIdentifier: UUID()
-        )
-        settings.scheduleOverride = override
-
-        let actualOverrideRange = settings.effectiveGlucoseTargetRangeSchedule()?.value(at: overrideStart.addingTimeInterval(2 /* hours */ * 60 * 60))
-        XCTAssertEqual(actualOverrideRange, overrideTargetRange)
-    }
+//    func testScheduleOverrideWithExpiredPreMealOverride() {
+//        var settings = self.settings
+//        settings.preMealOverride = TemporaryScheduleOverride(
+//            context: .preMeal,
+//            settings: TemporaryScheduleOverrideSettings(targetRange: preMealRange),
+//            startDate: Date(timeIntervalSinceNow: -2 /* hours */ * 60 * 60),
+//            duration: .finite(1 /* hours */ * 60 * 60),
+//            enactTrigger: .local,
+//            syncIdentifier: UUID()
+//        )
+//
+//        let overrideStart = Date()
+//        let overrideTargetRange = DoubleRange(minValue: 130, maxValue: 150)
+//        let override = TemporaryScheduleOverride(
+//            context: .custom,
+//            settings: TemporaryScheduleOverrideSettings(
+//                unit: .milligramsPerDeciliter,
+//                targetRange: overrideTargetRange
+//            ),
+//            startDate: overrideStart,
+//            duration: .finite(3 /* hours */ * 60 * 60),
+//            enactTrigger: .local,
+//            syncIdentifier: UUID()
+//        )
+//        settings.scheduleOverride = override
+//
+//        let actualOverrideRange = settings.effectiveGlucoseTargetRangeSchedule()?.value(at: overrideStart.addingTimeInterval(2 /* hours */ * 60 * 60))
+//        XCTAssertEqual(actualOverrideRange, overrideTargetRange)
+//    }
 }

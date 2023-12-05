@@ -95,6 +95,7 @@ extension ISO8601DateFormatter {
     }
 }
 
+@MainActor
 class LoopDataManagerTests: XCTestCase {
     // MARK: Constants for testing
     let retrospectiveCorrectionEffectDuration = TimeInterval(hours: 1)
@@ -124,7 +125,8 @@ class LoopDataManagerTests: XCTestCase {
     var dosingDecisionStore: MockDosingDecisionStore!
     var automaticDosingStatus: AutomaticDosingStatus!
     var loopDataManager: LoopDataManager!
-    
+    var deliveryDelegate: MockDeliveryDelegate!
+
     func setUp(for test: DosingTestScenario,
                basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil,
                maxBolus: Double = 10,
@@ -148,8 +150,6 @@ class LoopDataManagerTests: XCTestCase {
             timeZone: .utcTimeZone
         )!
 
-        
-
         let settings = StoredSettings(
             dosingEnabled: false,
             glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
@@ -161,8 +161,8 @@ class LoopDataManagerTests: XCTestCase {
             carbRatioSchedule: carbRatioSchedule,
             automaticDosingStrategy: dosingStrategy
         )
-        let settingsStore = SettingsStore(store: persistenceController, expireAfter: .days(5))
-        let settingsManager = SettingsManager(cacheStore: persistenceController, expireAfter: .days(5), alertMuter: AlertMuter())
+
+        let settingsProvider = MockSettingsProvider(settings: settings)
 
         let doseStore = MockDoseStore(for: test)
         let glucoseStore = MockGlucoseStore(for: test)
@@ -174,11 +174,12 @@ class LoopDataManagerTests: XCTestCase {
         dosingDecisionStore = MockDosingDecisionStore()
         automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
 
-        let temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsManager)
-        loopDataManager = await LoopDataManager(
+        let temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsProvider)
+
+        loopDataManager = LoopDataManager(
             lastLoopCompleted: currentDate,
             temporaryPresetsManager: temporaryPresetsManager,
-            settingsManager: settingsManager,
+            settingsProvider: settingsProvider,
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
@@ -188,6 +189,13 @@ class LoopDataManagerTests: XCTestCase {
             trustedTimeOffset: { 0 },
             analyticsServicesManager: nil
         )
+
+        deliveryDelegate = MockDeliveryDelegate()
+        loopDataManager.deliveryDelegate = deliveryDelegate
+
+        deliveryDelegate.basalDeliveryState = basalDeliveryState
+
+        await loopDataManager.updateDisplayState()
     }
     
     override func tearDownWithError() throws {

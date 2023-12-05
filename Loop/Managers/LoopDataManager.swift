@@ -70,6 +70,23 @@ final class LoopDataManager {
     // Represents the current state of the loop algorithm for display
     var displayState = AlgorithmDisplayState()
 
+    // Display state convenience accessors
+    var predictedGlucose: [PredictedGlucoseValue]? {
+        displayState.output?.predictedGlucose
+    }
+
+    var tempBasalRecommendation: TempBasalRecommendation? {
+        displayState.output?.recommendation?.automatic?.basalAdjustment
+    }
+
+    var automaticBolusRecommendation: Double? {
+        displayState.output?.recommendation?.automatic?.bolusUnits
+    }
+
+    var automaticRecommendation: AutomaticDoseRecommendation? {
+        displayState.output?.recommendation?.automatic
+    }
+
     private(set) var lastLoopCompleted: Date?
 
     var deliveryDelegate: DeliveryDelegate?
@@ -78,7 +95,7 @@ final class LoopDataManager {
     let carbStore: CarbStoreProtocol
     let doseStore: DoseStoreProtocol
     let temporaryPresetsManager: TemporaryPresetsManager
-    let settingsManager: SettingsManager
+    let settingsProvider: SettingsProvider
     let dosingDecisionStore: DosingDecisionStoreProtocol
     let glucoseStore: GlucoseStoreProtocol
 
@@ -110,11 +127,12 @@ final class LoopDataManager {
         doseStore.lastReservoirValue
     }
 
+    lazy private var cancellables = Set<AnyCancellable>()
 
     init(
         lastLoopCompleted: Date?,
         temporaryPresetsManager: TemporaryPresetsManager,
-        settingsManager: SettingsManager,
+        settingsProvider: SettingsProvider,
         doseStore: DoseStoreProtocol,
         glucoseStore: GlucoseStoreProtocol,
         carbStore: CarbStoreProtocol,
@@ -127,7 +145,7 @@ final class LoopDataManager {
 
         self.lastLoopCompleted = lastLoopCompleted
         self.temporaryPresetsManager = temporaryPresetsManager
-        self.settingsManager = settingsManager
+        self.settingsProvider = settingsProvider
         self.doseStore = doseStore
         self.glucoseStore = glucoseStore
         self.carbStore = carbStore
@@ -183,6 +201,27 @@ final class LoopDataManager {
             self.notify(forChange: .forecast)
         }
 
+        // Turn off preMeal when going into closed loop off mode
+        // Cancel any active temp basal when going into closed loop off mode
+        // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
+        automaticDosingStatus.$automaticDosingEnabled
+            .removeDuplicates()
+            .dropFirst()
+            .sink {
+                if !$0 {
+                    self.temporaryPresetsManager.clearOverride(matching: .preMeal)
+                    Task {
+                        await self.cancelActiveTempBasal(for: .automaticDosingDisabled)
+                    }
+                } else {
+                    Task {
+                        await self.updateDisplayState()
+                    }
+                }
+            }
+            .store(in: &cancellables)
+
+
     }
 
     // MARK: - Calculation state
@@ -220,7 +259,7 @@ final class LoopDataManager {
 
         dosesStart = doses.map { $0.startDate }.min() ?? dosesStart
 
-        let basal = try await settingsManager.settingsStore.getBasalHistory(startDate: dosesStart, endDate: baseTime)
+        let basal = try await settingsProvider.getBasalHistory(startDate: dosesStart, endDate: baseTime)
 
         let forecastEndTime = baseTime.addingTimeInterval(InsulinMath.defaultInsulinActivityDuration).dateCeiledToTimeInterval(.minutes(GlucoseMath.defaultDelta))
 
@@ -234,7 +273,7 @@ final class LoopDataManager {
             $0.userCreatedDate ?? $0.startDate < baseTime
         }
 
-        let carbRatio = try await settingsManager.settingsStore.getCarbRatioHistory(
+        let carbRatio = try await settingsProvider.getCarbRatioHistory(
             startDate: carbsStart,
             endDate: forecastEndTime
         )
@@ -243,11 +282,11 @@ final class LoopDataManager {
 
         let sensitivityStart = min(carbsStart, dosesStart)
 
-        let sensitivity = try await settingsManager.settingsStore.getInsulinSensitivityHistory(startDate: sensitivityStart, endDate: forecastEndTime)
+        let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(startDate: sensitivityStart, endDate: forecastEndTime)
 
-        let target = try await settingsManager.settingsStore.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
+        let target = try await settingsProvider.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
 
-        let dosingLimits = try await settingsManager.settingsStore.getDosingLimits(at: baseTime)
+        let dosingLimits = try await settingsProvider.getDosingLimits(at: baseTime)
 
         guard let maxBolus = dosingLimits.maxBolus else {
             throw LoopError.configurationError(.maximumBolus)
@@ -366,7 +405,7 @@ final class LoopDataManager {
         let recommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel)
 
         var dosingDecision = StoredDosingDecision(reason: reason.rawValue)
-        dosingDecision.settings = StoredDosingDecision.Settings(settingsManager.settings)
+        dosingDecision.settings = StoredDosingDecision.Settings(settingsProvider.settings)
         dosingDecision.automaticDoseRecommendation = recommendation
 
         do {
@@ -402,7 +441,7 @@ final class LoopDataManager {
 
             let startDate = input.predictionStart
 
-            let dosingStrategy = settingsManager.settings.automaticDosingStrategy
+            let dosingStrategy = settingsProvider.settings.automaticDosingStrategy
             input.recommendationType = dosingStrategy.recommendationType
 
             let latestGlucose = input.glucoseHistory.last!
@@ -532,7 +571,6 @@ extension LoopDataManager: PersistenceControllerDelegate {
 
 
 // MARK: - Intake
-@MainActor
 extension LoopDataManager {
     /// Adds and stores glucose samples
     ///
@@ -587,7 +625,7 @@ extension LoopDataManager {
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) async {
         let dosingDecision = StoredDosingDecision(date: date,
                                                   reason: bolusDosingDecision.reason.rawValue,
-                                                  settings: StoredDosingDecision.Settings(settingsManager.settings),
+                                                  settings: StoredDosingDecision.Settings(settingsProvider.settings),
                                                   scheduleOverride: bolusDosingDecision.scheduleOverride,
                                                   controllerStatus: UIDevice.current.controllerStatus,
                                                   lastReservoirValue: StoredDosingDecision.LastReservoirValue(doseStore.lastReservoirValue),
@@ -619,40 +657,6 @@ extension LoopDataManager {
         )
     }
 
-    /// Computes amount of insulin from boluses that have been issued and not confirmed, and
-    /// remaining insulin delivery from temporary basal rate adjustments above scheduled rate
-    /// that are still in progress.
-    ///
-    /// - Returns: The amount of pending insulin, in units
-    /// - Throws: LoopError.configurationError
-    private func getPendingInsulin() throws -> Double {
-//        dispatchPrecondition(condition: .onQueue(dataAccessQueue))
-//
-//        guard let basalRates = basalRateScheduleApplyingOverrideHistory else {
-//            throw LoopError.configurationError(.basalRateSchedule)
-//        }
-//
-//        let pendingTempBasalInsulin: Double
-//        let date = now()
-//
-//        if let basalDeliveryState = basalDeliveryState, case .tempBasal(let lastTempBasal) = basalDeliveryState, lastTempBasal.endDate > date {
-//            let normalBasalRate = basalRates.value(at: date)
-//            let remainingTime = lastTempBasal.endDate.timeIntervalSince(date)
-//            let remainingUnits = (lastTempBasal.unitsPerHour - normalBasalRate) * remainingTime.hours
-//
-//            pendingTempBasalInsulin = max(0, remainingUnits)
-//        } else {
-//            pendingTempBasalInsulin = 0
-//        }
-//
-//        let pendingBolusAmount: Double = lastRequestedBolus?.programmedUnits ?? 0
-//
-//        // All outstanding potential insulin delivery
-//        return pendingTempBasalInsulin + pendingBolusAmount
-        return 0
-    }
-
-
     /// Estimate glucose effects of suspending insulin delivery over duration of insulin action starting at the specified date
     func insulinDeliveryEffect(at date: Date, insulinType: InsulinType) async throws -> [GlucoseEffect] {
         let startSuspend = date
@@ -661,8 +665,8 @@ extension LoopDataManager {
 
         var suspendDoses: [DoseEntry] = []
 
-        let basal = try await settingsManager.settingsStore.getBasalHistory(startDate: startSuspend, endDate: endSuspend)
-        let sensitivity = try await settingsManager.settingsStore.getInsulinSensitivityHistory(startDate: startSuspend, endDate: endSuspend)
+        let basal = try await settingsProvider.getBasalHistory(startDate: startSuspend, endDate: endSuspend)
+        let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(startDate: startSuspend, endDate: endSuspend)
 
         // Iterate over basal entries during suspension of insulin delivery
         for (index, basalItem) in basal.enumerated() {
@@ -702,7 +706,7 @@ extension LoopDataManager {
         var dosingDecision = BolusDosingDecision(for: .simpleBolus)
 
         guard let iob = displayState.activeInsulin?.value,
-              let suspendThreshold = settingsManager.settings.suspendThreshold?.quantity,
+              let suspendThreshold = settingsProvider.settings.suspendThreshold?.quantity,
               let carbRatioSchedule = temporaryPresetsManager.carbRatioScheduleApplyingOverrideHistory,
               let correctionRangeSchedule = temporaryPresetsManager.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: mealCarbs != nil),
               let sensitivitySchedule = temporaryPresetsManager.insulinSensitivityScheduleApplyingOverrideHistory
@@ -880,50 +884,12 @@ private extension StoredDosingDecision.Settings {
     }
 }
 
-// MARK: - Simulated Core Data
-
-
-//extension LoopDataManager {
-//    public var therapySettings: TherapySettings {
-//        get {
-//            let settings = settings
-//            return TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
-//                            correctionRangeOverrides: CorrectionRangeOverrides(preMeal: settings.preMealTargetRange, workout: settings.legacyWorkoutTargetRange),
-//                            overridePresets: settings.overridePresets,
-//                            maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
-//                            maximumBolus: settings.maximumBolus,
-//                            suspendThreshold: settings.suspendThreshold,
-//                            insulinSensitivitySchedule: settings.insulinSensitivitySchedule,
-//                            carbRatioSchedule: settings.carbRatioSchedule,
-//                            basalRateSchedule: settings.basalRateSchedule,
-//                            defaultRapidActingModel: settings.defaultRapidActingModel)
-//        }
-//        
-//        set {
-//            mutateSettings { settings in
-//                settings.defaultRapidActingModel = newValue.defaultRapidActingModel
-//                settings.insulinSensitivitySchedule = newValue.insulinSensitivitySchedule
-//                settings.carbRatioSchedule = newValue.carbRatioSchedule
-//                settings.basalRateSchedule = newValue.basalRateSchedule
-//                settings.glucoseTargetRangeSchedule = newValue.glucoseTargetRangeSchedule
-//                settings.preMealTargetRange = newValue.correctionRangeOverrides?.preMeal
-//                settings.legacyWorkoutTargetRange = newValue.correctionRangeOverrides?.workout
-//                settings.suspendThreshold = newValue.suspendThreshold
-//                settings.maximumBolus = newValue.maximumBolus
-//                settings.maximumBasalRatePerHour = newValue.maximumBasalRatePerHour
-//                settings.overridePresets = newValue.overridePresets ?? []
-//            }
-//        }
-//    }
-//}
-
-@MainActor
 extension LoopDataManager: ServicesManagerDelegate {
     
     // Remote Overrides
     func enactOverride(name: String, duration: TemporaryScheduleOverride.Duration?, remoteAddress: String) async throws {
         
-        guard let preset = settingsManager.settings.overridePresets.first(where: { $0.name == name }) else {
+        guard let preset = settingsProvider.settings.overridePresets.first(where: { $0.name == name }) else {
             throw EnactOverrideError.unknownPreset(name)
         }
         
@@ -1028,11 +994,11 @@ extension LoopDataManager: SimpleBolusViewModelDelegate {
     }
 
     var maximumBolus: Double? {
-        settingsManager.settings.maximumBolus
+        settingsProvider.settings.maximumBolus
     }
     
     var suspendThreshold: HKQuantity? {
-        settingsManager.settings.suspendThreshold?.quantity
+        settingsProvider.settings.suspendThreshold?.quantity
     }
     
     func enactBolus(units: Double, activationType: BolusActivationType) async throws {
@@ -1088,9 +1054,9 @@ extension LoopDataManager: ManualDoseViewModelDelegate {
     var pumpInsulinType: InsulinType? {
         deliveryDelegate?.pumpInsulinType
     }
-    
-    var settings: LoopSettings {
-        settingsManager.loopSettings
+
+    var settings: StoredSettings {
+        settingsProvider.settings
     }
     
     var scheduleOverride: TemporaryScheduleOverride? {
@@ -1167,7 +1133,7 @@ extension LoopDataManager: DiagnosticReportGenerator {
 
         let entries: [String] = [
             "## LoopDataManager",
-            "settings: \(String(reflecting: settingsManager.loopSettings))",
+            "settings: \(String(reflecting: settingsProvider.settings))",
 
             "insulinCounteractionEffects: [",
             "* GlucoseEffectVelocity(start, end, mg/dL/min)",

@@ -157,16 +157,3 @@ extension LoopSettings: RawRepresentable {
         return raw
     }
 }
-
-public protocol LoopSettingsProvider {
-    var glucoseTargetRangeSchedule: GlucoseRangeSchedule? { get }
-    var insulinSensitivitySchedule: InsulinSensitivitySchedule? { get }
-    var basalRateSchedule: BasalRateSchedule? { get }
-    var carbRatioSchedule: CarbRatioSchedule? { get }
-    var preMealTargetRange: ClosedRange<HKQuantity>? { get }
-    var legacyWorkoutTargetRange: ClosedRange<HKQuantity>? { get }
-    var overridePresets: [TemporaryScheduleOverridePreset] { get }
-    var maximumBasalRatePerHour: Double? { get }
-    var maximumBolus: Double? { get }
-    var suspendThreshold: GlucoseThreshold? { get }
-}

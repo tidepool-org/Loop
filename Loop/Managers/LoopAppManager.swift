@@ -300,7 +300,7 @@ class LoopAppManager: NSObject {
         loopDataManager = LoopDataManager(
             lastLoopCompleted: ExtensionDataManager.context?.lastLoopCompleted,
             temporaryPresetsManager: temporaryPresetsManager,
-            settingsManager: settingsManager,
+            settingsProvider: settingsManager,
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
@@ -406,7 +406,7 @@ class LoopAppManager: NSObject {
         self.mealDetectionManager = MealDetectionManager(
             algorithmStateProvider: loopDataManager,
             settingsProvider: temporaryPresetsManager,
-            bolusDurationEstimator: deviceDataManager
+            bolusStateProvider: deviceDataManager
         )
 
         loopDataManager.deliveryDelegate = deviceDataManager
@@ -477,26 +477,6 @@ class LoopAppManager: NSObject {
             .combineLatest(settingsManager.$dosingEnabled)
             .map { $0 && $1 }
             .assign(to: \.automaticDosingStatus.automaticDosingEnabled, on: self)
-            .store(in: &cancellables)
-
-        // Turn off preMeal when going into closed loop off mode
-        // Cancel any active temp basal when going into closed loop off mode
-        // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
-        automaticDosingStatus.$automaticDosingEnabled
-            .removeDuplicates()
-            .dropFirst()
-            .sink {
-                if !$0 {
-                    self.temporaryPresetsManager.clearOverride(matching: .preMeal)
-                    Task {
-                        await self.loopDataManager.cancelActiveTempBasal(for: .automaticDosingDisabled)
-                    }
-                } else {
-                    Task {
-                        await self.loopDataManager.updateDisplayState()
-                    }
-                }
-            }
             .store(in: &cancellables)
 
 

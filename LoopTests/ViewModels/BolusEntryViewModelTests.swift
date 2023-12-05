@@ -87,6 +87,8 @@ class BolusEntryViewModelTests: XCTestCase {
     let queue = DispatchQueue(label: "BolusEntryViewModelTests")
     var saveAndDeliverSuccess = false
 
+    var mockDeliveryDelegate = MockDeliveryDelegate()
+
     override func setUp(completion: @escaping (Error?) -> Void) {
         now = Self.now
         delegate = MockBolusEntryViewModelDelegate()
@@ -112,6 +114,8 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.authenticationHandler = { _ in return true }
         
         bolusEntryViewModel.maximumBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 10)
+
+        bolusEntryViewModel.deliveryDelegate = mockDeliveryDelegate
 
         await bolusEntryViewModel.generateRecommendationAndStartObserving()
     }
@@ -222,7 +226,7 @@ class BolusEntryViewModelTests: XCTestCase {
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
         ], timeZone: .utcTimeZone)!
-        var newSettings = LoopSettings(dosingEnabled: true,
+        var newSettings = StoredSettings(dosingEnabled: true,
                                        glucoseTargetRangeSchedule: newGlucoseTargetRangeSchedule,
                                        maximumBasalRatePerHour: 1.0,
                                        maximumBolus: 10.0,
@@ -249,7 +253,7 @@ class BolusEntryViewModelTests: XCTestCase {
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
         ], timeZone: .utcTimeZone)!
-        var newSettings = LoopSettings(dosingEnabled: true,
+        var newSettings = StoredSettings(dosingEnabled: true,
                                        glucoseTargetRangeSchedule: newGlucoseTargetRangeSchedule,
                                        maximumBasalRatePerHour: 1.0,
                                        maximumBolus: 10.0,
@@ -632,7 +636,7 @@ class BolusEntryViewModelTests: XCTestCase {
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
         ], timeZone: .utcTimeZone)!
-        var newSettings = LoopSettings(dosingEnabled: true,
+        var newSettings = StoredSettings(dosingEnabled: true,
                                        glucoseTargetRangeSchedule: newGlucoseTargetRangeSchedule,
                                        maximumBasalRatePerHour: 1.0,
                                        maximumBolus: 10.0,
@@ -821,64 +825,17 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.enteredBolus = Self.exampleBolusQuantity
         XCTAssertEqual(.saveAndDeliver, bolusEntryViewModel.actionButtonAction)
     }
+
 }
 
-// MARK: utilities
-
-//fileprivate class MockLoopState: LoopState {
-//    
-//    var carbsOnBoard: CarbValue?
-//    
-//    var insulinOnBoard: InsulinValue?
-//    
-//    var error: LoopError?
-//    
-//    var insulinCounteractionEffects: [GlucoseEffectVelocity] = []
-//    
-//    var predictedGlucose: [PredictedGlucoseValue]?
-//    
-//    var predictedGlucoseIncludingPendingInsulin: [PredictedGlucoseValue]?
-//    
-//    var recommendedAutomaticDose: (recommendation: AutomaticDoseRecommendation, date: Date)?
-//    
-//    var retrospectiveGlucoseDiscrepancies: [GlucoseChange]?
-//    
-//    var totalRetrospectiveCorrection: HKQuantity?
-//    
-//    var predictGlucoseValueResult: [PredictedGlucoseValue] = []
-//    func predictGlucose(using inputs: PredictionInputEffect, potentialBolus: DoseEntry?, potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?, includingPendingInsulin: Bool, considerPositiveVelocityAndRC: Bool) throws -> [PredictedGlucoseValue] {
-//        return predictGlucoseValueResult
-//    }
-//
-//    func predictGlucoseFromManualGlucose(_ glucose: NewGlucoseSample, potentialBolus: DoseEntry?, potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?, includingPendingInsulin: Bool, considerPositiveVelocityAndRC: Bool) throws -> [PredictedGlucoseValue] {
-//        return predictGlucoseValueResult
-//    }
-//
-//    var bolusRecommendationResult: ManualBolusRecommendation?
-//    var bolusRecommendationError: Error?
-//    var consideringPotentialCarbEntryPassed: NewCarbEntry??
-//    var replacingCarbEntryPassed: StoredCarbEntry??
-//    func recommendBolus(consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?, considerPositiveVelocityAndRC: Bool) throws -> ManualBolusRecommendation? {
-//        consideringPotentialCarbEntryPassed = potentialCarbEntry
-//        replacingCarbEntryPassed = replacedCarbEntry
-//        if let error = bolusRecommendationError { throw error }
-//        return bolusRecommendationResult
-//    }
-//    
-//    func recommendBolusForManualGlucose(_ glucose: NewGlucoseSample, consideringPotentialCarbEntry potentialCarbEntry: NewCarbEntry?, replacingCarbEntry replacedCarbEntry: StoredCarbEntry?, considerPositiveVelocityAndRC: Bool) throws -> ManualBolusRecommendation? {
-//        consideringPotentialCarbEntryPassed = potentialCarbEntry
-//        replacingCarbEntryPassed = replacedCarbEntry
-//        if let error = bolusRecommendationError { throw error }
-//        return bolusRecommendationResult
-//    }
-//}
 
 public enum BolusEntryViewTestError: Error {
     case responseUndefined
 }
 
 fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
-    var settings: LoopSettings = LoopSettings(
+
+    var settings = StoredSettings(
         dosingEnabled: true,
         glucoseTargetRangeSchedule: BolusEntryViewModelTests.exampleGlucoseRangeSchedule,
         maximumBasalRatePerHour: 3.0,

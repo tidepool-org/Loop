@@ -20,7 +20,7 @@ import SwiftCharts
 
 protocol BolusEntryViewModelDelegate: AnyObject {
 
-    var settings: LoopSettings { get }
+    var settings: StoredSettings { get }
     var scheduleOverride: TemporaryScheduleOverride? { get }
     var preMealOverride: TemporaryScheduleOverride? { get }
     var pumpInsulinType: InsulinType? { get }
@@ -36,8 +36,9 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) async
     func enactBolus(units: Double, activationType: BolusActivationType) async throws
 
-    func generatePrediction(input: LoopAlgorithmInput) throws -> [PredictedGlucoseValue]
     func runAlgorithm(input: LoopAlgorithmInput) -> LoopAlgorithmOutput
+
+    func generatePrediction(input: LoopAlgorithmInput) throws -> [PredictedGlucoseValue]
 
     var activeInsulin: InsulinValue? { get }
     var activeCarbs: CarbValue? { get }
@@ -307,13 +308,13 @@ final class BolusEntryViewModel: ObservableObject {
 
     // returns true if no errors
     func saveAndDeliver() async -> Bool {
-        guard deliveryDelegate?.isPumpConfigured ?? false else {
-            presentAlert(.noPumpManagerConfigured)
+        guard let delegate, let deliveryDelegate else {
+            assertionFailure("Missing Delegate")
             return false
         }
 
-        guard let delegate, let deliveryDelegate else {
-            assertionFailure("Missing Delegate")
+        guard deliveryDelegate.isPumpConfigured else {
+            presentAlert(.noPumpManagerConfigured)
             return false
         }
 
@@ -528,7 +529,7 @@ final class BolusEntryViewModel: ObservableObject {
                 .removingCarbEntry(carbEntry: originalCarbEntry)
                 .addingCarbEntry(carbEntry: potentialCarbEntry)
 
-            let prediction = try input.predictGlucose()
+            let prediction = try delegate.generatePrediction(input: input)
             predictedGlucoseValues = prediction
             dosingDecision.predictedGlucose = prediction
         } catch {
@@ -624,7 +625,7 @@ final class BolusEntryViewModel: ObservableObject {
 
         input.recommendationType = .manualBolus
 
-        let output = LoopAlgorithm.run(input: input)
+        let output = delegate.runAlgorithm(input: input)
 
         if let iob = output.activeInsulin {
             activeInsulin = HKQuantity(unit: .internationalUnit(), doubleValue: iob)

@@ -270,46 +270,18 @@ class TemporaryPresetsManager {
 
 }
 
-extension TemporaryPresetsManager : LoopSettingsProvider {
-    var glucoseTargetRangeSchedule: LoopKit.GlucoseRangeSchedule? {
-        effectiveGlucoseTargetRangeSchedule()
-    }
-    
-    var insulinSensitivitySchedule: LoopKit.InsulinSensitivitySchedule? {
-        insulinSensitivityScheduleApplyingOverrideHistory
-    }
-    
-    var basalRateSchedule: LoopKit.BasalRateSchedule? {
-        basalRateScheduleApplyingOverrideHistory
-    }
-    
+public protocol SettingsWithOverridesProvider {
+    var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule? { get }
+    var carbRatioSchedule: CarbRatioSchedule? { get }
+    var maximumBolus: Double? { get }
+}
+
+extension TemporaryPresetsManager : SettingsWithOverridesProvider {
     var carbRatioSchedule: LoopKit.CarbRatioSchedule? {
         settingsProvider.settings.carbRatioSchedule
     }
 
-    var preMealTargetRange: ClosedRange<HKQuantity>? {
-        settingsProvider.settings.preMealTargetRange
-    }
-    
-    var legacyWorkoutTargetRange: ClosedRange<HKQuantity>? {
-        settingsProvider.settings.workoutTargetRange
-    }
-    
-    var overridePresets: [LoopKit.TemporaryScheduleOverridePreset] {
-        settingsProvider.settings.overridePresets
-    }
-    
-    var maximumBasalRatePerHour: Double? {
-        settingsProvider.settings.maximumBasalRatePerHour
-    }
-    
     var maximumBolus: Double? {
         settingsProvider.settings.maximumBolus
     }
-    
-    var suspendThreshold: LoopKit.GlucoseThreshold? {
-        settingsProvider.settings.suspendThreshold
-    }
-    
-
 }

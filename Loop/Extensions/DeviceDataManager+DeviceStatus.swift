@@ -11,7 +11,6 @@ import LoopKitUI
 import LoopCore
 
 extension DeviceDataManager {
-    @MainActor
     var cgmStatusHighlight: DeviceStatusHighlight? {
         let bluetoothState = bluetoothProvider.bluetoothState
         if bluetoothState == .unsupported || bluetoothState == .unauthorized {
@@ -25,17 +24,14 @@ extension DeviceDataManager {
         }
     }
     
-    @MainActor
     var cgmStatusBadge: DeviceStatusBadge? {
         return (cgmManager as? CGMManagerUI)?.cgmStatusBadge
     }
     
-    @MainActor
     var cgmLifecycleProgress: DeviceLifecycleProgress? {
         return (cgmManager as? CGMManagerUI)?.cgmLifecycleProgress
     }
 
-    @MainActor
     var pumpStatusHighlight: DeviceStatusHighlight? {
         let bluetoothState = bluetoothProvider.bluetoothState
         if bluetoothState == .unsupported || bluetoothState == .unauthorized || bluetoothState == .poweredOff {
@@ -49,12 +45,10 @@ extension DeviceDataManager {
         }
     }
 
-    @MainActor
     var pumpStatusBadge: DeviceStatusBadge? {
         return (pumpManager as? PumpManagerUI)?.pumpStatusBadge
     }
 
-    @MainActor
     var pumpLifecycleProgress: DeviceLifecycleProgress? {
         return (pumpManager as? PumpManagerUI)?.pumpLifecycleProgress
     }
@@ -99,7 +93,6 @@ extension DeviceDataManager {
         }
     }
     
-    @MainActor
     func didTapOnPumpStatus(_ view: BaseHUDView? = nil) -> HUDTapAction? {
         if let action = bluetoothProvider.bluetoothState.action {
             return action

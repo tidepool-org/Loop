@@ -10,6 +10,7 @@ import Foundation
 import LoopKit
 import LoopKitUI
 import HealthKit
+@testable import Loop
 
 class MockPumpManager: PumpManager {
 
@@ -104,7 +105,7 @@ class MockPumpManager: PumpManager {
     }
 
     func syncDeliveryLimits(limits deliveryLimits: DeliveryLimits, completion: @escaping (Result<DeliveryLimits, Error>) -> Void) {
-
+        completion(.success(deliveryLimits))
     }
 
     func estimatedDuration(toBolus units: Double) -> TimeInterval {
@@ -138,4 +139,3 @@ class MockPumpManager: PumpManager {
         return [.sound(name: "doesntExist")]
     }
 }
-
