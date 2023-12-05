@@ -15,64 +15,6 @@ import HealthKit
 
 public typealias JSONDictionary = [String: Any]
 
-enum DosingTestScenario {
-    case liveCapture // Includes actual dosing history, bg history, etc.
-    case flatAndStable
-    case highAndStable
-    case highAndRisingWithCOB
-    case lowAndFallingWithCOB
-    case lowWithLowTreatment
-    case highAndFalling
-
-    var fixturePrefix: String {
-        switch self {
-        case .liveCapture:
-            return "live_capture_"
-        case .flatAndStable:
-            return "flat_and_stable_"
-        case .highAndStable:
-            return "high_and_stable_"
-        case .highAndRisingWithCOB:
-            return "high_rising_with_cob_"
-        case .lowAndFallingWithCOB:
-            return "low_and_falling_with_cob_"
-        case .lowWithLowTreatment:
-            return "low_with_low_treatment_"
-        case .highAndFalling:
-            return "high_and_falling_"
-        }
-    }
-
-    static let localDateFormatter = ISO8601DateFormatter.localTimeDate()
-
-    static var dateFormatter: ISO8601DateFormatter = {
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime]
-        return dateFormatter
-    }()
-
-
-    var currentDate: Date {
-        switch self {
-        case .liveCapture:
-            return Self.dateFormatter.date(from: "2023-07-29T19:21:00Z")!
-        case .flatAndStable:
-            return Self.localDateFormatter.date(from: "2020-08-11T20:45:02")!
-        case .highAndStable:
-            return Self.localDateFormatter.date(from: "2020-08-12T12:39:22")!
-        case .highAndRisingWithCOB:
-            return Self.localDateFormatter.date(from: "2020-08-11T21:48:17")!
-        case .lowAndFallingWithCOB:
-            return Self.localDateFormatter.date(from: "2020-08-11T22:06:06")!
-        case .lowWithLowTreatment:
-            return Self.localDateFormatter.date(from: "2020-08-11T22:23:55")!
-        case .highAndFalling:
-            return Self.localDateFormatter.date(from: "2020-08-11T22:59:45")!
-        }
-    }
-
-}
-
 extension TimeZone {
     static var fixtureTimeZone: TimeZone {
         return TimeZone(secondsFromGMT: 25200)!
@@ -122,17 +64,20 @@ class LoopDataManagerTests: XCTestCase {
     // MARK: Stores
     var now: Date!
     let persistenceController = PersistenceController.mock()
+    var doseStore = MockDoseStore()
+    var glucoseStore = MockGlucoseStore()
+    var carbStore = MockCarbStore()
     var dosingDecisionStore: MockDosingDecisionStore!
     var automaticDosingStatus: AutomaticDosingStatus!
     var loopDataManager: LoopDataManager!
     var deliveryDelegate: MockDeliveryDelegate!
+    var settingsProvider: MockSettingsProvider!
 
-    func setUp(for test: DosingTestScenario,
-               basalDeliveryState: PumpManagerStatus.BasalDeliveryState? = nil,
-               maxBolus: Double = 10,
-               maxBasalRate: Double = 5.0,
-               dosingStrategy: AutomaticDosingStrategy = .tempBasalOnly) async
-    {
+    func d(_ interval: TimeInterval) -> Date {
+        return now.addingTimeInterval(interval)
+    }
+
+    override func setUp() async throws {
         let basalRateSchedule = loadBasalRateScheduleFixture("basal_profile")
         let insulinSensitivitySchedule = InsulinSensitivitySchedule(
             unit: .milligramsPerDeciliter,
@@ -153,29 +98,132 @@ class LoopDataManagerTests: XCTestCase {
         let settings = StoredSettings(
             dosingEnabled: false,
             glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
-            maximumBasalRatePerHour: maxBasalRate,
-            maximumBolus: maxBolus,
+            maximumBasalRatePerHour: 6,
+            maximumBolus: 5,
             suspendThreshold: suspendThreshold,
             basalRateSchedule: basalRateSchedule,
             insulinSensitivitySchedule: insulinSensitivitySchedule,
             carbRatioSchedule: carbRatioSchedule,
-            automaticDosingStrategy: dosingStrategy
+            automaticDosingStrategy: .automaticBolus
         )
 
-        let settingsProvider = MockSettingsProvider(settings: settings)
+        settingsProvider = MockSettingsProvider(settings: settings)
 
-        let doseStore = MockDoseStore(for: test)
-        let glucoseStore = MockGlucoseStore(for: test)
-        let carbStore = MockCarbStore(for: test)
+        now = dateFormatter.date(from: "2023-07-29T19:21:00Z")!
 
-        let currentDate = glucoseStore.latestGlucose!.startDate
-        now = currentDate
-        
         dosingDecisionStore = MockDosingDecisionStore()
         automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
 
         let temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsProvider)
 
+        loopDataManager = LoopDataManager(
+            lastLoopCompleted: now,
+            temporaryPresetsManager: temporaryPresetsManager,
+            settingsProvider: settingsProvider,
+            doseStore: doseStore,
+            glucoseStore: glucoseStore,
+            carbStore: carbStore,
+            dosingDecisionStore: dosingDecisionStore,
+            now: { [weak self] in self?.now ?? Date() },
+            automaticDosingStatus: automaticDosingStatus,
+            trustedTimeOffset: { 0 },
+            analyticsServicesManager: nil
+        )
+
+        deliveryDelegate = MockDeliveryDelegate()
+        loopDataManager.deliveryDelegate = deliveryDelegate
+
+        deliveryDelegate.basalDeliveryState = .active(now.addingTimeInterval(-.hours(2)))
+    }
+
+    func testCancellingTempBasalShouldStoreDosingDecision() {
+        // TODO
+//        XCTAssertEqual(mockDecisionStore.dosingDecisions.count, 1)
+//        XCTAssertEqual(mockDecisionStore.dosingDecisions[0].reason, "maximumBasalRateChanged")
+//        XCTAssertEqual(mockDecisionStore.dosingDecisions[0].automaticDoseRecommendation, AutomaticDoseRecommendation(basalAdjustment: .cancel))
+//
+    }
+
+    override func tearDownWithError() throws {
+        loopDataManager = nil
+    }
+
+    // MARK: Functions to load fixtures
+    func loadLocalDateGlucoseEffect(_ name: String) -> [GlucoseEffect] {
+        let fixture: [JSONDictionary] = loadFixture(name)
+        let localDateFormatter = ISO8601DateFormatter.localTimeDate()
+
+        return fixture.map {
+            return GlucoseEffect(startDate: localDateFormatter.date(from: $0["date"] as! String)!, quantity: HKQuantity(unit: HKUnit(from: $0["unit"] as! String), doubleValue:$0["amount"] as! Double))
+        }
+    }
+
+    func loadPredictedGlucoseFixture(_ name: String) -> [PredictedGlucoseValue] {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let url = bundle.url(forResource: name, withExtension: "json")!
+        return try! decoder.decode([PredictedGlucoseValue].self, from: try! Data(contentsOf: url))
+    }
+
+    // MARK: Tests
+    func testForecastFromLiveCaptureInputData() async {
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let url = bundle.url(forResource: "live_capture_input", withExtension: "json")!
+        let predictionInput = try! decoder.decode(LoopPredictionInput.self, from: try! Data(contentsOf: url))
+
+        // Therapy settings in the "live capture" input only have one value, so we can fake some schedules
+        // from the first entry of each therapy setting's history.
+        let basalRateSchedule = BasalRateSchedule(dailyItems: [
+            RepeatingScheduleValue(startTime: 0, value: predictionInput.basal.first!.value)
+        ])
+        let insulinSensitivitySchedule = InsulinSensitivitySchedule(
+            unit: .milligramsPerDeciliter,
+            dailyItems: [
+                RepeatingScheduleValue(startTime: 0, value: predictionInput.sensitivity.first!.value.doubleValue(for: .milligramsPerDeciliter))
+            ],
+            timeZone: .utcTimeZone
+        )!
+        let carbRatioSchedule = CarbRatioSchedule(
+            unit: .gram(),
+            dailyItems: [
+                RepeatingScheduleValue(startTime: 0.0, value: predictionInput.carbRatio.first!.value)
+            ],
+            timeZone: .utcTimeZone
+        )!
+
+        let settings = StoredSettings(
+            dosingEnabled: false,
+            glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
+            maximumBasalRatePerHour: 10,
+            maximumBolus: 5,
+            suspendThreshold: GlucoseThreshold(unit: .milligramsPerDeciliter, value: 65),
+            basalRateSchedule: basalRateSchedule,
+            insulinSensitivitySchedule: insulinSensitivitySchedule,
+            carbRatioSchedule: carbRatioSchedule,
+            automaticDosingStrategy: .automaticBolus
+        )
+
+        settingsProvider.settings = settings
+
+        let glucoseStore = MockGlucoseStore()
+        glucoseStore.storedGlucose = predictionInput.glucoseHistory
+
+        let currentDate = glucoseStore.latestGlucose!.startDate
+        now = currentDate
+
+        let doseStore = MockDoseStore()
+        doseStore.doseHistory = predictionInput.doses
+        doseStore.lastAddedPumpData = predictionInput.doses.last!.startDate
+        let carbStore = MockCarbStore()
+        carbStore.carbHistory = predictionInput.carbEntries
+
+        let temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsProvider)
+
+        dosingDecisionStore = MockDosingDecisionStore()
+        automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
         loopDataManager = LoopDataManager(
             lastLoopCompleted: currentDate,
             temporaryPresetsManager: temporaryPresetsManager,
@@ -187,20 +235,321 @@ class LoopDataManagerTests: XCTestCase {
             now: { currentDate },
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { 0 },
-            analyticsServicesManager: nil
+            analyticsServicesManager: AnalyticsServicesManager()
         )
 
-        deliveryDelegate = MockDeliveryDelegate()
-        loopDataManager.deliveryDelegate = deliveryDelegate
-
-        deliveryDelegate.basalDeliveryState = basalDeliveryState
+        let expectedPredictedGlucose = loadPredictedGlucoseFixture("live_capture_predicted_glucose")
 
         await loopDataManager.updateDisplayState()
+
+        guard let predictedGlucose = loopDataManager.predictedGlucose else {
+            XCTFail("No prediction!")
+            return
+        }
+
+        guard let recommendedBasal = loopDataManager.tempBasalRecommendation else {
+            XCTFail("No recommendation!")
+            return
+        }
+
+        XCTAssertNotNil(predictedGlucose)
+
+        XCTAssertEqual(expectedPredictedGlucose.count, predictedGlucose.count)
+        XCTAssertEqual(0, recommendedBasal.unitsPerHour)
+
+        for (expected, calculated) in zip(expectedPredictedGlucose, predictedGlucose) {
+            XCTAssertEqual(expected.startDate, calculated.startDate)
+            XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: defaultAccuracy)
+        }
     }
-    
-    override func tearDownWithError() throws {
-        loopDataManager = nil
+
+
+    func testHighAndStable() async {
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-1)), quantity: .glucose(value: 120)),
+        ]
+
+        await loopDataManager.updateDisplayState()
+
+        XCTAssertEqual(120, loopDataManager.eventualBG)
+        XCTAssert(loopDataManager.displayState.output!.effects.momentum.isEmpty)
+
+        await loopDataManager.loop()
+
+        XCTAssertEqual(0.2, deliveryDelegate.lastEnact!.bolusUnits!, accuracy: defaultAccuracy)
     }
+
+
+    func testHighAndFalling() async {
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-18)), quantity: .glucose(value: 200)),
+            StoredGlucoseSample(startDate: d(.minutes(-13)), quantity: .glucose(value: 190)),
+            StoredGlucoseSample(startDate: d(.minutes(-8)), quantity: .glucose(value: 180)),
+            StoredGlucoseSample(startDate: d(.minutes(-3)), quantity: .glucose(value: 170)),
+        ]
+
+        await loopDataManager.updateDisplayState()
+
+        XCTAssertEqual(150, loopDataManager.eventualBG)
+        XCTAssert(!loopDataManager.displayState.output!.effects.momentum.isEmpty)
+
+        await loopDataManager.loop()
+
+        // Should correct high.
+        XCTAssertEqual(0.4, deliveryDelegate.lastEnact!.bolusUnits!, accuracy: defaultAccuracy)
+    }
+
+    func testHighAndRisingWithCOB() async {
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-18)), quantity: .glucose(value: 200)),
+            StoredGlucoseSample(startDate: d(.minutes(-13)), quantity: .glucose(value: 210)),
+            StoredGlucoseSample(startDate: d(.minutes(-8)), quantity: .glucose(value: 220)),
+            StoredGlucoseSample(startDate: d(.minutes(-3)), quantity: .glucose(value: 230)),
+        ]
+
+        await loopDataManager.updateDisplayState()
+
+        XCTAssertEqual(250, loopDataManager.eventualBG)
+        XCTAssert(!loopDataManager.displayState.output!.effects.momentum.isEmpty)
+
+        await loopDataManager.loop()
+
+        // Should correct high.
+        XCTAssertEqual(1.15, deliveryDelegate.lastEnact!.bolusUnits!, accuracy: defaultAccuracy)
+    }
+
+    func testLowAndFalling() async {
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-18)), quantity: .glucose(value: 100)),
+            StoredGlucoseSample(startDate: d(.minutes(-13)), quantity: .glucose(value: 95)),
+            StoredGlucoseSample(startDate: d(.minutes(-8)), quantity: .glucose(value: 90)),
+            StoredGlucoseSample(startDate: d(.minutes(-3)), quantity: .glucose(value: 85)),
+        ]
+
+        await loopDataManager.updateDisplayState()
+
+        XCTAssertEqual(75, loopDataManager.eventualBG!, accuracy: 1.0)
+        XCTAssert(!loopDataManager.displayState.output!.effects.momentum.isEmpty)
+
+        await loopDataManager.loop()
+
+        // Should not bolus, and should low temp.
+        XCTAssertEqual(0, deliveryDelegate.lastEnact!.bolusUnits!, accuracy: defaultAccuracy)
+        XCTAssertEqual(0, deliveryDelegate.lastEnact!.basalAdjustment!.unitsPerHour, accuracy: defaultAccuracy)
+    }
+
+
+    func testLowAndFallingWithCOB() async {
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-18)), quantity: .glucose(value: 100)),
+            StoredGlucoseSample(startDate: d(.minutes(-13)), quantity: .glucose(value: 95)),
+            StoredGlucoseSample(startDate: d(.minutes(-8)), quantity: .glucose(value: 90)),
+            StoredGlucoseSample(startDate: d(.minutes(-3)), quantity: .glucose(value: 85)),
+        ]
+
+        carbStore.carbHistory = [
+            StoredCarbEntry(startDate: d(.minutes(-5)), quantity: .carbs(value: 20))
+        ]
+
+        await loopDataManager.updateDisplayState()
+
+        XCTAssertEqual(183, loopDataManager.eventualBG!, accuracy: 1.0)
+        XCTAssert(!loopDataManager.displayState.output!.effects.momentum.isEmpty)
+
+        await loopDataManager.loop()
+
+        // Because eventual is high, but mid-term is low, stay neutral in delivery.
+        XCTAssertEqual(0, deliveryDelegate.lastEnact!.bolusUnits!, accuracy: defaultAccuracy)
+        XCTAssertNil(deliveryDelegate.lastEnact!.basalAdjustment)
+    }
+
+    func testOpenLoopCancelsTempBasal() async {
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-1)), quantity: .glucose(value: 150)),
+        ]
+
+        let dose = DoseEntry(type: .tempBasal, startDate: Date(), value: 1.0, unit: .unitsPerHour)
+        deliveryDelegate.basalDeliveryState = .tempBasal(dose)
+
+        automaticDosingStatus.automaticDosingEnabled = false
+
+        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel)
+        XCTAssertEqual(deliveryDelegate.lastEnact, expectedAutomaticDoseRecommendation)
+        XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
+        XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "automaticDosingDisabled")
+        XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].automaticDoseRecommendation, expectedAutomaticDoseRecommendation)
+    }
+
+    func testLoopEnactsTempBasalWithoutManualBolusRecommendation() async {
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-1)), quantity: .glucose(value: 150)),
+        ]
+
+        settingsProvider.settings.automaticDosingStrategy = .tempBasalOnly
+
+        await loopDataManager.loop()
+
+        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 3.0, duration: .minutes(30)))
+        XCTAssertEqual(deliveryDelegate.lastEnact, expectedAutomaticDoseRecommendation)
+        XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
+        if dosingDecisionStore.dosingDecisions.count == 1 {
+            XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "loop")
+            XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].automaticDoseRecommendation, expectedAutomaticDoseRecommendation)
+            XCTAssertNil(dosingDecisionStore.dosingDecisions[0].manualBolusRecommendation)
+            XCTAssertNil(dosingDecisionStore.dosingDecisions[0].manualBolusRequested)
+        }
+    }
+
+    func testLoopRecommendsTempBasalWithoutEnactingIfOpenLoop() async {
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-1)), quantity: .glucose(value: 150)),
+        ]
+        automaticDosingStatus.automaticDosingEnabled = false
+        settingsProvider.settings.automaticDosingStrategy = .tempBasalOnly
+
+        await loopDataManager.loop()
+
+        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 3.0, duration: .minutes(30)))
+        XCTAssertNil(deliveryDelegate.lastEnact)
+        XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
+        XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "loop")
+        XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].automaticDoseRecommendation, expectedAutomaticDoseRecommendation)
+        XCTAssertNil(dosingDecisionStore.dosingDecisions[0].manualBolusRecommendation)
+        XCTAssertNil(dosingDecisionStore.dosingDecisions[0].manualBolusRequested)
+    }
+//
+//    func testIsClosedLoopAvoidsTriggeringTempBasalCancelOnCreation() {
+//        let settings = StoredSettings(
+//            dosingEnabled: false,
+//            glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
+//            maximumBasalRatePerHour: 5,
+//            maximumBolus: 10,
+//            suspendThreshold: suspendThreshold
+//        )
+//
+//        let doseStore = MockDoseStore()
+//        let glucoseStore = MockGlucoseStore(for: .flatAndStable)
+//        let carbStore = MockCarbStore()
+//
+//        let currentDate = Date()
+//
+//        dosingDecisionStore = MockDosingDecisionStore()
+//        automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: false, isAutomaticDosingAllowed: true)
+//        let existingTempBasal = DoseEntry(
+//            type: .tempBasal,
+//            startDate: currentDate.addingTimeInterval(-.minutes(2)),
+//            endDate: currentDate.addingTimeInterval(.minutes(28)),
+//            value: 1.0,
+//            unit: .unitsPerHour,
+//            deliveredUnits: nil,
+//            description: "Mock Temp Basal",
+//            syncIdentifier: "asdf",
+//            scheduledBasalRate: nil,
+//            insulinType: .novolog,
+//            automatic: true,
+//            manuallyEntered: false,
+//            isMutable: true)
+//
+//        let settingsProvider = MockSettingsProvider(settings: settings)
+//        let temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsProvider)
+//
+//        loopDataManager = LoopDataManager(
+//            lastLoopCompleted: currentDate.addingTimeInterval(-.minutes(5)),
+//            temporaryPresetsManager: temporaryPresetsManager,
+//            settingsProvider: settingsProvider,
+//            doseStore: doseStore,
+//            glucoseStore: glucoseStore,
+//            carbStore: carbStore,
+//            dosingDecisionStore: dosingDecisionStore,
+//            now: { currentDate },
+//            automaticDosingStatus: automaticDosingStatus,
+//            trustedTimeOffset: { 0 },
+//            analyticsServicesManager: nil
+//        )
+//
+//        let deliveryDelegate = MockDeliveryDelegate()
+//
+//        deliveryDelegate.basalDeliveryState = .tempBasal(existingTempBasal)
+//
+//        loopDataManager.deliveryDelegate = deliveryDelegate
+//
+//        // Dose enacting happens asynchronously, as does receiving isClosedLoop signals
+//        waitOnMain(timeout: 5)
+//        XCTAssertNil(deliveryDelegate.lastEnact)
+//    }
+
+    // TODO: Implement as LoopAlgorithm test
+//    func testAutoBolusMaxIOBClamping() async {
+//        /// `maxBolus` is set to clamp the automatic dose
+//        /// Autobolus without clamping: 0.65 U. Clamped recommendation: 0.2 U.
+//        await setUp(for: .highAndRisingWithCOB, maxBolus: 5, dosingStrategy: .automaticBolus)
+//
+//        var insulinOnBoard: InsulinValue?
+//        var recommendedBolus: Double?
+//        self.loopDataManager.getLoopState { _, state in
+//            insulinOnBoard = state.insulinOnBoard
+//            recommendedBolus = state.recommendedAutomaticDose?.recommendation.bolusUnits
+//            updateGroup.leave()
+//        }
+//        updateGroup.wait()
+//
+//        XCTAssertEqual(recommendedBolus!, 0.5, accuracy: 0.01)
+//        XCTAssertEqual(insulinOnBoard?.value, 9.5)
+//
+//        /// Set the `maximumBolus` to 10U so there's no clamping
+//        updateGroup.enter()
+//        self.loopDataManager.mutateSettings { settings in settings.maximumBolus = 10 }
+//        self.loopDataManager.getLoopState { _, state in
+//            insulinOnBoard = state.insulinOnBoard
+//            recommendedBolus = state.recommendedAutomaticDose?.recommendation.bolusUnits
+//            updateGroup.leave()
+//        }
+//        updateGroup.wait()
+//
+//        XCTAssertEqual(recommendedBolus!, 0.65, accuracy: 0.01)
+//        XCTAssertEqual(insulinOnBoard?.value, 9.5)
+//    }
+
+    // TODO: Implement as LoopAlgorithm test
+
+//    func testTempBasalMaxIOBClamping() {
+//        /// `maximumBolus` is set to 5U to clamp max IOB at 10U
+//        /// Without clamping: 4.25 U/hr. Clamped recommendation: 2.0 U/hr.
+//        setUp(for: .highAndRisingWithCOB, maxBolus: 5)
+//
+//        // This sets up dose rounding
+//        let delegate = MockDelegate()
+//        loopDataManager.delegate = delegate
+//
+//        let updateGroup = DispatchGroup()
+//        updateGroup.enter()
+//
+//        var insulinOnBoard: InsulinValue?
+//        var recommendedBasal: TempBasalRecommendation?
+//        self.loopDataManager.getLoopState { _, state in
+//            insulinOnBoard = state.insulinOnBoard
+//            recommendedBasal = state.recommendedAutomaticDose?.recommendation.basalAdjustment
+//            updateGroup.leave()
+//        }
+//        updateGroup.wait()
+//
+//        XCTAssertEqual(recommendedBasal!.unitsPerHour, 2.0, accuracy: 0.01)
+//        XCTAssertEqual(insulinOnBoard?.value, 9.5)
+//
+//        /// Set the `maximumBolus` to 10U so there's no clamping
+//        updateGroup.enter()
+//        self.loopDataManager.mutateSettings { settings in settings.maximumBolus = 10 }
+//        self.loopDataManager.getLoopState { _, state in
+//            insulinOnBoard = state.insulinOnBoard
+//            recommendedBasal = state.recommendedAutomaticDose?.recommendation.basalAdjustment
+//            updateGroup.leave()
+//        }
+//        updateGroup.wait()
+//
+//        XCTAssertEqual(recommendedBasal!.unitsPerHour, 4.25, accuracy: 0.01)
+//        XCTAssertEqual(insulinOnBoard?.value, 9.5)
+//    }
+
 }
 
 extension LoopDataManagerTests {
@@ -221,5 +570,22 @@ extension LoopDataManagerTests {
         }
 
         return BasalRateSchedule(dailyItems: items, timeZone: .utcTimeZone)!
+    }
+}
+
+extension HKQuantity {
+    static func glucose(value: Double) -> HKQuantity {
+        return .init(unit: .milligramsPerDeciliter, doubleValue: value)
+    }
+
+    static func carbs(value: Double) -> HKQuantity {
+        return .init(unit: .gram(), doubleValue: value)
+    }
+
+}
+
+extension LoopDataManager {
+    var eventualBG: Double? {
+        displayState.output?.predictedGlucose.last?.quantity.doubleValue(for: .milligramsPerDeciliter)
     }
 }

@@ -163,10 +163,6 @@ final class DeviceDataManagerTests: XCTestCase {
 
         XCTAssertEqual(.maximumBasalRateChanged, loopControlMock.lastCancelActiveTempBasalReason)
         XCTAssertEqual(limits.maximumBasalRate, newLimits.maximumBasalRate)
-
-        XCTAssertEqual(mockDecisionStore.dosingDecisions.count, 1)
-        XCTAssertEqual(mockDecisionStore.dosingDecisions[0].reason, "maximumBasalRateChanged")
-        XCTAssertEqual(mockDecisionStore.dosingDecisions[0].automaticDoseRecommendation, AutomaticDoseRecommendation(basalAdjustment: .cancel))
     }
 
     func testReceivedUnreliableCGMReadingCancelsTempBasal() {

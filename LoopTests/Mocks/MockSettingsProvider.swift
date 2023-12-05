@@ -11,7 +11,7 @@ import LoopKit
 import HealthKit
 @testable import Loop
 
-struct MockSettingsProvider: SettingsProvider {
+class MockSettingsProvider: SettingsProvider {
 
     var basalHistory: [AbsoluteScheduleValue<Double>]?
     func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>] {
@@ -33,10 +33,17 @@ struct MockSettingsProvider: SettingsProvider {
         return targetRangeHistory ?? settings.glucoseTargetRangeSchedule?.quantityBetween(start: startDate, end: endDate) ?? []
     }
     
-    var dosingLimits = DosingLimits()
     func getDosingLimits(at date: Date) async throws -> DosingLimits {
-        return dosingLimits
+        return DosingLimits(
+            suspendThreshold: settings.suspendThreshold?.quantity,
+            maxBolus: settings.maximumBolus,
+            maxBasalRate: settings.maximumBasalRatePerHour
+        )
     }
 
     var settings: StoredSettings
+
+    init(settings: StoredSettings) {
+        self.settings = settings
+    }
 }

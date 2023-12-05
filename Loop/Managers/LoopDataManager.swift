@@ -385,7 +385,7 @@ final class LoopDataManager {
     func updateDisplayState() async {
         var newState = AlgorithmDisplayState()
         do {
-            var input = try await fetchData()
+            var input = try await fetchData(for: now())
             input.recommendationType = .manualBolus
             newState.input = input
             newState.output = LoopAlgorithm.run(input: input)
@@ -418,12 +418,7 @@ final class LoopDataManager {
     }
 
     func loop() async {
-        guard self.automaticDosingStatus.automaticDosingEnabled else {
-            self.logger.default("Not adjusting dosing during open loop.")
-            return
-        }
-
-        let loopBaseTime = Date()
+        let loopBaseTime = now()
 
         var dosingDecision = StoredDosingDecision(
             date: loopBaseTime,
@@ -436,6 +431,7 @@ final class LoopDataManager {
             }
 
             logger.debug("Running Loop at %{public}@", String(describing: loopBaseTime))
+            NotificationCenter.default.post(name: .LoopRunning, object: self)
 
             var input = try await fetchData(for: loopBaseTime)
 
@@ -495,20 +491,24 @@ final class LoopDataManager {
 
                 dosingDecision.updateFrom(input: input, output: output)
 
-                if deliveryDelegate.isSuspended {
-                    throw LoopError.pumpSuspended
+                if self.automaticDosingStatus.automaticDosingEnabled {
+                    if deliveryDelegate.isSuspended {
+                        throw LoopError.pumpSuspended
+                    }
+
+                    if recommendationToEnact.hasDosingChange {
+                        logger.default("Enacting: %{public}@", String(describing: recommendationToEnact))
+                        try await deliveryDelegate.enact(recommendationToEnact)
+                    }
+
+                    logger.default("loop() completed successfully.")
+                    lastLoopCompleted = Date()
+                    let duration = lastLoopCompleted!.timeIntervalSince(loopBaseTime)
+
+                    analyticsServicesManager?.loopDidSucceed(duration)
+                } else {
+                    self.logger.default("Not adjusting dosing during open loop.")
                 }
-
-                if recommendationToEnact.hasDosingChange {
-                    logger.default("Enacting: %{public}@", String(describing: recommendationToEnact))
-                    try await deliveryDelegate.enact(recommendationToEnact)
-                }
-
-                logger.default("loop() completed successfully.")
-                lastLoopCompleted = Date()
-                let duration = lastLoopCompleted!.timeIntervalSince(loopBaseTime)
-
-                analyticsServicesManager?.loopDidSucceed(duration)
 
                 await dosingDecisionStore.storeDosingDecision(dosingDecision)
                 NotificationCenter.default.post(name: .LoopCycleCompleted, object: self)
@@ -532,7 +532,7 @@ final class LoopDataManager {
         originalCarbEntry: StoredCarbEntry?
     ) async throws -> ManualBolusRecommendation? {
 
-        var input = try await self.fetchData(for: Date(), disablingPreMeal: potentialCarbEntry != nil)
+        var input = try await self.fetchData(for: now(), disablingPreMeal: potentialCarbEntry != nil)
             .addingGlucoseSample(sample: manualGlucoseSample)
             .removingCarbEntry(carbEntry: originalCarbEntry)
             .addingCarbEntry(carbEntry: potentialCarbEntry)
