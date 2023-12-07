@@ -477,6 +477,8 @@ final class BolusEntryViewModel: ObservableObject {
         }
 
         self.activeCarbs = delegate?.activeCarbs?.quantity
+        self.activeInsulin = delegate?.activeInsulin?.quantity
+        dosingDecision.insulinOnBoard = delegate?.activeInsulin
 
         disableManualGlucoseEntryIfNecessary()
         updateChartDateInterval()
@@ -608,34 +610,25 @@ final class BolusEntryViewModel: ObservableObject {
             return nil
         }
 
-        let startDate = Date()
-
-        var input = try await delegate.fetchData(for: startDate, disablingPreMeal: potentialCarbEntry != nil)
-            .addingGlucoseSample(sample: manualGlucoseSample)
-            .removingCarbEntry(carbEntry: originalCarbEntry)
-            .addingCarbEntry(carbEntry: potentialCarbEntry)
-
+        let startDate = now()
         let historicalGlucoseStartDate = Date(timeInterval: -LoopCoreConstants.dosingDecisionHistoricalGlucoseInterval, since: now())
         let chartStartDate = chartDateInterval.start
+
+        var input = try await delegate.fetchData(for: startDate, disablingPreMeal: potentialCarbEntry != nil)
 
         let samples = input.glucoseHistory
         storedGlucoseValues = samples.filter { $0.startDate >= chartStartDate }
         dosingDecision.historicalGlucose = samples.filter { $0.startDate >= historicalGlucoseStartDate }.map { HistoricalGlucoseValue(startDate: $0.startDate, quantity: $0.quantity) }
         updateGlucoseChartValues()
 
+        input = input
+            .addingGlucoseSample(sample: manualGlucoseSample)
+            .removingCarbEntry(carbEntry: originalCarbEntry)
+            .addingCarbEntry(carbEntry: potentialCarbEntry)
+
         input.recommendationType = .manualBolus
 
         let output = delegate.runAlgorithm(input: input)
-
-        if let iob = output.activeInsulin {
-            activeInsulin = HKQuantity(unit: .internationalUnit(), doubleValue: iob)
-            dosingDecision.insulinOnBoard = InsulinValue(startDate: startDate, value: iob)
-        } else {
-            activeInsulin = nil
-            dosingDecision.insulinOnBoard = nil
-            storedGlucoseValues = []
-            dosingDecision.historicalGlucose = []
-        }
 
         switch output.recommendationResult {
         case .success(let prediction):

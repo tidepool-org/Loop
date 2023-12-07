@@ -70,7 +70,7 @@ class DoseEnactorTests: XCTestCase {
         await fulfillment(of: [tempBasalExpectation])
     }
     
-    func testTempBasalOnly() async {
+    func testTempBasalOnly() async throws {
         let enactor = DoseEnactor()
         let tempBasalRecommendation = TempBasalRecommendation(unitsPerHour: 1.2, duration: .minutes(30)) // Cancel
         let recommendation = AutomaticDoseRecommendation(basalAdjustment: tempBasalRecommendation, bolusUnits: 0)
@@ -86,14 +86,8 @@ class DoseEnactorTests: XCTestCase {
         pumpManager.enactBolusCalled = { (amount, automatic) in
             XCTFail("Should not enact bolus")
         }
-        
 
-        do {
-            try await enactor.enact(recommendation: recommendation, with: pumpManager)
-            XCTFail("Expected enact to throw error on failure.")
-        } catch {
-        }
-
+        try await enactor.enact(recommendation: recommendation, with: pumpManager)
 
         await fulfillment(of: [tempBasalExpectation])
     }

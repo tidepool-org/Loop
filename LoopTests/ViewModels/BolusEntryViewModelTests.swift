@@ -180,10 +180,10 @@ class BolusEntryViewModelTests: XCTestCase {
     
     func testUpdateGlucoseValuesWithManual() async throws {
         XCTAssertEqual(0, bolusEntryViewModel.glucoseValues.count)
-        bolusEntryViewModel.manualGlucoseQuantity = Self.exampleManualGlucoseQuantity
-        delegate.loopStateInput.glucoseHistory = [StoredGlucoseSample(sample: Self.exampleCGMGlucoseSample)]
+        bolusEntryViewModel.manualGlucoseQuantity = .glucose(value: 123)
+        delegate.loopStateInput.glucoseHistory = [.mock(100, at: now.addingTimeInterval(-.minutes(5)))]
         await bolusEntryViewModel.update()
-        XCTAssertEqual([100.4, 123.4], bolusEntryViewModel.glucoseValues.map {
+        XCTAssertEqual([100, 123], bolusEntryViewModel.glucoseValues.map {
             return $0.quantity.doubleValue(for: .milligramsPerDeciliter)
         })
     }
@@ -226,7 +226,7 @@ class BolusEntryViewModelTests: XCTestCase {
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
         ], timeZone: .utcTimeZone)!
-        var newSettings = StoredSettings(dosingEnabled: true,
+        let newSettings = StoredSettings(dosingEnabled: true,
                                        glucoseTargetRangeSchedule: newGlucoseTargetRangeSchedule,
                                        maximumBasalRatePerHour: 1.0,
                                        maximumBolus: 10.0,
@@ -253,7 +253,7 @@ class BolusEntryViewModelTests: XCTestCase {
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
         ], timeZone: .utcTimeZone)!
-        var newSettings = StoredSettings(dosingEnabled: true,
+        let newSettings = StoredSettings(dosingEnabled: true,
                                        glucoseTargetRangeSchedule: newGlucoseTargetRangeSchedule,
                                        maximumBasalRatePerHour: 1.0,
                                        maximumBolus: 10.0,
@@ -271,19 +271,11 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel = nil
     }
     
-    func testManualGlucoseChangesPredictedGlucoseValues() async throws {
-        bolusEntryViewModel.manualGlucoseQuantity = Self.exampleManualGlucoseQuantity
+    func testManualGlucoseIncludedInAlgorithmRun() async throws {
+        bolusEntryViewModel.manualGlucoseQuantity = .glucose(value: 123)
         await bolusEntryViewModel.update()
 
-        var input = try await delegate.fetchData(for: Self.exampleStartDate, disablingPreMeal: false)
-        input.glucoseHistory.append(Self.exampleManualStoredGlucoseSample)
-
-        let prediction = try input.predictGlucose()
-
-        XCTAssertEqual(prediction,
-                       bolusEntryViewModel.predictedGlucoseValues.map {
-                        PredictedGlucoseValue(startDate: $0.startDate, quantity: $0.quantity)
-        })
+        XCTAssertEqual(123, delegate.lastRunAlgorithmInput?.glucoseHistory.last?.quantity.doubleValue(for: .milligramsPerDeciliter))
     }
     
     func testUpdateInsulinOnBoard() async throws {
@@ -307,11 +299,19 @@ class BolusEntryViewModelTests: XCTestCase {
     }
 
     func testUpdateRecommendedBolusNoNotice() async throws {
-        delegate.loopStateInput.carbEntries = [mockOriginalCarbEntry]
-        await setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
+        let originalCarbEntry = StoredCarbEntry.mock(50, at: now.addingTimeInterval(-.minutes(5)))
+        let editedCarbEntry = NewCarbEntry.mock(40, at: now.addingTimeInterval(-.minutes(5)))
+
+        delegate.loopStateInput.carbEntries = [originalCarbEntry]
+
+        await setUpViewModel(originalCarbEntry: originalCarbEntry, potentialCarbEntry: editedCarbEntry)
+
         XCTAssertFalse(bolusEntryViewModel.isBolusRecommended)
         let recommendation = ManualBolusRecommendation(amount: 1.25)
+        delegate.algorithmOutput.recommendationResult = .success(.init(manual: recommendation))
+
         await bolusEntryViewModel.update()
+
         XCTAssertTrue(bolusEntryViewModel.isBolusRecommended)
         let recommendedBolus = bolusEntryViewModel.recommendedBolus
         XCTAssertNotNil(recommendedBolus)
@@ -322,12 +322,9 @@ class BolusEntryViewModelTests: XCTestCase {
             return
         }
 
-        let existingCarbsTotal = delegate.loopStateInput.carbEntries.map { $0.amount }.reduce(0, +)
-        let recommendationCarbsTotal = input.carbEntries.map { $0.amount }.reduce(0, +)
+        let carbsUsedForRecommendation = input.carbEntries.map { $0.amount }.reduce(0, +)
 
-        let carbChange = mockPotentialCarbEntry.amount - mockOriginalCarbEntry.amount
-
-        XCTAssertEqual(recommendationCarbsTotal, existingCarbsTotal + carbChange)
+        XCTAssertEqual(40, carbsUsedForRecommendation)
 
         XCTAssertNil(bolusEntryViewModel.activeNotice)
     }
@@ -424,28 +421,34 @@ class BolusEntryViewModelTests: XCTestCase {
     }
     
     func testUpdateRecommendedBolusWithManual() async throws {
-        await setUpViewModel(originalCarbEntry: mockOriginalCarbEntry, potentialCarbEntry: mockPotentialCarbEntry)
-        bolusEntryViewModel.manualGlucoseQuantity = Self.exampleManualGlucoseQuantity
+        let originalCarbEntry = StoredCarbEntry.mock(50, at: now.addingTimeInterval(-.minutes(5)))
+        let editedCarbEntry = NewCarbEntry.mock(40, at: now.addingTimeInterval(-.minutes(5)))
+
+        delegate.loopStateInput.carbEntries = [originalCarbEntry]
+
+        await setUpViewModel(originalCarbEntry: originalCarbEntry, potentialCarbEntry: editedCarbEntry)
+
+        bolusEntryViewModel.manualGlucoseQuantity = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 123)
+
         XCTAssertFalse(bolusEntryViewModel.isBolusRecommended)
+
         let recommendation = ManualBolusRecommendation(amount: 1.25)
         delegate.algorithmOutput.recommendationResult = .success(.init(manual: recommendation))
         await bolusEntryViewModel.update()
+
         XCTAssertTrue(bolusEntryViewModel.isBolusRecommended)
         let recommendedBolus = bolusEntryViewModel.recommendedBolus
         XCTAssertNotNil(recommendedBolus)
         XCTAssertEqual(recommendation.amount, recommendedBolus?.doubleValue(for: .internationalUnit()))
 
         guard let input = delegate.lastRunAlgorithmInput else {
-            XCTFail("Algorithm not run")
+            XCTFail("Algorithm did not run")
             return
         }
 
-        let existingCarbsTotal = delegate.loopStateInput.carbEntries.map { $0.amount }.reduce(0, +)
-        let recommendationCarbsTotal = input.carbEntries.map { $0.amount }.reduce(0, +)
+        let carbsUsedForRecommendation = input.carbEntries.map { $0.amount }.reduce(0, +)
 
-        let carbChange = mockPotentialCarbEntry.amount - mockOriginalCarbEntry.amount
-
-        XCTAssertEqual(recommendationCarbsTotal, existingCarbsTotal + carbChange)
+        XCTAssertEqual(40, carbsUsedForRecommendation)
 
         XCTAssertNil(bolusEntryViewModel.activeNotice)
     }
@@ -636,7 +639,7 @@ class BolusEntryViewModelTests: XCTestCase {
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
         ], timeZone: .utcTimeZone)!
-        var newSettings = StoredSettings(dosingEnabled: true,
+        let newSettings = StoredSettings(dosingEnabled: true,
                                        glucoseTargetRangeSchedule: newGlucoseTargetRangeSchedule,
                                        maximumBasalRatePerHour: 1.0,
                                        maximumBolus: 10.0,
@@ -1011,5 +1014,28 @@ extension LoopAlgorithmEffects {
             insulinCounteraction: [],
             retrospectiveGlucoseDiscrepancies: []
         )
+    }
+}
+
+extension NewCarbEntry {
+    static func mock(_ grams: Double, at date: Date) -> NewCarbEntry {
+        NewCarbEntry(
+            quantity: .init(unit: .gram(), doubleValue: grams),
+            startDate: date,
+            foodType: nil,
+            absorptionTime: nil
+        )
+    }
+}
+
+extension StoredCarbEntry {
+    static func mock(_ grams: Double, at date: Date) -> StoredCarbEntry {
+        StoredCarbEntry(startDate: date, quantity: .init(unit: .gram(), doubleValue: grams))
+    }
+}
+
+extension StoredGlucoseSample {
+    static func mock(_ value: Double, at date: Date) -> StoredGlucoseSample {
+        StoredGlucoseSample(startDate: date, quantity: .glucose(value: value))
     }
 }

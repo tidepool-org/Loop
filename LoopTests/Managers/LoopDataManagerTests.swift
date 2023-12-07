@@ -127,7 +127,8 @@ class LoopDataManagerTests: XCTestCase {
             now: { [weak self] in self?.now ?? Date() },
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { 0 },
-            analyticsServicesManager: nil
+            analyticsServicesManager: nil,
+            carbAbsorptionModel: .piecewiseLinear
         )
 
         deliveryDelegate = MockDeliveryDelegate()
@@ -194,7 +195,7 @@ class LoopDataManagerTests: XCTestCase {
             timeZone: .utcTimeZone
         )!
 
-        let settings = StoredSettings(
+        settingsProvider.settings = StoredSettings(
             dosingEnabled: false,
             glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
             maximumBasalRatePerHour: 10,
@@ -206,61 +207,34 @@ class LoopDataManagerTests: XCTestCase {
             automaticDosingStrategy: .automaticBolus
         )
 
-        settingsProvider.settings = settings
-
-        let glucoseStore = MockGlucoseStore()
         glucoseStore.storedGlucose = predictionInput.glucoseHistory
 
         let currentDate = glucoseStore.latestGlucose!.startDate
         now = currentDate
 
-        let doseStore = MockDoseStore()
         doseStore.doseHistory = predictionInput.doses
         doseStore.lastAddedPumpData = predictionInput.doses.last!.startDate
-        let carbStore = MockCarbStore()
         carbStore.carbHistory = predictionInput.carbEntries
-
-        let temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsProvider)
-
-        dosingDecisionStore = MockDosingDecisionStore()
-        automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true)
-        loopDataManager = LoopDataManager(
-            lastLoopCompleted: currentDate,
-            temporaryPresetsManager: temporaryPresetsManager,
-            settingsProvider: settingsProvider,
-            doseStore: doseStore,
-            glucoseStore: glucoseStore,
-            carbStore: carbStore,
-            dosingDecisionStore: dosingDecisionStore,
-            now: { currentDate },
-            automaticDosingStatus: automaticDosingStatus,
-            trustedTimeOffset: { 0 },
-            analyticsServicesManager: AnalyticsServicesManager()
-        )
 
         let expectedPredictedGlucose = loadPredictedGlucoseFixture("live_capture_predicted_glucose")
 
         await loopDataManager.updateDisplayState()
 
-        guard let predictedGlucose = loopDataManager.predictedGlucose else {
-            XCTFail("No prediction!")
-            return
-        }
-
-        guard let recommendedBasal = loopDataManager.tempBasalRecommendation else {
-            XCTFail("No recommendation!")
-            return
-        }
+        let predictedGlucose = loopDataManager.displayState.output?.predictedGlucose
 
         XCTAssertNotNil(predictedGlucose)
 
-        XCTAssertEqual(expectedPredictedGlucose.count, predictedGlucose.count)
-        XCTAssertEqual(0, recommendedBasal.unitsPerHour)
+        XCTAssertEqual(expectedPredictedGlucose.count, predictedGlucose!.count)
 
-        for (expected, calculated) in zip(expectedPredictedGlucose, predictedGlucose) {
+        for (expected, calculated) in zip(expectedPredictedGlucose, predictedGlucose!) {
             XCTAssertEqual(expected.startDate, calculated.startDate)
             XCTAssertEqual(expected.quantity.doubleValue(for: .milligramsPerDeciliter), calculated.quantity.doubleValue(for: .milligramsPerDeciliter), accuracy: defaultAccuracy)
         }
+
+        await loopDataManager.loop()
+
+        XCTAssertEqual(0, deliveryDelegate.lastEnact?.bolusUnits)
+        XCTAssertEqual(0, deliveryDelegate.lastEnact?.basalAdjustment?.unitsPerHour)
     }
 
 
@@ -371,13 +345,21 @@ class LoopDataManagerTests: XCTestCase {
         let dose = DoseEntry(type: .tempBasal, startDate: Date(), value: 1.0, unit: .unitsPerHour)
         deliveryDelegate.basalDeliveryState = .tempBasal(dose)
 
+        let exp = expectation(description: #function)
+        let observer = NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: nil, queue: nil) { _ in
+            exp.fulfill()
+        }
+
         automaticDosingStatus.automaticDosingEnabled = false
+
+        await fulfillment(of: [exp], timeout: 1.0)
 
         let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel)
         XCTAssertEqual(deliveryDelegate.lastEnact, expectedAutomaticDoseRecommendation)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "automaticDosingDisabled")
         XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].automaticDoseRecommendation, expectedAutomaticDoseRecommendation)
+        NotificationCenter.default.removeObserver(observer)
     }
 
     func testLoopEnactsTempBasalWithoutManualBolusRecommendation() async {

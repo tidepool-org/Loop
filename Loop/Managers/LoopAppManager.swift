@@ -297,6 +297,8 @@ class LoopAppManager: NSObject {
             }
         }
 
+        let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
+
         loopDataManager = LoopDataManager(
             lastLoopCompleted: ExtensionDataManager.context?.lastLoopCompleted,
             temporaryPresetsManager: temporaryPresetsManager,
@@ -307,7 +309,8 @@ class LoopAppManager: NSObject {
             dosingDecisionStore: dosingDecisionStore,
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset },
-            analyticsServicesManager: analyticsServicesManager
+            analyticsServicesManager: analyticsServicesManager,
+            carbAbsorptionModel: carbModel
         )
 
         cacheStore.delegate = loopDataManager

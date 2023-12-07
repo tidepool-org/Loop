@@ -65,8 +65,6 @@ enum LoopUpdateContext: Int {
 final class LoopDataManager {
     nonisolated static let LoopUpdateContextKey = "com.loudnate.Loop.LoopDataManager.LoopUpdateContext"
 
-    static let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
-
     // Represents the current state of the loop algorithm for display
     var displayState = AlgorithmDisplayState()
 
@@ -127,6 +125,8 @@ final class LoopDataManager {
         doseStore.lastReservoirValue
     }
 
+    var carbAbsorptionModel: CarbAbsorptionModel
+
     lazy private var cancellables = Set<AnyCancellable>()
 
     init(
@@ -140,7 +140,8 @@ final class LoopDataManager {
         now: @escaping () -> Date = { Date() },
         automaticDosingStatus: AutomaticDosingStatus,
         trustedTimeOffset: @escaping () async -> TimeInterval,
-        analyticsServicesManager: AnalyticsServicesManager?
+        analyticsServicesManager: AnalyticsServicesManager?,
+        carbAbsorptionModel: CarbAbsorptionModel
     ) {
 
         self.lastLoopCompleted = lastLoopCompleted
@@ -154,6 +155,7 @@ final class LoopDataManager {
         self.automaticDosingStatus = automaticDosingStatus
         self.trustedTimeOffset = trustedTimeOffset
         self.analyticsServicesManager = analyticsServicesManager
+        self.carbAbsorptionModel = carbAbsorptionModel
 
         // Required for device settings in stored dosing decisions
         UIDevice.current.isBatteryMonitoringEnabled = true
@@ -370,7 +372,7 @@ final class LoopDataManager {
             maxBolus: maxBolus,
             maxBasalRate: maxBasalRate,
             useIntegralRetrospectiveCorrection: UserDefaults.standard.integralRetrospectiveCorrectionEnabled,
-            carbAbsorptionModel: Self.carbModel,
+            carbAbsorptionModel: carbAbsorptionModel,
             recommendationInsulinType: deliveryDelegate?.pumpInsulinType ?? .novolog,
             recommendationType: .manualBolus,
             automaticBolusApplicationFactor: effectiveBolusApplicationFactor
