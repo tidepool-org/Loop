@@ -327,7 +327,7 @@ class LoopDataManagerTests: XCTestCase {
 
         await loopDataManager.updateDisplayState()
 
-        XCTAssertEqual(183, loopDataManager.eventualBG!, accuracy: 1.0)
+        XCTAssertEqual(185, loopDataManager.eventualBG!, accuracy: 1.0)
         XCTAssert(!loopDataManager.displayState.output!.effects.momentum.isEmpty)
 
         await loopDataManager.loop()

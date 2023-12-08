@@ -333,7 +333,8 @@ class MealDetectionManager {
         /// Coordinate the missed meal notification time with any pending autoboluses that `update` may have started
         /// so that the user doesn't have to cancel the current autobolus to bolus in response to the missed meal notification
         if let estimatedBolusDuration = bolusStateProvider.bolusTimeRemaining(at: now),
-           estimatedBolusDuration < MissedMealSettings.maxNotificationDelay
+           estimatedBolusDuration < MissedMealSettings.maxNotificationDelay,
+           estimatedBolusDuration > 0
         {
             NotificationManager.sendMissedMealNotification(mealStart: startTime, amountInGrams: clampedCarbAmount, delay: estimatedBolusDuration)
             lastMissedMealNotification = MissedMealNotification(deliveryTime: now.advanced(by: estimatedBolusDuration),

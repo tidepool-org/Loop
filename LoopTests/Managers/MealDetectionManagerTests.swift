@@ -191,9 +191,6 @@ class MealDetectionManagerTests: XCTestCase {
         mealDetectionManager.test_currentDate!
     }
 
-    var bolusUnits: Double?
-    var bolusDurationEstimator: ((Double) -> TimeInterval?)!
-    
     var algorithmInput: LoopAlgorithmInput!
     var algorithmOutput: LoopAlgorithmOutput!
 
@@ -277,10 +274,6 @@ class MealDetectionManagerTests: XCTestCase {
         )
         mealDetectionManager.test_currentDate = testType.currentDate
 
-        bolusDurationEstimator = { units in
-            self.bolusUnits = units
-            return self.pumpManager.estimatedDuration(toBolus: units)
-        }
     }
     
     private func counteractionEffects(for testType: MissedMealTestType) -> [GlucoseEffectVelocity] {
@@ -497,7 +490,6 @@ class MealDetectionManagerTests: XCTestCase {
         mealDetectionManager.manageMealNotifications(at: now, for: status)
 
         /// The bolus units time delegate should never be called if there are 0 pending units
-        XCTAssertNil(bolusUnits)
         XCTAssertEqual(mealDetectionManager.lastMissedMealNotification?.deliveryTime, now)
         XCTAssertEqual(mealDetectionManager.lastMissedMealNotification?.carbAmount, 40)
     }
@@ -505,11 +497,21 @@ class MealDetectionManagerTests: XCTestCase {
     func testMissedMealLongPendingBolus() {
         setUp(for: .notificationTest)
         UserDefaults.standard.missedMealNotificationsEnabled = true
-        
+
+        bolusState = .inProgress(
+            DoseEntry(
+                type: .bolus,
+                startDate: now.addingTimeInterval(-.seconds(10)),
+                endDate: now.addingTimeInterval(.minutes(10)),
+                value: 20,
+                unit: .units,
+                automatic: true
+            )
+        )
+
         let status = MissedMealStatus.hasMissedMeal(startTime: now, carbAmount: 40)
         mealDetectionManager.manageMealNotifications(at: now, for: status)
 
-        XCTAssertEqual(bolusUnits, 10)
         /// There shouldn't be a delay in delivering notification, since the autobolus will take the length of the notification window to deliver
         XCTAssertEqual(mealDetectionManager.lastMissedMealNotification?.deliveryTime, now)
         XCTAssertEqual(mealDetectionManager.lastMissedMealNotification?.carbAmount, 40)
@@ -518,19 +520,39 @@ class MealDetectionManagerTests: XCTestCase {
     func testNoMissedMealShortPendingBolus_DelaysNotificationTime() {
         setUp(for: .notificationTest)
         UserDefaults.standard.missedMealNotificationsEnabled = true
-        
+
+        bolusState = .inProgress(
+            DoseEntry(
+                type: .bolus,
+                startDate: now.addingTimeInterval(-.seconds(10)),
+                endDate: now.addingTimeInterval(20),
+                value: 2,
+                unit: .units,
+                automatic: true
+            )
+        )
+
         let status = MissedMealStatus.hasMissedMeal(startTime: now, carbAmount: 30)
         mealDetectionManager.manageMealNotifications(at: now, for: status)
 
-        let expectedDeliveryTime = now.addingTimeInterval(TimeInterval(80))
-        XCTAssertEqual(bolusUnits, 2)
+        let expectedDeliveryTime = now.addingTimeInterval(TimeInterval(20))
         XCTAssertEqual(mealDetectionManager.lastMissedMealNotification?.deliveryTime, expectedDeliveryTime)
-        
+
+        bolusState = .inProgress(
+            DoseEntry(
+                type: .bolus,
+                startDate: now.addingTimeInterval(-.seconds(10)),
+                endDate: now.addingTimeInterval(.minutes(3)),
+                value: 4.5,
+                unit: .units,
+                automatic: true
+            )
+        )
+
         mealDetectionManager.lastMissedMealNotification = nil
         mealDetectionManager.manageMealNotifications(at: now, for: status)
 
         let expectedDeliveryTime2 = now.addingTimeInterval(TimeInterval(minutes: 3))
-        XCTAssertEqual(bolusUnits, 4.5)
         XCTAssertEqual(mealDetectionManager.lastMissedMealNotification?.deliveryTime, expectedDeliveryTime2)
     }
     

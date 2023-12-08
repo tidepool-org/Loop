@@ -25,13 +25,6 @@ class ManualEntryDoseViewModelTests: XCTestCase {
 
     static let noBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0.0)
     
-    var authenticateOverrideCompletion: ((Swift.Result<Void, Error>) -> Void)?
-    private func authenticateOverride(_ message: String, _ completion: @escaping (Swift.Result<Void, Error>) -> Void) {
-        authenticateOverrideCompletion = completion
-    }
-    
-    var saveAndDeliverSuccess = false
-
     fileprivate var delegate: MockManualEntryDoseViewModelDelegate!
     
     static let mockUUID = UUID()
@@ -40,7 +33,6 @@ class ManualEntryDoseViewModelTests: XCTestCase {
     override func setUpWithError() throws {
         now = Self.now
         delegate = MockManualEntryDoseViewModelDelegate()
-        saveAndDeliverSuccess = false
         setUpViewModel()
     }
 
@@ -50,26 +42,34 @@ class ManualEntryDoseViewModelTests: XCTestCase {
                                                   debounceIntervalMilliseconds: 0,
                                                   uuidProvider: { self.mockUUID },
                                                   timeZone: TimeZone(abbreviation: "GMT")!)
-        manualEntryDoseViewModel.authenticate = authenticateOverride
+        manualEntryDoseViewModel.authenticationHandler = { _ in return true }
     }
 
-    func testDoseLogging() throws {
+    func testDoseLogging() async throws {
         XCTAssertEqual(.novolog, manualEntryDoseViewModel.selectedInsulinType)
         manualEntryDoseViewModel.enteredBolus = Self.exampleBolusQuantity
         
-        try saveAndDeliver(ManualEntryDoseViewModelTests.exampleBolusQuantity)
+        try await manualEntryDoseViewModel.saveManualDose()
+
         XCTAssertEqual(delegate.manualEntryBolusUnits, Self.exampleBolusQuantity.doubleValue(for: .internationalUnit()))
         XCTAssertEqual(delegate.manuallyEnteredDoseInsulinType, .novolog)
     }
-    
-    private func saveAndDeliver(_ bolus: HKQuantity, file: StaticString = #file, line: UInt = #line) throws {
-        manualEntryDoseViewModel.enteredBolus = bolus
-        manualEntryDoseViewModel.saveManualDose { self.saveAndDeliverSuccess = true }
-        if bolus != ManualEntryDoseViewModelTests.noBolus {
-            let authenticateOverrideCompletion = try XCTUnwrap(self.authenticateOverrideCompletion, file: file, line: line)
-            authenticateOverrideCompletion(.success(()))
-        }
+
+    func testDoseNotSavedIfNotAuthenticated() async throws {
+        XCTAssertEqual(.novolog, manualEntryDoseViewModel.selectedInsulinType)
+        manualEntryDoseViewModel.enteredBolus = Self.exampleBolusQuantity
+
+        manualEntryDoseViewModel.authenticationHandler = { _ in return false }
+
+        do {
+            try await manualEntryDoseViewModel.saveManualDose()
+            XCTFail("Saving should fail if not authenticated.")
+        } catch { }
+
+        XCTAssertNil(delegate.manualEntryBolusUnits)
+        XCTAssertNil(delegate.manuallyEnteredDoseInsulinType)
     }
+
 }
 
 fileprivate class MockManualEntryDoseViewModelDelegate: ManualDoseViewModelDelegate {

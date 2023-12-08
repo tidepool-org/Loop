@@ -17,6 +17,10 @@ import LoopKitUI
 import LoopUI
 import SwiftUI
 
+enum ManualEntryDoseViewModelError: Error {
+    case notAuthenticated
+}
+
 protocol ManualDoseViewModelDelegate: AnyObject {
     var algorithmDisplayState: AlgorithmDisplayState { get async }
     var pumpInsulinType: InsulinType? { get }
@@ -29,9 +33,6 @@ protocol ManualDoseViewModelDelegate: AnyObject {
 
 @MainActor
 final class ManualEntryDoseViewModel: ObservableObject {
-
-    var authenticate: AuthenticationChallenge = LocalAuthentication.deviceOwnerCheck
-
     // MARK: - State
 
     @Published var glucoseValues: [GlucoseValue] = [] // stored glucose values
@@ -67,14 +68,28 @@ final class ManualEntryDoseViewModel: ObservableObject {
     @Published var selectedDoseDate: Date = Date()
     
     var insulinTypePickerOptions: [InsulinType]
-    
+
     // MARK: - Seams
     private weak var delegate: ManualDoseViewModelDelegate?
     private let now: () -> Date
     private let screenWidth: CGFloat
     private let debounceIntervalMilliseconds: Int
     private let uuidProvider: () -> String
-    
+
+    var authenticationHandler: (String) async -> Bool = { message in
+        return await withCheckedContinuation { continuation in
+            LocalAuthentication.deviceOwnerCheck(message) { result in
+                switch result {
+                case .success:
+                    continuation.resume(returning: true)
+                case .failure:
+                    continuation.resume(returning: false)
+                }
+            }
+        }
+    }
+
+
     // MARK: - Initialization
 
     init(
@@ -155,34 +170,27 @@ final class ManualEntryDoseViewModel: ObservableObject {
 
     // MARK: - View API
 
-    func saveManualDose(onSuccess completion: @escaping () -> Void) {
-        // Authenticate before saving anything
-        if enteredBolus.doubleValue(for: .internationalUnit()) > 0 {
-            let message = String(format: NSLocalizedString("Authenticate to log %@ Units", comment: "The message displayed during a device authentication prompt to log an insulin dose"), enteredBolusAmountString)
-            authenticate(message) {
-                switch $0 {
-                case .success:
-                    self.continueSaving(onSuccess: completion)
-                case .failure:
-                    break
-                }
-            }
-        } else {
-            completion()
-        }
-    }
-    
-    private func continueSaving(onSuccess completion: @escaping () -> Void) {
-        let doseVolume = enteredBolus.doubleValue(for: .internationalUnit())
-        guard doseVolume > 0 else {
-            completion()
+    func saveManualDose() async throws {
+        guard enteredBolus.doubleValue(for: .internationalUnit()) > 0 else {
             return
         }
 
-        Task { @MainActor in
-            await delegate?.addManuallyEnteredDose(startDate: selectedDoseDate, units: doseVolume, insulinType: selectedInsulinType)
-            completion()
+        // Authenticate before saving anything
+        let message = String(format: NSLocalizedString("Authenticate to log %@ Units", comment: "The message displayed during a device authentication prompt to log an insulin dose"), enteredBolusAmountString)
+
+        if !(await authenticationHandler(message)) {
+            throw ManualEntryDoseViewModelError.notAuthenticated
         }
+        await self.continueSaving()
+    }
+    
+    private func continueSaving() async {
+        let doseVolume = enteredBolus.doubleValue(for: .internationalUnit())
+        guard doseVolume > 0 else {
+            return
+        }
+
+        await delegate?.addManuallyEnteredDose(startDate: selectedDoseDate, units: doseVolume, insulinType: selectedInsulinType)
     }
 
     private lazy var bolusVolumeFormatter = QuantityFormatter(for: .internationalUnit())
