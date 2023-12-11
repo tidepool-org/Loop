@@ -9,6 +9,7 @@
 import os.log
 import Foundation
 import LoopKit
+import UIKit
 
 enum RemoteDataType: String, CaseIterable {
     case alert = "Alert"
@@ -37,6 +38,7 @@ struct UploadTaskKey: Hashable {
     }
 }
 
+@MainActor
 final class RemoteDataServicesManager {
 
     public typealias RawState = [String: Any]
@@ -222,33 +224,6 @@ final class RemoteDataServicesManager {
             }
         }
     }
-
-    func updateRemoteRecommendation() {
-        // TODO: 
-//        dataAccessQueue.async {
-//            if self.remoteRecommendationNeedsUpdating {
-//                var (dosingDecision, updateError) = self.update(for: .updateRemoteRecommendation)
-//
-//                if let error = updateError {
-//                    self.logger.error("Error updating manual bolus recommendation: %{public}@", String(describing: error))
-//                } else {
-//                    do {
-//                        if let predictedGlucoseIncludingPendingInsulin = self.predictedGlucoseIncludingPendingInsulin,
-//                           let manualBolusRecommendation = try self.recommendManualBolus(forPrediction: predictedGlucoseIncludingPendingInsulin, consideringPotentialCarbEntry: nil)
-//                        {
-//                            dosingDecision.manualBolusRecommendation = ManualBolusRecommendationWithDate(recommendation: manualBolusRecommendation, date: Date())
-//                            self.logger.debug("Manual bolus rec = %{public}@", String(describing: dosingDecision.manualBolusRecommendation))
-//                            self.dosingDecisionStore.storeDosingDecision(dosingDecision) {}
-//                        }
-//                    } catch {
-//                        self.logger.error("Error updating manual bolus recommendation: %{public}@", String(describing: error))
-//                    }
-//                }
-//                self.remoteRecommendationNeedsUpdating = false
-//            }
-//        }
-    }
-
 }
 
 extension RemoteDataServicesManager {
@@ -648,7 +623,7 @@ extension RemoteDataServicesManager {
 extension RemoteDataServicesManager: UploadEventListener { }
 
 protocol RemoteDataServicesManagerDelegate: AnyObject {
-    var shouldSyncToRemoteService: Bool {get}
+    var shouldSyncToRemoteService: Bool { get }
 }
 
 

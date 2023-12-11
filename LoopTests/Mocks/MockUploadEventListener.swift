@@ -10,9 +10,6 @@ import Foundation
 @testable import Loop
 
 struct MockUploadEventListener: UploadEventListener {
-    func updateRemoteRecommendation() {
-    }
-    
     func triggerUpload(for triggeringType: Loop.RemoteDataType) {
     }
 }

@@ -20,6 +20,7 @@ public protocol DeviceSupportDelegate {
     func generateDiagnosticReport() async -> String
 }
 
+@MainActor
 public final class SupportManager {
     
     private lazy var log = DiagnosticLog(category: "SupportManager")

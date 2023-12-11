@@ -12,6 +12,7 @@ import LoopKitUI
 import SwiftUI
 @testable import Loop
 
+@MainActor
 class SupportManagerTests: XCTestCase {
     enum MockError: Error { case nothing }
 

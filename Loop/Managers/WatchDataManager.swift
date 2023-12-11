@@ -400,14 +400,13 @@ final class WatchDataManager: NSObject {
             return
         }
 
-        deviceManager.enactBolus(units: bolus.value, activationType: bolus.activationType) { (error) in
-            if error == nil {
-                self.analyticsServicesManager?.didBolus(source: "Watch", units: bolus.value)
-            }
+        do {
+            try await deviceManager.enactBolus(units: bolus.value, activationType: bolus.activationType)
+            self.analyticsServicesManager?.didBolus(source: "Watch", units: bolus.value)
+        } catch { }
 
-            // When we've successfully started the bolus, send a new context with our new prediction
-            self.sendWatchContextIfNeeded()
-        }
+        // When we've started the bolus, send a new context with our new prediction
+        self.sendWatchContextIfNeeded()
     }
 }
 

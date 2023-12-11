@@ -805,12 +805,10 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
             {
                 analyticsServicesManager.didRetryBolus()
                 
-                deviceDataManager?.enactBolus(units: units, activationType: activationType) { (_) in
-                    DispatchQueue.main.async {
-                        completionHandler()
-                    }
+                Task { @MainActor in
+                    try? await deviceDataManager?.enactBolus(units: units, activationType: activationType)
+                    completionHandler()
                 }
-                return
             }
         case NotificationManager.Action.acknowledgeAlert.rawValue:
             let userInfo = response.notification.request.content.userInfo

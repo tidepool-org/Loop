@@ -22,6 +22,7 @@ protocol DeviceStatusProvider {
     var cgmManagerStatus: CGMManagerStatus? { get }
 }
 
+@MainActor
 class SettingsManager {
 
     let settingsStore: SettingsStore

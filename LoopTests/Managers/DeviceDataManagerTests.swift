@@ -12,6 +12,7 @@ import LoopKit
 import LoopKitUI
 @testable import Loop
 
+@MainActor
 final class DeviceDataManagerTests: XCTestCase {
 
     var deviceDataManager: DeviceDataManager!
@@ -31,7 +32,6 @@ final class DeviceDataManagerTests: XCTestCase {
         }
     }
 
-    @MainActor
     override func setUpWithError() throws {
         let mockUserNotificationCenter = MockUserNotificationCenter()
         let mockBluetoothProvider = MockBluetoothProvider()
@@ -66,16 +66,7 @@ final class DeviceDataManagerTests: XCTestCase {
 
         let cgmEventStore = CgmEventStore(cacheStore: persistenceController)
 
-        let alertStore = AlertStore()
-
-        let dosingDecisionStore = DosingDecisionStore(store: persistenceController, expireAfter: .days(1))
-
-        let settingsStore = SettingsStore(store: persistenceController, expireAfter: .days(1))
-
         self.settingsManager = SettingsManager(cacheStore: persistenceController, expireAfter: .days(1), alertMuter: AlertMuter())
-
-        let pluginManager = PluginManager()
-        let analyticsServicesManager = AnalyticsServicesManager()
 
         deviceDataManager = DeviceDataManager(
             pluginManager: PluginManager(),
@@ -180,25 +171,15 @@ final class DeviceDataManagerTests: XCTestCase {
 
         loopControlMock.cancelExpectation = expectation(description: "Temp basal cancel")
 
-        cgmManager.delegateQueue.async {
-            self.deviceDataManager.cgmManager(self.cgmManager, hasNew: .unreliableData)
+        if let deviceManager = self.deviceDataManager {
+            cgmManager.delegateQueue.async {
+                deviceManager.cgmManager(self.cgmManager, hasNew: .unreliableData)
+            }
         }
 
         wait(for: [loopControlMock.cancelExpectation!], timeout: 1)
 
         XCTAssertEqual(loopControlMock.lastCancelActiveTempBasalReason, .unreliableCGMData)
-    }
-
-    func testLoopGetStateRecommendsManualBolusWithoutMomentum() {
-//        setUp(for: .highAndRisingWithCOB)
-//        let exp = expectation(description: #function)
-//        var recommendedBolus: ManualBolusRecommendation?
-//        loopDataManager.getLoopState { (_, loopState) in
-//            recommendedBolus = try? loopState.recommendBolus(consideringPotentialCarbEntry: nil, replacingCarbEntry: nil, considerPositiveVelocityAndRC: false)
-//            exp.fulfill()
-//        }
-//        wait(for: [exp], timeout: 1.0)
-//        XCTAssertEqual(recommendedBolus!.amount, 1.52, accuracy: 0.01)
     }
 
 }

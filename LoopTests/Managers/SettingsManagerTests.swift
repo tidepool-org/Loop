@@ -10,6 +10,7 @@ import XCTest
 import LoopKit
 @testable import Loop
 
+@MainActor
 final class SettingsManagerTests: XCTestCase {
 
 

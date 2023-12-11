@@ -127,6 +127,8 @@ final class LoopDataManager {
 
     var carbAbsorptionModel: CarbAbsorptionModel
 
+    private var lastManualBolusRecommendation: ManualBolusRecommendation?
+
     lazy private var cancellables = Set<AnyCancellable>()
 
     init(
@@ -396,6 +398,7 @@ final class LoopDataManager {
             logger.error("Error updating Loop state: %{public}@", String(describing: loopError))
         }
         displayState = newState
+        await updateRemoteRecommendation()
     }
 
     /// Cancel the active temp basal if it was automatically issued
@@ -558,6 +561,43 @@ final class LoopDataManager {
     var dosesRelativeToBasal: [DoseEntry] {
         displayState.output?.dosesRelativeToBasal ?? []
     }
+
+    func updateRemoteRecommendation() async {
+        if lastManualBolusRecommendation == nil {
+            lastManualBolusRecommendation = displayState.output?.recommendation?.manual
+        }
+
+        guard lastManualBolusRecommendation != displayState.output?.recommendation?.manual else {
+            // no change
+            return
+        }
+
+        lastManualBolusRecommendation = displayState.output?.recommendation?.manual
+
+        if let output = displayState.output {
+            var dosingDecision = StoredDosingDecision(date: Date(), reason: "updateRemoteRecommendation")
+            dosingDecision.predictedGlucose = output.predictedGlucose
+            dosingDecision.insulinOnBoard = displayState.activeInsulin
+            dosingDecision.carbsOnBoard = displayState.activeCarbs
+            switch output.recommendationResult {
+            case .success(let recommendation):
+                dosingDecision.automaticDoseRecommendation = recommendation.automatic
+                if let recommendationDate = displayState.input?.predictionStart, let manualRec = recommendation.manual {
+                    dosingDecision.manualBolusRecommendation = ManualBolusRecommendationWithDate(recommendation: manualRec, date: recommendationDate)
+                }
+            case .failure(let error):
+                if let loopError = error as? LoopError {
+                    dosingDecision.errors.append(loopError.issue)
+                } else {
+                    dosingDecision.errors.append(.init(id: "error", details: ["description": error.localizedDescription]))
+                }
+            }
+
+            dosingDecision.controllerStatus = UIDevice.current.controllerStatus
+            self.logger.debug("Manual bolus rec = %{public}@", String(describing: dosingDecision.manualBolusRecommendation))
+            await self.dosingDecisionStore.storeDosingDecision(dosingDecision)
+        }
+    }
 }
 
 // MARK: Background task management
@@ -642,12 +682,6 @@ extension LoopDataManager {
                                                   manualBolusRecommendation: bolusDosingDecision.manualBolusRecommendation,
                                                   manualBolusRequested: bolusDosingDecision.manualBolusRequested)
         await dosingDecisionStore.storeDosingDecision(dosingDecision)
-    }
-
-    fileprivate enum UpdateReason: String {
-        case loop
-        case getLoopState
-        case updateRemoteRecommendation
     }
 
     private func notify(forChange context: LoopUpdateContext) {

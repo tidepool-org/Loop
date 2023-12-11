@@ -399,7 +399,23 @@ class LoopDataManagerTests: XCTestCase {
         XCTAssertNil(dosingDecisionStore.dosingDecisions[0].manualBolusRecommendation)
         XCTAssertNil(dosingDecisionStore.dosingDecisions[0].manualBolusRequested)
     }
-//
+
+    // TODO:
+    func testLoopGetStateRecommendsManualBolusWithoutMomentum() {
+//        setUp(for: .highAndRisingWithCOB)
+//        let exp = expectation(description: #function)
+//        var recommendedBolus: ManualBolusRecommendation?
+//        loopDataManager.getLoopState { (_, loopState) in
+//            recommendedBolus = try? loopState.recommendBolus(consideringPotentialCarbEntry: nil, replacingCarbEntry: nil, considerPositiveVelocityAndRC: false)
+//            exp.fulfill()
+//        }
+//        wait(for: [exp], timeout: 1.0)
+//        XCTAssertEqual(recommendedBolus!.amount, 1.52, accuracy: 0.01)
+    }
+
+
+
+// TODO:
 //    func testIsClosedLoopAvoidsTriggeringTempBasalCancelOnCreation() {
 //        let settings = StoredSettings(
 //            dosingEnabled: false,

@@ -30,7 +30,6 @@ protocol ActiveStatefulPluginsProvider {
 
 
 protocol UploadEventListener {
-    func updateRemoteRecommendation()
     func triggerUpload(for triggeringType: RemoteDataType)
 }
 
@@ -725,46 +724,33 @@ extension DeviceDataManager {
 
 // MARK: - Client API
 extension DeviceDataManager {
-    func enactBolus(units: Double, activationType: BolusActivationType, completion: @escaping (_ error: Error?) -> Void = { _ in }) {
+    func enactBolus(units: Double, activationType: BolusActivationType) async throws {
         guard let pumpManager = pumpManager else {
-            completion(LoopError.configurationError(.pumpManager))
-            return
+            throw LoopError.configurationError(.pumpManager)
         }
 
-        pumpManager.enactBolus(units: units, activationType: activationType) { (error) in
-            if let error = error {
-                self.log.error("%{public}@", String(describing: error))
-                switch error {
-                case .uncertainDelivery:
-                    // Do not generate notification on uncertain delivery error
-                    break
-                default:
-                    // Do not generate notifications for automatic boluses that fail.
-                    if !activationType.isAutomatic {
-                        NotificationManager.sendBolusFailureNotification(for: error, units: units, at: Date(), activationType: activationType)
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            pumpManager.enactBolus(units: units, activationType: activationType) { (error) in
+                if let error = error {
+                    self.log.error("%{public}@", String(describing: error))
+                    switch error {
+                    case .uncertainDelivery:
+                        // Do not generate notification on uncertain delivery error
+                        break
+                    default:
+                        // Do not generate notifications for automatic boluses that fail.
+                        if !activationType.isAutomatic {
+                            NotificationManager.sendBolusFailureNotification(for: error, units: units, at: Date(), activationType: activationType)
+                        }
                     }
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume()
                 }
-                completion(error)
-            } else {
-                completion(nil)
             }
         }
-        // Trigger forecast/recommendation update for remote clients
-        self.uploadEventListener.updateRemoteRecommendation()
     }
     
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws {
-        return try await withCheckedThrowingContinuation { continuation in
-            enactBolus(units: units, activationType: activationType) { error in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                continuation.resume()
-            }
-        }
-    }
-
     var pumpManagerStatus: PumpManagerStatus? {
         return pumpManager?.status
     }
