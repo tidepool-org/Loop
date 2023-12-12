@@ -191,9 +191,6 @@ final class CarbEntryViewModel: ObservableObject {
             potentialCarbEntry: updatedCarbEntry,
             selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji
         )
-        Task {
-            await viewModel.generateRecommendationAndStartObserving()
-        }
         
         viewModel.analyticsServicesManager = analyticsServicesManager
         viewModel.deliveryDelegate = deliveryDelegate

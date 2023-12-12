@@ -129,6 +129,8 @@ final class LoopDataManager {
 
     private var lastManualBolusRecommendation: ManualBolusRecommendation?
 
+    var usePositiveMomentumAndRCForManualBoluses: Bool
+
     lazy private var cancellables = Set<AnyCancellable>()
 
     init(
@@ -143,7 +145,8 @@ final class LoopDataManager {
         automaticDosingStatus: AutomaticDosingStatus,
         trustedTimeOffset: @escaping () async -> TimeInterval,
         analyticsServicesManager: AnalyticsServicesManager?,
-        carbAbsorptionModel: CarbAbsorptionModel
+        carbAbsorptionModel: CarbAbsorptionModel,
+        usePositiveMomentumAndRCForManualBoluses: Bool = true
     ) {
 
         self.lastLoopCompleted = lastLoopCompleted
@@ -158,6 +161,7 @@ final class LoopDataManager {
         self.trustedTimeOffset = trustedTimeOffset
         self.analyticsServicesManager = analyticsServicesManager
         self.carbAbsorptionModel = carbAbsorptionModel
+        self.usePositiveMomentumAndRCForManualBoluses = usePositiveMomentumAndRCForManualBoluses
 
         // Required for device settings in stored dosing decisions
         UIDevice.current.isBatteryMonitoringEnabled = true
@@ -198,12 +202,6 @@ final class LoopDataManager {
                 }
             }
         ]
-
-        Task { @MainActor in
-            // Run initial display state update, and notify UI
-            await updateDisplayState()
-            self.notify(forChange: .forecast)
-        }
 
         // Turn off preMeal when going into closed loop off mode
         // Cancel any active temp basal when going into closed loop off mode
@@ -532,9 +530,9 @@ final class LoopDataManager {
     }
 
     func recommendManualBolus(
-        manualGlucoseSample: NewGlucoseSample?,
-        potentialCarbEntry: NewCarbEntry?,
-        originalCarbEntry: StoredCarbEntry?
+        manualGlucoseSample: NewGlucoseSample? = nil,
+        potentialCarbEntry: NewCarbEntry? = nil,
+        originalCarbEntry: StoredCarbEntry? = nil
     ) async throws -> ManualBolusRecommendation? {
 
         var input = try await self.fetchData(for: now(), disablingPreMeal: potentialCarbEntry != nil)
@@ -542,6 +540,7 @@ final class LoopDataManager {
             .removingCarbEntry(carbEntry: originalCarbEntry)
             .addingCarbEntry(carbEntry: potentialCarbEntry)
 
+        input.includePositiveVelocityAndRC = usePositiveMomentumAndRCForManualBoluses
         input.recommendationType = .manualBolus
 
         let output = LoopAlgorithm.run(input: input)
@@ -1067,10 +1066,6 @@ extension LoopDataManager: BolusEntryViewModelDelegate {
 
     func generatePrediction(input: LoopAlgorithmInput) throws -> [PredictedGlucoseValue] {
         try input.predictGlucose()
-    }
-
-    func runAlgorithm(input: LoopKit.LoopAlgorithmInput) -> LoopKit.LoopAlgorithmOutput {
-        LoopAlgorithm.run(input: input)
     }
 }
 

@@ -1378,11 +1378,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     isManualGlucoseEntryEnabled: enableManualGlucoseEntry
                 )
                 viewModel.deliveryDelegate = deviceManager
-
-                Task { @MainActor in
-                    await viewModel.generateRecommendationAndStartObserving()
-                }
-                
                 viewModel.analyticsServicesManager = analyticsServicesManager
                 
                 return viewModel

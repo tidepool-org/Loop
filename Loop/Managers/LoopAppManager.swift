@@ -485,6 +485,8 @@ class LoopAppManager: NSObject {
 
         state = state.next
 
+        await loopDataManager.updateDisplayState()
+
         NotificationCenter.default.publisher(for: .LoopCycleCompleted)
             .sink { [weak self] _ in
                 Task {

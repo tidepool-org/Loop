@@ -275,7 +275,7 @@ class BolusEntryViewModelTests: XCTestCase {
         bolusEntryViewModel.manualGlucoseQuantity = .glucose(value: 123)
         await bolusEntryViewModel.update()
 
-        XCTAssertEqual(123, delegate.lastRunAlgorithmInput?.glucoseHistory.last?.quantity.doubleValue(for: .milligramsPerDeciliter))
+        XCTAssertEqual(123, delegate.manualGlucoseSampleForBolusRecommendation?.quantity.doubleValue(for: .milligramsPerDeciliter))
     }
     
     func testUpdateInsulinOnBoard() async throws {
@@ -317,14 +317,9 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertNotNil(recommendedBolus)
         XCTAssertEqual(recommendation.amount, recommendedBolus?.doubleValue(for: .internationalUnit()))
 
-        guard let input = delegate.lastRunAlgorithmInput else {
-            XCTFail("Algorithm not run")
-            return
-        }
-
-        let carbsUsedForRecommendation = input.carbEntries.map { $0.amount }.reduce(0, +)
-
-        XCTAssertEqual(40, carbsUsedForRecommendation)
+        XCTAssertEqual(delegate.originalCarbEntryForBolusRecommendation?.quantity, originalCarbEntry.quantity)
+        XCTAssertEqual(delegate.potentialCarbEntryForBolusRecommendation?.quantity, editedCarbEntry.quantity)
+        XCTAssertNil(delegate.manualGlucoseSampleForBolusRecommendation)
 
         XCTAssertNil(bolusEntryViewModel.activeNotice)
     }
@@ -428,8 +423,9 @@ class BolusEntryViewModelTests: XCTestCase {
 
         await setUpViewModel(originalCarbEntry: originalCarbEntry, potentialCarbEntry: editedCarbEntry)
 
-        bolusEntryViewModel.manualGlucoseQuantity = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 123)
+        let manualGlucoseQuantity = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 123)
 
+        bolusEntryViewModel.manualGlucoseQuantity = manualGlucoseQuantity
         XCTAssertFalse(bolusEntryViewModel.isBolusRecommended)
 
         let recommendation = ManualBolusRecommendation(amount: 1.25)
@@ -441,14 +437,9 @@ class BolusEntryViewModelTests: XCTestCase {
         XCTAssertNotNil(recommendedBolus)
         XCTAssertEqual(recommendation.amount, recommendedBolus?.doubleValue(for: .internationalUnit()))
 
-        guard let input = delegate.lastRunAlgorithmInput else {
-            XCTFail("Algorithm did not run")
-            return
-        }
-
-        let carbsUsedForRecommendation = input.carbEntries.map { $0.amount }.reduce(0, +)
-
-        XCTAssertEqual(40, carbsUsedForRecommendation)
+        XCTAssertEqual(delegate.potentialCarbEntryForBolusRecommendation, editedCarbEntry)
+        XCTAssertEqual(delegate.originalCarbEntryForBolusRecommendation, originalCarbEntry)
+        XCTAssertEqual(delegate.manualGlucoseSampleForBolusRecommendation?.quantity, manualGlucoseQuantity)
 
         XCTAssertNil(bolusEntryViewModel.activeNotice)
     }
@@ -882,6 +873,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     )
 
     func fetchData(for baseTime: Date, disablingPreMeal: Bool) async throws -> LoopAlgorithmInput {
+        loopStateInput.predictionStart = baseTime
         return loopStateInput
     }
     
@@ -948,13 +940,28 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         activeInsulin: nil,
         activeCarbs: nil
     )
-    var lastRunAlgorithmInput: LoopAlgorithmInput?
 
-    func runAlgorithm(input: LoopAlgorithmInput) -> LoopAlgorithmOutput {
-        lastRunAlgorithmInput = input
-        return algorithmOutput
+    var manualGlucoseSampleForBolusRecommendation: NewGlucoseSample?
+    var potentialCarbEntryForBolusRecommendation: NewCarbEntry?
+    var originalCarbEntryForBolusRecommendation: StoredCarbEntry?
+
+    func recommendManualBolus(
+        manualGlucoseSample: NewGlucoseSample?,
+        potentialCarbEntry: NewCarbEntry?,
+        originalCarbEntry: StoredCarbEntry?
+    ) async throws -> ManualBolusRecommendation? {
+
+        manualGlucoseSampleForBolusRecommendation = manualGlucoseSample
+        potentialCarbEntryForBolusRecommendation = potentialCarbEntry
+        originalCarbEntryForBolusRecommendation = originalCarbEntry
+
+        switch algorithmOutput.recommendationResult {
+        case .success(let recommendation):
+            return recommendation.manual
+        case .failure(let error):
+            throw error
+        }
     }
-
 }
 
 fileprivate struct MockInsulinModel: InsulinModel {

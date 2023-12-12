@@ -36,7 +36,12 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) async
     func enactBolus(units: Double, activationType: BolusActivationType) async throws
 
-    func runAlgorithm(input: LoopAlgorithmInput) -> LoopAlgorithmOutput
+    func recommendManualBolus(
+        manualGlucoseSample: NewGlucoseSample?,
+        potentialCarbEntry: NewCarbEntry?,
+        originalCarbEntry: StoredCarbEntry?
+    ) async throws -> ManualBolusRecommendation?
+
 
     func generatePrediction(input: LoopAlgorithmInput) throws -> [PredictedGlucoseValue]
 
@@ -185,10 +190,6 @@ final class BolusEntryViewModel: ObservableObject {
         self.dosingDecision.originalCarbEntry = originalCarbEntry
 
         self.updateSettings()
-
-        Task {
-            await generateRecommendationAndStartObserving()
-        }
     }
 
     public func generateRecommendationAndStartObserving() async {
@@ -484,6 +485,7 @@ final class BolusEntryViewModel: ObservableObject {
         updateChartDateInterval()
         await updateRecommendedBolusAndNotice(isUpdatingFromUserInput: false)
         await updatePredictedGlucoseValues()
+        updateGlucoseChartValues()
     }
 
     private func disableManualGlucoseEntryIfNecessary() {
@@ -512,7 +514,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
 
         do {
-            let startDate = Date()
+            let startDate = now()
             var input = try await delegate.fetchData(for: startDate, disablingPreMeal: potentialCarbEntry != nil)
 
             let enteredBolusDose = DoseEntry(
@@ -523,6 +525,8 @@ final class BolusEntryViewModel: ObservableObject {
                 insulinType: deliveryDelegate?.pumpInsulinType,
                 manuallyEntered: true
             )
+
+            storedGlucoseValues = input.glucoseHistory
 
             // Add potential bolus, carbs, manual glucose
             input = input
@@ -548,7 +552,6 @@ final class BolusEntryViewModel: ObservableObject {
             return
         }
 
-        let now = Date()
         var recommendation: ManualBolusRecommendation?
         let recommendedBolus: HKQuantity?
         let notice: Notice?
@@ -593,7 +596,7 @@ final class BolusEntryViewModel: ObservableObject {
 
         let priorRecommendedBolus = self.recommendedBolus
         self.recommendedBolus = recommendedBolus
-        self.dosingDecision.manualBolusRecommendation = recommendation.map { ManualBolusRecommendationWithDate(recommendation: $0, date: now) }
+        self.dosingDecision.manualBolusRecommendation = recommendation.map { ManualBolusRecommendationWithDate(recommendation: $0, date: now()) }
         self.activeNotice = notice
 
         if priorRecommendedBolus != nil,
@@ -610,32 +613,11 @@ final class BolusEntryViewModel: ObservableObject {
             return nil
         }
 
-        let startDate = now()
-        let historicalGlucoseStartDate = Date(timeInterval: -LoopCoreConstants.dosingDecisionHistoricalGlucoseInterval, since: now())
-        let chartStartDate = chartDateInterval.start
-
-        var input = try await delegate.fetchData(for: startDate, disablingPreMeal: potentialCarbEntry != nil)
-
-        let samples = input.glucoseHistory
-        storedGlucoseValues = samples.filter { $0.startDate >= chartStartDate }
-        dosingDecision.historicalGlucose = samples.filter { $0.startDate >= historicalGlucoseStartDate }.map { HistoricalGlucoseValue(startDate: $0.startDate, quantity: $0.quantity) }
-        updateGlucoseChartValues()
-
-        input = input
-            .addingGlucoseSample(sample: manualGlucoseSample)
-            .removingCarbEntry(carbEntry: originalCarbEntry)
-            .addingCarbEntry(carbEntry: potentialCarbEntry)
-
-        input.recommendationType = .manualBolus
-
-        let output = delegate.runAlgorithm(input: input)
-
-        switch output.recommendationResult {
-        case .success(let prediction):
-            return prediction.manual
-        case .failure(let error):
-            throw error
-        }
+        return try await delegate.recommendManualBolus(
+            manualGlucoseSample: manualGlucoseSample,
+            potentialCarbEntry: potentialCarbEntry,
+            originalCarbEntry: originalCarbEntry
+        )
     }
 
     func updateSettings() {

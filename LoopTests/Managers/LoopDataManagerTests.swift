@@ -400,19 +400,23 @@ class LoopDataManagerTests: XCTestCase {
         XCTAssertNil(dosingDecisionStore.dosingDecisions[0].manualBolusRequested)
     }
 
-    // TODO:
-    func testLoopGetStateRecommendsManualBolusWithoutMomentum() {
-//        setUp(for: .highAndRisingWithCOB)
-//        let exp = expectation(description: #function)
-//        var recommendedBolus: ManualBolusRecommendation?
-//        loopDataManager.getLoopState { (_, loopState) in
-//            recommendedBolus = try? loopState.recommendBolus(consideringPotentialCarbEntry: nil, replacingCarbEntry: nil, considerPositiveVelocityAndRC: false)
-//            exp.fulfill()
-//        }
-//        wait(for: [exp], timeout: 1.0)
-//        XCTAssertEqual(recommendedBolus!.amount, 1.52, accuracy: 0.01)
-    }
+    func testLoopGetStateRecommendsManualBolusWithoutMomentum() async {
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-18)), quantity: .glucose(value: 100)),
+            StoredGlucoseSample(startDate: d(.minutes(-13)), quantity: .glucose(value: 130)),
+            StoredGlucoseSample(startDate: d(.minutes(-8)), quantity: .glucose(value: 160)),
+            StoredGlucoseSample(startDate: d(.minutes(-3)), quantity: .glucose(value: 190)),
+        ]
 
+        loopDataManager.usePositiveMomentumAndRCForManualBoluses = true
+        var recommendation = try! await loopDataManager.recommendManualBolus()!
+        XCTAssertEqual(recommendation.amount, 2.46, accuracy: 0.01)
+
+        loopDataManager.usePositiveMomentumAndRCForManualBoluses = false
+        recommendation = try! await loopDataManager.recommendManualBolus()!
+        XCTAssertEqual(recommendation.amount, 1.73, accuracy: 0.01)
+
+    }
 
 
 // TODO:
