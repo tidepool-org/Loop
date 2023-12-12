@@ -105,12 +105,6 @@ enum LoopError: Error {
     // Pump Manager Error
     case pumpManagerError(PumpManagerError)
 
-    // Loop State uninitialized
-    case uninitialized
-
-    // Loop State update in progress
-    case updateInProgress
-
     // Loop State loop in progress
     case loopInProgress
 
@@ -143,10 +137,6 @@ extension LoopError {
             return "pumpSuspended"
         case .pumpManagerError:
             return "pumpManagerError"
-        case .uninitialized:
-            return "uninitialized"
-        case .updateInProgress:
-            return "updateInProgress"
         case .loopInProgress:
             return "loopInProgress"
         case .unknownError:
@@ -219,10 +209,6 @@ extension LoopError: LocalizedError {
             return NSLocalizedString("Pump Suspended. Automatic dosing is disabled.", comment: "The error message displayed for LoopError.pumpSuspended errors.")
         case .pumpManagerError(let pumpManagerError):
             return String(format: NSLocalizedString("Pump Manager Error: %1$@", comment: "The error message displayed for pump manager errors. (1: pump manager error)"), pumpManagerError.errorDescription!)
-        case .uninitialized:
-            return NSLocalizedString("Loop state is uninitialized.", comment: "The error message displayed for LoopError.uninitialized errors.")
-        case .updateInProgress:
-            return NSLocalizedString("Loop state is being updated.", comment: "The error message displayed for LoopError.updateInProgress errors.")
         case .loopInProgress:
             return NSLocalizedString("Loop is already looping.", comment: "The error message displayed for LoopError.loopInProgress errors.")
         case .unknownError(let error):

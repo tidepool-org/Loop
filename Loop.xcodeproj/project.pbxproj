@@ -268,7 +268,6 @@
 		895788B3242E69A2002CB114 /* ActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895788AB242E69A2002CB114 /* ActionButton.swift */; };
 		895FE0952201234000FCF18A /* OverrideSelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895FE0942201234000FCF18A /* OverrideSelectionViewController.swift */; };
 		8968B1122408B3520074BB48 /* UIFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8968B1112408B3520074BB48 /* UIFont.swift */; };
-		8968B114240C55F10074BB48 /* LoopSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8968B113240C55F10074BB48 /* LoopSettingsTests.swift */; };
 		897A5A9624C2175B00C4E71D /* BolusEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 897A5A9524C2175B00C4E71D /* BolusEntryView.swift */; };
 		897A5A9924C22DE800C4E71D /* BolusEntryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 897A5A9824C22DE800C4E71D /* BolusEntryViewModel.swift */; };
 		898ECA60218ABD17001E9D35 /* GlucoseChartScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 898ECA5E218ABD17001E9D35 /* GlucoseChartScaler.swift */; };
@@ -1179,7 +1178,6 @@
 		895788AB242E69A2002CB114 /* ActionButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActionButton.swift; sourceTree = "<group>"; };
 		895FE0942201234000FCF18A /* OverrideSelectionViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OverrideSelectionViewController.swift; sourceTree = "<group>"; };
 		8968B1112408B3520074BB48 /* UIFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIFont.swift; sourceTree = "<group>"; };
-		8968B113240C55F10074BB48 /* LoopSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopSettingsTests.swift; sourceTree = "<group>"; };
 		897A5A9524C2175B00C4E71D /* BolusEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusEntryView.swift; sourceTree = "<group>"; };
 		897A5A9824C22DE800C4E71D /* BolusEntryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusEntryViewModel.swift; sourceTree = "<group>"; };
 		898ECA5E218ABD17001E9D35 /* GlucoseChartScaler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlucoseChartScaler.swift; sourceTree = "<group>"; };
@@ -2286,7 +2284,6 @@
 				E9C58A7624DB510500487A17 /* Fixtures */,
 				43E2D90F1D20C581004DA55F /* Info.plist */,
 				B4CAD8772549D2330057946B /* LoopCore */,
-				8968B113240C55F10074BB48 /* LoopSettingsTests.swift */,
 				A9DAE7CF2332D77F006AE942 /* LoopTests.swift */,
 				1DA7A83F24476E8C008257F0 /* Managers */,
 				E93E86AC24DDE02C00FF40C8 /* Mock Stores */,
@@ -3860,7 +3857,6 @@
 				B4D4534128E5CA7900F1A8D9 /* AlertMuterTests.swift in Sources */,
 				E98A55F124EDD85E0008715D /* MockDosingDecisionStore.swift in Sources */,
 				C1D476B42A8ED179002C1C87 /* LoopAlgorithmTests.swift in Sources */,
-				8968B114240C55F10074BB48 /* LoopSettingsTests.swift in Sources */,
 				A9BD28E7272226B40071DF15 /* TestLocalizedError.swift in Sources */,
 				A9F5F1F5251050EC00E7C8A4 /* ZipArchiveTests.swift in Sources */,
 				E9B3552D293592B40076AB04 /* MealDetectionManagerTests.swift in Sources */,
