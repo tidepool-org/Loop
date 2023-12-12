@@ -18,6 +18,7 @@ extension CommandResponseViewController {
         let vc = T(command: { (completionHandler) in
             Task { @MainActor in
                 let report = await reportGenerator.generateDiagnosticReport()
+                // TODO: https://tidepool.atlassian.net/browse/LOOP-4771
                 completionHandler([
                     "Use the Share button above to save this diagnostic report to aid investigating your problem. Issues can be filed at https://github.com/LoopKit/Loop/issues.",
                     "Generated: \(date)",
