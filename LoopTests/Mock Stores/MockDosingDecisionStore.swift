@@ -7,6 +7,7 @@
 //
 
 import LoopKit
+import XCTest
 @testable import Loop
 
 class MockDosingDecisionStore: DosingDecisionStoreProtocol {
@@ -24,8 +25,11 @@ class MockDosingDecisionStore: DosingDecisionStoreProtocol {
     
     var dosingDecisions: [StoredDosingDecision] = []
 
+    var storeExpectation: XCTestExpectation?
+
     func storeDosingDecision(_ dosingDecision: StoredDosingDecision) async {
         dosingDecisions.append(dosingDecision)
+        storeExpectation?.fulfill()
     }
 
     func executeDosingDecisionQuery(fromQueryAnchor queryAnchor: LoopKit.DosingDecisionStore.QueryAnchor?, limit: Int, completion: @escaping (LoopKit.DosingDecisionStore.DosingDecisionQueryResult) -> Void) {
