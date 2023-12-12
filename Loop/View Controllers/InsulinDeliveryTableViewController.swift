@@ -285,17 +285,12 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
 
     private func updateIOB() {
         if case .display = state {
-            doseStore?.insulinOnBoard(at: Date()) { (result) -> Void in
-                DispatchQueue.main.async {
-                    switch result {
-                    case .failure:
-                        self.iobValueLabel.text = "…"
-                        self.iobDateLabel.text = nil
-                    case .success(let iob):
-                        self.iobValueLabel.text = self.iobNumberFormatter.string(from: iob.value)
-                        self.iobDateLabel.text = String(format: NSLocalizedString("com.loudnate.InsulinKit.IOBDateLabel", value: "at %1$@", comment: "The format string describing the date of an IOB value. The first format argument is the localized date."), self.timeFormatter.string(from: iob.startDate))
-                    }
-                }
+            if let activeInsulin = loopDataManager.activeInsulin {
+                self.iobValueLabel.text = self.iobNumberFormatter.string(from: activeInsulin.value)
+                self.iobDateLabel.text = String(format: NSLocalizedString("com.loudnate.InsulinKit.IOBDateLabel", value: "at %1$@", comment: "The format string describing the date of an IOB value. The first format argument is the localized date."), self.timeFormatter.string(from: activeInsulin.startDate))
+            } else {
+                self.iobValueLabel.text = "…"
+                self.iobDateLabel.text = nil
             }
         }
     }
