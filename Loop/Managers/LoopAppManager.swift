@@ -129,15 +129,6 @@ class LoopAppManager: NSObject {
             INPreferences.requestSiriAuthorization { _ in }
         }
 
-        if FeatureFlags.remoteCommandsEnabled {
-            DispatchQueue.main.async {
-#if targetEnvironment(simulator)
-                self.remoteNotificationRegistrationDidFinish(.failure(SimulatorError.remoteNotificationsNotAvailable))
-#else
-                UIApplication.shared.registerForRemoteNotifications()
-#endif
-            }
-        }
         self.state = state.next
     }
 
@@ -216,6 +207,17 @@ class LoopAppManager: NSObject {
             alertMuter: alertManager.alertMuter,
             analyticsServicesManager: analyticsServicesManager
         )
+
+        // Once settings manager is initialized, we can register for remote notifications
+        if FeatureFlags.remoteCommandsEnabled {
+            DispatchQueue.main.async {
+#if targetEnvironment(simulator)
+                self.remoteNotificationRegistrationDidFinish(.failure(SimulatorError.remoteNotificationsNotAvailable))
+#else
+                UIApplication.shared.registerForRemoteNotifications()
+#endif
+            }
+        }
 
         healthStore = HKHealthStore()
 

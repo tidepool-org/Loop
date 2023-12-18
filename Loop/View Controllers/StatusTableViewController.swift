@@ -25,6 +25,7 @@ private extension RefreshContext {
     static let all: Set<RefreshContext> = [.status, .glucose, .insulin, .carbs, .targets]
 }
 
+@MainActor
 final class StatusTableViewController: LoopChartsTableViewController {
 
     private let log = OSLog(category: "StatusTableViewController")
@@ -88,10 +89,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
         let notificationCenter = NotificationCenter.default
 
         notificationObservers += [
-            notificationCenter.addObserver(forName: .LoopDataUpdated, object: nil, queue: nil) { [weak self] note in
-                Task { @MainActor in
-                    let rawContext = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopUpdateContext.RawValue
-                    let context = LoopUpdateContext(rawValue: rawContext)
+            notificationCenter.addObserver(forName: .LoopDataUpdated, object: nil, queue: nil) { note in
+                let rawContext = note.userInfo?[LoopDataManager.LoopUpdateContextKey] as! LoopUpdateContext.RawValue
+                let context = LoopUpdateContext(rawValue: rawContext)
+                Task { @MainActor [weak self] in
                     switch context {
                     case .none, .insulin?:
                         self?.refreshContext.formUnion([.status, .insulin])
@@ -112,27 +113,27 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
                 WidgetCenter.shared.reloadAllTimelines()
             },
-            notificationCenter.addObserver(forName: .LoopRunning, object: nil, queue: nil) { [weak self] _ in
-                Task { @MainActor in
+            notificationCenter.addObserver(forName: .LoopRunning, object: nil, queue: nil) { _ in
+                Task { @MainActor [weak self] in
                     self?.hudView?.loopCompletionHUD.loopInProgress = true
                 }
             },
-            notificationCenter.addObserver(forName: .PumpManagerChanged, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
-                Task { @MainActor in
+            notificationCenter.addObserver(forName: .PumpManagerChanged, object: deviceManager, queue: nil) { (notification: Notification) in
+                Task { @MainActor [weak self] in
                     self?.registerPumpManager()
                     self?.configurePumpManagerHUDViews()
                     self?.updateToolbarItems()
                 }
             },
-            notificationCenter.addObserver(forName: .CGMManagerChanged, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
-                Task { @MainActor in
+            notificationCenter.addObserver(forName: .CGMManagerChanged, object: deviceManager, queue: nil) { (notification: Notification) in
+                Task { @MainActor [weak self] in
                     self?.registerCGMManager()
                     self?.configureCGMManagerHUDViews()
                     self?.updateToolbarItems()
                 }
             },
-            notificationCenter.addObserver(forName: .PumpEventsAdded, object: deviceManager, queue: nil) { [weak self] (notification: Notification) in
-                Task { @MainActor in
+            notificationCenter.addObserver(forName: .PumpEventsAdded, object: deviceManager, queue: nil) { (notification: Notification) in
+                Task { @MainActor [weak self] in
                     self?.refreshContext.update(with: .insulin)
                     await self?.reloadData(animated: true)
                 }
@@ -1801,9 +1802,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             } else {
                 rotateTimer?.invalidate()
                 rotateTimer = Timer.scheduledTimer(withTimeInterval: rotateTimerTimeout, repeats: false) { [weak self] _ in
-                    self?.rotateCount = 0
-                    self?.rotateTimer?.invalidate()
-                    self?.rotateTimer = nil
+                    Task { @MainActor [weak self] in
+                        self?.rotateCount = 0
+                        self?.rotateTimer?.invalidate()
+                        self?.rotateTimer = nil
+                    }
                 }
                 rotateCount += 1
             }
@@ -2013,14 +2016,15 @@ extension StatusTableViewController: CompletionDelegate {
 
 extension StatusTableViewController: PumpManagerStatusObserver {
     func pumpManager(_ pumpManager: PumpManager, didUpdate status: PumpManagerStatus, oldStatus: PumpManagerStatus) {
-        dispatchPrecondition(condition: .onQueue(.main))
         log.default("PumpManager:%{public}@ did update status", String(describing: type(of: pumpManager)))
+        Task { @MainActor in
 
-        basalDeliveryState = status.basalDeliveryState
-        bolusState = status.bolusState
+            basalDeliveryState = status.basalDeliveryState
+            bolusState = status.bolusState
 
-        refreshContext.update(with: .status)
-        Task { await reloadData(animated: true) }
+            refreshContext.update(with: .status)
+            await self.reloadData(animated: true)
+        }
     }
 }
 

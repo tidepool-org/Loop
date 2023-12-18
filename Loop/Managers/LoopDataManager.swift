@@ -263,6 +263,10 @@ final class LoopDataManager {
 
         let basal = try await settingsProvider.getBasalHistory(startDate: dosesStart, endDate: baseTime)
 
+        guard !basal.isEmpty else {
+            throw LoopError.configurationError(.basalRateSchedule)
+        }
+
         let forecastEndTime = baseTime.addingTimeInterval(InsulinMath.defaultInsulinActivityDuration).dateCeiledToTimeInterval(.minutes(GlucoseMath.defaultDelta))
 
         let carbsStart = baseTime.addingTimeInterval(-CarbMath.maximumAbsorptionTimeInterval)
@@ -279,6 +283,10 @@ final class LoopDataManager {
             startDate: carbsStart,
             endDate: forecastEndTime
         )
+
+        guard !carbRatio.isEmpty else {
+            throw LoopError.configurationError(.carbRatioSchedule)
+        }
 
         let glucose = try await glucoseStore.getGlucoseSamples(start: carbsStart, end: baseTime)
 
