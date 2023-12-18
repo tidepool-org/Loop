@@ -451,7 +451,9 @@ final class LoopDataManager {
             let dosingStrategy = settingsProvider.settings.automaticDosingStrategy
             input.recommendationType = dosingStrategy.recommendationType
 
-            let latestGlucose = input.glucoseHistory.last!
+            guard let latestGlucose = input.glucoseHistory.last else {
+                throw LoopError.missingDataError(.glucose)
+            }
 
             guard startDate.timeIntervalSince(latestGlucose.startDate) <= LoopAlgorithm.inputDataRecencyInterval else {
                 throw LoopError.glucoseTooOld(date: latestGlucose.startDate)
