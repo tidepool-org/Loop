@@ -9,7 +9,9 @@
 import Foundation
 @testable import Loop
 
-struct MockUploadEventListener: UploadEventListener {
-    func triggerUpload(for triggeringType: Loop.RemoteDataType) {
+class MockUploadEventListener: UploadEventListener {
+    var lastUploadTriggeringType: RemoteDataType?
+    func triggerUpload(for triggeringType: RemoteDataType) {
+        self.lastUploadTriggeringType = triggeringType
     }
 }

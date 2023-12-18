@@ -22,6 +22,7 @@ final class DeviceDataManagerTests: XCTestCase {
     let trustedTimeChecker = MockTrustedTimeChecker()
     let loopControlMock = LoopControlMock()
     var settingsManager: SettingsManager!
+    var uploadEventListener: MockUploadEventListener!
 
 
     class MockAlertIssuer: AlertIssuer {
@@ -68,6 +69,8 @@ final class DeviceDataManagerTests: XCTestCase {
 
         self.settingsManager = SettingsManager(cacheStore: persistenceController, expireAfter: .days(1), alertMuter: AlertMuter())
 
+        self.uploadEventListener = MockUploadEventListener()
+
         deviceDataManager = DeviceDataManager(
             pluginManager: PluginManager(),
             alertManager: alertManager,
@@ -77,7 +80,7 @@ final class DeviceDataManagerTests: XCTestCase {
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             cgmEventStore: cgmEventStore,
-            uploadEventListener: MockUploadEventListener(),
+            uploadEventListener: uploadEventListener,
             crashRecoveryManager: CrashRecoveryManager(alertIssuer: MockAlertIssuer()),
             loopControl: loopControlMock,
             analyticsServicesManager: AnalyticsServicesManager(),
@@ -161,6 +164,12 @@ final class DeviceDataManagerTests: XCTestCase {
         wait(for: [loopControlMock.cancelExpectation!], timeout: 1)
 
         XCTAssertEqual(loopControlMock.lastCancelActiveTempBasalReason, .unreliableCGMData)
+    }
+
+    func testUploadEventListener() {
+        let alertStore = AlertStore()
+        deviceDataManager.alertStoreHasUpdatedAlertData(alertStore)
+        XCTAssertEqual(uploadEventListener.lastUploadTriggeringType, .alert)
     }
 
 }
