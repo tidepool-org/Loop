@@ -124,10 +124,6 @@ class TemporaryPresetsManager {
         }
     }
 
-    func settingsChanged() {
-
-    }
-
     public var isScheduleOverrideInfiniteWorkout: Bool {
         guard let scheduleOverride = scheduleOverride else { return false }
         return scheduleOverride.context == .legacyWorkout && scheduleOverride.duration.isInfinite
