@@ -425,6 +425,8 @@ final class LoopDataManager {
             dosingDecision.appendError(error as? LoopError ?? .unknownError(error))
             if reason == .maximumBasalRateChanged {
                 throw CancelTempBasalFailedMaximumBasalRateChangedError(reason: error)
+            } else {
+                throw error
             }
         }
 
