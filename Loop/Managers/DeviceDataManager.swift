@@ -432,13 +432,13 @@ final class DeviceDataManager {
         guard case .tempBasal(let tempBasal) = pumpManager?.status.basalDeliveryState else {
             return
         }
-        
+
         guard let scheduledBasalRate = settingsManager.settings.basalRateSchedule?.value(at: tempBasal.startDate),
               tempBasal.unitsPerHour > scheduledBasalRate else
         {
             return
         }
-        
+
         // Cancel active high temp basal
         try? await loopControl.cancelActiveTempBasal(for: .unreliableCGMData)
     }
