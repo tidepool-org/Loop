@@ -57,4 +57,9 @@ extension TempBasalRecommendation {
 
         return self
     }
+
+    public static var cancel: TempBasalRecommendation {
+        return self.init(unitsPerHour: 0, duration: 0)
+    }
 }
+
