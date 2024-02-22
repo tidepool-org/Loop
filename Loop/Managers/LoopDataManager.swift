@@ -1160,6 +1160,12 @@ extension AutomaticDosingStrategy {
     }
 }
 
+extension AutomaticDoseRecommendation {
+    public var hasDosingChange: Bool {
+        return basalAdjustment != nil || bolusUnits != nil
+    }
+}
+
 extension StoredDosingDecision {
     mutating func updateFrom(input: LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry>, output: LoopAlgorithmOutput<StoredCarbEntry>) {
         self.historicalGlucose = input.glucoseHistory.map { HistoricalGlucoseValue(startDate: $0.startDate, quantity: $0.quantity) }
