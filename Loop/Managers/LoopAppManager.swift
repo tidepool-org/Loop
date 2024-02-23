@@ -249,19 +249,10 @@ class LoopAppManager: NSObject {
             observationStart: Date().addingTimeInterval(-CarbMath.maximumAbsorptionTimeInterval)
         )
 
-        let insulinModelProvider: InsulinModelProvider
-
-        if FeatureFlags.adultChildInsulinModelSelectionEnabled {
-            insulinModelProvider = PresetInsulinModelProvider(defaultRapidActingModel: settingsManager.settings.defaultRapidActingModel?.presetForRapidActingInsulin)
-        } else {
-            insulinModelProvider = PresetInsulinModelProvider(defaultRapidActingModel: nil)
-        }
-
         self.doseStore = DoseStore(
             healthKitSampleStore: insulinHealthStore,
             cacheStore: cacheStore,
             cacheLength: localCacheDuration,
-            insulinModelProvider: insulinModelProvider,
             longestEffectDuration: ExponentialInsulinModelPreset.rapidActingAdult.effectDuration,
             basalProfile: settingsManager.settings.basalRateSchedule,
             lastPumpEventsReconciliation: nil // PumpManager is nil at this point. Will update this via addPumpEvents below

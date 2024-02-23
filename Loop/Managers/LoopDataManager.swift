@@ -15,24 +15,10 @@ import LoopCore
 import WidgetKit
 import LoopAlgorithm
 
-extension DoseEntry: InsulinDose {
-    public var deliveryType: InsulinDeliveryType {
-        switch self.type {
-        case .bolus:
-            return .bolus
-        default:
-            return .basal
-        }
-    }
-    
-    public var volume: Double {
-        return deliveredUnits ?? programmedUnits
-    }
-}
 
 struct AlgorithmDisplayState {
-    var input: LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry>?
-    var output: LoopAlgorithmOutput<StoredCarbEntry>?
+    var input: StoredDataAlgorithmInput?
+    var output: AlgorithmOutput<StoredCarbEntry>?
 
     var activeInsulin: InsulinValue? {
         guard let input, let value = output?.activeInsulin else {
@@ -48,7 +34,7 @@ struct AlgorithmDisplayState {
         return CarbValue(startDate: input.predictionStart, value: value)
     }
 
-    var asTuple: (algoInput: LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry>?, algoOutput: LoopAlgorithmOutput<StoredCarbEntry>?) {
+    var asTuple: (algoInput: StoredDataAlgorithmInput?, algoOutput: AlgorithmOutput<StoredCarbEntry>?) {
         return (algoInput: input, algoOutput: output)
     }
 }
@@ -63,6 +49,17 @@ protocol DeliveryDelegate: AnyObject {
     func enactBolus(units: Double, activationType: BolusActivationType) async throws
     func roundBasalRate(unitsPerHour: Double) -> Double
     func roundBolusVolume(units: Double) -> Double
+}
+
+extension PumpManagerStatus.BasalDeliveryState {
+    var currentTempBasal: DoseEntry? {
+        switch self {
+        case .tempBasal(let dose):
+            return dose
+        default:
+            return nil
+        }
+    }
 }
 
 protocol DosingManagerDelegate {
@@ -265,10 +262,23 @@ final class LoopDataManager {
         }
     }
 
+    func insulinModel(for type: InsulinType?) -> InsulinModel {
+        switch type {
+        case .fiasp:
+            return ExponentialInsulinModelPreset.fiasp
+        case .lyumjev:
+            return ExponentialInsulinModelPreset.lyumjev
+        case .afrezza:
+            return ExponentialInsulinModelPreset.afrezza
+        default:
+            return settings.defaultRapidActingModel?.presetForRapidActingInsulin?.model ?? ExponentialInsulinModelPreset.rapidActingAdult
+        }
+    }
+
     func fetchData(
         for baseTime: Date = Date(),
         disablingPreMeal: Bool = false
-    ) async throws -> LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry> {
+    ) async throws -> StoredDataAlgorithmInput {
         // Need to fetch doses back as far as t - (DIA + DCA) for Dynamic carbs
         let dosesInputHistory = CarbMath.maximumAbsorptionTimeInterval + InsulinMath.defaultInsulinActivityDuration
 
@@ -386,11 +396,11 @@ final class LoopDataManager {
             effectiveBolusApplicationFactor = nil
         }
 
-        return LoopAlgorithmInput(
-            predictionStart: baseTime,
+        return StoredDataAlgorithmInput(
             glucoseHistory: glucose,
-            doses: doses,
+            doses: doses.map { $0.simpleDose(with: insulinModel(for: $0.insulinType)) },
             carbEntries: carbEntries,
+            predictionStart: baseTime,
             basal: basalWithOverrides,
             sensitivity: sensitivityWithOverrides,
             carbRatio: carbRatioWithOverrides,
@@ -399,11 +409,11 @@ final class LoopDataManager {
             maxBolus: maxBolus,
             maxBasalRate: maxBasalRate,
             useIntegralRetrospectiveCorrection: UserDefaults.standard.integralRetrospectiveCorrectionEnabled,
+            includePositiveVelocityAndRC: true,
             carbAbsorptionModel: carbAbsorptionModel,
-            recommendationInsulinType: deliveryDelegate?.pumpInsulinType ?? .novolog,
+            recommendationInsulinModel: insulinModel(for: deliveryDelegate?.pumpInsulinType ?? .novolog),
             recommendationType: .manualBolus,
-            automaticBolusApplicationFactor: effectiveBolusApplicationFactor
-        )
+            automaticBolusApplicationFactor: effectiveBolusApplicationFactor)
     }
 
     func loopingReEnabled() async {
@@ -470,8 +480,6 @@ final class LoopDataManager {
 
             var input = try await fetchData(for: loopBaseTime)
 
-            let lastTempBasal = input.doses.first { $0.type == .tempBasal && $0.startDate < input.predictionStart && $0.endDate >= input.predictionStart }
-
             // Trim future basal
             input.doses =  input.doses.trimmed(to: loopBaseTime, onlyTrimTempBasals: true)
 
@@ -519,7 +527,7 @@ final class LoopDataManager {
                     let basalAdjustment = basal.ifNecessary(
                         at: loopBaseTime,
                         neutralBasalRate: scheduledBasalRate,
-                        lastTempBasal: lastTempBasal,
+                        lastTempBasal: deliveryDelegate.basalDeliveryState?.currentTempBasal,
                         continuationInterval: .minutes(11),
                         neutralBasalRateMatchesPump: activeOverride == nil
                     )
@@ -735,7 +743,7 @@ extension LoopDataManager {
     /// Estimate glucose effects of suspending insulin delivery over duration of insulin action starting at the specified date
     func insulinDeliveryEffect(at date: Date, insulinType: InsulinType) async throws -> [GlucoseEffect] {
         let startSuspend = date
-        let insulinEffectDuration = LoopAlgorithm.insulinModelProvider.model(for: insulinType).effectDuration
+        let insulinEffectDuration = insulinModel(for: insulinType).effectDuration
         let endSuspend = startSuspend.addingTimeInterval(insulinEffectDuration)
 
         var suspendDoses: [BasalRelativeDose] = []
@@ -776,7 +784,6 @@ extension LoopDataManager {
 
         // Calculate predicted glucose effect of suspending insulin delivery
         return suspendDoses.glucoseEffects(
-            insulinModelProvider: LoopAlgorithm.insulinModelProvider,
             insulinSensitivityHistory: sensitivity
         ).filterDateRange(startSuspend, endSuspend)
     }
@@ -862,9 +869,9 @@ extension NewGlucoseSample {
 }
 
 
-extension LoopAlgorithmInput where CarbType == StoredCarbEntry {
+extension StoredDataAlgorithmInput {
 
-    func addingDose(dose: InsulinDoseType?) -> LoopAlgorithmInput {
+    func addingDose(dose: InsulinDoseType?) -> StoredDataAlgorithmInput {
         var rval = self
         if let dose {
             rval.doses = doses + [dose]
@@ -872,7 +879,7 @@ extension LoopAlgorithmInput where CarbType == StoredCarbEntry {
         return rval
     }
 
-    func addingGlucoseSample(sample: GlucoseType?) -> LoopAlgorithmInput {
+    func addingGlucoseSample(sample: GlucoseType?) -> StoredDataAlgorithmInput {
         var rval = self
         if let sample {
             rval.glucoseHistory.append(sample)
@@ -880,7 +887,7 @@ extension LoopAlgorithmInput where CarbType == StoredCarbEntry {
         return rval
     }
 
-    func addingCarbEntry(carbEntry: CarbType?) -> LoopAlgorithmInput {
+    func addingCarbEntry(carbEntry: CarbType?) -> StoredDataAlgorithmInput {
         var rval = self
         if let carbEntry {
             rval.carbEntries = carbEntries + [carbEntry]
@@ -888,7 +895,7 @@ extension LoopAlgorithmInput where CarbType == StoredCarbEntry {
         return rval
     }
 
-    func removingCarbEntry(carbEntry: CarbType?) -> LoopAlgorithmInput {
+    func removingCarbEntry(carbEntry: CarbType?) -> StoredDataAlgorithmInput {
         guard let carbEntry else {
             return self
         }
@@ -1109,7 +1116,7 @@ extension LoopDataManager: BolusEntryViewModelDelegate {
         temporaryPresetsManager.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: presumingMealEntry)
     }
 
-    func generatePrediction(input: LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry>) throws -> [PredictedGlucoseValue] {
+    func generatePrediction(input: StoredDataAlgorithmInput) throws -> [PredictedGlucoseValue] {
         try input.predictGlucose()
     }
 }
@@ -1140,7 +1147,7 @@ extension LoopDataManager: ManualDoseViewModelDelegate {
     }
     
     func insulinActivityDuration(for type: InsulinType?) -> TimeInterval {
-        return LoopAlgorithm.insulinModelProvider.model(for: type).effectDuration
+        return insulinModel(for: type).effectDuration
     }
 
     var algorithmDisplayState: AlgorithmDisplayState {
@@ -1167,7 +1174,7 @@ extension AutomaticDoseRecommendation {
 }
 
 extension StoredDosingDecision {
-    mutating func updateFrom(input: LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry>, output: LoopAlgorithmOutput<StoredCarbEntry>) {
+    mutating func updateFrom(input: StoredDataAlgorithmInput, output: AlgorithmOutput<StoredCarbEntry>) {
         self.historicalGlucose = input.glucoseHistory.map { HistoricalGlucoseValue(startDate: $0.startDate, quantity: $0.quantity) }
         switch output.recommendationResult {
         case .success(let recommendation):

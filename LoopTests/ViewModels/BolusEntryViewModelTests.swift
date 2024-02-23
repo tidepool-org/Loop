@@ -935,7 +935,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         return prediction
     }
 
-    var algorithmOutput: LoopAlgorithmOutput = LoopAlgorithmOutput<StoredCarbEntry>(
+    var algorithmOutput: AlgorithmOutput = AlgorithmOutput<StoredCarbEntry>(
         recommendationResult: .success(.init()),
         predictedGlucose: [],
         effects: LoopAlgorithmEffects.emptyMock,

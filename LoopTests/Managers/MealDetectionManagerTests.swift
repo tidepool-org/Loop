@@ -194,7 +194,7 @@ class MealDetectionManagerTests: XCTestCase {
     }
 
     var algorithmInput: LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry>!
-    var algorithmOutput: LoopAlgorithmOutput<StoredCarbEntry>!
+    var algorithmOutput: AlgorithmOutput<StoredCarbEntry>!
 
     var mockAlgorithmState: AlgorithmDisplayState!
 
@@ -262,7 +262,7 @@ class MealDetectionManagerTests: XCTestCase {
             retrospectiveGlucoseDiscrepancies: []
         )
 
-        algorithmOutput = LoopAlgorithmOutput(
+        algorithmOutput = AlgorithmOutput(
             recommendationResult: .success(.init()),
             predictedGlucose: [],
             effects: effects,
