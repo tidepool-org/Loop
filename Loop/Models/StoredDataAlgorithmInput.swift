@@ -8,8 +8,8 @@
 
 import Foundation
 import LoopKit
-import LoopAlgorithm
 import HealthKit
+import LoopAlgorithm
 
 struct StoredDataAlgorithmInput: AlgorithmInput {
     typealias CarbType = StoredCarbEntry

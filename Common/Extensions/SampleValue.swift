@@ -9,7 +9,6 @@ import HealthKit
 import LoopKit
 import LoopAlgorithm
 
-
 extension Collection where Element == SampleValue {
     /// O(n)
     var quantityRange: ClosedRange<HKQuantity>? {

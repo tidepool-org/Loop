@@ -12,7 +12,6 @@ import LoopKit
 import LoopKitUI
 import SwiftUI
 import XCTest
-import LoopAlgorithm
 
 @testable import Loop
 

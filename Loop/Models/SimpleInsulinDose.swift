@@ -7,8 +7,8 @@
 //
 
 import Foundation
-import LoopAlgorithm
 import LoopKit
+import LoopAlgorithm
 
 // Implements the bare minimum of InsulinDose, including a slot for InsulinModel
 // We could use DoseEntry, but we need to dynamically lookup user's preferred

@@ -11,7 +11,6 @@ import Foundation
 import XCTest
 import HealthKit
 import LoopKit
-import LoopAlgorithm
 
 @testable import Loop
 

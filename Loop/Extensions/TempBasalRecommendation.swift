@@ -7,8 +7,8 @@
 //
 
 import Foundation
-import LoopAlgorithm
 import LoopKit
+import LoopAlgorithm
 
 extension TempBasalRecommendation {
     /// Equates the recommended rate with another rate
