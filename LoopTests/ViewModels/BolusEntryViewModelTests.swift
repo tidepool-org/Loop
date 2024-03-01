@@ -12,6 +12,7 @@ import LoopKit
 import LoopKitUI
 import SwiftUI
 import XCTest
+import LoopAlgorithm
 
 @testable import Loop
 
@@ -829,7 +830,9 @@ public enum BolusEntryViewTestError: Error {
 }
 
 fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
-
+    func insulinModel(for type: LoopKit.InsulinType?) -> InsulinModel {
+        return ExponentialInsulinModelPreset.rapidActingAdult
+    }
 
     var settings = StoredSettings(
         dosingEnabled: true,
@@ -856,11 +859,11 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     
     var mostRecentPumpDataDate: Date?
 
-    var loopStateInput = LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry>(
-        predictionStart: Date(),
+    var loopStateInput = StoredDataAlgorithmInput(
         glucoseHistory: [],
         doses: [],
         carbEntries: [],
+        predictionStart: Date(),
         basal: [],
         sensitivity: [],
         carbRatio: [],
@@ -868,13 +871,15 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         suspendThreshold: nil,
         maxBolus: 3,
         maxBasalRate: 6,
+        useIntegralRetrospectiveCorrection: false,
+        includePositiveVelocityAndRC: true,
         carbAbsorptionModel: .piecewiseLinear,
-        recommendationInsulinType: .novolog,
+        recommendationInsulinModel: ExponentialInsulinModelPreset.rapidActingAdult,
         recommendationType: .manualBolus,
         automaticBolusApplicationFactor: 0.4
     )
 
-    func fetchData(for baseTime: Date, disablingPreMeal: Bool) async throws -> LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry> {
+    func fetchData(for baseTime: Date, disablingPreMeal: Bool) async throws -> StoredDataAlgorithmInput {
         loopStateInput.predictionStart = baseTime
         return loopStateInput
     }
@@ -927,9 +932,9 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     var activeCarbs: CarbValue?
 
     var prediction: [PredictedGlucoseValue] = []
-    var lastGeneratePredictionInput: LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry>?
+    var lastGeneratePredictionInput: StoredDataAlgorithmInput?
 
-    func generatePrediction(input: LoopAlgorithmInput<StoredCarbEntry, StoredGlucoseSample, DoseEntry>) throws -> [PredictedGlucoseValue] {
+    func generatePrediction(input: StoredDataAlgorithmInput) throws -> [PredictedGlucoseValue] {
         lastGeneratePredictionInput = input
         return prediction
     }

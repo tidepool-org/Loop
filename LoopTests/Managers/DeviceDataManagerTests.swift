@@ -57,8 +57,7 @@ final class DeviceDataManagerTests: XCTestCase {
         )
 
         let doseStore = DoseStore(
-            cacheStore: persistenceController,
-            insulinModelProvider: PresetInsulinModelProvider(defaultRapidActingModel: nil)
+            cacheStore: persistenceController
         )
 
         let glucoseStore = GlucoseStore(cacheStore: persistenceController)

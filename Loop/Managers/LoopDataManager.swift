@@ -283,7 +283,7 @@ final class LoopDataManager {
         let dosesInputHistory = CarbMath.maximumAbsorptionTimeInterval + InsulinMath.defaultInsulinActivityDuration
 
         var dosesStart = baseTime.addingTimeInterval(-dosesInputHistory)
-        var doses = try await doseStore.getDoses(
+        let doses = try await doseStore.getDoses(
             start: dosesStart,
             end: baseTime
         )

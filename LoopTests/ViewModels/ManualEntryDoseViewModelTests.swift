@@ -10,6 +10,7 @@ import HealthKit
 import LoopCore
 import LoopKit
 import XCTest
+import LoopAlgorithm
 
 @testable import Loop
 
@@ -96,5 +97,8 @@ fileprivate class MockManualEntryDoseViewModelDelegate: ManualDoseViewModelDeleg
 
     var scheduleOverride: TemporaryScheduleOverride?
 
+    func insulinModel(for type: LoopKit.InsulinType?) -> InsulinModel {
+        return ExponentialInsulinModelPreset.rapidActingAdult
+    }
 }
 

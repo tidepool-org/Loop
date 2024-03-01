@@ -662,7 +662,7 @@ final class BolusEntryViewModel: ObservableObject {
         let totalHours = floor(Double(availableWidth / LoopConstants.minimumChartWidthPerHour))
         let insulinType = deliveryDelegate?.pumpInsulinType
         let insulinModel = delegate?.insulinModel(for: insulinType)
-        let futureHours = ceil((insulinModel?.effectDuration.hours ?? .hours(4)).hours)
+        let futureHours = ceil((insulinModel?.effectDuration ?? .hours(4)).hours)
         let historyHours = max(LoopConstants.statusChartMinimumHistoryDisplay.hours, totalHours - futureHours)
 
         let date = Date(timeInterval: -TimeInterval(hours: historyHours), since: now())

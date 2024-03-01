@@ -477,7 +477,6 @@
 		C1D0B6302986D4D90098D215 /* LocalizedString.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D0B62F2986D4D90098D215 /* LocalizedString.swift */; };
 		C1D0B6312986D4D90098D215 /* LocalizedString.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D0B62F2986D4D90098D215 /* LocalizedString.swift */; };
 		C1D289B522F90A52003FFBD9 /* BasalDeliveryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D289B422F90A52003FFBD9 /* BasalDeliveryState.swift */; };
-		C1D476B42A8ED179002C1C87 /* LoopAlgorithmTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D476B32A8ED179002C1C87 /* LoopAlgorithmTests.swift */; };
 		C1D6EEA02A06C7270047DE5C /* MKRingProgressView in Frameworks */ = {isa = PBXBuildFile; productRef = C1D6EE9F2A06C7270047DE5C /* MKRingProgressView */; };
 		C1DA434F2B164C6C00CBD33F /* MockSettingsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DA434E2B164C6C00CBD33F /* MockSettingsProvider.swift */; };
 		C1DA43532B19310A00CBD33F /* LoopControlMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DA43522B19310A00CBD33F /* LoopControlMock.swift */; };
@@ -1536,7 +1535,6 @@
 		C1D0B62F2986D4D90098D215 /* LocalizedString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedString.swift; sourceTree = "<group>"; };
 		C1D197FE232CF92D0096D646 /* capture-build-details.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "capture-build-details.sh"; sourceTree = "<group>"; };
 		C1D289B422F90A52003FFBD9 /* BasalDeliveryState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasalDeliveryState.swift; sourceTree = "<group>"; };
-		C1D476B32A8ED179002C1C87 /* LoopAlgorithmTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopAlgorithmTests.swift; sourceTree = "<group>"; };
 		C1D70F7A2A914F71009FE129 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C1DA434E2B164C6C00CBD33F /* MockSettingsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSettingsProvider.swift; sourceTree = "<group>"; };
 		C1DA43522B19310A00CBD33F /* LoopControlMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopControlMock.swift; sourceTree = "<group>"; };
@@ -1832,7 +1830,6 @@
 				A91E4C2224F86F1000BE9213 /* CriticalEventLogExportManagerTests.swift */,
 				C188599A2AF15E1B0010F21F /* DeviceDataManagerTests.swift */,
 				C16B983F26B4898800256B05 /* DoseEnactorTests.swift */,
-				C1D476B32A8ED179002C1C87 /* LoopAlgorithmTests.swift */,
 				E9C58A7124DB489100487A17 /* LoopDataManagerTests.swift */,
 				E9B3552C293592B40076AB04 /* MealDetectionManagerTests.swift */,
 				C1DA43562B1A70BE00CBD33F /* SettingsManagerTests.swift */,
@@ -3875,7 +3872,6 @@
 				E93E86A824DDCC4400FF40C8 /* MockDoseStore.swift in Sources */,
 				B4D4534128E5CA7900F1A8D9 /* AlertMuterTests.swift in Sources */,
 				E98A55F124EDD85E0008715D /* MockDosingDecisionStore.swift in Sources */,
-				C1D476B42A8ED179002C1C87 /* LoopAlgorithmTests.swift in Sources */,
 				A9BD28E7272226B40071DF15 /* TestLocalizedError.swift in Sources */,
 				A9F5F1F5251050EC00E7C8A4 /* ZipArchiveTests.swift in Sources */,
 				E9B3552D293592B40076AB04 /* MealDetectionManagerTests.swift in Sources */,
