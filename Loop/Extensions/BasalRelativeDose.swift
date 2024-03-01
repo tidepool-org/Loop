@@ -10,7 +10,7 @@ import Foundation
 import LoopAlgorithm
 
 public extension Array where Element == BasalRelativeDose {
-    func trimmed(from start: Date? = nil, to end: Date? = nil, onlyTrimTempBasals: Bool = false) -> [BasalRelativeDose] {
+    func trimmed(from start: Date? = nil, to end: Date? = nil) -> [BasalRelativeDose] {
         return self.compactMap { (dose) -> BasalRelativeDose? in
             if let start, dose.endDate < start {
                 return nil
@@ -18,7 +18,8 @@ public extension Array where Element == BasalRelativeDose {
             if let end, dose.startDate > end {
                 return nil
             }
-            if onlyTrimTempBasals && dose.type == .bolus {
+            if dose.type == .bolus {
+                // Do not split boluses
                 return dose
             }
             return dose.trimmed(from: start, to: end)

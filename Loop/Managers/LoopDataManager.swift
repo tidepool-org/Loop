@@ -524,7 +524,7 @@ final class LoopDataManager {
                     let scheduledBasalRate = input.basal.closestPrior(to: loopBaseTime)!.value
                     let activeOverride = temporaryPresetsManager.overrideHistory.activeOverride(at: loopBaseTime)
 
-                    let basalAdjustment = basal.ifNecessary(
+                    let basalAdjustment = basal.adjustForCurrentDelivery(
                         at: loopBaseTime,
                         neutralBasalRate: scheduledBasalRate,
                         lastTempBasal: deliveryDelegate.basalDeliveryState?.currentTempBasal,
