@@ -38,28 +38,3 @@ extension BolusRecommendationNotice {
     }
 }
 
-extension BolusRecommendationNotice: Equatable {
-    public static func ==(lhs: BolusRecommendationNotice, rhs: BolusRecommendationNotice) -> Bool {
-        switch (lhs, rhs) {
-        case (.glucoseBelowSuspendThreshold, .glucoseBelowSuspendThreshold):
-            return true
-
-        case (.currentGlucoseBelowTarget, .currentGlucoseBelowTarget):
-            return true
-
-        case (let .predictedGlucoseBelowTarget(minGlucose1), let .predictedGlucoseBelowTarget(minGlucose2)):
-            // GlucoseValue is not equatable
-            return
-                minGlucose1.startDate == minGlucose2.startDate &&
-                minGlucose1.endDate == minGlucose2.endDate &&
-                minGlucose1.quantity == minGlucose2.quantity
-
-        case (.predictedGlucoseInRange, .predictedGlucoseInRange):
-            return true
-
-        default:
-            return false
-        }
-    }
-}
-

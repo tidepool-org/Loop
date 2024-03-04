@@ -527,7 +527,7 @@ final class LoopDataManager {
                     let basalAdjustment = basal.adjustForCurrentDelivery(
                         at: loopBaseTime,
                         neutralBasalRate: scheduledBasalRate,
-                        lastTempBasal: deliveryDelegate.basalDeliveryState?.currentTempBasal,
+                        currentTempBasal: deliveryDelegate.basalDeliveryState?.currentTempBasal,
                         continuationInterval: .minutes(11),
                         neutralBasalRateMatchesPump: activeOverride == nil
                     )
