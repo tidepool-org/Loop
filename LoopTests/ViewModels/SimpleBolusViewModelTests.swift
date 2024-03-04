@@ -137,7 +137,7 @@ class SimpleBolusViewModelTests: XCTestCase {
         viewModel.enteredCarbString = ""
 
         XCTAssertEqual("–", viewModel.recommendedBolus)
-        XCTAssertEqual("0", viewModel.enteredBolusString)
+        XCTAssertEqual("", viewModel.enteredBolusString)
     }
 
     func testDeleteCurrentGlucoseRemovesRecommendation() {
@@ -156,7 +156,7 @@ class SimpleBolusViewModelTests: XCTestCase {
         viewModel.manualGlucoseString = ""
 
         XCTAssertEqual("–", viewModel.recommendedBolus)
-        XCTAssertEqual("0", viewModel.enteredBolusString)
+        XCTAssertEqual("", viewModel.enteredBolusString)
     }
 
     func testDeleteCurrentGlucoseRemovesActiveInsulin() {
