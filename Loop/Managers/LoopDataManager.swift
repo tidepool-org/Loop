@@ -481,7 +481,7 @@ final class LoopDataManager {
             var input = try await fetchData(for: loopBaseTime)
 
             // Trim future basal
-            input.doses =  input.doses.trimmed(to: loopBaseTime, onlyTrimTempBasals: true)
+            input.doses =  input.doses.trimmed(to: loopBaseTime)
 
             let dosingStrategy = settingsProvider.settings.automaticDosingStrategy
             input.recommendationType = dosingStrategy.recommendationType

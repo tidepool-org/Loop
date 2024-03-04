@@ -47,18 +47,15 @@ extension DoseEntry {
 }
 
 extension Array where Element == SimpleInsulinDose {
-    func trimmed(from start: Date? = nil, to end: Date? = nil, onlyTrimTempBasals: Bool = false) -> [SimpleInsulinDose] {
+    func trimmed(to end: Date? = nil) -> [SimpleInsulinDose] {
         return self.compactMap { (dose) -> SimpleInsulinDose? in
-            if let start, dose.endDate < start {
-                return nil
-            }
             if let end, dose.startDate > end {
                 return nil
             }
-            if onlyTrimTempBasals && dose.deliveryType == .bolus {
+            if dose.deliveryType == .bolus {
                 return dose
             }
-            return dose.trimmed(from: start, to: end)
+            return dose.trimmed(to: end)
         }
     }
 }
