@@ -228,8 +228,6 @@ class LoopAppManager: NSObject {
             observationStart: Date().addingTimeInterval(-CarbMath.maximumAbsorptionTimeInterval)
         )
 
-        let absorptionTimes = LoopCoreConstants.defaultCarbAbsorptionTimes
-
         temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsManager)
         temporaryPresetsManager.overrideHistory.delegate = self
 
