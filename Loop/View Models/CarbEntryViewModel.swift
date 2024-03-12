@@ -11,9 +11,11 @@ import LoopKit
 import HealthKit
 import Combine
 import LoopCore
+import LoopAlgorithm
 
 protocol CarbEntryViewModelDelegate: AnyObject, BolusEntryViewModelDelegate {
     var defaultAbsorptionTimes: DefaultAbsorptionTimes { get }
+    var insulinCounteractionEffects: [GlucoseEffectVelocity] { get }
     func scheduleOverrideEnabled(at date: Date) -> Bool
 }
 
@@ -38,11 +40,14 @@ final class CarbEntryViewModel: ObservableObject {
                 return 1
             case .overrideInProgress:
                 return 2
+            case .glucoseRisingRapidly:
+                return 3
             }
         }
         
         case entryIsMissedMeal
         case overrideInProgress
+        case glucoseRisingRapidly
     }
     
     @Published var alert: CarbEntryViewModel.Alert?
@@ -280,12 +285,14 @@ final class CarbEntryViewModel: ObservableObject {
     }
     
     private func observeLoopUpdates() {
-        self.checkIfOverrideEnabled()
+        checkIfOverrideEnabled()
+        checkGlucoseRisingRapidly()
         NotificationCenter.default
             .publisher(for: .LoopDataUpdated)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.checkIfOverrideEnabled()
+                self?.checkGlucoseRisingRapidly()
             }
             .store(in: &cancellables)
     }
@@ -305,6 +312,62 @@ final class CarbEntryViewModel: ObservableObject {
         }
     }
     
+    private func checkGlucoseRisingRapidly() {
+        guard let insulinCounteractionEffects = delegate?.insulinCounteractionEffects else {
+            return
+        }
+        
+        let now = Date()
+        let intervalStart = now.addingTimeInterval(-LoopConstants.missedMealWarningGlucoseRecencyWindow)
+        
+        let glucoseEffectVelocities = insulinCounteractionEffects
+            .filterDateRange(intervalStart, now)
+        
+        guard let first = glucoseEffectVelocities.first,
+              let last = glucoseEffectVelocities.last,
+              last.endDate.timeIntervalSince(first.startDate) >= LoopConstants.missedMealWarningVelocitySampleMinDuration
+        else {
+            warnings.remove(.glucoseRisingRapidly)
+            return
+        }
+        
+        if (last.velocityPerSecond - first.velocityPerSecond) * .minutes(1) > LoopConstants.missedMealWarningGlucoseRiseThreshold {
+            self.warnings.insert(.glucoseRisingRapidly)
+        } else {
+            self.warnings.remove(.glucoseRisingRapidly)
+        }
+    }
+    
+// ---- original code -------
+//    private func updateDisplayAccurateCarbEntryWarning() {
+//        let now = Date()
+//        let startDate = now.addingTimeInterval(-LoopConstants.missedMealWarningGlucoseRecencyWindow)
+//
+//        deviceManager.glucoseStore.getGlucoseSamples(start: startDate, end: nil) { [weak self] (result) -> Void in
+//            DispatchQueue.main.async {
+//                switch result {
+//                case .failure:
+//                    self?.shouldDisplayAccurateCarbEntryWarning = false
+//                case .success(let samples):
+//                    let filteredSamples = samples.filterDateRange(startDate, now)
+//                    guard let startSample = filteredSamples.first, let endSample = filteredSamples.last else {
+//                        self?.shouldDisplayAccurateCarbEntryWarning = false
+//                        return
+//                    }
+//                    let duration = endSample.startDate.timeIntervalSince(startSample.startDate)
+//                    guard duration >= LoopConstants.missedMealWarningVelocitySampleMinDuration else {
+//                        self?.shouldDisplayAccurateCarbEntryWarning = false
+//                        return
+//                    }
+//                    let delta = endSample.quantity.doubleValue(for: .milligramsPerDeciliter) - startSample.quantity.doubleValue(for: .milligramsPerDeciliter)
+//                    let velocity = delta / duration.minutes // Unit = mg/dL/m
+//                    self?.shouldDisplayAccurateCarbEntryWarning = velocity > LoopConstants.missedMealWarningGlucoseRiseThreshold
+//                }
+//            }
+//        }
+//    }
+// ---------------------------
+    
     private func observeAbsorptionTimeChange() {
         $absorptionTime
             .receive(on: RunLoop.main)
@@ -318,5 +381,11 @@ final class CarbEntryViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+    }
+}
+
+extension GlucoseEffectVelocity {    
+    var velocityPerSecond: Double {
+        quantity.doubleValue(for: GlucoseEffectVelocity.perSecondUnit)
     }
 }

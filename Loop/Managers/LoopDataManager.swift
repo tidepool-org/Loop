@@ -1135,6 +1135,9 @@ extension LoopDataManager: CarbEntryViewModelDelegate {
         LoopCoreConstants.defaultCarbAbsorptionTimes
     }
     
+    var insulinCounteractionEffects: [GlucoseEffectVelocity] {
+        algorithmState.output?.effects.insulinCounteraction ?? []
+    }
 }
 
 extension LoopDataManager: ManualDoseViewModelDelegate {
