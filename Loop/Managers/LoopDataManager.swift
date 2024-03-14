@@ -595,7 +595,9 @@ final class LoopDataManager {
 
         switch output.recommendationResult {
         case .success(let prediction):
-            return prediction.manual
+            guard var manualBolusRecommendation = prediction.manual else { return nil }
+            manualBolusRecommendation.amount = deliveryDelegate?.roundBolusVolume(units: manualBolusRecommendation.amount) ?? manualBolusRecommendation.amount
+            return manualBolusRecommendation
         case .failure(let error):
             throw error
         }

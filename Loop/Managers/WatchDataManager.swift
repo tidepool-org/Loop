@@ -292,7 +292,7 @@ final class WatchDataManager: NSObject {
             potentialCarbEntry: potentialCarbEntry,
             originalCarbEntry: nil
         ) {
-            context.recommendedBolusDose = deviceManager.roundBolusVolume(units: recommendedBolus.amount) 
+            context.recommendedBolusDose = recommendedBolus.amount 
             dosingDecision.manualBolusRecommendation = ManualBolusRecommendationWithDate(
                 recommendation: recommendedBolus,
                 date: Date())
