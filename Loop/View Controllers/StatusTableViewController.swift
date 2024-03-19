@@ -651,7 +651,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case status = 0
     }
 
-    private enum StatusRowMode {
+    private enum StatusRowMode: Equatable {
         case hidden
         case scheduleOverrideEnabled(TemporaryScheduleOverride)
         case enactingBolus
@@ -1343,7 +1343,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: navigationWrapper, action: #selector(dismissWithAnimation))
             present(navigationWrapper, animated: true)
         } else {
-            let viewModel = CarbEntryViewModel(delegate: loopManager)
+            let viewModel = CarbEntryViewModel(delegate: loopManager, enableManualGlucoseEntry: .recommendManualGlucoseEntry == statusRowMode)
             viewModel.deliveryDelegate = deviceManager
             viewModel.analyticsServicesManager = loopManager.analyticsServicesManager
             if let activity {
@@ -1358,7 +1358,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     @IBAction func presentBolusScreen() {
-        presentBolusEntryView()
+        presentBolusEntryView(enableManualGlucoseEntry: .recommendManualGlucoseEntry == statusRowMode)
     }
     
     @ViewBuilder
