@@ -651,7 +651,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case status = 0
     }
 
-    private enum StatusRowMode: Equatable {
+    private enum StatusRowMode {
         case hidden
         case scheduleOverrideEnabled(TemporaryScheduleOverride)
         case enactingBolus
