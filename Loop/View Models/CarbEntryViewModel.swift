@@ -11,7 +11,6 @@ import LoopKit
 import HealthKit
 import Combine
 import LoopCore
-import LoopAlgorithm
 
 protocol CarbEntryViewModelDelegate: AnyObject, BolusEntryViewModelDelegate {
     var defaultAbsorptionTimes: DefaultAbsorptionTimes { get }
@@ -364,11 +363,5 @@ final class CarbEntryViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-    }
-}
-
-extension GlucoseEffectVelocity {    
-    var velocityPerSecond: Double {
-        quantity.doubleValue(for: GlucoseEffectVelocity.perSecondUnit)
     }
 }
