@@ -1134,9 +1134,9 @@ extension LoopDataManager: CarbEntryViewModelDelegate {
     var defaultAbsorptionTimes: DefaultAbsorptionTimes {
         LoopCoreConstants.defaultCarbAbsorptionTimes
     }
-    
-    var insulinCounteractionEffects: [GlucoseEffectVelocity] {
-        algorithmState.output?.effects.insulinCounteraction ?? []
+
+    func getGlucoseSamples(start: Date?, end: Date?) async throws -> [StoredGlucoseSample] {
+        try await glucoseStore.getGlucoseSamples(start: start, end: end)
     }
 }
 
