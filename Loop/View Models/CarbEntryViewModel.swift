@@ -55,6 +55,7 @@ final class CarbEntryViewModel: ObservableObject {
     @Published var bolusViewModel: BolusEntryViewModel?
     
     let shouldBeginEditingQuantity: Bool
+    let enableManualGlucoseEntry: Bool
     
     @Published var carbsQuantity: Double? = nil
     var preferredCarbUnit = HKUnit.gram()
@@ -94,8 +95,9 @@ final class CarbEntryViewModel: ObservableObject {
     private lazy var cancellables = Set<AnyCancellable>()
     
     /// Initalizer for when`CarbEntryView` is presented from the home screen
-    init(delegate: CarbEntryViewModelDelegate) {
+    init(delegate: CarbEntryViewModelDelegate, enableManualGlucoseEntry: Bool = false) {
         self.delegate = delegate
+        self.enableManualGlucoseEntry = enableManualGlucoseEntry
         self.absorptionTime = delegate.defaultAbsorptionTimes.medium
         self.defaultAbsorptionTimes = delegate.defaultAbsorptionTimes
         self.shouldBeginEditingQuantity = true
@@ -107,8 +109,9 @@ final class CarbEntryViewModel: ObservableObject {
     }
     
     /// Initalizer for when`CarbEntryView` has an entry to edit
-    init(delegate: CarbEntryViewModelDelegate, originalCarbEntry: StoredCarbEntry) {
+    init(delegate: CarbEntryViewModelDelegate, enableManualGlucoseEntry: Bool = false, originalCarbEntry: StoredCarbEntry) {
         self.delegate = delegate
+        self.enableManualGlucoseEntry = enableManualGlucoseEntry
         self.originalCarbEntry = originalCarbEntry
         self.defaultAbsorptionTimes = delegate.defaultAbsorptionTimes
 
@@ -194,7 +197,8 @@ final class CarbEntryViewModel: ObservableObject {
             screenWidth: UIScreen.main.bounds.width,
             originalCarbEntry: originalCarbEntry,
             potentialCarbEntry: updatedCarbEntry,
-            selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji
+            selectedCarbAbsorptionTimeEmoji: selectedDefaultAbsorptionTimeEmoji,
+            isManualGlucoseEntryEnabled: enableManualGlucoseEntry
         )
         
         viewModel.analyticsServicesManager = analyticsServicesManager
