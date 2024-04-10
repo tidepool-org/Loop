@@ -61,7 +61,6 @@ final class BolusEntryViewModel: ObservableObject {
         case carbEntryPersistenceFailure
         case manualGlucoseEntryOutOfAcceptableRange
         case manualGlucoseEntryPersistenceFailure
-        case glucoseNoLongerStale
         case forecastInfo
     }
 
