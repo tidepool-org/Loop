@@ -16,7 +16,7 @@ struct WatchPredictedGlucose: Equatable {
     let values: [PredictedGlucoseValue]
 
     init?(values: [PredictedGlucoseValue]) {
-        guard values.count > 1 else {
+        guard values.count > 2 else {
             return nil
         }
         self.values = values
