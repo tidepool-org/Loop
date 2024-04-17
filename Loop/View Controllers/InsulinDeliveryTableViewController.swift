@@ -277,8 +277,9 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
     private lazy var timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
 
-        formatter.dateStyle = .none
+        formatter.dateStyle = .short
         formatter.timeStyle = .short
+        formatter.doesRelativeDateFormatting = true
 
         return formatter
     }()
