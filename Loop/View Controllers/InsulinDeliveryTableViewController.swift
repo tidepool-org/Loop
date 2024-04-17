@@ -200,6 +200,11 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
         case history([PersistedPumpEvent])
         case manualEntryDoses([DoseEntry])
     }
+    
+    private enum HistorySection: Int {
+        case today
+        case yesterday
+    }
 
     // Not thread-safe
     private var values = Values.reservoir([]) {
@@ -277,8 +282,17 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
     private lazy var timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
 
-        formatter.dateStyle = .short
+        formatter.dateStyle = .none
         formatter.timeStyle = .short
+
+        return formatter
+    }()
+    
+    private lazy var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+
+        formatter.dateStyle = .short
+        formatter.timeStyle = .none
         formatter.doesRelativeDateFormatting = true
 
         return formatter
@@ -383,7 +397,10 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
         case .unknown, .unavailable:
             return 0
         case .display:
-            return 1
+            switch self.values {
+            case .history(let values): return values.valuesBeforeToday.isEmpty ? 1 : 2
+            default: return 1
+            }
         }
     }
 
@@ -392,9 +409,33 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
         case .reservoir(let values):
             return values.count
         case .history(let values):
-            return values.count
+            switch HistorySection(rawValue: section) {
+            case .today: return values.valuesFromToday.count
+            case .yesterday: return values.valuesBeforeToday.count
+            case .none: return 0
+            }
         case .manualEntryDoses(let values):
             return values.count
+        }
+    }
+    
+    public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        switch state {
+        case .display:
+            switch self.values {
+            case .history(let values):
+                switch HistorySection(rawValue: section) {
+                case .today:
+                    guard let firstValue = values.valuesFromToday.first else { return nil }
+                    return dateFormatter.string(from: firstValue.date)
+                case .yesterday:
+                    guard let firstValue = values.valuesBeforeToday.first else { return nil }
+                    return dateFormatter.string(from: firstValue.date)
+                case .none: return nil
+                }
+            default: return nil
+            }
+        default: return nil
         }
     }
 
@@ -414,7 +455,13 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
                 cell.accessoryType = .none
                 cell.selectionStyle = .none
             case .history(let values):
-                let entry = values[indexPath.row]
+                let filterValues: [PersistedPumpEvent]
+                if HistorySection(rawValue: indexPath.section) == .today {
+                    filterValues = values.valuesFromToday
+                } else {
+                    filterValues = values.valuesBeforeToday
+                }
+                let entry = filterValues[indexPath.row]
                 let time = timeFormatter.string(from: entry.date)
 
                 if let attributedText = entry.localizedAttributedDescription {
@@ -636,3 +683,15 @@ extension PersistedPumpEvent {
 }
 
 extension InsulinDeliveryTableViewController: IdentifiableClass { }
+
+fileprivate extension Array where Element == PersistedPumpEvent {
+    var valuesFromToday: [PersistedPumpEvent] {
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        return self.filter({ $0.date >= startOfDay})
+    }
+    
+    var valuesBeforeToday: [PersistedPumpEvent] {
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        return self.filter({ $0.date < startOfDay})
+    }
+}
