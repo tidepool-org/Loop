@@ -418,7 +418,7 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
             return values.count
         }
     }
-    
+
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch state {
         case .display:
@@ -427,10 +427,10 @@ public final class InsulinDeliveryTableViewController: UITableViewController {
                 switch HistorySection(rawValue: section) {
                 case .today:
                     guard let firstValue = values.valuesFromToday.first else { return nil }
-                    return dateFormatter.string(from: firstValue.date)
+                    return dateFormatter.string(from: firstValue.date).uppercased()
                 case .yesterday:
                     guard let firstValue = values.valuesBeforeToday.first else { return nil }
-                    return dateFormatter.string(from: firstValue.date)
+                    return dateFormatter.string(from: firstValue.date).uppercased()
                 case .none: return nil
                 }
             default: return nil
