@@ -65,7 +65,7 @@ fileprivate extension Alert {
         let userNotificationContent = UNMutableNotificationContent()
         userNotificationContent.title = backgroundContent.title
         userNotificationContent.body = backgroundContent.body
-        //userNotificationContent.sound = userNotificationSound(muted: muted)
+        userNotificationContent.sound = userNotificationSound(muted: muted)
         if #available(iOS 15.0, *) {
             userNotificationContent.interruptionLevel = interruptionLevel.userNotificationInterruptLevel
         }
