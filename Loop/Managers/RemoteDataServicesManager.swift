@@ -53,6 +53,7 @@ final class RemoteDataServicesManager {
     private var unlockedRemoteDataServices = [RemoteDataService]()
 
     func addService(_ remoteDataService: RemoteDataService) {
+        remoteDataService.remoteDataServiceDelegate = self
         lock.withLock {
             unlockedRemoteDataServices.append(remoteDataService)
         }
@@ -60,6 +61,7 @@ final class RemoteDataServicesManager {
     }
 
     func restoreService(_ remoteDataService: RemoteDataService) {
+        remoteDataService.remoteDataServiceDelegate = self
         lock.withLock {
             unlockedRemoteDataServices.append(remoteDataService)
         }
@@ -140,6 +142,9 @@ final class RemoteDataServicesManager {
 
     private let overrideHistory: TemporaryScheduleOverrideHistory
 
+    private let deviceLog: PersistentDeviceLog
+
+
     init(
         alertStore: AlertStore,
         carbStore: CarbStore,
@@ -149,7 +154,8 @@ final class RemoteDataServicesManager {
         cgmEventStore: CgmEventStore,
         settingsStore: SettingsStore,
         overrideHistory: TemporaryScheduleOverrideHistory,
-        insulinDeliveryStore: InsulinDeliveryStore
+        insulinDeliveryStore: InsulinDeliveryStore,
+        deviceLog: PersistentDeviceLog
     ) {
         self.alertStore = alertStore
         self.carbStore = carbStore
@@ -161,6 +167,7 @@ final class RemoteDataServicesManager {
         self.settingsStore = settingsStore
         self.overrideHistory = overrideHistory
         self.lockedFailedUploads = Locked([])
+        self.deviceLog = deviceLog
     }
 
     private func uploadExistingData(to remoteDataService: RemoteDataService) {
@@ -589,6 +596,13 @@ extension RemoteDataServicesManager {
                 self.uploadPumpEventData(to: remoteDataService)
             }
         }
+    }
+}
+
+// RemoteDataServiceDelegate
+extension RemoteDataServicesManager: RemoteDataServiceDelegate {
+    func fetchDeviceLogs(startDate: Date, endDate: Date) async throws -> [LoopKit.StoredDeviceLogEntry] {
+        return try await deviceLog.fetch(startDate: startDate, endDate: endDate)
     }
 }
 
