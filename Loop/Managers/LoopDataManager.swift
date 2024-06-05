@@ -543,6 +543,10 @@ final class LoopDataManager {
                 dosingDecision.updateFrom(input: input, output: output)
 
                 if self.automaticDosingStatus.automaticDosingEnabled {
+                    if deliveryDelegate.basalDeliveryState == .pumpInoperable {
+                        throw LoopError.pumpInoperable
+                    }
+
                     if deliveryDelegate.isSuspended {
                         throw LoopError.pumpSuspended
                     }
