@@ -164,7 +164,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
                 let review = try await loopDataManager.fetchCarbAbsorptionReview(start: listStart, end: listEnd)
                 insulinCounteractionEffects = review.effectsVelocities.filterDateRange(chartStartDate, nil)
                 carbStatuses = review.carbStatuses
-                carbsOnBoard = carbStatuses?.getClampedCarbsOnBoard()
+                carbsOnBoard = loopDataManager.activeCarbs
                 carbEffects = review.carbEffects
             } catch {
                 log.error("Failed to get carb absorption review: %{public}@", String(describing: error))
