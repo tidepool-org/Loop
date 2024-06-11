@@ -476,7 +476,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         // always check for cob
         carbsOnBoard = loopManager.activeCarbs?.quantity
-        
+
         if currentContext.contains(.glucose) {
             do {
                 glucoseSamples = try await loopManager.glucoseStore.getGlucoseSamples(start: startDate, end: nil)

@@ -373,7 +373,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
                 format: NSLocalizedString("at %@", comment: "Format fragment for a specific time"),
                 timeFormatter.string(from: carbsOnBoard.startDate)
             )
-            cell.COBValueLabel.text = carbFormatter.string(from: carbsOnBoard.quantity)
+            cell.COBValueLabel.text = carbFormatter.string(from: carbsOnBoard.quantity, includeUnit: false)
 
             // Warn the user if the carbsOnBoard value isn't recent
             let textColor: UIColor
@@ -389,7 +389,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
             cell.COBDateLabel.textColor = textColor
         } else {
             cell.COBDateLabel.text = nil
-            cell.COBValueLabel.text = carbFormatter.string(from: HKQuantity(unit: .gram(), doubleValue: 0))
+            cell.COBValueLabel.text = carbFormatter.string(from: HKQuantity(unit: .gram(), doubleValue: 0), includeUnit: false)
         }
 
         if let carbTotal = carbTotal {
@@ -397,10 +397,10 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
                 format: NSLocalizedString("since %@", comment: "Format fragment for a start time"),
                 timeFormatter.string(from: carbTotal.startDate)
             )
-            cell.totalValueLabel.text = carbFormatter.string(from: carbTotal.quantity)
+            cell.totalValueLabel.text = carbFormatter.string(from: carbTotal.quantity, includeUnit: false)
         } else {
             cell.totalDateLabel.text = nil
-            cell.totalValueLabel.text = carbFormatter.string(from: HKQuantity(unit: .gram(), doubleValue: 0))
+            cell.totalValueLabel.text = carbFormatter.string(from: HKQuantity(unit: .gram(), doubleValue: 0), includeUnit: false)
         }
     }
 
