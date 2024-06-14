@@ -31,6 +31,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private let log = OSLog(category: "StatusTableViewController")
 
     lazy var carbFormatter: QuantityFormatter = QuantityFormatter(for: .gram())
+    
+    lazy var insulinFormatter: QuantityFormatter = {
+        let formatter = QuantityFormatter(for: .internationalUnit())
+        formatter.numberFormatter.minimumFractionDigits = 2
+        return formatter
+    }()
 
     var onboardingManager: OnboardingManager!
 
@@ -543,10 +549,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         // Show the larger of the value either before or after the current date
-        if let maxValue = charts.iob.iobPoints.allElementsAdjacent(to: Date()).max(by: {
-            return $0.y.scalar < $1.y.scalar
-        }) {
-            self.currentIOBDescription = String(describing: maxValue.y)
+        if let activeInsulin = loopManager.activeInsulin {
+            self.currentIOBDescription = insulinFormatter.string(from: activeInsulin.quantity, includeUnit: false)
         } else {
             self.currentIOBDescription = nil
         }
@@ -1076,12 +1080,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     return cell
                 case .canceledBolus(let dose):
                     let cell = getTitleSubtitleCell()
-                    
-                    lazy var insulinFormatter: QuantityFormatter = {
-                        let formatter = QuantityFormatter(for: .internationalUnit())
-                        formatter.numberFormatter.minimumFractionDigits = 2
-                        return formatter
-                    }()
                     
                     let totalUnitsQuantity = HKQuantity(unit: .internationalUnit(), doubleValue: dose.programmedUnits)
                     let totalUnitsString = insulinFormatter.string(from: totalUnitsQuantity) ?? ""
