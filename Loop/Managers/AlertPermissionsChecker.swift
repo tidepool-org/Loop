@@ -149,6 +149,8 @@ extension AlertPermissionsChecker {
         
         var alertBody: String {
             switch self {
+            case .notificationsDisabled:
+                NSLocalizedString("Time Sensitive Alerts are turned OFF. You may not get sound, visual or vibration alerts regarding critical safety information.\n\nTo fix the issue, tap ‘Settings’ and make sure Notifications are turned ON.", comment: "Notifications disabled alert body")
             case .criticalAlertsAndNotificationDisabled:
                 NSLocalizedString("Critical Alerts and Time Sensitive Notifications are turned off. You may not get sound, visual or vibration alerts regarding critical safety information.\n\nTo fix the issue, tap ‘Settings’ and make sure Notifications and Critical Alerts are turned ON.", comment: "Both Notifications and Critical Alerts disabled alert body")
             case .criticalAlertsAndTimeSensitiveDisabled:
@@ -157,8 +159,6 @@ extension AlertPermissionsChecker {
                 NSLocalizedString("Critical Alerts are turned off. You may not get sound, visual or vibration alerts regarding critical safety information.\n\nTo fix the issue, tap ‘Settings’ and make sure Critical Alerts are turned ON.", comment: "Critical alerts disabled alert body")
             case .timeSensitiveDisabled:
                 NSLocalizedString("Time Sensitive Alerts are turned OFF. You may not get sound, visual or vibration alerts regarding critical safety information.\n\nTo fix the issue, tap ‘Settings’ and make sure Time Sensitive Notifications are turned ON.", comment: "Time sensitive notifications disabled alert body")
-            case .notificationsDisabled:
-                NSLocalizedString("Time Sensitive Alerts are turned OFF. You may not get sound, visual or vibration alerts regarding critical safety information.\n\nTo fix the issue, tap ‘Settings’ and make sure Notifications are turned ON.", comment: "Notifications disabled alert body")
             }
         }
         
@@ -175,6 +175,8 @@ extension AlertPermissionsChecker {
         
         var bannerBody: String {
             switch self {
+            case .notificationsDisabled:
+                NSLocalizedString("Fix now by turning Notifications ON.", comment: "Notifications disabled banner body")
             case .criticalAlertsAndNotificationDisabled:
                 NSLocalizedString("Fix now by turning Notifications and Critical Alerts ON.", comment: "Both Critical Alerts and Notifications disabled banner body")
             case .criticalAlertsAndTimeSensitiveDisabled:
@@ -183,8 +185,6 @@ extension AlertPermissionsChecker {
                 NSLocalizedString("Fix now by turning Critical Alerts ON.", comment: "Critical alerts disabled banner body")
             case .timeSensitiveDisabled:
                 NSLocalizedString("Fix now by turning Time Sensitive Notifications ON.", comment: "Time sensitive notifications disabled banner body")
-            case .notificationsDisabled:
-                NSLocalizedString("Fix now by turning Notifications ON.", comment: "Notifications disabled banner body")
             }
         }
         
