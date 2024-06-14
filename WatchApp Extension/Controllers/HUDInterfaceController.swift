@@ -86,12 +86,7 @@ class HUDInterfaceController: WKInterfaceController {
                 var glucoseValue: String?
 
                 if let glucoseCondition = activeContext.glucoseCondition {
-                    switch glucoseCondition {
-                    case .aboveRange:
-                        glucoseValue = NSLocalizedString("HIGH", comment: "String displayed instead of a glucose value above the CGM range")
-                    case .belowRange:
-                        glucoseValue = NSLocalizedString("LOW", comment: "String displayed instead of a glucose value below the CGM range")
-                    }
+                    glucoseValue = glucoseCondition.localizedDescription
                 } else {
                     glucoseValue = formatter.string(from: glucose.doubleValue(for: unit))
                 }

@@ -73,12 +73,7 @@ extension CLKComplicationTemplate {
             var formattedGlucose: String?
 
             if let glucoseCondition {
-                switch glucoseCondition {
-                case .aboveRange:
-                    formattedGlucose = NSLocalizedString("HIGH", comment: "String displayed instead of a glucose value above the CGM range")
-                case .belowRange:
-                    formattedGlucose = NSLocalizedString("LOW", comment: "String displayed instead of a glucose value below the CGM range")
-                }
+                formattedGlucose = glucoseCondition.localizedDescription
             } else {
                 formattedGlucose = formatter.string(from: glucose.doubleValue(for: unit))
             }
