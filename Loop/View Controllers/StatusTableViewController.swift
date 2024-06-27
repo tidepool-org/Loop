@@ -246,6 +246,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         super.viewWillTransition(to: size, with: coordinator)
     }
+    
+    override func willTransition(to newCollection: UITraitCollection, with coordinator: any UIViewControllerTransitionCoordinator) {
+        redrawCharts()
+    }
 
     // MARK: - State
 
