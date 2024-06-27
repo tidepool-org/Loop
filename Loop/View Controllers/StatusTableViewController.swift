@@ -124,6 +124,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     self?.hudView?.loopCompletionHUD.loopInProgress = true
                 }
             },
+            notificationCenter.addObserver(forName: .LoopCycleCompleted, object: nil, queue: nil) { _ in
+                Task { @MainActor [weak self] in
+                    self?.hudView?.loopCompletionHUD.loopInProgress = false
+                }
+            },
             notificationCenter.addObserver(forName: .PumpManagerChanged, object: deviceManager, queue: nil) { (notification: Notification) in
                 Task { @MainActor [weak self] in
                     self?.registerPumpManager()
@@ -291,7 +296,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     private func updateBolusProgress() {
         if let cell = tableView.cellForRow(at: IndexPath(row: StatusRow.status.rawValue, section: Section.status.rawValue)) as? BolusProgressTableViewCell {
-            cell.deliveredUnits = bolusProgressReporter?.progress.deliveredUnits
+            if case let .bolusing(_, total) = cell.configuration {
+                cell.configuration = .bolusing(delivered: bolusProgressReporter?.progress.deliveredUnits, ofTotalVolume: total)
+            }
         }
     }
 
@@ -1000,7 +1007,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
             return cell
         case .status:
-
             func getTitleSubtitleCell() -> TitleSubtitleTableViewCell {
                 let cell = tableView.dequeueReusableCell(withIdentifier: TitleSubtitleTableViewCell.className, for: indexPath) as! TitleSubtitleTableViewCell
                 cell.selectionStyle = .none
@@ -1055,39 +1061,26 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
                     return cell
                 case .enactingBolus:
-                    let cell = getTitleSubtitleCell()
-                    cell.titleLabel.text = NSLocalizedString("Starting Bolus", comment: "The title of the cell indicating a bolus is being sent")
-
-                    let indicatorView = UIActivityIndicatorView(style: .default)
-                    indicatorView.startAnimating()
-                    cell.accessoryView = indicatorView
-                    return cell
+                    let progressCell = tableView.dequeueReusableCell(withIdentifier: BolusProgressTableViewCell.className, for: indexPath) as! BolusProgressTableViewCell
+                    progressCell.selectionStyle = .none
+                    progressCell.configuration = .starting
+                    return progressCell
                 case .bolusing(let dose):
                     let progressCell = tableView.dequeueReusableCell(withIdentifier: BolusProgressTableViewCell.className, for: indexPath) as! BolusProgressTableViewCell
                     progressCell.selectionStyle = .none
-                    progressCell.totalUnits = dose.programmedUnits
+                    progressCell.configuration = .bolusing(delivered: bolusProgressReporter?.progress.deliveredUnits, ofTotalVolume: dose.programmedUnits)
                     progressCell.tintColor = .insulinTintColor
-                    progressCell.deliveredUnits = bolusProgressReporter?.progress.deliveredUnits
-                    progressCell.backgroundColor = .secondarySystemBackground
                     return progressCell
                 case .cancelingBolus:
-                    let cell = getTitleSubtitleCell()
-                    cell.titleLabel.text = NSLocalizedString("Canceling Bolus", comment: "The title of the cell indicating a bolus is being canceled")
-
-                    let indicatorView = UIActivityIndicatorView(style: .default)
-                    indicatorView.startAnimating()
-                    cell.accessoryView = indicatorView
-                    return cell
+                    let progressCell = tableView.dequeueReusableCell(withIdentifier: BolusProgressTableViewCell.className, for: indexPath) as! BolusProgressTableViewCell
+                    progressCell.selectionStyle = .none
+                    progressCell.configuration = .canceling
+                    return progressCell
                 case .canceledBolus(let dose):
-                    let cell = getTitleSubtitleCell()
-                    
-                    let totalUnitsQuantity = HKQuantity(unit: .internationalUnit(), doubleValue: dose.programmedUnits)
-                    let totalUnitsString = insulinFormatter.string(from: totalUnitsQuantity) ?? ""
-                    
-                    let deliveredUnitsQuantity = HKQuantity(unit: .internationalUnit(), doubleValue: dose.deliveredUnits ?? 0)
-                    let deliveredUnitsString = insulinFormatter.string(from: deliveredUnitsQuantity, includeUnit: false) ?? ""
-                    cell.titleLabel.text = String(format: NSLocalizedString("Bolus Canceled: Delivered %1$@ of %2$@", comment: "The title of the cell indicating a bolus has been canceled. (1: delivered volume)(2: total volume)"), deliveredUnitsString, totalUnitsString)
-                    return cell
+                    let progressCell = tableView.dequeueReusableCell(withIdentifier: BolusProgressTableViewCell.className, for: indexPath) as! BolusProgressTableViewCell
+                    progressCell.selectionStyle = .none
+                    progressCell.configuration = .canceled(delivered: dose.deliveredUnits ?? 0, ofTotalVolume: dose.programmedUnits)
+                    return progressCell
                 case .pumpSuspended(let resuming):
                     let cell = getTitleSubtitleCell()
                     cell.titleLabel.text = NSLocalizedString("Insulin Suspended", comment: "The title of the cell indicating the pump is suspended")
@@ -1908,6 +1901,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
         })
         actionSheet.addAction(UIAlertAction(title: "Delete CGM Manager", style: .destructive) { _ in
             self.deviceManager.cgmManager?.delete() { }
+        })
+        
+        actionSheet.addAction(UIAlertAction(title: "Delete Pump Manager", style: .destructive) { _ in
+            self.deviceManager.pumpManager?.prepareForDeactivation(){ [weak self] _ in
+                self?.deviceManager.pumpManager?.notifyDelegateOfDeactivation() { }
+            }
         })
 
         actionSheet.addCancelAction()
