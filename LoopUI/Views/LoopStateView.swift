@@ -24,6 +24,9 @@ final class LoopStateView: UIView {
     var open = false {
         didSet {
             if open != oldValue {
+                if open, animated {
+                    animated = false
+                }
                 shapeLayer.path = drawPath()
             }
         }
