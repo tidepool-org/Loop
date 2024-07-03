@@ -90,7 +90,7 @@ final class LoopStateView: UIView {
     var animated: Bool = false {
         didSet {
             if animated != oldValue {
-                if animated {
+                if animated, !open {
                     let path = CABasicAnimation(keyPath: "path")
                     path.fromValue = shapeLayer.path ?? drawPath()
                     path.toValue = drawPath(lineWidth: 16)
