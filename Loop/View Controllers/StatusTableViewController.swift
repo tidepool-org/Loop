@@ -31,6 +31,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private let log = OSLog(category: "StatusTableViewController")
 
     lazy var carbFormatter: QuantityFormatter = QuantityFormatter(for: .gram())
+    
+    lazy var insulinFormatter: QuantityFormatter = {
+        let formatter = QuantityFormatter(for: .internationalUnit())
+        formatter.numberFormatter.maximumFractionDigits = 2
+        return formatter
+    }()
 
     var onboardingManager: OnboardingManager!
 
@@ -116,6 +122,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
             notificationCenter.addObserver(forName: .LoopRunning, object: nil, queue: nil) { _ in
                 Task { @MainActor [weak self] in
                     self?.hudView?.loopCompletionHUD.loopInProgress = true
+                }
+            },
+            notificationCenter.addObserver(forName: .LoopCycleCompleted, object: nil, queue: nil) { _ in
+                Task { @MainActor [weak self] in
+                    self?.hudView?.loopCompletionHUD.loopInProgress = false
                 }
             },
             notificationCenter.addObserver(forName: .PumpManagerChanged, object: deviceManager, queue: nil) { (notification: Notification) in
@@ -285,7 +296,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     private func updateBolusProgress() {
         if let cell = tableView.cellForRow(at: IndexPath(row: StatusRow.status.rawValue, section: Section.status.rawValue)) as? BolusProgressTableViewCell {
-            cell.deliveredUnits = bolusProgressReporter?.progress.deliveredUnits
+            if case let .bolusing(_, total) = cell.configuration {
+                cell.configuration = .bolusing(delivered: bolusProgressReporter?.progress.deliveredUnits, ofTotalVolume: total)
+            }
         }
     }
 
@@ -543,10 +556,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         // Show the larger of the value either before or after the current date
-        if let maxValue = charts.iob.iobPoints.allElementsAdjacent(to: Date()).max(by: {
-            return $0.y.scalar < $1.y.scalar
-        }) {
-            self.currentIOBDescription = String(describing: maxValue.y)
+        if let activeInsulin = loopManager.activeInsulin {
+            self.currentIOBDescription = insulinFormatter.string(from: activeInsulin.quantity, includeUnit: false)
         } else {
             self.currentIOBDescription = nil
         }
@@ -761,16 +772,23 @@ final class StatusTableViewController: LoopChartsTableViewController {
         switch (statusWasVisible, statusIsVisible) {
         case (true, true):
             switch (oldStatusRowMode, self.statusRowMode) {
+            case (.pumpSuspended(resuming: let wasResuming), .pumpSuspended(resuming: let isResuming)):
+                if isResuming != wasResuming {
+                    tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
+                }
             case (.enactingBolus, .enactingBolus):
                 break
             case (.bolusing(let oldDose), .bolusing(let newDose)):
                 if oldDose.syncIdentifier != newDose.syncIdentifier {
                     tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
                 }
-            case (.pumpSuspended(resuming: let wasResuming), .pumpSuspended(resuming: let isResuming)):
-                if isResuming != wasResuming {
+            case (.canceledBolus(let oldDose), .canceledBolus(let newDose)):
+                if oldDose != newDose {
                     tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
                 }
+            case (.cancelingBolus, .cancelingBolus), (.cancelingBolus, .bolusing(_)), (.canceledBolus(_), .cancelingBolus), (.canceledBolus(_), .bolusing(_)):
+                // these updates cause flickering and/or confusion.
+                break
             default:
                 tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
             }
@@ -910,7 +928,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let adjustViewForNarrowDisplay = bounds.width < 350
 
             var contentConfig = defaultContentConfiguration().updated(for: state)
-            let title = NSMutableAttributedString(string: NSLocalizedString("All Alerts Muted", comment: "Warning text for when alerts are muted"))
+            let title = NSMutableAttributedString(string: NSLocalizedString("All App Sounds Muted", comment: "Warning text for when alerts are muted"))
             let image = UIImage(systemName: "speaker.slash.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 25, weight: .thin, scale: .large))
             contentConfig.image = image
             contentConfig.imageProperties.tintColor = .white
@@ -996,7 +1014,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
             return cell
         case .status:
-
             func getTitleSubtitleCell() -> TitleSubtitleTableViewCell {
                 let cell = tableView.dequeueReusableCell(withIdentifier: TitleSubtitleTableViewCell.className, for: indexPath) as! TitleSubtitleTableViewCell
                 cell.selectionStyle = .none
@@ -1051,45 +1068,26 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
                     return cell
                 case .enactingBolus:
-                    let cell = getTitleSubtitleCell()
-                    cell.titleLabel.text = NSLocalizedString("Starting Bolus", comment: "The title of the cell indicating a bolus is being sent")
-
-                    let indicatorView = UIActivityIndicatorView(style: .default)
-                    indicatorView.startAnimating()
-                    cell.accessoryView = indicatorView
-                    return cell
+                    let progressCell = tableView.dequeueReusableCell(withIdentifier: BolusProgressTableViewCell.className, for: indexPath) as! BolusProgressTableViewCell
+                    progressCell.selectionStyle = .none
+                    progressCell.configuration = .starting
+                    return progressCell
                 case .bolusing(let dose):
                     let progressCell = tableView.dequeueReusableCell(withIdentifier: BolusProgressTableViewCell.className, for: indexPath) as! BolusProgressTableViewCell
                     progressCell.selectionStyle = .none
-                    progressCell.totalUnits = dose.programmedUnits
+                    progressCell.configuration = .bolusing(delivered: bolusProgressReporter?.progress.deliveredUnits, ofTotalVolume: dose.programmedUnits)
                     progressCell.tintColor = .insulinTintColor
-                    progressCell.deliveredUnits = bolusProgressReporter?.progress.deliveredUnits
-                    progressCell.backgroundColor = .secondarySystemBackground
                     return progressCell
                 case .cancelingBolus:
-                    let cell = getTitleSubtitleCell()
-                    cell.titleLabel.text = NSLocalizedString("Canceling Bolus", comment: "The title of the cell indicating a bolus is being canceled")
-
-                    let indicatorView = UIActivityIndicatorView(style: .default)
-                    indicatorView.startAnimating()
-                    cell.accessoryView = indicatorView
-                    return cell
+                    let progressCell = tableView.dequeueReusableCell(withIdentifier: BolusProgressTableViewCell.className, for: indexPath) as! BolusProgressTableViewCell
+                    progressCell.selectionStyle = .none
+                    progressCell.configuration = .canceling
+                    return progressCell
                 case .canceledBolus(let dose):
-                    let cell = getTitleSubtitleCell()
-                    
-                    lazy var insulinFormatter: QuantityFormatter = {
-                        let formatter = QuantityFormatter(for: .internationalUnit())
-                        formatter.numberFormatter.minimumFractionDigits = 2
-                        return formatter
-                    }()
-                    
-                    let totalUnitsQuantity = HKQuantity(unit: .internationalUnit(), doubleValue: dose.programmedUnits)
-                    let totalUnitsString = insulinFormatter.string(from: totalUnitsQuantity) ?? ""
-                    
-                    let deliveredUnitsQuantity = HKQuantity(unit: .internationalUnit(), doubleValue: dose.deliveredUnits ?? 0)
-                    let deliveredUnitsString = insulinFormatter.string(from: deliveredUnitsQuantity, includeUnit: false) ?? ""
-                    cell.titleLabel.text = String(format: NSLocalizedString("Bolus Canceled: Delivered %1$@ of %2$@", comment: "The title of the cell indicating a bolus has been canceled. (1: delivered volume)(2: total volume)"), deliveredUnitsString, totalUnitsString)
-                    return cell
+                    let progressCell = tableView.dequeueReusableCell(withIdentifier: BolusProgressTableViewCell.className, for: indexPath) as! BolusProgressTableViewCell
+                    progressCell.selectionStyle = .none
+                    progressCell.configuration = .canceled(delivered: dose.deliveredUnits ?? 0, ofTotalVolume: dose.programmedUnits)
+                    return progressCell
                 case .pumpSuspended(let resuming):
                     let cell = getTitleSubtitleCell()
                     cell.titleLabel.text = NSLocalizedString("Insulin Suspended", comment: "The title of the cell indicating the pump is suspended")
@@ -1285,10 +1283,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func presentUnmuteAlertConfirmation() {
-        let title = NSLocalizedString("Unmute Alerts?", comment: "The alert title for unmute alert confirmation")
-        let body = NSLocalizedString("Tap Unmute to resume sound for your alerts and alarms.", comment: "The alert body for unmute alert confirmation")
+        let title = NSLocalizedString("Unmute All App Sounds?", comment: "The alert title for unmute all app sounds confirmation")
+        let body = NSLocalizedString("Tap Unmute to resume all app sounds for your alerts.", comment: "The alert body for unmute alert confirmation")
         let action = UIAlertAction(
-            title: NSLocalizedString("Unmute", comment: "The title of the action used to unmute alerts"),
+            title: NSLocalizedString("Unmute", comment: "The title of the action used to unmute app sounds"),
             style: .default) { _ in
                 self.alertMuter.unmuteAlerts()
             }
@@ -1910,6 +1908,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
         })
         actionSheet.addAction(UIAlertAction(title: "Delete CGM Manager", style: .destructive) { _ in
             self.deviceManager.cgmManager?.delete() { }
+        })
+        
+        actionSheet.addAction(UIAlertAction(title: "Delete Pump Manager", style: .destructive) { _ in
+            self.deviceManager.pumpManager?.prepareForDeactivation(){ [weak self] _ in
+                self?.deviceManager.pumpManager?.notifyDelegateOfDeactivation() { }
+            }
         })
 
         actionSheet.addCancelAction()

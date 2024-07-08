@@ -585,29 +585,6 @@ final class DeviceDataManager {
             await self.checkPumpDataAndLoop()
         }
     }
-    
-//private func refreshCGM(_ completion: (() -> Void)? = nil) {
-//        guard let cgmManager = cgmManager else {
-//            completion?()
-//            return
-//        }
-//
-//        cgmManager.fetchNewDataIfNeeded { (result) in
-//            if case .newData = result {
-//                self.analyticsServicesManager.didFetchNewCGMData()
-//            }
-//
-//            self.queue.async {
-//                self.processCGMReadingResult(cgmManager, readingResult: result) {
-//                    if self.loopManager.lastLoopCompleted == nil || self.loopManager.lastLoopCompleted!.timeIntervalSinceNow < -.minutes(4.2) {
-//                        self.log.default("Triggering Loop from refreshCGM()")
-//                        self.checkPumpDataAndLoop()
-//                    }
-//                    completion?()
-//                }
-//            }
-//        }
-//    }
 
     func refreshDeviceData() async {
         await refreshCGM()
@@ -1096,7 +1073,7 @@ extension DeviceDataManager: PumpManagerDelegate {
             log.default("PumpManager:%{public}@ did read reservoir value", String(describing: type(of: pumpManager)))
 
             do {
-                let (newValue, lastValue, areStoredValuesContinuous) = try await addReservoirValue(units, at: date)
+                let (newValue, lastValue, areStoredValuesContinuous) = try await doseStore.addReservoirValue(units, at: date)
                 completion(.success((newValue: newValue, lastValue: lastValue, areStoredValuesContinuous: areStoredValuesContinuous)))
             } catch {
                 self.log.error("Failed to addReservoirValue: %{public}@", String(describing: error))
@@ -1104,35 +1081,6 @@ extension DeviceDataManager: PumpManagerDelegate {
             }
         }
     }
-
-    /// Adds and stores a pump reservoir volume
-    ///
-    /// - Parameters:
-    ///   - units: The reservoir volume, in units
-    ///   - date: The date of the volume reading
-    ///   - completion: A closure called once upon completion
-    ///   - result: The current state of the reservoir values:
-    ///       - newValue: The new stored value
-    ///       - lastValue: The previous new stored value
-    ///       - areStoredValuesContinuous: Whether the current recent state of the stored reservoir data is considered continuous and reliable for deriving insulin effects after addition of this new value.
-    func addReservoirValue(_ units: Double, at date: Date) async throws -> (newValue: ReservoirValue, lastValue: ReservoirValue?, areStoredValuesContinuous: Bool) {
-        try await withCheckedThrowingContinuation { continuation in
-            doseStore.addReservoirValue(units, at: date) { (newValue, previousValue, areStoredValuesContinuous, error) in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                } else if let newValue = newValue {
-                    continuation.resume(returning: (
-                        newValue: newValue,
-                        lastValue: previousValue,
-                        areStoredValuesContinuous: areStoredValuesContinuous
-                    ))
-                } else {
-                    assertionFailure()
-                }
-            }
-        }
-    }
-
 
     func startDateToFilterNewPumpEvents(for manager: PumpManager) -> Date {
         dispatchPrecondition(condition: .onQueue(.main))
@@ -1317,9 +1265,9 @@ struct CancelTempBasalFailedMaximumBasalRateChangedError: LocalizedError {
 extension DeviceDataManager : RemoteDataServicesManagerDelegate {
     var shouldSyncToRemoteService: Bool {
         guard let cgmManager = cgmManager else {
-            return true
+            return onboardingManager?.isComplete == true
         }
-        return cgmManager.shouldSyncToRemoteService
+        return cgmManager.shouldSyncToRemoteService && (onboardingManager?.isComplete == true)
     }
 }
 
