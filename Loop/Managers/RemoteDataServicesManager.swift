@@ -187,8 +187,14 @@ final class RemoteDataServicesManager {
             }
         }
     }
-
+    
     func triggerUpload(for triggeringType: RemoteDataType) {
+        Task {
+            await performUpload(for: triggeringType)
+        }
+    }
+
+    func performUpload(for triggeringType: RemoteDataType) {
         let uploadTypes = [triggeringType] + failedUploads.map { $0.remoteDataType }
 
         log.debug("RemoteDataType %{public}@ triggering uploads for: %{public}@", triggeringType.rawValue, String(describing: uploadTypes.map { $0.debugDescription}))
@@ -217,16 +223,16 @@ final class RemoteDataServicesManager {
         }
     }
     
-    func triggerUpload(for triggeringType: RemoteDataType, completion: @escaping () -> Void) {
+    func performUpload(for triggeringType: RemoteDataType, completion: @escaping () -> Void) {
         triggerUpload(for: triggeringType)
         self.uploadGroup.notify(queue: DispatchQueue.main) {
             completion()
         }
     }
     
-    func triggerUpload(for triggeringType: RemoteDataType) async {
+    func performUpload(for triggeringType: RemoteDataType) async {
         return await withCheckedContinuation { continuation in
-            triggerUpload(for: triggeringType) {
+            performUpload(for: triggeringType) {
                 continuation.resume(returning: ())
             }
         }
