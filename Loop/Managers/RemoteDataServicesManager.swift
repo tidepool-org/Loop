@@ -189,7 +189,8 @@ final class RemoteDataServicesManager {
     }
     
     func triggerUpload(for triggeringType: RemoteDataType) {
-        Task {
+        // TESTING putting this task on the main thread so that it is easier to find and investigate
+        Task { @MainActor in
             await performUpload(for: triggeringType)
         }
     }
