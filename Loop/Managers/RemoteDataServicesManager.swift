@@ -189,8 +189,7 @@ final class RemoteDataServicesManager {
     }
     
     func triggerUpload(for triggeringType: RemoteDataType) {
-        // TESTING putting this task on the main thread so that it is easier to find and investigate
-        Task { //@MainActor in
+        Task {
             await performUpload(for: triggeringType)
         }
     }
@@ -225,7 +224,7 @@ final class RemoteDataServicesManager {
     }
     
     func performUpload(for triggeringType: RemoteDataType, completion: @escaping () -> Void) {
-        triggerUpload(for: triggeringType)
+        performUpload(for: triggeringType)
         self.uploadGroup.notify(queue: DispatchQueue.main) {
             completion()
         }
