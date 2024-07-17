@@ -87,6 +87,10 @@ final class CarbEntryViewModel: ObservableObject {
     
     @Published var favoriteFoods = UserDefaults.standard.favoriteFoods
     @Published var selectedFavoriteFoodIndex = -1
+    var selectedFavoriteFood: StoredFavoriteFood? {
+        let foodExistsForIndex = 0..<favoriteFoods.count ~= selectedFavoriteFoodIndex
+        return foodExistsForIndex ? favoriteFoods[selectedFavoriteFoodIndex] : nil
+    }
     
     weak var delegate: CarbEntryViewModelDelegate?
     weak var analyticsServicesManager: AnalyticsServicesManager?
@@ -120,6 +124,10 @@ final class CarbEntryViewModel: ObservableObject {
         self.absorptionTimeWasEdited = true
         self.usesCustomFoodType = true
         self.shouldBeginEditingQuantity = false
+        
+        if let favoriteFoodIndex = favoriteFoods.firstIndex(where: { $0.id == originalCarbEntry.favoriteFoodID }) {
+            self.selectedFavoriteFoodIndex = favoriteFoodIndex
+        }
         
         observeLoopUpdates()
     }
