@@ -133,12 +133,15 @@ final class CarbEntryViewModel: ObservableObject {
                 return nil  // No changes were made
             }
             
+            let favoriteFoodID = selectedFavoriteFoodIndex == -1 ? nil : favoriteFoods[selectedFavoriteFoodIndex].id
+            
             return NewCarbEntry(
                 date: date,
                 quantity: HKQuantity(unit: preferredCarbUnit, doubleValue: quantity),
                 startDate: time,
                 foodType: usesCustomFoodType ? foodType : selectedDefaultAbsorptionTimeEmoji,
-                absorptionTime: absorptionTime
+                absorptionTime: absorptionTime,
+                favoriteFoodID: favoriteFoodID
             )
         }
         else {
