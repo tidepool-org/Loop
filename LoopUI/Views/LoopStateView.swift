@@ -13,67 +13,65 @@ final class LoopStateView: UIView {
     
     override func tintColorDidChange() {
         super.tintColorDidChange()
-
+        
         updateTintColor()
     }
-
+    
     private func updateTintColor() {
         shapeLayer.strokeColor = tintColor.cgColor
     }
-
+    
     var open = false {
         didSet {
-            if open != oldValue {
-                if open, animated {
-                    animated = false
-                }
-                shapeLayer.path = drawPath()
+            if open, animated {
+                animated = false
             }
+            shapeLayer.path = drawPath()
         }
     }
-
+    
     override class var layerClass : AnyClass {
         return CAShapeLayer.self
     }
-
+    
     private var shapeLayer: CAShapeLayer {
         return layer as! CAShapeLayer
     }
-
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
-
+        
         shapeLayer.lineWidth = 8
         shapeLayer.fillColor = UIColor.clear.cgColor
         updateTintColor()
-
+        
         shapeLayer.path = drawPath()
     }
-
+    
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-
+        
         shapeLayer.lineWidth = 8
         shapeLayer.fillColor = UIColor.clear.cgColor
         updateTintColor()
-
+        
         shapeLayer.path = drawPath()
     }
-
+    
     override func layoutSubviews() {
         super.layoutSubviews()
-
+        
         shapeLayer.path = drawPath()
     }
-
+    
     private func drawPath(lineWidth: CGFloat? = nil) -> CGPath {
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
         let lineWidth = lineWidth ?? shapeLayer.lineWidth
         let radius = min(bounds.width / 2, bounds.height / 2) - lineWidth / 2
-
+        
         let startAngle = open ? -CGFloat.pi / 4 : 0
         let endAngle = open ? 5 * CGFloat.pi / 4 : 2 * CGFloat.pi
-
+        
         let path = UIBezierPath(
             arcCenter: center,
             radius: radius,
@@ -81,38 +79,51 @@ final class LoopStateView: UIView {
             endAngle: endAngle,
             clockwise: true
         )
-
+        
         return path.cgPath
     }
-
+    
     private static let AnimationKey = "com.loudnate.Naterade.breatheAnimation"
-
+    
     var animated: Bool = false {
         didSet {
-            if animated != oldValue {
-                if animated, !open {
-                    let path = CABasicAnimation(keyPath: "path")
-                    path.fromValue = shapeLayer.path ?? drawPath()
-                    path.toValue = drawPath(lineWidth: 16)
-
-                    let width = CABasicAnimation(keyPath: "lineWidth")
-                    width.fromValue = shapeLayer.lineWidth
-                    width.toValue = 10
-
-                    let group = CAAnimationGroup()
-                    group.animations = [path, width]
-                    group.duration = firstDataUpdate ? 0 : 1
-                    group.repeatCount = HUGE
-                    group.autoreverses = true
-                    group.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-
-                    shapeLayer.add(group, forKey: type(of: self).AnimationKey)
-                } else {
-                    shapeLayer.removeAnimation(forKey: type(of: self).AnimationKey)
+            //            if animated != oldValue {
+            if animated, !open {
+                let path = CABasicAnimation(keyPath: "path")
+                path.fromValue = shapeLayer.path ?? drawPath()
+                path.toValue = drawPath(lineWidth: 16)
+                
+                let width = CABasicAnimation(keyPath: "lineWidth")
+                width.fromValue = shapeLayer.lineWidth
+                width.toValue = 10
+                
+                let group = CAAnimationGroup()
+                group.animations = [path, width]
+                group.duration = firstDataUpdate ? 0 : 1
+                group.repeatCount = HUGE
+                group.autoreverses = true
+                group.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                
+                print("!!!!! adding animation shapeLayer \(shapeLayer) key \(type(of: self).AnimationKey)")
+                //                    shapeLayer.removeAllAnimations()
+                print("!!!!!!!! all animation keys \(String(describing: shapeLayer.animationKeys()))")
+            } else {
+                print("!!! finished adding none repeating animation")
+                guard shapeLayer.animation(forKey: type(of: self).AnimationKey) != nil else {
+                    print("!!!!!!!! did not find the animation for key \(type(of: self).AnimationKey) shapeLayer \(shapeLayer)")
+                    print("!!!!!!!! all animation keys (shapeLayer) \(String(describing: shapeLayer.animationKeys()))")
+                    print("!!!!!!!! all animation keys (layer) \(String(describing: layer.animationKeys()))")
+                    return
                 }
+                print("!!!!! removing animation shapeLayer \(shapeLayer) key \(type(of: self).AnimationKey)")
+                shapeLayer.removeAnimation(forKey: type(of: self).AnimationKey)
+                print("!!!!!!!! all animation keys (shapeLayer) \(String(describing: shapeLayer.animationKeys()))")
+                //                    shapeLayer.setNeedsLayout()
+                //                    shapeLayer.setNeedsDisplay()
+                //                    shapeLayer.displayIfNeeded()
             }
+            //            }
             firstDataUpdate = false
         }
     }
 }
-

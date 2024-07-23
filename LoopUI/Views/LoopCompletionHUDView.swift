@@ -38,6 +38,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
     public var lastLoopCompleted: Date? {
         didSet {
+//            print("!!! lastLoopCompleted \(String(describing: lastLoopCompleted))")
             if lastLoopCompleted != oldValue {
                 loopInProgress = false
             }
@@ -73,10 +74,13 @@ public final class LoopCompletionHUDView: BaseHUDView {
     private var _tintColor: UIColor? {
         switch freshness {
         case .fresh:
+            print("!!!! fresh")
             return stateColors?.normal
         case .aging:
+            print("!!!! aging")
             return stateColors?.warning
         case .stale:
+            print("!!!! stale")
             return stateColors?.error
         }
     }

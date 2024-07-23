@@ -555,7 +555,7 @@ final class LoopDataManager: ObservableObject {
 
                 await dosingDecisionStore.storeDosingDecision(dosingDecision)
                 NotificationCenter.default.post(name: .LoopCycleCompleted, object: self)
-
+                print("!!! \(#function) trigger LoopCycleCompleted (success)")
             case .failure(let error):
                 throw error
             }
@@ -566,6 +566,7 @@ final class LoopDataManager: ObservableObject {
             await dosingDecisionStore.storeDosingDecision(dosingDecision)
             analyticsServicesManager?.loopDidError(error: loopError)
             NotificationCenter.default.post(name: .LoopCycleCompleted, object: self)
+            print("!!! \(#function) trigger LoopCycleCompleted (error)")
         }
         logger.default("Loop ended")
     }

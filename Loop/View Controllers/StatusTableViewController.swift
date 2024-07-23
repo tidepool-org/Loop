@@ -112,7 +112,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         break
                     }
 
+                    print("!!! \(#function) LoopDataUpdated setting loopInProgress = false")
                     self?.hudView?.loopCompletionHUD.loopInProgress = false
+                    print("!!! \(#function) loopInProgress \(String(describing: self?.hudView?.loopCompletionHUD.loopInProgress))")
                     self?.log.debug("[reloadData] from notification with context %{public}@", String(describing: context))
                     await self?.reloadData(animated: true)
                 }
@@ -121,12 +123,18 @@ final class StatusTableViewController: LoopChartsTableViewController {
             },
             notificationCenter.addObserver(forName: .LoopRunning, object: nil, queue: nil) { _ in
                 Task { @MainActor [weak self] in
+                    print("!!! \(#function) LoopRunning setting loopInProgress = true")
+                    print("!!! \(#function) loopCompletionHUD \(String(describing: self?.hudView?.loopCompletionHUD))")
                     self?.hudView?.loopCompletionHUD.loopInProgress = true
+                    print("!!! \(#function) loopInProgress \(String(describing: self?.hudView?.loopCompletionHUD.loopInProgress))")
                 }
             },
             notificationCenter.addObserver(forName: .LoopCycleCompleted, object: nil, queue: nil) { _ in
                 Task { @MainActor [weak self] in
+                    print("!!! \(#function) LoopCycleCompleted setting loopInProgress = false")
+                    print("!!! \(#function) loopCompletionHUD \(String(describing: self?.hudView?.loopCompletionHUD))")
                     self?.hudView?.loopCompletionHUD.loopInProgress = false
+                    print("!!! \(#function) loopInProgress \(String(describing: self?.hudView?.loopCompletionHUD.loopInProgress))")
                 }
             },
             notificationCenter.addObserver(forName: .PumpManagerChanged, object: deviceManager, queue: nil) { (notification: Notification) in
@@ -416,6 +424,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func reloadData(animated: Bool = false) async {
         dispatchPrecondition(condition: .onQueue(.main))
         // This should be kept up to date immediately
+//        print("!!! \(#function) lastLoopCompleted \(loopManager.lastLoopCompleted)")
         hudView?.loopCompletionHUD.lastLoopCompleted = loopManager.lastLoopCompleted
 
         guard !reloading && !deviceManager.authorizationRequired else {
@@ -1685,6 +1694,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             // when HUD view is initialized, update loop completion HUD (e.g., icon and last loop completed)
             hudView.loopCompletionHUD.stateColors = .loopStatus
             hudView.loopCompletionHUD.loopIconClosed = automaticDosingStatus.automaticDosingEnabled
+//            print("!!! \(#function) lastLoopCompleted \(loopManager.lastLoopCompleted)")
             hudView.loopCompletionHUD.lastLoopCompleted = loopManager.lastLoopCompleted
 
             hudView.cgmStatusHUD.stateColors = .cgmStatus
