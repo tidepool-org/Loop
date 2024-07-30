@@ -422,7 +422,7 @@ extension AlertStore {
         case failure(Error)
     }
 
-    func executeQuery(fromQueryAnchor queryAnchor: QueryAnchor? = nil, since date: Date, excludingFutureAlerts: Bool = true, now: Date = Date(), limit: Int, ascending: Bool, completion: @escaping (AlertQueryResult) -> Void) {
+    func executeQuery(fromQueryAnchor queryAnchor: QueryAnchor? = nil, since date: Date, excludingFutureAlerts: Bool = true, now: Date = Date(), limit: Int, ascending: Bool = true, completion: @escaping (AlertQueryResult) -> Void) {
         let sinceDateFilter = SinceDateFilter(predicateExpressionNotYetExpired: predicateExpressionNotYetExpired,
                                               date: date,
                                               excludingFutureAlerts: excludingFutureAlerts,
