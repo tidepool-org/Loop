@@ -147,6 +147,7 @@ public struct SettingsView: View {
                             therapySettings: viewModel.therapySettings(),
                             sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                             adultChildInsulinModelSelectionEnabled: FeatureFlags.adultChildInsulinModelSelectionEnabled,
+                            activeBolusAmount: viewModel.activeBolusAmount,
                             delegate: viewModel.therapySettingsViewModelDelegate
                         )
                     )

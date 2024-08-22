@@ -79,6 +79,7 @@ public class SettingsViewModel: ObservableObject {
     let sensitivityOverridesEnabled: Bool
     let isOnboardingComplete: Bool
     let therapySettingsViewModelDelegate: TherapySettingsViewModelDelegate?
+    let activeBolusAmount: Double?
     
     @Published private(set) var automaticDosingStatus: AutomaticDosingStatus
     
@@ -131,6 +132,7 @@ public class SettingsViewModel: ObservableObject {
                 availableSupports: [SupportUI],
                 isOnboardingComplete: Bool,
                 therapySettingsViewModelDelegate: TherapySettingsViewModelDelegate?,
+                activeBolusAmount: Double? = nil,
                 delegate: SettingsViewModelDelegate?
     ) {
         self.alertPermissionsChecker = alertPermissionsChecker
@@ -149,6 +151,7 @@ public class SettingsViewModel: ObservableObject {
         self.availableSupports = availableSupports
         self.isOnboardingComplete = isOnboardingComplete
         self.therapySettingsViewModelDelegate = therapySettingsViewModelDelegate
+        self.activeBolusAmount = activeBolusAmount
         self.delegate = delegate
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
@@ -203,6 +206,7 @@ extension SettingsViewModel {
                                  availableSupports: [],
                                  isOnboardingComplete: false,
                                  therapySettingsViewModelDelegate: nil,
+                                 activeBolusAmount: nil,
                                  delegate: nil
         )
     }

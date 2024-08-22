@@ -1621,6 +1621,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                           availableSupports: supportManager.availableSupports,
                                           isOnboardingComplete: onboardingManager.isComplete,
                                           therapySettingsViewModelDelegate: deviceManager,
+                                          activeBolusAmount: activeBolusAmount,
                                           delegate: self
         )
         viewModel.favoriteFoodInsightsDelegate = loopManager
@@ -1632,6 +1633,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 .environment(\.loopStatusColorPalette, .loopStatus),
             isModalInPresentation: false)
         present(hostingController, animated: true)
+    }
+    
+    private var activeBolusAmount: Double? {
+        guard case .inProgress(let dose) = bolusState else { return nil }
+        return dose.programmedUnits
     }
 
     private func onPumpTapped() {
