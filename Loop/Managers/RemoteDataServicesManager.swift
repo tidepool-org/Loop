@@ -411,7 +411,7 @@ extension RemoteDataServicesManager {
 
 extension RemoteDataServicesManager {
     private func uploadGlucoseData(to remoteDataService: RemoteDataService) {
-        guard delegate?.shouldSyncGlucoseToRemoteService == true else { return }
+        guard delegate?.shouldSyncGlucoseToRemoteService != false else { return }
 
         uploadGroup.enter()
 
