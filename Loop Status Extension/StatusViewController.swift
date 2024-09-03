@@ -280,7 +280,6 @@ class StatusViewController: UIViewController, NCWidgetProviding {
                     lastGlucose.quantity.doubleValue(for: unit),
                     at: lastGlucose.startDate,
                     unit: unit,
-                    staleGlucoseAge: LoopAlgorithm.inputDataRecencyInterval,
                     glucoseDisplay: context.glucoseDisplay,
                     wasUserEntered: lastGlucose.wasUserEntered,
                     isDisplayOnly: lastGlucose.isDisplayOnly

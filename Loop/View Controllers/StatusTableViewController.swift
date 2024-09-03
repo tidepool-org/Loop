@@ -590,7 +590,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 hudView.cgmStatusHUD.setGlucoseQuantity(glucose.quantity.doubleValue(for: unit),
                                                         at: glucose.startDate,
                                                         unit: unit,
-                                                        staleGlucoseAge: LoopAlgorithm.inputDataRecencyInterval,
                                                         glucoseDisplay: self.deviceManager.glucoseDisplay(for: glucose),
                                                         wasUserEntered: glucose.wasUserEntered,
                                                         isDisplayOnly: glucose.isDisplayOnly)
@@ -753,6 +752,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         let statusIsVisible = self.shouldShowStatus
 
         hudView?.cgmStatusHUD?.isVisible = hudIsVisible
+        hudView?.cgmStatusHUD.isGlucoseValueCurrent = !deviceManager.isGlucoseValueStale
 
         tableView.beginUpdates()
         

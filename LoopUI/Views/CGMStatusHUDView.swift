@@ -23,6 +23,15 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         return 1
     }
     
+    public var isGlucoseValueCurrent: Bool {
+        get {
+            viewModel.isGlucoseValueCurrent
+        }
+        set {
+            viewModel.isGlucoseValueCurrent = newValue
+        }
+    }
+    
     public var isVisible: Bool {
         get {
             viewModel.isVisible
@@ -110,7 +119,6 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     public func setGlucoseQuantity(_ glucoseQuantity: Double,
                                    at glucoseStartDate: Date,
                                    unit: HKUnit,
-                                   staleGlucoseAge: TimeInterval,
                                    glucoseDisplay: GlucoseDisplayable?,
                                    wasUserEntered: Bool,
                                    isDisplayOnly: Bool)
@@ -118,7 +126,6 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         viewModel.setGlucoseQuantity(glucoseQuantity,
                                      at: glucoseStartDate,
                                      unit: unit,
-                                     staleGlucoseAge: staleGlucoseAge,
                                      glucoseDisplay: glucoseDisplay,
                                      wasUserEntered: wasUserEntered,
                                      isDisplayOnly: isDisplayOnly)

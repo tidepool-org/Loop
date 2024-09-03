@@ -32,15 +32,12 @@ public class CGMStatusHUDViewModel {
         return manualGlucoseTrendIconOverride
     }
 
-    private var glucoseValueCurrent: Bool {
-        guard let isStaleAt = isStaleAt else { return true }
-        return Date() < isStaleAt
-    }
+    var isGlucoseValueCurrent: Bool = true
 
     private var isManualGlucose: Bool = false
 
     private var isManualGlucoseCurrent: Bool {
-        return isManualGlucose && glucoseValueCurrent
+        return isManualGlucose && isGlucoseValueCurrent
     }
 
     var manualGlucoseTrendIconOverride: UIImage?
@@ -70,43 +67,8 @@ public class CGMStatusHUDViewModel {
         }
     }
     
-    var isVisible: Bool = true {
-        didSet {
-            if oldValue != isVisible {
-                if !isVisible {
-                    stalenessTimer?.invalidate()
-                    stalenessTimer = nil
-                } else {
-                    startStalenessTimerIfNeeded()
-                }
-            }
-        }
-    }
-    
-    private var stalenessTimer: Timer?
-    
-    private var isStaleAt: Date? {
-        didSet {
-            if oldValue != isStaleAt {
-                stalenessTimer?.invalidate()
-                stalenessTimer = nil
-            }
-        }
-    }
+    var isVisible: Bool = true
 
-    private func startStalenessTimerIfNeeded() {
-        if let fireDate = isStaleAt,
-            isVisible,
-            stalenessTimer == nil
-        {
-            stalenessTimer = Timer(fire: fireDate, interval: 0, repeats: false) { (_) in
-                self.displayStaleGlucoseValue()
-                self.staleGlucoseValueHandler()
-            }
-            RunLoop.main.add(stalenessTimer!, forMode: .default)
-        }
-    }
-    
     private lazy var timeFormatter = DateFormatter(timeStyle: .short)
     
     var staleGlucoseValueHandler: () -> Void
@@ -118,7 +80,6 @@ public class CGMStatusHUDViewModel {
     func setGlucoseQuantity(_ glucoseQuantity: Double,
                             at glucoseStartDate: Date,
                             unit: HKUnit,
-                            staleGlucoseAge: TimeInterval,
                             glucoseDisplay: GlucoseDisplayable?,
                             wasUserEntered: Bool,
                             isDisplayOnly: Bool)
@@ -131,14 +92,11 @@ public class CGMStatusHUDViewModel {
         
         let time = timeFormatter.string(from: glucoseStartDate)
 
-        isStaleAt = glucoseStartDate.addingTimeInterval(staleGlucoseAge)
-
         glucoseValueTintColor = glucoseDisplay?.glucoseRangeCategory?.glucoseColor ?? .label
         
         let numberFormatter = NumberFormatter.glucoseFormatter(for: unit)
         if let valueString = numberFormatter.string(from: glucoseQuantity) {
-            if glucoseValueCurrent {
-                startStalenessTimerIfNeeded()
+            if isGlucoseValueCurrent {
                 switch glucoseDisplay?.glucoseRangeCategory {
                 case .some(.belowRange):
                     glucoseValueString = LocalizedString("LOW", comment: "String displayed instead of a glucose value below the CGM range")
@@ -158,7 +116,7 @@ public class CGMStatusHUDViewModel {
         if isManualGlucoseCurrent {
             // a manual glucose value presents any status highlight icon instead of a trend icon
             setManualGlucoseTrendIconOverride()
-        } else if let trend = glucoseDisplay?.trendType, glucoseValueCurrent {
+        } else if let trend = glucoseDisplay?.trendType, isGlucoseValueCurrent {
             self.trend = trend
             glucoseTrendTintColor = glucoseDisplay?.glucoseRangeCategory?.trendColor ?? .glucoseTintColor
             accessibilityStrings.append(trend.localizedDescription)
