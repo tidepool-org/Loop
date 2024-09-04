@@ -82,7 +82,8 @@ public class CGMStatusHUDViewModel {
                             unit: HKUnit,
                             glucoseDisplay: GlucoseDisplayable?,
                             wasUserEntered: Bool,
-                            isDisplayOnly: Bool)
+                            isDisplayOnly: Bool,
+                            isGlucoseValueCurrent: Bool)
     {
         var accessibilityStrings = [String]()
         
@@ -93,6 +94,7 @@ public class CGMStatusHUDViewModel {
         let time = timeFormatter.string(from: glucoseStartDate)
 
         glucoseValueTintColor = glucoseDisplay?.glucoseRangeCategory?.glucoseColor ?? .label
+        self.isGlucoseValueCurrent = isGlucoseValueCurrent
         
         let numberFormatter = NumberFormatter.glucoseFormatter(for: unit)
         if let valueString = numberFormatter.string(from: glucoseQuantity) {

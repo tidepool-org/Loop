@@ -121,14 +121,16 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
                                    unit: HKUnit,
                                    glucoseDisplay: GlucoseDisplayable?,
                                    wasUserEntered: Bool,
-                                   isDisplayOnly: Bool)
+                                   isDisplayOnly: Bool,
+                                   isGlucoseValueCurrent: Bool)
     {
         viewModel.setGlucoseQuantity(glucoseQuantity,
                                      at: glucoseStartDate,
                                      unit: unit,
                                      glucoseDisplay: glucoseDisplay,
                                      wasUserEntered: wasUserEntered,
-                                     isDisplayOnly: isDisplayOnly)
+                                     isDisplayOnly: isDisplayOnly,
+                                     isGlucoseValueCurrent: isGlucoseValueCurrent)
         
         updateDisplay()
     }
