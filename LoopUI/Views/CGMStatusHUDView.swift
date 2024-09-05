@@ -56,9 +56,7 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
     override func setup() {
         super.setup()
         statusHighlightView.setIconPosition(.right)
-        viewModel = CGMStatusHUDViewModel(staleGlucoseValueHandler: { [weak self] in
-            self?.updateDisplay()
-        })
+        viewModel = CGMStatusHUDViewModel()
     }
     
     override public func tintColorDidChange() {

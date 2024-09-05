@@ -70,12 +70,6 @@ public class CGMStatusHUDViewModel {
     var isVisible: Bool = true
 
     private lazy var timeFormatter = DateFormatter(timeStyle: .short)
-    
-    var staleGlucoseValueHandler: () -> Void
-    
-    init(staleGlucoseValueHandler: @escaping () -> Void) {
-        self.staleGlucoseValueHandler = staleGlucoseValueHandler
-    }
 
     func setGlucoseQuantity(_ glucoseQuantity: Double,
                             at glucoseStartDate: Date,
