@@ -32,12 +32,12 @@ public class CGMStatusHUDViewModel {
         return manualGlucoseTrendIconOverride
     }
 
-    var isGlucoseValueCurrent: Bool = true
+    var isGlucoseValueStale: Bool = false
 
     private var isManualGlucose: Bool = false
 
     private var isManualGlucoseCurrent: Bool {
-        return isManualGlucose && isGlucoseValueCurrent
+        return isManualGlucose && !isGlucoseValueStale
     }
 
     var manualGlucoseTrendIconOverride: UIImage?
@@ -83,7 +83,7 @@ public class CGMStatusHUDViewModel {
                             glucoseDisplay: GlucoseDisplayable?,
                             wasUserEntered: Bool,
                             isDisplayOnly: Bool,
-                            isGlucoseValueCurrent: Bool)
+                            isGlucoseValueStale: Bool)
     {
         var accessibilityStrings = [String]()
         
@@ -94,11 +94,11 @@ public class CGMStatusHUDViewModel {
         let time = timeFormatter.string(from: glucoseStartDate)
 
         glucoseValueTintColor = glucoseDisplay?.glucoseRangeCategory?.glucoseColor ?? .label
-        self.isGlucoseValueCurrent = isGlucoseValueCurrent
+        self.isGlucoseValueStale = isGlucoseValueStale
         
         let numberFormatter = NumberFormatter.glucoseFormatter(for: unit)
         if let valueString = numberFormatter.string(from: glucoseQuantity) {
-            if isGlucoseValueCurrent {
+            if !isGlucoseValueStale {
                 switch glucoseDisplay?.glucoseRangeCategory {
                 case .some(.belowRange):
                     glucoseValueString = LocalizedString("LOW", comment: "String displayed instead of a glucose value below the CGM range")
@@ -118,7 +118,7 @@ public class CGMStatusHUDViewModel {
         if isManualGlucoseCurrent {
             // a manual glucose value presents any status highlight icon instead of a trend icon
             setManualGlucoseTrendIconOverride()
-        } else if let trend = glucoseDisplay?.trendType, isGlucoseValueCurrent {
+        } else if let trend = glucoseDisplay?.trendType, !isGlucoseValueStale {
             self.trend = trend
             glucoseTrendTintColor = glucoseDisplay?.glucoseRangeCategory?.trendColor ?? .glucoseTintColor
             accessibilityStrings.append(trend.localizedDescription)

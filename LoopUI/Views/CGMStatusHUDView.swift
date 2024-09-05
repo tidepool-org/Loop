@@ -23,12 +23,12 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
         return 1
     }
     
-    public var isGlucoseValueCurrent: Bool {
+    public var isGlucoseValueStale: Bool {
         get {
-            viewModel.isGlucoseValueCurrent
+            viewModel.isGlucoseValueStale
         }
         set {
-            viewModel.isGlucoseValueCurrent = newValue
+            viewModel.isGlucoseValueStale = newValue
         }
     }
     
@@ -122,7 +122,7 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
                                    glucoseDisplay: GlucoseDisplayable?,
                                    wasUserEntered: Bool,
                                    isDisplayOnly: Bool,
-                                   isGlucoseValueCurrent: Bool)
+                                   isGlucoseValueStale: Bool)
     {
         viewModel.setGlucoseQuantity(glucoseQuantity,
                                      at: glucoseStartDate,
@@ -130,7 +130,7 @@ public final class CGMStatusHUDView: DeviceStatusHUDView, NibLoadable {
                                      glucoseDisplay: glucoseDisplay,
                                      wasUserEntered: wasUserEntered,
                                      isDisplayOnly: isDisplayOnly,
-                                     isGlucoseValueCurrent: isGlucoseValueCurrent)
+                                     isGlucoseValueStale: isGlucoseValueStale)
         
         updateDisplay()
     }
