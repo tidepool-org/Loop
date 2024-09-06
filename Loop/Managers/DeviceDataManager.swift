@@ -601,11 +601,6 @@ final class DeviceDataManager {
 
         return Date().timeIntervalSince(latestGlucoseDataDate) > LoopAlgorithm.inputDataRecencyInterval
     }
-    
-    var glucoseValueStaleDate: Date? {
-        guard let latestGlucoseDataDate = glucoseStore.latestGlucose?.startDate else { return nil }
-        return latestGlucoseDataDate.addingTimeInterval(LoopAlgorithm.inputDataRecencyInterval)
-    }
 }
 
 private extension DeviceDataManager {

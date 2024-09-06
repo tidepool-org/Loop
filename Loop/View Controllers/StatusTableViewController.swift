@@ -127,7 +127,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             notificationCenter.addObserver(forName: .LoopCycleCompleted, object: nil, queue: nil) { _ in
                 Task { @MainActor [weak self] in
                     self?.hudView?.loopCompletionHUD.loopInProgress = false
-                    self?.restartGlucoseValueStalenessTimer()
                 }
             },
             notificationCenter.addObserver(forName: .PumpManagerChanged, object: deviceManager, queue: nil) { (notification: Notification) in
@@ -269,13 +268,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var onscreen: Bool = false {
         didSet {
             updateHUDActive()
-            if oldValue != onscreen {
-                if onscreen {
-                    startGlucoseValueStalenessTimerIfNeeded()
-                } else {
-                    stopGlucoseValueStalenessTimer()
-                }
-            }
         }
     }
 
@@ -1841,34 +1833,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             alert.addCancelAction { _ in }
             present(alert, animated: true, completion: nil)
         }
-    }
-
-    private var glucoseValueStalenessTimer: Timer?
-
-    private func stopGlucoseValueStalenessTimer() {
-        glucoseValueStalenessTimer?.invalidate()
-        glucoseValueStalenessTimer = nil
-    }
-    
-    private func restartGlucoseValueStalenessTimer() {
-        stopGlucoseValueStalenessTimer()
-        startGlucoseValueStalenessTimerIfNeeded()
-    }
-   
-    private func startGlucoseValueStalenessTimerIfNeeded() {
-        guard let glucoseValueStaleDate = deviceManager.glucoseValueStaleDate,
-              visible,
-              glucoseValueStalenessTimer == nil
-        else { return }
-        
-        let fireDate = glucoseValueStaleDate.addingTimeInterval(.seconds(10)) // set fire date to be shortly after the glucose value stale date
-        glucoseValueStalenessTimer = Timer(fire: fireDate, interval: 0, repeats: false) { (_) in
-            Task { @MainActor in
-                self.refreshContext.update(with: .status)
-                await self.reloadData(animated: true)
-            }
-        }
-        RunLoop.main.add(glucoseValueStalenessTimer!, forMode: .default)
     }
     
     // MARK: - Debug Scenarios and Simulated Core Data
