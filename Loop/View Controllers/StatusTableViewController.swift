@@ -268,6 +268,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var onscreen: Bool = false {
         didSet {
             updateHUDActive()
+            loopManager.startGlucoseValueStalenessTimerIfNeeded()
         }
     }
 

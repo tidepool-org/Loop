@@ -175,7 +175,7 @@ final class LoopDataManager: ObservableObject {
         self.analyticsServicesManager = analyticsServicesManager
         self.carbAbsorptionModel = carbAbsorptionModel
         self.usePositiveMomentumAndRCForManualBoluses = usePositiveMomentumAndRCForManualBoluses
-
+        
         // Required for device settings in stored dosing decisions
         UIDevice.current.isBatteryMonitoringEnabled = true
 
@@ -236,8 +236,6 @@ final class LoopDataManager: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-
-
     }
 
     // MARK: - Calculation state
@@ -659,7 +657,7 @@ final class LoopDataManager: ObservableObject {
         glucoseValueStalenessTimer = nil
     }
        
-    private func startGlucoseValueStalenessTimerIfNeeded() {
+    func startGlucoseValueStalenessTimerIfNeeded() {
         guard let fireDate = glucoseValueStaleDate,
               glucoseValueStalenessTimer == nil
         else { return }
