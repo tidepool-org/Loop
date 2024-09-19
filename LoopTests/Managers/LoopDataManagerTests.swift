@@ -122,6 +122,8 @@ class LoopDataManagerTests: XCTestCase {
 
         loopDataManager = LoopDataManager(
             lastLoopCompleted: now,
+            publishedMostRecentGlucoseDataDate: now,
+            publishedMostRecentPumpDataDate: now,
             temporaryPresetsManager: temporaryPresetsManager,
             settingsProvider: settingsProvider,
             doseStore: doseStore,
