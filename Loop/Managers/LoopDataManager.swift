@@ -99,8 +99,8 @@ final class LoopDataManager: ObservableObject {
     }
 
     @Published private(set) var lastLoopCompleted: Date?
-    @Published private(set) var publishedMostRecentGlucoseDataDate: Date? = nil
-    @Published private(set) var publishedMostRecentPumpDataDate: Date? = nil
+    @Published private(set) var publishedMostRecentGlucoseDataDate: Date?
+    @Published private(set) var publishedMostRecentPumpDataDate: Date?
 
     var deliveryDelegate: DeliveryDelegate?
 
@@ -178,7 +178,7 @@ final class LoopDataManager: ObservableObject {
         self.carbAbsorptionModel = carbAbsorptionModel
         self.usePositiveMomentumAndRCForManualBoluses = usePositiveMomentumAndRCForManualBoluses
         
-        self.publishedMostRecentGlucoseDataDate = mostRecentGlucoseDataDate
+        self.publishedMostRecentGlucoseDataDate = glucoseStore.latestGlucose?.startDate
         self.publishedMostRecentPumpDataDate = mostRecentPumpDataDate
         
         // Required for device settings in stored dosing decisions
