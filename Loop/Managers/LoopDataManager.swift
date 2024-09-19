@@ -150,8 +150,6 @@ final class LoopDataManager: ObservableObject {
 
     init(
         lastLoopCompleted: Date?,
-        publishedMostRecentGlucoseDataDate: Date?,
-        publishedMostRecentPumpDataDate: Date?,
         temporaryPresetsManager: TemporaryPresetsManager,
         settingsProvider: SettingsProvider,
         doseStore: DoseStoreProtocol,
@@ -167,8 +165,8 @@ final class LoopDataManager: ObservableObject {
     ) {
 
         self.lastLoopCompleted = lastLoopCompleted
-        self.publishedMostRecentGlucoseDataDate = publishedMostRecentGlucoseDataDate
-        self.publishedMostRecentPumpDataDate = publishedMostRecentPumpDataDate
+        self.publishedMostRecentGlucoseDataDate = nil
+        self.publishedMostRecentPumpDataDate = nil
         self.temporaryPresetsManager = temporaryPresetsManager
         self.settingsProvider = settingsProvider
         self.doseStore = doseStore
@@ -181,6 +179,9 @@ final class LoopDataManager: ObservableObject {
         self.analyticsServicesManager = analyticsServicesManager
         self.carbAbsorptionModel = carbAbsorptionModel
         self.usePositiveMomentumAndRCForManualBoluses = usePositiveMomentumAndRCForManualBoluses
+        
+        self.publishedMostRecentGlucoseDataDate = mostRecentGlucoseDataDate
+        self.publishedMostRecentPumpDataDate = mostRecentPumpDataDate
         
         // Required for device settings in stored dosing decisions
         UIDevice.current.isBatteryMonitoringEnabled = true
