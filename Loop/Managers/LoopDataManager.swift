@@ -99,8 +99,8 @@ final class LoopDataManager: ObservableObject {
     }
 
     @Published private(set) var lastLoopCompleted: Date?
-    @Published private(set) var publishedMostRecentGlucoseDataDate: Date?
-    @Published private(set) var publishedMostRecentPumpDataDate: Date?
+    @Published private(set) var publishedMostRecentGlucoseDataDate: Date? = nil
+    @Published private(set) var publishedMostRecentPumpDataDate: Date? = nil
 
     var deliveryDelegate: DeliveryDelegate?
 
@@ -165,8 +165,6 @@ final class LoopDataManager: ObservableObject {
     ) {
 
         self.lastLoopCompleted = lastLoopCompleted
-        self.publishedMostRecentGlucoseDataDate = nil
-        self.publishedMostRecentPumpDataDate = nil
         self.temporaryPresetsManager = temporaryPresetsManager
         self.settingsProvider = settingsProvider
         self.doseStore = doseStore
