@@ -101,8 +101,8 @@ class CGMStalenessMonitorTests: XCTestCase {
 }
 
 extension CGMStalenessMonitorTests: CGMStalenessMonitorDelegate {
-    func getLatestCGMGlucose(since: Date, completion: @escaping (Result<StoredGlucoseSample?, Error>) -> Void) {
-        completion(.success(latestCGMGlucose))
+    public func getLatestCGMGlucose(since: Date) async throws -> StoredGlucoseSample? {
         fetchExpectation?.fulfill()
+        return latestCGMGlucose
     }
 }
