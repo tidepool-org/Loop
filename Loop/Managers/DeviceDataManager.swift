@@ -288,7 +288,11 @@ final class DeviceDataManager {
         glucoseStore.delegate = self
         cgmEventStore.delegate = self
         doseStore.insulinDeliveryStore.delegate = self
-        
+
+        Task {
+            await cgmStalenessMonitor.checkCGMStaleness()
+        }
+
         setupPump()
         setupCGM()
 

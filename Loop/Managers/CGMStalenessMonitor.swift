@@ -21,15 +21,7 @@ class CGMStalenessMonitor {
     
     private var cgmStalenessTimer: Timer?
     
-    weak var delegate: CGMStalenessMonitorDelegate? = nil {
-        didSet {
-            if delegate != nil {
-                Task {
-                    await checkCGMStaleness()
-                }
-            }
-        }
-    }
+    weak var delegate: CGMStalenessMonitorDelegate?
 
     @Published var cgmDataIsStale: Bool = true {
         didSet {
@@ -66,7 +58,7 @@ class CGMStalenessMonitor {
         cgmStalenessTimer?.tolerance = CGMStalenessMonitor.cgmStalenessTimerTolerance
     }
     
-    private func checkCGMStaleness() async {
+    func checkCGMStaleness() async {
         do {
             let sample = try await delegate?.getLatestCGMGlucose(since: Date(timeIntervalSinceNow: -LoopAlgorithm.inputDataRecencyInterval))
             self.log.debug("Fetched latest CGM Glucose for checkCGMStaleness: %{public}@", String(describing: sample))
