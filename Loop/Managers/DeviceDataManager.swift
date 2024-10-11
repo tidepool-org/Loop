@@ -1218,6 +1218,7 @@ extension DeviceDataManager {
                 // only clear cache since access to health kit is denied
                 do {
                     try await glucoseStore.purgeCachedGlucoseObjects()
+                    completion?(nil)
                 } catch {
                     completion?(error)
                 }

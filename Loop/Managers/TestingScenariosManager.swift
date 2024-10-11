@@ -230,66 +230,68 @@ extension TestingScenariosManager {
             completion(error)
         }
         
-        Task {
-            guard FeatureFlags.scenariosEnabled else {
-                fatalError("\(#function) should be invoked only when scenarios are enabled")
+        guard FeatureFlags.scenariosEnabled else {
+            fatalError("\(#function) should be invoked only when scenarios are enabled")
+        }
+
+        wipeExistingData { [weak self] error in
+            guard error == nil else {
+                bail(with: error!)
+                return
             }
-            
+
             let instance = scenario.instantiate()
             
-            var testingCGMManager: TestingCGMManager?
-            var testingPumpManager: TestingPumpManager?
-            
-            if instance.hasCGMData {
-                if let cgmManager = deviceManager.cgmManager as? TestingCGMManager {
-                    if instance.shouldReloadManager?.cgm == true {
-                            testingCGMManager = await reloadCGMManager(withIdentifier: cgmManager.pluginIdentifier)
-                    } else {
-                        testingCGMManager = cgmManager
-                    }
+            self?.carbStore.addNewCarbEntries(entries: instance.carbEntries) { error in
+                if let error {
+                    bail(with: error)
                 } else {
-                    bail(with: ScenarioLoadingError.noTestingCGMManagerEnabled)
-                    return
-                }
-            }
-            
-            if instance.hasPumpData {
-                if let pumpManager = deviceManager.pumpManager as? TestingPumpManager {
-                    if instance.shouldReloadManager?.pump == true {
-                        testingPumpManager = reloadPumpManager(withIdentifier: pumpManager.pluginIdentifier)
-                    } else {
-                        testingPumpManager = pumpManager
-                    }
-                } else {
-                    bail(with: ScenarioLoadingError.noTestingPumpManagerEnabled)
-                    return
-                }
-            }
-
-            wipeExistingData { error in
-                guard error == nil else {
-                    bail(with: error!)
-                    return
-                }
-
-                self.carbStore.addNewCarbEntries(entries: instance.carbEntries) { error in
-                    if let error {
-                        bail(with: error)
-                    } else {
+                    Task {
+                        var testingCGMManager: TestingCGMManager?
+                        var testingPumpManager: TestingPumpManager?
+                        
+                        if instance.hasCGMData {
+                            if let cgmManager = self?.deviceManager.cgmManager as? TestingCGMManager {
+                                if instance.shouldReloadManager?.cgm == true {
+                                    testingCGMManager = await self?.reloadCGMManager(withIdentifier: cgmManager.pluginIdentifier)
+                                } else {
+                                    testingCGMManager = cgmManager
+                                }
+                            } else {
+                                bail(with: ScenarioLoadingError.noTestingCGMManagerEnabled)
+                                return
+                            }
+                        }
+                        
+                        if instance.hasPumpData {
+                            if let pumpManager = self?.deviceManager.pumpManager as? TestingPumpManager {
+                                if instance.shouldReloadManager?.pump == true {
+                                    testingPumpManager = self?.reloadPumpManager(withIdentifier: pumpManager.pluginIdentifier)
+                                } else {
+                                    testingPumpManager = pumpManager
+                                }
+                            } else {
+                                bail(with: ScenarioLoadingError.noTestingPumpManagerEnabled)
+                                return
+                            }
+                        }
+                        
                         testingPumpManager?.reservoirFillFraction = 1.0
                         testingPumpManager?.injectPumpEvents(instance.pumpEvents)
                         testingCGMManager?.injectGlucoseSamples(instance.pastGlucoseSamples, futureSamples: instance.futureGlucoseSamples)
-                        self.activeScenario = scenario
+                        
+                        self?.activeScenario = scenario
+                        
+                        instance.deviceActions.forEach { [testingCGMManager, testingPumpManager] action in
+                            if testingCGMManager?.pluginIdentifier == action.managerIdentifier {
+                                testingCGMManager?.trigger(action: action)
+                            } else if testingPumpManager?.pluginIdentifier == action.managerIdentifier {
+                                testingPumpManager?.trigger(action: action)
+                            }
+                        }
+                        
                         completion(nil)
                     }
-                }
-            }
-            
-            instance.deviceActions.forEach { [testingCGMManager, testingPumpManager] action in
-                if testingCGMManager?.pluginIdentifier == action.managerIdentifier {
-                    testingCGMManager?.trigger(action: action)
-                } else if testingPumpManager?.pluginIdentifier == action.managerIdentifier {
-                    testingPumpManager?.trigger(action: action)
                 }
             }
         }
