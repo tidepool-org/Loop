@@ -366,11 +366,24 @@ final class LoopDataManager: ObservableObject {
 
         let glucose = try await glucoseStore.getGlucoseSamples(start: carbsStart, end: baseTime)
 
-        let sensitivityStart = min(carbsStart, dosesStart).dateFlooredToTimeInterval(GlucoseMath.defaultDelta)
+        let dosesWithModel = doses.map { $0.simpleDose(with: insulinModel(for: $0.insulinType)) }
 
-        let sensitivityEnd = max(forecastEndTime, doses.last?.endDate.addingTimeInterval(InsulinMath.defaultInsulinActivityDuration) ?? forecastEndTime).dateCeiledToTimeInterval(GlucoseMath.defaultDelta)
+        let recommendationInsulinModel = insulinModel(for: deliveryDelegate?.pumpInsulinType ?? .novolog)
 
-        let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(startDate: sensitivityStart, endDate: sensitivityEnd)
+        let recommendationEffectInterval = DateInterval(
+            start: baseTime,
+            duration: recommendationInsulinModel.effectDuration
+        )
+        let neededSensitivityTimeline = LoopAlgorithm.timelineIntervalForSensitivity(
+            doses: dosesWithModel,
+            glucoseHistoryStart: glucose.first?.startDate ?? baseTime,
+            recommendationEffectInterval: recommendationEffectInterval
+        )
+
+        let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(
+            startDate: neededSensitivityTimeline.start,
+            endDate: neededSensitivityTimeline.end
+        )
 
         let target = try await settingsProvider.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
 
@@ -384,7 +397,7 @@ final class LoopDataManager: ObservableObject {
             throw LoopError.configurationError(.maximumBasalRatePerHour)
         }
 
-        var overrides = temporaryPresetsManager.overrideHistory.getOverrideHistory(startDate: sensitivityStart, endDate: forecastEndTime)
+        var overrides = temporaryPresetsManager.overrideHistory.getOverrideHistory(startDate: neededSensitivityTimeline.start, endDate: forecastEndTime)
 
         // Bug (https://tidepool.atlassian.net/browse/LOOP-4759) pre-meal is not recorded in override history
         // So currently we handle automatic forecast by manually adding it in, and when meal bolusing, we do not do this.
@@ -435,7 +448,7 @@ final class LoopDataManager: ObservableObject {
 
         return StoredDataAlgorithmInput(
             glucoseHistory: glucose,
-            doses: doses.map { $0.simpleDose(with: insulinModel(for: $0.insulinType)) },
+            doses: dosesWithModel,
             carbEntries: carbEntries,
             predictionStart: baseTime,
             basal: basalWithOverrides,
@@ -448,7 +461,7 @@ final class LoopDataManager: ObservableObject {
             useIntegralRetrospectiveCorrection: UserDefaults.standard.integralRetrospectiveCorrectionEnabled,
             includePositiveVelocityAndRC: true,
             carbAbsorptionModel: carbAbsorptionModel,
-            recommendationInsulinModel: insulinModel(for: deliveryDelegate?.pumpInsulinType ?? .novolog),
+            recommendationInsulinModel: recommendationInsulinModel,
             recommendationType: .manualBolus,
             automaticBolusApplicationFactor: effectiveBolusApplicationFactor)
     }
@@ -1020,6 +1033,7 @@ extension StoredDataAlgorithmInput {
             carbRatio: carbRatio,
             algorithmEffectsOptions: effectsOptions,
             useIntegralRetrospectiveCorrection: self.useIntegralRetrospectiveCorrection,
+            useMidAbsorptionISF: true,
             carbAbsorptionModel: self.carbAbsorptionModel.model
         )
         return prediction.glucose
