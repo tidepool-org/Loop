@@ -343,7 +343,7 @@ final class LoopDataManager: ObservableObject {
             throw LoopError.configurationError(.basalRateSchedule)
         }
 
-        let forecastEndTime = baseTime.addingTimeInterval(InsulinMath.defaultInsulinActivityDuration).dateCeiledToTimeInterval(.minutes(GlucoseMath.defaultDelta))
+        let forecastEndTime = baseTime.addingTimeInterval(InsulinMath.defaultInsulinActivityDuration).dateCeiledToTimeInterval(GlucoseMath.defaultDelta)
 
         let carbsStart = baseTime.addingTimeInterval(CarbMath.dateAdjustmentPast + .minutes(-1)) // additional minute to handle difference in seconds between carb entry and carb ratio
 
@@ -366,9 +366,11 @@ final class LoopDataManager: ObservableObject {
 
         let glucose = try await glucoseStore.getGlucoseSamples(start: carbsStart, end: baseTime)
 
-        let sensitivityStart = min(carbsStart, dosesStart)
+        let sensitivityStart = min(carbsStart, dosesStart).dateFlooredToTimeInterval(GlucoseMath.defaultDelta)
 
-        let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(startDate: sensitivityStart, endDate: forecastEndTime)
+        let sensitivityEnd = max(forecastEndTime, doses.last?.endDate.addingTimeInterval(InsulinMath.defaultInsulinActivityDuration) ?? forecastEndTime).dateCeiledToTimeInterval(GlucoseMath.defaultDelta)
+
+        let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(startDate: sensitivityStart, endDate: sensitivityEnd)
 
         let target = try await settingsProvider.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
 
