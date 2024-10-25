@@ -66,7 +66,7 @@ extension Bundle {
         let components = identifier.components(separatedBy: ".")
         // DIY Loop has bundle identifiers like com.UY653SP37Q.loopkit.Loop
         if components[2] == "loopkit" && components[3] == "Loop" {
-            identifier = "com.loopkit.Looo"
+            identifier = "com.loopkit.Loop"
         }
         return identifier
     }
