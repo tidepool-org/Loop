@@ -119,7 +119,7 @@ struct PresetsAndExerciseContentView: View {
             Text(string)
         }
         
-        AdjustedRangeView(
+        AdjustedGlucoseRangeView(
             lowerBound: lowerBound,
             upperBound: upperBound
         )
@@ -141,8 +141,10 @@ struct PresetsAndExerciseContentView: View {
             presetName: NSLocalizedString("Walk to Work", comment: "Presets and exercise training content, scheduling preset, preset example, title"),
             duration: .duration(.seconds(1800)),
             percentOfScheduled: 1,
-            lowerCorrectionRangeBound: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 140),
-            upperCorrectionRangeBound: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 260)
+            correctionRange: (
+                lower: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 140),
+                upper: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 260)
+            )
         )
     }
 }

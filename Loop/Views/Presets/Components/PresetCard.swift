@@ -47,8 +47,7 @@ struct PresetCard<Icon: View>: View {
     let presetName: String
     let duration: DurationType
     let percentOfScheduled: Double
-    let lowerCorrectionRangeBound: HKQuantity
-    let upperCorrectionRangeBound: HKQuantity
+    let correctionRange: (lower: HKQuantity, upper: HKQuantity)
     
     private var numberFormatter: NumberFormatter {
         let formatter = NumberFormatter()
@@ -74,7 +73,7 @@ struct PresetCard<Icon: View>: View {
             .accessibilityLabel(Text(duration.accessibilityLabel))
     }
     
-    var overallInsulin: some View {
+    var overallInsulinView: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Overall Insulin")
                 .font(.subheadline)
@@ -90,14 +89,14 @@ struct PresetCard<Icon: View>: View {
         .accessibilityElement(children: .contain)
     }
     
-    var correctionRange: some View {
+    var correctionRangeView: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Correction Range")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .accessibilitySortPriority(2)
             
-            Group { Text(displayGlucosePreference.format(lowerQuantity: lowerCorrectionRangeBound, higherQuantity: upperCorrectionRangeBound, includeUnit: false)).bold() + Text(" \(displayGlucosePreference.unit.localizedUnitString(in: .medium) ?? displayGlucosePreference.unit.unitString)") }
+            Group { Text(displayGlucosePreference.format(lowerQuantity: correctionRange.lower, higherQuantity: correctionRange.upper, includeUnit: false)).bold() + Text(" \(displayGlucosePreference.unit.localizedUnitString(in: .medium) ?? displayGlucosePreference.unit.unitString)") }
                 .font(.subheadline)
                 .accessibilitySortPriority(1)
         }
@@ -127,17 +126,17 @@ struct PresetCard<Icon: View>: View {
             
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 0) {
-                    overallInsulin
+                    overallInsulinView
                     
                     Spacer()
                     
-                    correctionRange
+                    correctionRangeView
                 }
                 
                 VStack(alignment: .leading, spacing: 16) {
-                    overallInsulin
+                    overallInsulinView
                     
-                    correctionRange
+                    correctionRangeView
                 }
             }
         }

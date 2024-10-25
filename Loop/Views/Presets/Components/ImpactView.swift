@@ -16,7 +16,9 @@ public struct ImpactView<Content: View>: View {
         GroupBox {
             VStack(alignment: .leading, spacing: 10) {
                 Group {
-                    Text(Image(systemName: "exclamationmark.circle.fill")).foregroundColor(.accentColor) + Text(" Consider the Impact", comment: "Impact title")
+                    Text(Image(systemName: "exclamationmark.circle.fill"))
+                        .foregroundColor(.accentColor) +
+                    Text(" Consider the Impact", comment: "Impact title")
                 }
                 .font(.title3.weight(.semibold))
                 .frame(maxWidth: .infinity, alignment: .leading)

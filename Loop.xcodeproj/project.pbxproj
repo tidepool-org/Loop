@@ -261,7 +261,7 @@
 		84E8BBB82CC9924B0078E6CF /* HowTheyWorkContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBB72CC9924B0078E6CF /* HowTheyWorkContentView.swift */; };
 		84E8BBBA2CC9925C0078E6CF /* PresetsAndExerciseContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBB92CC9925C0078E6CF /* PresetsAndExerciseContentView.swift */; };
 		84E8BBBC2CC992660078E6CF /* PresetsAndIllnessContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBBB2CC992660078E6CF /* PresetsAndIllnessContentView.swift */; };
-		84E8BBC42CC9B9890078E6CF /* AdjustedRangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC32CC9B9800078E6CF /* AdjustedRangeView.swift */; };
+		84E8BBC42CC9B9890078E6CF /* AdjustedGlucoseRangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC32CC9B9800078E6CF /* AdjustedGlucoseRangeView.swift */; };
 		84E8BBC62CC9BF830078E6CF /* PercentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC52CC9BF830078E6CF /* PercentPickerView.swift */; };
 		84E8BBC82CC9D34B0078E6CF /* TherapySettingsExampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC72CC9D34B0078E6CF /* TherapySettingsExampleView.swift */; };
 		84E8BBCA2CCA16290078E6CF /* PresetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC92CCA16290078E6CF /* PresetsView.swift */; };
@@ -1137,7 +1137,7 @@
 		84E8BBB72CC9924B0078E6CF /* HowTheyWorkContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowTheyWorkContentView.swift; sourceTree = "<group>"; };
 		84E8BBB92CC9925C0078E6CF /* PresetsAndExerciseContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsAndExerciseContentView.swift; sourceTree = "<group>"; };
 		84E8BBBB2CC992660078E6CF /* PresetsAndIllnessContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsAndIllnessContentView.swift; sourceTree = "<group>"; };
-		84E8BBC32CC9B9800078E6CF /* AdjustedRangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdjustedRangeView.swift; sourceTree = "<group>"; };
+		84E8BBC32CC9B9800078E6CF /* AdjustedGlucoseRangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdjustedGlucoseRangeView.swift; sourceTree = "<group>"; };
 		84E8BBC52CC9BF830078E6CF /* PercentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PercentPickerView.swift; sourceTree = "<group>"; };
 		84E8BBC72CC9D34B0078E6CF /* TherapySettingsExampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TherapySettingsExampleView.swift; sourceTree = "<group>"; };
 		84E8BBC92CCA16290078E6CF /* PresetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsView.swift; sourceTree = "<group>"; };
@@ -2506,7 +2506,7 @@
 			isa = PBXGroup;
 			children = (
 				84C170EC2CCA361F0098E52F /* ImpactView.swift */,
-				84E8BBC32CC9B9800078E6CF /* AdjustedRangeView.swift */,
+				84E8BBC32CC9B9800078E6CF /* AdjustedGlucoseRangeView.swift */,
 				84E8BBCD2CCA1E070078E6CF /* PresetsTrainingCard.swift */,
 				84E8BBC52CC9BF830078E6CF /* PercentPickerView.swift */,
 				84E8BBC72CC9D34B0078E6CF /* TherapySettingsExampleView.swift */,
@@ -3683,7 +3683,7 @@
 				430D85891F44037000AF2D4F /* HUDViewTableViewCell.swift in Sources */,
 				43A51E211EB6DBDD000736CC /* LoopChartsTableViewController.swift in Sources */,
 				8968B1122408B3520074BB48 /* UIFont.swift in Sources */,
-				84E8BBC42CC9B9890078E6CF /* AdjustedRangeView.swift in Sources */,
+				84E8BBC42CC9B9890078E6CF /* AdjustedGlucoseRangeView.swift in Sources */,
 				84C170EF2CCA37680098E52F /* PresetCard.swift in Sources */,
 				1452F4A92A851C9400F8B9E4 /* FavoriteFoodAddEditViewModel.swift in Sources */,
 				438D42FB1D7D11A4003244B0 /* PredictionInputEffectTableViewCell.swift in Sources */,

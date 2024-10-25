@@ -88,14 +88,14 @@ struct PresetsTrainingContentContainerView: View {
                 }
                 
                 Button {
-                    if step.isLast {
+                    if step.isFinalStep {
                         dismiss()
                         onComplete()
                     } else {
                         viewModel.nextPage()
                     }
                 } label: {
-                    Text(step.isLast ? "Finish Training" : "Continue")
+                    Text(step.isFinalStep ? "Finish Training" : "Continue")
                 }
                 .buttonStyle(ActionButtonStyle(.primary))
             }

@@ -95,7 +95,7 @@ struct PresetsAndIllnessContentView: View {
             Text(string)
         }
         
-        AdjustedRangeView(
+        AdjustedGlucoseRangeView(
             lowerBound: lowerBound,
             upperBound: upperBound
         )

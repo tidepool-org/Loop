@@ -1,5 +1,5 @@
 //
-//  AdjustedRangeView.swift
+//  AdjustedGlucoseRangeView.swift
 //  Loop
 //
 //  Created by Cameron Ingham on 10/23/24.
@@ -10,7 +10,7 @@ import HealthKit
 import LoopKitUI
 import SwiftUI
 
-struct AdjustedRangeView: View {
+struct AdjustedGlucoseRangeView: View {
     
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
 

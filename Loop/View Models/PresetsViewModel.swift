@@ -9,7 +9,8 @@
 import SwiftUI
 
 class PresetsViewModel: ObservableObject {
-    @AppStorage("hasCompletedPresetsTraining") var hasCompletedTraining: Bool = false
     
+    // MARK: Training
+    @AppStorage("hasCompletedPresetsTraining") var hasCompletedTraining: Bool = false
     @Published var showTraining: Bool = false
 }
