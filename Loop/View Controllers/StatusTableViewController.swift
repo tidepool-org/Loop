@@ -812,14 +812,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 if oldDose.syncIdentifier != newDose.syncIdentifier {
                     tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
                 }
+            case (.cancelingBolus, .bolusing(let oldDose)):
+                // this occurs when a cancel command fails
+                tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
             case (.canceledBolus(let oldDose), .canceledBolus(let newDose)):
                 if oldDose != newDose {
                     tableView.reloadRows(at: [statusIndexPath], with: animated ? .fade : .none)
                 }
             // these updates cause flickering and/or confusion.
             case (.cancelingBolus, .cancelingBolus):
-                break
-            case (.cancelingBolus, .bolusing(_)):
                 break
             case (.canceledBolus(_), .cancelingBolus):
                 break
@@ -2304,7 +2305,7 @@ extension StatusTableViewController: ServicesViewModelDelegate {
     }
 
     fileprivate func showServiceSettings(_ serviceUI: ServiceUI) {
-        var settingsViewController = serviceUI.settingsViewController(colorPalette: .default)
+        var settingsViewController = serviceUI.settingsViewController(colorPalette: .default, allowDebugFeatures: FeatureFlags.allowDebugFeatures)
         settingsViewController.serviceOnboardingDelegate = servicesManager
         settingsViewController.completionDelegate = self
         show(settingsViewController, sender: self)
