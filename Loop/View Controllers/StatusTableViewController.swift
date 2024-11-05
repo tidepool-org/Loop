@@ -293,7 +293,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             loopManager.startGlucoseValueStalenessTimerIfNeeded()
         }
     }
-
+    
     private var bolusState: PumpManagerStatus.BolusState = .noBolus {
         didSet {
             if oldValue != bolusState {
@@ -306,10 +306,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     }
                 default:
                     break
-                }
-                Task { @MainActor in
-                    refreshContext.update(with: .status)
-                    await reloadData(animated: true)
                 }
             }
         }
