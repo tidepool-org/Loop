@@ -2120,14 +2120,8 @@ extension StatusTableViewController: CompletionDelegate {
 extension StatusTableViewController: PumpManagerStatusObserver {
     func pumpManager(_ pumpManager: PumpManager, didUpdate status: PumpManagerStatus, oldStatus: PumpManagerStatus) {
         log.default("PumpManager:%{public}@ did update status", String(describing: type(of: pumpManager)))
-        Task { @MainActor in
-
-            basalDeliveryState = status.basalDeliveryState
-            bolusState = status.bolusState
-
-            refreshContext.update(with: .status)
-            await self.reloadData(animated: true)
-        }
+        basalDeliveryState = status.basalDeliveryState
+        bolusState = status.bolusState
     }
 }
 
