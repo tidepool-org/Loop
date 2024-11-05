@@ -611,7 +611,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             self.currentCOBDescription = nil
         }
 
-        self.tableView.beginUpdates()
         if let hudView = self.hudView {
             // CGM Status
             if let glucose = self.loopManager.latestGlucose {
@@ -640,8 +639,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
         updateBannerAndHUDandStatusRows(statusRowMode: statusRowMode, newSize: currentContext.newSize, animated: animated)
 
         redrawCharts()
-
-        tableView.endUpdates()
 
         reloading = false
         let reloadNow = !self.refreshContext.isEmpty
