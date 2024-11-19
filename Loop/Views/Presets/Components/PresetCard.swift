@@ -58,14 +58,10 @@ struct PresetCard: View {
                 .foregroundColor(.secondary)
                 .accessibilitySortPriority(2)
 
-            if let insulinSensitivityMultiplier, let percent = numberFormatter.string(from: insulinSensitivityMultiplier) {
-                Group { Text(percent).bold() + Text(" of scheduled") }
-                    .font(.subheadline)
-                    .accessibilitySortPriority(1)
-            } else {
-                Text("No change")
-                    .font(.subheadline)
-            }
+            let percent = numberFormatter.string(from: insulinSensitivityMultiplier ?? 1)!
+            Group { Text(percent).bold() + Text(" of scheduled") }
+                .font(.subheadline)
+                .accessibilitySortPriority(1)
         }
         .accessibilityElement(children: .contain)
     }
@@ -87,7 +83,7 @@ struct PresetCard: View {
                         )
                     ).bold() + Text(" \(displayGlucosePreference.unit.localizedUnitString(in: .medium) ?? displayGlucosePreference.unit.unitString)")
                 } else {
-                    Text("No Target")
+                    Text("No Adjustment")
                 }
             }
                 .font(.subheadline)

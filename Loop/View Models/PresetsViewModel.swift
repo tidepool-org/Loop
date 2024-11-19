@@ -31,7 +31,7 @@ enum SelectablePreset: Hashable, Identifiable {
     var icon: PresetIcon {
         switch self {
         case .custom(let preset): return .emoji(preset.symbol)
-        case .preMeal: return .image("carbs", .carbTintColor)
+        case .preMeal: return .image("Pre-Meal", .carbTintColor)
         case .legacyWorkout: return .image("workout", .insulinTintColor)
         }
     }
