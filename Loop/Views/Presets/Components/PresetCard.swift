@@ -10,45 +10,16 @@ import HealthKit
 import LoopKitUI
 import SwiftUI
 
-struct PresetCard<Icon: View>: View {
-    
-    enum DurationType {
-        case untilCarbsEntered
-        case duration(TimeInterval)
-        
-        var localizedTitle: String {
-            switch self {
-            case .untilCarbsEntered:
-                return NSLocalizedString("until carbs added", comment: "Preset card carb entry duration")
-            case .duration(let duration):
-                let formatter = DateComponentsFormatter()
-                formatter.allowedUnits = [.hour, .minute]
-                formatter.unitsStyle = .short
-                return formatter.string(from: duration) ?? ""
-            }
-        }
-        
-        var accessibilityLabel: String {
-            switch self {
-            case .untilCarbsEntered:
-                return NSLocalizedString("Active until carbs are added", comment: "Presets card carb entry duration accessibility label")
-            case .duration(let duration):
-                let formatter = DateComponentsFormatter()
-                formatter.allowedUnits = [.hour, .minute]
-                formatter.unitsStyle = .spellOut
-                return NSLocalizedString("Active for \(formatter.string(from: duration) ?? "")", comment: "Presets card time duration accessibility label")
-            }
-        }
-    }
-    
+struct PresetCard: View {
+
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     
-    let icon: Icon
+    let icon: PresetIcon
     let presetName: String
-    let duration: DurationType
-    let percentOfScheduled: Double
-    let correctionRange: (lower: HKQuantity, upper: HKQuantity)
-    
+    let duration: PresetDurationType
+    let insulinSensitivityMultiplier: Double?
+    let correctionRange: ClosedRange<HKQuantity>?
+
     private var numberFormatter: NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .percent
@@ -56,11 +27,18 @@ struct PresetCard<Icon: View>: View {
     }
     
     var presetTitle: some View {
-        HStack(spacing: 4) {
-            icon
-                .aspectRatio(contentMode: .fit)
-                .frame(width: UIFontMetrics.default.scaledValue(for: 20), height: UIFontMetrics.default.scaledValue(for: 20))
-            
+        HStack(spacing: 6) {
+            switch icon {
+            case .emoji(let emoji):
+                Text(emoji)
+            case .image(let name, let iconColor):
+                Image(name)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundColor(iconColor)
+                    .frame(width: UIFontMetrics.default.scaledValue(for: 20), height: UIFontMetrics.default.scaledValue(for: 20))
+            }
+
             Text(presetName)
                 .fontWeight(.semibold)
         }
@@ -79,11 +57,14 @@ struct PresetCard<Icon: View>: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .accessibilitySortPriority(2)
-            
-            if let percent = numberFormatter.string(from: percentOfScheduled) {
+
+            if let insulinSensitivityMultiplier, let percent = numberFormatter.string(from: insulinSensitivityMultiplier) {
                 Group { Text(percent).bold() + Text(" of scheduled") }
                     .font(.subheadline)
                     .accessibilitySortPriority(1)
+            } else {
+                Text("No change")
+                    .font(.subheadline)
             }
         }
         .accessibilityElement(children: .contain)
@@ -96,7 +77,19 @@ struct PresetCard<Icon: View>: View {
                 .foregroundColor(.secondary)
                 .accessibilitySortPriority(2)
             
-            Group { Text(displayGlucosePreference.format(lowerQuantity: correctionRange.lower, higherQuantity: correctionRange.upper, includeUnit: false)).bold() + Text(" \(displayGlucosePreference.unit.localizedUnitString(in: .medium) ?? displayGlucosePreference.unit.unitString)") }
+            Group {
+                if let target = correctionRange {
+                    Text(
+                        displayGlucosePreference.format(
+                            lowerQuantity: target.lowerBound,
+                            higherQuantity: target.upperBound,
+                            includeUnit: false
+                        )
+                    ).bold() + Text(" \(displayGlucosePreference.unit.localizedUnitString(in: .medium) ?? displayGlucosePreference.unit.unitString)")
+                } else {
+                    Text("No Target")
+                }
+            }
                 .font(.subheadline)
                 .accessibilitySortPriority(1)
         }
@@ -144,5 +137,36 @@ struct PresetCard<Icon: View>: View {
         .background(RoundedRectangle(cornerRadius: 8)
             .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
             .frame(maxWidth: .infinity))
+    }
+}
+
+extension PresetDurationType {
+    var localizedTitle: String {
+        switch self {
+        case .untilCarbsEntered:
+            return NSLocalizedString("until carbs added", comment: "Preset card pre-meal duration")
+        case .indefinite:
+            return NSLocalizedString("indefinite", comment: "Preset card indefinite duration")
+        case .duration(let duration):
+            let formatter = DateComponentsFormatter()
+            formatter.allowedUnits = [.hour, .minute]
+            formatter.unitsStyle = .short
+            return formatter.string(from: duration) ?? ""
+
+        }
+    }
+
+    var accessibilityLabel: String {
+        switch self {
+        case .untilCarbsEntered:
+            return NSLocalizedString("Active until carbs are added", comment: "Presets card pre-meal duration accessibility label")
+        case .indefinite:
+            return NSLocalizedString("Active indefinitely", comment: "Presets card indefinite duration accessibility label")
+        case .duration(let duration):
+            let formatter = DateComponentsFormatter()
+            formatter.allowedUnits = [.hour, .minute]
+            formatter.unitsStyle = .spellOut
+            return NSLocalizedString("Active for \(formatter.string(from: duration) ?? "")", comment: "Presets card time duration accessibility label")
+        }
     }
 }

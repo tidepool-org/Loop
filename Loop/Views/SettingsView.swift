@@ -154,7 +154,12 @@ public struct SettingsView: View {
                             )
                         )
                     case .presets:
-                        PresetsView()
+                        PresetsView(
+                            viewModel: PresetsViewModel(
+                                customPresets: viewModel.therapySettings().overridePresets ?? [],
+                                correctionRangeOverrides: viewModel.therapySettings().correctionRangeOverrides
+                            )
+                        )
                     case .favoriteFoods:
                         FavoriteFoodsView(insightsDelegate: viewModel.favoriteFoodInsightsDelegate)
                     }
