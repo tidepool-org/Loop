@@ -50,13 +50,13 @@ class LoopDataManagerTests: XCTestCase {
     let defaultAccuracy = 1.0 / 40.0
     
     var suspendThreshold: GlucoseThreshold {
-        return GlucoseThreshold(unit: HKUnit.milligramsPerDeciliter, value: 75)
+        return GlucoseThreshold(unit: .milligramsPerDeciliter, value: 75)
     }
     
     var adultExponentialInsulinModel: InsulinModel = ExponentialInsulinModel(actionDuration: 21600.0, peakActivityTime: 4500.0)
 
     var glucoseTargetRangeSchedule: GlucoseRangeSchedule {
-        return GlucoseRangeSchedule(unit: HKUnit.milligramsPerDeciliter, dailyItems: [
+        return GlucoseRangeSchedule(unit: .milligramsPerDeciliter, dailyItems: [
             RepeatingScheduleValue(startTime: TimeInterval(0), value: DoubleRange(minValue: 100, maxValue: 110)),
             RepeatingScheduleValue(startTime: TimeInterval(28800), value: DoubleRange(minValue: 90, maxValue: 100)),
             RepeatingScheduleValue(startTime: TimeInterval(75600), value: DoubleRange(minValue: 100, maxValue: 110))
@@ -90,7 +90,7 @@ class LoopDataManagerTests: XCTestCase {
             timeZone: .utcTimeZone
         )!
         let carbRatioSchedule = CarbRatioSchedule(
-            unit: .gram(),
+            unit: .gram,
             dailyItems: [
                 RepeatingScheduleValue(startTime: 0.0, value: 10.0),
             ],
@@ -151,7 +151,7 @@ class LoopDataManagerTests: XCTestCase {
         let localDateFormatter = ISO8601DateFormatter.localTimeDate()
 
         return fixture.map {
-            return GlucoseEffect(startDate: localDateFormatter.date(from: $0["date"] as! String)!, quantity: HKQuantity(unit: HKUnit(from: $0["unit"] as! String), doubleValue:$0["amount"] as! Double))
+            return GlucoseEffect(startDate: localDateFormatter.date(from: $0["date"] as! String)!, quantity: LoopQuantity(unit: LoopUnit(from: $0["unit"] as! String), doubleValue:$0["amount"] as! Double))
         }
     }
 
@@ -184,7 +184,7 @@ class LoopDataManagerTests: XCTestCase {
             timeZone: .utcTimeZone
         )!
         let carbRatioSchedule = CarbRatioSchedule(
-            unit: .gram(),
+            unit: .gram,
             dailyItems: [
                 RepeatingScheduleValue(startTime: 0.0, value: predictionInput.carbRatio.first!.value)
             ],
@@ -475,13 +475,13 @@ extension LoopDataManagerTests {
     }
 }
 
-extension HKQuantity {
-    static func glucose(value: Double) -> HKQuantity {
+extension LoopQuantity {
+    static func glucose(value: Double) -> LoopQuantity {
         return .init(unit: .milligramsPerDeciliter, doubleValue: value)
     }
 
-    static func carbs(value: Double) -> HKQuantity {
-        return .init(unit: .gram(), doubleValue: value)
+    static func carbs(value: Double) -> LoopQuantity {
+        return .init(unit: .gram, doubleValue: value)
     }
 
 }

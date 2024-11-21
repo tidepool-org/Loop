@@ -902,7 +902,7 @@ extension LoopDataManager {
         ).filterDateRange(startSuspend, endSuspend)
     }
 
-    func computeSimpleBolusRecommendation(at date: Date, mealCarbs: HKQuantity?, manualGlucose: HKQuantity?) -> BolusDosingDecision? {
+    func computeSimpleBolusRecommendation(at date: Date, mealCarbs: LoopQuantity?, manualGlucose: LoopQuantity?) -> BolusDosingDecision? {
 
         var dosingDecision = BolusDosingDecision(for: .simpleBolus)
 
@@ -938,13 +938,13 @@ extension LoopDataManager {
         let bolusAmount = SimpleBolusCalculator.recommendedInsulin(
             mealCarbs: mealCarbs,
             manualGlucose: manualGlucose,
-            activeInsulin: HKQuantity.init(unit: .internationalUnit(), doubleValue: iob),
+            activeInsulin: LoopQuantity.init(unit: .internationalUnit, doubleValue: iob),
             carbRatioSchedule: carbRatioSchedule,
             correctionRangeSchedule: correctionRangeSchedule,
             sensitivitySchedule: sensitivitySchedule,
             at: date)
 
-        dosingDecision.manualBolusRecommendation = ManualBolusRecommendationWithDate(recommendation: ManualBolusRecommendation(amount: bolusAmount.doubleValue(for: .internationalUnit()), notice: notice),
+        dosingDecision.manualBolusRecommendation = ManualBolusRecommendationWithDate(recommendation: ManualBolusRecommendation(amount: bolusAmount.doubleValue(for: .internationalUnit), notice: notice),
                                                                                      date: Date())
 
         return dosingDecision
@@ -1135,7 +1135,7 @@ extension LoopDataManager: ServicesManagerDelegate {
             throw CarbActionError.invalidCarbs
         }
         
-        guard amountInGrams <= LoopConstants.maxCarbEntryQuantity.doubleValue(for: .gram()) else {
+        guard amountInGrams <= LoopConstants.maxCarbEntryQuantity.doubleValue(for: .gram) else {
             throw CarbActionError.exceedsMaxCarbs
         }
         
@@ -1147,7 +1147,7 @@ extension LoopDataManager: ServicesManagerDelegate {
             }
         }
         
-        let quantity = HKQuantity(unit: .gram(), doubleValue: amountInGrams)
+        let quantity = LoopQuantity(unit: .gram, doubleValue: amountInGrams)
         let candidateCarbEntry = NewCarbEntry(quantity: quantity, startDate: startDate ?? Date(), foodType: foodType, absorptionTime: absorptionTime)
         
         let _ = try await carbStore.addCarbEntry(candidateCarbEntry)
@@ -1199,7 +1199,7 @@ extension LoopDataManager: SimpleBolusViewModelDelegate {
         settingsProvider.settings.maximumBolus
     }
     
-    var suspendThreshold: HKQuantity? {
+    var suspendThreshold: LoopQuantity? {
         settingsProvider.settings.suspendThreshold?.quantity
     }
     

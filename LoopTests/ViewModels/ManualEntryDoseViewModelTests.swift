@@ -23,9 +23,9 @@ class ManualEntryDoseViewModelTests: XCTestCase {
 
     var manualEntryDoseViewModel: ManualEntryDoseViewModel!
 
-    static let exampleBolusQuantity = HKQuantity(unit: .internationalUnit(), doubleValue: 1.0)
+    static let exampleBolusQuantity = LoopQuantity(unit: .internationalUnit, doubleValue: 1.0)
 
-    static let noBolus = HKQuantity(unit: .internationalUnit(), doubleValue: 0.0)
+    static let noBolus = LoopQuantity(unit: .internationalUnit, doubleValue: 0.0)
     
     fileprivate var delegate: MockManualEntryDoseViewModelDelegate!
     
@@ -53,7 +53,7 @@ class ManualEntryDoseViewModelTests: XCTestCase {
         
         try await manualEntryDoseViewModel.saveManualDose()
 
-        XCTAssertEqual(delegate.manualEntryBolusUnits, Self.exampleBolusQuantity.doubleValue(for: .internationalUnit()))
+        XCTAssertEqual(delegate.manualEntryBolusUnits, Self.exampleBolusQuantity.doubleValue(for: .internationalUnit))
         XCTAssertEqual(delegate.manuallyEnteredDoseInsulinType, .novolog)
     }
 

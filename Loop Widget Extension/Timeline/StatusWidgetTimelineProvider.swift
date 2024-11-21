@@ -111,11 +111,21 @@ class StatusWidgetTimelineProvider: TimelineProvider {
             }
 
             let finalGlucose = glucose
+            
+            let unit: LoopUnit?
+            switch await healthStore.cachedPreferredUnits(for: .bloodGlucose) {
+            case .milligramsPerDeciliter:
+                unit = .milligramsPerDeciliter
+            case .millimolesPerLiter:
+                unit = .millimolesPerLiter
+            default:
+                unit = nil
+            }
 
             guard let defaults = self.defaults,
                   let context = defaults.statusExtensionContext,
                   let contextUpdatedAt = context.createdAt,
-                  let unit = await healthStore.cachedPreferredUnits(for: .bloodGlucose)
+                  let unit
             else {
                 return
             }
@@ -137,7 +147,7 @@ class StatusWidgetTimelineProvider: TimelineProvider {
                 previousGlucose = finalGlucose[finalGlucose.count - 2]
             }
 
-            var delta: HKQuantity?
+            var delta: LoopQuantity?
 
             // Making sure that previous glucose is within 6 mins of last glucose to avoid large deltas on sensor changes, missed readings, etc.
             if let prevGlucose = previousGlucose,
@@ -145,7 +155,7 @@ class StatusWidgetTimelineProvider: TimelineProvider {
                currGlucose.startDate.timeIntervalSince(prevGlucose.startDate).minutes < 6
             {
                 let deltaMGDL = currGlucose.quantity.doubleValue(for: .milligramsPerDeciliter) - prevGlucose.quantity.doubleValue(for: .milligramsPerDeciliter)
-                delta = HKQuantity(unit: .milligramsPerDeciliter, doubleValue: deltaMGDL)
+                delta = LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: deltaMGDL)
             }
 
             let predictedGlucose = context.predictedGlucose?.samples

@@ -28,13 +28,13 @@ struct StoredDataAlgorithmInput: AlgorithmInput {
     
     var basal: [AbsoluteScheduleValue<Double>]
     
-    var sensitivity: [AbsoluteScheduleValue<HKQuantity>]
+    var sensitivity: [AbsoluteScheduleValue<LoopQuantity>]
     
     var carbRatio: [AbsoluteScheduleValue<Double>]
     
     var target: GlucoseRangeTimeline
     
-    var suspendThreshold: HKQuantity?
+    var suspendThreshold: LoopQuantity?
     
     var maxBolus: Double
     
