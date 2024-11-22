@@ -154,12 +154,7 @@ public struct SettingsView: View {
                             )
                         )
                     case .presets:
-                        PresetsView(
-                            viewModel: PresetsViewModel(
-                                customPresets: viewModel.therapySettings().overridePresets ?? [],
-                                correctionRangeOverrides: viewModel.therapySettings().correctionRangeOverrides
-                            )
-                        )
+                        presetsView
                     case .favoriteFoods:
                         FavoriteFoodsView(insightsDelegate: viewModel.favoriteFoodInsightsDelegate)
                     }
@@ -176,6 +171,19 @@ public struct SettingsView: View {
         }
         .navigationViewStyle(.stack)
     }
+
+    public var presetsView: some View {
+        PresetsView(
+            viewModel: PresetsViewModel(
+                customPresets: viewModel.therapySettings().overridePresets ?? [],
+                correctionRangeOverrides: viewModel.therapySettings().correctionRangeOverrides,
+                preMealGuardrail: viewModel.preMealGuardrail,
+                legacyWorkoutGuardrail: viewModel.legacyWorkoutPresetGuardrail
+            )
+        )
+    }
+
+
 
     private func menuItemsForSection(name: String) -> some View {
         Section(header: SectionHeader(label: name)) {

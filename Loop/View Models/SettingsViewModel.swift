@@ -102,7 +102,30 @@ public class SettingsViewModel: ObservableObject {
            delegate?.dosingEnabledChanged(closedLoopPreference)
        }
     }
-    
+
+    var preMealGuardrail: Guardrail<HKQuantity>? {
+        guard let scheduleRange = therapySettings().glucoseTargetRangeSchedule?.scheduleRange() else {
+            return nil
+        }
+        return Guardrail.correctionRangeOverride(
+            for: .preMeal,
+            correctionRangeScheduleRange: scheduleRange,
+            suspendThreshold: therapySettings().suspendThreshold
+        )
+    }
+
+    var legacyWorkoutPresetGuardrail: Guardrail<HKQuantity>? {
+        guard let scheduleRange = therapySettings().glucoseTargetRangeSchedule?.scheduleRange() else {
+            return nil
+        }
+        return Guardrail.correctionRangeOverride(
+            for: .workout,
+            correctionRangeScheduleRange: scheduleRange,
+            suspendThreshold: therapySettings().suspendThreshold
+        )
+    }
+
+
     weak var favoriteFoodInsightsDelegate: FavoriteFoodInsightsViewModelDelegate?
 
     var showDeleteTestData: Bool {

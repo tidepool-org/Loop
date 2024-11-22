@@ -51,7 +51,8 @@ struct PresetsView: View {
                                     presetName: preset.name,
                                     duration: preset.duration,
                                     insulinSensitivityMultiplier: preset.insulinSensitivityMultiplier,
-                                    correctionRange: preset.correctionRange
+                                    correctionRange: preset.correctionRange,
+                                    guardrail: preset.guardrail
                                 )
                                 .background(Color.white)
                                 .cornerRadius(12)
@@ -84,7 +85,7 @@ struct PresetsView: View {
             }
             .background(Color(UIColor.secondarySystemBackground))
             .navigationTitle(Text("Presets", comment: "Presets screen title"))
-            .navigationBarItems(trailing: Text("Done").foregroundColor(.blue))
+            .navigationBarItems(trailing: dismissButton)
         }
 
         .sheet(isPresented: $viewModel.showTraining) {
@@ -95,6 +96,12 @@ struct PresetsView: View {
         .onAppear { // TODO: Remove this
             viewModel.hasCompletedTraining = false
         }
+    }
+
+    private var dismissButton: some View {
+        Button("Done") {
+            dismiss()
+        }.bold()
     }
 
     private var listHeader: some View {

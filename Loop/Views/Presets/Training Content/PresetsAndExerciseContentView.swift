@@ -145,7 +145,8 @@ struct PresetsAndExerciseContentView: View {
                 uncheckedBounds: (
                     HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 140),
                     HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 260))
-            )
+            ),
+            guardrail: nil
         )
     }
 }

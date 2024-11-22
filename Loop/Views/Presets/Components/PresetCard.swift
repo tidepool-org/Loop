@@ -9,8 +9,10 @@
 import HealthKit
 import LoopKitUI
 import SwiftUI
+import LoopKit
 
 struct PresetCard: View {
+    @Environment(\.guidanceColors) private var guidanceColors
 
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     
@@ -19,6 +21,7 @@ struct PresetCard: View {
     let duration: PresetDurationType
     let insulinSensitivityMultiplier: Double?
     let correctionRange: ClosedRange<HKQuantity>?
+    let guardrail: Guardrail<HKQuantity>?
 
     private var numberFormatter: NumberFormatter {
         let formatter = NumberFormatter()
@@ -65,7 +68,59 @@ struct PresetCard: View {
         }
         .accessibilityElement(children: .contain)
     }
-    
+
+    func guidanceColor(for classification: SafetyClassification?) -> Color? {
+        guard let classification else { return nil }
+
+        switch classification {
+        case .outsideRecommendedRange(let threshold):
+            switch threshold {
+            case .aboveRecommended, .belowRecommended:
+                return guidanceColors.warning
+            case .maximum, .minimum:
+                return guidanceColors.critical
+            }
+        case .withinRecommendedRange:
+            return nil
+        }
+    }
+
+    func annotatedRangeText(target: ClosedRange<HKQuantity>) -> some View {
+
+        let lowerColor = guardrail?.color(for: target.lowerBound, guidanceColors: guidanceColors) ?? .primary
+        let upperColor = guardrail?.color(for: target.upperBound, guidanceColors: guidanceColors) ?? .primary
+
+        let units = Text(" \(displayGlucosePreference.unit.localizedUnitString(in: .medium) ?? displayGlucosePreference.unit.unitString)")
+            .foregroundStyle(upperColor)
+        let lower = Text(displayGlucosePreference.format(target.lowerBound, includeUnit: false))
+            .foregroundStyle(lowerColor)
+            .bold()
+        let upper = Text(displayGlucosePreference.format(target.upperBound, includeUnit: false))
+            .foregroundStyle(upperColor)
+            .bold()
+        let warningSymbol = Text("\(Image(systemName: "exclamationmark.triangle.fill"))")
+
+        let lowerClassification = guardrail?.classification(for: target.lowerBound) ?? .withinRecommendedRange
+        let upperClassification = guardrail?.classification(for: target.upperBound) ?? .withinRecommendedRange
+
+        return Group {
+            switch (lowerClassification, upperClassification) {
+            case (.withinRecommendedRange, .withinRecommendedRange):
+                lower + Text(" - ") + upper + units
+            case (.withinRecommendedRange, .outsideRecommendedRange):
+                lower + Text(" - ") + warningSymbol.foregroundStyle(upperColor) + upper + units
+            case (.outsideRecommendedRange, .outsideRecommendedRange):
+                warningSymbol.foregroundStyle(lowerColor) + lower + Text("-").foregroundStyle(lowerColor) + upper + units
+            case (.outsideRecommendedRange, .withinRecommendedRange):
+                warningSymbol.foregroundStyle(lowerColor) + lower + Text("-") + upper + units
+            }
+        }
+//        return Group {
+//
+//            +
+//        }
+    }
+
     var correctionRangeView: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Correction Range")
@@ -75,15 +130,10 @@ struct PresetCard: View {
             
             Group {
                 if let target = correctionRange {
-                    Text(
-                        displayGlucosePreference.format(
-                            lowerQuantity: target.lowerBound,
-                            higherQuantity: target.upperBound,
-                            includeUnit: false
-                        )
-                    ).bold() + Text(" \(displayGlucosePreference.unit.localizedUnitString(in: .medium) ?? displayGlucosePreference.unit.unitString)")
+                    annotatedRangeText(target: target)
                 } else {
-                    Text("No Adjustment")
+                    Text("Scheduled Range")
+                        .bold()
                 }
             }
                 .font(.subheadline)
