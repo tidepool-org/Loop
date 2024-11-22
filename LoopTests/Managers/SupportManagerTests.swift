@@ -90,6 +90,9 @@ class SupportManagerTests: XCTestCase {
         mockAlertIssuer = MockAlertIssuer()
         supportManager = SupportManager(pluginManager: pluginManager, deviceSupportDelegate: mocKDeviceSupportDelegate, alertIssuer: mockAlertIssuer)
         mockSupport = SupportManagerTests.MockSupport()
+        for support in supportManager.availableSupports {
+            supportManager.removeSupport(support)
+        }
         supportManager.addSupport(mockSupport)
     }
     
