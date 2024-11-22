@@ -7,7 +7,6 @@
 //
 
 import XCTest
-import HealthKit
 import LoopAlgorithm
 import LoopKit
 @testable import LoopUI

@@ -7,7 +7,6 @@
 //
 
 import ClockKit
-import HealthKit
 import LoopKit
 import Foundation
 import LoopCore

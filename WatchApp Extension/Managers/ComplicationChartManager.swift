@@ -8,7 +8,6 @@
 
 import Foundation
 import UIKit
-import HealthKit
 import WatchKit
 import LoopKit
 import LoopAlgorithm

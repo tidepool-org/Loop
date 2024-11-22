@@ -10,7 +10,6 @@ import Foundation
 import LoopKit
 import UserNotifications
 import UIKit
-import HealthKit
 import Combine
 import LoopCore
 import LoopKitUI

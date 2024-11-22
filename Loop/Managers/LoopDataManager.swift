@@ -8,7 +8,6 @@
 
 import Foundation
 import Combine
-import HealthKit
 import LoopKit
 import LoopKitUI
 import LoopCore
