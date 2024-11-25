@@ -24,15 +24,17 @@ struct PresetsView: View {
     @State private var selectedSortOption: PresetSortOption = .name
     @State private var isAscending: Bool = true
 
+    var isDescending: Bool { !isAscending }
+
     init(viewModel: PresetsViewModel) {
         self._viewModel = StateObject(wrappedValue: viewModel)
     }
 
     var presetsSorted: [SelectablePreset] {
         viewModel.allPresets.sorted(by: {
-            switch (selectedSortOption, isAscending) {
-            case (.name, true): return $0.name.lowercased() < $1.name.lowercased()
-            case (.name, false): return $0.name.lowercased() > $1.name.lowercased()
+            switch (selectedSortOption) {
+            case .name:
+                return ($0.name.lowercased() < $1.name.lowercased()) != isDescending
             default: return true
             }
         })
