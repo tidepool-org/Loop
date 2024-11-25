@@ -8,6 +8,12 @@
 
 import SwiftUI
 
+enum PresetSortOption: String, CaseIterable {
+    case name = "Name"
+    case lastUsed = "Last Used"
+    case dateCreated = "Date Created"
+}
+
 struct PresetsView: View {
     
     @Environment(\.dismiss) private var dismiss
@@ -15,9 +21,21 @@ struct PresetsView: View {
     @StateObject private var viewModel: PresetsViewModel
 
     @State private var editMode: EditMode = .inactive
+    @State private var selectedSortOption: PresetSortOption = .name
+    @State private var isAscending: Bool = true
 
     init(viewModel: PresetsViewModel) {
         self._viewModel = StateObject(wrappedValue: viewModel)
+    }
+
+    var presetsSorted: [SelectablePreset] {
+        viewModel.allPresets.sorted(by: {
+            switch (selectedSortOption, isAscending) {
+            case (.name, true): return $0.name.lowercased() < $1.name.lowercased()
+            case (.name, false): return $0.name.lowercased() > $1.name.lowercased()
+            default: return true
+            }
+        })
     }
 
     var body: some View {
@@ -35,8 +53,27 @@ struct PresetsView: View {
                             Text("All Presets")
                                 .font(.title2.bold())
                             Spacer()
-                            Button("Sort") {
-                                // Sort action
+                            Menu {
+                                Picker("Sort By", selection: $selectedSortOption) {
+                                    ForEach(PresetSortOption.allCases, id: \.self) { option in
+                                        Text(option.rawValue)
+                                    }
+                                }
+
+                                Divider()
+
+                                Button(action: {
+                                    isAscending.toggle()
+                                }) {
+                                    HStack {
+                                        Text("Reverse Order")
+                                        if !isAscending {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            } label: {
+                                Text("Sort")
                             }
 
                             Button(action: {}) {
@@ -45,7 +82,7 @@ struct PresetsView: View {
                         }
 
                         LazyVStack(spacing: 12) {
-                            ForEach(viewModel.allPresets) { preset in
+                            ForEach(presetsSorted) { preset in
                                 PresetCard(
                                     icon: preset.icon,
                                     presetName: preset.name,
@@ -102,21 +139,6 @@ struct PresetsView: View {
         Button("Done") {
             dismiss()
         }.bold()
-    }
-
-    private var listHeader: some View {
-        HStack {
-            Text("All Presets")
-                .font(.title3)
-                .fontWeight(.semibold)
-                .textCase(nil)
-                .foregroundColor(.primary)
-
-            Spacer()
-
-            editButton
-        }
-        .listRowInsets(EdgeInsets(top: 20, leading: 4, bottom: 10, trailing: 4))
     }
 
     private var editButton: some View {
