@@ -16,6 +16,12 @@ enum PresetDurationType {
     case indefinite
 }
 
+enum PresetExpectedEndTime {
+    case untilCarbsEntered
+    case scheduled(Date)
+    case indefinite
+}
+
 enum PresetIcon {
     case emoji(String)
     case image(String, Color)
@@ -30,7 +36,7 @@ enum SelectablePreset: Hashable, Identifiable {
         case .custom(let preset):
             hasher.combine(preset)
         case .legacyWorkout(let range, _):
-            hasher.combine("legacy")
+            hasher.combine("legacyworkout")
             hasher.combine(range)
         case .preMeal(let range, _):
             hasher.combine("premeal")
@@ -190,6 +196,41 @@ class PresetsViewModel: ObservableObject {
             }
         }
         return lastUsed![id]
+    }
+
+    func expectedEndTime(id: String) -> PresetExpectedEndTime? {
+        // TODO: expectedEndTime gets called for each preset, so looking up the active preset
+        //       each time is a bit inefficient.
+        guard let override = presetHistory.activeOverride(at: Date()) else {
+            return nil
+        }
+
+        switch override.context {
+        case .preMeal:
+            if id != "preMeal" {
+                return nil
+            }
+        case .legacyWorkout:
+            if id != "legacyWorkout" {
+                return nil
+            }
+        case .preset(let preset):
+            if preset.id.uuidString != id {
+                return nil
+            }
+        case .custom:
+            return nil
+        }
+
+        switch override.context {
+        case .preMeal: return .untilCarbsEntered
+        case .legacyWorkout: return .indefinite
+        case .custom, .preset:
+            switch override.duration {
+            case .indefinite: return .indefinite
+            case .finite: return .scheduled(override.scheduledEndDate)
+            }
+        }
     }
 
     init(

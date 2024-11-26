@@ -90,7 +90,8 @@ struct PresetsView: View {
                                     duration: preset.duration,
                                     insulinSensitivityMultiplier: preset.insulinSensitivityMultiplier,
                                     correctionRange: preset.correctionRange,
-                                    guardrail: preset.guardrail
+                                    guardrail: preset.guardrail,
+                                    expectedEndTime: viewModel.expectedEndTime(id: preset.id)
                                 )
                                 .background(Color.white)
                                 .cornerRadius(12)

@@ -22,6 +22,7 @@ struct PresetCard: View {
     let insulinSensitivityMultiplier: Double?
     let correctionRange: ClosedRange<HKQuantity>?
     let guardrail: Guardrail<HKQuantity>?
+    let expectedEndTime: PresetExpectedEndTime?
 
     private var numberFormatter: NumberFormatter {
         let formatter = NumberFormatter()
@@ -53,7 +54,7 @@ struct PresetCard: View {
             .foregroundColor(.secondary)
             .accessibilityLabel(Text(duration.accessibilityLabel))
     }
-    
+
     var overallInsulinView: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Overall Insulin")
@@ -115,10 +116,6 @@ struct PresetCard: View {
                 warningSymbol.foregroundStyle(lowerColor) + lower + Text("-") + upper + units
             }
         }
-//        return Group {
-//
-//            +
-//        }
     }
 
     var correctionRangeView: some View {
@@ -146,11 +143,35 @@ struct PresetCard: View {
         VStack(alignment: .leading, spacing: 10) {
             ViewThatFits(in: .horizontal) {
                 HStack {
-                    presetTitle
-                    
+                    VStack(alignment: .leading) {
+                        if let expectedEndTime {
+                            HStack(spacing: 8) {
+                                Text(Image(systemName: "clock"))
+                                +
+                                Text(" \(expectedEndTime.localizedTitle)")
+                                    .accessibilityLabel(Text(expectedEndTime.accessibilityLabel))
+                            }
+                            .font(.footnote)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 5)
+                            .background(Color(red: 0.3, green: 0.5, blue: 0.7))
+                            .cornerRadius(8)
+                        }
+                        presetTitle
+                    }
+
                     Spacer()
+
+                    if expectedEndTime == nil {
+                        presetDuration
+                    }
                     
-                    presetDuration
+                    Image(systemName: "chevron.right")
+                        .imageScale(.small)
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                        .opacity(0.5)
                 }
                 
                 VStack(alignment: .leading, spacing: 10) {
@@ -183,6 +204,39 @@ struct PresetCard: View {
         .background(RoundedRectangle(cornerRadius: 8)
             .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
             .frame(maxWidth: .infinity))
+    }
+}
+
+extension PresetExpectedEndTime {
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter
+    }()
+
+    var localizedTitle: String {
+        switch self {
+        case .untilCarbsEntered:
+            return NSLocalizedString("on until carbs added", comment: "Preset card pre-meal expected end time")
+        case .indefinite:
+            return NSLocalizedString("on indefinitely", comment: "Preset card indefinite scheduled end time")
+        case .scheduled(let date):
+            return NSLocalizedString("on until \(Self.timeFormatter.string(from: date))", comment: "Presets card time duration accessibility label")
+        }
+    }
+
+    var accessibilityLabel: String {
+        switch self {
+        case .untilCarbsEntered:
+            return NSLocalizedString("on until carbs added", comment: "Presets card pre-meal expected end time accessibility label")
+        case .indefinite:
+            return NSLocalizedString("on indefinitely", comment: "Presets card indefinite duration accessibility label")
+        case .scheduled(let date):
+            let formatter = DateComponentsFormatter()
+            formatter.allowedUnits = [.hour, .minute]
+            formatter.unitsStyle = .spellOut
+            return NSLocalizedString("on until \(Self.timeFormatter.string(from: date))", comment: "Presets card time duration accessibility label")
+        }
     }
 }
 
