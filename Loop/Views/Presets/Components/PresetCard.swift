@@ -155,7 +155,7 @@ struct PresetCard: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 5)
-                            .background(Color(red: 0.3, green: 0.5, blue: 0.7))
+                            .background(Color.presets)
                             .cornerRadius(8)
                         }
                         presetTitle
@@ -202,6 +202,7 @@ struct PresetCard: View {
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 8)
+            .fill(Color(UIColor.tertiarySystemBackground))
             .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
             .frame(maxWidth: .infinity))
     }

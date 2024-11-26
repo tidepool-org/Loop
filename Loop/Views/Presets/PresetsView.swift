@@ -51,7 +51,7 @@ struct PresetsView: View {
             default:
                 return ((viewModel.lastUsed(id: $0.id) ?? .distantPast) > (viewModel.lastUsed(id: $1.id) ?? .distantPast)) != isDescending
             }
-        })
+        }).filter { $0.id != viewModel.activeOverride?.presetId }
     }
 
     var body: some View {
@@ -61,6 +61,13 @@ struct PresetsView: View {
 
                     if !viewModel.hasCompletedTraining {
                         PresetsTrainingCard(showTraining: $viewModel.showTraining)
+                    }
+
+                    if let activePreset = viewModel.activePreset {
+                        PresetCard(
+                            activePreset,
+                            expectedEndTime: viewModel.activeOverride?.expectedEndTime
+                        )
                     }
 
                     // All Presets Section
@@ -84,17 +91,9 @@ struct PresetsView: View {
 
                         LazyVStack(spacing: 12) {
                             ForEach(presetsSorted) { preset in
-                                PresetCard(
-                                    icon: preset.icon,
-                                    presetName: preset.name,
-                                    duration: preset.duration,
-                                    insulinSensitivityMultiplier: preset.insulinSensitivityMultiplier,
-                                    correctionRange: preset.correctionRange,
-                                    guardrail: preset.guardrail,
-                                    expectedEndTime: viewModel.expectedEndTime(id: preset.id)
-                                )
-                                .background(Color.white)
-                                .cornerRadius(12)
+                                PresetCard(preset)
+                                    .background(Color.white)
+                                    .cornerRadius(12)
                             }
                         }
                     }
@@ -109,10 +108,11 @@ struct PresetsView: View {
                                 Image(systemName: "list.bullet")
                                     .foregroundColor(.white)
                                     .padding(8)
-                                    .background(Color.blue)
+                                    .background(Color.presets)
                                     .cornerRadius(8)
 
                                 Text("Presets Performance History")
+                                    .foregroundStyle(.secondary)
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .foregroundColor(.gray)
@@ -201,3 +201,16 @@ struct PresetsView: View {
     }
 }
 
+extension PresetCard {
+    init (_ preset: SelectablePreset, expectedEndTime: PresetExpectedEndTime? = nil) {
+        self.init(
+            icon: preset.icon,
+            presetName: preset.name,
+            duration: preset.duration,
+            insulinSensitivityMultiplier: preset.insulinSensitivityMultiplier,
+            correctionRange: preset.correctionRange,
+            guardrail: preset.guardrail,
+            expectedEndTime: expectedEndTime
+        )
+    }
+}

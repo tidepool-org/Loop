@@ -22,6 +22,29 @@ enum PresetExpectedEndTime {
     case indefinite
 }
 
+extension TemporaryScheduleOverride {
+    var expectedEndTime: PresetExpectedEndTime? {
+        switch context {
+        case .preMeal: return .untilCarbsEntered
+        case .legacyWorkout: return .indefinite
+        case .custom, .preset:
+            switch duration {
+            case .indefinite: return .indefinite
+            case .finite: return .scheduled(scheduledEndDate)
+            }
+        }
+    }
+
+    var presetId: String {
+        switch context {
+        case .preMeal: return "premeal"
+        case .legacyWorkout: return "legacyworkout"
+        case .custom: return self.syncIdentifier.uuidString
+        case .preset(let preset): return preset.id.uuidString
+        }
+    }
+}
+
 enum PresetIcon {
     case emoji(String)
     case image(String, Color)
@@ -150,11 +173,16 @@ class PresetsViewModel: ObservableObject {
     var correctionRangeOverrides: CorrectionRangeOverrides?
 
     @Published var customPresets: [TemporaryScheduleOverridePreset]
+    @Published var activeOverride: TemporaryScheduleOverride?
 
     let preMealGuardrail: Guardrail<HKQuantity>?
     let legacyWorkoutGuardrail: Guardrail<HKQuantity>?
 
     private var presetHistory: TemporaryScheduleOverrideHistory
+
+    var activePreset: SelectablePreset? {
+        return allPresets.first(where: { $0.id == activeOverride?.presetId })
+    }
 
     var allPresets: [SelectablePreset] {
         var presets: [SelectablePreset] = []
@@ -198,41 +226,6 @@ class PresetsViewModel: ObservableObject {
         return lastUsed![id]
     }
 
-    func expectedEndTime(id: String) -> PresetExpectedEndTime? {
-        // TODO: expectedEndTime gets called for each preset, so looking up the active preset
-        //       each time is a bit inefficient.
-        guard let override = presetHistory.activeOverride(at: Date()) else {
-            return nil
-        }
-
-        switch override.context {
-        case .preMeal:
-            if id != "preMeal" {
-                return nil
-            }
-        case .legacyWorkout:
-            if id != "legacyWorkout" {
-                return nil
-            }
-        case .preset(let preset):
-            if preset.id.uuidString != id {
-                return nil
-            }
-        case .custom:
-            return nil
-        }
-
-        switch override.context {
-        case .preMeal: return .untilCarbsEntered
-        case .legacyWorkout: return .indefinite
-        case .custom, .preset:
-            switch override.duration {
-            case .indefinite: return .indefinite
-            case .finite: return .scheduled(override.scheduledEndDate)
-            }
-        }
-    }
-
     init(
         customPresets: [TemporaryScheduleOverridePreset],
         correctionRangeOverrides: CorrectionRangeOverrides?,
@@ -245,6 +238,9 @@ class PresetsViewModel: ObservableObject {
         self.presetHistory = presetsHistory
         self.preMealGuardrail = preMealGuardrail
         self.legacyWorkoutGuardrail = legacyWorkoutGuardrail
+
+        // TODO: If active preset changes, data store should update us.
+        activeOverride = presetsHistory.activeOverride(at: Date())
     }
 
 }
