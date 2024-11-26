@@ -23,6 +23,7 @@ struct PresetsView: View {
     @State private var editMode: EditMode = .inactive
     @State private var selectedSortOption: PresetSortOption = .name
     @State private var isAscending: Bool = true
+    @State private var showingMenu: Bool = false
 
     var isDescending: Bool { !isAscending }
 
@@ -55,32 +56,11 @@ struct PresetsView: View {
                             Text("All Presets")
                                 .font(.title2.bold())
                             Spacer()
-                            Menu {
-                                Picker("Sort By", selection: $selectedSortOption) {
-                                    ForEach(PresetSortOption.allCases, id: \.self) { option in
-                                        Text(option.rawValue)
-                                    }
-                                }
 
-                                Divider()
-
-                                Button(action: {
-                                    isAscending.toggle()
-                                }) {
-                                    HStack {
-                                        Text("Reverse Order")
-                                        if !isAscending {
-                                            Image(systemName: "checkmark")
-                                        }
-                                    }
-                                }
-                            } label: {
-                                Text("Sort")
-                            }
-
+                            sortMenu
                             Button(action: {}) {
                                 Image(systemName: "plus")
-                            }
+                            }.disabled(!viewModel.hasCompletedTraining)
                         }
 
                         LazyVStack(spacing: 12) {
@@ -134,6 +114,57 @@ struct PresetsView: View {
         }
         .onAppear { // TODO: Remove this
             viewModel.hasCompletedTraining = false
+        }
+    }
+
+    private var sortMenu: some View {
+        Button("Sort") {
+            showingMenu.toggle()
+        }
+        .popover(isPresented: $showingMenu) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Sort By")
+                        .font(.headline)
+                    Spacer()
+                    Button(action: {
+                        isAscending.toggle()
+                    }) {
+                        Image(systemName: "arrow.up.arrow.down")
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top, 20)
+                Divider()
+
+                ForEach(PresetSortOption.allCases, id: \.self) { option in
+                    Button(action: {
+                        selectedSortOption = option
+                        showingMenu = false
+                    }) {
+                        HStack {
+                            if selectedSortOption == option {
+                                Image(systemName: "checkmark")
+                            } else {
+                                Image(systemName: "checkmark")
+                                    .hidden()
+                            }
+                            Text(option.rawValue)
+                                .font(.body)
+                        }
+                        .padding(.horizontal)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.bottom, option == PresetSortOption.allCases.last ? 12 : 0)
+                    if option != PresetSortOption.allCases.last {
+                        Divider()
+                    }
+                }
+            }
+            .frame(width: 200)
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(12)
+            .presentationCompactAdaptation(.popover)
         }
     }
 
