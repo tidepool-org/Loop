@@ -177,6 +177,7 @@ public struct SettingsView: View {
             viewModel: PresetsViewModel(
                 customPresets: viewModel.therapySettings().overridePresets ?? [],
                 correctionRangeOverrides: viewModel.therapySettings().correctionRangeOverrides,
+                presetsHistory: viewModel.presetHistory,
                 preMealGuardrail: viewModel.preMealGuardrail,
                 legacyWorkoutGuardrail: viewModel.legacyWorkoutPresetGuardrail
             )

@@ -119,6 +119,17 @@ enum SelectablePreset: Hashable, Identifiable {
             return guardrail
         }
     }
+
+    var dateCreated: Date {
+        switch self {
+        case .custom:
+            return .distantPast // TODO
+        case .preMeal:
+            return .distantPast.addingTimeInterval(1)
+        case .legacyWorkout:
+            return .distantPast
+        }
+    }
 }
 
 class PresetsViewModel: ObservableObject {
@@ -127,12 +138,17 @@ class PresetsViewModel: ObservableObject {
     @AppStorage("hasCompletedPresetsTraining") var hasCompletedTraining: Bool = false
     @Published var showTraining: Bool = false
 
+    @AppStorage("presetsSortOrder") var selectedSortOption: PresetSortOption = .name
+    @AppStorage("presetsSortDirectionReversed") var presetsSortAscending: Bool = true
+
     var correctionRangeOverrides: CorrectionRangeOverrides?
 
     @Published var customPresets: [TemporaryScheduleOverridePreset]
 
     let preMealGuardrail: Guardrail<HKQuantity>?
     let legacyWorkoutGuardrail: Guardrail<HKQuantity>?
+
+    private var presetHistory: TemporaryScheduleOverrideHistory
 
     var allPresets: [SelectablePreset] {
         var presets: [SelectablePreset] = []
@@ -156,14 +172,36 @@ class PresetsViewModel: ObservableObject {
         return presets
     }
 
+    var lastUsed: [String: Date]?
+
+    func lastUsed(id: String) -> Date? {
+        if lastUsed == nil {
+            let enacts = presetHistory.getOverrideHistory(startDate: .distantPast, endDate: Date())
+            lastUsed = [:]
+            for enact in enacts {
+                var id: String
+                switch enact.context {
+                    case .preMeal: id = "preMeal"
+                    case .legacyWorkout: id = "legacyWorkout"
+                    case .preset(let preset): id = preset.id.uuidString
+                    case .custom: continue
+                }
+                lastUsed![id] = max(lastUsed![id] ?? .distantPast, enact.startDate)
+            }
+        }
+        return lastUsed![id]
+    }
+
     init(
         customPresets: [TemporaryScheduleOverridePreset],
         correctionRangeOverrides: CorrectionRangeOverrides?,
+        presetsHistory: TemporaryScheduleOverrideHistory,
         preMealGuardrail: Guardrail<HKQuantity>?,
         legacyWorkoutGuardrail: Guardrail<HKQuantity>?
     ) {
         self.customPresets = customPresets
         self.correctionRangeOverrides = correctionRangeOverrides
+        self.presetHistory = presetsHistory
         self.preMealGuardrail = preMealGuardrail
         self.legacyWorkoutGuardrail = legacyWorkoutGuardrail
     }

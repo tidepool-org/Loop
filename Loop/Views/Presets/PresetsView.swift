@@ -7,11 +7,23 @@
 //
 
 import SwiftUI
+import Foundation
 
-enum PresetSortOption: String, CaseIterable {
-    case name = "Name"
-    case lastUsed = "Last Used"
-    case dateCreated = "Date Created"
+enum PresetSortOption: Int, CaseIterable {
+    case name
+    case lastUsed
+    case dateCreated
+
+    var description: String {
+        switch self {
+        case .name:
+            return NSLocalizedString("Name", comment: "Preset sorting option description for sorting by name")
+        case .lastUsed:
+            return NSLocalizedString("Last Used", comment: "Preset sorting option description for sorting by last used")
+        case .dateCreated:
+            return NSLocalizedString("Date Created", comment: "Preset sorting option description for sorting by date created")
+        }
+    }
 }
 
 struct PresetsView: View {
@@ -21,11 +33,9 @@ struct PresetsView: View {
     @StateObject private var viewModel: PresetsViewModel
 
     @State private var editMode: EditMode = .inactive
-    @State private var selectedSortOption: PresetSortOption = .name
-    @State private var isAscending: Bool = true
     @State private var showingMenu: Bool = false
 
-    var isDescending: Bool { !isAscending }
+    var isDescending: Bool { !viewModel.presetsSortAscending }
 
     init(viewModel: PresetsViewModel) {
         self._viewModel = StateObject(wrappedValue: viewModel)
@@ -33,10 +43,13 @@ struct PresetsView: View {
 
     var presetsSorted: [SelectablePreset] {
         viewModel.allPresets.sorted(by: {
-            switch (selectedSortOption) {
+            switch (viewModel.selectedSortOption) {
             case .name:
                 return ($0.name.lowercased() < $1.name.lowercased()) != isDescending
-            default: return true
+            case .dateCreated:
+                return ($0.dateCreated > $1.dateCreated) != isDescending
+            default:
+                return ((viewModel.lastUsed(id: $0.id) ?? .distantPast) > (viewModel.lastUsed(id: $1.id) ?? .distantPast)) != isDescending
             }
         })
     }
@@ -57,7 +70,13 @@ struct PresetsView: View {
                                 .font(.title2.bold())
                             Spacer()
 
-                            sortMenu
+                            Button("Sort") {
+                                showingMenu.toggle()
+                            }
+                            .popover(isPresented: $showingMenu) {
+                                sortMenu
+                            }
+
                             Button(action: {}) {
                                 Image(systemName: "plus")
                             }.disabled(!viewModel.hasCompletedTraining)
@@ -118,54 +137,49 @@ struct PresetsView: View {
     }
 
     private var sortMenu: some View {
-        Button("Sort") {
-            showingMenu.toggle()
-        }
-        .popover(isPresented: $showingMenu) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Sort By")
-                        .font(.headline)
-                    Spacer()
-                    Button(action: {
-                        isAscending.toggle()
-                    }) {
-                        Image(systemName: "arrow.up.arrow.down")
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top, 20)
-                Divider()
-
-                ForEach(PresetSortOption.allCases, id: \.self) { option in
-                    Button(action: {
-                        selectedSortOption = option
-                        showingMenu = false
-                    }) {
-                        HStack {
-                            if selectedSortOption == option {
-                                Image(systemName: "checkmark")
-                            } else {
-                                Image(systemName: "checkmark")
-                                    .hidden()
-                            }
-                            Text(option.rawValue)
-                                .font(.body)
-                        }
-                        .padding(.horizontal)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.bottom, option == PresetSortOption.allCases.last ? 12 : 0)
-                    if option != PresetSortOption.allCases.last {
-                        Divider()
-                    }
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Sort By")
+                    .font(.headline)
+                Spacer()
+                Button(action: {
+                    viewModel.presetsSortAscending.toggle()
+                }) {
+                    Image(systemName: "arrow.up.arrow.down")
                 }
             }
-            .frame(width: 200)
-            .background(Color(UIColor.secondarySystemBackground))
-            .cornerRadius(12)
-            .presentationCompactAdaptation(.popover)
+            .padding(.horizontal)
+            .padding(.top, 20)
+            Divider()
+
+            ForEach(PresetSortOption.allCases, id: \.self) { option in
+                Button(action: {
+                    viewModel.selectedSortOption = option
+                    showingMenu = false
+                }) {
+                    HStack {
+                        if viewModel.selectedSortOption == option {
+                            Image(systemName: "checkmark")
+                        } else {
+                            Image(systemName: "checkmark")
+                                .hidden()
+                        }
+                        Text(option.description)
+                            .font(.body)
+                    }
+                    .padding(.horizontal)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.bottom, option == PresetSortOption.allCases.last ? 12 : 0)
+                if option != PresetSortOption.allCases.last {
+                    Divider()
+                }
+            }
         }
+        .frame(width: 200)
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(12)
+        .presentationCompactAdaptation(.popover)
     }
 
     private var dismissButton: some View {
