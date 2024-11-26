@@ -146,7 +146,7 @@ struct PresetCard: View {
                     VStack(alignment: .leading) {
                         if let expectedEndTime {
                             HStack(spacing: 8) {
-                                Text(Image(systemName: "clock"))
+                                Text(Image(systemName: "timer"))
                                 +
                                 Text(" \(expectedEndTime.localizedTitle)")
                                     .accessibilityLabel(Text(expectedEndTime.accessibilityLabel))
