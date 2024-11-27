@@ -165,8 +165,6 @@ class PresetsViewModel: ObservableObject {
 
     // MARK: Training
     @AppStorage("hasCompletedPresetsTraining") var hasCompletedTraining: Bool = false
-    @Published var showTraining: Bool = false
-
     @AppStorage("presetsSortOrder") var selectedSortOption: PresetSortOption = .name
     @AppStorage("presetsSortDirectionReversed") var presetsSortAscending: Bool = true
 

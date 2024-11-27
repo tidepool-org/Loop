@@ -34,6 +34,8 @@ struct PresetsView: View {
 
     @State private var editMode: EditMode = .inactive
     @State private var showingMenu: Bool = false
+    @State var showTraining: Bool = false
+
 
     var isDescending: Bool { !viewModel.presetsSortAscending }
 
@@ -42,7 +44,9 @@ struct PresetsView: View {
     }
 
     var presetsSorted: [SelectablePreset] {
-        viewModel.allPresets.sorted(by: {
+        viewModel.allPresets
+            .filter { $0.id != viewModel.activeOverride?.presetId }
+            .sorted(by: {
             switch (viewModel.selectedSortOption) {
             case .name:
                 return ($0.name.lowercased() < $1.name.lowercased()) != isDescending
@@ -51,7 +55,7 @@ struct PresetsView: View {
             default:
                 return ((viewModel.lastUsed(id: $0.id) ?? .distantPast) > (viewModel.lastUsed(id: $1.id) ?? .distantPast)) != isDescending
             }
-        }).filter { $0.id != viewModel.activeOverride?.presetId }
+        })
     }
 
     var body: some View {
@@ -60,7 +64,7 @@ struct PresetsView: View {
                 VStack(spacing: 20) {
 
                     if !viewModel.hasCompletedTraining {
-                        PresetsTrainingCard(showTraining: $viewModel.showTraining)
+                        PresetsTrainingCard(showTraining: $showTraining)
                     }
 
                     if let activePreset = viewModel.activePreset {
@@ -112,12 +116,35 @@ struct PresetsView: View {
                                     .cornerRadius(8)
 
                                 Text("Presets Performance History")
-                                    .foregroundStyle(.secondary)
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .foregroundColor(.gray)
                             }
                         }
+                        .padding(10)
+                        .foregroundStyle(.primary)
+                        .background(RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(UIColor.tertiarySystemBackground))
+                            .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
+                            .frame(maxWidth: .infinity))
+
+                        if viewModel.hasCompletedTraining {
+                            NavigationLink(destination: PresetsTrainingView { viewModel.hasCompletedTraining = true }) {
+                                HStack {
+                                    Text("Review Presets Training")
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            .padding(10)
+                            .foregroundStyle(.primary)
+                            .background(RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(UIColor.tertiarySystemBackground))
+                                .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
+                                .frame(maxWidth: .infinity))
+                        }
+
                     }
                 }
                 .padding()
@@ -127,7 +154,7 @@ struct PresetsView: View {
             .navigationBarItems(trailing: dismissButton)
         }
 
-        .sheet(isPresented: $viewModel.showTraining) {
+        .sheet(isPresented: $showTraining) {
             PresetsTrainingView {
                 viewModel.hasCompletedTraining = true
             }
