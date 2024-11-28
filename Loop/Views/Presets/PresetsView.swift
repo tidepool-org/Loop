@@ -6,6 +6,7 @@
 //  Copyright © 2024 LoopKit Authors. All rights reserved.
 //
 
+import LoopKit
 import SwiftUI
 import Foundation
 
@@ -107,7 +108,7 @@ struct PresetsView: View {
                         Text("Support")
                             .font(.title2.bold())
 
-                        NavigationLink(destination: EmptyView()) {
+                        NavigationLink(destination: PresetsHistoryView()) {
                             HStack {
                                 Image(systemName: "list.bullet")
                                     .foregroundColor(.white)
