@@ -298,9 +298,8 @@ class LoopAppManager: NSObject {
             }
 
             Task { @MainActor in
-                let unit = await LoopUnit(from: self.healthStore.cachedPreferredUnits(for: .bloodGlucose))
-                
-                if let unit {
+                if let hkUnit = await self.healthStore.cachedPreferredUnits(for: .bloodGlucose) {
+                    let unit = LoopUnit(from: hkUnit)
                     self.displayGlucosePreference.unitDidChange(to: unit)
                     self.notifyObserversOfDisplayGlucoseUnitChange(to: unit)
                 }

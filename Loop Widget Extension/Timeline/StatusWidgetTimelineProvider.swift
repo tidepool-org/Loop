@@ -111,17 +111,16 @@ class StatusWidgetTimelineProvider: TimelineProvider {
             }
 
             let finalGlucose = glucose
-            
-            let unit = await LoopUnit(from: healthStore.cachedPreferredUnits(for: .bloodGlucose))
 
-            guard let defaults = self.defaults,
+            guard let hkUnit = await healthStore.cachedPreferredUnits(for: .bloodGlucose),
+                  let defaults = self.defaults,
                   let context = defaults.statusExtensionContext,
-                  let contextUpdatedAt = context.createdAt,
-                  let unit
+                  let contextUpdatedAt = context.createdAt
             else {
                 return
             }
 
+            let unit = LoopUnit(from: hkUnit)
             let lastCompleted = context.lastLoopCompleted
 
             let closeLoop = context.isClosedLoop ?? false
