@@ -137,14 +137,17 @@ struct PresetsAndExerciseContentView: View {
         Text("Once saved, Omar’s completed preset will display in his Presets lists.", comment: "Presets and exercise training content, scheduling preset, paragraph 2")
         
         PresetCard(
-            icon: Text("🚶"),
+            icon: .emoji("🚶"),
             presetName: NSLocalizedString("Walk to Work", comment: "Presets and exercise training content, scheduling preset, preset example, title"),
             duration: .duration(.seconds(1800)),
-            percentOfScheduled: 1,
-            correctionRange: (
-                lower: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 140),
-                upper: HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 260)
-            )
+            insulinSensitivityMultiplier: 1.0,
+            correctionRange: ClosedRange(
+                uncheckedBounds: (
+                    HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 140),
+                    HKQuantity(unit: .milligramsPerDeciliter, doubleValue: 260))
+            ),
+            guardrail: nil,
+            expectedEndTime: .indefinite
         )
     }
 }
