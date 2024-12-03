@@ -112,15 +112,7 @@ class StatusWidgetTimelineProvider: TimelineProvider {
 
             let finalGlucose = glucose
             
-            let unit: LoopUnit?
-            switch await healthStore.cachedPreferredUnits(for: .bloodGlucose) {
-            case .milligramsPerDeciliter:
-                unit = .milligramsPerDeciliter
-            case .millimolesPerLiter:
-                unit = .millimolesPerLiter
-            default:
-                unit = nil
-            }
+            let unit = await LoopUnit(from: healthStore.cachedPreferredUnits(for: .bloodGlucose))
 
             guard let defaults = self.defaults,
                   let context = defaults.statusExtensionContext,

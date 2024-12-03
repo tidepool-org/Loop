@@ -298,15 +298,7 @@ class LoopAppManager: NSObject {
             }
 
             Task { @MainActor in
-                var unit: LoopUnit?
-                switch await self.healthStore.cachedPreferredUnits(for: .bloodGlucose) {
-                case .milligramsPerDeciliter:
-                    unit = .milligramsPerDeciliter
-                case .millimolesPerLiter:
-                    unit = .millimolesPerLiter
-                default:
-                    unit = nil
-                }
+                let unit = await LoopUnit(from: self.healthStore.cachedPreferredUnits(for: .bloodGlucose))
                 
                 if let unit {
                     self.displayGlucosePreference.unitDidChange(to: unit)

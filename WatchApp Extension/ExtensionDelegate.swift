@@ -177,7 +177,7 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
                     return
                 }
                 
-                context.displayGlucoseUnit = LoopUnit(from: unit.unitString)
+                context.displayGlucoseUnit = LoopUnit(from: unit)
             }
         } else {
             DispatchQueue.main.async {
