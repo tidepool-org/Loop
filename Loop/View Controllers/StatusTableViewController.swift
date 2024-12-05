@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import HealthKit
 import SwiftUI
 import Intents
 import LoopCore
@@ -30,10 +29,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     private let log = OSLog(category: "StatusTableViewController")
 
-    lazy var carbFormatter: QuantityFormatter = QuantityFormatter(for: .gram())
+    lazy var carbFormatter: QuantityFormatter = QuantityFormatter(for: .gram)
     
     lazy var insulinFormatter: QuantityFormatter = {
-        let formatter = QuantityFormatter(for: .internationalUnit())
+        let formatter = QuantityFormatter(for: .internationalUnit)
         formatter.numberFormatter.maximumFractionDigits = 2
         return formatter
     }()
@@ -293,23 +292,22 @@ final class StatusTableViewController: LoopChartsTableViewController {
             loopManager.startGlucoseValueStalenessTimerIfNeeded()
         }
     }
-
+    
     private var bolusState: PumpManagerStatus.BolusState = .noBolus {
         didSet {
             if oldValue != bolusState {
                 switch bolusState {
                 case .inProgress(_):
                     guard case .inProgress = oldValue else {
-                        // Bolus starting
-                        bolusProgressReporter = deviceManager.pumpManager?.createBolusProgressReporter(reportingOn: DispatchQueue.main)
+                        guard case .canceling = oldValue else {
+                            // Bolus starting
+                            bolusProgressReporter = deviceManager.pumpManager?.createBolusProgressReporter(reportingOn: DispatchQueue.main)
+                            break
+                        }
                         break
                     }
                 default:
                     break
-                }
-                Task { @MainActor in
-                    refreshContext.update(with: .status)
-                    await reloadData(animated: true)
                 }
             }
         }
@@ -481,7 +479,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         var doseEntries: [BasalRelativeDose]?
         var totalDelivery: Double?
         var cobValues: [CarbValue]?
-        var carbsOnBoard: HKQuantity?
+        var carbsOnBoard: LoopQuantity?
         let startDate = charts.startDate
         let basalDeliveryState = self.basalDeliveryState
         let automaticDosingEnabled = automaticDosingStatus.automaticDosingEnabled
@@ -611,7 +609,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             self.currentCOBDescription = nil
         }
 
-        self.tableView.beginUpdates()
         if let hudView = self.hudView {
             // CGM Status
             if let glucose = self.loopManager.latestGlucose {
@@ -640,8 +637,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
         updateBannerAndHUDandStatusRows(statusRowMode: statusRowMode, newSize: currentContext.newSize, animated: animated)
 
         redrawCharts()
-
-        tableView.endUpdates()
 
         reloading = false
         let reloadNow = !self.refreshContext.isEmpty
@@ -2121,14 +2116,8 @@ extension StatusTableViewController: CompletionDelegate {
 extension StatusTableViewController: PumpManagerStatusObserver {
     func pumpManager(_ pumpManager: PumpManager, didUpdate status: PumpManagerStatus, oldStatus: PumpManagerStatus) {
         log.default("PumpManager:%{public}@ did update status", String(describing: type(of: pumpManager)))
-        Task { @MainActor in
-
-            basalDeliveryState = status.basalDeliveryState
-            bolusState = status.bolusState
-
-            refreshContext.update(with: .status)
-            await self.reloadData(animated: true)
-        }
+        basalDeliveryState = status.basalDeliveryState
+        bolusState = status.bolusState
     }
 }
 

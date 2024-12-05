@@ -10,7 +10,6 @@ import Foundation
 import LoopKit
 import UserNotifications
 import UIKit
-import HealthKit
 import Combine
 import LoopCore
 import LoopKitUI
@@ -177,6 +176,12 @@ class SettingsManager {
     ///
     /// - Parameter timeZone: The time zone
     func setScheduleTimeZone(_ timeZone: TimeZone) {
+        let shouldUpdate = settings.basalRateSchedule?.timeZone != timeZone ||
+        settings.carbRatioSchedule?.timeZone != timeZone ||
+        settings.insulinSensitivitySchedule?.timeZone != timeZone ||
+        settings.glucoseTargetRangeSchedule?.timeZone != timeZone
+        guard shouldUpdate else { return }
+
         self.mutateLoopSettings { settings in
             settings.basalRateSchedule?.timeZone = timeZone
             settings.carbRatioSchedule?.timeZone = timeZone
@@ -272,11 +277,11 @@ class SettingsManager {
         try await settingsStore.getCarbRatioHistory(startDate: startDate, endDate: endDate)
     }
 
-    func getInsulinSensitivityHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<HKQuantity>] {
+    func getInsulinSensitivityHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<LoopQuantity>] {
         try await settingsStore.getInsulinSensitivityHistory(startDate: startDate, endDate: endDate)
     }
 
-    func getTargetRangeHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<ClosedRange<HKQuantity>>] {
+    func getTargetRangeHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<ClosedRange<LoopQuantity>>] {
         try await settingsStore.getTargetRangeHistory(startDate: startDate, endDate: endDate)
     }
 
@@ -325,8 +330,8 @@ protocol SettingsProvider {
 
     func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>]
     func getCarbRatioHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>]
-    func getInsulinSensitivityHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<HKQuantity>]
-    func getTargetRangeHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<ClosedRange<HKQuantity>>]
+    func getInsulinSensitivityHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<LoopQuantity>]
+    func getTargetRangeHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<ClosedRange<LoopQuantity>>]
     func getDosingLimits(at date: Date) async throws -> DosingLimits
     func executeSettingsQuery(fromQueryAnchor queryAnchor: SettingsStore.QueryAnchor?, limit: Int, completion: @escaping (SettingsStore.SettingsQueryResult) -> Void)
 }
