@@ -6,9 +6,9 @@
 //  Copyright © 2024 LoopKit Authors. All rights reserved.
 //
 
+import Foundation
 import LoopKit
 import SwiftUI
-import Foundation
 
 enum PresetSortOption: Int, CaseIterable {
     case name
