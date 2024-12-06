@@ -35,6 +35,7 @@ class TemporaryPresetsManager {
         self.settingsProvider = settingsProvider
         
         self.overrideHistory = TemporaryScheduleOverrideHistoryContainer.shared.fetch()
+        TemporaryScheduleOverrideHistory.relevantTimeWindow = Bundle.main.localCacheDuration
 
         scheduleOverride = overrideHistory.activeOverride(at: Date())
 
