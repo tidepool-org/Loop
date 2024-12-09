@@ -17,7 +17,6 @@ import HealthKit
 import WidgetKit
 import LoopCore
 import LoopAlgorithm
-import SwiftData
 
 #if targetEnvironment(simulator)
 enum SimulatorError: Error {
