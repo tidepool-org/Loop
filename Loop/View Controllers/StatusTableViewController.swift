@@ -1491,7 +1491,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         item.tintColor = UIColor.carbTintColor
         item.isEnabled = isEnabled
-        item.accessibilityIdentifier = isEnabled ? "statusTableViewPreMealButtonEnabled" : "statusTableViewPreMealButtonDisabled"
+        item.accessibilityIdentifier = "toolBarPreMealButton"
 
         return item
     }
