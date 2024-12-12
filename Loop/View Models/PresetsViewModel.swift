@@ -253,9 +253,9 @@ public class PresetsViewModel {
         case .custom(let temporaryScheduleOverridePreset):
             temporaryPresetsManager.scheduleOverride = temporaryScheduleOverridePreset.createOverride(enactTrigger: .local)
         case .preMeal:
-            temporaryPresetsManager.enablePreMealOverride(for: .hours(2)) // FIX TIME
+            temporaryPresetsManager.enablePreMealOverride(for: .hours(1))
         case .legacyWorkout:
-            temporaryPresetsManager.enableLegacyWorkoutOverride(for: .indefinite) // FIX TIME
+            temporaryPresetsManager.enableLegacyWorkoutOverride(for: .indefinite)
         }
     }
     

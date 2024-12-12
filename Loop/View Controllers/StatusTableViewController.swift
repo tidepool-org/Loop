@@ -68,75 +68,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
     var doseStore: DoseStore!
 
     var criticalEventLogExportManager: CriticalEventLogExportManager!
-
-    lazy var settingsViewModel: SettingsViewModel = {
-        let deletePumpDataFunc: () -> PumpManagerViewModel.DeleteTestingDataFunc? = { [weak self] in
-            (self?.deviceManager.pumpManager is TestingPumpManager) ? {
-                Task { [weak self] in try? await self?.deviceManager.deleteTestingPumpData()
-                }} : nil
-        }
-        let deleteCGMDataFunc: () -> CGMManagerViewModel.DeleteTestingDataFunc? = { [weak self] in
-            (self?.deviceManager.cgmManager is TestingCGMManager) ? {
-                Task { [weak self] in try? await self?.deviceManager.deleteTestingCGMData()
-                }} : nil
-        }
-        let pumpViewModel = PumpManagerViewModel(
-            image: { [weak self] in (self?.deviceManager.pumpManager as? PumpManagerUI)?.smallImage },
-            name: { [weak self] in self?.deviceManager.pumpManager?.localizedTitle ?? "" },
-            isSetUp: { [weak self] in self?.deviceManager.pumpManager?.isOnboarded == true },
-            availableDevices: deviceManager.availablePumpManagers,
-            deleteTestingDataFunc: deletePumpDataFunc,
-            onTapped: { [weak self] in
-                self?.onPumpTapped()
-            },
-            didTapAddDevice: { [weak self] in
-                self?.addPumpManager(withIdentifier: $0.identifier)
-        })
-
-        let cgmViewModel = CGMManagerViewModel(
-            image: {[weak self] in (self?.deviceManager.cgmManager as? DeviceManagerUI)?.smallImage },
-            name: {[weak self] in self?.deviceManager.cgmManager?.localizedTitle ?? "" },
-            isSetUp: {[weak self] in self?.deviceManager.cgmManager?.isOnboarded == true },
-            availableDevices: deviceManager.availableCGMManagers,
-            deleteTestingDataFunc: deleteCGMDataFunc,
-            onTapped: { [weak self] in
-                self?.onCGMTapped()
-            },
-            didTapAddDevice: { [weak self] in
-                self?.addCGMManager(withIdentifier: $0.identifier)
-        })
-        let servicesViewModel = ServicesViewModel(showServices: FeatureFlags.includeServicesInSettingsEnabled,
-                                                  availableServices: { [weak self] in self?.servicesManager.availableServices ?? [] },
-                                                  activeServices: { [weak self] in self?.servicesManager.activeServices ?? [] },
-                                                  delegate: self)
-        let versionUpdateViewModel = VersionUpdateViewModel(supportManager: supportManager, guidanceColors: .default)
-        
-        let viewModel = SettingsViewModel(alertPermissionsChecker: alertPermissionsChecker,
-                                          alertMuter: alertMuter,
-                                          versionUpdateViewModel: versionUpdateViewModel,
-                                          pumpManagerSettingsViewModel: pumpViewModel,
-                                          cgmManagerSettingsViewModel: cgmViewModel,
-                                          servicesViewModel: servicesViewModel,
-                                          criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: criticalEventLogExportManager),
-                                          therapySettings: { [weak self] in self?.settingsManager.therapySettings ?? TherapySettings() },
-                                          sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
-                                          initialDosingEnabled: self.settingsManager.settings.dosingEnabled, automaticDosingStatus: self.automaticDosingStatus,
-                                          automaticDosingStrategy: self.settingsManager.settings.automaticDosingStrategy,
-                                          lastLoopCompletion: loopManager.$lastLoopCompleted,
-                                          mostRecentGlucoseDataDate: loopManager.$publishedMostRecentGlucoseDataDate,
-                                          mostRecentPumpDataDate: loopManager.$publishedMostRecentPumpDataDate,
-                                          availableSupports: supportManager.availableSupports,
-                                          isOnboardingComplete: onboardingManager.isComplete,
-                                          therapySettingsViewModelDelegate: deviceManager,
-                                          presetHistory: temporaryPresetsManager.overrideHistory,
-                                          temporaryPresetsManager: temporaryPresetsManager,
-                                          delegate: self
-        )
-        
-        viewModel.favoriteFoodInsightsDelegate = loopManager
-        
-        return viewModel
-    }()
+    
+    var settingsViewModel: SettingsViewModel!
+    var statusTableViewModel: StatusTableViewModel!
     
     lazy private var cancellables = Set<AnyCancellable>()
     
@@ -147,6 +81,20 @@ final class StatusTableViewController: LoopChartsTableViewController {
         super.viewDidLoad()
         
         setupToolbarItems()
+        statusTableViewModel.settingsViewModel.delegate = self
+        statusTableViewModel.settingsViewModel.pumpManagerSettingsViewModel.didTap = { [weak self] in
+            self?.onPumpTapped()
+        }
+        statusTableViewModel.settingsViewModel.pumpManagerSettingsViewModel.didTapAdd = { [weak self] in
+            self?.addPumpManager(withIdentifier: $0.identifier)
+        }
+        statusTableViewModel.settingsViewModel.cgmManagerSettingsViewModel.didTap = { [weak self] in
+            self?.onCGMTapped()
+        }
+        statusTableViewModel.settingsViewModel.cgmManagerSettingsViewModel.didTapAdd = { [weak self] in
+            self?.addCGMManager(withIdentifier: $0.identifier)
+        }
+
         
         tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
         tableView.register(AlertPermissionsDisabledWarningCell.self, forCellReuseIdentifier: AlertPermissionsDisabledWarningCell.className)
@@ -1164,12 +1112,16 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 }
 
                 if override.isActive() {
-                    switch override.duration {
-                    case .finite:
-                        let endTimeText = DateFormatter.localizedString(from: override.activeInterval.end, dateStyle: .none, timeStyle: .short)
-                        cell.subtitleLabel.text = String(format: NSLocalizedString("on until %@", comment: "The format for the description of a custom preset end date"), endTimeText)
-                    case .indefinite:
-                        cell.subtitleLabel.text = nil
+                    if let preset = settingsViewModel.presetsViewModel.allPresets.first(where: { $0.id == override.presetId }), case .preMeal(_, _) = preset {
+                        cell.subtitleLabel.text = NSLocalizedString("on until carbs added", comment: "The format for the description of a premeal preset end date")
+                    } else {
+                        switch override.duration {
+                        case .finite:
+                            let endTimeText = DateFormatter.localizedString(from: override.activeInterval.end, dateStyle: .none, timeStyle: .short)
+                            cell.subtitleLabel.text = String(format: NSLocalizedString("on until %@", comment: "The format for the description of a custom preset end date"), endTimeText)
+                        case .indefinite:
+                            cell.subtitleLabel.text = nil
+                        }
                     }
                 } else {
                     let startTimeText = DateFormatter.localizedString(from: override.startDate, dateStyle: .none, timeStyle: .short)
@@ -1371,7 +1323,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch Section(rawValue: indexPath.section)! {
         case .presets:
-            settingsViewModel.presetsViewModel.pendingPreset = settingsViewModel.presetsViewModel.allPresets.first(where: { $0.id == (temporaryPresetsManager.scheduleOverride ?? temporaryPresetsManager.preMealOverride)?.presetId })
+            statusTableViewModel.pendingPreset = settingsViewModel.presetsViewModel.allPresets.first(where: { $0.id == (temporaryPresetsManager.scheduleOverride ?? temporaryPresetsManager.preMealOverride)?.presetId })
         case .alertWarning:
             if alertPermissionsChecker.showWarning {
                 tableView.deselectRow(at: indexPath, animated: true)

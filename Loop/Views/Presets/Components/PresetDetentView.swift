@@ -32,6 +32,11 @@ struct PresetDetentView: View {
         self.activeOverride = viewModel.temporaryPresetsManager.preMealOverride ?? viewModel.temporaryPresetsManager.scheduleOverride
     }
     
+    init?(viewModel: PresetsViewModel) {
+        guard let preset = viewModel.pendingPreset else { return nil }
+        self.init(viewModel: viewModel, preset: preset)
+    }
+    
     var operation: Operation {
         if activeOverride?.presetId == preset.id {
             return .end

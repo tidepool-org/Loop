@@ -32,10 +32,12 @@ private struct WrappedStatusTableViewController: UIViewControllerRepresentable {
     private let doseStore: DoseStore
     private let criticalEventLogExportManager: CriticalEventLogExportManager
     private let bluetoothStateManager: BluetoothStateManager
+    private let settingsViewModel: SettingsViewModel
+    private let statusTableViewModel: StatusTableViewModel
     
     let viewController: StatusTableViewController
     
-    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager) {
+    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel, statusTableViewModel: StatusTableViewModel) {
         self.alertPermissionsChecker = alertPermissionsChecker
         self.alertMuter = alertMuter
         self.automaticDosingStatus = automaticDosingStatus
@@ -54,6 +56,8 @@ private struct WrappedStatusTableViewController: UIViewControllerRepresentable {
         self.doseStore = doseStore
         self.criticalEventLogExportManager = criticalEventLogExportManager
         self.bluetoothStateManager = bluetoothStateManager
+        self.settingsViewModel = settingsViewModel
+        self.statusTableViewModel = statusTableViewModel
         
         let storyboard = UIStoryboard(name: "Main", bundle: Bundle(for: StatusTableViewController.self))
         let statusTableViewController = storyboard.instantiateViewController(withIdentifier: "MainStatusViewController") as! StatusTableViewController
@@ -74,6 +78,8 @@ private struct WrappedStatusTableViewController: UIViewControllerRepresentable {
         statusTableViewController.carbStore = carbStore
         statusTableViewController.doseStore = doseStore
         statusTableViewController.criticalEventLogExportManager = criticalEventLogExportManager
+        statusTableViewController.settingsViewModel = settingsViewModel
+        statusTableViewController.statusTableViewModel = statusTableViewModel
         bluetoothStateManager.addBluetoothObserver(statusTableViewController)
         
         self.viewController = statusTableViewController
@@ -86,44 +92,46 @@ private struct WrappedStatusTableViewController: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {}
 }
 
-struct StatusTableView: View {
+@MainActor
+@Observable
+class StatusTableViewModel {
+    let alertPermissionsChecker: AlertPermissionsChecker
+    let alertMuter: AlertMuter
+    let deviceDataManager: DeviceDataManager
+    let supportManager: SupportManager
+    let testingScenariosManager: TestingScenariosManager?
+    let loopDataManager: LoopDataManager
+    let diagnosticReportGenerator: DiagnosticReportGenerator
+    let simulatedData: SimulatedData
+    let analyticsServicesManager: AnalyticsServicesManager
+    let servicesManager: ServicesManager
+    let carbStore: CarbStore
+    let doseStore: DoseStore
+    let criticalEventLogExportManager: CriticalEventLogExportManager
+    let bluetoothStateManager: BluetoothStateManager
+    let settingsManager: SettingsManager
+    let automaticDosingStatus: AutomaticDosingStatus
+    let displayGlucosePreference: DisplayGlucosePreference
+    let onboardingManager: OnboardingManager
+    let temporaryPresetsManager: TemporaryPresetsManager
+    let settingsViewModel: SettingsViewModel
     
-    private let alertPermissionsChecker: AlertPermissionsChecker
-    private let alertMuter: AlertMuter
-    private let automaticDosingStatus: AutomaticDosingStatus
-    private let deviceDataManager: DeviceDataManager
-    private let displayGlucosePreference: DisplayGlucosePreference
-    private let onboardingManager: OnboardingManager
-    private let supportManager: SupportManager
-    private let testingScenariosManager: TestingScenariosManager?
-    private let settingsManager: SettingsManager
-    private let loopDataManager: LoopDataManager
-    private let diagnosticReportGenerator: DiagnosticReportGenerator
-    private let simulatedData: SimulatedData
-    private let analyticsServicesManager: AnalyticsServicesManager
-    private let servicesManager: ServicesManager
-    private let carbStore: CarbStore
-    private let doseStore: DoseStore
-    private let criticalEventLogExportManager: CriticalEventLogExportManager
-    private let bluetoothStateManager: BluetoothStateManager
-    
-    @Bindable var settingsViewModel: SettingsViewModel
-    
-    private let wrapped: WrappedStatusTableViewController
-    
-    var viewController: StatusTableViewController {
-        wrapped.viewController
+    var pendingPreset: SelectablePreset? {
+        didSet {
+            settingsViewModel.presetsViewModel.pendingPreset = pendingPreset
+        }
     }
     
-    init(displayGlucosePreference: DisplayGlucosePreference, alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager) {
-        self.displayGlucosePreference = displayGlucosePreference
+    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, displayGlucosePreference: DisplayGlucosePreference, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel) {
         self.alertPermissionsChecker = alertPermissionsChecker
         self.alertMuter = alertMuter
         self.automaticDosingStatus = automaticDosingStatus
         self.deviceDataManager = deviceDataManager
+        self.displayGlucosePreference = displayGlucosePreference
         self.onboardingManager = onboardingManager
         self.supportManager = supportManager
         self.testingScenariosManager = testingScenariosManager
+        self.temporaryPresetsManager = temporaryPresetsManager
         self.settingsManager = settingsManager
         self.loopDataManager = loopDataManager
         self.diagnosticReportGenerator = diagnosticReportGenerator
@@ -134,10 +142,48 @@ struct StatusTableView: View {
         self.doseStore = doseStore
         self.criticalEventLogExportManager = criticalEventLogExportManager
         self.bluetoothStateManager = bluetoothStateManager
+        self.settingsViewModel = settingsViewModel
+    }
+}
+
+struct StatusTableView: View {
+    
+    private let wrapped: WrappedStatusTableViewController
+    
+    var viewController: StatusTableViewController {
+        wrapped.viewController
+    }
+    
+    @ViewBuilder
+    var wrappedView: some View { wrapped }
+    
+    @Bindable var viewModel: StatusTableViewModel
+    
+    init(viewModel: StatusTableViewModel) {
+        self.viewModel = viewModel
         
-        self.wrapped = WrappedStatusTableViewController(alertPermissionsChecker: alertPermissionsChecker, alertMuter: alertMuter, automaticDosingStatus: automaticDosingStatus, deviceDataManager: deviceDataManager, onboardingManager: onboardingManager, supportManager: supportManager, testingScenariosManager: testingScenariosManager, settingsManager: settingsManager, temporaryPresetsManager: temporaryPresetsManager, loopDataManager: loopDataManager, diagnosticReportGenerator: diagnosticReportGenerator, simulatedData: simulatedData, analyticsServicesManager: analyticsServicesManager, servicesManager: servicesManager, carbStore: carbStore, doseStore: doseStore, criticalEventLogExportManager: criticalEventLogExportManager, bluetoothStateManager: bluetoothStateManager)
-        
-        self.settingsViewModel = wrapped.viewController.settingsViewModel
+        self.wrapped = WrappedStatusTableViewController(
+            alertPermissionsChecker: viewModel.alertPermissionsChecker,
+            alertMuter: viewModel.alertMuter,
+            automaticDosingStatus: viewModel.automaticDosingStatus,
+            deviceDataManager: viewModel.deviceDataManager,
+            onboardingManager: viewModel.onboardingManager,
+            supportManager: viewModel.supportManager,
+            testingScenariosManager: viewModel.testingScenariosManager,
+            settingsManager: viewModel.settingsManager,
+            temporaryPresetsManager: viewModel.temporaryPresetsManager,
+            loopDataManager: viewModel.loopDataManager,
+            diagnosticReportGenerator: viewModel.diagnosticReportGenerator,
+            simulatedData: viewModel.simulatedData,
+            analyticsServicesManager: viewModel.analyticsServicesManager,
+            servicesManager: viewModel.servicesManager,
+            carbStore: viewModel.carbStore,
+            doseStore: viewModel.doseStore,
+            criticalEventLogExportManager: viewModel.criticalEventLogExportManager,
+            bluetoothStateManager: viewModel.bluetoothStateManager,
+            settingsViewModel: viewModel.settingsViewModel,
+            statusTableViewModel: viewModel
+        )
     }
     
     func isActive(action: ToolbarAction) -> Bool {
@@ -145,11 +191,11 @@ struct StatusTableView: View {
         case .addCarbs, .bolus, .settings: // No active states for these actions
             return false
         case .preMealPreset:
-            return settingsViewModel.presetsViewModel.temporaryPresetsManager.preMealTargetEnabled()
+            return viewModel.temporaryPresetsManager.preMealTargetEnabled()
         case .workoutPreset:
-            return settingsViewModel.presetsViewModel.temporaryPresetsManager.nonPreMealOverrideEnabled()
+            return viewModel.temporaryPresetsManager.nonPreMealOverrideEnabled()
         case .presets:
-            return settingsViewModel.presetsViewModel.activeOverride != nil
+            return viewModel.settingsViewModel.presetsViewModel.activeOverride != nil
         }
     }
     
@@ -158,20 +204,20 @@ struct StatusTableView: View {
         case .addCarbs, .bolus, .presets, .settings:
             false
         case .preMealPreset:
-            !(onboardingManager.isComplete &&
-            (automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled)
-            && settingsManager.settings.preMealTargetRange != nil)
+            !(viewModel.onboardingManager.isComplete &&
+              (viewModel.automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled)
+              && viewModel.settingsManager.settings.preMealTargetRange != nil)
         case .workoutPreset:
-            viewController.workoutMode != nil && onboardingManager.isComplete
+            viewController.workoutMode != nil && viewModel.onboardingManager.isComplete
         }
     }
     
     var body: some View {
-        wrapped
-            .sheet(item: $settingsViewModel.presetsViewModel.pendingPreset) { preset in
+        wrappedView
+            .sheet(item: $viewModel.pendingPreset) { _ in
                 PresetDetentView(
-                    viewModel: settingsViewModel.presetsViewModel,
-                    preset: preset
+                    viewModel: viewModel.settingsViewModel.presetsViewModel,
+                    displayGlucosePreference: viewModel.displayGlucosePreference
                 )
             }
             .toolbar {
