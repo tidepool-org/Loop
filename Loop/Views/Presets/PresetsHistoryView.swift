@@ -88,7 +88,7 @@ struct PresetsHistoryView: View {
         case let .finite(scheduledDuration):
             let actualDuration = override.actualDuration.timeInterval
             if let scheduledDurationString = formatter.string(from: scheduledDuration), let actualDurationString = formatter.string(from: actualDuration) {
-                if scheduledDuration == actualDuration {
+                if scheduledDuration <= actualDuration {
                     Text(actualDurationString)
                         .foregroundStyle(.primary)
                 } else {

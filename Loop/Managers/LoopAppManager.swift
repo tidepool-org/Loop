@@ -608,7 +608,6 @@ class LoopAppManager: NSObject {
             alertMuter: alertManager.alertMuter,
             automaticDosingStatus: automaticDosingStatus,
             deviceDataManager: deviceDataManager,
-            displayGlucosePreference: displayGlucosePreference,
             onboardingManager: onboardingManager,
             supportManager: supportManager,
             testingScenariosManager: testingScenariosManager,
@@ -627,6 +626,10 @@ class LoopAppManager: NSObject {
         )
 
         let statusTableView = StatusTableView(viewModel: viewModel)
+            .environmentObject(deviceDataManager.displayGlucosePreference)
+            .environment(\.appName, Bundle.main.bundleDisplayName)
+            .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
+            .environment(\.loopStatusColorPalette, .loopStatus)
             .edgesIgnoringSafeArea(.top)
 
         var rootNavigationController = rootViewController as? RootNavigationController

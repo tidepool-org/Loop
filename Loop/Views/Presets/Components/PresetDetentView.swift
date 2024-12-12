@@ -45,25 +45,6 @@ struct PresetDetentView: View {
         }
     }
     
-    private func title(font: Font, iconSize: Double) -> some View {
-        HStack(spacing: 6) {
-            switch preset.icon {
-            case .emoji(let emoji):
-                Text(emoji)
-            case .image(let name, let iconColor):
-                Image(name)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .foregroundColor(iconColor)
-                    .frame(width: UIFontMetrics.default.scaledValue(for: iconSize), height: UIFontMetrics.default.scaledValue(for: iconSize))
-            }
-
-            Text(preset.name)
-                .font(font)
-                .fontWeight(.semibold)
-        }
-    }
-    
     @ViewBuilder
     private var subtitle: some View {
         Group {
@@ -100,6 +81,7 @@ struct PresetDetentView: View {
                     viewModel.startPreset(preset)
                 }
                 .buttonStyle(ActionButtonStyle())
+                .disabled(viewModel.activePreset != nil && preset != viewModel.activePreset)
             case .end:
                 Button("End Preset") {
                     dismiss()
@@ -108,23 +90,8 @@ struct PresetDetentView: View {
                 .buttonStyle(ActionButtonStyle(.destructive))
                 
                 NavigationLink("Adjust Preset Duration") {
-                    ZStack {
-                        Color(UIColor.secondarySystemBackground)
-                            .edgesIgnoringSafeArea(.all)
-                        
-                        VStack(spacing: 24) {
-                            title(font: .largeTitle, iconSize: 36)
-                                .fontWeight(.bold)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            DatePicker("On until", selection: .constant(Date()), displayedComponents: .hourAndMinute)
-                                .padding(6)
-                                .padding(.leading, 10)
-                                .background(Color.white.cornerRadius(10))
-                            
-                            Spacer()
-                        }
-                        .padding(.horizontal)
+                    if let activeOverride {
+                        EditOverrideDurationView(override: activeOverride, viewModel: viewModel)
                     }
                 }
                 .buttonStyle(ActionButtonStyle(.tertiary))
@@ -143,7 +110,7 @@ struct PresetDetentView: View {
             VStack(spacing: 24) {
                 VStack(spacing: 16) {
                     VStack(spacing: 4) {
-                        title(font: .title2, iconSize: 20)
+                        preset.title(font: .title2, iconSize: 20)
                         subtitle
                     }
                     

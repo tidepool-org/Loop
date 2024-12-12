@@ -88,7 +88,7 @@ class TemporaryPresetsManager {
             }
 
             if let newValue = scheduleOverride, newValue.context == .preMeal {
-//                preconditionFailure("The `scheduleOverride` field should not be used for a pre-meal target range override; use `preMealOverride` instead")
+                preconditionFailure("The `scheduleOverride` field should not be used for a pre-meal target range override; use `preMealOverride` instead")
             }
 
             if scheduleOverride != oldValue {

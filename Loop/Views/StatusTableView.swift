@@ -111,7 +111,6 @@ class StatusTableViewModel {
     let bluetoothStateManager: BluetoothStateManager
     let settingsManager: SettingsManager
     let automaticDosingStatus: AutomaticDosingStatus
-    let displayGlucosePreference: DisplayGlucosePreference
     let onboardingManager: OnboardingManager
     let temporaryPresetsManager: TemporaryPresetsManager
     let settingsViewModel: SettingsViewModel
@@ -122,12 +121,11 @@ class StatusTableViewModel {
         }
     }
     
-    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, displayGlucosePreference: DisplayGlucosePreference, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel) {
+    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel) {
         self.alertPermissionsChecker = alertPermissionsChecker
         self.alertMuter = alertMuter
         self.automaticDosingStatus = automaticDosingStatus
         self.deviceDataManager = deviceDataManager
-        self.displayGlucosePreference = displayGlucosePreference
         self.onboardingManager = onboardingManager
         self.supportManager = supportManager
         self.testingScenariosManager = testingScenariosManager
@@ -190,10 +188,6 @@ struct StatusTableView: View {
         switch action {
         case .addCarbs, .bolus, .settings: // No active states for these actions
             return false
-        case .preMealPreset:
-            return viewModel.temporaryPresetsManager.preMealTargetEnabled()
-        case .workoutPreset:
-            return viewModel.temporaryPresetsManager.nonPreMealOverrideEnabled()
         case .presets:
             return viewModel.settingsViewModel.presetsViewModel.activeOverride != nil
         }
@@ -201,14 +195,10 @@ struct StatusTableView: View {
     
     func isDisabled(action: ToolbarAction) -> Bool {
         switch action {
-        case .addCarbs, .bolus, .presets, .settings:
+        case .addCarbs, .bolus, .settings:
             false
-        case .preMealPreset:
-            !(viewModel.onboardingManager.isComplete &&
-              (viewModel.automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled)
-              && viewModel.settingsManager.settings.preMealTargetRange != nil)
-        case .workoutPreset:
-            viewController.workoutMode != nil && viewModel.onboardingManager.isComplete
+        case .presets:
+            !viewModel.onboardingManager.isComplete
         }
     }
     
@@ -216,14 +206,13 @@ struct StatusTableView: View {
         wrappedView
             .sheet(item: $viewModel.pendingPreset) { _ in
                 PresetDetentView(
-                    viewModel: viewModel.settingsViewModel.presetsViewModel,
-                    displayGlucosePreference: viewModel.displayGlucosePreference
+                    viewModel: viewModel.settingsViewModel.presetsViewModel
                 )
             }
             .toolbar {
                 ToolbarItem(placement: .bottomBar) {
                     HStack(alignment: .bottom) {
-                        ForEach(ToolbarAction.new) { action in
+                        ForEach(ToolbarAction.allCases) { action in
                             action.button(
                                 showTitle: true,
                                 isActive: isActive(action: action),
@@ -232,12 +221,8 @@ struct StatusTableView: View {
                                 switch action {
                                 case .addCarbs:
                                     viewController.userTappedAddCarbs()
-                                case .preMealPreset:
-                                    viewController.togglePreMealMode()
                                 case .bolus:
                                     viewController.presentBolusScreen()
-                                case .workoutPreset:
-                                    viewController.presentCustomPresets()
                                 case .presets:
                                     viewController.presentPresets()
                                 case .settings:
@@ -256,28 +241,24 @@ struct StatusTableView: View {
 
 enum ToolbarAction: String, Identifiable, CaseIterable {
     case addCarbs
-    case preMealPreset
     case bolus
-    case workoutPreset
     case presets
     case settings
     
-    static var legacy: [ToolbarAction] = [
-        .addCarbs,
-        .preMealPreset,
-        .bolus,
-        .workoutPreset,
-        .settings
-    ]
-    
-    static var new: [ToolbarAction] = [
-        .addCarbs,
-        .bolus,
-        .presets,
-        .settings
-    ]
-    
     var id: String { self.rawValue }
+    
+    var accessibilityIdentifier: String {
+        switch self {
+        case .addCarbs:
+            "statusTableViewControllerCarbsButton"
+        case .bolus:
+            "statusTableViewControllerBolusButton"
+        case .presets:
+            "statusTableViewPresetsButton"
+        case .settings:
+            "statusTableViewControllerSettingsButton"
+        }
+    }
     
     @ViewBuilder
     func icon(isActive: Bool) -> some View {
@@ -288,21 +269,11 @@ enum ToolbarAction: String, Identifiable, CaseIterable {
                     .resizable()
                     .renderingMode(.template)
                     .foregroundStyle(Color.carbs)
-            case .preMealPreset:
-                Image(isActive ? "Pre-Meal Selected" : "Pre-Meal")
-                    .resizable()
-                    .renderingMode(.template)
-                    .foregroundStyle(Color.carbs)
             case .bolus:
                 Image("bolus")
                     .resizable()
                     .renderingMode(.template)
                     .foregroundStyle(Color.insulin)
-            case .workoutPreset:
-                Image(isActive ? "workout-selected" : "workout")
-                    .resizable()
-                    .renderingMode(.template)
-                    .foregroundStyle(Color.glucose)
             case .presets:
                 Image(isActive ? "presets-selected" : "presets")
                     .resizable()
@@ -325,12 +296,8 @@ enum ToolbarAction: String, Identifiable, CaseIterable {
             switch self {
             case .addCarbs:
                 Text("Add Carbs", comment: "The label of the carb entry button")
-            case .preMealPreset:
-                Text("Pre-Meal Preset", comment: "The label of the pre-meal mode toggle button")
             case .bolus:
                 Text("Bolus", comment: "The label of the bolus entry button")
-            case .workoutPreset:
-                Text("Workout Preset", comment: "The label of the workout mode toggle button")
             case .presets:
                 Text("Presets", comment: "The label of the presets button")
             case .settings:
@@ -357,5 +324,6 @@ enum ToolbarAction: String, Identifiable, CaseIterable {
         .buttonStyle(.plain)
         .disabled(disabled)
         .contentShape(Rectangle())
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }
