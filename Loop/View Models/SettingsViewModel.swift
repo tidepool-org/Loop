@@ -266,7 +266,8 @@ extension SettingsViewModel {
                                  availableSupports: [],
                                  isOnboardingComplete: false,
                                  therapySettingsViewModelDelegate: nil,
-                                 presetHistory: TemporaryScheduleOverrideHistory(), temporaryPresetsManager: TemporaryPresetsManager(settingsProvider: FakeSettingsProvider()),
+                                 presetHistory: TemporaryScheduleOverrideHistory(),
+                                 temporaryPresetsManager: TemporaryPresetsManager(settingsProvider: FakeSettingsProvider()),
                                  delegate: nil
         )
     }
