@@ -1068,6 +1068,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         .foregroundStyle(Color.white)
                         .padding(8)
                         .background(Color.critical.cornerRadius(10))
+                        .padding([.top, .horizontal], 8)
                     }
                 } else {
                     HStack {
@@ -1075,7 +1076,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                             Text(Image(systemName: "speaker.slash.fill")) + Text(" ") + Text(NSLocalizedString("All App Sounds Muted", comment: "Warning text for when alerts are muted"))
                                 .font(.headline.bold())
                             
-                            Text(String(format: NSLocalizedString("Until %1$@", comment: "indication of when alerts will be unmuted (1: time when alerts unmute)"), NSLocalizedString("Unknown", comment: "label for when the alert mute end time is unknown")))
+                            Text(String(format: NSLocalizedString("Until %1$@", comment: "indication of when alerts will be unmuted (1: time when alerts unmute)"), alertMuter.formattedEndTime))
                                 .font(.subheadline)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -1083,13 +1084,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         Spacer()
                         
                         Text(Image(systemName: "stop.circle"))
-                            .font(.headline)
+                            .font(.title)
                     }
                     .foregroundStyle(Color.white)
                     .padding(8)
                     .background(Color.warning.cornerRadius(10))
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    .padding([.top, .horizontal], 8)
                 }
             }
             .margins(.all, 0)
