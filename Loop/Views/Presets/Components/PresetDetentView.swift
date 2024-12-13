@@ -89,12 +89,25 @@ struct PresetDetentView: View {
                 }
                 .buttonStyle(ActionButtonStyle(.destructive))
                 
-                NavigationLink("Adjust Preset Duration") {
-                    if let activeOverride {
-                        EditOverrideDurationView(override: activeOverride, viewModel: viewModel)
+                
+                switch preset {
+                case .custom:
+                    NavigationLink("Adjust Preset Duration") {
+                        if let activeOverride {
+                            EditOverrideDurationView(override: activeOverride, viewModel: viewModel)
+                        }
                     }
+                    .buttonStyle(ActionButtonStyle(.tertiary))
+                case .preMeal:
+                    EmptyView()
+                case .legacyWorkout:
+                    NavigationLink("Adjust Preset Duration") {
+                        if let activeOverride {
+                            EditOverrideDurationView(override: activeOverride, viewModel: viewModel)
+                        }
+                    }
+                    .buttonStyle(ActionButtonStyle(.tertiary))
                 }
-                .buttonStyle(ActionButtonStyle(.tertiary))
             }
             
             Button("Close") {
