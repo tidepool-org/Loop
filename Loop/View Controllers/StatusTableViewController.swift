@@ -1088,8 +1088,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     .foregroundStyle(Color.white)
                     .padding(8)
                     .background(Color.warning.cornerRadius(10))
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
                 }
             }
+            .margins(.all, 0)
             
             cell.backgroundColor = .secondarySystemBackground
             
