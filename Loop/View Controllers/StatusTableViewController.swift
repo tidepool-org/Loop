@@ -95,10 +95,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             self?.addCGMManager(withIdentifier: $0.identifier)
         }
 
-        
         tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
-        tableView.register(AlertPermissionsDisabledWarningCell.self, forCellReuseIdentifier: AlertPermissionsDisabledWarningCell.className)
-        tableView.register(MuteAlertsWarningCell.self, forCellReuseIdentifier: MuteAlertsWarningCell.className)
 
         if FeatureFlags.predictedGlucoseChartClampEnabled {
             statusCharts.glucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBoundClamped
@@ -977,93 +974,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
             return shouldShowStatus ? StatusRow.allCases.count : 0
         }
     }
-
-    private class AlertPermissionsDisabledWarningCell: UITableViewCell {
-        
-        var alert: AlertPermissionsChecker.UnsafeNotificationPermissionAlert?
-        
-        override func updateConfiguration(using state: UICellConfigurationState) {
-            guard let alert else {
-                return
-            }
-            
-            super.updateConfiguration(using: state)
-
-            let adjustViewForNarrowDisplay = bounds.width < 350
-
-            var contentConfig = defaultContentConfiguration().updated(for: state)
-            let titleImageAttachment = NSTextAttachment()
-            titleImageAttachment.image = UIImage(systemName: "exclamationmark.triangle.fill")?.withTintColor(.white)
-            let title = NSMutableAttributedString(string: alert.bannerTitle)
-            let titleWithImage = NSMutableAttributedString(attachment: titleImageAttachment)
-            titleWithImage.append(title)
-            contentConfig.attributedText = titleWithImage
-            contentConfig.textProperties.color = .white
-            contentConfig.textProperties.font = .systemFont(ofSize: adjustViewForNarrowDisplay ? 16 : 18, weight: .bold)
-            contentConfig.textProperties.adjustsFontSizeToFitWidth = true
-            contentConfig.secondaryText = alert.bannerBody
-            contentConfig.secondaryTextProperties.color = .white
-            contentConfig.secondaryTextProperties.font = .systemFont(ofSize: adjustViewForNarrowDisplay ? 13 : 15)
-            contentConfiguration = contentConfig
-
-            var backgroundConfig = backgroundConfiguration?.updated(for: state)
-            backgroundConfig?.backgroundColor = .critical
-            backgroundConfiguration = backgroundConfig
-            backgroundConfiguration?.backgroundInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 5, trailing: 10)
-            backgroundConfiguration?.cornerRadius = 10
-
-            let disclosureIndicator = UIImage(systemName: "chevron.right")?.withTintColor(.white)
-            let imageView = UIImageView(image: disclosureIndicator)
-            imageView.tintColor = .white
-            accessoryView = imageView
-
-            contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 6, leading: 0, bottom: 13, trailing: 0)
-        }
-    }
-
-    private class MuteAlertsWarningCell: UITableViewCell {
-        var formattedAlertMuteEndTime: String = NSLocalizedString("Unknown", comment: "label for when the alert mute end time is unknown")
-
-        fileprivate class GradientView: UIView {
-            override static var layerClass: AnyClass { CAGradientLayer.self }
-        }
-        
-        override func updateConfiguration(using state: UICellConfigurationState) {
-            super.updateConfiguration(using: state)
-
-            let adjustViewForNarrowDisplay = bounds.width < 350
-
-            var contentConfig = defaultContentConfiguration().updated(for: state)
-            let title = NSMutableAttributedString(string: NSLocalizedString("All App Sounds Muted", comment: "Warning text for when alerts are muted"))
-            let image = UIImage(systemName: "speaker.slash.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 25, weight: .thin, scale: .large))
-            contentConfig.image = image
-            contentConfig.imageProperties.tintColor = .white
-            contentConfig.attributedText = title
-            contentConfig.textProperties.color = .white
-            contentConfig.textProperties.font = .systemFont(ofSize: adjustViewForNarrowDisplay ? 16 : 18, weight: .semibold)
-            contentConfig.textProperties.adjustsFontSizeToFitWidth = true
-            contentConfig.secondaryText = String(format: NSLocalizedString("Until %1$@", comment: "indication of when alerts will be unmuted (1: time when alerts unmute)"), formattedAlertMuteEndTime)
-            contentConfig.secondaryTextProperties.color = .white
-            contentConfig.secondaryTextProperties.font = .systemFont(ofSize: adjustViewForNarrowDisplay ? 13 : 15)
-            contentConfiguration = contentConfig
-
-            let backgroundGradient = GradientView()
-            (backgroundGradient.layer as? CAGradientLayer)?.colors = [UIColor.warning.cgColor, UIColor.warning.withAlphaComponent(0.9).cgColor]
-            
-            var backgroundConfig = backgroundConfiguration?.updated(for: state)
-            backgroundConfig?.customView = backgroundGradient
-            backgroundConfiguration = backgroundConfig
-            backgroundConfiguration?.backgroundInsets = NSDirectionalEdgeInsets(top: 0, leading: 5, bottom: 5, trailing: 5)
-            backgroundConfiguration?.cornerRadius = 10
-
-            let unmuteIndicator = UIImage(systemName: "stop.circle")?.withTintColor(.white)
-            let imageView = UIImageView(image: unmuteIndicator)
-            imageView.tintColor = .white
-            imageView.frame.size = CGSize(width: 30, height: 30)
-            accessoryView = imageView
-
-            contentView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 6, leading: 0, bottom: 13, trailing: 0)
-        }
+    
+    private class GradientView: UIView {
+        override static var layerClass: AnyClass { CAGradientLayer.self }
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -1131,16 +1044,56 @@ final class StatusTableViewController: LoopChartsTableViewController {
             
             return cell
         case .alertWarning:
-            if alertPermissionsChecker.showWarning {
-                var cell = tableView.dequeueReusableCell(withIdentifier: AlertPermissionsDisabledWarningCell.className, for: indexPath) as! AlertPermissionsDisabledWarningCell
-                cell.alert = AlertPermissionsChecker.UnsafeNotificationPermissionAlert(permissions: alertPermissionsChecker.notificationCenterSettings)
-                return cell
-            } else {
-                let cell = tableView.dequeueReusableCell(withIdentifier: MuteAlertsWarningCell.className, for: indexPath) as! MuteAlertsWarningCell
-                cell.formattedAlertMuteEndTime = alertMuter.formattedEndTime
-                cell.selectionStyle = .none
-                return cell
+            let cell = UITableViewCell()
+            let alert = AlertPermissionsChecker.UnsafeNotificationPermissionAlert(permissions: alertPermissionsChecker.notificationCenterSettings)
+    
+            cell.contentConfiguration = UIHostingConfiguration  {
+                if alertPermissionsChecker.showWarning {
+                    if let alert {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(Image(systemName: "exclamationmark.triangle.fill")) + Text(" ") + Text(alert.bannerTitle)
+                                    .font(.headline.bold())
+                                
+                                Text(alert.bannerBody)
+                                    .font(.subheadline)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            
+                            Spacer()
+                            
+                            Text(Image(systemName: "chevron.right"))
+                                .font(.headline)
+                        }
+                        .foregroundStyle(Color.white)
+                        .padding(8)
+                        .background(Color.critical.cornerRadius(10))
+                    }
+                } else {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(Image(systemName: "speaker.slash.fill")) + Text(" ") + Text(NSLocalizedString("All App Sounds Muted", comment: "Warning text for when alerts are muted"))
+                                .font(.headline.bold())
+                            
+                            Text(String(format: NSLocalizedString("Until %1$@", comment: "indication of when alerts will be unmuted (1: time when alerts unmute)"), NSLocalizedString("Unknown", comment: "label for when the alert mute end time is unknown")))
+                                .font(.subheadline)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        
+                        Spacer()
+                        
+                        Text(Image(systemName: "stop.circle"))
+                            .font(.headline)
+                    }
+                    .foregroundStyle(Color.white)
+                    .padding(8)
+                    .background(Color.warning.cornerRadius(10))
+                }
             }
+            
+            cell.backgroundColor = .secondarySystemBackground
+            
+            return cell
         case .hud:
             let cell = tableView.dequeueReusableCell(withIdentifier: HUDViewTableViewCell.className, for: indexPath) as! HUDViewTableViewCell
             hudView = cell.hudView
@@ -1315,7 +1268,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
             case .iob, .dose, .cob:
                 return max(106, 0.21 * availableSize)
             }
-        case .presets, .hud, .status, .alertWarning:
+        case .alertWarning:
+            return UITableView.automaticDimension
+        case .presets, .hud, .status:
             return UITableView.automaticDimension
         }
     }
