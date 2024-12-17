@@ -10,7 +10,7 @@ import SwiftUI
 import LoopAlgorithm
 import LoopKit
 
-enum PresetDurationType {
+enum PresetDurationType: Equatable {
     case untilCarbsEntered
     case duration(TimeInterval)
     case indefinite
@@ -26,8 +26,7 @@ extension TemporaryScheduleOverride {
     var expectedEndTime: PresetExpectedEndTime? {
         switch context {
         case .preMeal: return .untilCarbsEntered
-        case .legacyWorkout: return .indefinite
-        case .custom, .preset:
+        case .legacyWorkout, .custom, .preset:
             switch duration {
             case .indefinite: return .indefinite
             case .finite: return .scheduled(scheduledEndDate)
@@ -284,5 +283,9 @@ public class PresetsViewModel {
         } else {
             temporaryPresetsManager.scheduleOverride = nil
         }
+    }
+    
+    func updateActivePresetDuration(newEndDate: Date) {
+        temporaryPresetsManager.updateActiveOverrideDuration(newEndDate: newEndDate)
     }
 }
