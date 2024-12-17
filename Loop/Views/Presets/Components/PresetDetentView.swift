@@ -118,7 +118,8 @@ struct PresetDetentView: View {
                     
                     if operation == .start {
                         Button {
-                            print("Edit \(preset.name)")
+                            dismiss()
+                            viewModel.editPreset.append(preset.id)
                         } label: {
                             Group {
                                 Text(Image(systemName: "pencil")) + Text(" ") + Text("Edit Preset")

@@ -137,6 +137,17 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
+    var canAdjustSenitivity: Bool {
+        switch self {
+        case .custom:
+            return true
+        case .preMeal:
+            return false
+        case .legacyWorkout:
+            return false
+        }
+    }
+
     var guardrail: Guardrail<LoopQuantity>? {
         switch self {
         case .custom:
@@ -194,11 +205,15 @@ public class PresetsViewModel {
 
     var customPresets: [TemporaryScheduleOverridePreset]
     var pendingPreset: SelectablePreset?
+    var editPreset: [String] = []
+
 
     public private(set) var preMealGuardrail: Guardrail<LoopQuantity>?
     public private(set) var legacyWorkoutGuardrail: Guardrail<LoopQuantity>?
 
     private var presetHistory: TemporaryScheduleOverrideHistory
+
+    var scheduledRange: ClosedRange<LoopQuantity>
 
     var activeOverride: TemporaryScheduleOverride? {
         temporaryPresetsManager.preMealOverride ?? temporaryPresetsManager.scheduleOverride
@@ -256,7 +271,8 @@ public class PresetsViewModel {
         presetsHistory: TemporaryScheduleOverrideHistory,
         preMealGuardrail: Guardrail<LoopQuantity>?,
         legacyWorkoutGuardrail: Guardrail<LoopQuantity>?,
-        temporaryPresetsManager: TemporaryPresetsManager
+        temporaryPresetsManager: TemporaryPresetsManager,
+        scheduledRange: ClosedRange<LoopQuantity>
     ) {
         self.customPresets = customPresets
         self.correctionRangeOverrides = correctionRangeOverrides
@@ -264,6 +280,7 @@ public class PresetsViewModel {
         self.preMealGuardrail = preMealGuardrail
         self.legacyWorkoutGuardrail = legacyWorkoutGuardrail
         self.temporaryPresetsManager = temporaryPresetsManager
+        self.scheduledRange = scheduledRange
     }
     
     func startPreset(_ preset: SelectablePreset) {

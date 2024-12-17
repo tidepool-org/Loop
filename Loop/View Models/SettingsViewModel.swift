@@ -194,7 +194,8 @@ class SettingsViewModel {
             presetsHistory: presetHistory,
             preMealGuardrail: preMealGuardrail,
             legacyWorkoutGuardrail: legacyWorkoutPresetGuardrail,
-            temporaryPresetsManager: temporaryPresetsManager
+            temporaryPresetsManager: temporaryPresetsManager,
+            scheduledRange: therapySettings().glucoseTargetRangeSchedule!.quantityRange(at: Date())
         )
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
