@@ -22,14 +22,10 @@ struct PresetDetentView: View {
     
     let preset: SelectablePreset
     let viewModel: PresetsViewModel
-    
-    let activeOverride: TemporaryScheduleOverride?
 
     init(viewModel: PresetsViewModel, preset: SelectablePreset) {
         self.viewModel = viewModel
         self.preset = preset
-        
-        self.activeOverride = viewModel.temporaryPresetsManager.preMealOverride ?? viewModel.temporaryPresetsManager.scheduleOverride
     }
     
     init?(viewModel: PresetsViewModel) {
@@ -38,7 +34,7 @@ struct PresetDetentView: View {
     }
     
     var operation: Operation {
-        if activeOverride?.presetId == preset.id {
+        if viewModel.temporaryPresetsManager.activeOverride?.presetId == preset.id {
             return .end
         } else {
             return .start
@@ -52,7 +48,7 @@ struct PresetDetentView: View {
             case .start:
                 Text("Duration: \(preset.duration.localizedTitle)")
             case .end:
-                if let activeOverride {
+                if let activeOverride = viewModel.temporaryPresetsManager.activeOverride {
                     if activeOverride.presetId == preset.id {
                         switch activeOverride.duration {
                         case .finite:
@@ -91,7 +87,7 @@ struct PresetDetentView: View {
                 
                 if preset.duration != .untilCarbsEntered {
                     NavigationLink("Adjust Preset Duration") {
-                        if let activeOverride {
+                        if let activeOverride = viewModel.temporaryPresetsManager.activeOverride {
                             EditOverrideDurationView(override: activeOverride, viewModel: viewModel)
                         }
                     }
