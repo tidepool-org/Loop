@@ -224,6 +224,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private var appearedOnce = false
+    
+    func presentLegacyPresets() {
+        performSegue(withIdentifier: OverrideSelectionViewController.className, sender: view)
+    }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)

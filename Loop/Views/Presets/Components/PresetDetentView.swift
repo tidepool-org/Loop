@@ -22,11 +22,15 @@ struct PresetDetentView: View {
     
     let preset: SelectablePreset
     let viewModel: PresetsViewModel
+    
+    let activeOverride: TemporaryScheduleOverride?
 
     init(viewModel: PresetsViewModel, preset: SelectablePreset) {
         self.viewModel = viewModel
         self.preset = preset
+        self.activeOverride = viewModel.temporaryPresetsManager.activeOverride
     }
+    
     
     init?(viewModel: PresetsViewModel) {
         guard let preset = viewModel.pendingPreset else { return nil }
@@ -34,7 +38,7 @@ struct PresetDetentView: View {
     }
     
     var operation: Operation {
-        if viewModel.temporaryPresetsManager.activeOverride?.presetId == preset.id {
+        if activeOverride?.presetId == preset.id {
             return .end
         } else {
             return .start
@@ -48,7 +52,7 @@ struct PresetDetentView: View {
             case .start:
                 Text("Duration: \(preset.duration.localizedTitle)")
             case .end:
-                if let activeOverride = viewModel.temporaryPresetsManager.activeOverride {
+                if let activeOverride {
                     if activeOverride.presetId == preset.id {
                         switch activeOverride.duration {
                         case .finite:
@@ -73,21 +77,19 @@ struct PresetDetentView: View {
             switch operation {
             case .start:
                 Button("Start Preset") {
-                    dismiss()
                     viewModel.startPreset(preset)
                 }
                 .buttonStyle(ActionButtonStyle())
-                .disabled(viewModel.activePreset != nil && preset != viewModel.activePreset)
+                .disabled(viewModel.activePreset != nil && preset.id != viewModel.activePreset?.id)
             case .end:
                 Button("End Preset") {
-                    dismiss()
                     viewModel.endPreset()
                 }
                 .buttonStyle(ActionButtonStyle(.destructive))
                 
                 if preset.duration != .untilCarbsEntered {
                     NavigationLink("Adjust Preset Duration") {
-                        if let activeOverride = viewModel.temporaryPresetsManager.activeOverride {
+                        if let activeOverride {
                             EditOverrideDurationView(override: activeOverride, viewModel: viewModel)
                         }
                     }
@@ -140,6 +142,9 @@ struct PresetDetentView: View {
             .padding(.top)
             .padding(16)
             .presentationHuggingDetent()
+        }
+        .onChange(of: viewModel.activePreset) { _, _ in
+            dismiss()
         }
     }
 }

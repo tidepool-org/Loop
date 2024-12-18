@@ -121,7 +121,9 @@ class StatusTableViewModel {
         }
     }
     
-    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel) {
+    let legacyPresetsEnabled: Bool
+    
+    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel, legacyPresetsEnabled: Bool = false) {
         self.alertPermissionsChecker = alertPermissionsChecker
         self.alertMuter = alertMuter
         self.automaticDosingStatus = automaticDosingStatus
@@ -141,6 +143,7 @@ class StatusTableViewModel {
         self.criticalEventLogExportManager = criticalEventLogExportManager
         self.bluetoothStateManager = bluetoothStateManager
         self.settingsViewModel = settingsViewModel
+        self.legacyPresetsEnabled = legacyPresetsEnabled
     }
 }
 
@@ -224,7 +227,11 @@ struct StatusTableView: View {
                                 case .bolus:
                                     viewController.presentBolusScreen()
                                 case .presets:
-                                    viewController.presentPresets()
+                                    if viewModel.legacyPresetsEnabled {
+                                        viewController.presentLegacyPresets()
+                                    } else {
+                                        viewController.presentPresets()
+                                    }
                                 case .settings:
                                     viewController.presentSettings()
                                 }
