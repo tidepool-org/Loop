@@ -183,16 +183,16 @@ class TemporaryPresetsManager {
         }
     }
 
-    public func scheduleOverrideEnabled(at date: Date = Date()) -> Bool {
+    public func isScheduleOverrideActive(at date: Date = Date()) -> Bool {
         return scheduleOverride?.isActive(at: date) == true
     }
 
-    public func nonPreMealOverrideEnabled(at date: Date = Date()) -> Bool {
-        return scheduleOverrideEnabled(at: date) == true && scheduleOverride?.context != .preMeal
+    public func isNonPreMealOverrideActive(at date: Date = Date()) -> Bool {
+        return isScheduleOverrideActive(at: date) == true && scheduleOverride?.context != .preMeal
     }
 
-    public func preMealTargetEnabled(at date: Date = Date()) -> Bool {
-        return scheduleOverrideEnabled(at: date) == true && scheduleOverride?.context == .preMeal
+    public func isPreMealTargetActive(at date: Date = Date()) -> Bool {
+        return isScheduleOverrideActive(at: date) == true && scheduleOverride?.context == .preMeal
     }
 
     public func futureOverrideEnabled(relativeTo date: Date = Date()) -> Bool {
