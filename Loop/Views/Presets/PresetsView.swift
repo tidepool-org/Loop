@@ -64,7 +64,6 @@ struct PresetsView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-
                     if !viewModel.hasCompletedTraining {
                         PresetsTrainingCard(showTraining: $showTraining)
                     }
