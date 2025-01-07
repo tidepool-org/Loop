@@ -88,8 +88,8 @@ enum SelectablePreset: Hashable, Identifiable {
     }
 
     case custom(TemporaryScheduleOverridePreset)
-    case preMeal(range: ClosedRange<LoopQuantity>, guardrail: Guardrail<LoopQuantity>?)
-    case legacyWorkout(range: ClosedRange<LoopQuantity>, guardrail: Guardrail<LoopQuantity>?)
+    case preMeal(range: ClosedRange<LoopQuantity>, guardrail: Guardrail<LoopQuantity>)
+    case legacyWorkout(range: ClosedRange<LoopQuantity>, guardrail: Guardrail<LoopQuantity>)
 
     var icon: PresetIcon {
         switch self {
@@ -122,10 +122,24 @@ enum SelectablePreset: Hashable, Identifiable {
     }
 
     var correctionRange: ClosedRange<LoopQuantity>? {
-        switch self {
-        case .custom(let preset): return preset.settings.targetRange
-        case .preMeal(let range, _): return range
-        case .legacyWorkout(let range, _): return range
+        get {
+            switch self {
+            case .custom(let preset): return preset.settings.targetRange
+            case .preMeal(let range, _): return range
+            case .legacyWorkout(let range, _): return range
+            }
+        }
+
+        set {
+            print("writing correction range")
+            switch self {
+            case .preMeal(_, let guardrail):
+                self = .preMeal(range: newValue!, guardrail: guardrail)
+            case .legacyWorkout(_, let guardrail):
+                self = .legacyWorkout(range: newValue!, guardrail: guardrail)
+            case .custom(var preset):
+                preset.settings = TemporaryScheduleOverrideSettings(targetRange: newValue, insulinNeedsScaleFactor: preset.settings.insulinNeedsScaleFactor)
+            }
         }
     }
 
@@ -137,7 +151,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var canAdjustSenitivity: Bool {
+    var canAdjustSensitivity: Bool {
         switch self {
         case .custom:
             return true
@@ -148,10 +162,10 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var guardrail: Guardrail<LoopQuantity>? {
+    var guardrail: Guardrail<LoopQuantity> {
         switch self {
         case .custom:
-            return nil
+            return Guardrail.correctionRange
         case .preMeal(_, let guardrail):
             return guardrail
         case .legacyWorkout(_, let guardrail):
@@ -208,8 +222,8 @@ public class PresetsViewModel {
     var editPreset: [String] = []
 
 
-    public private(set) var preMealGuardrail: Guardrail<LoopQuantity>?
-    public private(set) var legacyWorkoutGuardrail: Guardrail<LoopQuantity>?
+    public private(set) var preMealGuardrail: Guardrail<LoopQuantity>
+    public private(set) var legacyWorkoutGuardrail: Guardrail<LoopQuantity>
 
     private var presetHistory: TemporaryScheduleOverrideHistory
 
@@ -269,8 +283,8 @@ public class PresetsViewModel {
         customPresets: [TemporaryScheduleOverridePreset],
         correctionRangeOverrides: CorrectionRangeOverrides?,
         presetsHistory: TemporaryScheduleOverrideHistory,
-        preMealGuardrail: Guardrail<LoopQuantity>?,
-        legacyWorkoutGuardrail: Guardrail<LoopQuantity>?,
+        preMealGuardrail: Guardrail<LoopQuantity>,
+        legacyWorkoutGuardrail: Guardrail<LoopQuantity>,
         temporaryPresetsManager: TemporaryPresetsManager,
         scheduledRange: ClosedRange<LoopQuantity>
     ) {

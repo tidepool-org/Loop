@@ -32,7 +32,7 @@ struct PresetStatsView: View {
                 .foregroundColor(.secondary)
                 .accessibilitySortPriority(2)
 
-            let percent = numberFormatter.string(from: insulinSensitivityMultiplier ?? 1)!
+            let percent = numberFormatter.string(from: 1.0/(insulinSensitivityMultiplier ?? 1))!
             Group { Text(percent).bold() + Text(" of scheduled") }
                 .font(.subheadline)
                 .accessibilitySortPriority(1)

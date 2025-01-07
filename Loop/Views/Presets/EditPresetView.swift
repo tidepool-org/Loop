@@ -12,31 +12,6 @@ import SwiftUI
 import LoopKitUI
 import LoopAlgorithm
 
-struct CompactSectionOld<Content: View>: View {
-    let headerText: String?
-    let content: Content
-
-    init(_ headerText: String? = nil, @ViewBuilder content: () -> Content) {
-        self.headerText = headerText
-        self.content = content()
-    }
-
-    var body: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 8) {
-                content
-            }
-        } header: {
-            if let headerText {
-                Text(headerText)
-                    .padding(.leading, -10)
-                    .padding(.bottom, -8)
-            }
-        }
-        .listRowInsets(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 16))
-    }
-}
-
 struct CompactSection<Content: View, Header: View>: View {
     let header: Header?
     let content: Content
@@ -79,12 +54,14 @@ struct EditPresetView: View {
 
     @State private var duration: TimeInterval = 3600 // 1 hour in seconds
     @State private var presetName: String
+    @State private var preset: SelectablePreset
 
-    private var preset: SelectablePreset
+    private var originalPreset: SelectablePreset
     private var scheduledRange: ClosedRange<LoopQuantity>
 
     init(preset: SelectablePreset, scheduledRange: ClosedRange<LoopQuantity>) {
         self.preset = preset
+        self.originalPreset = preset
         self.presetName = preset.name
         self.scheduledRange = scheduledRange
     }
@@ -94,11 +71,71 @@ struct EditPresetView: View {
 
         return Text(rangeStr)
             .font(.system(size: 32, weight: .semibold))
-            .foregroundColor(.blue) +
+            .foregroundColor(.accentColor) +
         Text(" ") +
         Text(displayGlucosePreference.unit.localizedShortUnitString)
             .font(.system(.body))
             .foregroundColor(.secondary)
+    }
+
+    var sensitivitySection: some View {
+        CompactSection("Temporary Settings Adjustments") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Overall Insulin")
+                    .font(.system(.title3, weight: .semibold))
+
+                HStack {
+                    Spacer()
+                    VStack(alignment: .center) {
+                        Text("\(Int((1.0 / (preset.insulinSensitivityMultiplier ?? 1)) * 100))%")
+                            .font(.system(size: 48, weight: .semibold))
+                            .foregroundColor(.accentColor)
+                        Text("of scheduled")
+                            .foregroundColor(.primary)
+                    }
+                    Spacer()
+                }
+
+                if (!preset.canAdjustSensitivity) {
+                    (Text(Image(systemName: "info.circle")) + Text(" Overall insulin cannot be adjusted for this preset"))
+                        .foregroundColor(.secondary)
+                        .font(.footnote)
+                        .padding(.top, 4)
+                }
+            }
+            .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
+        }
+    }
+
+    var correctionSection: some View {
+        CompactSection {
+            NavigationLink {
+                EditPresetRangeView(
+                    range: $preset.correctionRange,
+                    guardrail: preset.guardrail
+                )
+            } label: {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Correction Range")
+                        .font(.system(.title3, weight: .semibold))
+                    HStack {
+                        Spacer()
+                        VStack(alignment: .center) {
+                            if let range = preset.correctionRange {
+                                correctionRangeLabel(range: range)
+                                Text("Adjusted Range")
+                                    .foregroundColor(.primary)
+                            } else {
+                                correctionRangeLabel(range: scheduledRange)
+                                Text("Scheduled Range")
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                        Spacer()
+                    }
+                }
+            }
+        }
     }
 
     var body: some View {
@@ -110,58 +147,9 @@ struct EditPresetView: View {
                 .listRowInsets(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 0))
                 .textCase(nil)
 
-                CompactSection("Temporary Settings Adjustments") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Overall Insulin")
-                            .font(.system(.title3, weight: .semibold))
+                sensitivitySection
 
-                        HStack {
-                            Spacer()
-                            VStack(alignment: .center) {
-                                Text("\(Int((preset.insulinSensitivityMultiplier ?? 1) * 100))%")
-                                    .font(.system(size: 48, weight: .semibold))
-                                    .foregroundColor(.blue)
-                                Text("of scheduled")
-                                    .foregroundColor(.primary)
-                            }
-                            Spacer()
-                        }
-
-                        if (!preset.canAdjustSenitivity) {
-                            (Text(Image(systemName: "info.circle")) + Text(" Overall insulin cannot be adjusted for this preset"))
-                                .foregroundColor(.secondary)
-                                .font(.footnote)
-                                .padding(.top, 4)
-                        }
-                    }
-                    .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
-
-                }
-                CompactSection {
-                    NavigationLink {
-                        Text("Correction Range Detail View")
-                    } label: {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Correction Range")
-                                .font(.system(.title3, weight: .semibold))
-                            HStack {
-                                Spacer()
-                                VStack(alignment: .center) {
-                                    if let range = preset.correctionRange {
-                                        correctionRangeLabel(range: range)
-                                        Text("Adjusted Range")
-                                            .foregroundColor(.primary)
-                                    } else {
-                                        correctionRangeLabel(range: scheduledRange)
-                                        Text("Scheduled Range")
-                                            .foregroundColor(.primary)
-                                    }
-                                }
-                                Spacer()
-                            }
-                        }
-                    }
-                }
+                correctionSection
 
                 CompactSection("PRESET DETAILS") {
                     HStack {
@@ -187,14 +175,22 @@ struct EditPresetView: View {
 
                 CompactSection {} header: {
                     Button("Save Preset") {
-                        // save
+                        dismiss()
                     }
+                    .disabled(preset == originalPreset)
                     .buttonStyle(ActionButtonStyle(.primary))
                     .textCase(nil)
                 }
             }
             .listSectionSpacing(16)
         }
+        .navigationBarBackButtonHidden(true)
+        .navigationBarItems(
+            trailing: Button("Cancel") {
+                dismiss()
+            }
+            .foregroundColor(.blue)
+        )
     }
 
     var presetTitle: some View {

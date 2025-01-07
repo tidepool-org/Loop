@@ -176,18 +176,25 @@ class SettingsViewModel {
         self.therapySettingsViewModelDelegate = therapySettingsViewModelDelegate
         self.presetHistory = presetHistory
         
-        var preMealGuardrail: Guardrail<LoopQuantity>?
-        var legacyWorkoutPresetGuardrail: Guardrail<LoopQuantity>?
+        let preMealGuardrail: Guardrail<LoopQuantity>
+        let legacyWorkoutPresetGuardrail: Guardrail<LoopQuantity>
         if let scheduleRange = therapySettings().glucoseTargetRangeSchedule?.scheduleRange() {
             preMealGuardrail = Guardrail.correctionRangeOverride(
                 for: .preMeal,
                 correctionRangeScheduleRange: scheduleRange,
                 suspendThreshold: therapySettings().suspendThreshold
             )
-            self.preMealGuardrail = preMealGuardrail
-            self.legacyWorkoutPresetGuardrail = legacyWorkoutPresetGuardrail
+
+            legacyWorkoutPresetGuardrail = Guardrail.correctionRangeOverride(
+                for: .workout,
+                correctionRangeScheduleRange: scheduleRange,
+                suspendThreshold: therapySettings().suspendThreshold
+            )
+        } else {
+            preMealGuardrail = Guardrail.correctionRange
+            legacyWorkoutPresetGuardrail = Guardrail.correctionRange
         }
-        
+
         self.presetsViewModel = PresetsViewModel(
             customPresets: therapySettings().overridePresets ?? [],
             correctionRangeOverrides: therapySettings().correctionRangeOverrides,
@@ -197,6 +204,9 @@ class SettingsViewModel {
             temporaryPresetsManager: temporaryPresetsManager,
             scheduledRange: therapySettings().glucoseTargetRangeSchedule!.quantityRange(at: Date())
         )
+
+        self.preMealGuardrail = preMealGuardrail
+        self.legacyWorkoutPresetGuardrail = legacyWorkoutPresetGuardrail
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
         lastLoopCompletion
