@@ -202,7 +202,9 @@ struct StatusTableView: View {
     var body: some View {
         wrappedView
             .onChange(of: viewModel.settingsViewModel.presetsViewModel.activePreset) { _, _ in
-                viewController.redrawCharts()
+                Task {
+                    await viewController.reloadData(animated: true)
+                }
             }
             .sheet(item: $viewModel.pendingPreset) { _ in
                 PresetDetentView(

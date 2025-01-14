@@ -848,7 +848,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         tableView.endUpdates()
     }
 
-    func redrawCharts() {
+    private func redrawCharts() {
         tableView.beginUpdates()
         charts.prerender()
         for case let cell as ChartTableViewCell in tableView.visibleCells {
