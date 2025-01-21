@@ -246,8 +246,12 @@ class TemporaryPresetsManager {
         )
     }
 
-    public func clearOverride(matching context: TemporaryScheduleOverride.Context? = nil) {
+    public func clearOverride(matching context: TemporaryScheduleOverride.Context? = nil, byEnteringMeal: Bool = false) {
         if context == .preMeal {
+            if byEnteringMeal {
+                preMealOverride?.scheduledEndDate = .now
+            }
+            
             preMealOverride = nil
             return
         }

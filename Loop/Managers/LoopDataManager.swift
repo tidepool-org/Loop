@@ -397,13 +397,9 @@ final class LoopDataManager: ObservableObject {
         }
 
         var overrides = temporaryPresetsManager.overrideHistory.getOverrideHistory(startDate: neededSensitivityTimeline.start, endDate: forecastEndTime)
-
-        // Bug (https://tidepool.atlassian.net/browse/LOOP-4759) pre-meal is not recorded in override history
-        // So currently we handle automatic forecast by manually adding it in, and when meal bolusing, we do not do this.
-        // Eventually, when pre-meal is stored in override history, during meal bolusing we should scan for it and adjust the end time
-        if !disablingPreMeal, let preMeal = temporaryPresetsManager.preMealOverride {
-            overrides.append(preMeal)
-            overrides.sort { $0.startDate < $1.startDate }
+        
+        if disablingPreMeal, let preMealOverride = temporaryPresetsManager.preMealOverride {
+            overrides.remove(preMealOverride)
         }
 
         guard !sensitivity.isEmpty else {
@@ -797,7 +793,7 @@ extension LoopDataManager {
         } else {
             storedCarbEntry = try await carbStore.addCarbEntry(carbEntry)
         }
-        self.temporaryPresetsManager.clearOverride(matching: .preMeal)
+        self.temporaryPresetsManager.clearOverride(matching: .preMeal, byEnteringMeal: true)
         return storedCarbEntry
     }
 
