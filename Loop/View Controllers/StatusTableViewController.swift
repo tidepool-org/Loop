@@ -1924,8 +1924,19 @@ extension StatusTableViewController: CompletionDelegate {
 extension StatusTableViewController: PumpManagerStatusObserver {
     func pumpManager(_ pumpManager: PumpManager, didUpdate status: PumpManagerStatus, oldStatus: PumpManagerStatus) {
         log.default("PumpManager:%{public}@ did update status", String(describing: type(of: pumpManager)))
-        basalDeliveryState = status.basalDeliveryState
-        bolusState = status.bolusState
+        
+        if basalDeliveryState == status.basalDeliveryState,
+           bolusState == status.bolusState
+        {
+            // if the basal and bolus states have not changed, still update UI
+            Task { @MainActor in
+                refreshContext.update(with: .status)
+                await self.reloadData(animated: true)
+            }
+        } else {
+            basalDeliveryState = status.basalDeliveryState
+            bolusState = status.bolusState
+        }
     }
 }
 
