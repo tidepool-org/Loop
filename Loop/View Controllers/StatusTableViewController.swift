@@ -1957,7 +1957,10 @@ extension StatusTableViewController: DoseProgressObserver {
             self.bolusProgressReporter = nil
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                 self.bolusState = .noBolus
-                Task { await self.reloadData(animated: true) }
+                Task {
+                    self.refreshContext.update(with: .insulin)
+                    await self.reloadData(animated: true)
+                }
             })
         }
     }
