@@ -398,8 +398,8 @@ final class LoopDataManager: ObservableObject {
 
         var overrides = temporaryPresetsManager.overrideHistory.getOverrideHistory(startDate: neededSensitivityTimeline.start, endDate: forecastEndTime)
         
-        if disablingPreMeal, let preMealOverride = temporaryPresetsManager.preMealOverride {
-            overrides.remove(preMealOverride)
+        if disablingPreMeal, let preMealOverride = temporaryPresetsManager.preMealOverride, let index = overrides.firstIndex(where: { $0 == preMealOverride }) {
+            overrides[index].scheduledEndDate = baseTime
         }
 
         guard !sensitivity.isEmpty else {
@@ -793,7 +793,7 @@ extension LoopDataManager {
         } else {
             storedCarbEntry = try await carbStore.addCarbEntry(carbEntry)
         }
-        self.temporaryPresetsManager.clearOverride(matching: .preMeal, byEnteringMeal: true)
+        self.temporaryPresetsManager.clearPreMealOverrideWhenEnteringMeal()
         return storedCarbEntry
     }
 
