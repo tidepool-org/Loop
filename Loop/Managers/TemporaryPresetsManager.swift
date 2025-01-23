@@ -246,7 +246,7 @@ class TemporaryPresetsManager {
         )
     }
     
-    public func clearPreMealOverrideWhenEnteringMeal() {
+    public func endPreMealOverride() {
         preMealOverride?.scheduledEndDate = .now
         clearOverride(matching: .preMeal)
     }
