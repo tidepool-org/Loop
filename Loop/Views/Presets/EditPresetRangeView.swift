@@ -11,17 +11,41 @@ import LoopKit
 import LoopKitUI
 
 struct EditPresetRangeView: View {
-    @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.guidanceColors) private var guidanceColors
+    @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
 
     @Binding var range: ClosedRange<LoopQuantity>?
     var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
 
-    private let availableRanges = stride(from: 65, through: 105, by: 5).map { String($0) }
+    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>) {
+        self._range = range
+        self.guardrail = guardrail
+        self.scheduledRange = scheduledRange
+    }
 
-    var lowerBoundStr: String { displayGlucosePreference.format((range ?? scheduledRange).lowerBound, includeUnit: false) }
-    var upperBoundStr: String { displayGlucosePreference.format((range ?? scheduledRange).upperBound, includeUnit: false) }
+    func boundText(for bound: LoopQuantity) -> Text {
+        let color = guardrail.color(for: bound, guidanceColors: guidanceColors)
+        let text = displayGlucosePreference.format(bound, includeUnit: false)
+        switch guardrail.classification(for: bound) {
+        case .withinRecommendedRange:
+            return Text(text)
+                .foregroundColor(.accentColor)
+                .font(.system(size: 42, weight: .semibold))
+        case .outsideRecommendedRange:
+            return (
+                Text(Image(systemName: "exclamationmark.triangle.fill"))
+                    .font(.system(size: 29, weight: .regular))
+                    .baselineOffset(3.0)
+                    .foregroundColor(color) +
+                Text(text)
+                    .foregroundColor(color)
+                    .font(.system(size: 42, weight: .semibold))
+                )
+        }
+    }
+
 
     var body: some View {
         List {
@@ -53,9 +77,14 @@ struct EditPresetRangeView: View {
                 VStack(spacing: 0) {
                     Text("Adjusted Range")
 
-                    Text("\(lowerBoundStr)-\(upperBoundStr)")
-                        .font(.system(size: 48, weight: .bold   ))
-                        .foregroundColor(.accentColor)
+                    (
+                        boundText(for: (range ?? scheduledRange).lowerBound) +
+                        Text("-").foregroundColor(.secondary)
+                            .font(.system(size: 42, weight: .light))
+                        +
+                        boundText(for: (range ?? scheduledRange).upperBound)
+                    )
+
 
                     Text("mg/dL")
                         .foregroundColor(.secondary)
@@ -64,13 +93,14 @@ struct EditPresetRangeView: View {
                 Divider()
 
                 GlucoseRangePicker(range: Binding(
-                    get: {}
-}
-                    set: {}),
+                    get: { range ?? scheduledRange },
+                    set: { range = $0 }),
                     unit: displayGlucosePreference.unit,
                     minValue: nil,
                     guardrail: guardrail)
                     .padding(.vertical, -20)
+
+                guardrailWarningIfNecessary
 
                 HStack(spacing: 8) {
                     Image(systemName: "info.circle")
@@ -92,5 +122,57 @@ struct EditPresetRangeView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Edit Preset")
+    }
+
+    var crossedThresholds: [SafetyClassification.Threshold] {
+        if let range {
+            let lowerBound = range.lowerBound
+            let upperBound = range.upperBound
+            return [lowerBound, upperBound].compactMap { (bound) -> SafetyClassification.Threshold? in
+                switch guardrail.classification(for: bound) {
+                case .withinRecommendedRange:
+                    return nil
+                case .outsideRecommendedRange(let threshold):
+                    return threshold
+                }
+            }
+        } else {
+            return []
+        }
+    }
+
+    var guardrailWarningIfNecessary: some View {
+        let crossedThresholds = self.crossedThresholds
+        return Group {
+            if !crossedThresholds.isEmpty {
+                CorrectionRangeGuardrailWarning(crossedThresholds: crossedThresholds)
+            }
+        }
+    }
+}
+
+private struct CorrectionRangeGuardrailWarning: View {
+    var crossedThresholds: [SafetyClassification.Threshold]
+
+    var body: some View {
+        assert(!crossedThresholds.isEmpty)
+        return GuardrailWarning(
+            therapySetting: .glucoseTargetRange,
+            title: crossedThresholds.count == 1 ? singularWarningTitle(for: crossedThresholds.first!) : multipleWarningTitle,
+            thresholds: crossedThresholds
+        )
+    }
+
+    private func singularWarningTitle(for threshold: SafetyClassification.Threshold) -> Text {
+        switch threshold {
+        case .minimum, .belowRecommended:
+            return Text("Low Correction Value", comment: "Title text for the low correction value warning")
+        case .aboveRecommended, .maximum:
+            return Text("High Correction Value", comment: "Title text for the high correction value warning")
+        }
+    }
+
+    private var multipleWarningTitle: Text {
+        Text("Correction Values", comment: "Title text for multi-value correction value warning")
     }
 }

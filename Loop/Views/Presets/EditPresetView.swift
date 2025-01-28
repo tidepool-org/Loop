@@ -50,7 +50,9 @@ struct CompactSection<Content: View, Header: View>: View {
 
 struct EditPresetView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.guidanceColors) private var guidanceColors
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
+
 
     @State private var duration: TimeInterval = 3600 // 1 hour in seconds
     @State private var presetName: String
@@ -66,12 +68,33 @@ struct EditPresetView: View {
         self.scheduledRange = scheduledRange
     }
 
-    func correctionRangeLabel(range: ClosedRange<LoopQuantity>) -> Text {
-        let rangeStr = displayGlucosePreference.format(lowerQuantity: range.lowerBound, higherQuantity: range.upperBound, includeUnit: false)
+    func boundText(for bound: LoopQuantity) -> Text {
+        let color = preset.guardrail.color(for: bound, guidanceColors: guidanceColors)
+        let text = displayGlucosePreference.format(bound, includeUnit: false)
+        switch preset.guardrail.classification(for: bound) {
+        case .withinRecommendedRange:
+            return Text(text)
+                .foregroundColor(.accentColor)
+                .font(.system(size: 34, weight: .semibold))
+        case .outsideRecommendedRange:
+            return (
+                Text(Image(systemName: "exclamationmark.triangle.fill"))
+                    .font(.system(size: 23, weight: .regular))
+                    .baselineOffset(3.0)
+                    .foregroundColor(color) +
+                Text(text)
+                    .foregroundColor(color)
+                    .font(.system(size: 34, weight: .semibold))
+                )
+        }
+    }
 
-        return Text(rangeStr)
-            .font(.system(size: 32, weight: .semibold))
-            .foregroundColor(.accentColor) +
+    func correctionRangeLabel(range: ClosedRange<LoopQuantity>) -> Text {
+        boundText(for: (preset.correctionRange ?? scheduledRange).lowerBound) +
+        Text("-").foregroundColor(.secondary)
+            .font(.system(size: 34, weight: .light))
+        +
+        boundText(for: (preset.correctionRange ?? scheduledRange).upperBound) +
         Text(" ") +
         Text(displayGlucosePreference.unit.localizedShortUnitString)
             .font(.system(.body))
@@ -112,7 +135,8 @@ struct EditPresetView: View {
             NavigationLink {
                 EditPresetRangeView(
                     range: $preset.correctionRange,
-                    guardrail: preset.guardrail
+                    guardrail: preset.guardrail,
+                    scheduledRange: scheduledRange
                 )
             } label: {
                 VStack(alignment: .leading, spacing: 8) {

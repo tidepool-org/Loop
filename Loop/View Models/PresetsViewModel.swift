@@ -234,7 +234,7 @@ public class PresetsViewModel {
     }
 
     var activePreset: SelectablePreset? {
-        return allPresets.first(where: { $0.id == activeOverride?.presetId })
+        return allPresets.first(where: { $0.id == temporaryPresetsManager.activeOverride?.presetId })
     }
 
     var allPresets: [SelectablePreset] {
@@ -310,9 +310,9 @@ public class PresetsViewModel {
     
     func endPreset() {
         if case .preMeal(_, _) = activePreset {
-            temporaryPresetsManager.preMealOverride = nil
+            temporaryPresetsManager.clearOverride(matching: .preMeal)
         } else {
-            temporaryPresetsManager.scheduleOverride = nil
+            temporaryPresetsManager.clearOverride()
         }
     }
     
