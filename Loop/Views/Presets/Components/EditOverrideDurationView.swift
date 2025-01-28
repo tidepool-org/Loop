@@ -26,7 +26,7 @@ struct EditOverrideDurationView: View {
         self.viewModel = viewModel
         self.currentDate = Date()
         
-        if case let .duration(timeInterval) = viewModel.activePreset?.duration {
+        if case let .finite(timeInterval) = viewModel.temporaryPresetsManager.activeOverride?.duration {
             dateSelection = override.startDate.addingTimeInterval(timeInterval)
         } else {
             dateSelection = currentDate
