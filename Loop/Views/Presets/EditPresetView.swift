@@ -60,12 +60,18 @@ struct EditPresetView: View {
 
     private var originalPreset: SelectablePreset
     private var scheduledRange: ClosedRange<LoopQuantity>
+    private var onSave: (SelectablePreset) throws -> Void
 
-    init(preset: SelectablePreset, scheduledRange: ClosedRange<LoopQuantity>) {
+    @State private var showingPicker = false
+    @State private var editedDuration: PresetDurationType
+
+    init(preset: SelectablePreset, scheduledRange: ClosedRange<LoopQuantity>, onSave: @escaping ((SelectablePreset) throws -> Void)) {
         self.preset = preset
         self.originalPreset = preset
         self.presetName = preset.name
         self.scheduledRange = scheduledRange
+        self.onSave = onSave
+        self.editedDuration = preset.duration
     }
 
     func boundText(for bound: LoopQuantity) -> Text {
@@ -99,6 +105,7 @@ struct EditPresetView: View {
         Text(displayGlucosePreference.unit.localizedShortUnitString)
             .font(.system(.body))
             .foregroundColor(.secondary)
+            .baselineOffset(5)
     }
 
     var sensitivitySection: some View {
@@ -123,6 +130,7 @@ struct EditPresetView: View {
                     (Text(Image(systemName: "info.circle")) + Text(" Overall insulin cannot be adjusted for this preset"))
                         .foregroundColor(.secondary)
                         .font(.footnote)
+                        .italic()
                         .padding(.top, 4)
                 }
             }
@@ -185,20 +193,31 @@ struct EditPresetView: View {
                 }
 
                 CompactSection() {
-                    NavigationLink {
-                        Text("Duration Detail View")
-                    } label: {
+                    Button(action: {
+                        showingPicker = true
+                    }) {
                         HStack {
                             Text("Duration")
+                                .foregroundColor(.primary)
                             Spacer()
-                            Text(preset.duration.localizedTitle)
+                            Text(editedDuration.localizedTitle)
                                 .foregroundColor(.secondary)
+                            if preset.canAdjustDuration {
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.gray)
+                            }
                         }
-                    }
+                        .background(Color(.systemBackground))
+                    }.disabled(!preset.canAdjustDuration)
                 }
 
                 CompactSection {} header: {
                     Button("Save Preset") {
+                        do {
+                            try onSave(preset)
+                        } catch {
+                            print(error)
+                        }
                         dismiss()
                     }
                     .disabled(preset == originalPreset)
@@ -215,6 +234,10 @@ struct EditPresetView: View {
             }
             .foregroundColor(.blue)
         )
+        .sheet(isPresented: $showingPicker) {
+            DurationPickerView(durationType: $editedDuration)
+            .presentationDetents([.height(300)])
+        }
     }
 
     var presetTitle: some View {

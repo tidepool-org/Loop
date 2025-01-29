@@ -165,7 +165,9 @@ struct PresetsView: View {
             .navigationTitle(Text("Presets", comment: "Presets screen title"))
             .navigationBarItems(trailing: dismissButton)
             .navigationDestination(for: String.self) { presetId in
-                EditPresetView(preset: viewModel.allPresets.first { $0.id == presetId }!, scheduledRange: viewModel.scheduledRange)
+                EditPresetView(preset: viewModel.allPresets.first { $0.id == presetId }!, scheduledRange: viewModel.scheduledRange) { preset in
+                    viewModel.savePreset(preset)
+                }
             }
         }
         .sheet(item: $viewModel.pendingPreset) { preset in

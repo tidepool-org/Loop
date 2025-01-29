@@ -131,7 +131,6 @@ enum SelectablePreset: Hashable, Identifiable {
         }
 
         set {
-            print("writing correction range")
             switch self {
             case .preMeal(_, let guardrail):
                 self = .preMeal(range: newValue!, guardrail: guardrail)
@@ -159,6 +158,17 @@ enum SelectablePreset: Hashable, Identifiable {
             return false
         case .legacyWorkout:
             return false
+        }
+    }
+
+    var canAdjustDuration: Bool {
+        switch self {
+        case .custom:
+            return true;
+        case .preMeal:
+            return false;
+        case .legacyWorkout:
+            return true;
         }
     }
 
@@ -213,14 +223,15 @@ public class PresetsViewModel {
     @ObservationIgnored @AppStorage("presetsSortOrder") var selectedSortOption: PresetSortOption = .name
     @ObservationIgnored @AppStorage("presetsSortDirectionReversed") var presetsSortAscending: Bool = true
 
-    @ObservationIgnored var correctionRangeOverrides: CorrectionRangeOverrides?
-    
+    @ObservationIgnored var premealRange: ClosedRange<LoopQuantity>?
+    @ObservationIgnored var workoutRange: ClosedRange<LoopQuantity>?
+
+
     let temporaryPresetsManager: TemporaryPresetsManager
 
     var customPresets: [TemporaryScheduleOverridePreset]
     var pendingPreset: SelectablePreset?
     var editPreset: [String] = []
-
 
     public private(set) var preMealGuardrail: Guardrail<LoopQuantity>
     public private(set) var legacyWorkoutGuardrail: Guardrail<LoopQuantity>
@@ -240,14 +251,14 @@ public class PresetsViewModel {
     var allPresets: [SelectablePreset] {
         var presets: [SelectablePreset] = []
 
-        if let preMealTargetRange = correctionRangeOverrides?.preMeal {
+        if let preMealTargetRange = premealRange {
             presets.append(.preMeal(
                 range: preMealTargetRange,
                 guardrail: preMealGuardrail
             ))
         }
 
-        if let legacyWorkoutTargetRange = correctionRangeOverrides?.workout {
+        if let legacyWorkoutTargetRange = workoutRange {
             presets.append(.legacyWorkout(
                 range: legacyWorkoutTargetRange,
                 guardrail: legacyWorkoutGuardrail
@@ -279,9 +290,12 @@ public class PresetsViewModel {
         return lastUsed![id]
     }
 
+    var presetWasEdited: ((SelectablePreset) throws -> Void)?;
+
     init(
         customPresets: [TemporaryScheduleOverridePreset],
-        correctionRangeOverrides: CorrectionRangeOverrides?,
+        premealRange: ClosedRange<LoopQuantity>?,
+        workoutRange: ClosedRange<LoopQuantity>?,
         presetsHistory: TemporaryScheduleOverrideHistory,
         preMealGuardrail: Guardrail<LoopQuantity>,
         legacyWorkoutGuardrail: Guardrail<LoopQuantity>,
@@ -289,14 +303,28 @@ public class PresetsViewModel {
         scheduledRange: ClosedRange<LoopQuantity>
     ) {
         self.customPresets = customPresets
-        self.correctionRangeOverrides = correctionRangeOverrides
+        self.premealRange = premealRange
+        self.workoutRange = workoutRange
         self.presetHistory = presetsHistory
         self.preMealGuardrail = preMealGuardrail
         self.legacyWorkoutGuardrail = legacyWorkoutGuardrail
         self.temporaryPresetsManager = temporaryPresetsManager
         self.scheduledRange = scheduledRange
     }
-    
+
+    func savePreset(_ preset: SelectablePreset) {
+        try? presetWasEdited?(preset);
+
+        switch preset {
+        case .preMeal(let range, _):
+            self.premealRange = range;
+        case .legacyWorkout(let range, _):
+            self.workoutRange = range;
+        default:
+            break
+        }
+    }
+
     func startPreset(_ preset: SelectablePreset) {
         switch preset {
         case .custom(let temporaryScheduleOverridePreset):
