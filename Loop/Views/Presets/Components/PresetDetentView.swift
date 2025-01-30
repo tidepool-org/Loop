@@ -78,14 +78,18 @@ struct PresetDetentView: View {
             case .start:
                 Button("Start Preset") {
                     viewModel.startPreset(preset)
+                    dismiss()
                 }
                 .buttonStyle(ActionButtonStyle())
                 .disabled(viewModel.activePreset != nil && preset.id != viewModel.activePreset?.id)
+                .accessibilityIdentifier("button_startPreset")
             case .end:
                 Button("End Preset") {
                     viewModel.endPreset()
+                    dismiss()
                 }
                 .buttonStyle(ActionButtonStyle(.destructive))
+                .accessibilityIdentifier("button_endPreset")
                 
                 if preset.duration != .untilCarbsEntered {
                     NavigationLink("Adjust Preset Duration") {
@@ -94,6 +98,7 @@ struct PresetDetentView: View {
                         }
                     }
                     .buttonStyle(ActionButtonStyle(.tertiary))
+                    .accessibilityIdentifier("button_adjustPresetDuration")
                 }
             }
             
@@ -102,8 +107,11 @@ struct PresetDetentView: View {
             }
             .tint(.accentColor)
             .fontWeight(.semibold)
+            .accessibilityIdentifier("button_close")
         }
     }
+    
+    @State var sheetContentHeight: Double = 0
     
     var body: some View {
         NavigationStack {
@@ -142,10 +150,8 @@ struct PresetDetentView: View {
             .toolbar(.hidden)
             .padding(.top)
             .padding(16)
-            .presentationHuggingDetent()
+            .readContentHeight(to: $sheetContentHeight)
         }
-        .onChange(of: viewModel.activePreset) { _, _ in
-            dismiss()
-        }
+        .sheetDetent(height: sheetContentHeight)
     }
 }

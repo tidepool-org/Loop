@@ -123,6 +123,14 @@ class TemporaryPresetsManager {
             }
             
             overrideHistory.recordOverride(preMealOverride)
+
+            if let newPreset = preMealOverride {
+                for observer in self.presetActivationObservers {
+                    observer.presetActivated(context: newPreset.context, duration: newPreset.duration)
+                }
+                
+                scheduleClearOverride(override: newPreset)
+            }
             
             notify(forChange: .preferences)
         }
@@ -236,6 +244,11 @@ class TemporaryPresetsManager {
             enactTrigger: .local,
             syncIdentifier: UUID()
         )
+    }
+    
+    public func endPreMealOverride() {
+        preMealOverride?.scheduledEndDate = .now
+        clearOverride(matching: .preMeal)
     }
 
     public func clearOverride(matching context: TemporaryScheduleOverride.Context? = nil) {

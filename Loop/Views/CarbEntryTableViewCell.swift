@@ -91,13 +91,6 @@ class CarbEntryTableViewCell: UITableViewCell {
         }
     }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-
-        contentView.layoutMargins.left = separatorInset.left
-        contentView.layoutMargins.right = separatorInset.left
-    }
-
     override func awakeFromNib() {
         super.awakeFromNib()
 

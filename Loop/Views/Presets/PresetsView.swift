@@ -64,7 +64,6 @@ struct PresetsView: View {
         NavigationStack(path: $viewModel.editPreset) {
             ScrollView {
                 VStack(spacing: 20) {
-
                     if !viewModel.hasCompletedTraining {
                         PresetsTrainingCard(showTraining: $showTraining)
                     }
@@ -95,7 +94,8 @@ struct PresetsView: View {
 
                             Button(action: {}) {
                                 Image(systemName: "plus")
-                            }.disabled(!viewModel.hasCompletedTraining)
+                            }
+                            .disabled(!viewModel.hasCompletedTraining)
                         }
 
                         LazyVStack(spacing: 12) {

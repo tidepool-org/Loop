@@ -69,7 +69,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     var criticalEventLogExportManager: CriticalEventLogExportManager!
     
-    var settingsViewModel: SettingsViewModel!
     var statusTableViewModel: StatusTableViewModel!
     
     lazy private var cancellables = Set<AnyCancellable>()
@@ -242,9 +241,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
         onboardingManager.$isComplete
             .merge(with: onboardingManager.$isSuspended)
             .sink { [weak self] _ in
+                guard let self else { return }
                 Task { @MainActor in
-                    self?.refreshContext.update(with: .status)
-                    await self?.reloadData(animated: true)
+                    self.statusTableViewModel.settingsViewModel.isOnboardingComplete = self.onboardingManager.isComplete
+                    self.refreshContext.update(with: .status)
+                    await self.reloadData(animated: true)
                 }
             }
             .store(in: &cancellables)
@@ -932,7 +933,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 }
 
                 if override.isActive() {
-                    if let preset = settingsViewModel.presetsViewModel.allPresets.first(where: { $0.id == override.presetId }), case .preMeal(_, _) = preset {
+                    if let preset = statusTableViewModel.settingsViewModel.presetsViewModel.allPresets.first(where: { $0.id == override.presetId }), case .preMeal(_, _) = preset {
                         cell.subtitleLabel.text = NSLocalizedString("on until carbs added", comment: "The format for the description of a premeal preset end date")
                     } else {
                         switch override.duration {
@@ -1051,7 +1052,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 cell.selectionStyle = .none
                 cell.backgroundColor = .secondarySystemBackground
                 cell.titleLabel.text = nil
+                cell.titleLabel.textColor = .label
+                cell.titleLabel.font = .systemFont(ofSize: 15, weight: .bold)
                 cell.subtitleLabel.text = nil
+                cell.subtitleLabel.textColor = .secondaryLabel
+                cell.subtitleLabel.font = .systemFont(ofSize: 15, weight: .bold)
                 cell.accessoryView = nil
                 return cell
             }
@@ -1106,7 +1111,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     cell.iconImageView.contentMode = .scaleAspectFit
                     cell.iconImageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 28)
                     cell.titleLabel.text = NSLocalizedString("Setup Incomplete", comment: "The title of the cell indicating that onboarding is suspended")
+                    cell.titleLabel.textColor = .label
+                    cell.titleLabel.font = .systemFont(ofSize: 15, weight: .bold)
                     cell.subtitleLabel.text = NSLocalizedString("Tap to Resume", comment: "The subtitle of the cell displaying an action to resume onboarding")
+                    cell.subtitleLabel.textColor = .secondaryLabel
+                    cell.subtitleLabel.font = .systemFont(ofSize: 15, weight: .bold)
                     cell.accessoryView = nil
                     return cell
                 case .recommendManualGlucoseEntry:
@@ -1188,7 +1197,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch Section(rawValue: indexPath.section)! {
         case .presets:
-            statusTableViewModel.pendingPreset = settingsViewModel.presetsViewModel.activePreset
+            statusTableViewModel.pendingPreset = statusTableViewModel.settingsViewModel.presetsViewModel.activePreset
         case .alertWarning:
             if alertPermissionsChecker.showWarning {
                 tableView.deselectRow(at: indexPath, animated: true)
@@ -1438,7 +1447,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     func presentPresets() {
         let hostingController = DismissibleHostingController(
-            rootView: PresetsView(viewModel: settingsViewModel.presetsViewModel)
+            rootView: PresetsView(viewModel: statusTableViewModel.settingsViewModel.presetsViewModel)
                 .onAppear { self.isShowingPresets = true }
                 .onDisappear { self.isShowingPresets = false }
                 .environmentObject(deviceManager.displayGlucosePreference)
@@ -1455,7 +1464,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     func presentSettings() {
         let hostingController = DismissibleHostingController(
-            rootView: SettingsView(viewModel: settingsViewModel, localizedAppNameAndVersion: supportManager.localizedAppNameAndVersion)
+            rootView: SettingsView(viewModel: statusTableViewModel.settingsViewModel, localizedAppNameAndVersion: supportManager.localizedAppNameAndVersion)
                 .environmentObject(deviceManager.displayGlucosePreference)
                 .environment(\.appName, Bundle.main.bundleDisplayName)
                 .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
@@ -1915,8 +1924,19 @@ extension StatusTableViewController: CompletionDelegate {
 extension StatusTableViewController: PumpManagerStatusObserver {
     func pumpManager(_ pumpManager: PumpManager, didUpdate status: PumpManagerStatus, oldStatus: PumpManagerStatus) {
         log.default("PumpManager:%{public}@ did update status", String(describing: type(of: pumpManager)))
-        basalDeliveryState = status.basalDeliveryState
-        bolusState = status.bolusState
+        
+        if basalDeliveryState == status.basalDeliveryState,
+           bolusState == status.bolusState
+        {
+            // if the basal and bolus states have not changed, still update UI
+            Task { @MainActor in
+                refreshContext.update(with: .status)
+                await self.reloadData(animated: true)
+            }
+        } else {
+            basalDeliveryState = status.basalDeliveryState
+            bolusState = status.bolusState
+        }
     }
 }
 
@@ -1937,7 +1957,10 @@ extension StatusTableViewController: DoseProgressObserver {
             self.bolusProgressReporter = nil
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                 self.bolusState = .noBolus
-                Task { await self.reloadData(animated: true) }
+                Task {
+                    self.refreshContext.update(with: .insulin)
+                    await self.reloadData(animated: true)
+                }
             })
         }
     }
