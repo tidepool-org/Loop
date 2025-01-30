@@ -121,6 +121,7 @@ class SettingsManager {
                               glucoseTargetRangeSchedule: newLoopSettings.glucoseTargetRangeSchedule,
                               preMealTargetRange: newLoopSettings.preMealTargetRange,
                               workoutTargetRange: newLoopSettings.legacyWorkoutTargetRange,
+                              workoutDefaultDuration: newLoopSettings.legacyWorkoutDuration,
                               overridePresets: newLoopSettings.overridePresets,
                               maximumBasalRatePerHour: newLoopSettings.maximumBasalRatePerHour,
                               maximumBolus: newLoopSettings.maximumBolus,
@@ -295,16 +296,22 @@ extension SettingsManager {
     public var therapySettings: TherapySettings {
         get {
             let settings = self.settings
-            return TherapySettings(glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
-                            correctionRangeOverrides: CorrectionRangeOverrides(preMeal: settings.preMealTargetRange, workout: settings.workoutTargetRange),
-                            overridePresets: settings.overridePresets,
-                            maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
-                            maximumBolus: settings.maximumBolus,
-                            suspendThreshold: settings.suspendThreshold,
-                            insulinSensitivitySchedule: settings.insulinSensitivitySchedule,
-                            carbRatioSchedule: settings.carbRatioSchedule,
-                            basalRateSchedule: settings.basalRateSchedule,
-                            defaultRapidActingModel: settings.defaultRapidActingModel?.presetForRapidActingInsulin)
+            return TherapySettings(
+                glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
+                correctionRangeOverrides: CorrectionRangeOverrides(
+                    preMeal: settings.preMealTargetRange,
+                    workout: settings.workoutTargetRange,
+                    workoutDuration: settings.workoutDefaultDuration
+                ),
+                overridePresets: settings.overridePresets,
+                maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
+                maximumBolus: settings.maximumBolus,
+                suspendThreshold: settings.suspendThreshold,
+                insulinSensitivitySchedule: settings.insulinSensitivitySchedule,
+                carbRatioSchedule: settings.carbRatioSchedule,
+                basalRateSchedule: settings.basalRateSchedule,
+                defaultRapidActingModel: settings.defaultRapidActingModel?.presetForRapidActingInsulin
+            )
         }
 
         set {

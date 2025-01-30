@@ -53,7 +53,6 @@ struct EditPresetView: View {
     @Environment(\.guidanceColors) private var guidanceColors
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
 
-
     @State private var duration: TimeInterval = 3600 // 1 hour in seconds
     @State private var presetName: String
     @State private var preset: SelectablePreset
@@ -63,7 +62,6 @@ struct EditPresetView: View {
     private var onSave: (SelectablePreset) throws -> Void
 
     @State private var showingPicker = false
-    @State private var editedDuration: PresetDurationType
 
     init(preset: SelectablePreset, scheduledRange: ClosedRange<LoopQuantity>, onSave: @escaping ((SelectablePreset) throws -> Void)) {
         self.preset = preset
@@ -71,7 +69,6 @@ struct EditPresetView: View {
         self.presetName = preset.name
         self.scheduledRange = scheduledRange
         self.onSave = onSave
-        self.editedDuration = preset.duration
     }
 
     func boundText(for bound: LoopQuantity) -> Text {
@@ -200,7 +197,7 @@ struct EditPresetView: View {
                             Text("Duration")
                                 .foregroundColor(.primary)
                             Spacer()
-                            Text(editedDuration.localizedTitle)
+                            Text(preset.duration.localizedTitle)
                                 .foregroundColor(.secondary)
                             if preset.canAdjustDuration {
                                 Image(systemName: "chevron.right")
@@ -235,7 +232,7 @@ struct EditPresetView: View {
             .foregroundColor(.blue)
         )
         .sheet(isPresented: $showingPicker) {
-            DurationPickerView(durationType: $editedDuration)
+            DurationPickerView(durationType: $preset.duration)
             .presentationDetents([.height(300)])
         }
     }

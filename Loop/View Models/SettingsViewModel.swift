@@ -181,6 +181,7 @@ class SettingsViewModel {
             customPresets: therapySettings().overridePresets ?? [],
             premealRange: therapySettings().correctionRangeOverrides?.preMeal,
             workoutRange:therapySettings().correctionRangeOverrides?.workout,
+            workoutDuration: therapySettings().correctionRangeOverrides?.workoutDuration ?? .indefinite,
             presetsHistory: presetHistory,
             preMealGuardrail: therapySettings().preMealGuardrail,
             legacyWorkoutGuardrail: therapySettings().legacyWorkoutPresetGuardrail,
@@ -206,17 +207,19 @@ class SettingsViewModel {
         var therapySettings = therapySettings()
         var preMealRange = therapySettings.correctionRangeOverrides?.ranges[.preMeal]
         var workoutRange = therapySettings.correctionRangeOverrides?.ranges[.workout]
+        var workoutDuration = therapySettings.correctionRangeOverrides?.workoutDuration
 
         switch(preset) {
         case .preMeal(let range, _):
             preMealRange = range
-        case .legacyWorkout(let range, _):
+        case .legacyWorkout(let range, let duration, _):
             workoutRange = range
+            workoutDuration = duration.presetDuration
         default:
             // TODO: editing of custom presets
             break
         }
-        therapySettings.correctionRangeOverrides = CorrectionRangeOverrides(preMeal: preMealRange, workout: workoutRange)
+        therapySettings.correctionRangeOverrides = CorrectionRangeOverrides(preMeal: preMealRange, workout: workoutRange, workoutDuration: workoutDuration)
         therapySettingsViewModelDelegate?.saveCompletion(therapySettings: therapySettings)
     }
 }
