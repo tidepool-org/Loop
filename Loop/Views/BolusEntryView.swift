@@ -67,6 +67,9 @@ struct BolusEntryView: View {
                         newEnteredBolusString = viewModel.formatBolusAmount(amount)
                     }
                     enteredBolusStringBinding.wrappedValue = newEnteredBolusString
+                } else {
+                    // If the recommendation changes, and the user has edited the bolus amount, set the bolus amount to 0
+                    enteredBolusStringBinding.wrappedValue = "0"
                 }
             }
             .task {
