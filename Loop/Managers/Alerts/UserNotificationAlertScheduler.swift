@@ -8,6 +8,7 @@
 
 import LoopKit
 import UIKit
+import AudioToolbox
 
 public protocol UserNotificationCenter {
     func add(_ request: UNNotificationRequest, withCompletionHandler: ((Error?) -> Void)?)
@@ -84,8 +85,12 @@ fileprivate extension Alert {
         
         switch sound {
         case .vibrate:
+            guard interruptionLevel == .critical else {
+                AudioServicesPlayAlertSound(kSystemSoundID_Vibrate)
+                return nil
+            }
             // setting the audio volume of critical alert to 0 only vibrates
-            return interruptionLevel == .critical ? .defaultCriticalSound(withAudioVolume: 0) : nil
+            return .defaultCriticalSound(withAudioVolume: 0)
         default:
             if let actualFileName = AlertManager.soundURL(for: self)?.lastPathComponent {
                 let unname = UNNotificationSoundName(rawValue: actualFileName)
