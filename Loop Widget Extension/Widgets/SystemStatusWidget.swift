@@ -44,8 +44,8 @@ struct SystemStatusWidgetEntryView: View {
                     GlucoseView(entry: entry)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                .padding(5)
+                .frame(maxHeight: .infinity, alignment: .center)
+                .padding(.vertical, 5)
                 .containerRelativeBackground()
                 
                 HStack(alignment: .center, spacing: 0) {
