@@ -1242,8 +1242,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         deviceManager.pumpManager?.cancelBolus() { (result) in
                             DispatchQueue.main.async {
                                 switch result {
-                                case .success:
-                                    self.updateBannerAndHUDandStatusRows(statusRowMode: .canceledBolus(dose: dose), newSize: nil, animated: true)
+                                case .success(let canceledDose):
+                                    let doseToReport = canceledDose ?? dose
+                                    self.canceledDose = doseToReport
+                                    self.updateBannerAndHUDandStatusRows(statusRowMode: .canceledBolus(dose: doseToReport), newSize: nil, animated: true)
                                     self.bolusState = .noBolus
                                     Task {
                                         try? await Task.sleep(nanoseconds: NSEC_PER_SEC * 10)
