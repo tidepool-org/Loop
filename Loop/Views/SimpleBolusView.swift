@@ -28,6 +28,16 @@ struct SimpleBolusView: View {
             set: { newValue in viewModel.manualGlucoseString = newValue }
         )
     }
+    
+    private var enteredBolusString: Binding<String> {
+        Binding(
+            get: { return viewModel.enteredBolusString },
+            set: { newValue in
+                viewModel.enteredBolusString = newValue
+                viewModel.didEditBolusAmount = true
+            }
+        )
+    }
 
     init(viewModel: SimpleBolusViewModel) {
         self.viewModel = viewModel
@@ -192,7 +202,7 @@ struct SimpleBolusView: View {
             Spacer()
             HStack(alignment: .firstTextBaseline) {
                 DismissibleKeyboardTextField(
-                    text: $viewModel.enteredBolusString,
+                    text: enteredBolusString,
                     placeholder: "0",
                     font: .preferredFont(forTextStyle: .title1),
                     textColor: .loopAccent,

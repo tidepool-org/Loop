@@ -185,6 +185,7 @@ class SimpleBolusViewModel: ObservableObject {
             updateNotice()
         }
     }
+    var didEditBolusAmount: Bool = false
     
     private var carbQuantity: LoopQuantity? = nil
 
@@ -213,7 +214,11 @@ class SimpleBolusViewModel: ObservableObject {
         didSet {
             if let recommendation = recommendation, let maxBolus = delegate.maximumBolus {
                 recommendedBolus = Self.doseAmountFormatter.string(from: recommendation)!
-                enteredBolusString = Self.doseAmountFormatter.string(from: min(recommendation, maxBolus))!
+                if didEditBolusAmount {
+                    enteredBolusString = "0"
+                } else {
+                    enteredBolusString = Self.doseAmountFormatter.string(from: min(recommendation, maxBolus))!
+                }
             } else {
                 recommendedBolus = NSLocalizedString("–", comment: "String denoting lack of a recommended bolus amount in the simple bolus calculator")
                 enteredBolusString = ""
