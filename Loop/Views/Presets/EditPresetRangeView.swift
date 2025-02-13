@@ -18,11 +18,16 @@ struct EditPresetRangeView: View {
     @Binding var range: ClosedRange<LoopQuantity>?
     var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
+    @State private var editedRange: ClosedRange<LoopQuantity>?
 
     init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>) {
         self._range = range
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
+    }
+
+    var displayedRange: ClosedRange<LoopQuantity> {
+        return editedRange ?? range ?? scheduledRange
     }
 
     func boundText(for bound: LoopQuantity) -> Text {
@@ -46,86 +51,122 @@ struct EditPresetRangeView: View {
         }
     }
 
-
     var body: some View {
-        List {
-            VStack(spacing: 24) {
-                VStack(spacing: 8) {
-                    HStack {
-                        Text("Correction Range")
-                            .foregroundColor(.secondary)
-                            .font(.system(size: 14))
-                        Image(systemName: "info.circle")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .foregroundColor(.accentColor)
-                            .frame(width: UIFontMetrics.default.scaledValue(for: 14), height: UIFontMetrics.default.scaledValue(for: 14))
-                    }
-                    .padding(.top, 10)
-
-
-                    Text("Set your correction range")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .multilineTextAlignment(.center)
+        VStack(spacing: 0) {
+            List {
+                VStack(spacing: 24) {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("Correction Range")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 14))
+                            Image(systemName: "info.circle")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .foregroundColor(.accentColor)
+                                .frame(width: UIFontMetrics.default.scaledValue(for: 14), height: UIFontMetrics.default.scaledValue(for: 14))
+                        }
                         .padding(.top, 10)
 
-                    Text("To reduce the risk of highs or lows, you may want to set an adjusted range if you think your glucose will vary more than usual.")
-                        .multilineTextAlignment(.center)
-                }
 
-                VStack(spacing: 0) {
-                    Text("Adjusted Range")
+                        Text("Set your correction range")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 10)
 
-                    (
-                        boundText(for: (range ?? scheduledRange).lowerBound) +
-                        Text("-").foregroundColor(.secondary)
-                            .font(.system(size: 42, weight: .light))
-                        +
-                        boundText(for: (range ?? scheduledRange).upperBound)
-                    )
+                        Text("To reduce the risk of highs or lows, you may want to set an adjusted range if you think your glucose will vary more than usual.")
+                            .multilineTextAlignment(.center)
+                    }
+
+                    VStack(spacing: 0) {
+                        Text("Adjusted Range")
+
+                        (
+                            boundText(for: (displayedRange).lowerBound) +
+                            Text("-").foregroundColor(.secondary)
+                                .font(.system(size: 42, weight: .light))
+                            +
+                            boundText(for: (displayedRange).upperBound)
+                        )
 
 
-                    Text("mg/dL")
-                        .foregroundColor(.secondary)
-                }
+                        Text("mg/dL")
+                            .foregroundColor(.secondary)
+                    }
 
-                Divider()
+                    Divider()
 
-                GlucoseRangePicker(range: Binding(
-                    get: { range ?? scheduledRange },
-                    set: { range = $0 }),
-                    unit: displayGlucosePreference.unit,
-                    minValue: nil,
-                    guardrail: guardrail)
+                    GlucoseRangePicker(range: Binding(
+                        get: { displayedRange },
+                        set: { editedRange = $0 }),
+                                       unit: displayGlucosePreference.unit,
+                                       minValue: nil,
+                                       guardrail: guardrail)
                     .padding(.vertical, -20)
 
-                guardrailWarningIfNecessary
+                    HStack(spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.accentColor)
 
-                HStack(spacing: 8) {
-                    Image(systemName: "info.circle")
-                        .foregroundColor(.accentColor)
-
-                    (Text("To help avoid lows, set a range ")
-                     + Text("higher")
-                        .italic()
-                        .bold()
-                     + Text(" than your typical correction range."))
-                    .font(.system(size: 14))
+                        (Text("To help avoid lows, set a range ")
+                         + Text("higher")
+                            .italic()
+                            .bold()
+                         + Text(" than your typical correction range."))
+                        .font(.system(size: 14))
+                    }
+                    .padding()
+                    .overlay( /// apply a rounded border
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(.gray, lineWidth: 1)
+                    )
                 }
-                .padding()
-                .overlay( /// apply a rounded border
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(.gray, lineWidth: 1)
-                )
             }
+            actionArea
         }
+        .navigationBarBackButtonHidden(editedRange != nil)
+        .navigationBarItems(
+            trailing: cancelButton
+        )
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Edit Preset")
+        .edgesIgnoringSafeArea(.bottom)
     }
 
+    private var cancelButton: some View {
+        Group {
+            if editedRange != nil {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .foregroundColor(.blue)
+            }
+        }
+    }
+
+
+    private var actionArea: some View {
+        VStack(spacing: 0) {
+            guardrailWarningIfNecessary
+            actionButton
+        }
+        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
+    }
+
+    private var actionButton: some View {
+        Button("Save") {
+            range = editedRange
+            dismiss()
+        }
+        .disabled(editedRange == nil)
+        .buttonStyle(ActionButtonStyle(.primary))
+        .padding()
+    }
+
+
     var crossedThresholds: [SafetyClassification.Threshold] {
-        if let range {
+        if let range = editedRange ?? range {
             let lowerBound = range.lowerBound
             let upperBound = range.upperBound
             return [lowerBound, upperBound].compactMap { (bound) -> SafetyClassification.Threshold? in
@@ -147,7 +188,7 @@ struct EditPresetRangeView: View {
             if !crossedThresholds.isEmpty {
                 CorrectionRangeGuardrailWarning(crossedThresholds: crossedThresholds)
             }
-        }
+        }.padding()
     }
 }
 

@@ -12,26 +12,30 @@ import SwiftUI
 import LoopKitUI
 import LoopAlgorithm
 
-struct CompactSection<Content: View, Header: View>: View {
+struct CompactSection<Content: View, Header: View, Footer: View>: View {
     let header: Header?
+    let footer: Footer?
     let content: Content
 
     // Initializer for custom view header
-    init(@ViewBuilder content: () -> Content, @ViewBuilder header: () -> Header) {
+    init(@ViewBuilder content: () -> Content, @ViewBuilder header: () -> Header, @ViewBuilder footer: () -> Footer) {
         self.content = content()
         self.header = header()
+        self.footer = footer()
     }
 
     // Initializer for string header
-    init(_ headerText: String?, @ViewBuilder content: () -> Content) where Header == Text {
+    init(_ headerText: String? = nil, @ViewBuilder content: () -> Content, footerText: String? = nil) where Header == Text, Footer == Text {
         self.content = content()
         self.header = headerText.map { Text($0) }
+        self.footer = footerText.map { Text($0) }
     }
 
     // Initializer for no header
-    init(@ViewBuilder content: () -> Content) where Header == Text {
+    init(@ViewBuilder content: () -> Content) where Header == Text, Footer == Text {
         self.content = content()
         self.header = nil
+        self.footer = nil
     }
 
     var body: some View {
@@ -41,6 +45,10 @@ struct CompactSection<Content: View, Header: View>: View {
             if let header {
                 header
                     .padding([.leading, .trailing], -10)
+            }
+        } footer: {
+            if let footer {
+                footer
             }
         }
         .listRowInsets(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
@@ -53,7 +61,6 @@ struct EditPresetView: View {
     @Environment(\.guidanceColors) private var guidanceColors
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
 
-    @State private var duration: TimeInterval = 3600 // 1 hour in seconds
     @State private var presetName: String
     @State private var preset: SelectablePreset
 
@@ -78,7 +85,7 @@ struct EditPresetView: View {
         case .withinRecommendedRange:
             return Text(text)
                 .foregroundColor(.accentColor)
-                .font(.system(size: 34, weight: .semibold))
+                .font(.system(size: 34, weight: .bold))
         case .outsideRecommendedRange:
             return (
                 Text(Image(systemName: "exclamationmark.triangle.fill"))
@@ -87,7 +94,7 @@ struct EditPresetView: View {
                     .foregroundColor(color) +
                 Text(text)
                     .foregroundColor(color)
-                    .font(.system(size: 34, weight: .semibold))
+                    .font(.system(size: 34, weight: .bold))
                 )
         }
     }
@@ -115,7 +122,7 @@ struct EditPresetView: View {
                     Spacer()
                     VStack(alignment: .center) {
                         Text("\(Int((1.0 / (preset.insulinSensitivityMultiplier ?? 1)) * 100))%")
-                            .font(.system(size: 48, weight: .semibold))
+                            .font(.system(size: 34, weight: .semibold))
                             .foregroundColor(.accentColor)
                         Text("of scheduled")
                             .foregroundColor(.primary)
@@ -189,52 +196,39 @@ struct EditPresetView: View {
                     }
                 }
 
-                CompactSection() {
-                    Button(action: {
-                        showingPicker = true
-                    }) {
-                        HStack {
-                            Text("Duration")
-                                .foregroundColor(.primary)
-                            Spacer()
-                            Text(preset.duration.localizedTitle)
-                                .foregroundColor(.secondary)
-                            if preset.canAdjustDuration {
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(.gray)
+                CompactSection(
+                    content: {
+                        Button(action: {
+                            showingPicker = true
+                        }) {
+                            HStack {
+                                Text("Duration")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Text(preset.duration.localizedTitle)
+                                    .foregroundColor(.secondary)
+                                if preset.canAdjustDuration {
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.gray)
+                                }
                             }
-                        }
-                        .background(Color(.systemBackground))
-                    }.disabled(!preset.canAdjustDuration)
-                }
-
-                CompactSection {} header: {
-                    Button("Save Preset") {
-                        do {
-                            try onSave(preset)
-                        } catch {
-                            print(error)
-                        }
-                        dismiss()
-                    }
-                    .disabled(preset == originalPreset)
-                    .buttonStyle(ActionButtonStyle(.primary))
-                    .textCase(nil)
-                }
+                        }.disabled(!preset.canAdjustDuration)
+                    },
+                    footerText: preset.canAdjustDuration ? nil : "Duration and Name not configurable for this preset.")
             }
             .listSectionSpacing(16)
         }
-        .navigationBarBackButtonHidden(true)
-        .navigationBarItems(
-            trailing: Button("Cancel") {
-                dismiss()
-            }
-            .foregroundColor(.blue)
-        )
         .sheet(isPresented: $showingPicker) {
             DurationPickerView(durationType: $preset.duration)
             .presentationDetents([.height(300)])
         }
+        .onChange(of: preset, {
+            do {
+                try onSave(preset)
+            } catch {
+                print(error)
+            }
+        })
     }
 
     var presetTitle: some View {
@@ -242,18 +236,18 @@ struct EditPresetView: View {
             switch preset.icon {
             case .emoji(let emoji):
                 Text(emoji)
-                    .font(.system(size: 48, weight: .semibold))
+                    .font(.system(size: 34, weight: .semibold))
                     .foregroundColor(.primary)
             case .image(let name, let iconColor):
                 Image(name)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .foregroundColor(iconColor)
-                    .frame(width: UIFontMetrics.default.scaledValue(for: 48), height: UIFontMetrics.default.scaledValue(for: 48))
+                    .frame(width: UIFontMetrics.default.scaledValue(for: 34), height: UIFontMetrics.default.scaledValue(for: 34))
             }
 
             Text(presetName)
-                .font(.system(size: 48, weight: .semibold))
+                .font(.system(size: 34, weight: .semibold))
                 .foregroundColor(.primary)
         }
     }
