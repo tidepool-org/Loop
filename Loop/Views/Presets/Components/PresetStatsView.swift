@@ -98,7 +98,7 @@ struct PresetStatsView: View {
             case (.withinRecommendedRange, .outsideRecommendedRange):
                 lower + Text(" - ") + warningSymbol.foregroundStyle(upperColor) + upper + units
             case (.outsideRecommendedRange, .outsideRecommendedRange):
-                warningSymbol.foregroundStyle(lowerColor) + lower + Text("-").foregroundStyle(lowerColor) + upper + units
+                warningSymbol.foregroundStyle(lowerColor) + lower + Text("-").foregroundStyle(lowerColor) + warningSymbol.foregroundStyle(upperColor) + upper + units
             case (.outsideRecommendedRange, .withinRecommendedRange):
                 warningSymbol.foregroundStyle(lowerColor) + lower + Text("-") + upper + units
             }
