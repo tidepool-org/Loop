@@ -100,7 +100,10 @@ struct PresetsHistoryView: View {
                 }
             }
         case .indefinite:
-            if let durationString = formatter.string(from: override.actualDuration.timeInterval) {
+            let actualDuration = override.actualDuration.timeInterval
+            if actualDuration != .infinity,
+               let durationString = formatter.string(from: actualDuration)
+            {
                 Text(durationString)
                     .foregroundStyle(.primary)
                     .fontWeight(.semibold)
