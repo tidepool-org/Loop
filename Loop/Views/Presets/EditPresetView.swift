@@ -69,6 +69,7 @@ struct EditPresetView: View {
     private var onSave: (SelectablePreset) throws -> Void
 
     @State private var showingPicker = false
+    @State private var navigateToCorrectionRangeEditor = false
 
     init(preset: SelectablePreset, scheduledRange: ClosedRange<LoopQuantity>, onSave: @escaping ((SelectablePreset) throws -> Void)) {
         self.preset = preset
@@ -88,10 +89,6 @@ struct EditPresetView: View {
                 .font(.system(size: 34, weight: .bold))
         case .outsideRecommendedRange:
             return (
-                Text(Image(systemName: "exclamationmark.triangle.fill"))
-                    .font(.system(size: 23, weight: .regular))
-                    .baselineOffset(3.0)
-                    .foregroundColor(color) +
                 Text(text)
                     .foregroundColor(color)
                     .font(.system(size: 34, weight: .bold))
@@ -109,7 +106,7 @@ struct EditPresetView: View {
         Text(displayGlucosePreference.unit.localizedShortUnitString)
             .font(.system(.body))
             .foregroundColor(.secondary)
-            .baselineOffset(5)
+            .baselineOffset(12)
     }
 
     var sensitivitySection: some View {
@@ -142,37 +139,82 @@ struct EditPresetView: View {
         }
     }
 
-    var correctionSection: some View {
-        CompactSection {
-            NavigationLink {
-                EditPresetRangeView(
-                    range: $preset.correctionRange,
-                    guardrail: preset.guardrail,
-                    scheduledRange: scheduledRange
-                )
-            } label: {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Correction Range")
-                        .font(.system(.title3, weight: .semibold))
-                    HStack {
-                        Spacer()
-                        VStack(alignment: .center) {
-                            if let range = preset.correctionRange {
-                                correctionRangeLabel(range: range)
-                                Text("Adjusted Range")
-                                    .foregroundColor(.primary)
-                            } else {
-                                correctionRangeLabel(range: scheduledRange)
-                                Text("Scheduled Range")
-                                    .foregroundColor(.primary)
-                            }
-                        }
-                        Spacer()
-                    }
+    private var correctionRangeCrossedThresholds: [SafetyClassification.Threshold] {
+        guard let range = preset.correctionRange else { return [] }
+
+        let guardrail = preset.guardrail
+        let thresholds: [SafetyClassification.Threshold] = [range.lowerBound, range.upperBound].compactMap { bound in
+            switch guardrail.classification(for: bound) {
+            case .withinRecommendedRange:
+                return nil
+            case .outsideRecommendedRange(let threshold):
+                return threshold
+            }
+        }
+
+        return thresholds
+    }
+
+    private var guardrailWarningIfNecessary: some View {
+        let crossedThresholds = self.correctionRangeCrossedThresholds
+        let severity = crossedThresholds.map { $0.severity }.max()
+
+        return Group {
+            if let severity, !crossedThresholds.isEmpty {
+                let color = severity > .default ? Color.red : .orange
+                HStack(alignment: .top, spacing: 12) {
+                    Text(Image(systemName: "exclamationmark.triangle.fill"))
+                        .foregroundColor(color)
+                    Text(SafetyClassification.captionForCrossedThresholds(crossedThresholds, isRange: true));
                 }
+                .padding(12)
+                .background(color.opacity(0.1))
+                .cornerRadius(12)
             }
         }
     }
+
+
+    var correctionSection: some View {
+        CompactSection {
+            Button {
+                navigateToCorrectionRangeEditor = true;
+            } label: {
+                VStack(alignment: .center, spacing: 12) {
+                    HStack {
+                        Text("Correction Range")
+                            .font(.system(size: 17, weight: .semibold))
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                    }.padding(.bottom, 10)
+                    VStack(spacing: 4) {
+                        if let range = preset.correctionRange {
+                            correctionRangeLabel(range: range)
+                            Text("Adjusted Range")
+                        } else {
+                            correctionRangeLabel(range: scheduledRange)
+                            Text("Scheduled Range")
+                        }
+                    }
+                    guardrailWarningIfNecessary
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .padding(.bottom, 5)
+                        .padding(.horizontal, 2)
+                }
+                .foregroundColor(.primary)
+            }
+        }
+        .navigationDestination(isPresented: $navigateToCorrectionRangeEditor) {
+            EditPresetRangeView(
+                range: $preset.correctionRange,
+                guardrail: preset.guardrail,
+                scheduledRange: scheduledRange
+            )
+        }
+    }
+
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
