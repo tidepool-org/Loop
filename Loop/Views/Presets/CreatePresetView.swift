@@ -49,7 +49,7 @@ struct CreatePresetView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
 
     @Environment(\.dismiss) private var dismiss
-    @State private var insulinPercentage: Double = 85
+    @State private var insulinPercentage: Double = 100
     @State private var presentInfoView: Bool = false
 
     var basalRate: Double? {
@@ -148,6 +148,9 @@ struct CreatePresetView: View {
         .navigationBarBackButtonHidden(true)
         .navigationTitle("Create a preset")
         .edgesIgnoringSafeArea(.bottom)
+        .sheet(isPresented: $presentInfoView) {
+            InsulinScaleInformationView()
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Cancel") {
