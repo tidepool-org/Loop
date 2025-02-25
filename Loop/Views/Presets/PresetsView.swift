@@ -37,7 +37,8 @@ struct PresetsView: View {
 
     @State private var editMode: EditMode = .inactive
     @State private var showingMenu: Bool = false
-    @State var showTraining: Bool = false
+    @State private var showTraining: Bool = false
+    @State private var presentCreateView: Bool = false
 
     var isDescending: Bool { !viewModel.presetsSortAscending }
 
@@ -92,7 +93,9 @@ struct PresetsView: View {
                                 sortMenu
                             }
 
-                            Button(action: {}) {
+                            Button(action: {
+                                presentCreateView = true;
+                            }) {
                                 Image(systemName: "plus")
                             }
                             .disabled(!viewModel.hasCompletedTraining)
@@ -169,6 +172,10 @@ struct PresetsView: View {
                     viewModel.savePreset(preset)
                 }
             }
+            .navigationDestination(isPresented: $presentCreateView) {
+                CreatePresetView()
+            }
+
         }
         .sheet(item: $viewModel.pendingPreset) { preset in
             PresetDetentView(
