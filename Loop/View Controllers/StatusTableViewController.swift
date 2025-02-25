@@ -1455,7 +1455,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 .environmentObject(deviceManager.displayGlucosePreference)
                 .environment(\.appName, Bundle.main.bundleDisplayName)
                 .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
-                .environment(\.loopStatusColorPalette, .loopStatus),
+                .environment(\.loopStatusColorPalette, .loopStatus)
+                .environment(\.therapySettings, settingsManager.therapySettings),
             isModalInPresentation: false)
         present(hostingController, animated: true)
     }
@@ -1470,7 +1471,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 .environmentObject(deviceManager.displayGlucosePreference)
                 .environment(\.appName, Bundle.main.bundleDisplayName)
                 .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
-                .environment(\.loopStatusColorPalette, .loopStatus),
+                .environment(\.loopStatusColorPalette, .loopStatus)
+                .environment(\.therapySettings, settingsManager.therapySettings),
             isModalInPresentation: false)
         present(hostingController, animated: true)
     }

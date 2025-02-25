@@ -7,18 +7,74 @@
 //
 
 import SwiftUI
+import LoopAlgorithm
 import LoopKitUI
+import LoopKit
+
+struct ExampleSettingView: View {
+    let value: LoopQuantity
+    let displayUnit: LoopUnit
+    let name: String
+    private let formatter: QuantityFormatter
+    private let higlighed: Bool
+
+    init(value: LoopQuantity, displayUnit: LoopUnit, name: String, highlighed: Bool = false) {
+        self.value = value
+        self.displayUnit = displayUnit
+        self.name = name
+        self.formatter = QuantityFormatter(for: displayUnit)
+        self.higlighed = highlighed
+    }
+
+    var valueRow: some View {
+        Text(formatter.string(from: value, includeUnit: false) ?? "NA")
+            .bold() + Text(" ") +
+        Text(displayUnit.shortLocalizedUnitString())
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if higlighed {
+                valueRow.foregroundColor(.insulin)
+            } else {
+                valueRow
+            }
+            Text(name)
+        }
+    }
+}
 
 struct CreatePresetView: View {
+    @Environment(\.therapySettings) private var therapySettings
+    @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+
     @Environment(\.dismiss) private var dismiss
     @State private var insulinPercentage: Double = 85
     @State private var presentInfoView: Bool = false
 
-    private let metrics = [
-        ("Basal Rate", "0.75 U/hr"),
-        ("Carb Ratio", "12 g"),
-        ("ISF", "47 mg/dL")
-    ]
+    var basalRate: Double? {
+        if let baseValue = therapySettings.basalRateSchedule?.value(at: Date()) {
+            return baseValue * (insulinPercentage/100)
+        } else {
+            return nil
+        }
+    }
+    var carbRatio: Double? {
+        if let baseValue = therapySettings.carbRatioSchedule?.value(at: Date()) {
+            return baseValue / (insulinPercentage/100)
+        } else {
+            return nil
+        }
+    }
+    var isf: LoopQuantity? {
+        if let baseQuantity = therapySettings.insulinSensitivitySchedule?.quantity(at: Date()) {
+            let value = baseQuantity.doubleValue(for: .milligramsPerDeciliter)
+            let adjustedValue = value / (insulinPercentage/100)
+            return LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: adjustedValue)
+        } else {
+            return nil
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,19 +107,19 @@ struct CreatePresetView: View {
 
                     HStack(spacing: 24) {
                         Button(action: {
-                            if insulinPercentage > 0 {
+                            if insulinPercentage > 5 {
                                 insulinPercentage -= 5
                             }
                         }) {
                             Text(Image(systemName: "minus.circle.fill").symbolRenderingMode(.hierarchical))
-                                .font(.system(size: 40))
+                                .font(.system(size: 44, weight: .bold))
                                 .foregroundColor(.insulin)
                         }
                         .buttonStyle(BorderlessButtonStyle())
 
 
                         Text("\(Int(insulinPercentage))%")
-                            .font(.system(size: 48, weight: .semibold))
+                            .font(.system(size: 50, weight: .bold))
                             .foregroundColor(.insulin)
 
                         Button(action: {
@@ -72,40 +128,17 @@ struct CreatePresetView: View {
                             }
                         }) {
                             Text(Image(systemName: "plus.circle.fill").symbolRenderingMode(.hierarchical))
-                                .font(.system(size: 40))
+                                .font(.system(size: 44, weight: .bold))
                                 .foregroundColor(.insulin)
                         }
                         .buttonStyle(BorderlessButtonStyle())
                     }
 
-                    Text("Settings Impact")
-                        .font(.headline)
+                    Divider()
 
-                    Text("This adjustment will make your settings weaker.")
-                        .foregroundColor(.secondary)
+                    settingsImpact
 
-                    HStack(spacing: 32) {
-                        ForEach(metrics, id: \.0) { metric in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(metric.1)
-                                    .font(.title3)
-                                    .foregroundColor(.blue)
-                                Text(metric.0)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-
-                    // Footer Note
-                    Text("Note: These example values are based on your current settings. Values may be different when you enable the preset.")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal)
-
-                    Spacer()
                 }
-                .font(.body)
                 .multilineTextAlignment(.center)
             }
 
@@ -119,6 +152,61 @@ struct CreatePresetView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Cancel") {
                     dismiss()
+                }
+            }
+        }
+    }
+
+    private var settingsImpact: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Settings Impact")
+                    .font(.headline)
+
+                if insulinPercentage < 100 {
+                    Text("This adjustment will make your settings weaker.")
+                } else if (insulinPercentage > 100) {
+                    Text("This adjustment will make your settings stronger.")
+                } else {
+                    Text("No change to insulin settings.")
+                }
+            }
+
+            exampleSettings
+
+            // Footer Note
+            Text("Note: These example values are based on your current settings. Values may be different when you enable the preset.")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+        }
+        .font(.system(size: 15))
+        .multilineTextAlignment(.leading)
+    }
+
+    private var exampleSettings: some View {
+        Group {
+            if let basalRate = basalRate, let carbRatio = carbRatio, let isf = isf {
+                HStack(spacing: 32) {
+                    ExampleSettingView(
+                        value: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: basalRate),
+                        displayUnit: .internationalUnitsPerHour,
+                        name: "Basal Rate",
+                        highlighed: insulinPercentage != 100
+                    )
+
+                    ExampleSettingView(
+                        value: LoopQuantity(unit: .gram, doubleValue: carbRatio),
+                        displayUnit: .gram,
+                        name: "Carb Ratio",
+                        highlighed: insulinPercentage != 100
+                    )
+
+                    ExampleSettingView(
+                        value: isf,
+                        displayUnit: displayGlucosePreference.unit,
+                        name: "ISF",
+                        highlighed: insulinPercentage != 100
+                    )
                 }
             }
         }
