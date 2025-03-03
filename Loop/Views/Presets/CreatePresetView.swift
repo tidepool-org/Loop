@@ -11,19 +11,19 @@ import LoopAlgorithm
 import LoopKitUI
 import LoopKit
 
-struct ExampleSettingView: View {
+struct SettingAdjustmentPreview: View {
     let value: LoopQuantity
     let displayUnit: LoopUnit
     let name: String
     private let formatter: QuantityFormatter
-    private let higlighed: Bool
+    private let highlighted: Bool
 
-    init(value: LoopQuantity, displayUnit: LoopUnit, name: String, highlighed: Bool = false) {
+    init(value: LoopQuantity, displayUnit: LoopUnit, name: String, highlighted: Bool = false) {
         self.value = value
         self.displayUnit = displayUnit
         self.name = name
         self.formatter = QuantityFormatter(for: displayUnit)
-        self.higlighed = highlighed
+        self.highlighted = highlighted
     }
 
     var valueRow: some View {
@@ -34,7 +34,7 @@ struct ExampleSettingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if higlighed {
+            if highlighted {
                 valueRow.foregroundColor(.insulin)
             } else {
                 valueRow
@@ -49,19 +49,20 @@ struct CreatePresetView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
 
     @Environment(\.dismiss) private var dismiss
-    @State private var insulinPercentage: Double = 100
+    @State private var preset = NewCustomPreset()
     @State private var presentInfoView: Bool = false
+    @State private var navigateToRangeEdit: Bool = false
 
     var basalRate: Double? {
         if let baseValue = therapySettings.basalRateSchedule?.value(at: Date()) {
-            return baseValue * (insulinPercentage/100)
+            return baseValue * preset.insulinMultiplier
         } else {
             return nil
         }
     }
     var carbRatio: Double? {
         if let baseValue = therapySettings.carbRatioSchedule?.value(at: Date()) {
-            return baseValue / (insulinPercentage/100)
+            return baseValue / preset.insulinMultiplier
         } else {
             return nil
         }
@@ -69,11 +70,19 @@ struct CreatePresetView: View {
     var isf: LoopQuantity? {
         if let baseQuantity = therapySettings.insulinSensitivitySchedule?.quantity(at: Date()) {
             let value = baseQuantity.doubleValue(for: .milligramsPerDeciliter)
-            let adjustedValue = value / (insulinPercentage/100)
+            let adjustedValue = value / preset.insulinMultiplier
             return LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: adjustedValue)
         } else {
             return nil
         }
+    }
+
+    var insulinPercentage: Double {
+        get { return preset.insulinMultiplier * 100 }
+    }
+
+    var scheduledRange: ClosedRange<LoopQuantity>? {
+        therapySettings.glucoseTargetRangeSchedule?.quantityRange(at: Date())
     }
 
     var body: some View {
@@ -105,34 +114,7 @@ struct CreatePresetView: View {
                     Text(" less ").fontWeight(.bold) +
                     Text("insulin than usual.")
 
-                    HStack(spacing: 24) {
-                        Button(action: {
-                            if insulinPercentage > 5 {
-                                insulinPercentage -= 5
-                            }
-                        }) {
-                            Text(Image(systemName: "minus.circle.fill").symbolRenderingMode(.hierarchical))
-                                .font(.system(size: 44, weight: .bold))
-                                .foregroundColor(.insulin)
-                        }
-                        .buttonStyle(BorderlessButtonStyle())
-
-
-                        Text("\(Int(insulinPercentage))%")
-                            .font(.system(size: 50, weight: .bold))
-                            .foregroundColor(.insulin)
-
-                        Button(action: {
-                            if insulinPercentage < 200 {
-                                insulinPercentage += 5
-                            }
-                        }) {
-                            Text(Image(systemName: "plus.circle.fill").symbolRenderingMode(.hierarchical))
-                                .font(.system(size: 44, weight: .bold))
-                                .foregroundColor(.insulin)
-                        }
-                        .buttonStyle(BorderlessButtonStyle())
-                    }
+                    adjustInsulinControls
 
                     Divider()
 
@@ -148,6 +130,9 @@ struct CreatePresetView: View {
         .navigationBarBackButtonHidden(true)
         .navigationTitle("Create a preset")
         .edgesIgnoringSafeArea(.bottom)
+        .sheet(isPresented: $navigateToRangeEdit) {
+            newPresetRangeEdit
+        }
         .sheet(isPresented: $presentInfoView) {
             InsulinScaleInformationView()
         }
@@ -158,6 +143,50 @@ struct CreatePresetView: View {
                 }
             }
         }
+    }
+
+    private var newPresetRangeEdit: some View {
+        return Group {
+            if let scheduledRange {
+                NewPresetRangeEdit(
+                    range: $preset.correctionRange,
+                    guardrail: Guardrail.correctionRange,
+                    scheduledRange: scheduledRange
+                )
+            }
+        }
+    }
+
+    private var adjustInsulinControls: some View {
+        HStack(spacing: 24) {
+            Button(action: {
+                if insulinPercentage > 5 {
+                    preset.insulinMultiplier -= 0.05
+                }
+            }) {
+                Text(Image(systemName: "minus.circle.fill").symbolRenderingMode(.hierarchical))
+                    .font(.system(size: 44, weight: .bold))
+                    .foregroundColor(.insulin)
+            }
+            .buttonStyle(BorderlessButtonStyle())
+
+
+            Text("\(Int(insulinPercentage))%")
+                .font(.system(size: 50, weight: .bold))
+                .foregroundColor(.insulin)
+
+            Button(action: {
+                if insulinPercentage < 200 {
+                    preset.insulinMultiplier += 0.05
+                }
+            }) {
+                Text(Image(systemName: "plus.circle.fill").symbolRenderingMode(.hierarchical))
+                    .font(.system(size: 44, weight: .bold))
+                    .foregroundColor(.insulin)
+            }
+            .buttonStyle(BorderlessButtonStyle())
+        }
+
     }
 
     private var settingsImpact: some View {
@@ -190,25 +219,25 @@ struct CreatePresetView: View {
         Group {
             if let basalRate = basalRate, let carbRatio = carbRatio, let isf = isf {
                 HStack(spacing: 32) {
-                    ExampleSettingView(
+                    SettingAdjustmentPreview(
                         value: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: basalRate),
                         displayUnit: .internationalUnitsPerHour,
                         name: "Basal Rate",
-                        highlighed: insulinPercentage != 100
+                        highlighted: insulinPercentage != 100
                     )
 
-                    ExampleSettingView(
+                    SettingAdjustmentPreview(
                         value: LoopQuantity(unit: .gram, doubleValue: carbRatio),
                         displayUnit: .gram,
                         name: "Carb Ratio",
-                        highlighed: insulinPercentage != 100
+                        highlighted: insulinPercentage != 100
                     )
 
-                    ExampleSettingView(
+                    SettingAdjustmentPreview(
                         value: isf,
                         displayUnit: displayGlucosePreference.unit,
                         name: "ISF",
-                        highlighed: insulinPercentage != 100
+                        highlighted: insulinPercentage != 100
                     )
                 }
             }
@@ -224,8 +253,7 @@ struct CreatePresetView: View {
 
     private var actionButton: some View {
         Button("Continue") {
-            //range = editedRange
-           // dismiss()
+            navigateToRangeEdit = true
         }
         .buttonStyle(ActionButtonStyle(.primary))
         .padding()

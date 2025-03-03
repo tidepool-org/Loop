@@ -161,7 +161,7 @@ struct EditPresetView: View {
 
         return Group {
             if let severity, !crossedThresholds.isEmpty {
-                let color = severity > .default ? Color.red : .orange
+                let color: Color = severity > .default ? guidanceColors.critical : guidanceColors.warning
                 HStack(alignment: .top, spacing: 12) {
                     Text(Image(systemName: "exclamationmark.triangle.fill"))
                         .foregroundColor(color)
@@ -207,7 +207,7 @@ struct EditPresetView: View {
             }
         }
         .navigationDestination(isPresented: $navigateToCorrectionRangeEditor) {
-            EditPresetRangeView(
+            ExistingPresetRangeEdit(
                 range: $preset.correctionRange,
                 guardrail: preset.guardrail,
                 scheduledRange: scheduledRange
