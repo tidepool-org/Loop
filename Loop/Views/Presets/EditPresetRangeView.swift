@@ -19,11 +19,13 @@ struct EditPresetRangeView: View {
     var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
     @State private var editedRange: ClosedRange<LoopQuantity>?
+    private var isPreMeal: Bool
 
-    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>) {
+    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, isPreMeal: Bool) {
         self._range = range
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
+        self.isPreMeal = isPreMeal
     }
 
     var displayedRange: ClosedRange<LoopQuantity> {
@@ -109,12 +111,7 @@ struct EditPresetRangeView: View {
                         Image(systemName: "info.circle")
                             .foregroundColor(.accentColor)
 
-                        (Text("To help avoid lows, set a range ")
-                         + Text("higher")
-                            .italic()
-                            .bold()
-                         + Text(" than your typical correction range."))
-                        .font(.system(size: 14))
+                        tipText.font(.system(size: 14))
                     }
                     .padding()
                     .overlay( /// apply a rounded border
@@ -132,6 +129,24 @@ struct EditPresetRangeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Edit Preset")
         .edgesIgnoringSafeArea(.bottom)
+    }
+
+    private var tipText: some View {
+        Group {
+            if isPreMeal {
+                Text("To help avoid post-meal highs, set a range ")
+                 + Text("lower")
+                    .italic()
+                    .bold()
+                 + Text(" than your typical correction range.")
+            } else {
+                Text("To help avoid lows, set a range ")
+                 + Text("higher")
+                    .italic()
+                    .bold()
+                 + Text(" than your typical correction range.")
+            }
+        }
     }
 
     private var cancelButton: some View {

@@ -210,7 +210,8 @@ struct EditPresetView: View {
             EditPresetRangeView(
                 range: $preset.correctionRange,
                 guardrail: preset.guardrail,
-                scheduledRange: scheduledRange
+                scheduledRange: scheduledRange,
+                isPreMeal: preset.isPreMeal
             )
         }
     }

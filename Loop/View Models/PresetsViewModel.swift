@@ -219,6 +219,13 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
+    var isPreMeal: Bool {
+        if case .preMeal = self {
+            return true
+        }
+        return false
+    }
+
     var guardrail: Guardrail<LoopQuantity> {
         switch self {
         case .custom:
