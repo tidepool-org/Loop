@@ -38,13 +38,13 @@ struct NewPresetRangeEdit: View {
             }
             actionArea
         }
-        .navigationBarBackButtonHidden(editedRange != nil)
         .navigationBarItems(
             trailing: cancelButton
         )
         .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle("Edit Preset")
+        .navigationTitle("Create a Preset")
         .edgesIgnoringSafeArea(.bottom)
+        .padding(.top, -30)
     }
 
     private var cancelButton: some View {
@@ -67,8 +67,16 @@ struct NewPresetRangeEdit: View {
         .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
     }
 
+    private var actionButtonText: String {
+        if range == nil {
+            NSLocalizedString("Continue", comment: "Continue button for new preset range edit when range is not edited")
+        } else {
+            NSLocalizedString("Continue with adjusted range", comment: "Continue button for new preset range edit when range edited")
+        }
+    }
+
     private var actionButton: some View {
-        Button("Save") {
+        Button(actionButtonText) {
             range = editedRange
             dismiss()
         }

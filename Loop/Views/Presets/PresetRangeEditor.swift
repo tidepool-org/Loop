@@ -35,7 +35,7 @@ struct PresetRangeEditor: View {
         switch guardrail.classification(for: bound) {
         case .withinRecommendedRange:
             return Text(text)
-                .foregroundColor(.accentColor)
+                .foregroundColor(range == nil ? .secondary : .accentColor)
                 .font(.system(size: 42, weight: .semibold))
         case .outsideRecommendedRange:
             return (
@@ -74,10 +74,27 @@ struct PresetRangeEditor: View {
 
                 Text("To reduce the risk of highs or lows, you may want to set an adjusted range if you think your glucose will vary more than usual.")
                     .multilineTextAlignment(.center)
+
+                Toggle("Use Scheduled Range", isOn: Binding(get: {
+                    range == nil
+                }, set: { newValue in
+                    if (newValue) {
+                        range = nil
+                    } else {
+                        range = scheduledRange
+                    }
+                }))
+                .padding(.vertical)
+                .font(.system(size: 17))
             }
 
             VStack(spacing: 0) {
-                Text("Adjusted Range")
+                if (range == nil) {
+                    Text("Currently Scheduled Correction Range")
+                } else {
+                    Text("Adjusted Range")
+
+                }
 
                 (
                     boundText(for: (displayedRange).lowerBound) +
@@ -92,15 +109,17 @@ struct PresetRangeEditor: View {
                     .foregroundColor(.secondary)
             }
 
-            Divider()
+            if range != nil {
+                Divider()
 
-            GlucoseRangePicker(range: Binding(
-                get: { displayedRange },
-                set: { range = $0 }),
-                               unit: displayGlucosePreference.unit,
-                               minValue: nil,
-                               guardrail: guardrail)
-            .padding(.vertical, -20)
+                GlucoseRangePicker(range: Binding(
+                    get: { displayedRange },
+                    set: { range = $0 }),
+                                   unit: displayGlucosePreference.unit,
+                                   minValue: nil,
+                                   guardrail: guardrail)
+                .padding(.vertical, -20)
+            }
 
             HStack(spacing: 8) {
                 Image(systemName: "info.circle")
@@ -119,6 +138,7 @@ struct PresetRangeEditor: View {
                     .stroke(.gray, lineWidth: 1)
             )
         }
+        .font(.system(size: 15))
     }
 
 
