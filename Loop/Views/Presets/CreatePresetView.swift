@@ -78,7 +78,7 @@ struct CreatePresetView: View {
     }
 
     var insulinPercentage: Double {
-        get { return preset.insulinMultiplier * 100 }
+        get { return (preset.insulinMultiplier * 100).rounded() }
     }
 
     var scheduledRange: ClosedRange<LoopQuantity>? {
@@ -86,82 +86,81 @@ struct CreatePresetView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Form {
-                // Header Section
-                VStack(spacing: 16) {
-                    HStack {
-                        Text("Overall Insulin Needs")
-                            .foregroundColor(.secondary)
-                            .font(.subheadline)
-                            .padding(.vertical)
+        NavigationStack {
+            VStack(spacing: 0) {
+                Form {
+                    // Header Section
+                    VStack(spacing: 16) {
+                        HStack {
+                            Text("Overall Insulin Needs")
+                                .foregroundColor(.secondary)
+                                .font(.subheadline)
+                                .padding(.vertical)
 
-                        Button(action: {
-                            presentInfoView = true;
-                        }) {
-                            Image(systemName: "info.circle")
+                            Button(action: {
+                                presentInfoView = true;
+                            }) {
+                                Image(systemName: "info.circle")
+                            }
+                            .buttonStyle(BorderlessButtonStyle())
                         }
-                        .buttonStyle(BorderlessButtonStyle())
+
+                        Text("Set your overall insulin needs")
+                            .font(.title2)
+                            .fontWeight(.bold)
+
+                        Text("Use the + and - buttons to set whether you need") +
+                        Text(" more ").fontWeight(.bold) +
+                        Text("or") +
+                        Text(" less ").fontWeight(.bold) +
+                        Text("insulin than usual.")
+
+                        adjustInsulinControls
+
+                        Divider()
+
+                        settingsImpact
+
                     }
-
-                    Text("Set your overall insulin needs")
-                        .font(.title2)
-                        .fontWeight(.bold)
-
-                    Text("Use the + and - buttons to set whether you need") +
-                    Text(" more ").fontWeight(.bold) +
-                    Text("or") +
-                    Text(" less ").fontWeight(.bold) +
-                    Text("insulin than usual.")
-
-                    adjustInsulinControls
-
-                    Divider()
-
-                    settingsImpact
-
+                    .multilineTextAlignment(.center)
                 }
-                .multilineTextAlignment(.center)
-            }
 
-            actionArea
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .navigationTitle("Create a preset")
-        .edgesIgnoringSafeArea(.bottom)
-        .sheet(isPresented: $navigateToRangeEdit) {
-            newPresetRangeEdit
-        }
-        .sheet(isPresented: $presentInfoView) {
-            InsulinScaleInformationView()
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Cancel") {
-                    dismiss()
+                actionArea
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .navigationTitle("Create a preset")
+            .edgesIgnoringSafeArea(.bottom)
+            .navigationDestination(isPresented: $navigateToRangeEdit) {
+                Group {
+                    if let scheduledRange {
+                        NewPresetRangeEdit(
+                            range: $preset.correctionRange,
+                            guardrail: Guardrail.correctionRange,
+                            scheduledRange: scheduledRange
+                        )
+                    }
+                }
+            }
+            .sheet(isPresented: $presentInfoView) {
+                InsulinScaleInformationView()
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
             }
         }
     }
 
-    private var newPresetRangeEdit: some View {
-        return Group {
-            if let scheduledRange {
-                NewPresetRangeEdit(
-                    range: $preset.correctionRange,
-                    guardrail: Guardrail.correctionRange,
-                    scheduledRange: scheduledRange
-                )
-            }
-        }
-    }
 
     private var adjustInsulinControls: some View {
         HStack(spacing: 24) {
             Button(action: {
-                if insulinPercentage > 5 {
-                    preset.insulinMultiplier -= 0.05
+                if insulinPercentage > 10 {
+                    preset.insulinMultiplier = (insulinPercentage - 5) / 100
                 }
             }) {
                 Text(Image(systemName: "minus.circle.fill").symbolRenderingMode(.hierarchical))
@@ -177,7 +176,7 @@ struct CreatePresetView: View {
 
             Button(action: {
                 if insulinPercentage < 200 {
-                    preset.insulinMultiplier += 0.05
+                    preset.insulinMultiplier = (insulinPercentage + 5) / 100
                 }
             }) {
                 Text(Image(systemName: "plus.circle.fill").symbolRenderingMode(.hierarchical))
@@ -225,6 +224,7 @@ struct CreatePresetView: View {
                         name: "Basal Rate",
                         highlighted: insulinPercentage != 100
                     )
+                    .frame(maxWidth: .infinity)
 
                     SettingAdjustmentPreview(
                         value: LoopQuantity(unit: .gram, doubleValue: carbRatio),
@@ -232,6 +232,7 @@ struct CreatePresetView: View {
                         name: "Carb Ratio",
                         highlighted: insulinPercentage != 100
                     )
+                    .frame(maxWidth: .infinity)
 
                     SettingAdjustmentPreview(
                         value: isf,
@@ -239,6 +240,7 @@ struct CreatePresetView: View {
                         name: "ISF",
                         highlighted: insulinPercentage != 100
                     )
+                    .frame(maxWidth: .infinity)
                 }
             }
         }

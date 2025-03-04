@@ -172,10 +172,6 @@ struct PresetsView: View {
                     viewModel.savePreset(preset)
                 }
             }
-            .navigationDestination(isPresented: $presentCreateView) {
-                CreatePresetView()
-            }
-
         }
         .sheet(item: $viewModel.pendingPreset) { preset in
             PresetDetentView(
@@ -187,6 +183,9 @@ struct PresetsView: View {
             PresetsTrainingView {
                 viewModel.hasCompletedTraining = true
             }
+        }
+        .sheet(isPresented: $presentCreateView) {
+            CreatePresetView()
         }
     }
 
