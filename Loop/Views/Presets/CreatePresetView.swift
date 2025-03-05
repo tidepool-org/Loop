@@ -11,6 +11,13 @@ import LoopAlgorithm
 import LoopKitUI
 import LoopKit
 
+
+enum CreatePresetPage: Hashable {
+    case correctionRange
+    case name
+    case summary
+}
+
 struct SettingAdjustmentPreview: View {
     let value: LoopQuantity
     let displayUnit: LoopUnit
@@ -49,6 +56,7 @@ struct CreatePresetView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
 
     @Environment(\.dismiss) private var dismiss
+    @State private var path = NavigationPath()
     @State private var preset = NewCustomPreset()
     @State private var presentInfoView: Bool = false
     @State private var navigateToRangeEdit: Bool = false
@@ -86,7 +94,7 @@ struct CreatePresetView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             VStack(spacing: 0) {
                 Form {
                     // Header Section
@@ -127,24 +135,32 @@ struct CreatePresetView: View {
 
                 actionArea
             }
+            .edgesIgnoringSafeArea(.bottom)
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
-            .navigationTitle("Create a preset")
-            .edgesIgnoringSafeArea(.bottom)
-            .navigationDestination(isPresented: $navigateToRangeEdit) {
-                Group {
-                    if let scheduledRange {
-                        NewPresetRangeEdit(
-                            range: $preset.correctionRange,
-                            guardrail: Guardrail.correctionRange,
-                            scheduledRange: scheduledRange
-                        )
-                    }
-                }
-            }
             .sheet(isPresented: $presentInfoView) {
                 InsulinScaleInformationView()
             }
+            .navigationDestination(for: CreatePresetPage.self) { page in
+                switch page {
+                case .correctionRange:
+                    Group {
+                        if let scheduledRange {
+                            NewPresetRangeEdit(
+                                preset: $preset,
+                                path: $path,
+                                guardrail: Guardrail.correctionRange,
+                                scheduledRange: scheduledRange
+                            )
+                        }
+                    }
+                case .summary:
+                    Text("Summary view not yet implemented")
+                case .name:
+                    Text("Name view not yet implemented")
+                }
+            }
+            .navigationTitle("Create a preset")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Cancel") {
@@ -255,7 +271,7 @@ struct CreatePresetView: View {
 
     private var actionButton: some View {
         Button("Continue") {
-            navigateToRangeEdit = true
+            path.append(CreatePresetPage.correctionRange)
         }
         .buttonStyle(ActionButtonStyle(.primary))
         .padding()

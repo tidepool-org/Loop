@@ -14,23 +14,19 @@ import LoopKitUI
 struct NewPresetRangeEdit: View {
     @Environment(\.dismiss) private var dismiss
 
-    @Binding var range: ClosedRange<LoopQuantity>?
+    @Binding var preset: NewCustomPreset
+    @Binding var path: NavigationPath
     var guardrail: Guardrail<LoopQuantity>
-    private var scheduledRange: ClosedRange<LoopQuantity>
-    @State private var editedRange: ClosedRange<LoopQuantity>?
+    var scheduledRange: ClosedRange<LoopQuantity>
 
-    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>) {
-        self._range = range
-        self.guardrail = guardrail
-        self.scheduledRange = scheduledRange
-    }
+    @State private var editedRange: ClosedRange<LoopQuantity>?
 
     var body: some View {
         VStack(spacing: 0) {
             List {
                 PresetRangeEditor(range:
                     Binding(
-                        get: { editedRange ?? range },
+                        get: { editedRange ?? preset.correctionRange },
                         set: { editedRange = $0 }),
                     guardrail: guardrail,
                     scheduledRange: scheduledRange
@@ -68,7 +64,7 @@ struct NewPresetRangeEdit: View {
     }
 
     private var actionButtonText: String {
-        if range == nil {
+        if editedRange == nil {
             NSLocalizedString("Continue", comment: "Continue button for new preset range edit when range is not edited")
         } else {
             NSLocalizedString("Continue with adjusted range", comment: "Continue button for new preset range edit when range edited")
@@ -77,17 +73,17 @@ struct NewPresetRangeEdit: View {
 
     private var actionButton: some View {
         Button(actionButtonText) {
-            range = editedRange
+            preset.correctionRange = editedRange
             dismiss()
         }
-        .disabled(editedRange == nil)
+        .disabled(preset.insulinMultiplier == 1 && editedRange == nil)
         .buttonStyle(ActionButtonStyle(.primary))
         .padding()
     }
 
 
     var crossedThresholds: [SafetyClassification.Threshold] {
-        if let range = editedRange ?? range {
+        if let range = editedRange ?? preset.correctionRange {
             let lowerBound = range.lowerBound
             let upperBound = range.upperBound
             return [lowerBound, upperBound].compactMap { (bound) -> SafetyClassification.Threshold? in
