@@ -12,4 +12,5 @@ struct NewCustomPreset {
     var insulinMultiplier: Double = 1
     var correctionRange: ClosedRange<LoopQuantity>?
     var name: String = ""
+    var duration: PresetDuration?
 }

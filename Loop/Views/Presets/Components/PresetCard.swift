@@ -18,7 +18,7 @@ struct PresetCard: View {
     
     let icon: PresetIcon
     let presetName: String
-    let duration: PresetDurationType
+    let duration: PresetDuration
     let insulinSensitivityMultiplier: Double?
     let correctionRange: ClosedRange<LoopQuantity>?
     let guardrail: Guardrail<LoopQuantity>?
@@ -120,7 +120,7 @@ extension PresetExpectedEndTime {
         case .untilCarbsEntered:
             return NSLocalizedString("on until carbs added", comment: "Preset card pre-meal expected end time")
         case .indefinite:
-            return NSLocalizedString("on indefinitely", comment: "Preset card indefinite scheduled end time")
+            return NSLocalizedString("on until turned off", comment: "Preset card indefinite scheduled end time")
         case .scheduled(let date):
             return NSLocalizedString("on until \(Self.timeFormatter.string(from: date))", comment: "Presets card time duration accessibility label")
         }
@@ -141,13 +141,13 @@ extension PresetExpectedEndTime {
     }
 }
 
-extension PresetDurationType {
+extension PresetDuration {
     var localizedTitle: String {
         switch self {
         case .untilCarbsEntered:
             return NSLocalizedString("until carbs added", comment: "Preset card pre-meal duration")
         case .indefinite:
-            return NSLocalizedString("indefinite", comment: "Preset card indefinite duration")
+            return NSLocalizedString("until turned off", comment: "Preset card indefinite duration")
         case .duration(let duration):
             let formatter = DateComponentsFormatter()
             formatter.allowedUnits = [.hour, .minute]
@@ -162,7 +162,7 @@ extension PresetDurationType {
         case .untilCarbsEntered:
             return NSLocalizedString("Active until carbs are added", comment: "Presets card pre-meal duration accessibility label")
         case .indefinite:
-            return NSLocalizedString("Active indefinitely", comment: "Presets card indefinite duration accessibility label")
+            return NSLocalizedString("Active until turned off", comment: "Presets card indefinite duration accessibility label")
         case .duration(let duration):
             let formatter = DateComponentsFormatter()
             formatter.allowedUnits = [.hour, .minute]

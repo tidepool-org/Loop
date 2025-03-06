@@ -10,7 +10,7 @@ import SwiftUI
 import LoopAlgorithm
 import LoopKit
 
-enum PresetDurationType: Equatable {
+enum PresetDuration: Equatable {
     case untilCarbsEntered
     case duration(TimeInterval)
     case indefinite
@@ -31,7 +31,7 @@ enum PresetExpectedEndTime {
 }
 
 extension TemporaryScheduleOverride.Duration {
-    var presetDurationType: PresetDurationType {
+    var presetDurationType: PresetDuration {
         switch self {
         case .finite(let interval):
             return .duration(interval)
@@ -70,7 +70,7 @@ enum PresetIcon {
 
 typealias RangeSafetyClassification = (lower: SafetyClassification, upper: SafetyClassification)
 
-extension PresetDurationType: Hashable {
+extension PresetDuration: Hashable {
     func hash(into hasher: inout Hasher) {
         switch self {
         case .indefinite:
@@ -123,7 +123,7 @@ enum SelectablePreset: Hashable, Identifiable {
 
     case custom(TemporaryScheduleOverridePreset)
     case preMeal(range: ClosedRange<LoopQuantity>, guardrail: Guardrail<LoopQuantity>)
-    case legacyWorkout(range: ClosedRange<LoopQuantity>, duration: PresetDurationType, guardrail: Guardrail<LoopQuantity>)
+    case legacyWorkout(range: ClosedRange<LoopQuantity>, duration: PresetDuration, guardrail: Guardrail<LoopQuantity>)
 
     var icon: PresetIcon {
         switch self {
@@ -133,7 +133,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var duration: PresetDurationType {
+    var duration: PresetDuration {
         get {
             switch self {
             case .custom(let preset):

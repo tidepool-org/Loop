@@ -23,24 +23,28 @@ struct NewPresetRangeEdit: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            List {
-                PresetRangeEditor(range:
-                    Binding(
-                        get: { editedRange ?? preset.correctionRange },
-                        set: { editedRange = $0 }),
-                    guardrail: guardrail,
-                    scheduledRange: scheduledRange
-                )
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    CardSection {
+                        PresetRangeEditor(
+                            range: $editedRange,
+                            guardrail: guardrail,
+                            scheduledRange: scheduledRange
+                        )
+                    }
+                }
+                .padding()
             }
+
             actionArea
         }
-        .navigationBarItems(
-            trailing: cancelButton
-        )
+        .background(Color(.systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Create a Preset")
         .edgesIgnoringSafeArea(.bottom)
-        .padding(.top, -30)
+        .navigationBarItems(
+            trailing: cancelButton
+        )
     }
 
     private var cancelButton: some View {
@@ -74,7 +78,7 @@ struct NewPresetRangeEdit: View {
     private var actionButton: some View {
         Button(actionButtonText) {
             preset.correctionRange = editedRange
-            dismiss()
+            path.append(CreatePresetPage.nameAndSchedule)
         }
         .disabled(preset.insulinMultiplier == 1 && editedRange == nil)
         .buttonStyle(ActionButtonStyle(.primary))

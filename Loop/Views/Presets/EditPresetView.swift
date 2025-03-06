@@ -261,8 +261,21 @@ struct EditPresetView: View {
             .listSectionSpacing(16)
         }
         .sheet(isPresented: $showingPicker) {
-            DurationPickerView(durationType: $preset.duration)
-            .presentationDetents([.height(300)])
+            VStack(alignment: .center, spacing: 24) {
+                HStack {
+                    Text("Duration")
+                        .font(.system(size: 17, weight: .regular))
+                    Spacer()
+                    Text("Required")
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundColor(.gray)
+                }
+                DurationPickerView(durationType: $preset.duration)
+                    .presentationDetents([.height(300)])
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(10)
         }
         .onChange(of: preset, {
             do {

@@ -9,14 +9,14 @@
 import SwiftUI
 
 struct DurationPickerView: View {
-    @Binding var durationType: PresetDurationType
+    @Binding var durationType: PresetDuration
     @State private var lastUsedDuration: TimeInterval
 
     // Available values (respecting min 5min and max 8hr constraints)
     private let availableHours = Array(0...8)
     private let availableMinutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
 
-    init(durationType: Binding<PresetDurationType>) {
+    init(durationType: Binding<PresetDuration>) {
         self._durationType = durationType
 
         // Initialize lastUsedDuration based on current durationType or default to 1 hour
@@ -81,16 +81,7 @@ struct DurationPickerView: View {
     }
 
     var body: some View {
-        VStack(alignment: .center, spacing: 24) {
-            HStack {
-                Text("Duration")
-                    .font(.system(size: 17, weight: .regular))
-                Spacer()
-                Text("Required")
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundColor(.gray)
-            }
-
+        VStack {
             HStack(spacing: 16) {
                 HStack(spacing: 8) {
                     Picker("Hours", selection: hours) {
@@ -127,10 +118,10 @@ struct DurationPickerView: View {
                 }
             }
             .padding(.horizontal)
-            .onChange(of: hours.wrappedValue) { _ in
+            .onChange(of: hours.wrappedValue) { _, _ in
                 enforceConstraints()
             }
-            .onChange(of: minutes.wrappedValue) { _ in
+            .onChange(of: minutes.wrappedValue) { _, _ in
                 enforceConstraints()
             }
 
@@ -142,9 +133,6 @@ struct DurationPickerView: View {
                     .labelsHidden()
             }
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(10)
     }
 
     private func enforceConstraints() {

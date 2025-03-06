@@ -417,6 +417,8 @@
 		B4FEEF7D24B8A71F00A8DF9B /* DeviceDataManager+DeviceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FEEF7C24B8A71F00A8DF9B /* DeviceDataManager+DeviceStatus.swift */; };
 		C1004DF22981F5B700B8CF94 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C1004DF02981F5B700B8CF94 /* InfoPlist.strings */; };
 		C1004DF52981F5B700B8CF94 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C1004DF32981F5B700B8CF94 /* Localizable.strings */; };
+		C105095B2D78D35100118A37 /* CreatePresetNameAndScheduledEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105095A2D78D32C00118A37 /* CreatePresetNameAndScheduledEdit.swift */; };
+		C105095D2D7A1DB700118A37 /* CardSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105095C2D7A1DB300118A37 /* CardSection.swift */; };
 		C110888D2A3913C600BA4898 /* BuildDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = C110888C2A3913C600BA4898 /* BuildDetails.swift */; };
 		C11613492983096D00777E7C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C11613472983096D00777E7C /* InfoPlist.strings */; };
 		C116134C2983096D00777E7C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C116134A2983096D00777E7C /* Localizable.strings */; };
@@ -1358,6 +1360,8 @@
 		C1004E342981F77B00B8CF94 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C1004E352981F77B00B8CF94 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C101947127DD473C004E7EB8 /* MockKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MockKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C105095A2D78D32C00118A37 /* CreatePresetNameAndScheduledEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePresetNameAndScheduledEdit.swift; sourceTree = "<group>"; };
+		C105095C2D7A1DB300118A37 /* CardSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSection.swift; sourceTree = "<group>"; };
 		C1092BFD29F8116700AE3D1C /* apply-info-customizations.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "apply-info-customizations.sh"; sourceTree = "<group>"; };
 		C110888C2A3913C600BA4898 /* BuildDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildDetails.swift; sourceTree = "<group>"; };
 		C11613482983096D00777E7C /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -2510,6 +2514,7 @@
 		84E8BBAF2CC979300078E6CF /* Presets */ = {
 			isa = PBXGroup;
 			children = (
+				C105095A2D78D32C00118A37 /* CreatePresetNameAndScheduledEdit.swift */,
 				C1AC039F2D6FCB2C004D4D2B /* NewCustomPreset.swift */,
 				C1AC039D2D6FC8BB004D4D2B /* NewPresetRangeEdit.swift */,
 				C1AC039B2D6E751C004D4D2B /* ExistingPresetRangeEdit.swift */,
@@ -2541,6 +2546,7 @@
 		84E8BBC22CC9B9780078E6CF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				C105095C2D7A1DB300118A37 /* CardSection.swift */,
 				84C170EC2CCA361F0098E52F /* ImpactView.swift */,
 				84E8BBC32CC9B9800078E6CF /* AdjustedGlucoseRangeView.swift */,
 				84E8BBCD2CCA1E070078E6CF /* PresetsTrainingCard.swift */,
@@ -3566,6 +3572,7 @@
 				89E267FC2292456700A3F2AF /* FeatureFlags.swift in Sources */,
 				43A567691C94880B00334FAC /* LoopDataManager.swift in Sources */,
 				C152B9F52C9C7D4A00ACBC06 /* AutomationHistoryEntry.swift in Sources */,
+				C105095B2D78D35100118A37 /* CreatePresetNameAndScheduledEdit.swift in Sources */,
 				1DA649A9244126DA00F61E75 /* InAppModalAlertScheduler.swift in Sources */,
 				43B260491ED248FB008CAA77 /* CarbEntryTableViewCell.swift in Sources */,
 				142CB75B2A60BFC30075748A /* FavoriteFoodsView.swift in Sources */,
@@ -3630,6 +3637,7 @@
 				1DDE273D24AEA4B000796622 /* SettingsViewModel.swift in Sources */,
 				DD3DBD292A33AFE9000F8B5B /* IntegralRetrospectiveCorrectionSelectionView.swift in Sources */,
 				A9347F3124E7521800C99C34 /* CarbBackfillRequestUserInfo.swift in Sources */,
+				C105095D2D7A1DB700118A37 /* CardSection.swift in Sources */,
 				A9CBE458248AB564008E7BA2 /* DoseStore+SimulatedCoreData.swift in Sources */,
 				84E8BBBC2CC992660078E6CF /* PresetsAndIllnessContentView.swift in Sources */,
 				897A5A9924C22DE800C4E71D /* BolusEntryViewModel.swift in Sources */,

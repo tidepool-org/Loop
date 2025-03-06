@@ -78,10 +78,12 @@ struct PresetRangeEditor: View {
                 Toggle("Use Scheduled Range", isOn: Binding(get: {
                     range == nil
                 }, set: { newValue in
-                    if (newValue) {
-                        range = nil
-                    } else {
-                        range = scheduledRange
+                    withAnimation {
+                        if (newValue) {
+                            range = nil
+                        } else {
+                            range = scheduledRange
+                        }
                     }
                 }))
                 .padding(.vertical)
@@ -111,6 +113,7 @@ struct PresetRangeEditor: View {
 
             if range != nil {
                 Divider()
+                    .animation(.default, value: range != nil)
 
                 GlucoseRangePicker(range: Binding(
                     get: { displayedRange },
@@ -137,6 +140,7 @@ struct PresetRangeEditor: View {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(.gray, lineWidth: 1)
             )
+            .padding(.bottom)
         }
         .font(.system(size: 15))
     }

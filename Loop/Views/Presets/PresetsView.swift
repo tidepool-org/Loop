@@ -104,7 +104,6 @@ struct PresetsView: View {
                         LazyVStack(spacing: 12) {
                             ForEach(presetsSorted) { preset in
                                 PresetCard(preset)
-                                    .background(Color.white)
                                     .cornerRadius(12)
                                     .onTapGesture {
                                         viewModel.pendingPreset = preset

@@ -14,7 +14,7 @@ import LoopKit
 
 enum CreatePresetPage: Hashable {
     case correctionRange
-    case name
+    case nameAndSchedule
     case summary
 }
 
@@ -156,8 +156,8 @@ struct CreatePresetView: View {
                     }
                 case .summary:
                     Text("Summary view not yet implemented")
-                case .name:
-                    Text("Name view not yet implemented")
+                case .nameAndSchedule:
+                    CreatePresetNameAndScheduledEdit(preset: $preset, path: $path)
                 }
             }
             .navigationTitle("Create a preset")
