@@ -18,12 +18,14 @@ struct ExistingPresetRangeEdit: View {
     var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
     @State private var editedRange: ClosedRange<LoopQuantity>?
+    private var allowsScheduledRange: Bool
 
-    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>) {
+    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, allowsScheduledRange: Bool = true) {
         self._range = range
         self.editedRange = range.wrappedValue
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
+        self.allowsScheduledRange = allowsScheduledRange
     }
 
     var body: some View {
@@ -32,7 +34,8 @@ struct ExistingPresetRangeEdit: View {
                 PresetRangeEditor(
                     range: $editedRange,
                     guardrail: guardrail,
-                    scheduledRange: scheduledRange
+                    scheduledRange: scheduledRange,
+                    allowsScheduledRange: allowsScheduledRange
                 )
             }
         } actionArea: {

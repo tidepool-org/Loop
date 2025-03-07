@@ -224,7 +224,8 @@ struct EditPresetView: View {
             ExistingPresetRangeEdit(
                 range: $preset.correctionRange,
                 guardrail: preset.guardrail,
-                scheduledRange: scheduledRange
+                scheduledRange: scheduledRange,
+                allowsScheduledRange: preset.canAdjustSensitivity
             )
         }
         .onChange(of: preset, {

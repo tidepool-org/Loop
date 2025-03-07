@@ -18,11 +18,13 @@ struct PresetRangeEditor: View {
     @Binding var range: ClosedRange<LoopQuantity>?
     var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
+    private var allowsScheduledRange: Bool
 
-    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>) {
+    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, allowsScheduledRange: Bool = true) {
         self._range = range
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
+        self.allowsScheduledRange = allowsScheduledRange
     }
 
     var displayedRange: ClosedRange<LoopQuantity> {
@@ -75,19 +77,21 @@ struct PresetRangeEditor: View {
                 Text("To reduce the risk of highs or lows, you may want to set an adjusted range if you think your glucose will vary more than usual.")
                     .multilineTextAlignment(.center)
 
-                Toggle("Use Scheduled Range", isOn: Binding(get: {
-                    range == nil
-                }, set: { newValue in
-                    withAnimation {
-                        if (newValue) {
-                            range = nil
-                        } else {
-                            range = scheduledRange
+                if allowsScheduledRange {
+                    Toggle("Use Scheduled Range", isOn: Binding(get: {
+                        range == nil
+                    }, set: { newValue in
+                        withAnimation {
+                            if (newValue) {
+                                range = nil
+                            } else {
+                                range = scheduledRange
+                            }
                         }
-                    }
-                }))
-                .padding(.vertical)
-                .font(.system(size: 17))
+                    }))
+                    .padding(.vertical)
+                    .font(.system(size: 17))
+                }
             }
 
             VStack(spacing: 0) {
