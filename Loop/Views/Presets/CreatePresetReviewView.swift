@@ -26,127 +26,110 @@ struct CreatePresetReviewView: View {
     let minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    VStack(alignment: .leading) {
-                        Text("New Preset")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .padding(.top, 40)
-                    }
+        CardSectionScrollView {
+            VStack(alignment: .leading) {
+                Text("New Preset")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .padding(.top, 40)
+            }
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Review Settings")
-                            .font(.system(size: 17, weight: .semibold))
-                        Text("Review your preset settings below. To make any changes, tap on the row you’d like to edit. You can edit these settings at any time.")
-                            .font(.system(size: 13))
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.accentColor)
-                        .frame(maxWidth: .infinity))
-                    .padding(.top, 10)
-                    .clipped()
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Review Settings")
+                    .font(.system(size: 17, weight: .semibold))
+                Text("Review your preset settings below. To make any changes, tap on the row you’d like to edit. You can edit these settings at any time.")
+                    .font(.system(size: 13))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(RoundedRectangle(cornerRadius: 10)
+                .fill(Color.accentColor)
+                .frame(maxWidth: .infinity))
+            .padding(.top, 10)
+            .clipped()
 
-                    Text("TEMPORARY SETTINGS ADJUSTMENTS")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
+            // Name Field
+            if preset.savePreset {
+                CardSection("Temporary Settings Adjustments") {
+                    HStack {
+                        Text("Name")
+                            .font(.body)
 
-                    // Name Field
-                    if preset.savePreset {
-                        CardSection {
-                            HStack {
-                                Text("Name")
-                                    .font(.body)
+                        Spacer()
 
-                                Spacer()
-
-                                TextField("", text: $preset.name, prompt: Text("Required").foregroundColor(.gray))
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($isTextFieldFocused)
-                            }
-                            .padding(.vertical, 6)
-                        }
-                    }
-
-                    // Duration Section
-                    CardSection {
-                        VStack(alignment: .leading, spacing: 0) {
-                            HStack {
-                                Text("Duration")
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                if let duration = preset.duration {
-                                    Text(duration.localizedTitle)
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.secondary)
-                                } else {
-                                    Text("Required")
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .padding(.vertical, 6)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                isTextFieldFocused = false
-                                withAnimation() {
-                                    isDurationPickerExpanded.toggle()
-                                }
-                            }
-
-                            if isDurationPickerExpanded {
-                                DurationPickerView(
-                                    durationType: Binding(
-                                        get: {
-                                            return preset.duration ?? .duration(0)
-                                        },
-                                        set: { duration in
-                                            preset.duration = duration
-                                        }
-                                    )
-                                )
-                            }
-                        }
-                    }
-
-                    // Schedule Toggle
-                    if preset.savePreset {
-                        CardSection {
-                            HStack {
-                                Text("Schedule")
-                                    .font(.body)
-
-                                Spacer()
-
-                                Toggle("", isOn: $scheduleEnabled)
-                                    .toggleStyle(SwitchToggleStyle(tint: .green))
-                                    .labelsHidden()
-                            }
-                            .padding(.vertical, 6)
-                        }
+                        TextField("", text: $preset.name, prompt: Text("Required").foregroundColor(.gray))
+                            .multilineTextAlignment(.trailing)
+                            .focused($isTextFieldFocused)
                     }
                 }
             }
+
+            // Duration Section
+            CardSection {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack {
+                        Text("Duration")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        if let duration = preset.duration {
+                            Text(duration.localizedTitle)
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Required")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        isTextFieldFocused = false
+                        withAnimation() {
+                            isDurationPickerExpanded.toggle()
+                        }
+                    }
+
+                    if isDurationPickerExpanded {
+                        DurationPickerView(
+                            durationType: Binding(
+                                get: {
+                                    return preset.duration ?? .duration(0)
+                                },
+                                set: { duration in
+                                    preset.duration = duration
+                                }
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Schedule Toggle
+            if preset.savePreset {
+                CardSection {
+                    HStack {
+                        Text("Schedule")
+                            .font(.body)
+
+                        Spacer()
+
+                        Toggle("", isOn: $scheduleEnabled)
+                            .toggleStyle(SwitchToggleStyle(tint: .green))
+                            .labelsHidden()
+                    }
+                }
+            }
+        } actionArea: {
+            Button("Continue") {
+                path.append(CreatePresetPage.summary)
+            }
+            .disabled(!allowSave)
+            .buttonStyle(ActionButtonStyle(.primary))
             .padding()
-
-            VStack(spacing: 0) {
-                Button("Continue") {
-                    path.append(CreatePresetPage.summary)
-                }
-                .disabled(!allowSave)
-                .buttonStyle(ActionButtonStyle(.primary))
-                .padding()
-            }
-            .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
-
         }
-        .background(Color(.systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Create a Preset")
-        .edgesIgnoringSafeArea([.bottom, .top])
+        .edgesIgnoringSafeArea([.top])
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Cancel") {

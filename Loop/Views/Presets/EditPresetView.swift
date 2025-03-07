@@ -166,52 +166,43 @@ struct EditPresetView: View {
 
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading) {
-                    Section {} header: {
-                        presetTitle
-                    }
-                    .listRowInsets(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 0))
-                    .textCase(nil)
-                    
-                    sensitivitySection
-                    
-                    correctionSection
-                    
-                    CardSection("PRESET DETAILS") {
-                        HStack {
-                            Text("Name")
-                            Spacer()
-                            Text(presetName)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    CardSection(
-                        content: {
-                            Button(action: {
-                                showingPicker = true
-                            }) {
-                                HStack {
-                                    Text("Duration")
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                    Text(preset.duration.localizedTitle)
-                                        .foregroundColor(.secondary)
-                                    if preset.canAdjustDuration {
-                                        Image(systemName: "chevron.right")
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                            }.disabled(!preset.canAdjustDuration)
-                        },
-                        footerText: preset.canAdjustDuration ? nil : "Duration and Name not configurable for this preset.")
+        CardSectionScrollView {
+            presetTitle
+
+            sensitivitySection
+
+            correctionSection
+
+            CardSection("Preset Details") {
+                HStack {
+                    Text("Name")
+                    Spacer()
+                    Text(presetName)
+                        .foregroundColor(.secondary)
                 }
             }
-            .padding()
+
+            CardSection(
+                content: {
+                    Button(action: {
+                        showingPicker = true
+                    }) {
+                        HStack {
+                            Text("Duration")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Text(preset.duration.localizedTitle)
+                                .foregroundColor(.secondary)
+                            if preset.canAdjustDuration {
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                    }.disabled(!preset.canAdjustDuration)
+                },
+                footerText: preset.canAdjustDuration ? nil : "Duration and Name not configurable for this preset."
+            )
         }
-        .background(Color(.systemGroupedBackground))
         .sheet(isPresented: $showingPicker) {
             VStack(alignment: .center, spacing: 24) {
                 HStack {

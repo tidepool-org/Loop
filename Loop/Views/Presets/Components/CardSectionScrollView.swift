@@ -6,6 +6,11 @@
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 
+// Container designed to hold CardSection views in a scrollview, and an optional action area
+// that the scrollview would flow under, with a shadow effect. Together, they replace a List (TableView)
+// with grouped styling, and allow rows to have their height animated as expected, avoiding the animation
+// issues that resizing rows in Lists presents.
+
 import SwiftUI
 
 struct CardSectionScrollView<Content: View, ActionArea: View>: View {
@@ -40,6 +45,6 @@ struct CardSectionScrollView<Content: View, ActionArea: View>: View {
             }
         }
         .background(Color(.systemGroupedBackground))
-        .edgesIgnoringSafeArea(actionArea == nil ? .bottom : [])
+        .edgesIgnoringSafeArea(actionArea != nil ? .bottom : [])
     }
 }

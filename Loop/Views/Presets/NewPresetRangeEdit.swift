@@ -22,49 +22,31 @@ struct NewPresetRangeEdit: View {
     @State private var editedRange: ClosedRange<LoopQuantity>?
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading) {
-                    CardSection {
-                        PresetRangeEditor(
-                            range: $editedRange,
-                            guardrail: guardrail,
-                            scheduledRange: scheduledRange
-                        )
-                    }
-                }
-                .padding()
+        CardSectionScrollView {
+            CardSection {
+                PresetRangeEditor(
+                    range: $editedRange,
+                    guardrail: guardrail,
+                    scheduledRange: scheduledRange
+                )
             }
-
-            actionArea
+        } actionArea: {
+            guardrailWarningIfNecessary
+            actionButton
         }
-        .background(Color(.systemGroupedBackground))
+
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Create a Preset")
-        .edgesIgnoringSafeArea(.bottom)
         .navigationBarItems(
             trailing: cancelButton
         )
     }
 
     private var cancelButton: some View {
-        Group {
-            if editedRange != nil {
-                Button("Cancel") {
-                    dismiss()
-                }
-                .foregroundColor(.blue)
-            }
+        Button("Cancel") {
+            dismiss()
         }
-    }
-
-
-    private var actionArea: some View {
-        VStack(spacing: 0) {
-            guardrailWarningIfNecessary
-            actionButton
-        }
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
+        .foregroundColor(.blue)
     }
 
     private var actionButtonText: String {
