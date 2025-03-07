@@ -16,7 +16,7 @@ struct InsulinScaleInformationView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading) {
                 Text("Overall Insulin")
                     .font(.largeTitle)
                     .fontWeight(.bold)

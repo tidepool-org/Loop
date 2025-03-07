@@ -9,6 +9,7 @@
 import LoopAlgorithm
 
 struct NewCustomPreset {
+    var savePreset: Bool = true
     var insulinMultiplier: Double = 1
     var correctionRange: ClosedRange<LoopQuantity>?
     var name: String = ""

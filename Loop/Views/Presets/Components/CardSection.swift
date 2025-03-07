@@ -12,25 +12,57 @@ import SwiftUI
 // that need to animate height (List/TableViews have problems with resizing views and animating them). Similar to Card in
 // LoopKitUI, but unlike Card, has requirement on the type of content except that it is a View.
 
-struct CardSection<Content: View>: View {
+struct CardSection<Content: View, Header: View, Footer: View>: View {
+    let header: Header?
+    let footer: Footer?
     let content: Content
 
     // Initializer for custom view header
-    init(@ViewBuilder content: () -> Content) {
+    init(@ViewBuilder content: () -> Content, @ViewBuilder header: () -> Header, @ViewBuilder footer: () -> Footer) {
         self.content = content()
+        self.header = header()
+        self.footer = footer()
+    }
+
+    // Initializer for string header
+    init(_ headerText: String? = nil, @ViewBuilder content: () -> Content, footerText: String? = nil) where Header == Text, Footer == Text {
+        self.content = content()
+        self.header = headerText.map { Text($0) }
+        self.footer = footerText.map { Text($0) }
+    }
+
+    // Initializer for no header
+    init(@ViewBuilder content: () -> Content) where Header == Text, Footer == Text {
+        self.content = content()
+        self.header = nil
+        self.footer = nil
     }
 
     var body: some View {
-        VStack {
-            content
+        VStack(alignment: .leading) {
+            if let header = header {
+                header
+                    .font(.footnote)
+                    .textCase(.uppercase)
+                    .foregroundStyle(.secondary)
+            }
+            VStack {
+                content
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(RoundedRectangle(cornerRadius: 10)
+                .fill(Color(UIColor.tertiarySystemBackground))
+                .frame(maxWidth: .infinity))
+            .clipped()
+            if let footer = footer {
+                footer
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading)
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
-        .background(RoundedRectangle(cornerRadius: 10)
-            .fill(Color(UIColor.tertiarySystemBackground))
-            .frame(maxWidth: .infinity))
         .padding(.top, 10)
-        .clipped()
     }
 }
 

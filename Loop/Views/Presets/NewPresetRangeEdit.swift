@@ -24,7 +24,7 @@ struct NewPresetRangeEdit: View {
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading) {
                     CardSection {
                         PresetRangeEditor(
                             range: $editedRange,

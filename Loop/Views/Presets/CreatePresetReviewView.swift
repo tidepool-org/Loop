@@ -1,21 +1,21 @@
 //
-//  CreatePresetNameAndScheduledEdit.swift
+//  CreatePresetReviewView.swift
 //  Loop
 //
-//  Created by Pete Schwamb on 3/5/25.
+//  Created by Pete Schwamb on 3/6/25.
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 
-
 import LoopKitUI
 import SwiftUI
+import LoopUI
 
-struct CreatePresetNameAndScheduledEdit: View {
+struct CreatePresetReviewView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Binding var preset: NewCustomPreset
     @Binding var path: NavigationPath
-    
+
     @State private var scheduleEnabled = false
     @State private var isDurationPickerExpanded = false
 
@@ -29,24 +29,31 @@ struct CreatePresetNameAndScheduledEdit: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    CardSection {
-                        // Save Preset Toggle
-                        HStack {
-                            Text("Save Preset")
-                                .font(.body)
-
-                            Spacer()
-
-                            Toggle("", isOn: $preset.savePreset.animation())
-                                .toggleStyle(SwitchToggleStyle(tint: .green))
-                                .labelsHidden()
-                        }
+                    VStack(alignment: .leading) {
+                        Text("New Preset")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .padding(.top, 40)
                     }
 
-                    Text("Toggle off for a single use preset")
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Review Settings")
+                            .font(.system(size: 17, weight: .semibold))
+                        Text("Review your preset settings below. To make any changes, tap on the row you’d like to edit. You can edit these settings at any time.")
+                            .font(.system(size: 13))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.accentColor)
+                        .frame(maxWidth: .infinity))
+                    .padding(.top, 10)
+                    .clipped()
+
+                    Text("TEMPORARY SETTINGS ADJUSTMENTS")
                         .font(.footnote)
-                        .foregroundColor(.gray)
-                        .padding(.horizontal, 10)
+                        .foregroundColor(.secondary)
 
                     // Name Field
                     if preset.savePreset {
@@ -89,7 +96,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                                     isDurationPickerExpanded.toggle()
                                 }
                             }
-                            
+
                             if isDurationPickerExpanded {
                                 DurationPickerView(
                                     durationType: Binding(
@@ -139,7 +146,7 @@ struct CreatePresetNameAndScheduledEdit: View {
         .background(Color(.systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Create a Preset")
-        .edgesIgnoringSafeArea(.bottom)
+        .edgesIgnoringSafeArea([.bottom, .top])
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Cancel") {
@@ -154,66 +161,12 @@ struct CreatePresetNameAndScheduledEdit: View {
     }
 }
 
-// Optional: Extension for expanded row when Duration is tapped
-struct DurationRowView: View {
-    @Binding var untilTurnOff: Bool
-    @Binding var selectedHour: Int
-    @Binding var selectedMinute: Int
-
-    let hours = Array(0...23)
-    let minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
-
-    var body: some View {
-        VStack {
-            HStack(spacing: 0) {
-                Picker("Hour", selection: $selectedHour) {
-                    ForEach(hours, id: \.self) { hour in
-                        Text("\(hour)").tag(hour)
-                    }
-                }
-                .pickerStyle(WheelPickerStyle())
-                .frame(width: UIScreen.main.bounds.width / 2)
-                .clipped()
-
-                Text("hour")
-                    .foregroundColor(.gray)
-                    .padding(.trailing, 20)
-
-                Picker("Minute", selection: $selectedMinute) {
-                    ForEach(minutes, id: \.self) { minute in
-                        Text("\(minute)").tag(minute)
-                    }
-                }
-                .pickerStyle(WheelPickerStyle())
-                .frame(width: UIScreen.main.bounds.width / 2)
-                .clipped()
-
-                Text("min")
-                    .foregroundColor(.gray)
-            }
-            .frame(height: 120)
-
-            HStack {
-                Text("Until I turn off")
-                    .font(.body)
-
-                Spacer()
-
-                Toggle("", isOn: $untilTurnOff)
-                    .toggleStyle(SwitchToggleStyle(tint: .green))
-                    .labelsHidden()
-            }
-            .padding(.horizontal, 16)
-        }
-    }
-}
-
 // Preview Provider
-struct PresetCreationView_Previews: PreviewProvider {
+struct CreatePresetReviewView_Previews: PreviewProvider {
     @State static var preset: NewCustomPreset = .init()
     @State static var path: NavigationPath = .init()
 
     static var previews: some View {
-        CreatePresetNameAndScheduledEdit(preset: $preset, path: $path)
+        CreatePresetReviewView(preset: $preset, path: $path)
     }
 }

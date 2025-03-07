@@ -12,50 +12,6 @@ import SwiftUI
 import LoopKitUI
 import LoopAlgorithm
 
-struct CompactSection<Content: View, Header: View, Footer: View>: View {
-    let header: Header?
-    let footer: Footer?
-    let content: Content
-
-    // Initializer for custom view header
-    init(@ViewBuilder content: () -> Content, @ViewBuilder header: () -> Header, @ViewBuilder footer: () -> Footer) {
-        self.content = content()
-        self.header = header()
-        self.footer = footer()
-    }
-
-    // Initializer for string header
-    init(_ headerText: String? = nil, @ViewBuilder content: () -> Content, footerText: String? = nil) where Header == Text, Footer == Text {
-        self.content = content()
-        self.header = headerText.map { Text($0) }
-        self.footer = footerText.map { Text($0) }
-    }
-
-    // Initializer for no header
-    init(@ViewBuilder content: () -> Content) where Header == Text, Footer == Text {
-        self.content = content()
-        self.header = nil
-        self.footer = nil
-    }
-
-    var body: some View {
-        Section {
-            content
-        } header: {
-            if let header {
-                header
-                    .padding([.leading, .trailing], -10)
-            }
-        } footer: {
-            if let footer {
-                footer
-            }
-        }
-        .listRowInsets(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
-    }
-}
-
-
 struct EditPresetView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.guidanceColors) private var guidanceColors
@@ -110,7 +66,7 @@ struct EditPresetView: View {
     }
 
     var sensitivitySection: some View {
-        CompactSection("Temporary Settings Adjustments") {
+        CardSection("Temporary Settings Adjustments") {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Overall Insulin")
                     .font(.system(.title3, weight: .semibold))
@@ -176,7 +132,7 @@ struct EditPresetView: View {
 
 
     var correctionSection: some View {
-        CompactSection {
+        CardSection {
             Button {
                 navigateToCorrectionRangeEditor = true;
             } label: {
@@ -206,60 +162,56 @@ struct EditPresetView: View {
                 .foregroundColor(.primary)
             }
         }
-        .navigationDestination(isPresented: $navigateToCorrectionRangeEditor) {
-            ExistingPresetRangeEdit(
-                range: $preset.correctionRange,
-                guardrail: preset.guardrail,
-                scheduledRange: scheduledRange
-            )
-        }
     }
 
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Form {
-                Section {} header: {
-                    presetTitle
-                }
-                .listRowInsets(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 0))
-                .textCase(nil)
-
-                sensitivitySection
-
-                correctionSection
-
-                CompactSection("PRESET DETAILS") {
-                    HStack {
-                        Text("Name")
-                        Spacer()
-                        Text(presetName)
-                            .foregroundColor(.secondary)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading) {
+                    Section {} header: {
+                        presetTitle
                     }
-                }
-
-                CompactSection(
-                    content: {
-                        Button(action: {
-                            showingPicker = true
-                        }) {
-                            HStack {
-                                Text("Duration")
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                Text(preset.duration.localizedTitle)
-                                    .foregroundColor(.secondary)
-                                if preset.canAdjustDuration {
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.gray)
+                    .listRowInsets(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 0))
+                    .textCase(nil)
+                    
+                    sensitivitySection
+                    
+                    correctionSection
+                    
+                    CardSection("PRESET DETAILS") {
+                        HStack {
+                            Text("Name")
+                            Spacer()
+                            Text(presetName)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    CardSection(
+                        content: {
+                            Button(action: {
+                                showingPicker = true
+                            }) {
+                                HStack {
+                                    Text("Duration")
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Text(preset.duration.localizedTitle)
+                                        .foregroundColor(.secondary)
+                                    if preset.canAdjustDuration {
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(.gray)
+                                    }
                                 }
-                            }
-                        }.disabled(!preset.canAdjustDuration)
-                    },
-                    footerText: preset.canAdjustDuration ? nil : "Duration and Name not configurable for this preset.")
+                            }.disabled(!preset.canAdjustDuration)
+                        },
+                        footerText: preset.canAdjustDuration ? nil : "Duration and Name not configurable for this preset.")
+                }
             }
-            .listSectionSpacing(16)
+            .padding()
         }
+        .background(Color(.systemGroupedBackground))
         .sheet(isPresented: $showingPicker) {
             VStack(alignment: .center, spacing: 24) {
                 HStack {
@@ -276,6 +228,13 @@ struct EditPresetView: View {
             .padding()
             .background(Color(.systemBackground))
             .cornerRadius(10)
+        }
+        .navigationDestination(isPresented: $navigateToCorrectionRangeEditor) {
+            ExistingPresetRangeEdit(
+                range: $preset.correctionRange,
+                guardrail: preset.guardrail,
+                scheduledRange: scheduledRange
+            )
         }
         .onChange(of: preset, {
             do {

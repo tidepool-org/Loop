@@ -154,10 +154,10 @@ struct CreatePresetView: View {
                             )
                         }
                     }
-                case .summary:
-                    Text("Summary view not yet implemented")
                 case .nameAndSchedule:
                     CreatePresetNameAndScheduledEdit(preset: $preset, path: $path)
+                case .summary:
+                    CreatePresetReviewView(preset: $preset, path: $path)
                 }
             }
             .navigationTitle("Create a preset")

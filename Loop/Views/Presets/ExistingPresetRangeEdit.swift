@@ -21,22 +21,23 @@ struct ExistingPresetRangeEdit: View {
 
     init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>) {
         self._range = range
+        self.editedRange = range.wrappedValue
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            List {
-                PresetRangeEditor(range:
-                    Binding(
-                        get: { editedRange ?? range },
-                        set: { editedRange = $0 }),
+        CardSectionScrollView {
+            CardSection {
+                PresetRangeEditor(
+                    range: $editedRange,
                     guardrail: guardrail,
                     scheduledRange: scheduledRange
                 )
             }
-            actionArea
+        } actionArea: {
+            guardrailWarningIfNecessary
+            actionButton
         }
         .navigationBarBackButtonHidden(editedRange != nil)
         .navigationBarItems(
@@ -44,12 +45,11 @@ struct ExistingPresetRangeEdit: View {
         )
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Edit Preset")
-        .edgesIgnoringSafeArea(.bottom)
     }
 
     private var cancelButton: some View {
         Group {
-            if editedRange != nil {
+            if editedRange != range {
                 Button("Cancel") {
                     dismiss()
                 }
@@ -59,20 +59,12 @@ struct ExistingPresetRangeEdit: View {
     }
 
 
-    private var actionArea: some View {
-        VStack(spacing: 0) {
-            guardrailWarningIfNecessary
-            actionButton
-        }
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
-    }
-
     private var actionButton: some View {
         Button("Save") {
             range = editedRange
             dismiss()
         }
-        .disabled(editedRange == nil)
+        .disabled(editedRange == range)
         .buttonStyle(ActionButtonStyle(.primary))
         .padding()
     }
