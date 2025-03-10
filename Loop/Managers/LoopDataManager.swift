@@ -431,7 +431,7 @@ final class LoopDataManager: ObservableObject {
             ? GlucoseBasedApplicationFactorStrategy()
             : ConstantApplicationFactorStrategy()
 
-        let correctionRange = target.closestPrior(to: baseTime)?.value
+        let correctionRange = targetWithOverrides.closestPrior(to: baseTime)?.value
 
         let effectiveBolusApplicationFactor: Double?
 
