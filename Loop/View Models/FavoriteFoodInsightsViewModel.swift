@@ -87,7 +87,7 @@ class FavoriteFoodInsightsViewModel: ObservableObject {
         let glucoseChart = GlucoseCarbChart(yAxisStepSizeMGDLOverride: FeatureFlags.predictedGlucoseChartClampEnabled ? 40 : nil)
         glucoseChart.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayRangeWide
         let iobChart = IOBChart()
-        let doseChart = DoseChart()
+        let doseChart = LegacyDoseChart()
         let carbEffectChart = CarbEffectChart()
         carbEffectChart.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBound
         return ChartsManager(colors: .primary, settings: .default, charts: [glucoseChart, iobChart, doseChart, carbEffectChart], traitCollection: .current)

@@ -138,7 +138,14 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         }
 
         if let lastPoint = self.glucoseChart.alternatePredictedGlucosePoints?.last?.y {
-            self.eventualGlucoseDescription = String(describing: lastPoint)
+            let valueAttributedString = NSMutableAttributedString(string: String(describing: lastPoint.copy), attributes: [.font: UIFont.systemFont(ofSize: 22, weight: .semibold), .foregroundColor: ChartColorPalette.primary.glucoseTint])
+            let spacer = NSAttributedString(string: "\u{00a0}")
+            let unitAttributedString =  NSAttributedString(string: String(describing: lastPoint).replacingOccurrences(of: String(describing: lastPoint.copy), with: "").trimmingCharacters(in: .whitespacesAndNewlines), attributes: [.font: UIFont.systemFont(ofSize: 15, weight: .regular), .foregroundColor: ChartColorPalette.primary.glucoseTint])
+            
+            valueAttributedString.append(spacer)
+            valueAttributedString.append(unitAttributedString)
+            
+            self.eventualGlucoseDescription = valueAttributedString
         } else {
             self.eventualGlucoseDescription = nil
         }
@@ -185,7 +192,7 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         case inputs
     }
 
-    private var eventualGlucoseDescription: String?
+    private var eventualGlucoseDescription: NSAttributedString?
 
     // Removed .suspend from this list; LoopAlgorithm needs updates to support this. Also review
     // for better ways to support desired use cases. https://github.com/LoopKit/Loop/pull/2026
@@ -235,7 +242,13 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
         }
 
         if let eventualGlucose = eventualGlucoseDescription {
-            cell.setTitleLabelText(label: String(format: NSLocalizedString("Eventually %@", comment: "The subtitle format describing eventual glucose. (1: localized glucose value description)"), eventualGlucose))
+            let title = NSMutableAttributedString(string: NSLocalizedString("Eventually", comment: ""), attributes: [.font: UIFont.systemFont(ofSize: 15, weight: .regular)])
+            let spacer = NSAttributedString(string: "\u{00a0}")
+            
+            title.append(spacer)
+            title.append(eventualGlucose)
+            
+            cell.setTitleLabelText(label: title)
         } else {
             cell.setTitleLabelText(label: SettingsTableViewCell.NoValueString)
         }
