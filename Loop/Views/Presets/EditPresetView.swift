@@ -35,36 +35,6 @@ struct EditPresetView: View {
         self.onSave = onSave
     }
 
-    func boundText(for bound: LoopQuantity) -> Text {
-        let color = preset.guardrail.color(for: bound, guidanceColors: guidanceColors)
-        let text = displayGlucosePreference.format(bound, includeUnit: false)
-        switch preset.guardrail.classification(for: bound) {
-        case .withinRecommendedRange:
-            return Text(text)
-                .foregroundColor(.accentColor)
-                .font(.system(size: 34, weight: .bold))
-        case .outsideRecommendedRange:
-            return (
-                Text(text)
-                    .foregroundColor(color)
-                    .font(.system(size: 34, weight: .bold))
-                )
-        }
-    }
-
-    func correctionRangeLabel(range: ClosedRange<LoopQuantity>) -> Text {
-        boundText(for: (preset.correctionRange ?? scheduledRange).lowerBound) +
-        Text("-").foregroundColor(.secondary)
-            .font(.system(size: 34, weight: .light))
-        +
-        boundText(for: (preset.correctionRange ?? scheduledRange).upperBound) +
-        Text(" ") +
-        Text(displayGlucosePreference.unit.localizedShortUnitString)
-            .font(.system(.body))
-            .foregroundColor(.secondary)
-            .baselineOffset(12)
-    }
-
     var sensitivitySection: some View {
         CardSection("Temporary Settings Adjustments") {
             VStack(alignment: .leading, spacing: 8) {
@@ -91,79 +61,8 @@ struct EditPresetView: View {
                         .padding(.top, 4)
                 }
             }
-            .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
         }
     }
-
-    private var correctionRangeCrossedThresholds: [SafetyClassification.Threshold] {
-        guard let range = preset.correctionRange else { return [] }
-
-        let guardrail = preset.guardrail
-        let thresholds: [SafetyClassification.Threshold] = [range.lowerBound, range.upperBound].compactMap { bound in
-            switch guardrail.classification(for: bound) {
-            case .withinRecommendedRange:
-                return nil
-            case .outsideRecommendedRange(let threshold):
-                return threshold
-            }
-        }
-
-        return thresholds
-    }
-
-    private var guardrailWarningIfNecessary: some View {
-        let crossedThresholds = self.correctionRangeCrossedThresholds
-        let severity = crossedThresholds.map { $0.severity }.max()
-
-        return Group {
-            if let severity, !crossedThresholds.isEmpty {
-                let color: Color = severity > .default ? guidanceColors.critical : guidanceColors.warning
-                HStack(alignment: .top, spacing: 12) {
-                    Text(Image(systemName: "exclamationmark.triangle.fill"))
-                        .foregroundColor(color)
-                    Text(SafetyClassification.captionForCrossedThresholds(crossedThresholds, isRange: true));
-                }
-                .padding(12)
-                .background(color.opacity(0.1))
-                .cornerRadius(12)
-            }
-        }
-    }
-
-
-    var correctionSection: some View {
-        CardSection {
-            Button {
-                navigateToCorrectionRangeEditor = true;
-            } label: {
-                VStack(alignment: .center, spacing: 12) {
-                    HStack {
-                        Text("Correction Range")
-                            .font(.system(size: 17, weight: .semibold))
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                    }.padding(.bottom, 10)
-                    VStack(spacing: 4) {
-                        if let range = preset.correctionRange {
-                            correctionRangeLabel(range: range)
-                            Text("Adjusted Range")
-                        } else {
-                            correctionRangeLabel(range: scheduledRange)
-                            Text("Scheduled Range")
-                        }
-                    }
-                    guardrailWarningIfNecessary
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .padding(.bottom, 5)
-                        .padding(.horizontal, 2)
-                }
-                .foregroundColor(.primary)
-            }
-        }
-    }
-
 
     var body: some View {
         CardSectionScrollView {
@@ -171,7 +70,13 @@ struct EditPresetView: View {
 
             sensitivitySection
 
-            correctionSection
+            CardSection {
+                Button {
+                    navigateToCorrectionRangeEditor = true;
+                } label: {
+                    CorrectionRangePreview(range: $preset.correctionRange, guardrail: preset.guardrail, scheduledRange: scheduledRange, allowsScheduledRange: preset.canAdjustSensitivity, showDisclosure: true)
+                }
+            }
 
             CardSection("Preset Details") {
                 HStack {

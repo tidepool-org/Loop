@@ -21,9 +21,8 @@ struct CreatePresetNameAndScheduledEdit: View {
 
     @FocusState private var isTextFieldFocused: Bool
 
-    // For picker wheels
-    let hours = Array(0...23)
-    let minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
+    @State private var scheduleDate: Date = Date()
+    @State private var repeatOption: PresetScheduleRepeatOption?
 
     var body: some View {
         CardSectionScrollView {
@@ -56,7 +55,7 @@ struct CreatePresetNameAndScheduledEdit: View {
 
                         Spacer()
 
-                        TextField("", text: $preset.name, prompt: Text("Required").foregroundColor(.gray))
+                        TextField("", text: $preset.name, prompt: Text("Required"))
                             .multilineTextAlignment(.trailing)
                             .focused($isTextFieldFocused)
                     }
@@ -115,6 +114,26 @@ struct CreatePresetNameAndScheduledEdit: View {
                             .toggleStyle(SwitchToggleStyle(tint: .green))
                             .labelsHidden()
                             .padding(.vertical, -6)
+                    }
+
+                    if scheduleEnabled {
+                        Divider()
+                        HStack {
+                            Text("Date")
+                            Spacer()
+                            DatePicker("", selection: $scheduleDate, displayedComponents: [.date, .hourAndMinute])
+                        }
+                        Divider()
+                        HStack {
+                            Text("Repeat")
+                            Spacer()
+                            Picker("Repeat", selection: $repeatOption) {
+                                ForEach(PresetScheduleRepeatOption.allCases, id: \.self) { option in
+                                    Text(String(describing: option))
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                        }
                     }
                 }
             }

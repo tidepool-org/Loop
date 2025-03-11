@@ -42,7 +42,7 @@ struct ExistingPresetRangeEdit: View {
             guardrailWarningIfNecessary
             actionButton
         }
-        .navigationBarBackButtonHidden(editedRange != nil)
+        .navigationBarBackButtonHidden(editedRange != range)
         .navigationBarItems(
             trailing: cancelButton
         )

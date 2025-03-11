@@ -419,8 +419,10 @@
 		C1004DF52981F5B700B8CF94 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C1004DF32981F5B700B8CF94 /* Localizable.strings */; };
 		C105095B2D78D35100118A37 /* CreatePresetNameAndScheduledEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105095A2D78D32C00118A37 /* CreatePresetNameAndScheduledEdit.swift */; };
 		C105095D2D7A1DB700118A37 /* CardSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105095C2D7A1DB300118A37 /* CardSection.swift */; };
-		C105095F2D7A311200118A37 /* CreatePresetReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105095E2D7A310B00118A37 /* CreatePresetReviewView.swift */; };
+		C105095F2D7A311200118A37 /* ReviewNewPresetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105095E2D7A310B00118A37 /* ReviewNewPresetView.swift */; };
 		C10509612D7B3DF400118A37 /* CardSectionScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509602D7B3DEA00118A37 /* CardSectionScrollView.swift */; };
+		C10509652D7B6B1900118A37 /* CorrectionRangePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509642D7B6B0000118A37 /* CorrectionRangePreview.swift */; };
+		C10509672D7F7A4900118A37 /* InsulinScaleAdjustView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509662D7F7A3700118A37 /* InsulinScaleAdjustView.swift */; };
 		C110888D2A3913C600BA4898 /* BuildDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = C110888C2A3913C600BA4898 /* BuildDetails.swift */; };
 		C11613492983096D00777E7C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C11613472983096D00777E7C /* InfoPlist.strings */; };
 		C116134C2983096D00777E7C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C116134A2983096D00777E7C /* Localizable.strings */; };
@@ -1364,8 +1366,10 @@
 		C101947127DD473C004E7EB8 /* MockKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MockKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C105095A2D78D32C00118A37 /* CreatePresetNameAndScheduledEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePresetNameAndScheduledEdit.swift; sourceTree = "<group>"; };
 		C105095C2D7A1DB300118A37 /* CardSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSection.swift; sourceTree = "<group>"; };
-		C105095E2D7A310B00118A37 /* CreatePresetReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePresetReviewView.swift; sourceTree = "<group>"; };
+		C105095E2D7A310B00118A37 /* ReviewNewPresetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewNewPresetView.swift; sourceTree = "<group>"; };
 		C10509602D7B3DEA00118A37 /* CardSectionScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSectionScrollView.swift; sourceTree = "<group>"; };
+		C10509642D7B6B0000118A37 /* CorrectionRangePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectionRangePreview.swift; sourceTree = "<group>"; };
+		C10509662D7F7A3700118A37 /* InsulinScaleAdjustView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinScaleAdjustView.swift; sourceTree = "<group>"; };
 		C1092BFD29F8116700AE3D1C /* apply-info-customizations.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "apply-info-customizations.sh"; sourceTree = "<group>"; };
 		C110888C2A3913C600BA4898 /* BuildDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildDetails.swift; sourceTree = "<group>"; };
 		C11613482983096D00777E7C /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -2518,19 +2522,19 @@
 		84E8BBAF2CC979300078E6CF /* Presets */ = {
 			isa = PBXGroup;
 			children = (
-				C105095E2D7A310B00118A37 /* CreatePresetReviewView.swift */,
 				C105095A2D78D32C00118A37 /* CreatePresetNameAndScheduledEdit.swift */,
-				C1AC039F2D6FCB2C004D4D2B /* NewCustomPreset.swift */,
-				C1AC039D2D6FC8BB004D4D2B /* NewPresetRangeEdit.swift */,
-				C1AC039B2D6E751C004D4D2B /* ExistingPresetRangeEdit.swift */,
-				C1AC03992D6E3C7B004D4D2B /* InsulinScaleInformationView.swift */,
 				C1AC03952D6E07D3004D4D2B /* CreatePresetView.swift */,
 				C14F68C82D4AC54000BC3B8D /* DurationPickerView.swift */,
-				C16971F82D1231AB001B7DF6 /* PresetRangeEditor.swift */,
 				C16971DE2D10C216001B7DF6 /* EditPresetView.swift */,
-				84E8BBC92CCA16290078E6CF /* PresetsView.swift */,
+				C1AC039B2D6E751C004D4D2B /* ExistingPresetRangeEdit.swift */,
+				C1AC03992D6E3C7B004D4D2B /* InsulinScaleInformationView.swift */,
+				C1AC039F2D6FCB2C004D4D2B /* NewCustomPreset.swift */,
+				C1AC039D2D6FC8BB004D4D2B /* NewPresetRangeEdit.swift */,
+				C16971F82D1231AB001B7DF6 /* PresetRangeEditor.swift */,
 				84FA9D322CF7FD0D004162B4 /* PresetsHistoryView.swift */,
 				84E8BBB02CC9793C0078E6CF /* PresetsTrainingView.swift */,
+				84E8BBC92CCA16290078E6CF /* PresetsView.swift */,
+				C105095E2D7A310B00118A37 /* ReviewNewPresetView.swift */,
 				84E8BBC22CC9B9780078E6CF /* Components */,
 				84E8BBB62CC990480078E6CF /* Training Content */,
 			);
@@ -2551,6 +2555,8 @@
 		84E8BBC22CC9B9780078E6CF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				C10509662D7F7A3700118A37 /* InsulinScaleAdjustView.swift */,
+				C10509642D7B6B0000118A37 /* CorrectionRangePreview.swift */,
 				C10509602D7B3DEA00118A37 /* CardSectionScrollView.swift */,
 				C105095C2D7A1DB300118A37 /* CardSection.swift */,
 				84C170EC2CCA361F0098E52F /* ImpactView.swift */,
@@ -3694,7 +3700,7 @@
 				1D12D3B92548EFDD00B53E8B /* main.swift in Sources */,
 				435400341C9F878D00D5819C /* SetBolusUserInfo.swift in Sources */,
 				A9DCF32A25B0FABF00C89088 /* LoopUIColorPalette+Default.swift in Sources */,
-				C105095F2D7A311200118A37 /* CreatePresetReviewView.swift in Sources */,
+				C105095F2D7A311200118A37 /* ReviewNewPresetView.swift in Sources */,
 				1DDE273E24AEA4B000796622 /* SettingsView.swift in Sources */,
 				A9B607B0247F000F00792BE4 /* UserNotifications+Loop.swift in Sources */,
 				43F89CA322BDFBBD006BB54E /* UIActivityIndicatorView.swift in Sources */,
@@ -3717,6 +3723,7 @@
 				4F11D3C220DD80B3006E072C /* WatchHistoricalGlucose.swift in Sources */,
 				4372E490213CFCE70068E043 /* LoopSettingsUserInfo.swift in Sources */,
 				14ED83F62C6421F9008B4A5C /* FavoriteFoodInsightsCardView.swift in Sources */,
+				C10509652D7B6B1900118A37 /* CorrectionRangePreview.swift in Sources */,
 				C174233C259BEB0F00399C9D /* ManualEntryDoseViewModel.swift in Sources */,
 				84E8BBC82CC9D34B0078E6CF /* TherapySettingsExampleView.swift in Sources */,
 				1D05219B2469E9DF000EBBDE /* StoredAlert.swift in Sources */,
@@ -3726,6 +3733,7 @@
 				A97F250825E056D500F0EE19 /* OnboardingManager.swift in Sources */,
 				438D42F91D7C88BC003244B0 /* PredictionInputEffect.swift in Sources */,
 				892A5D692230C41D008961AB /* RangeReplaceableCollection.swift in Sources */,
+				C10509672D7F7A4900118A37 /* InsulinScaleAdjustView.swift in Sources */,
 				DDC389F62A2B61750066E2E8 /* ApplicationFactorStrategy.swift in Sources */,
 				4F70C2101DE8FAC5006380B7 /* ExtensionDataManager.swift in Sources */,
 				1455ACB22C667BEE004F44F2 /* Deeplink.swift in Sources */,

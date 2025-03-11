@@ -1,29 +1,25 @@
 //
-//  CreatePresetReviewView.swift
+//  ReviewNewPresetView.swift
 //  Loop
 //
 //  Created by Pete Schwamb on 3/6/25.
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 
-import LoopKitUI
 import SwiftUI
+import LoopKit
+import LoopKitUI
 import LoopUI
+import LoopAlgorithm
 
-struct CreatePresetReviewView: View {
+struct ReviewNewPresetView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Binding var preset: NewCustomPreset
     @Binding var path: NavigationPath
+    var scheduledRange: ClosedRange<LoopQuantity>
 
     @State private var scheduleEnabled = false
-    @State private var isDurationPickerExpanded = false
-
-    @FocusState private var isTextFieldFocused: Bool
-
-    // For picker wheels
-    let hours = Array(0...23)
-    let minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
 
     var body: some View {
         CardSectionScrollView {
@@ -37,7 +33,7 @@ struct CreatePresetReviewView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Review Settings")
                     .font(.system(size: 17, weight: .semibold))
-                Text("Review your preset settings below. To make any changes, tap on the row you’d like to edit. You can edit these settings at any time.")
+                Text("Review your preset settings below. To make any changes, navigate back to the setting you’d like to edit. You can edit these settings after saving your preset as well.")
                     .font(.system(size: 13))
             }
             .foregroundColor(.white)
@@ -49,18 +45,24 @@ struct CreatePresetReviewView: View {
             .padding(.top, 10)
             .clipped()
 
+
+            sensitivitySection
+
+            CardSection {
+                CorrectionRangePreview(range: $preset.correctionRange, guardrail: Guardrail.correctionRange, scheduledRange: scheduledRange, allowsScheduledRange: true)
+            }
+
             // Name Field
             if preset.savePreset {
-                CardSection("Temporary Settings Adjustments") {
+                CardSection {
                     HStack {
                         Text("Name")
                             .font(.body)
 
                         Spacer()
 
-                        TextField("", text: $preset.name, prompt: Text("Required").foregroundColor(.gray))
-                            .multilineTextAlignment(.trailing)
-                            .focused($isTextFieldFocused)
+                        Text(preset.name)
+                            .font(.body)
                     }
                 }
             }
@@ -74,33 +76,12 @@ struct CreatePresetReviewView: View {
                         Spacer()
                         if let duration = preset.duration {
                             Text(duration.localizedTitle)
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.secondary)
                         } else {
                             Text("Required")
                                 .foregroundColor(.secondary)
                         }
                     }
                     .contentShape(Rectangle())
-                    .onTapGesture {
-                        isTextFieldFocused = false
-                        withAnimation() {
-                            isDurationPickerExpanded.toggle()
-                        }
-                    }
-
-                    if isDurationPickerExpanded {
-                        DurationPickerView(
-                            durationType: Binding(
-                                get: {
-                                    return preset.duration ?? .duration(0)
-                                },
-                                set: { duration in
-                                    preset.duration = duration
-                                }
-                            )
-                        )
-                    }
                 }
             }
 
@@ -142,14 +123,29 @@ struct CreatePresetReviewView: View {
     var allowSave: Bool {
         return (!preset.savePreset && preset.duration != nil) || (preset.savePreset && !preset.name.isEmpty && preset.duration != nil)
     }
-}
 
-// Preview Provider
-struct CreatePresetReviewView_Previews: PreviewProvider {
-    @State static var preset: NewCustomPreset = .init()
-    @State static var path: NavigationPath = .init()
+    var sensitivitySection: some View {
+        CardSection("Temporary Settings Adjustments") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Overall Insulin")
+                    .font(.headline)
+                    .padding(.bottom, 10)
 
-    static var previews: some View {
-        CreatePresetReviewView(preset: $preset, path: $path)
+
+                HStack {
+                    Spacer()
+                    VStack(alignment: .center) {
+                        Text("\(Int(preset.insulinMultiplier * 100))%")
+                            .font(.system(size: 34, weight: .semibold))
+                            .foregroundColor(.accentColor)
+                        Text("of scheduled")
+                            .foregroundColor(.primary)
+                    }
+                    Spacer()
+                }
+            }
+            .foregroundColor(.primary)
+        }
     }
+
 }
