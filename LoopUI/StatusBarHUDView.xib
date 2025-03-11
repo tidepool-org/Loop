@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
-        <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -35,13 +34,13 @@
                                     <rect key="frame" x="0.0" y="0.0" width="92" height="44"/>
                                     <subviews>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" text="399" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="15" translatesAutoresizingMaskIntoConstraints="NO" id="bni-3H-QVi">
-                                            <rect key="frame" x="0.0" y="-2" width="92" height="36"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="92" height="36"/>
                                             <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="30"/>
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="mmol/L" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsLetterSpacingToFitWidth="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kt8-vp-e3L">
-                                            <rect key="frame" x="0.0" y="27" width="92" height="13.5"/>
+                                            <rect key="frame" x="0.0" y="31" width="92" height="13.5"/>
                                             <fontDescription key="fontDescription" style="UICTFontTextStyleCaption2"/>
                                             <color key="textColor" systemColor="secondaryLabelColor"/>
                                             <nil key="highlightedColor"/>
@@ -53,10 +52,10 @@
                                     <constraints>
                                         <constraint firstAttribute="trailing" secondItem="kt8-vp-e3L" secondAttribute="trailing" id="CSk-Gr-Pza"/>
                                         <constraint firstItem="kt8-vp-e3L" firstAttribute="leading" secondItem="SoP-1x-VMa" secondAttribute="leading" id="F6e-OV-fsv"/>
-                                        <constraint firstItem="kt8-vp-e3L" firstAttribute="top" secondItem="bni-3H-QVi" secondAttribute="bottom" constant="-7" id="KQ0-LY-pJM"/>
+                                        <constraint firstItem="kt8-vp-e3L" firstAttribute="top" secondItem="bni-3H-QVi" secondAttribute="bottom" constant="-5" id="KQ0-LY-pJM"/>
                                         <constraint firstAttribute="trailing" secondItem="bni-3H-QVi" secondAttribute="trailing" id="fYx-LS-0qO"/>
                                         <constraint firstItem="bni-3H-QVi" firstAttribute="leading" secondItem="SoP-1x-VMa" secondAttribute="leading" id="hTM-X7-eoN"/>
-                                        <constraint firstItem="bni-3H-QVi" firstAttribute="top" secondItem="SoP-1x-VMa" secondAttribute="top" constant="-2" id="w8R-TL-StH"/>
+                                        <constraint firstItem="bni-3H-QVi" firstAttribute="top" secondItem="SoP-1x-VMa" secondAttribute="top" id="w8R-TL-StH"/>
                                     </constraints>
                                     <connections>
                                         <outlet property="glucoseLabel" destination="bni-3H-QVi" id="6yY-Zi-jpk"/>
@@ -195,32 +194,22 @@
                                     <rect key="frame" x="0.0" y="0.0" width="71" height="44"/>
                                     <subviews>
                                         <view contentMode="scaleToFill" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="TKp-ot-mqw" customClass="BasalStateView" customModule="LoopUI">
-                                            <rect key="frame" x="13.5" y="4" width="44" height="22"/>
+                                            <rect key="frame" x="10" y="4" width="61" height="36"/>
                                             <constraints>
-                                                <constraint firstAttribute="height" priority="999" constant="22" id="MQM-FC-5zC"/>
-                                                <constraint firstAttribute="width" constant="44" id="RCZ-ka-XLC"/>
+                                                <constraint firstAttribute="width" constant="61" id="ApZ-2h-b1H"/>
+                                                <constraint firstAttribute="height" priority="999" constant="40" id="MQM-FC-5zC"/>
                                             </constraints>
                                         </view>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="-0.85 U" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsLetterSpacingToFitWidth="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yoL-F7-Mou">
-                                            <rect key="frame" x="0.0" y="27" width="71" height="13.5"/>
-                                            <fontDescription key="fontDescription" style="UICTFontTextStyleCaption2"/>
-                                            <color key="textColor" systemColor="secondaryLabelColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
                                     </subviews>
                                     <accessibility key="accessibilityConfiguration" label="Net Basal Rate">
                                         <bool key="isElement" value="YES"/>
                                     </accessibility>
                                     <constraints>
-                                        <constraint firstAttribute="bottom" secondItem="yoL-F7-Mou" secondAttribute="bottom" constant="3.5" id="3sc-3X-SNe"/>
+                                        <constraint firstItem="TKp-ot-mqw" firstAttribute="centerY" secondItem="Xc6-TW-EU5" secondAttribute="centerY" id="2pi-fT-tRZ"/>
                                         <constraint firstItem="TKp-ot-mqw" firstAttribute="top" secondItem="Xc6-TW-EU5" secondAttribute="top" constant="4" id="Kxm-QC-hDQ"/>
-                                        <constraint firstItem="yoL-F7-Mou" firstAttribute="top" secondItem="TKp-ot-mqw" secondAttribute="bottom" constant="1" id="MXv-xs-vwp"/>
-                                        <constraint firstItem="yoL-F7-Mou" firstAttribute="trailing" secondItem="Xc6-TW-EU5" secondAttribute="trailing" id="aHB-n6-NeC"/>
-                                        <constraint firstItem="yoL-F7-Mou" firstAttribute="leading" secondItem="Xc6-TW-EU5" secondAttribute="leading" id="rpX-DB-PfC"/>
-                                        <constraint firstItem="TKp-ot-mqw" firstAttribute="centerX" secondItem="Xc6-TW-EU5" secondAttribute="centerX" id="shO-b8-3kg"/>
+                                        <constraint firstItem="TKp-ot-mqw" firstAttribute="centerX" secondItem="Xc6-TW-EU5" secondAttribute="centerX" constant="5" id="shO-b8-3kg"/>
                                     </constraints>
                                     <connections>
-                                        <outlet property="basalRateLabel" destination="yoL-F7-Mou" id="Fwt-lX-1K8"/>
                                         <outlet property="basalStateView" destination="TKp-ot-mqw" id="vLE-F3-FtD"/>
                                     </connections>
                                 </view>
@@ -358,13 +347,13 @@
             <color red="0.91699999570846558" green="0.7630000114440918" blue="0.26899999380111694" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemBlueColor">
-            <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

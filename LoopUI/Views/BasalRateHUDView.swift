@@ -28,6 +28,7 @@ public final class BasalRateHUDView: BaseHUDView {
 
     public override func tintColorDidChange() {
         super.tintColorDidChange()
+        basalStateView.tintColor = tintColor
     }
 
     private lazy var basalRateFormatString = LocalizedString("%@ U", comment: "The format string describing the basal rate.")
@@ -43,8 +44,18 @@ public final class BasalRateHUDView: BaseHUDView {
             basalRateLabel?.text = nil
             accessibilityValue = nil
         }
-
-        basalStateView.netBasalPercent = percent
+        
+        switch percent {
+            // still needs to handle manual temp basal
+        case let x where x == -1.0:
+            basalStateView.basalDisplayState = .basalTempAutoNoDelivery
+        case let x where x < 0.0:
+            basalStateView.basalDisplayState = .basalTempAutoBelow
+        case let x where x > 0.0:
+            basalStateView.basalDisplayState = .basalTempAutoAbove
+        default:
+            basalStateView.basalDisplayState = .basalScheduled
+        }
     }
 
     private lazy var decimalFormatter: NumberFormatter = {

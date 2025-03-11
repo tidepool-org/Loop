@@ -6,88 +6,139 @@
 //  Copyright © 2016 Nathan Racklyeft. All rights reserved.
 //
 
-import UIKit
+import SwiftUI
+import LoopKitUI
+
+class WrappedBasalRateViewModel: ObservableObject {
+    
+    private lazy var basalRateUnitString = LocalizedString("U/hr", comment: "The format string describing the basal rate unit.")
+    private lazy var basalRateFormatString = "%1$d %2$@"
+    
+    @Published var basalDisplayState: BasalDisplayState
+    @Published var tintColor: Color
+    
+    var basalStateImageName: String? {
+        basalDisplayState.imageName
+    }
+    var manualTempBasalAmount: Double? {
+        switch basalDisplayState {
+        case .basalTempManual(let double):
+             return double
+        default:
+            return nil
+        }
+    }
+    var manualTempBasalAmountString: String? {
+        guard let manualTempBasalAmount = manualTempBasalAmount else { return nil }
+        return "\(manualTempBasalAmount)"
+    }
+    var basalStateCaptionString: String? {
+        switch basalDisplayState {
+        case .basalTempManual: return basalRateUnitString
+        case .basalTempAutoNoDelivery: return String(format: basalRateFormatString, 0, basalRateUnitString)
+        default: return nil
+        }
+    }
+    var isBasalTempManual: Bool {
+        switch basalDisplayState {
+        case .basalTempManual: return true
+        default: return false
+        }
+    }
+        
+    init(basalDisplayState: BasalDisplayState = .basalScheduled,
+         tintColor: Color = .insulinTintColor
+    ) {
+        self.basalDisplayState = basalDisplayState
+        self.tintColor = tintColor
+    }
+}
+
+struct WrappedBasalRateView: View {
+    
+    @StateObject var viewModel: WrappedBasalRateViewModel
+    
+    var body: some View {
+        VStack {
+            if let basalStateImageName = viewModel.basalStateImageName {
+                Image(systemName: basalStateImageName)
+                    .font(.title)
+                    .foregroundStyle(viewModel.tintColor)
+            }
+            if let manualTempBasalAmountString = viewModel.manualTempBasalAmountString {
+                Text(manualTempBasalAmountString)
+                    .font(.system(size: 24))
+                    .fontWeight(.heavy)
+                    .bold()
+                    .fixedSize(horizontal: true, vertical: false)
+                    .foregroundStyle(viewModel.tintColor)
+            }
+            if let basalStateCaptionString = viewModel.basalStateCaptionString {
+                Text(basalStateCaptionString)
+                    .font(.caption2)
+                    .foregroundStyle(viewModel.isBasalTempManual ? .secondary : .primary)
+            }
+        }
+        .animation(.default, value: viewModel.basalDisplayState)
+    }
+}
+
+class BasalRateHostingController: UIHostingController<WrappedBasalRateView> {
+    init(viewModel: WrappedBasalRateViewModel) {
+        super.init(
+            rootView: WrappedBasalRateView(
+                viewModel: viewModel
+            )
+        )
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError()
+    }
+}
 
 
 public final class BasalStateView: UIView {
-
-    var netBasalPercent: Double = 0 {
-        didSet {
-            animateToPath(drawPath())
-        }
-    }
-
-    override public class var layerClass : AnyClass {
-        return CAShapeLayer.self
-    }
-
-    private var shapeLayer: CAShapeLayer {
-        return layer as! CAShapeLayer
-    }
-
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
-
-        shapeLayer.lineWidth = 2
-        updateTintColor()
+        
+        setupViews()
     }
-
-    required public init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-
-        shapeLayer.lineWidth = 2
-        updateTintColor()
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        
+        setupViews()
     }
-
-    override public func layoutSubviews() {
-        super.layoutSubviews()
+    
+    var basalDisplayState: BasalDisplayState = .basalScheduled {
+        didSet {
+            viewModel.basalDisplayState = basalDisplayState
+        }
     }
-
+    
     public override func tintColorDidChange() {
         super.tintColorDidChange()
-        updateTintColor()
+        viewModel.tintColor = Color(uiColor: tintColor)
     }
-
-    private func updateTintColor() {
-        shapeLayer.fillColor = tintColor.withAlphaComponent(0.5).cgColor
-        shapeLayer.strokeColor = tintColor.cgColor
-    }
-
-    private func drawPath() -> CGPath {
-        let startX = bounds.minX
-        let endX = bounds.maxX
-        let midY = bounds.midY
-
-        let path = UIBezierPath()
-        path.move(to: CGPoint(x: startX, y: midY))
-
-        let leftAnchor = startX + 1/6 * bounds.size.width
-        let rightAnchor = startX + 5/6 * bounds.size.width
-
-        let yAnchor = bounds.midY - CGFloat(netBasalPercent) * (bounds.size.height - shapeLayer.lineWidth) / 2
-
-        path.addLine(to: CGPoint(x: leftAnchor, y: midY))
-        path.addLine(to: CGPoint(x: leftAnchor, y: yAnchor))
-        path.addLine(to: CGPoint(x: rightAnchor, y: yAnchor))
-        path.addLine(to: CGPoint(x: rightAnchor, y: midY))
-        path.addLine(to: CGPoint(x: endX, y: midY))
-
-        return path.cgPath
-    }
-
-    private static let AnimationKey = "com.loudnate.Naterade.shapePathAnimation"
-
-    private func animateToPath(_ path: CGPath) {
-        if shapeLayer.path != nil {
-            let animation = CABasicAnimation(keyPath: "path")
-            animation.fromValue = shapeLayer.path ?? drawPath()
-            animation.toValue = path
-            animation.duration = 1
-            animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-
-            shapeLayer.add(animation, forKey: type(of: self).AnimationKey)
-        }
-
-        shapeLayer.path = path
+    
+    private let viewModel = WrappedBasalRateViewModel()
+    
+    private func setupViews() {
+        let hostingController = BasalRateHostingController(viewModel: viewModel)
+        
+        hostingController.view.backgroundColor = .clear
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        hostingController.view.frame = CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height)
+        
+        addSubview(hostingController.view)
+        
+        NSLayoutConstraint.activate([
+            hostingController.view.leadingAnchor.constraint(equalTo: leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: trailingAnchor),
+            hostingController.view.topAnchor.constraint(equalTo: topAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
     }
 }

@@ -70,6 +70,7 @@ struct PresetsAndIllnessContentView: View {
             
             if let string = try? AttributedString(markdown: String(format: NSLocalizedString("Paloma wants to tell the %1$@ system that she needs more insulin than usual since her glucose has been elevated. She will adjust her overall insulin **above** her scheduled delivery.", comment: "Presets and illness training content, overall insulin, paragraph 1"), appName)) {
                 Text(string)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         
@@ -107,6 +108,7 @@ struct PresetsAndIllnessContentView: View {
                 .font(.title2.bold())
             
             Text(String(format: NSLocalizedString("Paloma will set her preset duration to “Until I Turn Off” since she is not sure when her illness will pass. %1$@ will remind her every 8 hours that the preset is running. ", comment: "Presets and illness training content, duration, paragraph 1"), appName))
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
     
