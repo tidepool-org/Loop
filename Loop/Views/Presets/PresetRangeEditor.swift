@@ -19,12 +19,14 @@ struct PresetRangeEditor: View {
     var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
     private var allowsScheduledRange: Bool
+    private var isPreMeal: Bool
 
-    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, allowsScheduledRange: Bool = true) {
+    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, allowsScheduledRange: Bool = true, isPreMeal: Bool) {
         self._range = range
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
         self.allowsScheduledRange = allowsScheduledRange
+        self.isPreMeal = isPreMeal
     }
 
     var displayedRange: ClosedRange<LoopQuantity> {
@@ -132,12 +134,7 @@ struct PresetRangeEditor: View {
                 Image(systemName: "info.circle")
                     .foregroundColor(.accentColor)
 
-                (Text("To help avoid lows, set a range ")
-                 + Text("higher")
-                    .italic()
-                    .bold()
-                 + Text(" than your typical correction range."))
-                .font(.system(size: 14))
+                tipText.font(.system(size: 14))
             }
             .padding()
             .overlay( /// apply a rounded border
@@ -148,6 +145,26 @@ struct PresetRangeEditor: View {
         }
         .font(.system(size: 15))
     }
+
+
+    private var tipText: some View {
+         Group {
+             if isPreMeal {
+                 Text("To help avoid post-meal highs, set a range ")
+                  + Text("lower")
+                     .italic()
+                     .bold()
+                  + Text(" than your typical correction range.")
+             } else {
+                 Text("To help avoid lows, set a range ")
+                  + Text("higher")
+                     .italic()
+                     .bold()
+                  + Text(" than your typical correction range.")
+             }
+         }
+     }
+
 
 
     var crossedThresholds: [SafetyClassification.Threshold] {

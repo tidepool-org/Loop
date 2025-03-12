@@ -16,35 +16,35 @@ import LoopAlgorithm
 class StatusChartsManager: ChartsManager {
     enum ChartIndex: Int, CaseIterable {
         case glucose
-        case iob
         case dose
+        case iob
         case cob
     }
 
     let glucose: PredictedGlucoseChart
-    let iob: IOBChart
     let dose: DoseChart
+    let iob: IOBChart
     let cob: COBChart
 
     init(colors: ChartColorPalette, settings: ChartSettings, traitCollection: UITraitCollection) {
         let glucose = PredictedGlucoseChart(predictedGlucoseBounds: FeatureFlags.predictedGlucoseChartClampEnabled ? .default : nil,
                                             yAxisStepSizeMGDLOverride: FeatureFlags.predictedGlucoseChartClampEnabled ? 40 : nil)
-        let iob = IOBChart()
         let dose = DoseChart()
+        let iob = IOBChart()
         let cob = COBChart()
         self.glucose = glucose
-        self.iob = iob
         self.dose = dose
+        self.iob = iob
         self.cob = cob
 
         super.init(colors: colors, settings: settings, charts: ChartIndex.allCases.map({ (index) -> ChartProviding in
             switch index {
             case .glucose:
                 return glucose
-            case .iob:
-                return iob
             case .dose:
                 return dose
+            case .iob:
+                return iob
             case .cob:
                 return cob
             }
@@ -109,14 +109,14 @@ extension StatusChartsManager {
         invalidateChart(atIndex: ChartIndex.iob.rawValue)
     }
 
-    func iobChart(withFrame frame: CGRect) -> Chart? {
-        return chart(atIndex: ChartIndex.iob.rawValue, frame: frame)
+    func iobChart(withFrame frame: CGRect, highlightLabelOffsetY: CGFloat) -> Chart? {
+        return chart(atIndex: ChartIndex.iob.rawValue, frame: frame, highlightLabelOffsetY: highlightLabelOffsetY)
     }
 }
 
 
 extension StatusChartsManager {
-    func setDoseEntries(_ doseEntries: [BasalRelativeDose]) {
+    func setDoseEntries(_ doseEntries: [DoseEntry]) {
         dose.doseEntries = doseEntries
         invalidateChart(atIndex: ChartIndex.dose.rawValue)
     }

@@ -425,6 +425,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         charts.maxEndDate = chartStartDate.addingTimeInterval(.hours(totalHours))
         charts.updateEndDate(charts.maxEndDate)
     }
+    
+    private var lastDoseEntry: DoseEntry?
 
     override func reloadData(animated: Bool = false) async {
         dispatchPrecondition(condition: .onQueue(.main))
@@ -464,7 +466,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         var glucoseSamples: [StoredGlucoseSample]?
         var predictedGlucoseValues: [GlucoseValue]?
         var iobValues: [InsulinValue]?
-        var doseEntries: [BasalRelativeDose]?
+        var doseEntries: [DoseEntry]?
         var totalDelivery: Double?
         var cobValues: [CarbValue]?
         var carbsOnBoard: LoopQuantity?
@@ -515,7 +517,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         if currentContext.contains(.insulin) {
-            doseEntries = loopManager.dosesRelativeToBasal.trimmed(from: startDate)
+            doseEntries = try? await loopManager.doseStore.getNormalizedDoseEntries(start: startDate, end: nil)
+            lastDoseEntry = try? await loopManager.doseStore.getNormalizedDoseEntries(start: Date().addingTimeInterval(.days(-1)), end: nil).filter({ $0.automatic == false }).last
 
             iobValues = loopManager.iobValues.filterDateRange(startDate, nil)
             totalDelivery = await loopManager.totalDeliveredToday()?.value
@@ -535,7 +538,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
         if !FeatureFlags.predictedGlucoseChartClampEnabled,
             let lastPoint = self.statusCharts.glucose.predictedGlucosePoints.last?.y
         {
-            self.eventualGlucoseDescription = String(describing: lastPoint)
+            let valueAttributedString = NSMutableAttributedString(string: String(describing: lastPoint.copy), attributes: [.font: UIFont.systemFont(ofSize: 22, weight: .semibold), .foregroundColor: ChartColorPalette.primary.glucoseTint])
+            let spacer = NSAttributedString(string: "\u{00a0}")
+            let unitAttributedString =  NSAttributedString(string: String(describing: lastPoint).replacingOccurrences(of: String(describing: lastPoint.copy), with: "").trimmingCharacters(in: .whitespacesAndNewlines), attributes: [.font: UIFont.systemFont(ofSize: 15, weight: .regular), .foregroundColor: ChartColorPalette.primary.glucoseTint])
+            
+            valueAttributedString.append(spacer)
+            valueAttributedString.append(unitAttributedString)
+            
+            self.eventualGlucoseDescription = valueAttributedString
         } else {
             // if the predicted glucose values are clamped, the eventually glucose description should not be displayed, since it may not align with what is being charted.
             self.eventualGlucoseDescription = nil
@@ -557,8 +567,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         // Show the larger of the value either before or after the current date
-        if let activeInsulin = loopManager.activeInsulin {
-            self.currentIOBDescription = insulinFormatter.string(from: activeInsulin.quantity, includeUnit: true)
+        if let activeInsulin = loopManager.activeInsulin, let valueString = insulinFormatter.string(from: activeInsulin.quantity, includeUnit: false) {
+            let valueAttributedString = NSMutableAttributedString(string: valueString, attributes: [.font: UIFont.systemFont(ofSize: 22, weight: .semibold), .foregroundColor: ChartColorPalette.primary.insulinTint])
+            let spacer = NSAttributedString(string: "\u{00a0}")
+            let unitAttributedString = NSMutableAttributedString(string: insulinFormatter.localizedUnitStringWithPlurality(forQuantity: activeInsulin.quantity, avoidLineBreaking: true), attributes: [.font: UIFont.systemFont(ofSize: 15, weight: .regular), .foregroundColor: ChartColorPalette.primary.insulinTint])
+            
+            valueAttributedString.append(spacer)
+            valueAttributedString.append(unitAttributedString)
+            
+            self.currentIOBDescription = valueAttributedString
         } else {
             self.currentIOBDescription = nil
         }
@@ -576,9 +593,23 @@ final class StatusTableViewController: LoopChartsTableViewController {
             charts.setCOBValues(cobValues)
         }
         if let index = charts.cob.cobPoints.closestIndex(priorTo: Date()) {
-            self.currentCOBDescription = String(describing: charts.cob.cobPoints[index].y)
-        } else if let carbsOnBoard = carbsOnBoard {
-            self.currentCOBDescription = self.carbFormatter.string(from: carbsOnBoard)
+            let valueAttributedString = NSMutableAttributedString(string: String(describing: charts.cob.cobPoints[index].y.copy), attributes: [.font: UIFont.systemFont(ofSize: 22, weight: .semibold), .foregroundColor: ChartColorPalette.primary.carbTint])
+            let spacer = NSAttributedString(string: "\u{00a0}")
+            let unitAttributedString =  NSAttributedString(string: String(describing: charts.cob.cobPoints[index].y).replacingOccurrences(of: String(describing: charts.cob.cobPoints[index].y.copy), with: "").trimmingCharacters(in: .whitespacesAndNewlines), attributes: [.font: UIFont.systemFont(ofSize: 15, weight: .regular), .foregroundColor: ChartColorPalette.primary.carbTint])
+            
+            valueAttributedString.append(spacer)
+            valueAttributedString.append(unitAttributedString)
+            
+            self.currentCOBDescription = valueAttributedString
+        } else if let carbsOnBoard = carbsOnBoard, let valueString = carbFormatter.string(from: carbsOnBoard, includeUnit: false) {
+            let valueAttributedString = NSMutableAttributedString(string: valueString, attributes: [.font: UIFont.systemFont(ofSize: 22, weight: .semibold), .foregroundColor: ChartColorPalette.primary.carbTint])
+            let spacer = NSAttributedString(string: "\u{00a0}")
+            let unitAttributedString = NSAttributedString(string: carbFormatter.localizedUnitStringWithPlurality(forQuantity: carbsOnBoard, avoidLineBreaking: true), attributes: [.font: UIFont.systemFont(ofSize: 15, weight: .regular), .foregroundColor: ChartColorPalette.primary.carbTint])
+            
+            valueAttributedString.append(spacer)
+            valueAttributedString.append(unitAttributedString)
+            
+            self.currentCOBDescription = valueAttributedString
         } else {
             self.currentCOBDescription = nil
         }
@@ -635,17 +666,16 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private enum ChartRow: Int, CaseIterable {
         case glucose
         case iob
-        case dose
         case cob
     }
 
     // MARK: Glucose
 
-    private var eventualGlucoseDescription: String?
+    private var eventualGlucoseDescription: NSAttributedString?
 
     // MARK: IOB
 
-    private var currentIOBDescription: String?
+    private var currentIOBDescription: NSAttributedString?
 
     // MARK: Dose
 
@@ -653,7 +683,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     // MARK: COB
 
-    private var currentCOBDescription: String?
+    private var currentCOBDescription: NSAttributedString?
 
     // MARK: - Loop Status Section Data
     
@@ -857,6 +887,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
             if let indexPath = tableView.indexPath(for: cell) {
                 self.tableView(tableView, updateSubtitleFor: cell, at: indexPath)
+                if Section(rawValue: indexPath.section)! == .charts && ChartRow(rawValue: indexPath.row)! == .iob {
+                    cell.setFooterView(content: iobFooterViewContent)
+                }
             }
         }
         tableView.endUpdates()
@@ -1020,22 +1053,25 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     return self?.statusCharts.glucoseChart(withFrame: frame)?.view
                 })
                 cell.setTitleLabelText(label: NSLocalizedString("Glucose", comment: "The title of the glucose and prediction graph"))
+                cell.setTitleTextColor(color: ChartColorPalette.primary.glucoseTint)
                 cell.doesNavigate = automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
             case .iob:
-                cell.setChartGenerator(generator: { [weak self] (frame) in
-                    return self?.statusCharts.iobChart(withFrame: frame)?.view
-                })
-                cell.setTitleLabelText(label: NSLocalizedString("Active Insulin", comment: "The title of the Insulin On-Board graph"))
-            case .dose:
-                cell.setChartGenerator(generator: { [weak self] (frame) in
+                cell.setSupplementalChartGenerator(generator: { [weak self] (frame) in
                     return self?.statusCharts.doseChart(withFrame: frame)?.view
                 })
-                cell.setTitleLabelText(label: NSLocalizedString("Insulin Delivery", comment: "The title of the insulin delivery graph"))
+                
+                cell.setChartGenerator(generator: { [weak self] (frame) in
+                    return self?.statusCharts.iobChart(withFrame: frame, highlightLabelOffsetY: cell.supplementalChartContentView.bounds.height)?.view
+                })
+                cell.setTitleLabelText(label: NSLocalizedString("Active Insulin", comment: "The title of the Insulin On-Board graph"))
+                cell.setTitleTextColor(color: ChartColorPalette.primary.insulinTint)
+                cell.setFooterView(content: iobFooterViewContent)
             case .cob:
                 cell.setChartGenerator(generator: { [weak self] (frame) in
                     return self?.statusCharts.cobChart(withFrame: frame)?.view
                 })
                 cell.setTitleLabelText(label: NSLocalizedString("Active Carbohydrates", comment: "The title of the Carbs On-Board graph"))
+                cell.setTitleTextColor(color: ChartColorPalette.primary.carbTint)
             }
 
             self.tableView(tableView, updateSubtitleFor: cell, at: indexPath)
@@ -1131,6 +1167,43 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
         }
     }
+    
+    @ViewBuilder
+    private func iobFooterViewContent() -> some View {
+        let formatter = QuantityFormatter(for: .internationalUnit)
+        
+        if let lastManualDose = lastDoseEntry, let formattedBolusValue = formatter.string(from: LoopQuantity(unit: .internationalUnit, doubleValue: lastManualDose.deliveredUnits ?? lastManualDose.value)) {
+            let hoursDifference = Date().timeIntervalSince(lastManualDose.endDate) / 3600
+            
+            let lastBolusLabel = Text("Last Bolus: ")
+            let lastBolusValue = Text("\(formattedBolusValue) ").fontWeight(.semibold)
+            let icon = Text(Image(systemName: "hourglass.bottomhalf.filled")).foregroundStyle(.secondary)
+            let exactTime = Text("at \(lastManualDose.endDate.formatted(date: .omitted, time: .shortened))").foregroundStyle(.secondary)
+            let roundedTime = Text(" \(Int(hoursDifference.rounded())) hours ago").foregroundStyle(.secondary)
+            
+            Group {
+                switch hoursDifference {
+                case ..<6:
+                    lastBolusLabel +
+                    lastBolusValue +
+                    exactTime
+                case 6..<12:
+                    lastBolusLabel +
+                    lastBolusValue
+                        .foregroundStyle(.secondary) +
+                    icon +
+                    roundedTime
+                default:
+                    lastBolusLabel +
+                    icon +
+                    roundedTime
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 36)
+            .padding(.vertical)
+        }
+    }
 
     private func tableView(_ tableView: UITableView, updateSubtitleFor cell: ChartTableViewCell, at indexPath: IndexPath) {
         switch Section(rawValue: indexPath.section)! {
@@ -1138,7 +1211,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
             switch ChartRow(rawValue: indexPath.row)! {
             case .glucose:
                 if let eventualGlucose = eventualGlucoseDescription {
-                    cell.setSubtitleLabel(label: String(format: NSLocalizedString("Eventually %@", comment: "The subtitle format describing eventual glucose. (1: localized glucose value description)"), eventualGlucose))
+                    let subtitle = NSMutableAttributedString(string: NSLocalizedString("Eventually", comment: ""), attributes: [.font: UIFont.systemFont(ofSize: 15, weight: .regular)])
+                    let spacer = NSAttributedString(string: "\u{00a0}")
+                    
+                    subtitle.append(spacer)
+                    subtitle.append(eventualGlucose)
+                    
+                    cell.setSubtitleLabel(label: subtitle)
                 } else {
                     cell.setSubtitleLabel(label: nil)
                 }
@@ -1146,16 +1225,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             case .iob:
                 if let currentIOB = currentIOBDescription {
                     cell.setSubtitleLabel(label: currentIOB)
-                } else {
-                    cell.setSubtitleLabel(label: nil)
-                }
-            case .dose:
-                let integerFormatter = NumberFormatter()
-                integerFormatter.maximumFractionDigits = 0
-
-                if  let total = totalDelivery,
-                    let totalString = integerFormatter.string(from: total) {
-                    cell.setSubtitleLabel(label: String(format: NSLocalizedString("%@ U Total", comment: "The subtitle format describing total insulin. (1: localized insulin total)"), totalString))
                 } else {
                     cell.setSubtitleLabel(label: nil)
                 }
@@ -1183,9 +1252,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
             switch ChartRow(rawValue: indexPath.row)! {
             case .glucose:
-                return max(106, 0.37 * availableSize)
-            case .iob, .dose, .cob:
-                return max(106, 0.21 * availableSize)
+                return max(106, 0.30 * availableSize)
+            case .iob:
+                return max(106, 0.45 * availableSize)
+            case .cob:
+                return max(106, 0.25 * availableSize)
             }
         case .alertWarning:
             return UITableView.automaticDimension
@@ -1278,7 +1349,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 if automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled {
                     performSegue(withIdentifier: PredictionTableViewController.className, sender: indexPath)
                 }
-            case .iob, .dose:
+            case .iob:
                 performSegue(withIdentifier: InsulinDeliveryTableViewController.className, sender: indexPath)
             case .cob:
                 performSegue(withIdentifier: CarbAbsorptionViewController.className, sender: indexPath)

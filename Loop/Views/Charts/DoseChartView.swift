@@ -19,7 +19,7 @@ struct DoseChartView: View {
     @Binding var isInteractingWithChart: Bool
     
     var body: some View {
-        LoopChartView<DoseChart>(chartManager: chartManager, dateInterval: dateInterval, isInteractingWithChart: $isInteractingWithChart) { doseChart in
+        LoopChartView<LegacyDoseChart>(chartManager: chartManager, dateInterval: dateInterval, isInteractingWithChart: $isInteractingWithChart) { doseChart in
             doseChart.doseEntries = doses
         }
     }

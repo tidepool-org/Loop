@@ -219,6 +219,13 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
+    var isPreMeal: Bool {
+        if case .preMeal = self {
+            return true
+        }
+        return false
+    }
+
     var guardrail: Guardrail<LoopQuantity> {
         switch self {
         case .custom:
@@ -381,6 +388,8 @@ public class PresetsViewModel {
     }
 
     var presetWasEdited: ((SelectablePreset) throws -> Void)?;
+    
+    var impactForPreset: (SelectablePreset) -> TherapySettings.InsulinMultiplierImpact
 
     init(
         customPresets: [TemporaryScheduleOverridePreset],
@@ -391,7 +400,8 @@ public class PresetsViewModel {
         preMealGuardrail: Guardrail<LoopQuantity>,
         legacyWorkoutGuardrail: Guardrail<LoopQuantity>,
         temporaryPresetsManager: TemporaryPresetsManager,
-        scheduledRange: ClosedRange<LoopQuantity>
+        scheduledRange: ClosedRange<LoopQuantity>,
+        impactForPreset: @escaping (SelectablePreset) -> TherapySettings.InsulinMultiplierImpact
     ) {
         self.customPresets = customPresets
         self.premealRange = premealRange
@@ -402,6 +412,26 @@ public class PresetsViewModel {
         self.legacyWorkoutGuardrail = legacyWorkoutGuardrail
         self.temporaryPresetsManager = temporaryPresetsManager
         self.scheduledRange = scheduledRange
+        self.impactForPreset = impactForPreset
+    }
+    
+    convenience init(
+        therapySettings: TherapySettings,
+        temporaryPresetsManager: TemporaryPresetsManager,
+        presetsHistory: TemporaryScheduleOverrideHistory
+    ) {
+        self.init(
+            customPresets: therapySettings.overridePresets ?? [],
+            premealRange: therapySettings.correctionRangeOverrides?.preMeal,
+            workoutRange: therapySettings.correctionRangeOverrides?.workout,
+            workoutDuration: therapySettings.correctionRangeOverrides?.workoutDuration ?? .indefinite,
+            presetsHistory: presetsHistory,
+            preMealGuardrail: therapySettings.preMealGuardrail,
+            legacyWorkoutGuardrail: therapySettings.legacyWorkoutPresetGuardrail,
+            temporaryPresetsManager: temporaryPresetsManager,
+            scheduledRange: therapySettings.glucoseTargetRangeSchedule!.quantityRange(at: Date()),
+            impactForPreset: { therapySettings.impact(for: Double( 1 / ($0.insulinSensitivityMultiplier ?? 1))) }
+        )
     }
 
     func savePreset(_ preset: SelectablePreset) {

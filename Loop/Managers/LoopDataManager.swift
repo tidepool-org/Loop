@@ -1264,7 +1264,7 @@ extension LoopDataManager: FavoriteFoodInsightsViewModelDelegate {
         let doses = try await doseStore.getNormalizedDoseEntries(
             start: dosesStart,
             end: end
-        ).map { $0.simpleDose(with: insulinModel(for: $0.insulinType)) }
+        )
 
         dosesStart = doses.map { $0.startDate }.min() ?? dosesStart
 
@@ -1301,7 +1301,7 @@ extension LoopDataManager: FavoriteFoodInsightsViewModelDelegate {
         let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
 
         // Overlay basal history on basal doses, splitting doses to get amount delivered relative to basal
-        let annotatedDoses = doses.annotated(with: basalWithOverrides)
+        let annotatedDoses = doses.map({ $0.simpleDose(with: insulinModel(for: $0.insulinType)) }).annotated(with: basalWithOverrides)
 
         let insulinEffects = annotatedDoses.glucoseEffects(
             insulinSensitivityHistory: sensitivityWithOverrides,

@@ -97,7 +97,8 @@ struct PresetCard: View {
             PresetStatsView(
                 insulinSensitivityMultiplier: insulinSensitivityMultiplier,
                 correctionRange: correctionRange,
-                guardrail: guardrail
+                guardrail: guardrail,
+                therapySettingsImpactDisplayState: .hide
             )
         }
         .padding(10)
