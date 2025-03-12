@@ -176,17 +176,10 @@ class SettingsViewModel {
         self.therapySettingsViewModelDelegate = therapySettingsViewModelDelegate
         self.presetHistory = presetHistory
 
-
         self.presetsViewModel = PresetsViewModel(
-            customPresets: therapySettings().overridePresets ?? [],
-            premealRange: therapySettings().correctionRangeOverrides?.preMeal,
-            workoutRange:therapySettings().correctionRangeOverrides?.workout,
-            workoutDuration: therapySettings().correctionRangeOverrides?.workoutDuration ?? .indefinite,
-            presetsHistory: presetHistory,
-            preMealGuardrail: therapySettings().preMealGuardrail,
-            legacyWorkoutGuardrail: therapySettings().legacyWorkoutPresetGuardrail,
+            therapySettings: therapySettings(),
             temporaryPresetsManager: temporaryPresetsManager,
-            scheduledRange: therapySettings().glucoseTargetRangeSchedule!.quantityRange(at: Date())
+            presetsHistory: presetHistory
         )
 
         self.presetsViewModel.presetWasEdited = savePreset

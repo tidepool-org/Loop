@@ -142,7 +142,8 @@ struct PresetDetentView: View {
                 PresetStatsView(
                     insulinSensitivityMultiplier: preset.insulinSensitivityMultiplier,
                     correctionRange: preset.correctionRange,
-                    guardrail: preset.guardrail
+                    guardrail: preset.guardrail,
+                    therapySettingsImpactDisplayState: operation == .end ? .show(viewModel.impactForPreset(preset)) : .hide
                 )
                 
                 actionArea
