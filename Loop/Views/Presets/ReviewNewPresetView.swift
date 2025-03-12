@@ -87,7 +87,7 @@ struct ReviewNewPresetView: View {
             }
 
             // Schedule Toggle
-            if let startDate = preset.startDate {
+            if preset.savePreset, let startDate = preset.startDate {
                 CardSection {
                     HStack {
                         if preset.repeatOptions != nil  {
@@ -118,11 +118,30 @@ struct ReviewNewPresetView: View {
 
             }
         } actionArea: {
-            Button("Continue") {
-                path.append(CreatePresetPage.summary)
+            Group {
+                if preset.savePreset, preset.startDate != nil {
+                    Button("Save and Schedule for Later") {
+                        path.append(CreatePresetPage.summary)
+                    }
+                    .buttonStyle(ActionButtonStyle(.primary))
+                } else if preset.savePreset {
+                    VStack {
+                        Button("Start Preset") {
+                            path.append(CreatePresetPage.summary)
+                        }
+                        .buttonStyle(ActionButtonStyle(.primary))
+                        Button("Save for later") {
+                            path.append(CreatePresetPage.summary)
+                        }
+                        .buttonStyle(ActionButtonStyle(.secondary))
+                    }
+                } else {
+                    Button("Start Preset") {
+                        path.append(CreatePresetPage.summary)
+                    }
+                    .buttonStyle(ActionButtonStyle(.primary))
+                }
             }
-            .disabled(!allowSave)
-            .buttonStyle(ActionButtonStyle(.primary))
             .padding()
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -135,10 +154,6 @@ struct ReviewNewPresetView: View {
                 }
             }
         }
-    }
-
-    var allowSave: Bool {
-        return (!preset.savePreset && preset.duration != nil) || (preset.savePreset && !preset.name.isEmpty && preset.duration != nil)
     }
 
     var sensitivitySection: some View {
