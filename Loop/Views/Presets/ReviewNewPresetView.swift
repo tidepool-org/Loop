@@ -19,8 +19,6 @@ struct ReviewNewPresetView: View {
     @Binding var path: NavigationPath
     var scheduledRange: ClosedRange<LoopQuantity>
 
-    @State private var scheduleEnabled = false
-
     var body: some View {
         CardSectionScrollView {
             VStack(alignment: .leading) {
@@ -63,6 +61,8 @@ struct ReviewNewPresetView: View {
 
                         Text(preset.name)
                             .font(.body)
+                            .foregroundColor(.secondary)
+
                     }
                 }
             }
@@ -74,31 +74,48 @@ struct ReviewNewPresetView: View {
                         Text("Duration")
                             .foregroundColor(.primary)
                         Spacer()
-                        if let duration = preset.duration {
-                            Text(duration.localizedTitle)
-                        } else {
-                            Text("Required")
-                                .foregroundColor(.secondary)
+                        Group {
+                            if let duration = preset.duration {
+                                Text(duration.localizedTitle)
+                            } else {
+                                Text("Required")
+                            }
                         }
+                        .foregroundColor(.secondary)
                     }
-                    .contentShape(Rectangle())
                 }
             }
 
             // Schedule Toggle
-            if preset.savePreset {
+            if let startDate = preset.startDate {
                 CardSection {
                     HStack {
-                        Text("Schedule")
-                            .font(.body)
-
+                        if preset.repeatOptions != nil  {
+                            Text("Start Date")
+                        } else {
+                            Text("Start at")
+                        }
                         Spacer()
-
-                        Toggle("", isOn: $scheduleEnabled)
-                            .toggleStyle(SwitchToggleStyle(tint: .green))
-                            .labelsHidden()
+                        Text(DateFormatter.localizedString(from: startDate, dateStyle: .short, timeStyle: .short))
+                            .foregroundColor(.secondary)
+                    }
+                    if let repeatOptions = preset.repeatOptions {
+                        Divider()
+                        HStack {
+                            Text("Repeat weekly on")
+                            Spacer()
+                            RepeatOptionView(repeatOptions: repeatOptions)
+                        }
+                        .padding(.vertical, 4)
                     }
                 }
+
+                Text("Tidepool Loop will always ask you to confirm before turning on a scheduled preset.")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.top, 4)
+
             }
         } actionArea: {
             Button("Continue") {

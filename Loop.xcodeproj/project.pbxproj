@@ -423,6 +423,7 @@
 		C10509612D7B3DF400118A37 /* CardSectionScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509602D7B3DEA00118A37 /* CardSectionScrollView.swift */; };
 		C10509652D7B6B1900118A37 /* CorrectionRangePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509642D7B6B0000118A37 /* CorrectionRangePreview.swift */; };
 		C10509672D7F7A4900118A37 /* InsulinScaleAdjustView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509662D7F7A3700118A37 /* InsulinScaleAdjustView.swift */; };
+		C105096D2D80E23A00118A37 /* DayPickerPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105096C2D80E22C00118A37 /* DayPickerPopup.swift */; };
 		C110888D2A3913C600BA4898 /* BuildDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = C110888C2A3913C600BA4898 /* BuildDetails.swift */; };
 		C11613492983096D00777E7C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C11613472983096D00777E7C /* InfoPlist.strings */; };
 		C116134C2983096D00777E7C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C116134A2983096D00777E7C /* Localizable.strings */; };
@@ -1370,6 +1371,7 @@
 		C10509602D7B3DEA00118A37 /* CardSectionScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSectionScrollView.swift; sourceTree = "<group>"; };
 		C10509642D7B6B0000118A37 /* CorrectionRangePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectionRangePreview.swift; sourceTree = "<group>"; };
 		C10509662D7F7A3700118A37 /* InsulinScaleAdjustView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinScaleAdjustView.swift; sourceTree = "<group>"; };
+		C105096C2D80E22C00118A37 /* DayPickerPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayPickerPopup.swift; sourceTree = "<group>"; };
 		C1092BFD29F8116700AE3D1C /* apply-info-customizations.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "apply-info-customizations.sh"; sourceTree = "<group>"; };
 		C110888C2A3913C600BA4898 /* BuildDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildDetails.swift; sourceTree = "<group>"; };
 		C11613482983096D00777E7C /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -2555,6 +2557,7 @@
 		84E8BBC22CC9B9780078E6CF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				C105096C2D80E22C00118A37 /* DayPickerPopup.swift */,
 				C10509662D7F7A3700118A37 /* InsulinScaleAdjustView.swift */,
 				C10509642D7B6B0000118A37 /* CorrectionRangePreview.swift */,
 				C10509602D7B3DEA00118A37 /* CardSectionScrollView.swift */,
@@ -3657,6 +3660,7 @@
 				1DB619AC270BAD3D006C9D07 /* VersionUpdateViewModel.swift in Sources */,
 				A9C62D882331703100535612 /* Service.swift in Sources */,
 				89CAB36324C8FE96009EE3CE /* PredictedGlucoseChartView.swift in Sources */,
+				C105096D2D80E23A00118A37 /* DayPickerPopup.swift in Sources */,
 				DDC389F82A2B620B0066E2E8 /* GlucoseBasedApplicationFactorStrategy.swift in Sources */,
 				4F6663941E905FD2009E74FC /* ChartColorPalette+Loop.swift in Sources */,
 				A9F703732489BC8500C98AD8 /* CarbStore+SimulatedCoreData.swift in Sources */,

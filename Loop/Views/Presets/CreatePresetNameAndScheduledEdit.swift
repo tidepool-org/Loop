@@ -10,19 +10,40 @@
 import LoopKitUI
 import SwiftUI
 
+enum RepeatOption: CaseIterable {
+    case never
+    case weekly
+}
+
+extension RepeatOption: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .never:
+            NSLocalizedString(
+                "Never",
+                comment: "Repeat option never for a preset schedule"
+            )
+        case .weekly:
+            NSLocalizedString(
+                "Weekly",
+                comment: "Repeat option weekly for a preset schedule"
+            )
+        }
+    }
+}
+
 struct CreatePresetNameAndScheduledEdit: View {
     @Environment(\.dismiss) private var dismiss
 
     @Binding var preset: NewCustomPreset
     @Binding var path: NavigationPath
     
-    @State private var scheduleEnabled = false
     @State private var isDurationPickerExpanded = false
 
     @FocusState private var isTextFieldFocused: Bool
 
-    @State private var scheduleDate: Date = Date()
-    @State private var repeatOption: PresetScheduleRepeatOption?
+    @State private var selectedRepeatOption: RepeatOption = .never
+    @State private var showingDayPicker: Bool = false
 
     var body: some View {
         CardSectionScrollView {
@@ -43,7 +64,7 @@ struct CreatePresetNameAndScheduledEdit: View {
 
             Text("Toggle off for a single use preset")
                 .font(.footnote)
-                .foregroundColor(.gray)
+                .foregroundColor(.secondary)
                 .padding(.horizontal, 10)
 
             // Name Field
@@ -58,6 +79,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                         TextField("", text: $preset.name, prompt: Text("Required"))
                             .multilineTextAlignment(.trailing)
                             .focused($isTextFieldFocused)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -69,14 +91,16 @@ struct CreatePresetNameAndScheduledEdit: View {
                         Text("Duration")
                             .foregroundColor(.primary)
                         Spacer()
-                        if let duration = preset.duration {
-                            Text(duration.localizedTitle)
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("Required")
-                                .foregroundColor(.secondary)
+                        Group {
+                            if let duration = preset.duration {
+                                Text(duration.localizedTitle)
+                                Image(systemName: "chevron.right")
+                            } else {
+                                Text("Required")
+                                    .foregroundStyle(.placeholder)
+                            }
                         }
+                        .foregroundColor(.secondary)
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -110,29 +134,82 @@ struct CreatePresetNameAndScheduledEdit: View {
 
                         Spacer()
 
-                        Toggle("", isOn: $scheduleEnabled)
-                            .toggleStyle(SwitchToggleStyle(tint: .green))
-                            .labelsHidden()
-                            .padding(.vertical, -6)
+                        Toggle("", isOn: Binding(get: {
+                            return preset.startDate != nil
+                        }, set: { newValue in
+                            if newValue {
+                                preset.startDate = Date()
+                            } else {
+                                preset.startDate = nil
+                            }
+                        }))
+                        .toggleStyle(SwitchToggleStyle(tint: .green))
+                        .labelsHidden()
+                        .padding(.vertical, -4)
                     }
 
-                    if scheduleEnabled {
+                    if preset.startDate != nil {
                         Divider()
                         HStack {
-                            Text("Date")
+                            if selectedRepeatOption == .never {
+                                Text("Date")
+                            } else {
+                                Text("Start Date")
+                            }
                             Spacer()
-                            DatePicker("", selection: $scheduleDate, displayedComponents: [.date, .hourAndMinute])
+                            DatePicker(
+                                "",
+                                selection: Binding(get: {
+                                    preset.startDate ?? Date()
+                                }, set: { newValue in
+                                    preset.startDate = newValue
+                                }),
+                                in: Date()...,
+                                displayedComponents: [.date, .hourAndMinute]
+                            )
                         }
                         Divider()
+                            .padding(.top, -4)
                         HStack {
                             Text("Repeat")
                             Spacer()
-                            Picker("Repeat", selection: $repeatOption) {
-                                ForEach(PresetScheduleRepeatOption.allCases, id: \.self) { option in
+                            Picker("Repeat", selection: $selectedRepeatOption) {
+                                ForEach(RepeatOption.allCases, id: \.self) { option in
                                     Text(String(describing: option))
                                 }
                             }
+                            .tint(.secondary)
                             .pickerStyle(MenuPickerStyle())
+                            .padding(.trailing, -8)
+                        }
+
+                        if selectedRepeatOption == .weekly {
+                            Divider()
+                                .padding(.top, -4)
+                            HStack {
+                                Button(action: {
+                                    showingDayPicker = true
+                                }) {
+                                    HStack {
+                                        Text("Selected days")
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                        RepeatOptionView(repeatOptions: preset.repeatOptions ?? .none)
+                                    }
+                                    .padding(.vertical, 6)
+                                }
+                                .popover(isPresented: $showingDayPicker) {
+                                    DayPickerPopup(selectedDays: Binding(
+                                    get: {
+                                        preset.repeatOptions ?? .none
+                                    }, set: { newValue in
+                                        preset.repeatOptions = newValue.union(requiredRepeatOption ?? .none)
+                                    }))
+                                    .cornerRadius(12)
+                                    .presentationCompactAdaptation(.popover)
+                                }
+                            }
+
                         }
                     }
                 }
@@ -145,6 +222,17 @@ struct CreatePresetNameAndScheduledEdit: View {
             .buttonStyle(ActionButtonStyle(.primary))
             .padding()
         }
+        .onChange(of: selectedRepeatOption, { oldValue, newValue in
+            if newValue == .weekly {
+                assignRepeatDays()
+            }
+        })
+        .onChange(of: preset.startDate, { oldValue, newValue in
+            if newValue != nil {
+                assignRepeatDays()
+            }
+        })
+
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Create a Preset")
         .toolbar {
@@ -154,6 +242,19 @@ struct CreatePresetNameAndScheduledEdit: View {
                 }
             }
         }
+    }
+
+    private var requiredRepeatOption: PresetScheduleRepeatOptions? {
+        guard let startDate = preset.startDate else { return nil }
+        guard selectedRepeatOption == .weekly else { return nil }
+        return .allCases[Calendar.current.component(.weekday, from: startDate) - 1]
+    }
+
+    func assignRepeatDays() {
+        guard let requiredRepeatOption else {
+            return
+        }
+        preset.repeatOptions = requiredRepeatOption
     }
 
     var allowSave: Bool {
@@ -211,6 +312,41 @@ struct DurationRowView: View {
                     .labelsHidden()
             }
             .padding(.horizontal, 16)
+        }
+    }
+}
+
+struct RepeatOptionView: View {
+    let repeatOptions: PresetScheduleRepeatOptions
+
+    private var selectedDays: [PresetScheduleRepeatOptions] {
+        PresetScheduleRepeatOptions.allCases.filter { repeatOptions.contains($0) }
+    }
+
+    private var isSingleDay: Bool {
+        selectedDays.count == 1
+    }
+
+    var body: some View {
+        if repeatOptions == .none {
+            Text(repeatOptions.description)
+                .tint(.secondary)
+        } else if isSingleDay {
+            Text(selectedDays[0].description)
+                .foregroundColor(.secondary)
+        } else {
+            HStack(spacing: 4) {
+                ForEach(PresetScheduleRepeatOptions.allCases, id: \.rawValue) { day in
+                    Text(String(day.description.first!))
+                        .font(.system(size: 12))
+                        .frame(width: 20, height: 20)
+                        .background(
+                            Circle()
+                                .fill(repeatOptions.contains(day) ? Color.blue : Color.gray.opacity(0.2))
+                        )
+                        .foregroundColor(repeatOptions.contains(day) ? .white : .gray)
+                }
+            }
         }
     }
 }

@@ -9,17 +9,31 @@
 import LoopAlgorithm
 import UIKit
 
-enum PresetScheduleRepeatOption: CaseIterable {
-    case monday
-    case tuesday
-    case wednesday
-    case thursday
-    case friday
-    case saturday
-    case sunday
+struct PresetScheduleRepeatOptions: OptionSet {
+    let rawValue: UInt8
+
+    static let none = PresetScheduleRepeatOptions([])
+    static let monday = PresetScheduleRepeatOptions(rawValue: 1 << 0)
+    static let tuesday = PresetScheduleRepeatOptions(rawValue: 1 << 1)
+    static let wednesday = PresetScheduleRepeatOptions(rawValue: 1 << 2)
+    static let thursday = PresetScheduleRepeatOptions(rawValue: 1 << 3)
+    static let friday = PresetScheduleRepeatOptions(rawValue: 1 << 4)
+    static let saturday = PresetScheduleRepeatOptions(rawValue: 1 << 5)
+    static let sunday = PresetScheduleRepeatOptions(rawValue: 1 << 6)
+
+    static let allCases: [PresetScheduleRepeatOptions] = [
+        .sunday,
+        .monday,
+        .tuesday,
+        .wednesday,
+        .thursday,
+        .friday,
+        .saturday,
+    ]
 }
 
-extension PresetScheduleRepeatOption: CustomStringConvertible {
+extension PresetScheduleRepeatOptions: CustomStringConvertible {
+
     var description: String {
         switch self {
         case .monday:
@@ -36,6 +50,10 @@ extension PresetScheduleRepeatOption: CustomStringConvertible {
             return NSLocalizedString("Saturday", comment: "Preset schedule repeat option saturday")
         case .sunday:
             return NSLocalizedString("Sunday", comment: "Preset schedule repeat option sunday")
+        case .none:
+            return NSLocalizedString("None", comment: "Preset schedule repeat option none")
+        default:
+            return NSLocalizedString("Multiple", comment: "Preset schedule repeat option multiple days")
         }
     }
 }
@@ -46,6 +64,6 @@ struct NewCustomPreset {
     var correctionRange: ClosedRange<LoopQuantity>?
     var name: String = ""
     var duration: PresetDuration?
-    var scheduledDate: Date?
-    var repeatOptions: PresetScheduleRepeatOption?
+    var startDate: Date?
+    var repeatOptions: PresetScheduleRepeatOptions?
 }
