@@ -213,6 +213,12 @@ struct CreatePresetNameAndScheduledEdit: View {
                         }
                     }
                 }
+                if preset.repeatOptions != nil {
+                    Text(preset.scheduleDescription())
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 10)
+                }
             }
         } actionArea: {
             Button("Continue") {

@@ -27,7 +27,8 @@ struct NewPresetRangeEdit: View {
                 PresetRangeEditor(
                     range: $editedRange,
                     guardrail: guardrail,
-                    scheduledRange: scheduledRange
+                    scheduledRange: scheduledRange,
+                    isPreMeal: false
                 )
             }
         } actionArea: {

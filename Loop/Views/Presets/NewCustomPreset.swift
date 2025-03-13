@@ -67,3 +67,54 @@ struct NewCustomPreset {
     var startDate: Date?
     var repeatOptions: PresetScheduleRepeatOptions?
 }
+
+extension NewCustomPreset {
+    func scheduleDescription() -> String {
+        guard let startDate = startDate, let repeatOptions = repeatOptions else {
+            return ""
+        }
+
+        // Handle case where no days are selected
+        if repeatOptions.isEmpty || repeatOptions == .none {
+            return ""
+        }
+
+        // Get date formatter for time (will use user's locale)
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short // Uses locale-appropriate short time format (e.g., "10:00 AM" or "10:00")
+        let timeString = timeFormatter.string(from: startDate)
+
+        // Get all selected days
+        let selectedDays = PresetScheduleRepeatOptions.allCases
+            .filter { repeatOptions.contains($0) }
+            .map { $0.description } // Already localized via your existing description
+
+        // Format the days string based on count
+        let daysString: String
+        switch selectedDays.count {
+        case 1:
+            daysString = selectedDays[0]
+        case 2:
+            daysString = String(
+                format: NSLocalizedString("%@ and %@", comment: "Format for two days"),
+                selectedDays[0],
+                selectedDays[1]
+            )
+        default:
+            let lastDay = selectedDays.last ?? ""
+            let otherDays = selectedDays.dropLast().joined(separator: NSLocalizedString(", ", comment: "Separator for multiple days"))
+            daysString = String(
+                format: NSLocalizedString("%@, and %@", comment: "Format for three or more days"),
+                otherDays,
+                lastDay
+            )
+        }
+
+        // Combine with localized format string
+        return String(
+            format: NSLocalizedString("Repeats weekly on %@ at %@", comment: "Weekly repeat schedule format"),
+            daysString,
+            timeString
+        )
+    }
+}
