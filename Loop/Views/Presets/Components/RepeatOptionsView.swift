@@ -33,7 +33,7 @@ struct RepeatOptionView: View {
                         .frame(width: 20, height: 20)
                         .background(
                             Circle()
-                                .fill(repeatOptions.contains(day) ? Color.blue : Color.gray.opacity(0.2))
+                                .fill(repeatOptions.contains(day) ? Color.accentColor : Color.gray.opacity(0.2))
                         )
                         .foregroundColor(repeatOptions.contains(day) ? .white : .gray)
                 }
