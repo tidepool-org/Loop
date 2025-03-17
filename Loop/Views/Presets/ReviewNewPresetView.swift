@@ -173,6 +173,10 @@ struct ReviewNewPresetView: View {
                 }
             }
         }
+        // Update currentDate every second
+        .onReceive(timer) { _ in
+            currentDate = Date()
+        }
     }
 
     var sensitivitySection: some View {
