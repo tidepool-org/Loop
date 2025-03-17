@@ -19,6 +19,16 @@ struct ReviewNewPresetView: View {
     @Binding var path: NavigationPath
     var scheduledRange: ClosedRange<LoopQuantity>
 
+    // Add a timer to trigger updates
+    @State private var currentDate = Date()
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    // Computed property to check if start date is too soon
+    private var isStartDateTooSoon: Bool {
+        guard let startDate = preset.startDate, preset.savePreset else { return false }
+        return startDate < currentDate.addingTimeInterval(60)
+    }
+
     var body: some View {
         CardSectionScrollView {
             VStack(alignment: .leading) {
@@ -118,12 +128,21 @@ struct ReviewNewPresetView: View {
 
             }
         } actionArea: {
+            if isStartDateTooSoon {
+                WarningView(
+                    title: Text("Invalid Start Time"),
+                    caption: Text("Start time must be at least 1 minute in the future.")
+                )
+                .padding()
+            }
+
             Group {
                 if preset.savePreset, preset.startDate != nil {
                     Button("Save and Schedule for Later") {
                         path.append(CreatePresetPage.summary)
                     }
                     .buttonStyle(ActionButtonStyle(.primary))
+                    .disabled(isStartDateTooSoon)
                 } else if preset.savePreset {
                     VStack {
                         Button("Start Preset") {
