@@ -1061,7 +1061,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 })
                 
                 cell.setChartGenerator(generator: { [weak self] (frame) in
-                    return self?.statusCharts.iobChart(withFrame: frame, highlightLabelOffsetY: cell.supplementalChartContentView.bounds.height)?.view
+                    return self?.statusCharts.iobChart(withFrame: frame, highlightLabelOffsetY: cell.supplementalChartContentView?.bounds.height ?? 0)?.view
                 })
                 cell.setTitleLabelText(label: NSLocalizedString("Active Insulin", comment: "The title of the Insulin On-Board graph"))
                 cell.setTitleTextColor(color: ChartColorPalette.primary.insulinTint)
