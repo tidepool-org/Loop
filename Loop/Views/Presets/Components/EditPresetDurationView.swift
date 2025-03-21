@@ -10,7 +10,7 @@ import LoopKit
 import LoopKitUI
 import SwiftUI
 
-struct EditOverrideDurationView: View {
+struct EditPresetDurationView: View {
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.settingsManager) private var settingsManager
 

@@ -81,7 +81,7 @@ struct PresetDetentView: View {
                 
                 if preset.duration != .untilCarbsEntered {
                     NavigationLink("Adjust Preset Duration") {
-                        EditOverrideDurationView()
+                        EditPresetDurationView()
                     }
                     .buttonStyle(ActionButtonStyle(.tertiary))
                     .accessibilityIdentifier("button_adjustPresetDuration")
