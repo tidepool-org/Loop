@@ -121,23 +121,37 @@ extension NewCustomPreset {
 }
 
 extension NewCustomPreset {
-    var enactablePreset: TemporaryScheduleOverridePreset? {
-
-        let overrideDuration: TemporaryScheduleOverride.Duration
-        switch duration {
-        case .duration(let interval):
-            overrideDuration = .finite(interval)
-        default:
-            overrideDuration = .indefinite
+    var temporaryScheduleOverride: TemporaryScheduleOverride? {
+        guard let duration else {
+            return nil
         }
-        return TemporaryScheduleOverridePreset(
-            symbol: "",
-            name: name,
-            settings: TemporaryScheduleOverrideSettings(
-                targetRange: correctionRange,
-                insulinNeedsScaleFactor: insulinMultiplier
-            ),
-            duration: overrideDuration
+        let overrideDuration = duration.presetDuration
+
+        let settings = TemporaryScheduleOverrideSettings(
+            targetRange: correctionRange,
+            insulinNeedsScaleFactor: insulinMultiplier
+        )
+
+        let context: TemporaryScheduleOverride.Context
+
+        if savePreset {
+            let preset = TemporaryScheduleOverridePreset(
+                symbol: "",
+                name: name,
+                settings: settings,
+                duration: overrideDuration
+            )
+            context = .preset(preset)
+        } else {
+            context = .custom
+        }
+        return TemporaryScheduleOverride(
+            context: context,
+            settings: settings,
+            startDate: startDate ?? Date(),
+            duration: overrideDuration,
+            enactTrigger: .local,
+            syncIdentifier: UUID()
         )
     }
 }

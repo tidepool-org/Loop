@@ -101,12 +101,12 @@ struct CreatePresetView: View {
                             onCancel: { dismiss() },
                             onComplete: { startPreset in
                                 dismiss()
-                                if let enactablePreset = preset.enactablePreset {
-                                    if preset.savePreset {
-                                        settingsManager.createPreset(enactablePreset)
+                                if let temporaryScheduleOverride = preset.temporaryScheduleOverride {
+                                    if preset.savePreset, case .preset(let preset) = temporaryScheduleOverride.context {
+                                        settingsManager.createPreset(preset)
                                     }
                                     if startPreset {
-                                        temporaryPresetsManager.scheduleOverride = enactablePreset.createOverride(enactTrigger: .local)
+                                        temporaryPresetsManager.scheduleOverride = temporaryScheduleOverride
                                     }
                                 }
                             }

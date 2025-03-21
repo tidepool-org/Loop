@@ -49,7 +49,7 @@ struct PresetsView: View {
     var isDescending: Bool { !presetsSortAscending }
 
     var presetsSorted: [SelectablePreset] {
-        settingsManager.allPresets
+        temporaryPresetsManager.selectablePresets
             .filter { $0.id != temporaryPresetsManager.activeOverride?.presetId }
             .sorted(by: {
             switch (selectedSortOption) {
@@ -75,7 +75,7 @@ struct PresetsView: View {
                         PresetsTrainingCard(showTraining: $showTraining)
                     }
 
-                    if let activePreset = settingsManager.allPresets.first(where: { $0.id == temporaryPresetsManager.activeOverride?.presetId })
+                    if let activePreset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == temporaryPresetsManager.activeOverride?.presetId })
                     {
                         PresetCard(
                             activePreset,
@@ -179,7 +179,7 @@ struct PresetsView: View {
             .navigationBarItems(trailing: dismissButton)
             .navigationDestination(for: String.self) { presetId in
                 if let scheduledRange {
-                    EditPresetView(preset: settingsManager.allPresets.first { $0.id == presetId }!, scheduledRange: scheduledRange) { preset in
+                    EditPresetView(preset: temporaryPresetsManager.selectablePresets.first { $0.id == presetId }!, scheduledRange: scheduledRange) { preset in
                         settingsManager.savePreset(preset)
                     }
                 }

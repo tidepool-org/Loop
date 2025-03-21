@@ -963,11 +963,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 case .preset(let preset):
                     cell.titleLabel.text = String(format: NSLocalizedString("%@ %@", comment: "The format for an active custom preset. (1: preset symbol)(2: preset name)"), preset.symbol, preset.name)
                 case .custom:
-                    cell.titleLabel.text = NSLocalizedString("Custom Preset", comment: "The title of the cell indicating a generic custom preset is enabled")
+                    cell.titleLabel.text = NSLocalizedString("Single Use Preset", comment: "The title of the cell indicating a generic custom preset is enabled")
                 }
 
                 if override.isActive() {
-                    if let preset = settingsManager.allPresets.first(where: { $0.id == override.presetId }), case .preMeal(_) = preset {
+                    if let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == override.presetId }), case .preMeal(_) = preset {
                         cell.subtitleLabel.text = NSLocalizedString("on until carbs added", comment: "The format for the description of a premeal preset end date")
                     } else {
                         switch override.duration {
@@ -1269,7 +1269,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch Section(rawValue: indexPath.section)! {
         case .presets:
-            statusTableViewModel.pendingPreset = settingsManager.allPresets.first { $0.id == temporaryPresetsManager.activeOverride?.presetId }
+            statusTableViewModel.pendingPreset = temporaryPresetsManager.activePreset
         case .alertWarning:
             if alertPermissionsChecker.showWarning {
                 tableView.deselectRow(at: indexPath, animated: true)

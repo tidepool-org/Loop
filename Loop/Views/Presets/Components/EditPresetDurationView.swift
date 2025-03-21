@@ -21,7 +21,7 @@ struct EditPresetDurationView: View {
     private let currentDate: Date = Date()
 
     var preset: SelectablePreset? {
-        settingsManager.allPresets.first { $0.id == temporaryPresetsManager.activeOverride?.presetId }
+        temporaryPresetsManager.selectablePresets.first { $0.id == temporaryPresetsManager.activeOverride?.presetId }
     }
 
     var buttonDisabled: Bool {

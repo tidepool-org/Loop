@@ -50,7 +50,7 @@ struct PresetsHistoryView: View {
                                     .font(.footnote)
                                     .foregroundStyle(.secondary)
                                 
-                                if let preset = settingsManager.allPresets.first(where: { $0.id == override.presetId }) {
+                                if let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == override.presetId }) {
                                     HStack(spacing: 4) {
                                         switch preset.icon {
                                         case .emoji(let emoji):

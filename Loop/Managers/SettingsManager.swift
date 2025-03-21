@@ -373,26 +373,6 @@ extension SettingsManager {
         }
     }
 
-    var allPresets: [SelectablePreset] {
-        var presets: [SelectablePreset] = []
-
-        if let preMealTargetRange = settings.preMealTargetRange {
-            presets.append(.preMeal(range: preMealTargetRange))
-        }
-
-        if let legacyWorkoutTargetRange = settings.workoutTargetRange {
-            let duration = settings.workoutDefaultDuration ?? .indefinite
-            presets.append(.legacyWorkout(
-                range: legacyWorkoutTargetRange,
-                duration: duration.presetDurationType
-            ))
-        }
-
-        presets.append(contentsOf: settings.overridePresets.map { .custom($0)} )
-
-        return presets
-    }
-
     func savePreset(_ preset: SelectablePreset) {
         switch(preset) {
         case .preMeal(let range):

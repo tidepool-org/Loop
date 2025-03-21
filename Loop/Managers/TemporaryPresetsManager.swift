@@ -148,6 +148,60 @@ class TemporaryPresetsManager {
         }
     }
 
+    public var activePreset: SelectablePreset? {
+        guard let override = activeOverride else {
+            return nil
+        }
+
+        let range = override.settings.targetRange
+
+        switch override.context {
+        case .preMeal:
+            return .preMeal(range: range!)
+        case .legacyWorkout:
+            return .legacyWorkout(range: range!, duration: override.duration.presetDurationType)
+        case .custom:
+            let preset = TemporaryScheduleOverridePreset(
+                id: override.syncIdentifier,
+                symbol: "",
+                name: "Single Use Preset",
+                settings: override.settings,
+                duration: override.duration
+            )
+            return .custom(preset)
+        case .preset(let preset):
+            return .custom(preset)
+        }
+    }
+
+    var selectablePresets: [SelectablePreset] {
+        var presets: [SelectablePreset] = []
+
+        let settings = settingsProvider.settings
+
+        if let activeOverride, activeOverride.context == .custom {
+            presets.append(activePreset!)
+        }
+
+        if let preMealTargetRange = settings.preMealTargetRange {
+            presets.append(.preMeal(range: preMealTargetRange))
+        }
+
+        if let legacyWorkoutTargetRange = settings.workoutTargetRange {
+            let duration = settings.workoutDefaultDuration ?? .indefinite
+            presets.append(.legacyWorkout(
+                range: legacyWorkoutTargetRange,
+                duration: duration.presetDurationType
+            ))
+        }
+
+        presets.append(contentsOf: settings.overridePresets.map { .custom($0)} )
+
+        return presets
+    }
+
+
+
     var clearOverrideTimer: Timer?
     public func scheduleClearOverride(override: TemporaryScheduleOverride) {
         clearOverrideTimer?.invalidate()
