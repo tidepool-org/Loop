@@ -31,51 +31,59 @@ enum PresetSortOption: Int, CaseIterable {
 struct PresetsView: View {
     
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+    @Environment(\.settingsManager) private var settingsManager
+    @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
     
-    @State private var viewModel: PresetsViewModel
-
     @State private var editMode: EditMode = .inactive
     @State private var showingMenu: Bool = false
     @State private var showTraining: Bool = false
     @State private var presentCreateView: Bool = false
+    @State private var editPresetPath: [String] = []
+    @State private var pendingPreset: SelectablePreset?
 
-    var isDescending: Bool { !viewModel.presetsSortAscending }
+    @AppStorage("presetsSortAscending") private var presetsSortAscending: Bool = true
+    @AppStorage("presetsSortOrder") private var selectedSortOption: PresetSortOption = .name
+    @AppStorage("hasCompletedPresetsTraining") private var hasCompletedTraining: Bool = false
 
-    init(viewModel: PresetsViewModel) {
-        self.viewModel = viewModel
-    }
+    var isDescending: Bool { !presetsSortAscending }
 
     var presetsSorted: [SelectablePreset] {
-        viewModel.allPresets
-            .filter { $0.id != viewModel.temporaryPresetsManager.activeOverride?.presetId }
+        settingsManager.allPresets
+            .filter { $0.id != temporaryPresetsManager.activeOverride?.presetId }
             .sorted(by: {
-            switch (viewModel.selectedSortOption) {
+            switch (selectedSortOption) {
             case .name:
                 return ($0.name.lowercased() < $1.name.lowercased()) != isDescending
             case .dateCreated:
                 return ($0.dateCreated > $1.dateCreated) != isDescending
             default:
-                return ((viewModel.lastUsed(id: $0.id) ?? .distantPast) > (viewModel.lastUsed(id: $1.id) ?? .distantPast)) != isDescending
+                return ((temporaryPresetsManager.lastUsed(id: $0.id) ?? .distantPast) > (temporaryPresetsManager.lastUsed(id: $1.id) ?? .distantPast)) != isDescending
             }
         })
     }
 
+    var scheduledRange: ClosedRange<LoopQuantity>? {
+        settingsManager.therapySettings.glucoseTargetRangeSchedule?.quantityRange(at: Date())
+    }
+
     var body: some View {
-        NavigationStack(path: $viewModel.editPreset) {
+        NavigationStack(path: $editPresetPath) {
             ScrollView {
                 VStack(spacing: 20) {
-                    if !viewModel.hasCompletedTraining {
+                    if !hasCompletedTraining {
                         PresetsTrainingCard(showTraining: $showTraining)
                     }
 
-                    if let activePreset = viewModel.activePreset {
+                    if let activePreset = settingsManager.allPresets.first(where: { $0.id == temporaryPresetsManager.activeOverride?.presetId })
+                    {
                         PresetCard(
                             activePreset,
-                            expectedEndTime: viewModel.temporaryPresetsManager.activeOverride?.expectedEndTime
+                            guardrail: settingsManager.guardrailForPreset(activePreset),
+                            expectedEndTime: temporaryPresetsManager.activeOverride?.expectedEndTime
                         )
                         .onTapGesture {
-                            viewModel.pendingPreset = activePreset
+                            pendingPreset = activePreset
                         }
                     }
 
@@ -98,16 +106,19 @@ struct PresetsView: View {
                             }) {
                                 Image(systemName: "plus")
                             }
-                            .disabled(!viewModel.hasCompletedTraining)
+                            .disabled(!hasCompletedTraining)
                         }
 
                         LazyVStack(spacing: 12) {
                             ForEach(presetsSorted) { preset in
-                                PresetCard(preset)
-                                    .cornerRadius(12)
-                                    .onTapGesture {
-                                        viewModel.pendingPreset = preset
-                                    }
+                                PresetCard(
+                                    preset,
+                                    guardrail: settingsManager.guardrailForPreset(preset)
+                                )
+                                .cornerRadius(12)
+                                .onTapGesture {
+                                    pendingPreset = preset
+                                }
                             }
                         }
                     }
@@ -117,7 +128,7 @@ struct PresetsView: View {
                         Text("Support")
                             .font(.title2.bold())
 
-                        NavigationLink(destination: PresetsHistoryView(viewModel: viewModel)) {
+                        NavigationLink(destination: PresetsHistoryView()) {
                             HStack {
                                 Image(systemName: "list.bullet")
                                     .foregroundColor(.white)
@@ -138,7 +149,7 @@ struct PresetsView: View {
                             .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
                             .frame(maxWidth: .infinity))
 
-                        if viewModel.hasCompletedTraining {
+                        if hasCompletedTraining {
                             Button {
                                 showTraining = true
                             } label: {
@@ -160,27 +171,28 @@ struct PresetsView: View {
                     }
                 }
                 .padding()
-                .animation(.default, value: viewModel.hasCompletedTraining)
-                .animation(.default, value: viewModel.temporaryPresetsManager.activeOverride)
+                .animation(.default, value: hasCompletedTraining)
+                .animation(.default, value: temporaryPresetsManager.activeOverride)
             }
             .background(Color(UIColor.secondarySystemBackground))
             .navigationTitle(Text("Presets", comment: "Presets screen title"))
             .navigationBarItems(trailing: dismissButton)
             .navigationDestination(for: String.self) { presetId in
-                EditPresetView(preset: viewModel.allPresets.first { $0.id == presetId }!, scheduledRange: viewModel.scheduledRange) { preset in
-                    viewModel.savePreset(preset)
+                if let scheduledRange {
+                    EditPresetView(preset: settingsManager.allPresets.first { $0.id == presetId }!, scheduledRange: scheduledRange) { preset in
+                        settingsManager.savePreset(preset)
+                    }
                 }
             }
         }
-        .sheet(item: $viewModel.pendingPreset) { preset in
-            PresetDetentView(
-                viewModel: viewModel,
-                preset: preset
-            )
+        .sheet(item: $pendingPreset) { preset in
+            PresetDetentView(preset: preset, didTapEdit: {
+                editPresetPath.append(preset.id)
+            })
         }
         .sheet(isPresented: $showTraining) {
             PresetsTrainingView {
-                viewModel.hasCompletedTraining = true
+                hasCompletedTraining = true
             }
         }
         .sheet(isPresented: $presentCreateView) {
@@ -195,7 +207,7 @@ struct PresetsView: View {
                     .font(.headline)
                 Spacer()
                 Button(action: {
-                    viewModel.presetsSortAscending.toggle()
+                    presetsSortAscending.toggle()
                 }) {
                     Image(systemName: "arrow.up.arrow.down")
                 }
@@ -206,11 +218,11 @@ struct PresetsView: View {
 
             ForEach(PresetSortOption.allCases, id: \.self) { option in
                 Button(action: {
-                    viewModel.selectedSortOption = option
+                    selectedSortOption = option
                     showingMenu = false
                 }) {
                     HStack {
-                        if viewModel.selectedSortOption == option {
+                        if selectedSortOption == option {
                             Image(systemName: "checkmark")
                         } else {
                             Image(systemName: "checkmark")
@@ -253,14 +265,14 @@ struct PresetsView: View {
 }
 
 extension PresetCard {
-    init (_ preset: SelectablePreset, expectedEndTime: PresetExpectedEndTime? = nil) {
+    init (_ preset: SelectablePreset, guardrail: Guardrail<LoopQuantity>, expectedEndTime: PresetExpectedEndTime? = nil) {
         self.init(
             icon: preset.icon,
             presetName: preset.name,
             duration: preset.duration,
             insulinSensitivityMultiplier: preset.insulinSensitivityMultiplier,
             correctionRange: preset.correctionRange,
-            guardrail: preset.guardrail,
+            guardrail: guardrail,
             expectedEndTime: expectedEndTime
         )
     }

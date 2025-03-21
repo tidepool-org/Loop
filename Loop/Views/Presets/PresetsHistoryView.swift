@@ -10,15 +10,9 @@ import LoopKit
 import SwiftUI
 
 struct PresetsHistoryView: View {
-    
-    let viewModel: PresetsViewModel
-    @State var history: TemporaryScheduleOverrideHistory
-    
-    init (viewModel: PresetsViewModel) {
-        self.viewModel = viewModel
-        self.history = TemporaryScheduleOverrideHistoryContainer.shared.fetch()
-    }
-    
+    @Environment(\.settingsManager) private var settingsManager
+    @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
+
     let formatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
         formatter.allowedUnits = [.hour, .minute, .second]
@@ -28,7 +22,7 @@ struct PresetsHistoryView: View {
     
     var overridesByDate: Dictionary<Date, [TemporaryScheduleOverride]> {
         Dictionary(
-            grouping: history.recentEvents
+            grouping: temporaryPresetsManager.presetHistory.recentEvents
                 .map(\.override)
                 .filter({ !$0.isActive() })
                 .sorted(by: { $0.actualEndDate > $1.actualEndDate })
@@ -56,7 +50,7 @@ struct PresetsHistoryView: View {
                                     .font(.footnote)
                                     .foregroundStyle(.secondary)
                                 
-                                if let preset = viewModel.allPresets.first(where: { $0.id == override.presetId }) {
+                                if let preset = settingsManager.allPresets.first(where: { $0.id == override.presetId }) {
                                     HStack(spacing: 4) {
                                         switch preset.icon {
                                         case .emoji(let emoji):

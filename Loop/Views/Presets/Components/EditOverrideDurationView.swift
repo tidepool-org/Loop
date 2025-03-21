@@ -11,36 +11,23 @@ import LoopKitUI
 import SwiftUI
 
 struct EditOverrideDurationView: View {
-    
+    @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
+    @Environment(\.settingsManager) private var settingsManager
+
     @Environment(\.dismiss) private var dismiss
     
-    let viewModel: PresetsViewModel
-    let override: TemporaryScheduleOverride
-    
-    @State var dateSelection: Date
+    @State var dateSelection: Date = Date()
 
-    private let currentDate: Date
-    
-    init(override: TemporaryScheduleOverride, viewModel: PresetsViewModel) {
-        self.override = override
-        self.viewModel = viewModel
-        self.currentDate = Date()
-        
-        if case let .finite(timeInterval) = viewModel.temporaryPresetsManager.activeOverride?.duration {
-            dateSelection = override.startDate.addingTimeInterval(timeInterval)
-        } else {
-            dateSelection = currentDate
-        }
-    }
-    
+    private let currentDate: Date = Date()
+
     var preset: SelectablePreset? {
-        viewModel.allPresets.first(where: { $0.id == override.presetId })
+        settingsManager.allPresets.first { $0.id == temporaryPresetsManager.activeOverride?.presetId }
     }
-    
+
     var buttonDisabled: Bool {
-        if case .duration = viewModel.activePreset?.duration {
-            return dateSelection == override.actualEndDate
-        } else if case .indefinite = viewModel.activePreset?.duration {
+        if case .finite = temporaryPresetsManager.activeOverride?.duration {
+            return dateSelection == temporaryPresetsManager.activeOverride?.actualEndDate
+        } else if case .indefinite = temporaryPresetsManager.activeOverride?.duration {
             return false
         } else {
             return dateSelection == currentDate
@@ -68,13 +55,22 @@ struct EditOverrideDurationView: View {
                 .padding(.horizontal)
                 
                 Button("Save") {
-                    viewModel.updateActivePresetDuration(newEndDate: dateSelection)
+                    temporaryPresetsManager.updateActivePresetDuration(newEndDate: dateSelection)
                     dismiss()
                 }
                 .buttonStyle(ActionButtonStyle())
                 .padding([.top, .horizontal])
                 .background(Color(UIColor.secondarySystemBackground))
                 .disabled(buttonDisabled)
+            }
+        }
+        .onAppear {
+            if let activeOverride = temporaryPresetsManager.activeOverride {
+                if case let .finite(timeInterval) = activeOverride.duration {
+                    dateSelection = activeOverride.startDate.addingTimeInterval(timeInterval)
+                } else {
+                    dateSelection = currentDate
+                }
             }
         }
     }

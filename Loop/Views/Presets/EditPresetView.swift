@@ -15,10 +15,11 @@ import LoopAlgorithm
 struct EditPresetView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.guidanceColors) private var guidanceColors
+    @Environment(\.settingsManager) private var settingsManager
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
 
-    @State private var presetName: String
     @State private var preset: SelectablePreset
+
 
     private var originalPreset: SelectablePreset
     private var scheduledRange: ClosedRange<LoopQuantity>
@@ -26,11 +27,11 @@ struct EditPresetView: View {
 
     @State private var showingPicker = false
     @State private var navigateToCorrectionRangeEditor = false
+    @FocusState private var isTextFieldFocused: Bool
 
     init(preset: SelectablePreset, scheduledRange: ClosedRange<LoopQuantity>, onSave: @escaping ((SelectablePreset) throws -> Void)) {
         self.preset = preset
         self.originalPreset = preset
-        self.presetName = preset.name
         self.scheduledRange = scheduledRange
         self.onSave = onSave
     }
@@ -74,7 +75,13 @@ struct EditPresetView: View {
                 Button {
                     navigateToCorrectionRangeEditor = true;
                 } label: {
-                    CorrectionRangePreview(range: $preset.correctionRange, guardrail: preset.guardrail, scheduledRange: scheduledRange, allowsScheduledRange: preset.canAdjustSensitivity, showDisclosure: true)
+                    CorrectionRangePreview(
+                        range: $preset.correctionRange,
+                        guardrail: settingsManager.guardrailForPreset(preset),
+                        scheduledRange: scheduledRange,
+                        allowsScheduledRange: preset.canAdjustSensitivity,
+                        showDisclosure: true
+                    )
                 }
             }
 
@@ -82,8 +89,15 @@ struct EditPresetView: View {
                 HStack {
                     Text("Name")
                     Spacer()
-                    Text(presetName)
-                        .foregroundColor(.secondary)
+                    if preset.canChangeName {
+                        TextField("", text: $preset.name, prompt: Text("Required"))
+                            .multilineTextAlignment(.trailing)
+                            .focused($isTextFieldFocused)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text(preset.name)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
 
@@ -128,7 +142,7 @@ struct EditPresetView: View {
         .navigationDestination(isPresented: $navigateToCorrectionRangeEditor) {
             ExistingPresetRangeEdit(
                 range: $preset.correctionRange,
-                guardrail: preset.guardrail,
+                guardrail: settingsManager.guardrailForPreset(preset),
                 scheduledRange: scheduledRange,
                 allowsScheduledRange: preset.canAdjustSensitivity,
                 isPreMeal: preset.isPreMeal
@@ -158,7 +172,7 @@ struct EditPresetView: View {
                     .frame(width: UIFontMetrics.default.scaledValue(for: 34), height: UIFontMetrics.default.scaledValue(for: 34))
             }
 
-            Text(presetName)
+            Text(preset.name)
                 .font(.system(size: 34, weight: .semibold))
                 .foregroundColor(.primary)
         }

@@ -52,15 +52,16 @@ struct SettingAdjustmentPreview: View {
 }
 
 struct CreatePresetView: View {
-    @Environment(\.therapySettings) private var therapySettings
-
+    @Environment(\.settingsManager) private var settingsManager
+    @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
+
     @State private var path = NavigationPath()
     @State private var preset = NewCustomPreset()
     @State private var navigateToRangeEdit: Bool = false
 
     var scheduledRange: ClosedRange<LoopQuantity>? {
-        therapySettings.glucoseTargetRangeSchedule?.quantityRange(at: Date())
+        settingsManager.settings.glucoseTargetRangeSchedule?.quantityRange(at: Date())
     }
 
     var body: some View {
@@ -84,15 +85,32 @@ struct CreatePresetView: View {
                                 preset: $preset,
                                 path: $path,
                                 guardrail: Guardrail.correctionRange,
-                                scheduledRange: scheduledRange
+                                scheduledRange: scheduledRange,
+                                onCancel: { dismiss() }
                             )
                         }
                     }
                 case .nameAndSchedule:
-                    CreatePresetNameAndScheduledEdit(preset: $preset, path: $path)
+                    CreatePresetNameAndScheduledEdit(preset: $preset, path: $path, onCancel: { dismiss() })
                 case .summary:
                     if let scheduledRange {
-                        ReviewNewPresetView(preset: $preset, path: $path, scheduledRange: scheduledRange)
+                        ReviewNewPresetView(
+                            preset: $preset,
+                            path: $path,
+                            scheduledRange: scheduledRange,
+                            onCancel: { dismiss() },
+                            onComplete: { startPreset in
+                                dismiss()
+                                if let enactablePreset = preset.enactablePreset {
+                                    if preset.savePreset {
+                                        settingsManager.createPreset(enactablePreset)
+                                    }
+                                    if startPreset {
+                                        temporaryPresetsManager.scheduleOverride = enactablePreset.createOverride(enactTrigger: .local)
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }

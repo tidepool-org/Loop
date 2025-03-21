@@ -12,12 +12,11 @@ import LoopKitUI
 import SwiftUI
 
 struct PresetStatsView: View {
-    
     enum TherapySettingsImpactDisplayState {
         case hide
         case show(TherapySettings.InsulinMultiplierImpact)
     }
-    
+
     @Environment(\.guidanceColors) private var guidanceColors
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     

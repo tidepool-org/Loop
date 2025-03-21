@@ -18,6 +18,7 @@ struct NewPresetRangeEdit: View {
     @Binding var path: NavigationPath
     var guardrail: Guardrail<LoopQuantity>
     var scheduledRange: ClosedRange<LoopQuantity>
+    var onCancel: () -> Void
 
     @State private var editedRange: ClosedRange<LoopQuantity>?
 
@@ -45,7 +46,7 @@ struct NewPresetRangeEdit: View {
 
     private var cancelButton: some View {
         Button("Cancel") {
-            dismiss()
+            onCancel()
         }
         .foregroundColor(.blue)
     }

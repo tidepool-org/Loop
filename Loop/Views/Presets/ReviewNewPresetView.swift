@@ -18,6 +18,8 @@ struct ReviewNewPresetView: View {
     @Binding var preset: NewCustomPreset
     @Binding var path: NavigationPath
     var scheduledRange: ClosedRange<LoopQuantity>
+    var onCancel: () -> Void
+    var onComplete: (_ startPreset: Bool) -> Void
 
     // Add a timer to trigger updates
     @State private var currentDate = Date()
@@ -139,24 +141,24 @@ struct ReviewNewPresetView: View {
             Group {
                 if preset.savePreset, preset.startDate != nil {
                     Button("Save and Schedule for Later") {
-                        path.append(CreatePresetPage.summary)
+                        onComplete(false)
                     }
                     .buttonStyle(ActionButtonStyle(.primary))
                     .disabled(isStartDateTooSoon)
                 } else if preset.savePreset {
                     VStack {
                         Button("Start Preset") {
-                            path.append(CreatePresetPage.summary)
+                            onComplete(true)
                         }
                         .buttonStyle(ActionButtonStyle(.primary))
                         Button("Save for later") {
-                            path.append(CreatePresetPage.summary)
+                            onComplete(false)
                         }
                         .buttonStyle(ActionButtonStyle(.secondary))
                     }
                 } else {
                     Button("Start Preset") {
-                        path.append(CreatePresetPage.summary)
+                        onComplete(true)
                     }
                     .buttonStyle(ActionButtonStyle(.primary))
                 }
@@ -169,7 +171,7 @@ struct ReviewNewPresetView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Cancel") {
-                    dismiss()
+                    onCancel()
                 }
             }
         }

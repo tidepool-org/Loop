@@ -268,7 +268,6 @@
 		84E8BBC62CC9BF830078E6CF /* PercentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC52CC9BF830078E6CF /* PercentPickerView.swift */; };
 		84E8BBC82CC9D34B0078E6CF /* TherapySettingsExampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC72CC9D34B0078E6CF /* TherapySettingsExampleView.swift */; };
 		84E8BBCA2CCA16290078E6CF /* PresetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC92CCA16290078E6CF /* PresetsView.swift */; };
-		84E8BBCC2CCA16B30078E6CF /* PresetsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBCB2CCA16B30078E6CF /* PresetsViewModel.swift */; };
 		84E8BBCE2CCA1E070078E6CF /* PresetsTrainingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBCD2CCA1E070078E6CF /* PresetsTrainingCard.swift */; };
 		84EC162E2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 84EC162D2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan */; };
 		84F20DFB2D0A56CB0089DF02 /* PresetStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F20DFA2D0A56CB0089DF02 /* PresetStatsView.swift */; };
@@ -426,6 +425,10 @@
 		C105096D2D80E23A00118A37 /* DayPickerPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105096C2D80E22C00118A37 /* DayPickerPopup.swift */; };
 		C105096F2D8237F300118A37 /* EditPresetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105096E2D8237EF00118A37 /* EditPresetView.swift */; };
 		C10509712D84A80900118A37 /* RepeatOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509702D84A80500118A37 /* RepeatOptionsView.swift */; };
+		C10509752D8B309400118A37 /* Environment+SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509742D8B308E00118A37 /* Environment+SettingsManager.swift */; };
+		C10509772D8B591200118A37 /* StatusTableViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509762D8B590D00118A37 /* StatusTableViewModel.swift */; };
+		C10509792D8B636900118A37 /* Environment+TemporaryPresetsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10509782D8B635F00118A37 /* Environment+TemporaryPresetsManager.swift */; };
+		C105097B2D8B947B00118A37 /* SelectablePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105097A2D8B947700118A37 /* SelectablePreset.swift */; };
 		C110888D2A3913C600BA4898 /* BuildDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = C110888C2A3913C600BA4898 /* BuildDetails.swift */; };
 		C11613492983096D00777E7C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C11613472983096D00777E7C /* InfoPlist.strings */; };
 		C116134C2983096D00777E7C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C116134A2983096D00777E7C /* Localizable.strings */; };
@@ -438,6 +441,7 @@
 		C11BD0552523CFED00236B08 /* SimpleBolusViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11BD0542523CFED00236B08 /* SimpleBolusViewModel.swift */; };
 		C1201E2C23ECDBD0002DA84A /* WatchContextRequestUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1201E2B23ECDBD0002DA84A /* WatchContextRequestUserInfo.swift */; };
 		C1201E2D23ECDF3D002DA84A /* WatchContextRequestUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1201E2B23ECDBD0002DA84A /* WatchContextRequestUserInfo.swift */; };
+		C120CECC2D8CD6990050944B /* Publisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C120CECB2D8CD6970050944B /* Publisher.swift */; };
 		C129BF4A2B2791EE00DF15CB /* TemporaryPresetsManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C129BF492B2791EE00DF15CB /* TemporaryPresetsManagerTests.swift */; };
 		C129D3BF2B8697F100FEA6A9 /* TempBasalRecommendationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C129D3BE2B8697F100FEA6A9 /* TempBasalRecommendationTests.swift */; };
 		C13072BA2A76AF31009A7C58 /* live_capture_predicted_glucose.json in Resources */ = {isa = PBXBuildFile; fileRef = C13072B92A76AF31009A7C58 /* live_capture_predicted_glucose.json */; };
@@ -1165,7 +1169,6 @@
 		84E8BBC52CC9BF830078E6CF /* PercentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PercentPickerView.swift; sourceTree = "<group>"; };
 		84E8BBC72CC9D34B0078E6CF /* TherapySettingsExampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TherapySettingsExampleView.swift; sourceTree = "<group>"; };
 		84E8BBC92CCA16290078E6CF /* PresetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsView.swift; sourceTree = "<group>"; };
-		84E8BBCB2CCA16B30078E6CF /* PresetsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsViewModel.swift; sourceTree = "<group>"; };
 		84E8BBCD2CCA1E070078E6CF /* PresetsTrainingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingCard.swift; sourceTree = "<group>"; };
 		84EC162D2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = DIYLoopUnitTestPlan.xctestplan; sourceTree = "<group>"; };
 		84F20DFA2D0A56CB0089DF02 /* PresetStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetStatsView.swift; sourceTree = "<group>"; };
@@ -1375,6 +1378,10 @@
 		C105096C2D80E22C00118A37 /* DayPickerPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayPickerPopup.swift; sourceTree = "<group>"; };
 		C105096E2D8237EF00118A37 /* EditPresetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPresetView.swift; sourceTree = "<group>"; };
 		C10509702D84A80500118A37 /* RepeatOptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatOptionsView.swift; sourceTree = "<group>"; };
+		C10509742D8B308E00118A37 /* Environment+SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Environment+SettingsManager.swift"; sourceTree = "<group>"; };
+		C10509762D8B590D00118A37 /* StatusTableViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTableViewModel.swift; sourceTree = "<group>"; };
+		C10509782D8B635F00118A37 /* Environment+TemporaryPresetsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Environment+TemporaryPresetsManager.swift"; sourceTree = "<group>"; };
+		C105097A2D8B947700118A37 /* SelectablePreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectablePreset.swift; sourceTree = "<group>"; };
 		C1092BFD29F8116700AE3D1C /* apply-info-customizations.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "apply-info-customizations.sh"; sourceTree = "<group>"; };
 		C110888C2A3913C600BA4898 /* BuildDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildDetails.swift; sourceTree = "<group>"; };
 		C11613482983096D00777E7C /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -1388,6 +1395,7 @@
 		C11B9D61286779C000500CF8 /* MockKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MockKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C11BD0542523CFED00236B08 /* SimpleBolusViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBolusViewModel.swift; sourceTree = "<group>"; };
 		C1201E2B23ECDBD0002DA84A /* WatchContextRequestUserInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchContextRequestUserInfo.swift; sourceTree = "<group>"; };
+		C120CECB2D8CD6970050944B /* Publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Publisher.swift; sourceTree = "<group>"; };
 		C121D8CF29C7866D00DA0520 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/Main.strings; sourceTree = "<group>"; };
 		C121D8D029C7866D00DA0520 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C121D8D129C7866D00DA0520 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -1916,6 +1924,7 @@
 		43757D131C06F26C00910CB9 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				C105097A2D8B947700118A37 /* SelectablePreset.swift */,
 				DDC389F52A2B61750066E2E8 /* ApplicationFactorStrategy.swift */,
 				B4E2022F2661063E009421B5 /* AutomaticDosingStatus.swift */,
 				A9FB75F0252BE320004C7D3F /* BolusDosingDecision.swift */,
@@ -2156,6 +2165,9 @@
 		43E344A01B9E144300C85C07 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				C120CECB2D8CD6970050944B /* Publisher.swift */,
+				C10509782D8B635F00118A37 /* Environment+TemporaryPresetsManager.swift */,
+				C10509742D8B308E00118A37 /* Environment+SettingsManager.swift */,
 				A98556842493F901000FD662 /* AlertStore+SimulatedCoreData.swift */,
 				C1D289B422F90A52003FFBD9 /* BasalDeliveryState.swift */,
 				C1F2CAAB2B7A980600D7F581 /* BasalRelativeDose.swift */,
@@ -2641,6 +2653,7 @@
 		897A5A9724C22DCE00C4E71D /* View Models */ = {
 			isa = PBXGroup;
 			children = (
+				C10509762D8B590D00118A37 /* StatusTableViewModel.swift */,
 				897A5A9824C22DE800C4E71D /* BolusEntryViewModel.swift */,
 				149A28BA2A853E5100052EDF /* CarbEntryViewModel.swift */,
 				A9A056B424B94123007CF06D /* CriticalEventLogExportViewModel.swift */,
@@ -2653,7 +2666,6 @@
 				C174233B259BEB0F00399C9D /* ManualEntryDoseViewModel.swift */,
 				1DB619AB270BAD3D006C9D07 /* VersionUpdateViewModel.swift */,
 				84E8BBAD2CC9791E0078E6CF /* PresetsTrainingViewModel.swift */,
-				84E8BBCB2CCA16B30078E6CF /* PresetsViewModel.swift */,
 			);
 			path = "View Models";
 			sourceTree = "<group>";
@@ -3613,6 +3625,7 @@
 				A9C62D8A2331703100535612 /* ServicesManager.swift in Sources */,
 				43DBF0531C93EC8200B3C386 /* DeviceDataManager.swift in Sources */,
 				A9347F2F24E7508A00C99C34 /* WatchHistoricalCarbs.swift in Sources */,
+				C10509792D8B636900118A37 /* Environment+TemporaryPresetsManager.swift in Sources */,
 				A9B996F027235191002DC09C /* LoopWarning.swift in Sources */,
 				C17824A01E19CF9800D9D25C /* GlucoseThresholdTableViewController.swift in Sources */,
 				4372E487213C86240068E043 /* SampleValue.swift in Sources */,
@@ -3629,13 +3642,13 @@
 				C191D2A125B3ACAA00C26C0B /* DosingStrategySelectionView.swift in Sources */,
 				A977A2F424ACFECF0059C207 /* CriticalEventLogExportManager.swift in Sources */,
 				89CA2B32226C18B8004D9350 /* TestingScenariosTableViewController.swift in Sources */,
-				84E8BBCC2CCA16B30078E6CF /* PresetsViewModel.swift in Sources */,
 				43E93FB71E469A5100EAB8DB /* HKUnit.swift in Sources */,
 				C1AC039E2D6FC8C8004D4D2B /* NewPresetRangeEdit.swift in Sources */,
 				43C05CAF21EB2C24006FB252 /* NSBundle.swift in Sources */,
 				B455C7332BD14E25002B847E /* Comparable.swift in Sources */,
 				A91D2A3F26CF0FF80023B075 /* IconTitleSubtitleTableViewCell.swift in Sources */,
 				A967D94C24F99B9300CDDF8A /* OutputStream.swift in Sources */,
+				C120CECC2D8CD6990050944B /* Publisher.swift in Sources */,
 				84D1F1A92D09800700CB271F /* PresetDetentView.swift in Sources */,
 				1DB1065124467E18005542BD /* AlertManager.swift in Sources */,
 				43C0944A1CACCC73001F6403 /* NotificationManager.swift in Sources */,
@@ -3667,9 +3680,11 @@
 				DDC389F82A2B620B0066E2E8 /* GlucoseBasedApplicationFactorStrategy.swift in Sources */,
 				4F6663941E905FD2009E74FC /* ChartColorPalette+Loop.swift in Sources */,
 				A9F703732489BC8500C98AD8 /* CarbStore+SimulatedCoreData.swift in Sources */,
+				C105097B2D8B947B00118A37 /* SelectablePreset.swift in Sources */,
 				4328E0351CFC0AE100E199AA /* WatchDataManager.swift in Sources */,
 				4345E3FC21F04911009E00E5 /* UIColor+HIG.swift in Sources */,
 				1D4A3E2E2478628500FD601B /* StoredAlert+CoreDataProperties.swift in Sources */,
+				C10509752D8B309400118A37 /* Environment+SettingsManager.swift in Sources */,
 				E95D380124EADE7C005E2F50 /* DoseStoreProtocol.swift in Sources */,
 				43D381621EBD9759007F8C8F /* HeaderValuesTableViewCell.swift in Sources */,
 				C13DA2B024F6C7690098BB29 /* UIViewController.swift in Sources */,
@@ -3704,6 +3719,7 @@
 				C1AF062329426300002C1B19 /* ManualGlucoseEntryRow.swift in Sources */,
 				C10509612D7B3DF400118A37 /* CardSectionScrollView.swift in Sources */,
 				C148CEE724FD91BD00711B3B /* DeliveryUncertaintyAlertManager.swift in Sources */,
+				C10509772D8B591200118A37 /* StatusTableViewModel.swift in Sources */,
 				84DEB10D2C18FABA00170734 /* IOSFocusModesView.swift in Sources */,
 				DDC389FC2A2BC6670066E2E8 /* SettingsView+algorithmExperimentsSection.swift in Sources */,
 				1D12D3B92548EFDD00B53E8B /* main.swift in Sources */,

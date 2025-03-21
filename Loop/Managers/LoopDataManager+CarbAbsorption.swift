@@ -49,7 +49,7 @@ extension LoopDataManager {
 
         let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(startDate: sensitivityStart, endDate: end)
 
-        let overrides = temporaryPresetsManager.overrideHistory.getOverrideHistory(startDate: sensitivityStart, endDate: end)
+        let overrides = temporaryPresetsManager.presetHistory.getOverrideHistory(startDate: sensitivityStart, endDate: end)
 
         guard !sensitivity.isEmpty else {
             throw LoopError.configurationError(.insulinSensitivitySchedule)

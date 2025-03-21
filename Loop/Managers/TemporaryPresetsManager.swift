@@ -16,6 +16,7 @@ protocol PresetActivationObserver: AnyObject {
     func presetDeactivated(context: TemporaryScheduleOverride.Context)
 }
 
+@MainActor
 @Observable
 class TemporaryPresetsManager {
 
@@ -23,20 +24,19 @@ class TemporaryPresetsManager {
 
     @ObservationIgnored private var settingsProvider: SettingsProvider
 
-    var overrideHistory: TemporaryScheduleOverrideHistory
+    var presetHistory: TemporaryScheduleOverrideHistory
 
     @ObservationIgnored private var presetActivationObservers: [PresetActivationObserver] = []
 
     @ObservationIgnored private var overrideIntentObserver: NSKeyValueObservation? = nil
 
-    @MainActor
     init(settingsProvider: SettingsProvider) {
         self.settingsProvider = settingsProvider
         
-        self.overrideHistory = TemporaryScheduleOverrideHistoryContainer.shared.fetch()
+        self.presetHistory = TemporaryScheduleOverrideHistoryContainer.shared.fetch()
         TemporaryScheduleOverrideHistory.relevantTimeWindow = Bundle.main.localCacheDuration
 
-        scheduleOverride = overrideHistory.activeOverride(at: Date())
+        scheduleOverride = presetHistory.activeOverride(at: Date())
 
         if scheduleOverride?.context == .preMeal {
             preMealOverride = scheduleOverride
@@ -48,7 +48,9 @@ class TemporaryPresetsManager {
              options: [.new],
              changeHandler:
                 { [weak self] (defaults, change) in
-                    self?.handleIntentOverrideAction(default: defaults, change: change)
+                    Task { @MainActor in
+                        self?.handleIntentOverrideAction(default: defaults, change: change)
+                    }
                 }
         )
     }
@@ -79,6 +81,7 @@ class TemporaryPresetsManager {
 
     public var scheduleOverride: TemporaryScheduleOverride? {
         didSet {
+            print("didSet scheduleOverride called: \(scheduleOverride)")
             guard oldValue != scheduleOverride else {
                 return
             }
@@ -88,7 +91,7 @@ class TemporaryPresetsManager {
             }
             
             if scheduleOverride != oldValue {
-                overrideHistory.recordOverride(scheduleOverride)
+                presetHistory.recordOverride(scheduleOverride)
 
                 if let oldPreset = oldValue {
                     for observer in self.presetActivationObservers {
@@ -122,7 +125,7 @@ class TemporaryPresetsManager {
                 scheduleOverride = nil
             }
             
-            overrideHistory.recordOverride(preMealOverride)
+            presetHistory.recordOverride(preMealOverride)
 
             if let newPreset = preMealOverride {
                 for observer in self.presetActivationObservers {
@@ -149,14 +152,18 @@ class TemporaryPresetsManager {
     public func scheduleClearOverride(override: TemporaryScheduleOverride) {
         clearOverrideTimer?.invalidate()
         clearOverrideTimer = Timer.scheduledTimer(withTimeInterval: override.scheduledEndDate.timeIntervalSince(Date()), repeats: false, block: { [weak self] _ in
-            if override == self?.scheduleOverride {
-                self?.clearOverride()
-            } else if override == self?.preMealOverride {
-                self?.clearOverride(matching: .preMeal)
-            }
+            Task { await self?.endOverride(override) }
         })
     }
-    
+
+    func endOverride(_ override: TemporaryScheduleOverride) {
+        if override == scheduleOverride {
+            clearOverride()
+        } else if override == preMealOverride {
+            clearOverride(matching: .preMeal)
+        }
+    }
+
     public var isScheduleOverrideInfiniteWorkout: Bool {
         guard let scheduleOverride = scheduleOverride else { return false }
         return scheduleOverride.context == .legacyWorkout && scheduleOverride.duration.isInfinite
@@ -245,7 +252,26 @@ class TemporaryPresetsManager {
             syncIdentifier: UUID()
         )
     }
-    
+
+    func startPreset(_ preset: SelectablePreset) {
+        switch preset {
+        case .custom(let temporaryScheduleOverridePreset):
+            scheduleOverride = temporaryScheduleOverridePreset.createOverride(enactTrigger: .local)
+        case .preMeal:
+            enablePreMealOverride(for: .hours(1))
+        case .legacyWorkout(_, let duration):
+            enableLegacyWorkoutOverride(for: duration.presetDuration)
+        }
+    }
+
+    func endPreset() {
+        if activeOverride?.context == .preMeal {
+            clearOverride(matching: .preMeal)
+        } else {
+            clearOverride()
+        }
+    }
+
     public func endPreMealOverride() {
         preMealOverride?.scheduledEndDate = .now
         clearOverride(matching: .preMeal)
@@ -270,7 +296,7 @@ class TemporaryPresetsManager {
 
     public var basalRateScheduleApplyingOverrideHistory: BasalRateSchedule? {
         if let basalSchedule = settingsProvider.settings.basalRateSchedule {
-            return overrideHistory.resolvingRecentBasalSchedule(basalSchedule)
+            return presetHistory.resolvingRecentBasalSchedule(basalSchedule)
         } else {
             return nil
         }
@@ -279,7 +305,7 @@ class TemporaryPresetsManager {
     /// The insulin sensitivity schedule, applying recent overrides relative to the current moment in time.
     public var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule? {
         if let insulinSensitivitySchedule = settingsProvider.settings.insulinSensitivitySchedule {
-            return overrideHistory.resolvingRecentInsulinSensitivitySchedule(insulinSensitivitySchedule)
+            return presetHistory.resolvingRecentInsulinSensitivitySchedule(insulinSensitivitySchedule)
         } else {
             return nil
         }
@@ -287,7 +313,7 @@ class TemporaryPresetsManager {
 
     public var carbRatioScheduleApplyingOverrideHistory: CarbRatioSchedule? {
         if let carbRatioSchedule = carbRatioSchedule {
-            return overrideHistory.resolvingRecentCarbRatioSchedule(carbRatioSchedule)
+            return presetHistory.resolvingRecentCarbRatioSchedule(carbRatioSchedule)
         } else {
             return nil
         }
@@ -301,8 +327,8 @@ class TemporaryPresetsManager {
             ]
         )
     }
-    
-    func updateActiveOverrideDuration(newEndDate: Date) {
+
+    func updateActivePresetDuration(newEndDate: Date) {
         if var scheduleOverride {
             if newEndDate > Date() {
                 scheduleOverride.scheduledEndDate = newEndDate
@@ -314,8 +340,36 @@ class TemporaryPresetsManager {
             self.scheduleClearOverride(override: scheduleOverride)
         }
     }
+
+    var lastUsed: [String: Date]?
+
+    func lastUsed(id: String) -> Date? {
+        if lastUsed == nil {
+            let enacts = presetHistory.getOverrideHistory(startDate: .distantPast, endDate: Date())
+            lastUsed = [:]
+            for enact in enacts {
+                var id: String
+                switch enact.context {
+                    case .preMeal: id = "preMeal"
+                    case .legacyWorkout: id = "legacyWorkout"
+                    case .preset(let preset): id = preset.id.uuidString
+                    case .custom: continue
+                }
+                lastUsed![id] = max(lastUsed![id] ?? .distantPast, enact.startDate)
+            }
+        }
+        return lastUsed![id]
+    }
+
 }
 
+extension TemporaryPresetsManager {
+    static var placeholder: TemporaryPresetsManager {
+        .init(settingsProvider: SettingsManager.placeholder)
+    }
+}
+
+@MainActor
 public protocol SettingsWithOverridesProvider {
     var insulinSensitivityScheduleApplyingOverrideHistory: InsulinSensitivitySchedule? { get }
     var carbRatioSchedule: CarbRatioSchedule? { get }

@@ -396,7 +396,7 @@ final class LoopDataManager: ObservableObject {
             throw LoopError.configurationError(.maximumBasalRatePerHour)
         }
 
-        var overrides = temporaryPresetsManager.overrideHistory.getOverrideHistory(startDate: neededSensitivityTimeline.start, endDate: forecastEndTime)
+        var overrides = temporaryPresetsManager.presetHistory.getOverrideHistory(startDate: neededSensitivityTimeline.start, endDate: forecastEndTime)
         
         if disablingPreMeal,
            let activeOverride = temporaryPresetsManager.activeOverride,
@@ -575,7 +575,7 @@ final class LoopDataManager: ObservableObject {
                     basal.unitsPerHour = deliveryDelegate.roundBasalRate(unitsPerHour: basal.unitsPerHour)
 
                     let scheduledBasalRate = input.basal.closestPrior(to: loopBaseTime)!.value
-                    let activeOverride = temporaryPresetsManager.overrideHistory.activeOverride(at: loopBaseTime)
+                    let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: loopBaseTime)
 
                     let basalAdjustment = basal.adjustForCurrentDelivery(
                         at: loopBaseTime,
@@ -1280,7 +1280,7 @@ extension LoopDataManager: FavoriteFoodInsightsViewModelDelegate {
 
         let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(startDate: sensitivityStart, endDate: end)
 
-        let overrides = temporaryPresetsManager.overrideHistory.getOverrideHistory(startDate: sensitivityStart, endDate: end)
+        let overrides = temporaryPresetsManager.presetHistory.getOverrideHistory(startDate: sensitivityStart, endDate: end)
 
         guard !sensitivity.isEmpty else {
             throw LoopError.configurationError(.insulinSensitivitySchedule)

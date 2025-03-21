@@ -434,7 +434,7 @@ extension OnboardingManager: ServiceProvider {
 // MARK: - TherapySettingsProvider
 
 extension OnboardingManager: TherapySettingsProvider {
-    var onboardingTherapySettings: TherapySettings {
+    var therapySettings: TherapySettings {
         return settingsManager.therapySettings
     }
 }

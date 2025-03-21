@@ -11,34 +11,22 @@ import LoopKitUI
 import SwiftUI
 
 struct PresetDetentView: View {
-    
+
     enum Operation {
         case start
         case end
     }
     
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+    @Environment(\.settingsManager) private var settingsManager
+    @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
     
     let preset: SelectablePreset
-    let viewModel: PresetsViewModel
-    
-    let activeOverride: TemporaryScheduleOverride?
+    let didTapEdit: () -> Void
 
-    init(viewModel: PresetsViewModel, preset: SelectablePreset) {
-        self.viewModel = viewModel
-        self.preset = preset
-        self.activeOverride = viewModel.temporaryPresetsManager.activeOverride
-    }
-    
-    
-    init?(viewModel: PresetsViewModel) {
-        guard let preset = viewModel.pendingPreset else { return nil }
-        self.init(viewModel: viewModel, preset: preset)
-    }
-    
     var operation: Operation {
-        if activeOverride?.presetId == preset.id {
+        if temporaryPresetsManager.activeOverride?.presetId == preset.id {
             return .end
         } else {
             return .start
@@ -52,7 +40,7 @@ struct PresetDetentView: View {
             case .start:
                 Text("Duration: \(preset.duration.localizedTitle)")
             case .end:
-                if let activeOverride {
+                if let activeOverride = temporaryPresetsManager.activeOverride {
                     if activeOverride.presetId == preset.id {
                         switch activeOverride.duration {
                         case .finite:
@@ -77,15 +65,15 @@ struct PresetDetentView: View {
             switch operation {
             case .start:
                 Button("Start Preset") {
-                    viewModel.startPreset(preset)
+                    temporaryPresetsManager.startPreset(preset)
                     dismiss()
                 }
                 .buttonStyle(ActionButtonStyle())
-                .disabled(viewModel.activePreset != nil && preset.id != viewModel.activePreset?.id)
+                .disabled(temporaryPresetsManager.activeOverride != nil && preset.id != temporaryPresetsManager.activeOverride?.presetId)
                 .accessibilityIdentifier("button_startPreset")
             case .end:
                 Button("End Preset") {
-                    viewModel.endPreset()
+                    temporaryPresetsManager.endPreset()
                     dismiss()
                 }
                 .buttonStyle(ActionButtonStyle(.destructive))
@@ -93,9 +81,7 @@ struct PresetDetentView: View {
                 
                 if preset.duration != .untilCarbsEntered {
                     NavigationLink("Adjust Preset Duration") {
-                        if let activeOverride {
-                            EditOverrideDurationView(override: activeOverride, viewModel: viewModel)
-                        }
+                        EditOverrideDurationView()
                     }
                     .buttonStyle(ActionButtonStyle(.tertiary))
                     .accessibilityIdentifier("button_adjustPresetDuration")
@@ -112,7 +98,11 @@ struct PresetDetentView: View {
     }
     
     @State var sheetContentHeight: Double = 0
-    
+
+    var therapySettingsImpactDisplayState: PresetStatsView.TherapySettingsImpactDisplayState {
+        operation == .end ? .show(settingsManager.therapySettings.impact(for: preset.insulinSensitivityMultiplier ?? 1.0)) : .hide
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -125,7 +115,7 @@ struct PresetDetentView: View {
                     if operation == .start {
                         Button {
                             dismiss()
-                            viewModel.editPreset.append(preset.id)
+                            didTapEdit()
                         } label: {
                             Group {
                                 Text(Image(systemName: "pencil")) + Text(" ") + Text("Edit Preset")
@@ -142,8 +132,8 @@ struct PresetDetentView: View {
                 PresetStatsView(
                     insulinSensitivityMultiplier: preset.insulinSensitivityMultiplier,
                     correctionRange: preset.correctionRange,
-                    guardrail: preset.guardrail,
-                    therapySettingsImpactDisplayState: operation == .end ? .show(viewModel.impactForPreset(preset)) : .hide
+                    guardrail: settingsManager.guardrailForPreset(preset),
+                    therapySettingsImpactDisplayState: therapySettingsImpactDisplayState
                 )
                 
                 actionArea

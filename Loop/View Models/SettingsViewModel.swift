@@ -88,8 +88,6 @@ class SettingsViewModel {
     private(set) var mostRecentGlucoseDataDate: Date?
     private(set) var mostRecentPumpDataDate: Date?
     
-    var presetsViewModel: PresetsViewModel
-
     var closedLoopDescriptiveText: String? {
         return delegate?.closedLoopDescriptiveText
     }
@@ -176,14 +174,6 @@ class SettingsViewModel {
         self.therapySettingsViewModelDelegate = therapySettingsViewModelDelegate
         self.presetHistory = presetHistory
 
-        self.presetsViewModel = PresetsViewModel(
-            therapySettings: therapySettings(),
-            temporaryPresetsManager: temporaryPresetsManager,
-            presetsHistory: presetHistory
-        )
-
-        self.presetsViewModel.presetWasEdited = savePreset
-
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
         lastLoopCompletion
             .assign(to: \.lastLoopCompletion, on: self)
@@ -194,26 +184,6 @@ class SettingsViewModel {
         mostRecentPumpDataDate
             .assign(to: \.mostRecentPumpDataDate, on: self)
             .store(in: &cancellables)
-    }
-
-    func savePreset(_ preset: SelectablePreset) throws {
-        var therapySettings = therapySettings()
-        var preMealRange = therapySettings.correctionRangeOverrides?.ranges[.preMeal]
-        var workoutRange = therapySettings.correctionRangeOverrides?.ranges[.workout]
-        var workoutDuration = therapySettings.correctionRangeOverrides?.workoutDuration
-
-        switch(preset) {
-        case .preMeal(let range, _):
-            preMealRange = range
-        case .legacyWorkout(let range, let duration, _):
-            workoutRange = range
-            workoutDuration = duration.presetDuration
-        default:
-            // TODO: editing of custom presets
-            break
-        }
-        therapySettings.correctionRangeOverrides = CorrectionRangeOverrides(preMeal: preMealRange, workout: workoutRange, workoutDuration: workoutDuration)
-        therapySettingsViewModelDelegate?.saveCompletion(therapySettings: therapySettings)
     }
 }
 

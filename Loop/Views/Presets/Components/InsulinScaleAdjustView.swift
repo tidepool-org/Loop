@@ -12,7 +12,7 @@ import LoopKitUI
 
 public struct InsulinScaleAdjustView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
-    @Environment(\.therapySettings) private var therapySettings
+    @Environment(\.settingsManager) private var settingsManager
 
     @State private var presentInfoView: Bool = false
 
@@ -23,21 +23,21 @@ public struct InsulinScaleAdjustView: View {
     }
 
     var basalRate: Double? {
-        if let baseValue = therapySettings.basalRateSchedule?.value(at: Date()) {
+        if let baseValue = settingsManager.settings.basalRateSchedule?.value(at: Date()) {
             return baseValue * insulinMultiplier
         } else {
             return nil
         }
     }
     var carbRatio: Double? {
-        if let baseValue = therapySettings.carbRatioSchedule?.value(at: Date()) {
+        if let baseValue = settingsManager.settings.carbRatioSchedule?.value(at: Date()) {
             return baseValue / insulinMultiplier
         } else {
             return nil
         }
     }
     var isf: LoopQuantity? {
-        if let baseQuantity = therapySettings.insulinSensitivitySchedule?.quantity(at: Date()) {
+        if let baseQuantity = settingsManager.settings.insulinSensitivitySchedule?.quantity(at: Date()) {
             let value = baseQuantity.doubleValue(for: .milligramsPerDeciliter)
             let adjustedValue = value / insulinMultiplier
             return LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: adjustedValue)

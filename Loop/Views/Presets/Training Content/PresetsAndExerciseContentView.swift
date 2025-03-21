@@ -14,6 +14,7 @@ import SwiftUI
 struct PresetsAndExerciseContentView: View {
     
     @Environment(\.appName) private var appName
+    @Environment(\.settingsManager) private var settingsManager
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     
     enum StepNumber {
@@ -132,7 +133,7 @@ struct PresetsAndExerciseContentView: View {
             Text("Some people use this feature before exercise for a pre-programmed 1-hour, 2-hour, or indefinite length of time in an effort to decrease their risk of low glucose during exercise or other physical activity.", comment: "Presets and exercise training content, scheduling preset, paragraph 1")
         }
     }
-    
+
     @ViewBuilder
     var stepFourView: some View {
         Text("Once saved, Omar’s completed preset will display in his Presets lists.", comment: "Presets and exercise training content, scheduling preset, paragraph 2")
@@ -153,7 +154,7 @@ struct PresetsAndExerciseContentView: View {
                     ),
                     duration: TemporaryScheduleOverride.Duration.finite(1800)
                 )
-            )
+            ), guardrail: .correctionRange
         )
     }
 }

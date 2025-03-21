@@ -251,7 +251,7 @@ class LoopAppManager: NSObject {
         )
 
         temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsManager)
-        temporaryPresetsManager.overrideHistory.delegate = self
+        temporaryPresetsManager.presetHistory.delegate = self
 
         temporaryPresetsManager.addTemporaryPresetObserver(alertManager)
         temporaryPresetsManager.addTemporaryPresetObserver(analyticsServicesManager)
@@ -355,7 +355,7 @@ class LoopAppManager: NSObject {
             glucoseStore: glucoseStore,
             cgmEventStore: cgmEventStore,
             settingsProvider: settingsManager,
-            overrideHistory: temporaryPresetsManager.overrideHistory,
+            overrideHistory: temporaryPresetsManager.presetHistory,
             insulinDeliveryStore: doseStore.insulinDeliveryStore,
             deviceLog: deviceLog,
             automationHistoryProvider: loopDataManager
@@ -405,9 +405,7 @@ class LoopAppManager: NSObject {
         dosingDecisionStore.delegate = deviceDataManager
         remoteDataServicesManager.delegate = deviceDataManager
 
-
-
-        let criticalEventLogs: [CriticalEventLog] = [settingsManager.settingsStore, glucoseStore, carbStore, dosingDecisionStore, doseStore, deviceDataManager.deviceLog, alertManager.alertStore]
+        let criticalEventLogs: [CriticalEventLog] = [settingsManager.settingsStore!, glucoseStore, carbStore, dosingDecisionStore, doseStore, deviceDataManager.deviceLog, alertManager.alertStore]
         criticalEventLogExportManager = CriticalEventLogExportManager(logs: criticalEventLogs,
                                                                       directory: FileManager.default.exportsDirectoryURL,
                                                                       historicalDuration: localCacheDuration)
@@ -501,8 +499,10 @@ class LoopAppManager: NSObject {
 
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
+        let dosingEnablePublisher = ObservablePublishers.tracking(settingsManager, keyPath: \.dosingEnabled)
+
         automaticDosingStatus.$isAutomaticDosingAllowed
-            .combineLatest(settingsManager.$dosingEnabled)
+            .combineLatest(dosingEnablePublisher)
             .map { $0 && $1 }
             .assign(to: \.automaticDosingStatus.automaticDosingEnabled, on: self)
             .store(in: &cancellables)
@@ -590,7 +590,7 @@ class LoopAppManager: NSObject {
                                           availableSupports: supportManager.availableSupports,
                                           isOnboardingComplete: onboardingManager.isComplete,
                                           therapySettingsViewModelDelegate: deviceDataManager,
-                                          presetHistory: temporaryPresetsManager.overrideHistory,
+                                          presetHistory: temporaryPresetsManager.presetHistory,
                                           temporaryPresetsManager: temporaryPresetsManager
         )
         
@@ -630,6 +630,8 @@ class LoopAppManager: NSObject {
             .environment(\.appName, Bundle.main.bundleDisplayName)
             .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
             .environment(\.loopStatusColorPalette, .loopStatus)
+            .environment(\.settingsManager, settingsManager)
+            .environment(\.temporaryPresetsManager, temporaryPresetsManager)
             .edgesIgnoringSafeArea(.top)
 
         var rootNavigationController = rootViewController as? RootNavigationController
@@ -829,6 +831,7 @@ extension LoopAppManager: AlertPresenter {
     }
 }
 
+@MainActor
 protocol DisplayGlucoseUnitBroadcaster: AnyObject {
     func addDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver)
     func removeDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver)
@@ -858,7 +861,7 @@ extension LoopAppManager: DisplayGlucoseUnitBroadcaster {
 
 // MARK: - DeviceOrientationController
 
-extension LoopAppManager: DeviceOrientationController {
+extension LoopAppManager: @preconcurrency DeviceOrientationController {
     func setDefaultSupportedInferfaceOrientations() {
         supportedInterfaceOrientations = Self.defaultSupportedInterfaceOrientations
     }
@@ -1060,6 +1063,7 @@ extension LoopAppManager: DiagnosticReportGenerator {
 
 // MARK: SimulatedData
 
+@MainActor
 protocol SimulatedData {
     func generateSimulatedHistoricalCoreData(completion: @escaping (Error?) -> Void)
     func purgeHistoricalCoreData(completion: @escaping (Error?) -> Void)
@@ -1071,7 +1075,11 @@ extension LoopAppManager: SimulatedData {
             fatalError("\(#function) should be invoked only when simulated core data is enabled")
         }
 
-        settingsManager.settingsStore.generateSimulatedHistoricalSettingsObjects() { error in
+        guard let settingsStore = settingsManager.settingsStore else {
+            fatalError("\(#function) invoke with no settings store")
+        }
+
+        settingsManager.settingsStore?.generateSimulatedHistoricalSettingsObjects() { error in
             guard error == nil else {
                 completion(error)
                 return

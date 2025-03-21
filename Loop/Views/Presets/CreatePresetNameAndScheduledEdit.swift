@@ -45,6 +45,8 @@ struct CreatePresetNameAndScheduledEdit: View {
     @State private var selectedRepeatOption: RepeatOption = .never
     @State private var showingDayPicker: Bool = false
 
+    var onCancel: () -> Void
+
     var body: some View {
         CardSectionScrollView {
             CardSection {
@@ -247,7 +249,7 @@ struct CreatePresetNameAndScheduledEdit: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Cancel") {
-                    dismiss()
+                    onCancel()
                 }
             }
         }
@@ -277,6 +279,6 @@ struct PresetCreationView_Previews: PreviewProvider {
     @State static var path: NavigationPath = .init()
 
     static var previews: some View {
-        CreatePresetNameAndScheduledEdit(preset: $preset, path: $path)
+        CreatePresetNameAndScheduledEdit(preset: $preset, path: $path, onCancel: {})
     }
 }

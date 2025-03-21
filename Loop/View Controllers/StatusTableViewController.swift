@@ -735,6 +735,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private var canceledDose: DoseEntry? = nil
     
     private func determinePresetsRowMode() -> PresetsRowMode {
+        print("temporaryPresetsManager.scheduleOverride = \(String(describing: temporaryPresetsManager.scheduleOverride))")
         if let preset = temporaryPresetsManager.scheduleOverride ?? temporaryPresetsManager.preMealOverride, !preset.hasFinished() {
             return .scheduleOverrideEnabled(preset)
         } else {
@@ -966,7 +967,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 }
 
                 if override.isActive() {
-                    if let preset = statusTableViewModel.settingsViewModel.presetsViewModel.allPresets.first(where: { $0.id == override.presetId }), case .preMeal(_, _) = preset {
+                    if let preset = settingsManager.allPresets.first(where: { $0.id == override.presetId }), case .preMeal(_) = preset {
                         cell.subtitleLabel.text = NSLocalizedString("on until carbs added", comment: "The format for the description of a premeal preset end date")
                     } else {
                         switch override.duration {
@@ -1061,7 +1062,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 })
                 
                 cell.setChartGenerator(generator: { [weak self] (frame) in
-                    return self?.statusCharts.iobChart(withFrame: frame, highlightLabelOffsetY: cell.supplementalChartContentView.bounds.height)?.view
+                    return self?.statusCharts.iobChart(withFrame: frame, highlightLabelOffsetY: cell.supplementalChartContentView?.bounds.height ?? 0)?.view
                 })
                 cell.setTitleLabelText(label: NSLocalizedString("Active Insulin", comment: "The title of the Insulin On-Board graph"))
                 cell.setTitleTextColor(color: ChartColorPalette.primary.insulinTint)
@@ -1268,7 +1269,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch Section(rawValue: indexPath.section)! {
         case .presets:
-            statusTableViewModel.pendingPreset = statusTableViewModel.settingsViewModel.presetsViewModel.activePreset
+            statusTableViewModel.pendingPreset = settingsManager.allPresets.first { $0.id == temporaryPresetsManager.activeOverride?.presetId }
         case .alertWarning:
             if alertPermissionsChecker.showWarning {
                 tableView.deselectRow(at: indexPath, animated: true)
@@ -1423,7 +1424,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
             vc.presets = loopManager.settings.overridePresets
             vc.glucoseUnit = statusCharts.glucose.glucoseUnit
-            vc.overrideHistory = temporaryPresetsManager.overrideHistory.getEvents()
+            vc.overrideHistory = temporaryPresetsManager.presetHistory.getEvents()
             vc.delegate = self
         case let vc as PredictionTableViewController:
             vc.deviceManager = deviceManager
@@ -1520,14 +1521,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     func presentPresets() {
         let hostingController = DismissibleHostingController(
-            rootView: PresetsView(viewModel: statusTableViewModel.settingsViewModel.presetsViewModel)
+            rootView: PresetsView()
                 .onAppear { self.isShowingPresets = true }
                 .onDisappear { self.isShowingPresets = false }
                 .environmentObject(deviceManager.displayGlucosePreference)
                 .environment(\.appName, Bundle.main.bundleDisplayName)
                 .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
                 .environment(\.loopStatusColorPalette, .loopStatus)
-                .environment(\.therapySettings, settingsManager.therapySettings),
+                .environment(\.temporaryPresetsManager, temporaryPresetsManager)
+                .environment(\.settingsManager, settingsManager),
             isModalInPresentation: false)
         present(hostingController, animated: true)
     }
@@ -1543,7 +1545,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 .environment(\.appName, Bundle.main.bundleDisplayName)
                 .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
                 .environment(\.loopStatusColorPalette, .loopStatus)
-                .environment(\.therapySettings, settingsManager.therapySettings),
+                .environment(\.settingsManager, settingsManager)
+                .environment(\.temporaryPresetsManager, temporaryPresetsManager),
+
             isModalInPresentation: false)
         present(hostingController, animated: true)
     }

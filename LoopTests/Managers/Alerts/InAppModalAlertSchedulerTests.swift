@@ -141,7 +141,7 @@ class InAppModalAlertSchedulerTests: XCTestCase {
         XCTAssertEqual("FOREGROUND", alertController?.title)
     }
 
-    func testRemoveImmediateAlert() {
+    @MainActor func testRemoveImmediateAlert() {
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .immediate)
         inAppModalAlertScheduler.scheduleAlert(alert)
         

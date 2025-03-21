@@ -23,9 +23,10 @@ protocol DeviceStatusProvider {
 }
 
 @MainActor
+@Observable
 class SettingsManager {
 
-    let settingsStore: SettingsStore
+    let settingsStore: SettingsStore?
 
     var remoteDataServicesManager: RemoteDataServicesManager?
 
@@ -37,7 +38,7 @@ class SettingsManager {
 
     var displayGlucosePreference: DisplayGlucosePreference?
 
-    public var settings: StoredSettings
+    private var storedSettings: StoredSettings
 
     private var remoteNotificationRegistrationResult: Swift.Result<Data,Error>?
 
@@ -45,27 +46,35 @@ class SettingsManager {
 
     private let log = OSLog(category: "SettingsManager")
 
-    private var loopSettingsLock = UnfairLock()
+    var dosingEnabled: Bool {
+        get { storedSettings.dosingEnabled }
+        set { storedSettings.dosingEnabled = newValue }
+    }
 
-    @Published private(set) var dosingEnabled: Bool
-
-    init(cacheStore: PersistenceController, expireAfter: TimeInterval, alertMuter: AlertMuter, analyticsServicesManager: AnalyticsServicesManager? = nil)
+    init(cacheStore: PersistenceController?, expireAfter: TimeInterval, alertMuter: AlertMuter, analyticsServicesManager: AnalyticsServicesManager? = nil)
     {
         self.analyticsServicesManager = analyticsServicesManager
 
-        settingsStore = SettingsStore(store: cacheStore, expireAfter: expireAfter)
         self.alertMuter = alertMuter
 
-        if let storedSettings = settingsStore.latestSettings {
-            settings = storedSettings
+        if let cacheStore {
+            settingsStore = SettingsStore(store: cacheStore, expireAfter: expireAfter)
+        } else {
+            settingsStore = nil
+        }
+
+        if let latest = settingsStore?.latestSettings {
+            storedSettings = latest
         } else {
             log.default("SettingsStore has no settings: initializing empty StoredSettings.")
-            settings = StoredSettings()
+            storedSettings = StoredSettings()
         }
 
         dosingEnabled = settings.dosingEnabled
 
-        settingsStore.delegate = self
+        settingsStore?.delegate = self
+
+        
 
         // Migrate old settings from UserDefaults
         if var legacyLoopSettings = UserDefaults.appGroup?.legacyLoopSettings {
@@ -114,7 +123,7 @@ class SettingsManager {
     private func mergeSettings(newLoopSettings: LoopSettings? = nil, notificationSettings: NotificationSettings? = nil, deviceToken: String? = nil) -> StoredSettings
     {
         let newLoopSettings = newLoopSettings ?? loopSettings
-        let newNotificationSettings = notificationSettings ?? settingsStore.latestSettings?.notificationSettings
+        let newNotificationSettings = notificationSettings ?? settingsStore?.latestSettings?.notificationSettings
 
         return StoredSettings(date: Date(),
                               dosingEnabled: newLoopSettings.dosingEnabled,
@@ -155,7 +164,7 @@ class SettingsManager {
             return
         }
 
-        settings = mergedSettings
+        storedSettings = mergedSettings
 
         if remoteNotificationRegistrationResult == nil && FeatureFlags.remoteCommandsEnabled {
             // remote notification registration not finished
@@ -166,7 +175,7 @@ class SettingsManager {
             log.default("Saving settings with no ISF schedule.")
         }
 
-        settingsStore.storeSettings(settings) { error in
+        settingsStore?.storeSettings(settings) { error in
             if let error = error {
                 self.log.error("Error storing settings: %{public}@", error.localizedDescription)
             }
@@ -201,38 +210,36 @@ class SettingsManager {
     }
 
     func mutateLoopSettings(_ changes: (_ settings: inout LoopSettings) -> Void) {
-        loopSettingsLock.withLock {
-            let oldValue = loopSettings
-            var newValue = oldValue
-            changes(&newValue)
+        let oldValue = loopSettings
+        var newValue = oldValue
+        changes(&newValue)
 
-            guard oldValue != newValue else {
-                return
+        guard oldValue != newValue else {
+            return
+        }
+
+        storeSettings(newLoopSettings: newValue)
+
+        if newValue.insulinSensitivitySchedule != oldValue.insulinSensitivitySchedule {
+            analyticsServicesManager?.didChangeInsulinSensitivitySchedule()
+        }
+
+        if newValue.basalRateSchedule != oldValue.basalRateSchedule {
+            if let newValue = newValue.basalRateSchedule, let oldValue = oldValue.basalRateSchedule, newValue.items != oldValue.items {
+                analyticsServicesManager?.didChangeBasalRateSchedule()
             }
+        }
 
-            storeSettings(newLoopSettings: newValue)
+        if newValue.carbRatioSchedule != oldValue.carbRatioSchedule {
+            analyticsServicesManager?.didChangeCarbRatioSchedule()
+        }
 
-            if newValue.insulinSensitivitySchedule != oldValue.insulinSensitivitySchedule {
-                analyticsServicesManager?.didChangeInsulinSensitivitySchedule()
-            }
+        if newValue.defaultRapidActingModel != oldValue.defaultRapidActingModel {
+            analyticsServicesManager?.didChangeInsulinModel()
+        }
 
-            if newValue.basalRateSchedule != oldValue.basalRateSchedule {
-                if let newValue = newValue.basalRateSchedule, let oldValue = oldValue.basalRateSchedule, newValue.items != oldValue.items {
-                    analyticsServicesManager?.didChangeBasalRateSchedule()
-                }
-            }
-
-            if newValue.carbRatioSchedule != oldValue.carbRatioSchedule {
-                analyticsServicesManager?.didChangeCarbRatioSchedule()
-            }
-
-            if newValue.defaultRapidActingModel != oldValue.defaultRapidActingModel {
-                analyticsServicesManager?.didChangeInsulinModel()
-            }
-
-            if newValue.dosingEnabled != oldValue.dosingEnabled {
-                self.dosingEnabled = newValue.dosingEnabled
-            }
+        if newValue.dosingEnabled != oldValue.dosingEnabled {
+            self.dosingEnabled = newValue.dosingEnabled
         }
         notify(forChange: .preferences)
     }
@@ -240,7 +247,7 @@ class SettingsManager {
     func storeSettingsCheckingNotificationPermissions() {
         UNUserNotificationCenter.current().getNotificationSettings() { notificationSettings in
             DispatchQueue.main.async {
-                guard let settings = self.settingsStore.latestSettings else {
+                guard let settings = self.settingsStore?.latestSettings else {
                     return
                 }
 
@@ -265,29 +272,29 @@ class SettingsManager {
     }
 
     func purgeHistoricalSettingsObjects(completion: @escaping (Error?) -> Void) {
-        settingsStore.purgeHistoricalSettingsObjects(completion: completion)
+        settingsStore?.purgeHistoricalSettingsObjects(completion: completion)
     }
 
     // MARK: Historical queries
 
     func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>] {
-        try await settingsStore.getBasalHistory(startDate: startDate, endDate: endDate)
+        try await settingsStore?.getBasalHistory(startDate: startDate, endDate: endDate) ?? []
     }
 
     func getCarbRatioHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>] {
-        try await settingsStore.getCarbRatioHistory(startDate: startDate, endDate: endDate)
+        try await settingsStore!.getCarbRatioHistory(startDate: startDate, endDate: endDate)
     }
 
     func getInsulinSensitivityHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<LoopQuantity>] {
-        try await settingsStore.getInsulinSensitivityHistory(startDate: startDate, endDate: endDate)
+        try await settingsStore!.getInsulinSensitivityHistory(startDate: startDate, endDate: endDate)
     }
 
     func getTargetRangeHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<ClosedRange<LoopQuantity>>] {
-        try await settingsStore.getTargetRangeHistory(startDate: startDate, endDate: endDate)
+        try await settingsStore!.getTargetRangeHistory(startDate: startDate, endDate: endDate)
     }
 
     func getDosingLimits(at date: Date) async throws -> DosingLimits {
-        try await settingsStore.getDosingLimits(at: date)
+        try await settingsStore!.getDosingLimits(at: date)
     }
 
 }
@@ -330,8 +337,97 @@ extension SettingsManager {
             }
         }
     }
+
+    public func guardrailForPreset(_ preset: SelectablePreset) -> Guardrail<LoopQuantity> {
+        switch preset {
+        case .preMeal:
+            return preMealGuardrail
+        case .legacyWorkout:
+            return legacyWorkoutPresetGuardrail
+        default:
+            return .correctionRange
+        }
+    }
+
+    public var preMealGuardrail: Guardrail<LoopQuantity> {
+        if let scheduleRange = settings.glucoseTargetRangeSchedule?.scheduleRange() {
+            return Guardrail.correctionRangeOverride(
+                for: .preMeal,
+                correctionRangeScheduleRange: scheduleRange,
+                suspendThreshold: settings.suspendThreshold
+            )
+        } else {
+            return Guardrail.correctionRange
+        }
+    }
+
+    public var legacyWorkoutPresetGuardrail: Guardrail<LoopQuantity> {
+        if let scheduleRange = settings.glucoseTargetRangeSchedule?.scheduleRange() {
+            return Guardrail.correctionRangeOverride(
+                for: .workout,
+                correctionRangeScheduleRange: scheduleRange,
+                suspendThreshold: settings.suspendThreshold
+            )
+        } else {
+            return Guardrail.correctionRange
+        }
+    }
+
+    var allPresets: [SelectablePreset] {
+        var presets: [SelectablePreset] = []
+
+        if let preMealTargetRange = settings.preMealTargetRange {
+            presets.append(.preMeal(range: preMealTargetRange))
+        }
+
+        if let legacyWorkoutTargetRange = settings.workoutTargetRange {
+            let duration = settings.workoutDefaultDuration ?? .indefinite
+            presets.append(.legacyWorkout(
+                range: legacyWorkoutTargetRange,
+                duration: duration.presetDurationType
+            ))
+        }
+
+        presets.append(contentsOf: settings.overridePresets.map { .custom($0)} )
+
+        return presets
+    }
+
+    func savePreset(_ preset: SelectablePreset) {
+        switch(preset) {
+        case .preMeal(let range):
+            mutateLoopSettings { settings in
+                settings.preMealTargetRange = range
+            }
+        case .legacyWorkout(let range, let duration):
+            mutateLoopSettings { settings in
+                settings.legacyWorkoutTargetRange = range
+                switch duration {
+                case .indefinite:
+                    settings.legacyWorkoutDuration = .indefinite
+                case .duration(let interval):
+                    settings.legacyWorkoutDuration = .finite(interval)
+                case .untilCarbsEntered:
+                    break
+                }
+            }
+        case .custom(let preset):
+            if let index = settings.overridePresets.firstIndex(where: { $0.id == preset.id }) {
+                mutateLoopSettings { settings in
+                    settings.overridePresets[index] = preset
+                }
+            }
+        }
+    }
+
+    func createPreset(_ preset: TemporaryScheduleOverridePreset) {
+        mutateLoopSettings { settings in
+            settings.overridePresets.append(preset)
+        }
+    }
 }
 
+@MainActor
 protocol SettingsProvider {
     var settings: StoredSettings { get }
 
@@ -344,15 +440,29 @@ protocol SettingsProvider {
 }
 
 extension SettingsManager: SettingsProvider {
+    var settings: StoredSettings { storedSettings }
+
     func executeSettingsQuery(fromQueryAnchor queryAnchor: SettingsStore.QueryAnchor?, limit: Int, completion: @escaping (SettingsStore.SettingsQueryResult) -> Void) {
-        settingsStore.executeSettingsQuery(fromQueryAnchor: queryAnchor, limit: limit, completion: completion)
+        settingsStore!.executeSettingsQuery(fromQueryAnchor: queryAnchor, limit: limit, completion: completion)
+    }
+}
+
+extension SettingsManager {
+    static var placeholder: SettingsManager {
+        .init(
+            cacheStore: .controllerInLocalDirectory(),
+            expireAfter: .hours(1),
+            alertMuter: .init()
+        )
     }
 }
 
 // MARK: - SettingsStoreDelegate
 extension SettingsManager: SettingsStoreDelegate {
-    func settingsStoreHasUpdatedSettingsData(_ settingsStore: SettingsStore) {
-        remoteDataServicesManager?.triggerUpload(for: .settings)
+    nonisolated func settingsStoreHasUpdatedSettingsData(_ settingsStore: SettingsStore) {
+        Task {
+            await remoteDataServicesManager?.triggerUpload(for: .settings)
+        }
     }
 }
 
@@ -388,5 +498,3 @@ private extension NotificationSettings {
         )
     }
 }
-
-

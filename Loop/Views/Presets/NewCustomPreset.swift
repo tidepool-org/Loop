@@ -8,6 +8,7 @@
 
 import LoopAlgorithm
 import UIKit
+import LoopKit
 
 struct PresetScheduleRepeatOptions: OptionSet {
     let rawValue: UInt8
@@ -115,6 +116,28 @@ extension NewCustomPreset {
             format: NSLocalizedString("Repeats weekly on %@ at %@", comment: "Weekly repeat schedule format"),
             daysString,
             timeString
+        )
+    }
+}
+
+extension NewCustomPreset {
+    var enactablePreset: TemporaryScheduleOverridePreset? {
+
+        let overrideDuration: TemporaryScheduleOverride.Duration
+        switch duration {
+        case .duration(let interval):
+            overrideDuration = .finite(interval)
+        default:
+            overrideDuration = .indefinite
+        }
+        return TemporaryScheduleOverridePreset(
+            symbol: "",
+            name: name,
+            settings: TemporaryScheduleOverrideSettings(
+                targetRange: correctionRange,
+                insulinNeedsScaleFactor: insulinMultiplier
+            ),
+            duration: overrideDuration
         )
     }
 }

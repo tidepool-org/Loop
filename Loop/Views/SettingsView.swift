@@ -171,7 +171,7 @@ struct SettingsView: View {
     }
 
     public var presetsView: some View {
-        PresetsView(viewModel: viewModel.presetsViewModel)
+        PresetsView()
     }
 
     private func menuItemsForSection(name: String) -> some View {
