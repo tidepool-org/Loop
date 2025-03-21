@@ -373,7 +373,7 @@ extension OnboardingManager: CGMManagerProvider {
 
 // MARK: - PumpManagerProvider
 
-extension OnboardingManager: PumpManagerProvider {
+extension OnboardingManager: @preconcurrency PumpManagerProvider {
     var activePumpManager: PumpManager? { deviceDataManager.pumpManager }
 
     var availablePumpManagers: [PumpManagerDescriptor] { deviceDataManager.availablePumpManagers }
@@ -425,7 +425,7 @@ extension OnboardingManager: StatefulPluggableProvider {
 
 // MARK: - ServiceProvider
 
-extension OnboardingManager: ServiceProvider {    
+extension OnboardingManager: @preconcurrency ServiceProvider {    
     var activeServices: [Service] { servicesManager.activeServices }
 
     var availableServices: [ServiceDescriptor] { servicesManager.availableServices }
@@ -433,8 +433,8 @@ extension OnboardingManager: ServiceProvider {
 
 // MARK: - TherapySettingsProvider
 
-extension OnboardingManager: TherapySettingsProvider {
-    var therapySettings: TherapySettings {
+extension OnboardingManager: @preconcurrency OnboardingTherapySettingsProvider {
+    var onboardingTherapySettings: TherapySettings {
         return settingsManager.therapySettings
     }
 }
