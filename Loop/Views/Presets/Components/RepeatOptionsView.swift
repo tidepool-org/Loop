@@ -10,6 +10,8 @@ import SwiftUI
 struct RepeatOptionView: View {
     let repeatOptions: PresetScheduleRepeatOptions
 
+    @ScaledMetric var dayTextSize: Double = 12
+
     private var selectedDays: [PresetScheduleRepeatOptions] {
         PresetScheduleRepeatOptions.allCases.filter { repeatOptions.contains($0) }
     }
@@ -28,9 +30,9 @@ struct RepeatOptionView: View {
         } else {
             HStack(spacing: 4) {
                 ForEach(PresetScheduleRepeatOptions.allCases, id: \.rawValue) { day in
-                    Text(String(day.description.first!))
-                        .font(.system(size: 12))
-                        .frame(width: 20, height: 20)
+                    Text(String(day.veryShortDescription))
+                        .font(.system(size: dayTextSize))
+                        .frame(width: dayTextSize+8, height: dayTextSize+8)
                         .background(
                             Circle()
                                 .fill(repeatOptions.contains(day) ? Color.accentColor : Color.gray.opacity(0.2))

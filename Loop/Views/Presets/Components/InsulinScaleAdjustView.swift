@@ -140,7 +140,7 @@ public struct InsulinScaleAdjustView: View {
                 .font(.footnote)
                 .foregroundColor(.secondary)
         }
-        .font(.system(size: 15))
+        .font(.subheadline)
         .multilineTextAlignment(.leading)
     }
 

@@ -42,9 +42,9 @@ struct ReviewNewPresetView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("Review Settings")
-                    .font(.system(size: 17, weight: .semibold))
+                    .fontWeight(.semibold)
                 Text("Review your preset settings below. To make any changes, navigate back to the setting you’d like to edit. You can edit these settings after saving your preset as well.")
-                    .font(.system(size: 13))
+                    .font(.footnote)
             }
             .foregroundColor(.white)
             .padding(.horizontal, 16)

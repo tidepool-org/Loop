@@ -92,7 +92,6 @@ struct PresetRangeEditor: View {
                         }
                     }))
                     .padding(.vertical)
-                    .font(.system(size: 17))
                 }
             }
 
@@ -143,7 +142,7 @@ struct PresetRangeEditor: View {
             )
             .padding(.bottom)
         }
-        .font(.system(size: 15))
+        .font(.subheadline)
     }
 
 

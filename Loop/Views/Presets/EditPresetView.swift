@@ -126,10 +126,8 @@ struct EditPresetView: View {
             VStack(alignment: .center, spacing: 24) {
                 HStack {
                     Text("Duration")
-                        .font(.system(size: 17, weight: .regular))
                     Spacer()
                     Text("Required")
-                        .font(.system(size: 17, weight: .regular))
                         .foregroundColor(.gray)
                 }
                 DurationPickerView(durationType: $preset.duration)

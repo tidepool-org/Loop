@@ -127,7 +127,6 @@ struct DurationPickerView: View {
 
             HStack {
                 Text("Until I turn off")
-                    .font(.system(size: 17, weight: .regular))
                 Spacer()
                 Toggle("", isOn: isIndefinite)
                     .labelsHidden()
