@@ -11,7 +11,7 @@ import LoopKit
 
 @testable import Loop
 
-
+@MainActor
 class TemporaryPresetsManagerTests: XCTestCase {
     private let preMealRange = DoubleRange(minValue: 80, maxValue: 80).quantityRange(for: .milligramsPerDeciliter)
     private let targetRange = DoubleRange(minValue: 95, maxValue: 105)
@@ -30,7 +30,7 @@ class TemporaryPresetsManagerTests: XCTestCase {
 
     override func setUp() async throws {
         let settingsProvider = MockSettingsProvider(settings: settings)
-        manager = await TemporaryPresetsManager(settingsProvider: settingsProvider)
+        manager = TemporaryPresetsManager(settingsProvider: settingsProvider)
     }
 
     func testPreMealOverride() {
