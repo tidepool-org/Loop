@@ -499,13 +499,9 @@ class LoopAppManager: NSObject {
 
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
-        let dosingEnablePublisher = ObservablePublishers.tracking(settingsManager, keyPath: \.dosingEnabled)
-
-        automaticDosingStatus.$isAutomaticDosingAllowed
-            .combineLatest(dosingEnablePublisher)
-            .map { $0 && $1 }
-            .assign(to: \.automaticDosingStatus.automaticDosingEnabled, on: self)
-            .store(in: &cancellables)
+        withObservationTracking(of: self.automaticDosingStatus.isAutomaticDosingAllowed && self.settingsManager.dosingEnabled) { [weak self] enabled in
+            self?.automaticDosingStatus.automaticDosingEnabled = enabled
+        }
 
         state = state.next
 
@@ -582,7 +578,8 @@ class LoopAppManager: NSObject {
                                           criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: criticalEventLogExportManager),
                                           therapySettings: { [weak self] in self?.settingsManager.therapySettings ?? TherapySettings() },
                                           sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
-                                          initialDosingEnabled: self.settingsManager.settings.dosingEnabled, automaticDosingStatus: self.automaticDosingStatus,
+                                          initialDosingEnabled: self.settingsManager.settings.dosingEnabled,
+                                          automaticDosingStatus: self.automaticDosingStatus,
                                           automaticDosingStrategy: self.settingsManager.settings.automaticDosingStrategy,
                                           lastLoopCompletion: loopDataManager.$lastLoopCompleted,
                                           mostRecentGlucoseDataDate: loopDataManager.$publishedMostRecentGlucoseDataDate,

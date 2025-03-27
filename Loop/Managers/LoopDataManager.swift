@@ -243,34 +243,28 @@ final class LoopDataManager: ObservableObject {
         // Turn off preMeal when going into closed loop off mode
         // Cancel any active temp basal when going into closed loop off mode
         // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
-        automaticDosingStatus.$automaticDosingEnabled
-            .removeDuplicates()
-            .dropFirst()
-            .sink { [weak self] enabled in
-                guard let self else {
-                    return
-                }
-                if self.automationHistory.last?.enabled != enabled {
-                    self.automationHistory.append(AutomationHistoryEntry(startDate: Date(), enabled: enabled))
+        
+        withObservationTracking(of: automaticDosingStatus.automaticDosingEnabled) { [weak self] enabled in
+            if self?.automationHistory.last?.enabled != enabled {
+                self?.automationHistory.append(AutomationHistoryEntry(startDate: Date(), enabled: enabled))
 
-                    // Clean up entries older than 36 hours; we should not be interpolating basal data before then.
-                    let now = Date()
-                    self.automationHistory = self.automationHistory.filter({ entry in
-                        now.timeIntervalSince(entry.startDate) < .hours(36)
-                    })
+                // Clean up entries older than 36 hours; we should not be interpolating basal data before then.
+                let now = Date()
+                self?.automationHistory = self?.automationHistory.filter({ entry in
+                    now.timeIntervalSince(entry.startDate) < .hours(36)
+                }) ?? []
+            }
+            if !enabled {
+                temporaryPresetsManager.clearOverride(matching: .preMeal)
+                Task {
+                    try? await self?.cancelActiveTempBasal(for: .automaticDosingDisabled)
                 }
-                if !enabled {
-                    self.temporaryPresetsManager.clearOverride(matching: .preMeal)
-                    Task {
-                        try? await self.cancelActiveTempBasal(for: .automaticDosingDisabled)
-                    }
-                } else {
-                    Task {
-                        await self.updateDisplayState()
-                    }
+            } else {
+                Task {
+                    await self?.updateDisplayState()
                 }
             }
-            .store(in: &cancellables)
+        }
     }
 
     // MARK: - Calculation state

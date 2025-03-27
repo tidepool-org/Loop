@@ -162,11 +162,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
             },
         ]
 
-        automaticDosingStatus.$automaticDosingEnabled
-            .receive(on: DispatchQueue.main)
-            .dropFirst()
-            .sink { self.automaticDosingStatusChanged($0) }
-            .store(in: &cancellables)
+        withObservationTracking(of: self.automaticDosingStatus.automaticDosingEnabled) { [weak self] enabled in
+            self?.automaticDosingStatusChanged(enabled)
+        }
 
         alertMuter.$configuration
             .removeDuplicates()

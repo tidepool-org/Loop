@@ -8,9 +8,10 @@
 
 import Foundation
 
-public class AutomaticDosingStatus: ObservableObject {
-    @Published public var automaticDosingEnabled: Bool
-    @Published public var isAutomaticDosingAllowed: Bool
+@Observable
+public class AutomaticDosingStatus {
+    public var automaticDosingEnabled: Bool
+    public var isAutomaticDosingAllowed: Bool
 
     public init(automaticDosingEnabled: Bool,
                 isAutomaticDosingAllowed: Bool)

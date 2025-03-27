@@ -7,7 +7,19 @@
 //
 
 import Combine
+import Foundation
 import Observation
+
+public func withObservationTracking<T: Sendable>(of value: @escaping @autoclosure () -> T, execute: @escaping (T) -> Void) {
+    Observation.withObservationTracking {
+        execute(value())
+    } onChange: {
+        RunLoop.current.perform {
+            withObservationTracking(of: value(), execute: execute)
+        }
+    }
+}
+
 
 enum ObservablePublishers {
     static func tracking<Object: Observable, Value>(
@@ -15,26 +27,15 @@ enum ObservablePublishers {
         keyPath: KeyPath<Object, Value>
     ) -> AnyPublisher<Value, Never> {
         let subject = PassthroughSubject<Value, Never>()
-
-        Task {
-            while true {
-                // Get the value and track access
-                let initialValue = withObservationTracking {
-                    object[keyPath: keyPath]
-                } onChange: {
-                    // When change happens, continue the loop
-                    Task { @MainActor in
-                        subject.send(object[keyPath: keyPath])
-                    }
-                }
-
-                // Send initial value
-                subject.send(initialValue)
-
-                // Wait until the next change
-                try? await Task.sleep(for: .seconds(100))
+        
+        withObservationTracking(of: object[keyPath: keyPath]) { newValue in
+            // When change happens, continue the loop
+            Task { @MainActor in
+                subject.send(newValue)
             }
         }
+        
+        subject.send(object[keyPath: keyPath])
 
         return subject.eraseToAnyPublisher()
     }
