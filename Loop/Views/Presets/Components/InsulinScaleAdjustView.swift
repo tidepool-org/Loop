@@ -40,7 +40,7 @@ public struct InsulinScaleAdjustView: View {
         if let baseQuantity = settingsManager.settings.insulinSensitivitySchedule?.quantity(at: Date()) {
             let value = baseQuantity.doubleValue(for: .milligramsPerDeciliter)
             let adjustedValue = value / insulinMultiplier
-            return LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: adjustedValue)
+            return LoopQuantity(unit: .milligramsPerDeciliterPerInternationalUnit, doubleValue: adjustedValue)
         } else {
             return nil
         }
@@ -62,6 +62,8 @@ public struct InsulinScaleAdjustView: View {
                 }
                 .buttonStyle(BorderlessButtonStyle())
             }
+            .padding(.top, -5)
+
 
             Text("Set your overall insulin needs")
                 .font(.title2)
@@ -139,38 +141,52 @@ public struct InsulinScaleAdjustView: View {
             Text("Note: These example values are based on your current settings. Values may be different when you enable the preset.")
                 .font(.footnote)
                 .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .font(.subheadline)
         .multilineTextAlignment(.leading)
     }
 
+    private var sensitivityUnit: LoopUnit {
+        switch displayGlucosePreference.unit {
+        case .milligramsPerDeciliter:
+            return .milligramsPerDeciliterPerInternationalUnit
+        case .millimolesPerLiter:
+            return .millimolesPerLiterPerInternationalUnit
+        default:
+            fatalError()
+        }
+    }
+
+
     private var exampleSettings: some View {
         Group {
             if let basalRate = basalRate, let carbRatio = carbRatio, let isf = isf {
-                HStack(spacing: 32) {
+                HStack(spacing: 0) {
                     SettingAdjustmentPreview(
                         value: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: basalRate),
                         displayUnit: .internationalUnitsPerHour,
                         name: "Basal Rate",
                         highlighted: insulinPercentage != 100
                     )
-                    .frame(maxWidth: .infinity)
+
+                    Spacer()
 
                     SettingAdjustmentPreview(
-                        value: LoopQuantity(unit: .gram, doubleValue: carbRatio),
-                        displayUnit: .gram,
+                        value: LoopQuantity(unit: .gramsPerUnit, doubleValue: carbRatio),
+                        displayUnit: .gramsPerUnit,
                         name: "Carb Ratio",
                         highlighted: insulinPercentage != 100
                     )
-                    .frame(maxWidth: .infinity)
+
+                    Spacer()
 
                     SettingAdjustmentPreview(
                         value: isf,
-                        displayUnit: displayGlucosePreference.unit,
+                        displayUnit: sensitivityUnit,
                         name: "ISF",
                         highlighted: insulinPercentage != 100
                     )
-                    .frame(maxWidth: .infinity)
                 }
             }
         }

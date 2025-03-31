@@ -30,13 +30,22 @@ struct SettingAdjustmentPreview: View {
         self.displayUnit = displayUnit
         self.name = name
         self.formatter = QuantityFormatter(for: displayUnit)
+        if displayUnit == .internationalUnitsPerHour {
+            // Basal rates get special treatment here. Loop's default max for basal rate is 3 digits,
+            // to support pumps that support that. The value shown here does not represent an actual
+            // set basal rate, but rather a value computed by loop, used in computing insulin effects,
+            // and is somewhat independent of pump supported rates. 2 digits is generally enough
+            // precision here.
+            self.formatter.numberFormatter.maximumFractionDigits = 2
+        }
         self.highlighted = highlighted
     }
 
     var valueRow: some View {
-        Text(formatter.string(from: value, includeUnit: false) ?? "NA")
+        (Text(formatter.string(from: value, includeUnit: false) ?? "NA")
             .bold() + Text(" ") +
-        Text(displayUnit.shortLocalizedUnitString())
+        Text(displayUnit.shortLocalizedUnitString()))
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     var body: some View {
@@ -114,7 +123,7 @@ struct CreatePresetView: View {
                     }
                 }
             }
-            .navigationTitle("Create a preset")
+            .navigationTitle("Create a Preset")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Cancel") {
