@@ -204,7 +204,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                                             }
                                         }
                                 }
-                                .popover(isPresented: $showingDayPicker) {
+                                .popover(isPresented: $showingDayPicker, arrowEdge: .bottom) {
                                     DayPickerPopup(selectedDays: Binding(
                                         get: {
                                             preset.repeatOptions ?? .none
