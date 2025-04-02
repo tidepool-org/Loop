@@ -8,10 +8,12 @@
 
 import SwiftUI
 import LoopAlgorithm
+import LoopKit
 import LoopKitUI
 
 public struct InsulinScaleAdjustView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+    @Environment(\.guidanceColors) private var guidanceColors
     @Environment(\.settingsManager) private var settingsManager
 
     @State private var presentInfoView: Bool = false
@@ -88,6 +90,20 @@ public struct InsulinScaleAdjustView: View {
         }
     }
 
+    var valueColor: Color {
+        switch Guardrail.presetInsulinNeeds.classification(for: .init(unit: .percent, doubleValue: insulinPercentage)) {
+        case .withinRecommendedRange:
+            return .insulin
+        case .outsideRecommendedRange(let threshold):
+            switch threshold {
+            case .minimum, .maximum:
+                return guidanceColors.critical
+            case .belowRecommended, .aboveRecommended:
+                return guidanceColors.warning
+            }
+        }
+    }
+
     private var adjustInsulinControls: some View {
         HStack(spacing: 24) {
             Button(action: {
@@ -104,7 +120,7 @@ public struct InsulinScaleAdjustView: View {
 
             Text("\(Int(insulinPercentage))%")
                 .font(.system(size: 50, weight: .bold))
-                .foregroundColor(.insulin)
+                .foregroundColor(valueColor)
 
             Button(action: {
                 if insulinPercentage < 200 {
@@ -128,8 +144,10 @@ public struct InsulinScaleAdjustView: View {
 
                 if insulinPercentage < 100 {
                     Text("This adjustment will make your settings weaker.")
+                        .fixedSize(horizontal: false, vertical: true)
                 } else if (insulinPercentage > 100) {
                     Text("This adjustment will make your settings stronger.")
+                        .fixedSize(horizontal: false, vertical: true)
                 } else {
                     Text("No change to insulin settings.")
                 }
