@@ -30,13 +30,22 @@ struct SettingAdjustmentPreview: View {
         self.displayUnit = displayUnit
         self.name = name
         self.formatter = QuantityFormatter(for: displayUnit)
+        if displayUnit == .internationalUnitsPerHour {
+            // Basal rates get special treatment here. Loop's default max for basal rate is 3 digits,
+            // to support pumps that support that. The value shown here does not represent an actual
+            // set basal rate, but rather a value computed by loop, used in computing insulin effects,
+            // and is somewhat independent of pump supported rates. 2 digits is generally enough
+            // precision here.
+            self.formatter.numberFormatter.maximumFractionDigits = 2
+        }
         self.highlighted = highlighted
     }
 
     var valueRow: some View {
-        Text(formatter.string(from: value, includeUnit: false) ?? "NA")
+        (Text(formatter.string(from: value, includeUnit: false) ?? "NA")
             .bold() + Text(" ") +
-        Text(displayUnit.shortLocalizedUnitString())
+        Text(displayUnit.shortLocalizedUnitString()))
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     var body: some View {
@@ -114,7 +123,7 @@ struct CreatePresetView: View {
                     }
                 }
             }
-            .navigationTitle("Create a preset")
+            .navigationTitle("Create a Preset")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Cancel") {
@@ -125,8 +134,28 @@ struct CreatePresetView: View {
         }
     }
 
+    var exceededThreshold: SafetyClassification.Threshold? {
+        switch Guardrail.presetInsulinNeeds.classification(for: .init(unit: .percent, doubleValue: preset.insulinMultiplier * 100)) {
+        case .withinRecommendedRange:
+            return nil
+        case .outsideRecommendedRange(let threshold):
+            return threshold
+        }
+
+    }
+
+    var guardrailWarningIfNecessary: some View {
+        Group {
+            if let threshold = exceededThreshold {
+                WarningView(title: threshold.warningTitle, caption: threshold.warningCaption, severity: threshold.severity)
+                    .padding()
+            }
+        }
+    }
+
     private var actionArea: some View {
         VStack(spacing: 0) {
+            guardrailWarningIfNecessary
             actionButton
         }
         .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
@@ -139,8 +168,29 @@ struct CreatePresetView: View {
         .buttonStyle(ActionButtonStyle(.primary))
         .padding()
     }
+}
+
+extension SafetyClassification.Threshold {
+    public var warningTitle: Text {
+        switch self {
+        case .belowRecommended, .minimum:
+            return Text("Insulin adjustment is below the safety threshold")
+        case .aboveRecommended, .maximum:
+            return Text("Insulin adjustment is above the safety threshold")
+        }
+    }
+
+    public var warningCaption: Text {
+        switch self {
+        case .belowRecommended, .minimum:
+            return Text("Using this adjustment may lead to an under delivery of insulin. Monitor your glucose while this preset is in use.")
+        case .aboveRecommended, .maximum:
+            return Text("Using this adjustment may lead to an over delivery of insulin. Monitor your glucose while this preset is in use.")
+        }
+    }
 
 }
+
 
 #Preview {
     CreatePresetView()

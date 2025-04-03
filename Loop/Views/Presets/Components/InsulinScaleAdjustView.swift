@@ -8,10 +8,12 @@
 
 import SwiftUI
 import LoopAlgorithm
+import LoopKit
 import LoopKitUI
 
 public struct InsulinScaleAdjustView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+    @Environment(\.guidanceColors) private var guidanceColors
     @Environment(\.settingsManager) private var settingsManager
 
     @State private var presentInfoView: Bool = false
@@ -38,6 +40,8 @@ public struct InsulinScaleAdjustView: View {
                 }
                 .buttonStyle(BorderlessButtonStyle())
             }
+            .padding(.top, -5)
+
 
             Text("Set your overall insulin needs")
                 .font(.title2)
@@ -62,6 +66,20 @@ public struct InsulinScaleAdjustView: View {
         }
     }
 
+    var valueColor: Color {
+        switch Guardrail.presetInsulinNeeds.classification(for: .init(unit: .percent, doubleValue: insulinPercentage)) {
+        case .withinRecommendedRange:
+            return .insulin
+        case .outsideRecommendedRange(let threshold):
+            switch threshold {
+            case .minimum, .maximum:
+                return guidanceColors.critical
+            case .belowRecommended, .aboveRecommended:
+                return guidanceColors.warning
+            }
+        }
+    }
+
     private var adjustInsulinControls: some View {
         HStack(spacing: 24) {
             Button(action: {
@@ -78,7 +96,7 @@ public struct InsulinScaleAdjustView: View {
 
             Text("\(Int(insulinPercentage))%")
                 .font(.system(size: 50, weight: .bold))
-                .foregroundColor(.insulin)
+                .foregroundColor(valueColor)
 
             Button(action: {
                 if insulinPercentage < 200 {
@@ -102,8 +120,10 @@ public struct InsulinScaleAdjustView: View {
 
                 if insulinPercentage < 100 {
                     Text("This adjustment will make your settings weaker.")
+                        .fixedSize(horizontal: false, vertical: true)
                 } else if (insulinPercentage > 100) {
                     Text("This adjustment will make your settings stronger.")
+                        .fixedSize(horizontal: false, vertical: true)
                 } else {
                     Text("No change to insulin settings.")
                 }
@@ -115,10 +135,23 @@ public struct InsulinScaleAdjustView: View {
             Text("Note: These example values are based on your current settings. Values may be different when you enable the preset.")
                 .font(.footnote)
                 .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .font(.subheadline)
         .multilineTextAlignment(.leading)
     }
+
+    private var sensitivityUnit: LoopUnit {
+        switch displayGlucosePreference.unit {
+        case .milligramsPerDeciliter:
+            return .milligramsPerDeciliterPerInternationalUnit
+        case .millimolesPerLiter:
+            return .millimolesPerLiterPerInternationalUnit
+        default:
+            fatalError()
+        }
+    }
+
 
     private var exampleSettings: some View {
         Group {
@@ -131,7 +164,8 @@ public struct InsulinScaleAdjustView: View {
                         name: "Basal Rate",
                         highlighted: insulinPercentage != 100
                     )
-                    .frame(maxWidth: .infinity)
+
+                    Spacer()
 
                     SettingAdjustmentPreview(
                         value: carbRatio,
@@ -139,7 +173,8 @@ public struct InsulinScaleAdjustView: View {
                         name: "Carb Ratio",
                         highlighted: insulinPercentage != 100
                     )
-                    .frame(maxWidth: .infinity)
+
+                    Spacer()
 
                     SettingAdjustmentPreview(
                         value: isf,
@@ -147,7 +182,6 @@ public struct InsulinScaleAdjustView: View {
                         name: "ISF",
                         highlighted: insulinPercentage != 100
                     )
-                    .frame(maxWidth: .infinity)
                 }
             }
         }

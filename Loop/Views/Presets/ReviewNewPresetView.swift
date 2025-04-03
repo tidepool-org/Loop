@@ -49,12 +49,10 @@ struct ReviewNewPresetView: View {
             .foregroundColor(.white)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(RoundedRectangle(cornerRadius: 10)
-                .fill(Color.accentColor)
-                .frame(maxWidth: .infinity))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.accentColor)
+            .cornerRadius(10)
             .padding(.top, 10)
-            .clipped()
-
 
             sensitivitySection
 

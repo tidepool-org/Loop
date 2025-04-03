@@ -163,23 +163,4 @@ struct PresetRangeEditor: View {
              }
          }
      }
-
-
-
-    var crossedThresholds: [SafetyClassification.Threshold] {
-        if let range = range {
-            let lowerBound = range.lowerBound
-            let upperBound = range.upperBound
-            return [lowerBound, upperBound].compactMap { (bound) -> SafetyClassification.Threshold? in
-                switch guardrail.classification(for: bound) {
-                case .withinRecommendedRange:
-                    return nil
-                case .outsideRecommendedRange(let threshold):
-                    return threshold
-                }
-            }
-        } else {
-            return []
-        }
-    }
 }
