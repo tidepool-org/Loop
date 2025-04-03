@@ -155,7 +155,7 @@ public struct InsulinScaleAdjustView: View {
 
     private var exampleSettings: some View {
         Group {
-            let impact = settingsManager.therapySettings.impact(for: insulinMultiplier, invert: true)
+            let impact = settingsManager.therapySettings.impact(for: insulinMultiplier)
             if let basalRate = impact.basalRate, let carbRatio = impact.carbRatio, let isf = impact.isf {
                 HStack(spacing: 0) {
                     SettingAdjustmentPreview(
