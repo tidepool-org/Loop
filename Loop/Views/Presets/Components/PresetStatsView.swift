@@ -132,72 +132,6 @@ struct PresetStatsView: View {
         .accessibilityElement(children: .contain)
     }
     
-    @ViewBuilder
-    func basalRateView(basalRateValue: String, condensed: Bool) -> some View {
-        let label = Text("Basal Rate").font(.subheadline)
-        let value = Group {
-            Text(basalRateValue).bold() +
-            Text(" \(LoopUnit.internationalUnitsPerHour.unitString)")
-        }.font(.subheadline)
-        
-        if condensed {
-            HStack {
-                label + Text(": ")
-                value
-            }
-        } else {
-            VStack(alignment: .leading, spacing: 4) {
-                value
-                label
-            }
-        }
-    }
-    
-    @ViewBuilder
-    func carbRatioView(carbRatioValue: String, condensed: Bool) -> some View {
-        let label = Text("Carb Ratio").font(.subheadline)
-        let value = Group {
-            Text(carbRatioValue).bold() +
-            Text(" \(LoopUnit.gram.unitString)")
-        }.font(.subheadline)
-        
-        if condensed {
-            HStack {
-                label + Text(": ")
-                value
-            }
-        } else {
-            VStack(alignment: .leading, spacing: 4) {
-                value
-                label
-            }
-        }
-    }
-    
-    @ViewBuilder
-    func isfView(isfValue: String, condensed: Bool) -> some View {
-        let label = Text("ISF").font(.subheadline)
-        let value = Group {
-            Text(isfValue).bold() +
-            Text(" \(displayGlucosePreference.unit.unitString)")
-        }.font(.subheadline)
-        
-        if condensed {
-            HStack {
-                label + Text(": ")
-                value
-            }
-        } else {
-            VStack(alignment: .leading, spacing: 4) {
-                value
-                label
-            }
-        }
-    }
-    
-    private let basalRateFormatter = QuantityFormatter(for: .internationalUnitsPerHour)
-    private let carbRatioFormatter = QuantityFormatter(for: .gram)
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             ViewThatFits(in: .horizontal) {
@@ -220,33 +154,34 @@ struct PresetStatsView: View {
                         .foregroundColor(.secondary)
                     
                     ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 0) {
-                            if let basalRate = insulinMultiplierImpact.basalRate, let basalRateValue = basalRateFormatter.string(from: basalRate, includeUnit: false) {
-                                basalRateView(basalRateValue: basalRateValue, condensed: false)
-                                Spacer()
+                        HStack(spacing: 32) {
+                            if let basalRate = insulinMultiplierImpact.basalRate {
+                                SettingAdjustmentPreview(value: basalRate, displayUnit: .internationalUnitsPerHour, name: "Basal Rate", highlighted: false)
+                                    .frame(maxWidth: .infinity)
                             }
                             
-                            if let carbRatio = insulinMultiplierImpact.carbRatio, let carbRatioValue = carbRatioFormatter.string(from: carbRatio, includeUnit: false) {
-                                carbRatioView(carbRatioValue: carbRatioValue, condensed: false)
-                                Spacer()
+                            if let carbRatio = insulinMultiplierImpact.carbRatio {
+                                SettingAdjustmentPreview(value: carbRatio, displayUnit: .gram, name: "Carb Ratio", highlighted: false)
+                                    .frame(maxWidth: .infinity)
                             }
                             
-                            if let isf = insulinMultiplierImpact.isf, let isfValue = displayGlucosePreference.formatter.string(from: isf, includeUnit: false) {
-                                isfView(isfValue: isfValue, condensed: false)
+                            if let isf = insulinMultiplierImpact.isf, let displayUnit = displayGlucosePreference.unit.unitDivided(by: .internationalUnit) {
+                                SettingAdjustmentPreview(value: isf, displayUnit: displayUnit, name: "ISF", highlighted: false)
+                                    .frame(maxWidth: .infinity)
                             }
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
-                            if let basalRate = insulinMultiplierImpact.basalRate, let basalRateValue = basalRateFormatter.string(from: basalRate, includeUnit: false) {
-                                basalRateView(basalRateValue: basalRateValue, condensed: true)
+                            if let basalRate = insulinMultiplierImpact.basalRate {
+                                SettingAdjustmentPreview(value: basalRate, displayUnit: .internationalUnitsPerHour, name: "Basal Rate", highlighted: false)
                             }
                             
-                            if let carbRatio = insulinMultiplierImpact.carbRatio, let carbRatioValue = carbRatioFormatter.string(from: carbRatio, includeUnit: false)  {
-                                carbRatioView(carbRatioValue: carbRatioValue, condensed: true)
+                            if let carbRatio = insulinMultiplierImpact.carbRatio {
+                                SettingAdjustmentPreview(value: carbRatio, displayUnit: .gram, name: "Carb Ratio", highlighted: false)
                             }
                             
-                            if let isf = insulinMultiplierImpact.isf, let isfValue = displayGlucosePreference.formatter.string(from: isf, includeUnit: false) {
-                                isfView(isfValue: isfValue, condensed: true)
+                            if let isf = insulinMultiplierImpact.isf, let displayUnit = displayGlucosePreference.unit.unitDivided(by: .internationalUnit) {
+                                SettingAdjustmentPreview(value: isf, displayUnit: displayUnit, name: "ISF", highlighted: false)
                             }
                         }
                     }

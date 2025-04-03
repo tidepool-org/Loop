@@ -100,7 +100,7 @@ struct PresetDetentView: View {
     @State var sheetContentHeight: Double = 0
 
     var settingsImpact: TherapySettings.InsulinMultiplierImpact {
-        settingsManager.therapySettings.impact(for: preset.insulinSensitivityMultiplier ?? 1.0)
+        settingsManager.therapySettings.impact(for: preset.insulinSensitivityMultiplier ?? 1.0, invert: false)
     }
 
     var body: some View {
