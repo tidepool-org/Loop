@@ -22,27 +22,30 @@ struct SettingAdjustmentPreview: View {
     let value: LoopQuantity
     let displayUnit: LoopUnit
     let name: String
-    private let formatter: QuantityFormatter
+    private let valueFormatter: QuantityFormatter
+    private let unitFormatter: QuantityFormatter
     private let highlighted: Bool
 
-    init(value: LoopQuantity, displayUnit: LoopUnit, name: String, highlighted: Bool = false) {
+    init(value: LoopQuantity, displayUnit: LoopUnit? = nil, name: String, highlighted: Bool = false) {
         self.value = value
-        self.displayUnit = displayUnit
+        self.displayUnit = displayUnit ?? value.unit
         self.name = name
-        self.formatter = QuantityFormatter(for: displayUnit)
-        if displayUnit == .internationalUnitsPerHour {
+        self.valueFormatter = QuantityFormatter(for: value.unit)
+        self.unitFormatter = QuantityFormatter(for: self.displayUnit)
+        if self.displayUnit == .internationalUnitsPerHour {
             // Basal rates get special treatment here. Loop's default max for basal rate is 3 digits,
             // to support pumps that support that. The value shown here does not represent an actual
             // set basal rate, but rather a value computed by loop, used in computing insulin effects,
             // and is somewhat independent of pump supported rates. 2 digits is generally enough
             // precision here.
-            self.formatter.numberFormatter.maximumFractionDigits = 2
+            self.valueFormatter.numberFormatter.maximumFractionDigits = 2
         }
+        
         self.highlighted = highlighted
     }
 
     var valueRow: some View {
-        (Text(formatter.string(from: value, includeUnit: false) ?? "NA")
+        (Text(valueFormatter.string(from: value, includeUnit: false) ?? "NA")
             .bold() + Text(" ") +
         Text(displayUnit.shortLocalizedUnitString()))
         .fixedSize(horizontal: false, vertical: true)

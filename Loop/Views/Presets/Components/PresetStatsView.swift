@@ -159,7 +159,7 @@ struct PresetStatsView: View {
                             
                             Spacer()
                             
-                            SettingAdjustmentPreview(value: carbRatio, displayUnit: .gram, name: "Carb Ratio", highlighted: false)
+                            SettingAdjustmentPreview(value: carbRatio, name: "Carb Ratio", highlighted: false)
                         
                             Spacer()
                             
@@ -169,7 +169,7 @@ struct PresetStatsView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             SettingAdjustmentPreview(value: basalRate, displayUnit: .internationalUnitsPerHour, name: "Basal Rate", highlighted: false)
                             
-                            SettingAdjustmentPreview(value: carbRatio, displayUnit: .gram, name: "Carb Ratio", highlighted: false)
+                            SettingAdjustmentPreview(value: carbRatio, name: "Carb Ratio", highlighted: false)
                             
                             SettingAdjustmentPreview(value: isf, displayUnit: displayGlucosePreference.unit.unitDivided(by: .internationalUnit), name: "ISF", highlighted: false)
                         }

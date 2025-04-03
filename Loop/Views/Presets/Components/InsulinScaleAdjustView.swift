@@ -169,7 +169,6 @@ public struct InsulinScaleAdjustView: View {
 
                     SettingAdjustmentPreview(
                         value: carbRatio,
-                        displayUnit: .gram,
                         name: "Carb Ratio",
                         highlighted: insulinPercentage != 100
                     )
@@ -178,7 +177,7 @@ public struct InsulinScaleAdjustView: View {
 
                     SettingAdjustmentPreview(
                         value: isf,
-                        displayUnit: displayGlucosePreference.unit.unitDivided(by: .internationalUnit) ?? .milligramsPerDeciliterPerInternationalUnit,
+                        displayUnit: displayGlucosePreference.unit.unitDivided(by: .internationalUnit),
                         name: "ISF",
                         highlighted: insulinPercentage != 100
                     )
