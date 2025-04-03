@@ -19,7 +19,7 @@ struct PresetCard: View {
     let icon: PresetIcon
     let presetName: String
     let duration: PresetDuration
-    let insulinSensitivityMultiplier: Double?
+    let insulinMultiplier: Double?
     let correctionRange: ClosedRange<LoopQuantity>?
     let guardrail: Guardrail<LoopQuantity>?
     let expectedEndTime: PresetExpectedEndTime?
@@ -95,7 +95,7 @@ struct PresetCard: View {
                 .padding(.horizontal, -10)
             
             PresetStatsView(
-                insulinSensitivityMultiplier: insulinSensitivityMultiplier,
+                insulinMultiplier: insulinMultiplier,
                 correctionRange: correctionRange,
                 guardrail: guardrail,
                 therapySettingsImpactDisplayState: .hide

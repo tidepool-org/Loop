@@ -20,7 +20,7 @@ struct PresetStatsView: View {
     @Environment(\.guidanceColors) private var guidanceColors
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     
-    let insulinSensitivityMultiplier: Double?
+    let insulinMultiplier: Double?
     let correctionRange: ClosedRange<LoopQuantity>?
     let guardrail: Guardrail<LoopQuantity>?
     let therapySettingsImpactDisplayState: TherapySettingsImpactDisplayState
@@ -38,7 +38,7 @@ struct PresetStatsView: View {
                 .foregroundColor(.secondary)
                 .accessibilitySortPriority(2)
 
-            let percent = numberFormatter.string(from: 1.0/(insulinSensitivityMultiplier ?? 1))!
+            let percent = numberFormatter.string(from: insulinMultiplier ?? 1)!
             Group { Text(percent).bold() + Text(" of scheduled") }
                 .font(.subheadline)
                 .accessibilitySortPriority(1)
@@ -147,7 +147,7 @@ struct PresetStatsView: View {
                 }
             }
             
-            if case let .show(insulinMultiplierImpact) = therapySettingsImpactDisplayState, (insulinSensitivityMultiplier ?? 1) != 1, let basalRate = insulinMultiplierImpact.basalRate, let carbRatio = insulinMultiplierImpact.carbRatio, let isf = insulinMultiplierImpact.isf {
+            if case let .show(insulinMultiplierImpact) = therapySettingsImpactDisplayState, (insulinMultiplier ?? 1) != 1, let basalRate = insulinMultiplierImpact.basalRate, let carbRatio = insulinMultiplierImpact.carbRatio, let isf = insulinMultiplierImpact.isf {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Settings Impact")
                         .font(.subheadline)

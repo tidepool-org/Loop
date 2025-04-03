@@ -204,6 +204,14 @@ enum SelectablePreset: Hashable, Identifiable {
             return nil
         }
     }
+    
+    var insulinMultiplier: Double? {
+        guard let insulinSensitivityMultiplier else {
+            return nil
+        }
+        
+        return 1.0 / insulinSensitivityMultiplier
+    }
 
     var canAdjustSensitivity: Bool {
         switch self {
