@@ -157,7 +157,7 @@ public struct InsulinScaleAdjustView: View {
         Group {
             let impact = settingsManager.therapySettings.impact(for: insulinMultiplier, invert: true)
             if let basalRate = impact.basalRate, let carbRatio = impact.carbRatio, let isf = impact.isf {
-                HStack(spacing: 32) {
+                HStack(spacing: 0) {
                     SettingAdjustmentPreview(
                         value: basalRate,
                         displayUnit: .internationalUnitsPerHour,

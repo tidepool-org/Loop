@@ -147,42 +147,31 @@ struct PresetStatsView: View {
                 }
             }
             
-            if case let .show(insulinMultiplierImpact) = therapySettingsImpactDisplayState, (insulinSensitivityMultiplier ?? 1) != 1 {
+            if case let .show(insulinMultiplierImpact) = therapySettingsImpactDisplayState, (insulinSensitivityMultiplier ?? 1) != 1, let basalRate = insulinMultiplierImpact.basalRate, let carbRatio = insulinMultiplierImpact.carbRatio, let isf = insulinMultiplierImpact.isf, let isfDisplayUnit = displayGlucosePreference.unit.unitDivided(by: .internationalUnit) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Settings Impact")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
                     ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 32) {
-                            if let basalRate = insulinMultiplierImpact.basalRate {
-                                SettingAdjustmentPreview(value: basalRate, displayUnit: .internationalUnitsPerHour, name: "Basal Rate", highlighted: false)
-                                    .frame(maxWidth: .infinity)
-                            }
+                        HStack(spacing: 0) {
+                            SettingAdjustmentPreview(value: basalRate, displayUnit: .internationalUnitsPerHour, name: "Basal Rate", highlighted: false)
                             
-                            if let carbRatio = insulinMultiplierImpact.carbRatio {
-                                SettingAdjustmentPreview(value: carbRatio, displayUnit: .gram, name: "Carb Ratio", highlighted: false)
-                                    .frame(maxWidth: .infinity)
-                            }
+                            Spacer()
                             
-                            if let isf = insulinMultiplierImpact.isf, let displayUnit = displayGlucosePreference.unit.unitDivided(by: .internationalUnit) {
-                                SettingAdjustmentPreview(value: isf, displayUnit: displayUnit, name: "ISF", highlighted: false)
-                                    .frame(maxWidth: .infinity)
-                            }
+                            SettingAdjustmentPreview(value: carbRatio, displayUnit: .gram, name: "Carb Ratio", highlighted: false)
+                        
+                            Spacer()
+                            
+                            SettingAdjustmentPreview(value: isf, displayUnit: isfDisplayUnit, name: "ISF", highlighted: false)
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
-                            if let basalRate = insulinMultiplierImpact.basalRate {
-                                SettingAdjustmentPreview(value: basalRate, displayUnit: .internationalUnitsPerHour, name: "Basal Rate", highlighted: false)
-                            }
+                            SettingAdjustmentPreview(value: basalRate, displayUnit: .internationalUnitsPerHour, name: "Basal Rate", highlighted: false)
                             
-                            if let carbRatio = insulinMultiplierImpact.carbRatio {
-                                SettingAdjustmentPreview(value: carbRatio, displayUnit: .gram, name: "Carb Ratio", highlighted: false)
-                            }
+                            SettingAdjustmentPreview(value: carbRatio, displayUnit: .gram, name: "Carb Ratio", highlighted: false)
                             
-                            if let isf = insulinMultiplierImpact.isf, let displayUnit = displayGlucosePreference.unit.unitDivided(by: .internationalUnit) {
-                                SettingAdjustmentPreview(value: isf, displayUnit: displayUnit, name: "ISF", highlighted: false)
-                            }
+                            SettingAdjustmentPreview(value: isf, displayUnit: isfDisplayUnit, name: "ISF", highlighted: false)
                         }
                     }
                 }
