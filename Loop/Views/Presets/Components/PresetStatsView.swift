@@ -147,7 +147,7 @@ struct PresetStatsView: View {
                 }
             }
             
-            if case let .show(insulinMultiplierImpact) = therapySettingsImpactDisplayState, (insulinSensitivityMultiplier ?? 1) != 1, let basalRate = insulinMultiplierImpact.basalRate, let carbRatio = insulinMultiplierImpact.carbRatio, let isf = insulinMultiplierImpact.isf, let isfDisplayUnit = displayGlucosePreference.unit.unitDivided(by: .internationalUnit) {
+            if case let .show(insulinMultiplierImpact) = therapySettingsImpactDisplayState, (insulinSensitivityMultiplier ?? 1) != 1, let basalRate = insulinMultiplierImpact.basalRate, let carbRatio = insulinMultiplierImpact.carbRatio, let isf = insulinMultiplierImpact.isf {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Settings Impact")
                         .font(.subheadline)
@@ -163,7 +163,7 @@ struct PresetStatsView: View {
                         
                             Spacer()
                             
-                            SettingAdjustmentPreview(value: isf, displayUnit: isfDisplayUnit, name: "ISF", highlighted: false)
+                            SettingAdjustmentPreview(value: isf, displayUnit: displayGlucosePreference.unit.unitDivided(by: .internationalUnit), name: "ISF", highlighted: false)
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
@@ -171,7 +171,7 @@ struct PresetStatsView: View {
                             
                             SettingAdjustmentPreview(value: carbRatio, displayUnit: .gram, name: "Carb Ratio", highlighted: false)
                             
-                            SettingAdjustmentPreview(value: isf, displayUnit: isfDisplayUnit, name: "ISF", highlighted: false)
+                            SettingAdjustmentPreview(value: isf, displayUnit: displayGlucosePreference.unit.unitDivided(by: .internationalUnit), name: "ISF", highlighted: false)
                         }
                     }
                 }
