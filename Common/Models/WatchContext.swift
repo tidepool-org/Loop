@@ -124,8 +124,7 @@ final class WatchContext: RawRepresentable {
 
         raw["gc"] = glucoseCondition?.rawValue
         raw["gt"] = glucoseTrend?.rawValue
-        if let glucoseTrendRate = glucoseTrendRate {
-            let unitPerMinute = unit.glucose(per: .minutes)
+        if let glucoseTrendRate = glucoseTrendRate, let unitPerMinute = unit.unitDivided(by: .minute) {
             raw["gtru"] = unitPerMinute.unitString
             raw["gtrv"] = glucoseTrendRate.doubleValue(for: unitPerMinute)
         }
