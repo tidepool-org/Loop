@@ -15,6 +15,7 @@ struct PresetRangeEditor: View {
     @Environment(\.guidanceColors) private var guidanceColors
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
 
+    @State private var presentInfoView: Bool = false
     @Binding var range: ClosedRange<LoopQuantity>?
     var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
@@ -61,11 +62,11 @@ struct PresetRangeEditor: View {
                     Text("Correction Range")
                         .foregroundColor(.secondary)
                         .font(.system(size: 14))
-                    Image(systemName: "info.circle")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.accentColor)
-                        .frame(width: UIFontMetrics.default.scaledValue(for: 14), height: UIFontMetrics.default.scaledValue(for: 14))
+                    Button(action: {
+                        presentInfoView = true;
+                    }) {
+                        Image(systemName: "info.circle")
+                    }
                 }
                 .padding(.top, 10)
 
@@ -143,6 +144,9 @@ struct PresetRangeEditor: View {
             .padding(.bottom)
         }
         .font(.subheadline)
+        .sheet(isPresented: $presentInfoView) {
+            CorrectionRangeInformationView()
+        }
     }
 
 

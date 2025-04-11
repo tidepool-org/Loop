@@ -73,7 +73,7 @@ struct NewPresetRangeEdit: View {
 
     private var actionButtonText: String {
         if editedRange == nil {
-            NSLocalizedString("Continue", comment: "Continue button for new preset range edit when range is not edited")
+            NSLocalizedString("Continue with scheduled range", comment: "Continue button for new preset range edit when range is not edited")
         } else {
             NSLocalizedString("Continue with adjusted range", comment: "Continue button for new preset range edit when range edited")
         }

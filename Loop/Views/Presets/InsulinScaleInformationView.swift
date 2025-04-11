@@ -10,11 +10,21 @@
 import SwiftUI
 
 struct InsulinScaleInformationView: View {
-    @State private var insulinPercentage: Double = 100
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
+            // Close button
+            VStack {
+                Button("Close") {
+                    dismiss()
+                }
+                .font(.title3)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding()
+            }
+            .background(Color(.systemBackground))
+
             // Header
             VStack(alignment: .leading) {
                 Text("Overall Insulin")
@@ -58,18 +68,6 @@ struct InsulinScaleInformationView: View {
                 }
                 .padding()
             }
-
-            // Close button
-            VStack {
-                Button("Close") {
-                    dismiss()
-                }
-                .font(.body.bold())
-                .foregroundColor(.blue)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding()
-            }
-            .background(Color(.systemBackground))
         }
     }
 }
