@@ -33,6 +33,26 @@ struct NewPresetRangeEdit: View {
                 )
             }
         } actionArea: {
+            if preset.insulinMultiplier == 1 && editedRange == nil {
+                HStack {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Set an Adjusted Correction Range")
+                            .font(Font(UIFont.preferredFont(forTextStyle: .title3)))
+                            .bold()
+                            .padding(.vertical)
+
+                        Text("With overall insulin needs at 100%, an adjusted correction range is required.")
+                            .font(.callout)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .accessibilityElement(children: .combine)
+
+                    Spacer()
+                }
+                .padding(.horizontal)
+
+            }
             guardrailWarningIfNecessary
             actionButton
         }
