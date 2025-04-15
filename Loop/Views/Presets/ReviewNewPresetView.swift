@@ -149,7 +149,7 @@ struct ReviewNewPresetView: View {
                             onComplete(true)
                         }
                         .buttonStyle(ActionButtonStyle(.primary))
-                        Button("Save for later") {
+                        Button("Save for Later") {
                             onComplete(false)
                         }
                         .buttonStyle(ActionButtonStyle(.secondary))
