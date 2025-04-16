@@ -27,6 +27,8 @@ struct EditPresetView: View {
 
     @State private var showingPicker = false
     @State private var navigateToCorrectionRangeEditor = false
+    @State private var isDurationPickerExpanded = false
+
     @FocusState private var isTextFieldFocused: Bool
 
     init(preset: SelectablePreset, scheduledRange: ClosedRange<LoopQuantity>, onSave: @escaping ((SelectablePreset) throws -> Void)) {
@@ -101,26 +103,41 @@ struct EditPresetView: View {
                 }
             }
 
-            CardSection(
-                content: {
-                    Button(action: {
-                        showingPicker = true
-                    }) {
-                        HStack {
-                            Text("Duration")
-                                .foregroundColor(.primary)
-                            Spacer()
+            // Duration Section
+            CardSection {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack {
+                        Text("Duration")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Group {
                             Text(preset.duration.localizedTitle)
-                                .foregroundColor(.secondary)
-                            if preset.canAdjustDuration {
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(.gray)
-                            }
+                            Image(systemName: "chevron.right")
                         }
-                    }.disabled(!preset.canAdjustDuration)
-                },
-                footerText: preset.canAdjustDuration ? nil : "Duration and Name not configurable for this preset."
-            )
+                        .foregroundColor(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        isTextFieldFocused = false
+                        withAnimation() {
+                            isDurationPickerExpanded.toggle()
+                        }
+                    }
+
+                    if isDurationPickerExpanded {
+                        DurationPickerView(
+                            durationType: Binding(
+                                get: {
+                                    return preset.duration
+                                },
+                                set: { duration in
+                                    preset.duration = duration
+                                }
+                            )
+                        )
+                    }
+                }
+            }
         }
         .sheet(isPresented: $showingPicker) {
             VStack(alignment: .center, spacing: 24) {
