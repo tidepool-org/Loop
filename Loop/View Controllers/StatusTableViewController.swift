@@ -2044,7 +2044,7 @@ extension StatusTableViewController: DoseProgressObserver {
 }
 
 extension StatusTableViewController: OverrideSelectionViewControllerDelegate {
-    func overrideSelectionViewController(_ vc: OverrideSelectionViewController, didUpdatePresets presets: [TemporaryScheduleOverridePreset]) {
+    func overrideSelectionViewController(_ vc: OverrideSelectionViewController, didUpdatePresets presets: [TemporaryPreset]) {
         settingsManager.mutateLoopSettings { settings in
             settings.overridePresets = presets
         }
@@ -2054,7 +2054,7 @@ extension StatusTableViewController: OverrideSelectionViewControllerDelegate {
         temporaryPresetsManager.scheduleOverride = override
     }
 
-    func overrideSelectionViewController(_ vc: OverrideSelectionViewController, didConfirmPreset preset: TemporaryScheduleOverridePreset) {
+    func overrideSelectionViewController(_ vc: OverrideSelectionViewController, didConfirmPreset preset: TemporaryPreset) {
         let intent = EnableOverridePresetIntent()
         intent.overrideName = preset.name
 

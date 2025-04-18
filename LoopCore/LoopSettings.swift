@@ -36,7 +36,7 @@ public struct LoopSettings: Equatable {
 
     public var legacyWorkoutDuration: TemporaryScheduleOverride.Duration?
 
-    public var overridePresets: [TemporaryScheduleOverridePreset] = []
+    public var overridePresets: [TemporaryPreset] = []
 
     public var maximumBasalRatePerHour: Double?
 
@@ -61,7 +61,7 @@ public struct LoopSettings: Equatable {
         preMealTargetRange: ClosedRange<LoopQuantity>? = nil,
         legacyWorkoutTargetRange: ClosedRange<LoopQuantity>? = nil,
         legacyWorkoutDuration: TemporaryScheduleOverride.Duration = .indefinite,
-        overridePresets: [TemporaryScheduleOverridePreset]? = nil,
+        overridePresets: [TemporaryPreset]? = nil,
         maximumBasalRatePerHour: Double? = nil,
         maximumBolus: Double? = nil,
         suspendThreshold: GlucoseThreshold? = nil,
@@ -128,8 +128,8 @@ extension LoopSettings: RawRepresentable {
             self.legacyWorkoutDuration = .finite(rawLegacyWorkoutDuration)
         }
 
-        if let rawPresets = rawValue["overridePresets"] as? [TemporaryScheduleOverridePreset.RawValue] {
-            self.overridePresets = rawPresets.compactMap(TemporaryScheduleOverridePreset.init(rawValue:))
+        if let rawPresets = rawValue["overridePresets"] as? [TemporaryPreset.RawValue] {
+            self.overridePresets = rawPresets.compactMap(TemporaryPreset.init(rawValue:))
         }
 
         self.maximumBasalRatePerHour = rawValue["maximumBasalRatePerHour"] as? Double

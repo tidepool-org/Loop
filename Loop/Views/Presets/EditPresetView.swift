@@ -19,15 +19,13 @@ struct EditPresetView: View {
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
 
     @State private var preset: SelectablePreset
-
-
     private var originalPreset: SelectablePreset
     private var scheduledRange: ClosedRange<LoopQuantity>
     private var onSave: (SelectablePreset) throws -> Void
 
-    @State private var showingPicker = false
     @State private var navigateToCorrectionRangeEditor = false
     @State private var isDurationPickerExpanded = false
+    @State private var showingDayPicker: Bool = false
 
     @FocusState private var isTextFieldFocused: Bool
 
@@ -68,91 +66,202 @@ struct EditPresetView: View {
     }
 
     var body: some View {
-        CardSectionScrollView {
-            presetTitle
+        ScrollViewReader { scrollViewProxy in
+            CardSectionScrollView {
+                presetTitle
 
-            sensitivitySection
+                sensitivitySection
 
-            CardSection {
-                Button {
-                    navigateToCorrectionRangeEditor = true;
-                } label: {
-                    CorrectionRangePreview(
-                        range: $preset.correctionRange,
-                        guardrail: settingsManager.guardrailForPreset(preset),
-                        scheduledRange: scheduledRange,
-                        allowsScheduledRange: preset.canAdjustSensitivity,
-                        showDisclosure: true
-                    )
-                }
-            }
-
-            CardSection("Preset Details") {
-                HStack {
-                    Text("Name")
-                    Spacer()
-                    if preset.canChangeName {
-                        TextField("", text: $preset.name, prompt: Text("Required"))
-                            .multilineTextAlignment(.trailing)
-                            .focused($isTextFieldFocused)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text(preset.name)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-
-            // Duration Section
-            CardSection {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack {
-                        Text("Duration")
-                            .foregroundColor(.primary)
-                        Spacer()
-                        Group {
-                            Text(preset.duration.localizedTitle)
-                            Image(systemName: "chevron.right")
-                        }
-                        .foregroundColor(.secondary)
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        isTextFieldFocused = false
-                        withAnimation() {
-                            isDurationPickerExpanded.toggle()
-                        }
-                    }
-
-                    if isDurationPickerExpanded {
-                        DurationPickerView(
-                            durationType: Binding(
-                                get: {
-                                    return preset.duration
-                                },
-                                set: { duration in
-                                    preset.duration = duration
-                                }
-                            )
+                CardSection {
+                    Button {
+                        navigateToCorrectionRangeEditor = true
+                    } label: {
+                        CorrectionRangePreview(
+                            range: $preset.correctionRange,
+                            guardrail: settingsManager.guardrailForPreset(preset),
+                            scheduledRange: scheduledRange,
+                            allowsScheduledRange: preset.canAdjustSensitivity,
+                            showDisclosure: true
                         )
                     }
                 }
-            }
-        }
-        .sheet(isPresented: $showingPicker) {
-            VStack(alignment: .center, spacing: 24) {
-                HStack {
-                    Text("Duration")
-                    Spacer()
-                    Text("Required")
-                        .foregroundColor(.gray)
+
+                CardSection("Preset Details") {
+                    HStack {
+                        Text("Name")
+                        Spacer()
+                        if preset.canChangeName {
+                            TextField("", text: $preset.name, prompt: Text("Required"))
+                                .multilineTextAlignment(.trailing)
+                                .focused($isTextFieldFocused)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text(preset.name)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
-                DurationPickerView(durationType: $preset.duration)
-                    .presentationDetents([.height(300)])
+
+                // Duration Section
+                if preset.canAdjustDuration {
+                    CardSection {
+                        VStack(alignment: .leading, spacing: 0) {
+                            HStack {
+                                Text("Duration")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Group {
+                                    Text(preset.duration.localizedTitle)
+                                    Image(systemName: "chevron.right")
+                                }
+                                .foregroundColor(.secondary)
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                isTextFieldFocused = false
+                                withAnimation {
+                                    isDurationPickerExpanded.toggle()
+                                    Task {
+                                        if isDurationPickerExpanded {
+                                            try? await Task.sleep(nanoseconds: 200_000_000) // ~0.2s delay
+                                            withAnimation {
+                                                scrollViewProxy.scrollTo("durationPicker", anchor: .bottom)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if isDurationPickerExpanded {
+                                DurationPickerView(
+                                    durationType: $preset.duration
+                                )
+                                .id("durationPicker") // Assign an ID for scrolling
+                            }
+                        }
+                    }
+                    .id("durationSection") // Optional: ID for the entire duration section
+                }
+
+                // Schedule Toggle
+                if preset.allowsScheduling {
+                    CardSection {
+                        HStack {
+                            Text("Schedule")
+                                .font(.body)
+
+                            Spacer()
+
+                            Toggle("", isOn: Binding(get: {
+                                return preset.scheduleStartDate != nil
+                            }, set: { newValue in
+                                withAnimation {
+                                    if newValue {
+                                        preset.scheduleStartDate = Date().addingTimeInterval(.hours(1))
+                                        Task {
+                                            try? await Task.sleep(nanoseconds: 200_000_000) // ~0.2s delay
+                                            withAnimation {
+                                                scrollViewProxy.scrollTo("repeatOption", anchor: .bottom)
+                                            }
+                                        }
+                                    } else {
+                                        preset.scheduleStartDate = nil
+                                        preset.repeatOptions = .none
+                                    }
+                                }
+                            }))
+                            .toggleStyle(SwitchToggleStyle(tint: .green))
+                            .labelsHidden()
+                            .padding(.vertical, -4)
+                        }
+
+                        if preset.scheduleStartDate != nil {
+                            Divider()
+                            HStack {
+                                if preset.repeatOptions != .none {
+                                    Text("Date")
+                                } else {
+                                    Text("Start Date")
+                                }
+                                Spacer()
+                                DatePicker(
+                                    "",
+                                    selection: Binding(get: {
+                                        preset.scheduleStartDate ?? Date()
+                                    }, set: { newValue in
+                                        preset.scheduleStartDate = newValue
+                                    }),
+                                    in: Date()...,
+                                    displayedComponents: [.date, .hourAndMinute]
+                                )
+                            }
+                            Divider()
+                                .padding(.top, -4)
+                            HStack {
+                                Text("Repeat")
+                                Spacer()
+                                Picker("Repeat", selection: Binding<RepeatOption>(
+                                    get: { preset.repeatOptions == .none ? .never : .weekly },
+                                    set: { newValue in
+                                        if newValue == .never {
+                                            preset.repeatOptions = .none
+                                        } else {
+                                            Task {
+                                                if let requiredRepeatOption {
+                                                    preset.repeatOptions = requiredRepeatOption
+                                                }
+                                                try? await Task.sleep(nanoseconds: 200_000_000) // ~0.2s delay
+                                                withAnimation {
+                                                    scrollViewProxy.scrollTo("selectedDays", anchor: .bottom)
+                                                }
+                                            }
+                                        }
+                                    }
+                                ).animation()) {
+                                    ForEach(RepeatOption.allCases, id: \.self) { option in
+                                        Text(String(describing: option))
+                                    }
+                                }
+                                .tint(.secondary)
+                                .pickerStyle(MenuPickerStyle())
+                                .padding(.trailing, -8)
+                            }
+                            .id("repeatOption") // Assign an ID for scrolling
+
+
+                            if preset.repeatOptions != .none {
+                                Divider()
+                                    .padding(.top, -4)
+                                HStack {
+                                    Text("Selected days")
+                                        .foregroundColor(.primary)
+                                    HStack {
+                                        Spacer()
+                                        RepeatOptionView(repeatOptions: preset.repeatOptions)
+                                            .padding(.vertical, 6)
+                                            .onTapGesture {
+                                                withAnimation {
+                                                    showingDayPicker = true
+                                                }
+                                            }
+                                    }
+                                    .popover(isPresented: $showingDayPicker, arrowEdge: .bottom) {
+                                        DayPickerPopup(selectedDays: Binding(
+                                            get: {
+                                                preset.repeatOptions
+                                            }, set: { newValue in
+                                                preset.repeatOptions = newValue.union(requiredRepeatOption ?? .none)
+                                            }))
+                                        .cornerRadius(12)
+                                        .presentationCompactAdaptation(.popover)
+                                    }
+                                }
+                                .id("selectedDays") // Assign an ID for scrolling
+                            }
+                        }
+                    }
+                }
             }
-            .padding()
-            .background(Color(.systemBackground))
-            .cornerRadius(10)
         }
         .navigationDestination(isPresented: $navigateToCorrectionRangeEditor) {
             ExistingPresetRangeEdit(
@@ -163,13 +272,18 @@ struct EditPresetView: View {
                 isPreMeal: preset.isPreMeal
             )
         }
-        .onChange(of: preset, {
+        .onChange(of: preset) {
             do {
                 try onSave(preset)
             } catch {
                 print(error)
             }
-        })
+        }
+    }
+
+    private var requiredRepeatOption: PresetScheduleRepeatOptions? {
+        guard let startDate = preset.scheduleStartDate else { return nil }
+        return .allCases[Calendar.current.component(.weekday, from: startDate) - 1]
     }
 
     var presetTitle: some View {
@@ -192,5 +306,4 @@ struct EditPresetView: View {
                 .foregroundColor(.primary)
         }
     }
-
 }

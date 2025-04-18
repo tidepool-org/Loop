@@ -52,7 +52,7 @@ class BolusEntryViewModelTests: XCTestCase {
 
     static let mockUUID = UUID()
 
-    static let exampleScheduleOverrideSettings = TemporaryScheduleOverrideSettings(unit: .millimolesPerLiter, targetRange: nil, insulinNeedsScaleFactor: nil)
+    static let exampleScheduleOverrideSettings = TemporaryPresetSettings(unit: .millimolesPerLiter, targetRange: nil, insulinNeedsScaleFactor: nil)
     static let examplePreMealOverride = TemporaryScheduleOverride(context: .preMeal, settings: exampleScheduleOverrideSettings, startDate: exampleStartDate, duration: .indefinite, enactTrigger: .local, syncIdentifier: mockUUID)
     static let exampleCustomScheduleOverride = TemporaryScheduleOverride(context: .custom, settings: exampleScheduleOverrideSettings, startDate: exampleStartDate, duration: .indefinite, enactTrigger: .local, syncIdentifier: mockUUID)
     
@@ -224,7 +224,7 @@ class BolusEntryViewModelTests: XCTestCase {
                                        maximumBasalRatePerHour: 1.0,
                                        maximumBolus: 10.0,
                                        suspendThreshold: GlucoseThreshold(unit: .milligramsPerDeciliter, value: 100.0))
-        let settings = TemporaryScheduleOverrideSettings(unit: .millimolesPerLiter, targetRange: nil, insulinNeedsScaleFactor: nil)
+        let settings = TemporaryPresetSettings(unit: .millimolesPerLiter, targetRange: nil, insulinNeedsScaleFactor: nil)
         delegate.preMealOverride = TemporaryScheduleOverride(context: .preMeal, settings: settings, startDate: Self.exampleStartDate, duration: .indefinite, enactTrigger: .local, syncIdentifier: UUID())
         delegate.scheduleOverride = TemporaryScheduleOverride(context: .custom, settings: settings, startDate: Self.exampleStartDate, duration: .indefinite, enactTrigger: .local, syncIdentifier: UUID())
         delegate.settings = newSettings

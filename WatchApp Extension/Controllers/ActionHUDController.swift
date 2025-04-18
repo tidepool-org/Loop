@@ -289,7 +289,7 @@ final class ActionHUDController: HUDInterfaceController {
 }
 
 extension ActionHUDController: OverrideSelectionControllerDelegate {
-    func overrideSelectionController(_ controller: OverrideSelectionController, didSelectPreset preset: TemporaryScheduleOverridePreset) {
+    func overrideSelectionController(_ controller: OverrideSelectionController, didSelectPreset preset: TemporaryPreset) {
         let override = preset.createOverride(enactTrigger: .local)
         sendOverride(override)
     }

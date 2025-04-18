@@ -52,7 +52,7 @@ class TemporaryPresetsManagerTests: XCTestCase {
         let overrideTargetRange = DoubleRange(minValue: 130, maxValue: 150)
         let override = TemporaryScheduleOverride(
             context: .custom,
-            settings: TemporaryScheduleOverrideSettings(
+            settings: TemporaryPresetSettings(
                 unit: .milligramsPerDeciliter,
                 targetRange: overrideTargetRange
             ),
@@ -69,7 +69,7 @@ class TemporaryPresetsManagerTests: XCTestCase {
     func testScheduleOverrideWithExpiredPreMealOverride() {
         manager.preMealOverride = TemporaryScheduleOverride(
             context: .preMeal,
-            settings: TemporaryScheduleOverrideSettings(targetRange: preMealRange),
+            settings: TemporaryPresetSettings(targetRange: preMealRange),
             startDate: Date(timeIntervalSinceNow: -2 /* hours */ * 60 * 60),
             duration: .finite(1 /* hours */ * 60 * 60),
             enactTrigger: .local,
@@ -80,7 +80,7 @@ class TemporaryPresetsManagerTests: XCTestCase {
         let overrideTargetRange = DoubleRange(minValue: 130, maxValue: 150)
         let override = TemporaryScheduleOverride(
             context: .custom,
-            settings: TemporaryScheduleOverrideSettings(
+            settings: TemporaryPresetSettings(
                 unit: .milligramsPerDeciliter,
                 targetRange: overrideTargetRange
             ),

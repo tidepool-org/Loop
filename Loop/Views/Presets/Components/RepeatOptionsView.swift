@@ -6,6 +6,7 @@
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 import SwiftUI
+import LoopKit
 
 struct RepeatOptionView: View {
     let repeatOptions: PresetScheduleRepeatOptions

@@ -400,7 +400,7 @@ extension SettingsManager {
         }
     }
 
-    func createPreset(_ preset: TemporaryScheduleOverridePreset) {
+    func createPreset(_ preset: TemporaryPreset) {
         mutateLoopSettings { settings in
             settings.overridePresets.append(preset)
         }

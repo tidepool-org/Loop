@@ -140,10 +140,10 @@ struct PresetsAndExerciseContentView: View {
         
         PresetCard(
             SelectablePreset.custom(
-                TemporaryScheduleOverridePreset(
+                TemporaryPreset(
                     symbol: "🚶",
                     name: NSLocalizedString("Walk to Work", comment: "Presets and exercise training content, scheduling preset, preset example, title"),
-                    settings: TemporaryScheduleOverrideSettings(
+                    settings: TemporaryPresetSettings(
                         targetRange: ClosedRange(
                             uncheckedBounds: (
                                 LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 140),

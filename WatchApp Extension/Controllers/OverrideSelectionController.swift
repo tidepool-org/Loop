@@ -14,7 +14,7 @@ import WatchConnectivity
 
 
 protocol OverrideSelectionControllerDelegate: AnyObject {
-    func overrideSelectionController(_ controller: OverrideSelectionController, didSelectPreset preset: TemporaryScheduleOverridePreset)
+    func overrideSelectionController(_ controller: OverrideSelectionController, didSelectPreset preset: TemporaryPreset)
 }
 
 

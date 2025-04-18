@@ -64,7 +64,7 @@ fileprivate extension StoredDosingDecision {
         let reason = "simulatedCoreData"
         let settings = StoredDosingDecision.Settings(syncIdentifier: UUID(uuidString: "18CF3948-0B3D-4B12-8BFE-14986B0E6784")!)
         let scheduleOverride = TemporaryScheduleOverride(context: .preMeal,
-                                                         settings: TemporaryScheduleOverrideSettings(unit: .milligramsPerDeciliter,
+                                                         settings: TemporaryPresetSettings(unit: .milligramsPerDeciliter,
                                                                                                      targetRange: DoubleRange(minValue: 80.0,
                                                                                                                               maxValue: 90.0),
                                                                                                      insulinNeedsScaleFactor: 1.5),
