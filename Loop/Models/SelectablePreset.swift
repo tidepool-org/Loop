@@ -308,6 +308,15 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
+    var canBeDeleted: Bool {
+        switch self {
+        case .custom:
+            return true;
+        case .preMeal, .legacyWorkout:
+            return false;
+        }
+    }
+
     var isPreMeal: Bool {
         if case .preMeal = self {
             return true

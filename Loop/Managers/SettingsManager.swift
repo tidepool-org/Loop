@@ -405,6 +405,17 @@ extension SettingsManager {
             settings.overridePresets.append(preset)
         }
     }
+
+    func deletePreset(_ preset: SelectablePreset) {
+        switch(preset) {
+        case .preMeal, .legacyWorkout:
+            break // cannot delete these
+        case .custom(let preset):
+            mutateLoopSettings { settings in
+                settings.overridePresets = settings.overridePresets.filter { $0.id != preset.id }
+            }
+        }
+    }
 }
 
 @MainActor

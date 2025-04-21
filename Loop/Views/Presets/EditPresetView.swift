@@ -28,17 +28,25 @@ struct EditPresetView: View {
     private var originalPreset: SelectablePreset
     private var scheduledRange: ClosedRange<LoopQuantity>
     private var onSave: (SelectablePreset) throws -> Void
+    private var onDelete: (SelectablePreset) throws -> Void
 
     @State private var isDurationPickerExpanded = false
     @State private var showingDayPicker: Bool = false
+    @State private var isConfirmingDelete = false
 
     @FocusState private var isTextFieldFocused: Bool
 
-    init(preset: SelectablePreset, scheduledRange: ClosedRange<LoopQuantity>, onSave: @escaping ((SelectablePreset) throws -> Void)) {
+    init(
+        preset: SelectablePreset,
+        scheduledRange: ClosedRange<LoopQuantity>,
+        onSave: @escaping ((SelectablePreset) throws -> Void),
+        onDelete: @escaping ((SelectablePreset) throws -> Void)
+    ) {
         self.preset = preset
         self.originalPreset = preset
         self.scheduledRange = scheduledRange
         self.onSave = onSave
+        self.onDelete = onDelete
     }
 
     var sensitivitySection: some View {
@@ -50,9 +58,11 @@ struct EditPresetView: View {
                     HStack {
                         Text("Overall Insulin")
                             .font(.headline)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
+                        if preset.canAdjustSensitivity {
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
                     }.padding(.bottom, 10)
 
                     HStack {
@@ -75,8 +85,8 @@ struct EditPresetView: View {
                             .padding(.top, 4)
                     }
                 }
-                .foregroundColor(.primary)
             }
+            .foregroundColor(.primary)
         }
     }
 
@@ -276,6 +286,15 @@ struct EditPresetView: View {
                         }
                     }
                 }
+
+                if preset.canBeDeleted {
+                    Button("Delete") {
+                        // TODO: Delete
+                        isConfirmingDelete = true
+                    }
+                    .buttonStyle(ActionButtonStyle(.destructive))
+                    .padding(.top)
+                }
             }
         }
 
@@ -304,6 +323,14 @@ struct EditPresetView: View {
             } catch {
                 print(error)
             }
+        }
+        .alert(isPresented: $isConfirmingDelete) {
+            Alert(
+                title: Text("Delete “\(preset.name)”?"),
+                message: Text("Are you sure you want to delete this preset?"),
+                primaryButton: .default(Text("Go Back")),
+                secondaryButton: .destructive(Text("Yes, Delete").bold(), action: { print("Delete") })
+            )
         }
     }
 

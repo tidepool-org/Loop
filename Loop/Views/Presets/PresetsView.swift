@@ -179,9 +179,12 @@ struct PresetsView: View {
             .navigationBarItems(trailing: dismissButton)
             .navigationDestination(for: String.self) { presetId in
                 if let scheduledRange {
-                    EditPresetView(preset: temporaryPresetsManager.selectablePresets.first { $0.id == presetId }!, scheduledRange: scheduledRange) { preset in
-                        settingsManager.savePreset(preset)
-                    }
+                    EditPresetView(
+                        preset: temporaryPresetsManager.selectablePresets.first { $0.id == presetId}!,
+                        scheduledRange: scheduledRange,
+                        onSave: { preset in settingsManager.savePreset(preset) },
+                        onDelete: { preset in settingsManager.deletePreset(preset) },
+                    )
                 }
             }
         }
