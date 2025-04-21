@@ -289,7 +289,6 @@ struct EditPresetView: View {
 
                 if preset.canBeDeleted {
                     Button("Delete") {
-                        // TODO: Delete
                         isConfirmingDelete = true
                     }
                     .buttonStyle(ActionButtonStyle(.destructive))
@@ -329,7 +328,14 @@ struct EditPresetView: View {
                 title: Text("Delete “\(preset.name)”?"),
                 message: Text("Are you sure you want to delete this preset?"),
                 primaryButton: .default(Text("Go Back")),
-                secondaryButton: .destructive(Text("Yes, Delete").bold(), action: { print("Delete") })
+                secondaryButton: .destructive(Text("Yes, Delete").bold(), action: {
+                    do {
+                        try onDelete(preset)
+                        dismiss()
+                    } catch {
+                        print(error)
+                    }
+                })
             )
         }
     }

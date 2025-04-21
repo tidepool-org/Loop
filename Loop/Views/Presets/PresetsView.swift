@@ -178,9 +178,9 @@ struct PresetsView: View {
             .navigationTitle(Text("Presets", comment: "Presets screen title"))
             .navigationBarItems(trailing: dismissButton)
             .navigationDestination(for: String.self) { presetId in
-                if let scheduledRange {
+                if let scheduledRange, let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == presetId}) {
                     EditPresetView(
-                        preset: temporaryPresetsManager.selectablePresets.first { $0.id == presetId}!,
+                        preset: preset,
                         scheduledRange: scheduledRange,
                         onSave: { preset in settingsManager.savePreset(preset) },
                         onDelete: { preset in settingsManager.deletePreset(preset) },
