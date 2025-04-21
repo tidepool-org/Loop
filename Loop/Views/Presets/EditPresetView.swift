@@ -18,12 +18,17 @@ struct EditPresetView: View {
     @Environment(\.settingsManager) private var settingsManager
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
 
+    enum Destination {
+        case editCorrectionRange
+        case editInsulinNeeds
+    }
+    @State private var destination: Destination? = nil
+
     @State private var preset: SelectablePreset
     private var originalPreset: SelectablePreset
     private var scheduledRange: ClosedRange<LoopQuantity>
     private var onSave: (SelectablePreset) throws -> Void
 
-    @State private var navigateToCorrectionRangeEditor = false
     @State private var isDurationPickerExpanded = false
     @State private var showingDayPicker: Bool = false
 
@@ -37,30 +42,40 @@ struct EditPresetView: View {
     }
 
     var sensitivitySection: some View {
-        CardSection("Temporary Settings Adjustments") {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Overall Insulin")
-                    .font(.system(.title3, weight: .semibold))
+        Button {
+            destination = .editInsulinNeeds
+        } label: {
+            CardSection("Temporary Settings Adjustments") {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Overall Insulin")
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                    }.padding(.bottom, 10)
 
-                HStack {
-                    Spacer()
-                    VStack(alignment: .center) {
-                        Text("\(Int((1.0 / (preset.insulinSensitivityMultiplier ?? 1)) * 100))%")
-                            .font(.system(size: 34, weight: .semibold))
-                            .foregroundColor(.accentColor)
-                        Text("of scheduled")
-                            .foregroundColor(.primary)
+                    HStack {
+                        Spacer()
+                        VStack(alignment: .center) {
+                            Text("\(Int((1.0 / (preset.insulinSensitivityMultiplier ?? 1)) * 100))%")
+                                .font(.system(size: 34, weight: .bold))
+                                .foregroundColor(.accentColor)
+                            Text("of scheduled")
+                                .foregroundColor(.primary)
+                        }
+                        Spacer()
                     }
-                    Spacer()
-                }
 
-                if (!preset.canAdjustSensitivity) {
-                    (Text(Image(systemName: "info.circle")) + Text(" Overall insulin cannot be adjusted for this preset"))
-                        .foregroundColor(.secondary)
-                        .font(.footnote)
-                        .italic()
-                        .padding(.top, 4)
+                    if (!preset.canAdjustSensitivity) {
+                        (Text(Image(systemName: "info.circle")) + Text(" Overall insulin cannot be adjusted for this preset"))
+                            .foregroundColor(.secondary)
+                            .font(.footnote)
+                            .italic()
+                            .padding(.top, 4)
+                    }
                 }
+                .foregroundColor(.primary)
             }
         }
     }
@@ -74,7 +89,7 @@ struct EditPresetView: View {
 
                 CardSection {
                     Button {
-                        navigateToCorrectionRangeEditor = true
+                        destination = .editCorrectionRange
                     } label: {
                         CorrectionRangePreview(
                             range: $preset.correctionRange,
@@ -263,14 +278,25 @@ struct EditPresetView: View {
                 }
             }
         }
-        .navigationDestination(isPresented: $navigateToCorrectionRangeEditor) {
-            ExistingPresetRangeEdit(
-                range: $preset.correctionRange,
-                guardrail: settingsManager.guardrailForPreset(preset),
-                scheduledRange: scheduledRange,
-                allowsScheduledRange: preset.canAdjustSensitivity,
-                isPreMeal: preset.isPreMeal
-            )
+
+        .navigationDestination(isPresented: Binding(
+            get: { destination != nil },
+            set: { if !$0 { destination = nil } }
+        )) {
+            switch destination {
+            case .editInsulinNeeds:
+                ExistingPresetInsulinNeedsEdit(insulinScaleFactor: $preset.insulinNeedsScaleFactor)
+            case .editCorrectionRange:
+                ExistingPresetRangeEdit(
+                    range: $preset.correctionRange,
+                    guardrail: settingsManager.guardrailForPreset(preset),
+                    scheduledRange: scheduledRange,
+                    allowsScheduledRange: preset.canAdjustSensitivity,
+                    isPreMeal: preset.isPreMeal
+                )
+            case .none:
+                EmptyView()
+            }
         }
         .onChange(of: preset) {
             do {

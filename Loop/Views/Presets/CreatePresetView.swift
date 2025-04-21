@@ -150,7 +150,7 @@ struct CreatePresetView: View {
     var guardrailWarningIfNecessary: some View {
         Group {
             if let threshold = exceededThreshold {
-                WarningView(title: threshold.warningTitle, caption: threshold.warningCaption, severity: threshold.severity)
+                WarningView(title: threshold.insulinNeedsScaleWarningTitle, caption: threshold.insulinNeedsScaleWarningCaption, severity: threshold.severity)
                     .padding()
             }
         }
@@ -174,7 +174,7 @@ struct CreatePresetView: View {
 }
 
 extension SafetyClassification.Threshold {
-    public var warningTitle: Text {
+    public var insulinNeedsScaleWarningTitle: Text {
         switch self {
         case .belowRecommended, .minimum:
             return Text("Insulin adjustment is below the safety threshold")
@@ -183,7 +183,7 @@ extension SafetyClassification.Threshold {
         }
     }
 
-    public var warningCaption: Text {
+    public var insulinNeedsScaleWarningCaption: Text {
         switch self {
         case .belowRecommended, .minimum:
             return Text("Using this adjustment may lead to an under delivery of insulin. Monitor your glucose while this preset is in use.")

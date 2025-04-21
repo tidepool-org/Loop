@@ -256,12 +256,20 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
     
-    var insulinMultiplier: Double? {
-        guard let insulinSensitivityMultiplier else {
-            return nil
+    var insulinNeedsScaleFactor: Double {
+        get {
+            if case .custom(let preset) = self {
+                return 1.0 / (preset.settings.insulinSensitivityMultiplier ?? 1)
+            } else {
+                return 1.0
+            }
         }
-        
-        return 1.0 / insulinSensitivityMultiplier
+        set {
+            if case .custom(var preset) = self {
+                preset.settings = TemporaryPresetSettings(targetRange: preset.settings.targetRange, insulinNeedsScaleFactor: newValue)
+                self = .custom(preset)
+            }
+        }
     }
 
     var canAdjustSensitivity: Bool {

@@ -431,6 +431,7 @@
 		C105097B2D8B947B00118A37 /* SelectablePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = C105097A2D8B947700118A37 /* SelectablePreset.swift */; };
 		C110888D2A3913C600BA4898 /* BuildDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = C110888C2A3913C600BA4898 /* BuildDetails.swift */; };
 		C11445B22DA98A3400034864 /* CorrectionRangeInformationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11445B12DA98A2D00034864 /* CorrectionRangeInformationView.swift */; };
+		C11445B42DB2EBE400034864 /* ExistingPresetInsulinNeedsEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11445B32DB2EBDC00034864 /* ExistingPresetInsulinNeedsEdit.swift */; };
 		C11613492983096D00777E7C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C11613472983096D00777E7C /* InfoPlist.strings */; };
 		C116134C2983096D00777E7C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C116134A2983096D00777E7C /* Localizable.strings */; };
 		C11B9D5B286778A800500CF8 /* SwiftCharts in Frameworks */ = {isa = PBXBuildFile; productRef = C11B9D5A286778A800500CF8 /* SwiftCharts */; };
@@ -1386,6 +1387,7 @@
 		C1092BFD29F8116700AE3D1C /* apply-info-customizations.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "apply-info-customizations.sh"; sourceTree = "<group>"; };
 		C110888C2A3913C600BA4898 /* BuildDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildDetails.swift; sourceTree = "<group>"; };
 		C11445B12DA98A2D00034864 /* CorrectionRangeInformationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectionRangeInformationView.swift; sourceTree = "<group>"; };
+		C11445B32DB2EBDC00034864 /* ExistingPresetInsulinNeedsEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExistingPresetInsulinNeedsEdit.swift; sourceTree = "<group>"; };
 		C11613482983096D00777E7C /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C116134B2983096D00777E7C /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C116134D2983096D00777E7C /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/ckcomplication.strings; sourceTree = "<group>"; };
@@ -2540,6 +2542,7 @@
 		84E8BBAF2CC979300078E6CF /* Presets */ = {
 			isa = PBXGroup;
 			children = (
+				C11445B32DB2EBDC00034864 /* ExistingPresetInsulinNeedsEdit.swift */,
 				C11445B12DA98A2D00034864 /* CorrectionRangeInformationView.swift */,
 				C105095A2D78D32C00118A37 /* CreatePresetNameAndScheduledEdit.swift */,
 				C1AC03952D6E07D3004D4D2B /* CreatePresetView.swift */,
@@ -3719,6 +3722,7 @@
 				C16F511B2B89363A00EFD7A1 /* SimpleInsulinDose.swift in Sources */,
 				4F08DE8F1E7BB871006741EA /* CollectionType+Loop.swift in Sources */,
 				A9F703772489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift in Sources */,
+				C11445B42DB2EBE400034864 /* ExistingPresetInsulinNeedsEdit.swift in Sources */,
 				E9B080B1253BDA6300BAD8F8 /* UserDefaults+LoopIntents.swift in Sources */,
 				C1AF062329426300002C1B19 /* ManualGlucoseEntryRow.swift in Sources */,
 				C10509612D7B3DF400118A37 /* CardSectionScrollView.swift in Sources */,

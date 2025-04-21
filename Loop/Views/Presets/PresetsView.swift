@@ -270,7 +270,7 @@ extension PresetCard {
             icon: preset.icon,
             presetName: preset.name,
             duration: preset.duration,
-            insulinMultiplier: preset.insulinMultiplier,
+            insulinMultiplier: preset.insulinNeedsScaleFactor,
             correctionRange: preset.correctionRange,
             guardrail: guardrail,
             expectedEndTime: expectedEndTime
