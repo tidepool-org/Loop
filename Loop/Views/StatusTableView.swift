@@ -146,6 +146,7 @@ struct StatusTableView: View {
     
     var body: some View {
         wrappedView
+            .ignoresSafeArea(.keyboard, edges: .bottom)
             .onChange(of: viewModel.temporaryPresetsManager.activeOverride) { _, _ in
                 Task {
                     await viewController.reloadData(animated: true)
