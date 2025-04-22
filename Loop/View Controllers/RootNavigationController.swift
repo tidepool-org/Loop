@@ -8,19 +8,28 @@
 import UIKit
 import LoopKit
 import LoopKitUI
+import SwiftUI
 
 /// The root view controller in Loop
 class RootNavigationController: UINavigationController {
 
     /// Its root view controller is always StatusTableViewController after loading
     var statusTableViewController: StatusTableViewController? {
-        return viewControllers.first as? StatusTableViewController
+        return (viewControllers.first as? UIHostingController<StatusTableView>)?.rootView.viewController
     }
     
     func navigate(to deeplink: Deeplink) {
         switch deeplink {
-        case .carbEntry:
-            statusTableViewController?.presentCarbEntryScreen(nil)
+        case let .carbEntry(carbEntryLink):
+            guard let carbEntryLink else {
+                statusTableViewController?.presentCarbEntryScreen(nil)
+                return
+            }
+            
+            switch carbEntryLink {
+            case let .carbEntryDetected(value, source):
+                statusTableViewController?.presentCarbEntryScreen(nil, value: value, source: source)
+            }
         case .preMeal:
             statusTableViewController?.presentPresets()
         case .bolus:

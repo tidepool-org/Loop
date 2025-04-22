@@ -62,6 +62,8 @@ final class CarbEntryViewModel: ObservableObject {
     var maxCarbEntryQuantity = LoopConstants.maxCarbEntryQuantity
     var warningCarbEntryQuantity = LoopConstants.warningCarbEntryQuantity
     
+    var carbsSource: Deeplink.AppSource?
+    
     @Published var time = Date()
     private var date = Date()
     var minimumDate: Date {

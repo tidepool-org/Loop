@@ -1441,12 +1441,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
         presentCarbEntryScreen(nil)
     }
 
-    func presentCarbEntryScreen(_ activity: NSUserActivity?) {
+    func presentCarbEntryScreen(_ activity: NSUserActivity?, value: LoopQuantity? = nil, source: Deeplink.AppSource? = nil) {
         let navigationWrapper: UINavigationController
         if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingStatus.automaticDosingEnabled {
             let viewModel = SimpleBolusViewModel(delegate: loopManager, displayMealEntry: true, displayGlucosePreference: deviceManager.displayGlucosePreference)
             if let activity = activity {
                 viewModel.restoreUserActivityState(activity)
+            }
+            if let carbString = value?.doubleValue(for: .gram) {
+                viewModel.enteredCarbString = carbString.formatted()
             }
             let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(deviceManager.displayGlucosePreference)
             let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
@@ -1455,6 +1458,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
             present(navigationWrapper, animated: true)
         } else {
             let viewModel = CarbEntryViewModel(delegate: loopManager)
+            viewModel.carbsQuantity = value?.doubleValue(for: .gram)
+            viewModel.carbsSource = source
             viewModel.deliveryDelegate = deviceManager
             viewModel.analyticsServicesManager = loopManager.analyticsServicesManager
             if let activity {

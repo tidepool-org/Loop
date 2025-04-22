@@ -131,6 +131,22 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
 
             CardSectionDivider()
             
+            if let source = viewModel.carbsSource {
+                HStack(spacing: 2) {
+                    Text("Source")
+                        .foregroundColor(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Spacer()
+                    
+                    Text(source.name)
+                        .foregroundColor(Color(.secondaryLabel))
+                }
+                .accessibilityElement(children: .combine)
+                
+                CardSectionDivider()
+            }
+            
             DatePickerRow(date: $viewModel.time, isFocused: timeFocused, minimumDate: viewModel.minimumDate, maximumDate: viewModel.maximumDate)
             
             CardSectionDivider()

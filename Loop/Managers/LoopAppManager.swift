@@ -622,14 +622,7 @@ class LoopAppManager: NSObject {
             settingsViewModel: settingsViewModel
         )
 
-        let statusTableView = StatusTableView(viewModel: viewModel)
-            .environmentObject(deviceDataManager.displayGlucosePreference)
-            .environment(\.appName, Bundle.main.bundleDisplayName)
-            .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
-            .environment(\.loopStatusColorPalette, .loopStatus)
-            .environment(\.settingsManager, settingsManager)
-            .environment(\.temporaryPresetsManager, temporaryPresetsManager)
-            .edgesIgnoringSafeArea(.top)
+        let statusTableView = StatusTableView(viewModel: viewModel, displayGlucosePreference: deviceDataManager.displayGlucosePreference, settingsManager: settingsManager, temporaryPresetsManager: temporaryPresetsManager)
 
         var rootNavigationController = rootViewController as? RootNavigationController
         if rootNavigationController == nil {

@@ -63,7 +63,7 @@ struct SystemStatusWidgetEntryView: View {
             if widgetFamily != .systemSmall {
                 VStack(alignment: .center, spacing: 5) {
                     HStack(alignment: .center, spacing: 5) {
-                        DeeplinkView(destination: .carbEntry)
+                        DeeplinkView(destination: .carbEntry(nil))
                         
                         DeeplinkView(destination: .bolus)
                     }
