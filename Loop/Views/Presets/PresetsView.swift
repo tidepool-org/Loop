@@ -183,7 +183,7 @@ struct PresetsView: View {
                         preset: preset,
                         scheduledRange: scheduledRange,
                         onSave: { preset in settingsManager.savePreset(preset) },
-                        onDelete: { preset in settingsManager.deletePreset(preset) },
+                        onDelete: { preset in settingsManager.deletePreset(preset) }
                     )
                 }
             }
