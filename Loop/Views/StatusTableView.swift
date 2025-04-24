@@ -102,16 +102,8 @@ struct StatusTableView: View {
     
     @Bindable var viewModel: StatusTableViewModel
     
-    let displayGlucosePreference: DisplayGlucosePreference
-    let settingsManager: SettingsManager
-    let temporaryPresetsManager: TemporaryPresetsManager
-    
-    init(viewModel: StatusTableViewModel, displayGlucosePreference: DisplayGlucosePreference, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager) {
+    init(viewModel: StatusTableViewModel) {
         self.viewModel = viewModel
-        
-        self.displayGlucosePreference = displayGlucosePreference
-        self.settingsManager = settingsManager
-        self.temporaryPresetsManager = temporaryPresetsManager
         
         self.wrapped = WrappedStatusTableViewController(
             alertPermissionsChecker: viewModel.alertPermissionsChecker,
@@ -191,13 +183,6 @@ struct StatusTableView: View {
                     }
                 }
             }
-            .environmentObject(displayGlucosePreference)
-            .environment(\.appName, Bundle.main.bundleDisplayName)
-            .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
-            .environment(\.loopStatusColorPalette, .loopStatus)
-            .environment(\.settingsManager, settingsManager)
-            .environment(\.temporaryPresetsManager, temporaryPresetsManager)
-            .edgesIgnoringSafeArea(.top)
     }
 }
 
