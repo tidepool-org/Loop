@@ -22,14 +22,14 @@ class MockDeliveryDelegate: DeliveryDelegate {
 
     var lastEnact: AutomaticDoseRecommendation?
 
-    func enact(_ recommendation: AutomaticDoseRecommendation) async throws {
+    func enact(_ recommendation: AutomaticDoseRecommendation, decisionId: UUID?) async throws {
         lastEnact = recommendation
     }
 
     var lastBolus: Double?
     var lastBolusActivationType: BolusActivationType?
 
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws {
+    func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws {
         lastBolus = units
         lastBolusActivationType = activationType
     }

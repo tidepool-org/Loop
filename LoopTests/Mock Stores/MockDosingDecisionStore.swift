@@ -37,4 +37,8 @@ class MockDosingDecisionStore: DosingDecisionStoreProtocol {
             completion(.success(queryAnchor, []))
         }
     }
+    
+    func findDosingDecisionsByDate(_ date: Date) async throws -> [StoredDosingDecision] {
+        []
+    }
 }

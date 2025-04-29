@@ -59,6 +59,7 @@ extension DosingDecisionStore {
 
 fileprivate extension StoredDosingDecision {
     static func simulated(date: Date) -> StoredDosingDecision {
+        let id = UUID(uuidString: "ebd31ac5-4345-4a81-a0fe-871aa0b0938d")!
         let controllerTimeZone = TimeZone(identifier: "America/Los_Angeles")!
         let scheduleTimeZone = TimeZone(secondsFromGMT: TimeZone(identifier: "America/Phoenix")!.secondsFromGMT())!
         let reason = "simulatedCoreData"
@@ -178,7 +179,8 @@ fileprivate extension StoredDosingDecision {
         let errors: [Issue] = [Issue(id: "alpha"),
                                Issue(id: "bravo", details: ["size": "tiny"])]
 
-        return StoredDosingDecision(date: date,
+        return StoredDosingDecision(id: id,
+                                    date: date,
                                     controllerTimeZone: controllerTimeZone,
                                     reason: reason,
                                     settings: settings,

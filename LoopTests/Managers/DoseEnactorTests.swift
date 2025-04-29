@@ -39,7 +39,7 @@ class DoseEnactorTests: XCTestCase {
             bolusExpectation.fulfill()
         }
 
-        try await enactor.enact(recommendation: recommendation, with: pumpManager)
+        try await enactor.enact(decisionId: nil, recommendation: recommendation, with: pumpManager)
 
         await fulfillment(of: [tempBasalExpectation, bolusExpectation], timeout: 5, enforceOrder: true)
     }
@@ -62,7 +62,7 @@ class DoseEnactorTests: XCTestCase {
         pumpManager.enactTempBasalError = .configuration(MockPumpManagerError.failed)
 
         do {
-            try await enactor.enact(recommendation: recommendation, with: pumpManager)
+            try await enactor.enact(decisionId: nil, recommendation: recommendation, with: pumpManager)
             XCTFail("Expected enact to throw error on failure.")
         } catch {
         }
@@ -87,7 +87,7 @@ class DoseEnactorTests: XCTestCase {
             XCTFail("Should not enact bolus")
         }
 
-        try await enactor.enact(recommendation: recommendation, with: pumpManager)
+        try await enactor.enact(decisionId: nil, recommendation: recommendation, with: pumpManager)
 
         await fulfillment(of: [tempBasalExpectation])
     }

@@ -913,7 +913,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     
     var enactedBolusUnits: Double?
     var enactedBolusActivationType: BolusActivationType?
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws {
+    func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws {
         enactedBolusUnits = units
         enactedBolusActivationType = activationType
     }

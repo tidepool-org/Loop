@@ -13,7 +13,6 @@ import HealthKit
 @testable import Loop
 
 class MockPumpManager: PumpManager {
-
     var enactBolusCalled: ((Double, BolusActivationType) -> Void)?
 
     var enactTempBasalCalled: ((Double, TimeInterval) -> Void)?
@@ -79,7 +78,7 @@ class MockPumpManager: PumpManager {
         return nil
     }
 
-    func enactBolus(units: Double, activationType: BolusActivationType, completion: @escaping (PumpManagerError?) -> Void) {
+    func enactBolus(decisionId: UUID?, units: Double, activationType: BolusActivationType, completion: @escaping (PumpManagerError?) -> Void) {
         enactBolusCalled?(units, activationType)
         completion(nil)
     }

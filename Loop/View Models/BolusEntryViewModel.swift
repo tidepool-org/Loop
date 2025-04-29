@@ -32,7 +32,7 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?) async throws -> StoredCarbEntry
     func saveGlucose(sample: NewGlucoseSample) async throws -> StoredGlucoseSample
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) async
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws
+    func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws
 
     func insulinModel(for type: InsulinType?) -> InsulinModel
 
@@ -396,7 +396,7 @@ final class BolusEntryViewModel: ObservableObject {
         if amountToDeliver > 0 {
             savedPreMealOverride = nil
             do {
-                try await delegate.enactBolus(units: amountToDeliver, activationType: activationType)
+                try await delegate.enactBolus(units: amountToDeliver, decisionId: dosingDecision.id, activationType: activationType)
             } catch {
                 log.error("Failed to store bolus: %{public}@", String(describing: error))
             }

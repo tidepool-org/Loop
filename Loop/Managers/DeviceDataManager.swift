@@ -721,13 +721,13 @@ extension DeviceDataManager {
 
 // MARK: - Client API
 extension DeviceDataManager {
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws {
+    func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws {
         guard let pumpManager = pumpManager else {
             throw LoopError.configurationError(.pumpManager)
         }
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            pumpManager.enactBolus(units: units, activationType: activationType) { (error) in
+            pumpManager.enactBolus(decisionId: decisionId, units: units, activationType: activationType) { (error) in
                 if let error = error {
                     self.log.error("%{public}@", String(describing: error))
                     switch error {
@@ -737,7 +737,7 @@ extension DeviceDataManager {
                     default:
                         // Do not generate notifications for automatic boluses that fail.
                         if !activationType.isAutomatic {
-                            NotificationManager.sendBolusFailureNotification(for: error, units: units, at: Date(), activationType: activationType)
+                            NotificationManager.sendBolusFailureNotification(for: error, units: units, at: Date(), decisionId: decisionId, activationType: activationType)
                         }
                     }
                     continuation.resume(throwing: error)
@@ -1362,7 +1362,7 @@ extension DeviceDataManager: DeliveryDelegate {
         return pumpManager?.status.basalDeliveryState?.isSuspended ?? false
     }
     
-    func enact(_ recommendation: AutomaticDoseRecommendation) async throws {
+    func enact(_ recommendation: AutomaticDoseRecommendation, decisionId: UUID?) async throws {
         guard let pumpManager = pumpManager else {
             throw LoopError.configurationError(.pumpManager)
         }
@@ -1376,7 +1376,7 @@ extension DeviceDataManager: DeliveryDelegate {
         crashRecoveryManager.dosingStarted(dose: recommendation)
         defer { self.crashRecoveryManager.dosingFinished() }
 
-        try await doseEnactor.enact(recommendation: recommendation, with: pumpManager)
+        try await doseEnactor.enact(decisionId: decisionId, recommendation: recommendation, with: pumpManager)
     }
 
     var basalDeliveryState: PumpManagerStatus.BasalDeliveryState? {

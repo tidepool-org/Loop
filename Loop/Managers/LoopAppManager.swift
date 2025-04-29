@@ -898,7 +898,7 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
                 analyticsServicesManager.didRetryBolus()
                 
                 Task { @MainActor in
-                    try? await deviceDataManager?.enactBolus(units: units, activationType: activationType)
+                    try? await deviceDataManager?.enactBolus(units: units, decisionId: UUID(uuidString: response.notification.request.content.userInfo[LoopNotificationUserInfoKey.decisionId.rawValue] as? String ?? ""), activationType: activationType)
                     completionHandler()
                 }
             }
@@ -998,8 +998,8 @@ extension LoopAppManager: ResetLoopManagerDelegate {
 // MARK: - ServicesManagerDosingDelegate
 
 extension LoopAppManager: ServicesManagerDosingDelegate {
-    func deliverBolus(amountInUnits: Double) async throws {
-        try await deviceDataManager.enactBolus(units: amountInUnits, activationType: .manualNoRecommendation)
+    func deliverBolus(amountInUnits: Double, decisionId: UUID?) async throws {
+        try await deviceDataManager.enactBolus(units: amountInUnits, decisionId: decisionId, activationType: .manualNoRecommendation)
     }
 }
 

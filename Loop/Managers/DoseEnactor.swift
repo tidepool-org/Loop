@@ -16,7 +16,7 @@ class DoseEnactor {
     
     private let log = DiagnosticLog(category: "DoseEnactor")
 
-    func enact(recommendation: AutomaticDoseRecommendation, with pumpManager: PumpManager) async throws {
+    func enact(decisionId: UUID?, recommendation: AutomaticDoseRecommendation, with pumpManager: PumpManager) async throws {
 
         if let basalAdjustment = recommendation.basalAdjustment {
             self.log.default("Enacting recommended basal change")
@@ -25,7 +25,7 @@ class DoseEnactor {
 
         if let bolusUnits = recommendation.bolusUnits, bolusUnits > 0 {
             self.log.default("Enacting recommended bolus dose")
-            try await pumpManager.enactBolus(units: bolusUnits, activationType: .automatic)
+            try await pumpManager.enactBolus(decisionId: decisionId, units: bolusUnits, activationType: .automatic)
         }
     }
 }

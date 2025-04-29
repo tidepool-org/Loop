@@ -44,8 +44,8 @@ protocol DeliveryDelegate: AnyObject {
     var basalDeliveryState: PumpManagerStatus.BasalDeliveryState? { get }
     var isPumpConfigured: Bool { get }
 
-    func enact(_ recommendation: AutomaticDoseRecommendation) async throws
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws
+    func enact(_ recommendation: AutomaticDoseRecommendation, decisionId: UUID?) async throws
+    func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws
     func roundBasalRate(unitsPerHour: Double) -> Double
     func roundBolusVolume(units: Double) -> Double
 }
@@ -119,7 +119,7 @@ final class LoopDataManager: ObservableObject {
 
     private let now: () -> Date
 
-    private let automaticDosingStatus: AutomaticDosingStatus
+    let automaticDosingStatus: AutomaticDosingStatus
 
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
@@ -254,6 +254,7 @@ final class LoopDataManager: ObservableObject {
                     now.timeIntervalSince(entry.startDate) < .hours(36)
                 }) ?? []
             }
+            
             if !enabled {
                 temporaryPresetsManager.clearOverride(matching: .preMeal)
                 Task {
@@ -495,7 +496,7 @@ final class LoopDataManager: ObservableObject {
         dosingDecision.automaticDoseRecommendation = recommendation
 
         do {
-            try await deliveryDelegate?.enact(recommendation)
+            try await deliveryDelegate?.enact(recommendation, decisionId: dosingDecision.id)
         } catch {
             dosingDecision.appendError(error as? LoopError ?? .unknownError(error))
             if reason == .maximumBasalRateChanged {
@@ -600,7 +601,7 @@ final class LoopDataManager: ObservableObject {
 
                     if recommendationToEnact.hasDosingChange {
                         logger.default("Enacting: %{public}@", String(describing: recommendationToEnact))
-                        try await deliveryDelegate.enact(recommendationToEnact)
+                        try await deliveryDelegate.enact(recommendationToEnact, decisionId: dosingDecision.id)
                     }
 
                     logger.default("loop() completed successfully.")
@@ -807,7 +808,7 @@ extension LoopDataManager {
     ///   - insulinModel: The type of insulin model that should be used for the dose.
     func addManuallyEnteredDose(startDate: Date, units: Double, insulinType: InsulinType? = nil) async {
         let syncIdentifier = Data(UUID().uuidString.utf8).hexadecimalString
-        let dose = DoseEntry(type: .bolus, startDate: startDate, value: units, unit: .units, syncIdentifier: syncIdentifier, insulinType: insulinType, manuallyEntered: true)
+        let dose = DoseEntry(type: .bolus, startDate: startDate, value: units, unit: .units, decisionId: nil, syncIdentifier: syncIdentifier, insulinType: insulinType, manuallyEntered: true)
 
         do {
             try await doseStore.addDoses([dose], from: nil)
@@ -818,7 +819,8 @@ extension LoopDataManager {
     }
 
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) async {
-        let dosingDecision = StoredDosingDecision(date: date,
+        let dosingDecision = StoredDosingDecision(id: bolusDosingDecision.id,
+                                                  date: date,
                                                   reason: bolusDosingDecision.reason.rawValue,
                                                   settings: StoredDosingDecision.Settings(settingsProvider.settings),
                                                   scheduleOverride: bolusDosingDecision.scheduleOverride,
@@ -1195,8 +1197,8 @@ extension LoopDataManager: SimpleBolusViewModelDelegate {
         settingsProvider.settings.suspendThreshold?.quantity
     }
     
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws {
-        try await deliveryDelegate?.enactBolus(units: units, activationType: activationType)
+    func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws {
+        try await deliveryDelegate?.enactBolus(units: units, decisionId: decisionId, activationType: activationType)
     }
     
 }

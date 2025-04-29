@@ -404,7 +404,7 @@ final class WatchDataManager: NSObject {
         }
 
         do {
-            try await deviceManager.enactBolus(units: bolus.value, activationType: bolus.activationType)
+            try await deviceManager.enactBolus(units: bolus.value, decisionId: dosingDecision.id, activationType: bolus.activationType)
             self.analyticsServicesManager?.didBolus(source: "Watch", units: bolus.value)
         } catch { }
 
