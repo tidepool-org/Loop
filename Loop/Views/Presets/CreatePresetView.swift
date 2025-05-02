@@ -76,6 +76,11 @@ struct CreatePresetView: View {
         settingsManager.settings.glucoseTargetRangeSchedule?.quantityRange(at: Date())
     }
 
+    var suspendThreshold: GlucoseThreshold? {
+        settingsManager.settings.suspendThreshold
+    }
+
+
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
@@ -96,7 +101,7 @@ struct CreatePresetView: View {
                             NewPresetRangeEdit(
                                 preset: $preset,
                                 path: $path,
-                                guardrail: Guardrail.correctionRange,
+                                guardrail: Guardrail.temporaryPresetCorrectionRange(suspendThreshold: suspendThreshold),
                                 scheduledRange: scheduledRange,
                                 onCancel: { dismiss() }
                             )
