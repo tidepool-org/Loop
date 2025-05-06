@@ -38,7 +38,7 @@ class MockDosingDecisionStore: DosingDecisionStoreProtocol {
         }
     }
     
-    func findDosingDecisionsByDate(_ date: Date) async throws -> [StoredDosingDecision] {
-        []
+    func findDosingDecisionsById(_ id: UUID) async throws -> StoredDosingDecision? {
+        nil
     }
 }
