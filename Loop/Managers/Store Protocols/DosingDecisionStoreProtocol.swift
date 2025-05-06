@@ -15,7 +15,7 @@ protocol DosingDecisionStoreProtocol: CriticalEventLog {
 
     func executeDosingDecisionQuery(fromQueryAnchor queryAnchor: DosingDecisionStore.QueryAnchor?, limit: Int, completion: @escaping (DosingDecisionStore.DosingDecisionQueryResult) -> Void)
     
-    func findDosingDecisionsByDate(_ date: Date) async throws -> [StoredDosingDecision]
+    func findDosingDecisionsById(_ id: UUID) async throws -> StoredDosingDecision?
 }
 
 extension DosingDecisionStore: DosingDecisionStoreProtocol { }
