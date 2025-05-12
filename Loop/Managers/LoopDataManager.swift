@@ -1486,7 +1486,51 @@ extension LoopDataManager: DiagnosticReportGenerator {
     }
 }
 
-extension LoopDataManager: LoopControl {}
+extension LoopDataManager: LoopControl {
+    var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
+        guard let input = displayState.input else {
+            return nil
+        }
+
+        let now = Date()
+
+        let neutralBasal = input.basal.closestPrior(to: now)!.value
+        var scheduledBasalRate: Double
+        if let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: now) {
+            scheduledBasalRate = neutralBasal / activeOverride.settings.effectiveInsulinNeedsScaleFactor
+        } else {
+            scheduledBasalRate = neutralBasal
+        }
+
+        var currentBasalRate: Double
+        if let currentTempBasal = deliveryDelegate?.basalDeliveryState?.currentTempBasal {
+            currentBasalRate = currentTempBasal.unitsPerHour
+        } else {
+            currentBasalRate = scheduledBasalRate
+        }
+
+        if currentBasalRate > neutralBasal {
+            return .increasedInsulin
+        } else if currentBasalRate < neutralBasal {
+            if currentBasalRate == 0 {
+                return .minimumDelivery
+            } else {
+                return .decreasedInsulin
+            }
+        } else {
+            let recentAutomaticBoluses = input.doses.filter({ dose in
+                dose.deliveryType == .bolus &&
+                dose.automatic &&
+                dose.startDate.addingTimeInterval(.minutes(5)) > now
+            })
+            print("recentAutomaticBoluses \(recentAutomaticBoluses)")
+            if !recentAutomaticBoluses.isEmpty {
+                return .increasedInsulin
+            }
+            return .neutral
+        }
+    }
+}
 
 extension LoopDataManager: AutomationHistoryProvider {
     func automationHistory(from start: Date, to end: Date) async throws -> [AbsoluteScheduleValue<Bool>] {

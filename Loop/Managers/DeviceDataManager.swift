@@ -7,7 +7,7 @@
 //
 
 import HealthKit
-import LoopKit
+@preconcurrency import LoopKit
 import LoopKitUI
 import LoopCore
 import LoopTestingKit
@@ -15,8 +15,10 @@ import UserNotifications
 import Combine
 import LoopAlgorithm
 
+@MainActor
 protocol LoopControl {
     var lastLoopCompleted: Date? { get }
+    var automatedTreatmentState: AutomatedTreatmentState? { get }
     func cancelActiveTempBasal(for reason: CancelActiveTempBasalReason) async throws
     func loop() async
 }
@@ -942,7 +944,10 @@ extension DeviceDataManager: CGMManagerOnboardingDelegate {
 
 // MARK: - PumpManagerDelegate
 extension DeviceDataManager: PumpManagerDelegate {
-
+    var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
+        return loopControl.automatedTreatmentState
+    }
+    
     var detectedSystemTimeOffset: TimeInterval { UserDefaults.standard.detectedSystemTimeOffset ?? 0 }
 
     func pumpManager(_ pumpManager: PumpManager, didAdjustPumpClockBy adjustment: TimeInterval) {

@@ -16,6 +16,7 @@ import Intents
 import LocalAuthentication
 import LoopAlgorithm
 
+@MainActor
 protocol SimpleBolusViewModelDelegate: AnyObject {
     
     func saveGlucose(sample: NewGlucoseSample) async throws -> StoredGlucoseSample

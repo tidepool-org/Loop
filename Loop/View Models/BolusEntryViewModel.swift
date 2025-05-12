@@ -18,6 +18,7 @@ import SwiftUI
 import SwiftCharts
 import LoopAlgorithm
 
+@MainActor
 protocol BolusEntryViewModelDelegate: AnyObject {
 
     var settings: StoredSettings { get }
@@ -520,6 +521,7 @@ final class BolusEntryViewModel: ObservableObject {
 
             let enteredBolusDose = SimpleInsulinDose(
                 deliveryType: .bolus,
+                automatic: false,
                 startDate: startDate,
                 endDate: startDate,
                 volume: enteredBolus.doubleValue(for: .internationalUnit),
