@@ -29,7 +29,7 @@ class WrappedTreatmentArrowViewModel: ObservableObject {
         }
     }
 
-    init(basalDisplayState: AutomatedTreatmentState = .neutral,
+    init(basalDisplayState: AutomatedTreatmentState = .neutralNoOverride,
          tintColor: Color = .insulinTintColor
     ) {
         self.treatmentArrowState = basalDisplayState
@@ -87,7 +87,7 @@ public final class TreatmentArrowStateView: UIView {
         setupViews()
     }
     
-    var automatedTreatmentState: AutomatedTreatmentState = .neutral {
+    var automatedTreatmentState: AutomatedTreatmentState = .neutralNoOverride {
         didSet {
             viewModel.treatmentArrowState = automatedTreatmentState
         }

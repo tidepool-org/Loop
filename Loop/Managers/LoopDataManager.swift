@@ -1523,11 +1523,10 @@ extension LoopDataManager: LoopControl {
                 dose.automatic &&
                 dose.startDate.addingTimeInterval(.minutes(5)) > now
             })
-            print("recentAutomaticBoluses \(recentAutomaticBoluses)")
             if !recentAutomaticBoluses.isEmpty {
                 return .increasedInsulin
             }
-            return .neutral
+            return scheduledBasalRate != neutralBasal ? .neutralOverride : .neutralNoOverride
         }
     }
 }
