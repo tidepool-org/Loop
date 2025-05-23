@@ -169,6 +169,7 @@ public struct InsulinScaleAdjustView: View {
 
                     SettingAdjustmentPreview(
                         value: carbRatio,
+                        displayUnit: .gramsPerUnit,
                         name: "Carb Ratio",
                         highlighted: insulinPercentage != 100
                     )
