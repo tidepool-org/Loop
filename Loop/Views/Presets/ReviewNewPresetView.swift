@@ -57,7 +57,7 @@ struct ReviewNewPresetView: View {
             sensitivitySection
 
             CardSection {
-                CorrectionRangePreview(range: $preset.correctionRange, guardrail: Guardrail.correctionRange, scheduledRange: scheduledRange, allowsScheduledRange: true)
+                CorrectionRangePreview(range: preset.correctionRange, guardrail: Guardrail.correctionRange, scheduledRange: scheduledRange)
             }
 
             // Name Field

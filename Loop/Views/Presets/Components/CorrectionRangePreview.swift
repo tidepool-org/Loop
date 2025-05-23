@@ -15,19 +15,15 @@ public struct CorrectionRangePreview: View {
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.guidanceColors) private var guidanceColors
 
-    @Binding var range: ClosedRange<LoopQuantity>?
+    var range: ClosedRange<LoopQuantity>?
     var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
-    @State private var editedRange: ClosedRange<LoopQuantity>?
-    private var allowsScheduledRange: Bool
     var showDisclosure: Bool
 
-    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, allowsScheduledRange: Bool = true, showDisclosure: Bool = false) {
-        self._range = range
-        self.editedRange = range.wrappedValue
+    init(range: ClosedRange<LoopQuantity>?, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, showDisclosure: Bool = false) {
+        self.range = range
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
-        self.allowsScheduledRange = allowsScheduledRange
         self.showDisclosure = showDisclosure
     }
 

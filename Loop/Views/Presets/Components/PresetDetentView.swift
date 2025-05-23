@@ -114,7 +114,6 @@ struct PresetDetentView: View {
                     
                     if operation == .start {
                         Button {
-                            dismiss()
                             didTapEdit()
                         } label: {
                             Group {

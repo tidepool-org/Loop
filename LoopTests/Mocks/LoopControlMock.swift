@@ -9,10 +9,13 @@
 import XCTest
 import Foundation
 import LoopAlgorithm
+import LoopKit
 @testable import Loop
 
 
 class LoopControlMock: LoopControl {
+    var automatedTreatmentState: AutomatedTreatmentState?
+    
     var lastLoopCompleted: Date?
 
     var lastCancelActiveTempBasalReason: CancelActiveTempBasalReason?
