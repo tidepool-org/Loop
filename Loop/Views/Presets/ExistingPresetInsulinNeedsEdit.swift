@@ -17,12 +17,14 @@ struct ExistingPresetInsulinNeedsEdit: View {
     var guardrail: Guardrail<LoopQuantity>
     @Binding var scaleFactor: Double
     @State var editedScale: Double
+    var presetUsesScheduledRange: Bool = false
 
-    init(insulinScaleFactor: Binding<Double>) {
+    init(insulinScaleFactor: Binding<Double>, presetUsesScheduledRange: Bool) {
 
         _scaleFactor = insulinScaleFactor
         editedScale = insulinScaleFactor.wrappedValue
         guardrail = Guardrail.presetInsulinNeeds
+        self.presetUsesScheduledRange = presetUsesScheduledRange
     }
 
     var body: some View {
@@ -31,7 +33,18 @@ struct ExistingPresetInsulinNeedsEdit: View {
                 InsulinScaleAdjustView(insulinMultiplier: $editedScale)
             }
         } actionArea: {
-            guardrailWarningIfNecessary
+            if let crossedThreshold {
+                WarningView(
+                    title: crossedThreshold.insulinNeedsScaleWarningTitle,
+                    caption: crossedThreshold.insulinNeedsScaleWarningCaption,
+                    severity: crossedThreshold.severity
+                )
+            } else if presetUsesScheduledRange && editedScale == 1 {
+                NoticeView(
+                    title: Text("Adjust Overall Insulin Needs"),
+                    caption: Text("With correction range set to using your scheduled range, overall insulin needs adjustment is required.")
+                )
+            }
             actionButton
         }
         .navigationBarBackButtonHidden(editedScale != scaleFactor)
@@ -59,9 +72,8 @@ struct ExistingPresetInsulinNeedsEdit: View {
             scaleFactor = editedScale
             dismiss()
         }
-        .disabled(editedScale == scaleFactor)
+        .disabled(editedScale == scaleFactor || (editedScale == 1 && presetUsesScheduledRange))
         .buttonStyle(ActionButtonStyle(.primary))
-        .padding()
     }
 
     var crossedThreshold: SafetyClassification.Threshold? {
@@ -71,17 +83,5 @@ struct ExistingPresetInsulinNeedsEdit: View {
         case .outsideRecommendedRange(let threshold):
             return threshold
         }
-    }
-
-    var guardrailWarningIfNecessary: some View {
-        return Group {
-            if let crossedThreshold {
-                WarningView(
-                    title: crossedThreshold.insulinNeedsScaleWarningTitle,
-                    caption: crossedThreshold.insulinNeedsScaleWarningCaption,
-                    severity: crossedThreshold.severity
-                )
-            }
-        }.padding()
     }
 }

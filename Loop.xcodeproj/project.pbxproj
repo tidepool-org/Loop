@@ -456,6 +456,7 @@
 		C152B9F72C9C7EF100ACBC06 /* AutomationHistoryEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C152B9F62C9C7EF100ACBC06 /* AutomationHistoryEntryTests.swift */; };
 		C159C82F286787EF00A86EC0 /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C159C82E286787EF00A86EC0 /* LoopKit.framework */; };
 		C15A8C492A7305B1009D736B /* SwiftCharts in Frameworks */ = {isa = PBXBuildFile; productRef = C1E3DC4628595FAA00CA19FF /* SwiftCharts */; };
+		C1620D392DE0E5120033DEB5 /* NoticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1620D382DE0E50D0033DEB5 /* NoticeView.swift */; };
 		C165756F2534C468004AE16E /* SimpleBolusViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C165756E2534C468004AE16E /* SimpleBolusViewModelTests.swift */; };
 		C16575712538A36B004AE16E /* CGMStalenessMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16575702538A36B004AE16E /* CGMStalenessMonitor.swift */; };
 		C16575732538AFF6004AE16E /* CGMStalenessMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16575722538AFF6004AE16E /* CGMStalenessMonitorTests.swift */; };
@@ -1441,6 +1442,7 @@
 		C15A582129C7866600D3A5A1 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C15A582229C7866600D3A5A1 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C15A582329C7866600D3A5A1 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C1620D382DE0E50D0033DEB5 /* NoticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeView.swift; sourceTree = "<group>"; };
 		C165756E2534C468004AE16E /* SimpleBolusViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBolusViewModelTests.swift; sourceTree = "<group>"; };
 		C16575702538A36B004AE16E /* CGMStalenessMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMStalenessMonitor.swift; sourceTree = "<group>"; };
 		C16575722538AFF6004AE16E /* CGMStalenessMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMStalenessMonitorTests.swift; sourceTree = "<group>"; };
@@ -2542,6 +2544,7 @@
 		84E8BBAF2CC979300078E6CF /* Presets */ = {
 			isa = PBXGroup;
 			children = (
+				C1620D382DE0E50D0033DEB5 /* NoticeView.swift */,
 				C11445B32DB2EBDC00034864 /* ExistingPresetInsulinNeedsEdit.swift */,
 				C11445B12DA98A2D00034864 /* CorrectionRangeInformationView.swift */,
 				C105095A2D78D32C00118A37 /* CreatePresetNameAndScheduledEdit.swift */,
@@ -3699,6 +3702,7 @@
 				89E267FF229267DF00A3F2AF /* Optional.swift in Sources */,
 				43785E982120E7060057DED1 /* Intents.intentdefinition in Sources */,
 				1D82E6A025377C6B009131FB /* TrustedTimeChecker.swift in Sources */,
+				C1620D392DE0E5120033DEB5 /* NoticeView.swift in Sources */,
 				C105096F2D8237F300118A37 /* EditPresetView.swift in Sources */,
 				A98556852493F901000FD662 /* AlertStore+SimulatedCoreData.swift in Sources */,
 				899433B823FE129800FA4BEA /* OverrideBadgeView.swift in Sources */,

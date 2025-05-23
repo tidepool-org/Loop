@@ -71,7 +71,7 @@ struct EditPresetView: View {
                     HStack {
                         Spacer()
                         VStack(alignment: .center) {
-                            Text("\(Int((1.0 / (preset.insulinSensitivityMultiplier ?? 1)) * 100))%")
+                            Text("\(Int(((1.0 / (preset.insulinSensitivityMultiplier ?? 1)) * 100).rounded()))%")
                                 .font(.system(size: 34, weight: .bold))
                                 .foregroundColor(.accentColor)
                             Text("of scheduled")
@@ -303,14 +303,18 @@ struct EditPresetView: View {
             .navigationDestination(for: Destination.self) { dest in
                 switch dest {
                 case .editInsulinNeeds:
-                    ExistingPresetInsulinNeedsEdit(insulinScaleFactor: $preset.insulinNeedsScaleFactor)
+                    ExistingPresetInsulinNeedsEdit(
+                        insulinScaleFactor: $preset.insulinNeedsScaleFactor,
+                        presetUsesScheduledRange: preset.correctionRange == nil,
+                    )
                 case .editCorrectionRange:
                     ExistingPresetRangeEdit(
                         range: $preset.correctionRange,
                         guardrail: settingsManager.guardrailForPreset(preset),
                         scheduledRange: scheduledRange,
                         allowsScheduledRange: preset.canAdjustSensitivity,
-                        isPreMeal: preset.isPreMeal
+                        isPreMeal: preset.isPreMeal,
+                        presetAdjustsInsulinNeeds: preset.insulinNeedsScaleFactor != 1
                     )
                 }
             }
