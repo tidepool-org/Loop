@@ -20,7 +20,7 @@ class DoseEnactor {
 
         if let basalAdjustment = recommendation.basalAdjustment {
             self.log.default("Enacting recommended basal change")
-            try await pumpManager.enactTempBasal(unitsPerHour: basalAdjustment.unitsPerHour, for: basalAdjustment.duration)
+            try await pumpManager.enactTempBasal(decisionId: decisionId, unitsPerHour: basalAdjustment.unitsPerHour, for: basalAdjustment.duration)
         }
 
         if let bolusUnits = recommendation.bolusUnits, bolusUnits > 0 {
