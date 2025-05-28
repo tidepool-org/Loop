@@ -494,8 +494,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         self.lastLoopError = lastLoopError
 
-        if let netBasal = netBasal {
-            self.hudView?.pumpStatusHUD.basalRateHUD.setNetBasalRate(netBasal.rate, percent: netBasal.percent, at: netBasal.start)
+        if let automatedTreatmentState = loopManager.automatedTreatmentState {
+            self.hudView?.pumpStatusHUD.basalRateHUD.setAutomatedTreatmentState(automatedTreatmentState)
         }
 
         if currentContext.contains(.carbs) {

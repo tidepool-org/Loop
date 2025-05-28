@@ -288,7 +288,7 @@ struct EditPresetView: View {
                 }
 
                 if preset.canBeDeleted {
-                    Button("Delete") {
+                    Button("Delete Preset") {
                         isConfirmingDelete = true
                     }
                     .buttonStyle(ActionButtonStyle(.destructive))

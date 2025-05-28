@@ -29,17 +29,17 @@ enum PresetSortOption: Int, CaseIterable {
 }
 
 struct PresetsView: View {
-    
+
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.settingsManager) private var settingsManager
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var editMode: EditMode = .inactive
     @State private var showingMenu: Bool = false
     @State private var showTraining: Bool = false
     @State private var presentCreateView: Bool = false
-    @State private var editPresetPath: [String] = []
+    @State private var navigationPath = NavigationPath()
     @State private var pendingPreset: SelectablePreset?
 
     @AppStorage("presetsSortAscending") private var presetsSortAscending: Bool = true
@@ -68,7 +68,7 @@ struct PresetsView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $editPresetPath) {
+        NavigationStack(path: $navigationPath) {
             ScrollView {
                 VStack(spacing: 20) {
                     if !hasCompletedTraining {
@@ -128,7 +128,7 @@ struct PresetsView: View {
                         Text("Support")
                             .font(.title2.bold())
 
-                        NavigationLink(destination: PresetsHistoryView()) {
+                        NavigationLink(value: Route.presetsHistory) {
                             HStack {
                                 Image(systemName: "list.bullet")
                                     .foregroundColor(.white)
@@ -177,20 +177,25 @@ struct PresetsView: View {
             .background(Color(UIColor.secondarySystemBackground))
             .navigationTitle(Text("Presets", comment: "Presets screen title"))
             .navigationBarItems(trailing: dismissButton)
-            .navigationDestination(for: String.self) { presetId in
-                if let scheduledRange, let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == presetId}) {
-                    EditPresetView(
-                        preset: preset,
-                        scheduledRange: scheduledRange,
-                        onSave: { preset in settingsManager.savePreset(preset) },
-                        onDelete: { preset in settingsManager.deletePreset(preset) }
-                    )
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .presetsHistory:
+                    PresetsHistoryView()
+                case .editPreset(let presetId):
+                    if let scheduledRange, let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == presetId}) {
+                        EditPresetView(
+                            preset: preset,
+                            scheduledRange: scheduledRange,
+                            onSave: { preset in settingsManager.savePreset(preset) },
+                            onDelete: { preset in settingsManager.deletePreset(preset) }
+                        )
+                    }
                 }
             }
         }
         .sheet(item: $pendingPreset) { preset in
             PresetDetentView(preset: preset, didTapEdit: {
-                editPresetPath.append(preset.id)
+                navigationPath.append(Route.editPreset(preset.id))
             })
         }
         .sheet(isPresented: $showTraining) {
@@ -265,6 +270,12 @@ struct PresetsView: View {
                 .textCase(nil)
         }
     }
+}
+
+// Define navigation routes
+enum Route: Hashable {
+    case presetsHistory
+    case editPreset(String)
 }
 
 extension PresetCard {

@@ -13,12 +13,14 @@ import LoopCore
 import LoopAlgorithm
 import os.log
 
+@MainActor
 protocol CarbEntryViewModelDelegate: AnyObject, BolusEntryViewModelDelegate, FavoriteFoodInsightsViewModelDelegate {
     var defaultAbsorptionTimes: DefaultAbsorptionTimes { get }
     func isScheduleOverrideActive(at date: Date) -> Bool
     func getGlucoseSamples(start: Date?, end: Date?) async throws -> [StoredGlucoseSample]
 }
 
+@MainActor
 final class CarbEntryViewModel: ObservableObject {
     enum Alert: Identifiable {
         var id: Self {
