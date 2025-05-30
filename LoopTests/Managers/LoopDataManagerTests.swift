@@ -228,7 +228,7 @@ class LoopDataManagerTests: XCTestCase {
         await loopDataManager.loop()
 
         XCTAssertEqual(0, deliveryDelegate.lastEnact?.bolusUnits)
-        XCTAssertEqual(0, deliveryDelegate.lastEnact?.basalAdjustment?.unitsPerHour)
+        XCTAssertEqual(0, deliveryDelegate.lastEnact?.basalAdjustment.unitsPerHour)
     }
 
 
@@ -303,7 +303,7 @@ class LoopDataManagerTests: XCTestCase {
 
         // Should not bolus, and should low temp.
         XCTAssertEqual(0, deliveryDelegate.lastEnact!.bolusUnits!, accuracy: defaultAccuracy)
-        XCTAssertEqual(0, deliveryDelegate.lastEnact!.basalAdjustment!.unitsPerHour, accuracy: defaultAccuracy)
+        XCTAssertEqual(0, deliveryDelegate.lastEnact!.basalAdjustment.unitsPerHour, accuracy: defaultAccuracy)
     }
 
 
@@ -328,7 +328,6 @@ class LoopDataManagerTests: XCTestCase {
 
         // Because eventual is high, but mid-term is low, stay neutral in delivery.
         XCTAssertEqual(0, deliveryDelegate.lastEnact!.bolusUnits!, accuracy: defaultAccuracy)
-        XCTAssertNil(deliveryDelegate.lastEnact!.basalAdjustment)
     }
 
     func testOpenLoopCancelsTempBasal() async {
@@ -345,7 +344,7 @@ class LoopDataManagerTests: XCTestCase {
 
         await fulfillment(of: [dosingDecisionStore.storeExpectation!], timeout: 1.0)
 
-        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel)
+        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel, direction: .decrease)
         XCTAssertEqual(deliveryDelegate.lastEnact, expectedAutomaticDoseRecommendation)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "automaticDosingDisabled")
@@ -361,7 +360,7 @@ class LoopDataManagerTests: XCTestCase {
 
         await loopDataManager.loop()
 
-        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 3.0, duration: .minutes(30)))
+        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 3.0, duration: .minutes(30)), direction: .increase)
         XCTAssertEqual(deliveryDelegate.lastEnact, expectedAutomaticDoseRecommendation)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
         if dosingDecisionStore.dosingDecisions.count == 1 {
@@ -402,8 +401,8 @@ class LoopDataManagerTests: XCTestCase {
         await loopDataManager.loop()
 
         // Should not adjust delivery, as existing temp basal is correct.
-        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: nil)
-        XCTAssertNil(deliveryDelegate.lastEnact)
+        let basalAdjustment = TempBasalRecommendation(unitsPerHour: 5.046818181818183, duration: .seconds(1800))
+        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: basalAdjustment, direction: .increase)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
         if dosingDecisionStore.dosingDecisions.count == 1 {
             XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "loop")
@@ -423,7 +422,7 @@ class LoopDataManagerTests: XCTestCase {
 
         await loopDataManager.loop()
 
-        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 3.0, duration: .minutes(30)))
+        let expectedAutomaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 3.0, duration: .minutes(30)), direction: .increase)
         XCTAssertNil(deliveryDelegate.lastEnact)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions.count, 1)
         XCTAssertEqual(dosingDecisionStore.dosingDecisions[0].reason, "loop")

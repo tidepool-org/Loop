@@ -167,7 +167,7 @@ fileprivate extension StoredDosingDecision {
                                                           quantity: LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 125 + minutes / 5)))
         }
         let automaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 0.75,
-                                                                                                               duration: .minutes(30)),
+                                                                                                               duration: .minutes(30)), direction: .increase,
                                                                       bolusUnits: 1.25)
         let manualBolusRecommendation = ManualBolusRecommendationWithDate(recommendation: ManualBolusRecommendation(amount: 0.2,
                                                                                                                     notice: .predictedGlucoseBelowTarget(minGlucose: SimpleGlucoseValue(startDate: date.addingTimeInterval(.minutes(30)),

@@ -489,7 +489,7 @@ final class LoopDataManager: ObservableObject {
 
         logger.default("Cancelling active temp basal for reason: %{public}@", String(describing: reason))
 
-        let recommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel)
+        let recommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel, direction: .decrease)
 
         var dosingDecision = StoredDosingDecision(reason: reason.rawValue)
         dosingDecision.settings = StoredDosingDecision.Settings(settingsProvider.settings)
@@ -566,22 +566,23 @@ final class LoopDataManager: ObservableObject {
                     recommendationToEnact.bolusUnits = deliveryDelegate.roundBolusVolume(units: bolus)
                 }
 
-                if var basal = algoRecommendation.basalAdjustment {
-                    basal.unitsPerHour = deliveryDelegate.roundBasalRate(unitsPerHour: basal.unitsPerHour)
+                var basal = algoRecommendation.basalAdjustment
+                
+                basal.unitsPerHour = deliveryDelegate.roundBasalRate(unitsPerHour: basal.unitsPerHour)
 
-                    let scheduledBasalRate = input.basal.closestPrior(to: loopBaseTime)!.value
-                    let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: loopBaseTime)
+                let scheduledBasalRate = input.basal.closestPrior(to: loopBaseTime)!.value
+                let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: loopBaseTime)
 
-                    let basalAdjustment = basal.adjustForCurrentDelivery(
-                        at: loopBaseTime,
-                        neutralBasalRate: scheduledBasalRate,
-                        currentTempBasal: deliveryDelegate.basalDeliveryState?.currentTempBasal,
-                        continuationInterval: .minutes(11),
-                        neutralBasalRateMatchesPump: activeOverride == nil
-                    )
-
+                if let basalAdjustment = basal.adjustForCurrentDelivery(
+                    at: loopBaseTime,
+                    neutralBasalRate: scheduledBasalRate,
+                    currentTempBasal: deliveryDelegate.basalDeliveryState?.currentTempBasal,
+                    continuationInterval: .minutes(11),
+                    neutralBasalRateMatchesPump: activeOverride == nil
+                ) {
                     recommendationToEnact.basalAdjustment = basalAdjustment
                 }
+                
                 output.recommendationResult = .success(.init(automatic: recommendationToEnact))
 
                 if recommendationToEnact != algoRecommendation {
