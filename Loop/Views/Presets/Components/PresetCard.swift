@@ -75,13 +75,7 @@ struct PresetCard: View {
 
                     if expectedEndTime == nil {
                         presetDuration
-                    }
-                    
-                    Image(systemName: "chevron.right")
-                        .imageScale(.small)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                        .opacity(0.5)
+                    }                    
                 }
                 
                 VStack(alignment: .leading, spacing: 10) {
