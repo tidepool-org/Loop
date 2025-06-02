@@ -44,7 +44,7 @@ protocol DeliveryDelegate: AnyObject {
     var basalDeliveryState: PumpManagerStatus.BasalDeliveryState? { get }
     var isPumpConfigured: Bool { get }
 
-    func enact(_ recommendation: AutomaticDoseRecommendation, decisionId: UUID?) async throws
+    func enact(bolus: Double?, tempBasal: TempBasalRecommendation?, decisionId: UUID?) async throws
     func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws
     func roundBasalRate(unitsPerHour: Double) -> Double
     func roundBolusVolume(units: Double) -> Double
@@ -110,6 +110,7 @@ final class LoopDataManager: ObservableObject {
     let settingsProvider: SettingsProvider
     let dosingDecisionStore: DosingDecisionStoreProtocol
     let glucoseStore: GlucoseStoreProtocol
+    let crashRecoveryManager: CrashRecoveryManager
 
     let logger = DiagnosticLog(category: "LoopDataManager")
 
@@ -160,6 +161,7 @@ final class LoopDataManager: ObservableObject {
         doseStore: DoseStoreProtocol,
         glucoseStore: GlucoseStoreProtocol,
         carbStore: CarbStoreProtocol,
+        crashRecoveryManager: CrashRecoveryManager,
         dosingDecisionStore: DosingDecisionStoreProtocol,
         now: @escaping () -> Date = { Date() },
         automaticDosingStatus: AutomaticDosingStatus,
@@ -175,6 +177,7 @@ final class LoopDataManager: ObservableObject {
         self.doseStore = doseStore
         self.glucoseStore = glucoseStore
         self.carbStore = carbStore
+        self.crashRecoveryManager = crashRecoveryManager
         self.dosingDecisionStore = dosingDecisionStore
         self.now = now
         self.automaticDosingStatus = automaticDosingStatus
@@ -496,7 +499,9 @@ final class LoopDataManager: ObservableObject {
         dosingDecision.automaticDoseRecommendation = recommendation
 
         do {
-            try await deliveryDelegate?.enact(recommendation, decisionId: dosingDecision.id)
+            crashRecoveryManager.dosingStarted(dose: recommendation)
+            try await deliveryDelegate?.enact(bolus: recommendation.bolusUnits, tempBasal: recommendation.basalAdjustment, decisionId: dosingDecision.id)
+            self.crashRecoveryManager.dosingFinished()
         } catch {
             dosingDecision.appendError(error as? LoopError ?? .unknownError(error))
             if reason == .maximumBasalRateChanged {
@@ -573,13 +578,15 @@ final class LoopDataManager: ObservableObject {
                 let scheduledBasalRate = input.basal.closestPrior(to: loopBaseTime)!.value
                 let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: loopBaseTime)
 
-                if let basalAdjustment = basal.adjustForCurrentDelivery(
+                let basalAdjustment = basal.adjustForCurrentDelivery(
                     at: loopBaseTime,
                     neutralBasalRate: scheduledBasalRate,
                     currentTempBasal: deliveryDelegate.basalDeliveryState?.currentTempBasal,
                     continuationInterval: .minutes(11),
                     neutralBasalRateMatchesPump: activeOverride == nil
-                ) {
+                )
+                
+                if let basalAdjustment {
                     recommendationToEnact.basalAdjustment = basalAdjustment
                 }
                 
@@ -600,10 +607,9 @@ final class LoopDataManager: ObservableObject {
                         throw LoopError.pumpSuspended
                     }
 
-                    if recommendationToEnact.hasDosingChange {
-                        logger.default("Enacting: %{public}@", String(describing: recommendationToEnact))
-                        try await deliveryDelegate.enact(recommendationToEnact, decisionId: dosingDecision.id)
-                    }
+                    logger.default("Enacting: %{public}@", String(describing: recommendationToEnact))
+
+                    try await deliveryDelegate.enact(bolus: recommendationToEnact.bolusUnits, tempBasal: basalAdjustment, decisionId: dosingDecision.id)
 
                     logger.default("loop() completed successfully.")
                     lastLoopCompleted = Date()
@@ -1376,12 +1382,6 @@ extension AutomaticDosingStrategy {
         case .automaticBolus:
             return .automaticBolus
         }
-    }
-}
-
-extension AutomaticDoseRecommendation {
-    public var hasDosingChange: Bool {
-        return basalAdjustment != nil || bolusUnits != nil
     }
 }
 

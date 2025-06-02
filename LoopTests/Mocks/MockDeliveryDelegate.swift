@@ -20,10 +20,10 @@ class MockDeliveryDelegate: DeliveryDelegate {
     
     var isPumpConfigured: Bool = true
 
-    var lastEnact: AutomaticDoseRecommendation?
+    var lastEnact: (bolus: Double?, tempBasal: TempBasalRecommendation?)
 
-    func enact(_ recommendation: AutomaticDoseRecommendation, decisionId: UUID?) async throws {
-        lastEnact = recommendation
+    func enact(bolus: Double?, tempBasal: TempBasalRecommendation?, decisionId: UUID?) async throws {
+        lastEnact = (bolus, tempBasal)
     }
 
     var lastBolus: Double?

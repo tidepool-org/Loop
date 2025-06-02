@@ -1367,7 +1367,7 @@ extension DeviceDataManager: DeliveryDelegate {
         return pumpManager?.status.basalDeliveryState?.isSuspended ?? false
     }
     
-    func enact(_ recommendation: AutomaticDoseRecommendation, decisionId: UUID?) async throws {
+    func enact(bolus: Double?, tempBasal: TempBasalRecommendation?, decisionId: UUID?) async throws {
         guard let pumpManager = pumpManager else {
             throw LoopError.configurationError(.pumpManager)
         }
@@ -1376,12 +1376,9 @@ extension DeviceDataManager: DeliveryDelegate {
             throw LoopError.connectionError
         }
 
-        log.default("Enacting dose: %{public}@", String(describing: recommendation))
-
-        crashRecoveryManager.dosingStarted(dose: recommendation)
-        defer { self.crashRecoveryManager.dosingFinished() }
-
-        try await doseEnactor.enact(decisionId: decisionId, recommendation: recommendation, with: pumpManager)
+        log.default("Enacting dose: %{public}@", String(describing: (bolus, tempBasal)))
+        
+        try await doseEnactor.enact(decisionId: decisionId, bolus: bolus, tempBasal: tempBasal, with: pumpManager)
     }
 
     var basalDeliveryState: PumpManagerStatus.BasalDeliveryState? {
