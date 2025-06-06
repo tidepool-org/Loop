@@ -101,7 +101,7 @@ struct CreatePresetView: View {
                             NewPresetRangeEdit(
                                 preset: $preset,
                                 path: $path,
-                                guardrail: Guardrail.temporaryPresetCorrectionRange(suspendThreshold: suspendThreshold),
+                                guardrail: Guardrail.temporaryPresetCorrectionRange,
                                 scheduledRange: scheduledRange,
                                 onCancel: { dismiss() }
                             )

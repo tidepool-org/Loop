@@ -14,6 +14,8 @@ struct PresetRangeEditor: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.guidanceColors) private var guidanceColors
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+    @Environment(\.settingsManager) private var settingsManager
+
 
     @State private var presentInfoView: Bool = false
     @Binding var range: ClosedRange<LoopQuantity>?
@@ -125,7 +127,7 @@ struct PresetRangeEditor: View {
                     get: { displayedRange },
                     set: { range = $0 }),
                                    unit: displayGlucosePreference.unit,
-                                   minValue: nil,
+                                   minValue: settingsManager.settings.suspendThreshold?.quantity,
                                    guardrail: guardrail)
                 .padding(.vertical, -20)
             }
