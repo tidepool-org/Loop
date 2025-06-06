@@ -309,6 +309,7 @@ class LoopAppManager: NSObject {
         }
 
         let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
+        crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
 
         loopDataManager = LoopDataManager(
             lastLoopCompleted: ExtensionDataManager.context?.lastLoopCompleted,
@@ -327,7 +328,6 @@ class LoopAppManager: NSObject {
 
         cacheStore.delegate = loopDataManager
 
-        crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
 
         Task { @MainActor in
             alertManager.addAlertResponder(managerIdentifier: crashRecoveryManager.managerIdentifier, alertResponder: crashRecoveryManager)
