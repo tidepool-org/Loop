@@ -14,6 +14,7 @@ import LoopAlgorithm
 
 struct ReviewNewPresetView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.settingsManager) private var settingsManager
 
     @Binding var preset: NewCustomPreset
     @Binding var path: NavigationPath
@@ -57,7 +58,11 @@ struct ReviewNewPresetView: View {
             sensitivitySection
 
             CardSection {
-                CorrectionRangePreview(range: preset.correctionRange, guardrail: Guardrail.correctionRange, scheduledRange: scheduledRange)
+                CorrectionRangePreview(
+                    range: preset.correctionRange,
+                    guardrail: settingsManager.customPresetGuardRail,
+                    scheduledRange: scheduledRange
+                )
             }
 
             // Name Field
