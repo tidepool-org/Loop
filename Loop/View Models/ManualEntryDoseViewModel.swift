@@ -232,6 +232,7 @@ final class ManualEntryDoseViewModel: ObservableObject {
 
         let enteredBolusDose = SimpleInsulinDose(
             deliveryType: .bolus,
+            automatic: false,
             startDate: selectedDoseDate,
             endDate: selectedDoseDate,
             volume: enteredBolus.doubleValue(for: .internationalUnit),

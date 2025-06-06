@@ -317,6 +317,7 @@ class LoopAppManager: NSObject {
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
+            crashRecoveryManager: crashRecoveryManager,
             dosingDecisionStore: dosingDecisionStore,
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset },

@@ -38,9 +38,11 @@ struct CardSectionScrollView<Content: View, ActionArea: View>: View {
                 .padding()
             }
             if let actionArea {
-                VStack(spacing: 0) {
+                VStack(spacing: 12) {
                     actionArea
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
                 .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
             }
         }

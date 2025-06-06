@@ -7,7 +7,7 @@
 //
 
 import HealthKit
-import LoopKit
+@preconcurrency import LoopKit
 import LoopKitUI
 import LoopCore
 import LoopTestingKit
@@ -15,8 +15,10 @@ import UserNotifications
 import Combine
 import LoopAlgorithm
 
+@MainActor
 protocol LoopControl {
     var lastLoopCompleted: Date? { get }
+    var automatedTreatmentState: AutomatedTreatmentState? { get }
     func cancelActiveTempBasal(for reason: CancelActiveTempBasalReason) async throws
     func loop() async
 }
@@ -942,7 +944,10 @@ extension DeviceDataManager: CGMManagerOnboardingDelegate {
 
 // MARK: - PumpManagerDelegate
 extension DeviceDataManager: PumpManagerDelegate {
-
+    var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
+        return loopControl.automatedTreatmentState
+    }
+    
     var detectedSystemTimeOffset: TimeInterval { UserDefaults.standard.detectedSystemTimeOffset ?? 0 }
 
     func pumpManager(_ pumpManager: PumpManager, didAdjustPumpClockBy adjustment: TimeInterval) {
@@ -1362,7 +1367,7 @@ extension DeviceDataManager: DeliveryDelegate {
         return pumpManager?.status.basalDeliveryState?.isSuspended ?? false
     }
     
-    func enact(_ recommendation: AutomaticDoseRecommendation, decisionId: UUID?) async throws {
+    func enact(bolus: Double?, tempBasal: TempBasalRecommendation?, decisionId: UUID?) async throws {
         guard let pumpManager = pumpManager else {
             throw LoopError.configurationError(.pumpManager)
         }
@@ -1371,12 +1376,9 @@ extension DeviceDataManager: DeliveryDelegate {
             throw LoopError.connectionError
         }
 
-        log.default("Enacting dose: %{public}@", String(describing: recommendation))
-
-        crashRecoveryManager.dosingStarted(dose: recommendation)
-        defer { self.crashRecoveryManager.dosingFinished() }
-
-        try await doseEnactor.enact(decisionId: decisionId, recommendation: recommendation, with: pumpManager)
+        log.default("Enacting dose: %{public}@", String(describing: (bolus, tempBasal)))
+        
+        try await doseEnactor.enact(decisionId: decisionId, bolus: bolus, tempBasal: tempBasal, with: pumpManager)
     }
 
     var basalDeliveryState: PumpManagerStatus.BasalDeliveryState? {

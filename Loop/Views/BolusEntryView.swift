@@ -344,6 +344,7 @@ struct BolusEntryView: View {
         )
         .buttonStyle(ActionButtonStyle(viewModel.primaryButton == .manualGlucoseEntry ? .primary : .secondary))
         .padding([.top, .horizontal])
+        .accessibilityIdentifier("button_EnterFingerstickGlucose")
     }
 
     private var actionButton: some View {

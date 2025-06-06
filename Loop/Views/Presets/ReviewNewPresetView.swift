@@ -57,7 +57,7 @@ struct ReviewNewPresetView: View {
             sensitivitySection
 
             CardSection {
-                CorrectionRangePreview(range: $preset.correctionRange, guardrail: Guardrail.correctionRange, scheduledRange: scheduledRange, allowsScheduledRange: true)
+                CorrectionRangePreview(range: preset.correctionRange, guardrail: Guardrail.correctionRange, scheduledRange: scheduledRange)
             }
 
             // Name Field
@@ -133,35 +133,31 @@ struct ReviewNewPresetView: View {
                     title: Text("Invalid Start Time"),
                     caption: Text("Start time must be at least 1 minute in the future.")
                 )
-                .padding()
             }
 
-            Group {
-                if preset.savePreset, preset.startDate != nil {
-                    Button("Save and Schedule for Later") {
-                        onComplete(false)
-                    }
-                    .buttonStyle(ActionButtonStyle(.primary))
-                    .disabled(isStartDateTooSoon)
-                } else if preset.savePreset {
-                    VStack {
-                        Button("Start Preset") {
-                            onComplete(true)
-                        }
-                        .buttonStyle(ActionButtonStyle(.primary))
-                        Button("Save for Later") {
-                            onComplete(false)
-                        }
-                        .buttonStyle(ActionButtonStyle(.secondary))
-                    }
-                } else {
+            if preset.savePreset, preset.startDate != nil {
+                Button("Save and Schedule for Later") {
+                    onComplete(false)
+                }
+                .buttonStyle(ActionButtonStyle(.primary))
+                .disabled(isStartDateTooSoon)
+            } else if preset.savePreset {
+                VStack {
                     Button("Start Preset") {
                         onComplete(true)
                     }
                     .buttonStyle(ActionButtonStyle(.primary))
+                    Button("Save for Later") {
+                        onComplete(false)
+                    }
+                    .buttonStyle(ActionButtonStyle(.secondary))
                 }
+            } else {
+                Button("Start Preset") {
+                    onComplete(true)
+                }
+                .buttonStyle(ActionButtonStyle(.primary))
             }
-            .padding()
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Create a Preset")

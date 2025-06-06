@@ -50,7 +50,7 @@ struct ManualGlucoseEntryRow: View {
                 .onChange(of: displayGlucosePreference.unit, perform: { value in
                     unitsChanged()
                 })
-
+                .accessibilityIdentifier("textField_FingerstickGlucose")
                 Text(displayGlucosePreference.formatter.localizedUnitStringWithPlurality())
                     .foregroundColor(Color(.secondaryLabel))
             }

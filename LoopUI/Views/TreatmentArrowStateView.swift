@@ -7,56 +7,39 @@
 //
 
 import SwiftUI
+import LoopKit
 import LoopKitUI
 
-class WrappedBasalRateViewModel: ObservableObject {
+class WrappedTreatmentArrowViewModel: ObservableObject {
     
     private lazy var basalRateUnitString = LocalizedString("U/hr", comment: "The format string describing the basal rate unit.")
     private lazy var basalRateFormatString = "%1$d %2$@"
     
-    @Published var basalDisplayState: BasalDisplayState
+    @Published var treatmentArrowState: AutomatedTreatmentState
     @Published var tintColor: Color
     
     var basalStateImageName: String? {
-        basalDisplayState.imageName
+        treatmentArrowState.imageName
     }
-    var manualTempBasalAmount: Double? {
-        switch basalDisplayState {
-        case .basalTempManual(let double):
-             return double
-        default:
-            return nil
-        }
-    }
-    var manualTempBasalAmountString: String? {
-        guard let manualTempBasalAmount = manualTempBasalAmount else { return nil }
-        return "\(manualTempBasalAmount)"
-    }
+
     var basalStateCaptionString: String? {
-        switch basalDisplayState {
-        case .basalTempManual: return basalRateUnitString
-        case .basalTempAutoNoDelivery: return String(format: basalRateFormatString, 0, basalRateUnitString)
+        switch treatmentArrowState {
+        case .minimumDelivery: return String(format: basalRateFormatString, 0, basalRateUnitString)
         default: return nil
         }
     }
-    var isBasalTempManual: Bool {
-        switch basalDisplayState {
-        case .basalTempManual: return true
-        default: return false
-        }
-    }
-        
-    init(basalDisplayState: BasalDisplayState = .basalScheduled,
+
+    init(basalDisplayState: AutomatedTreatmentState = .neutralNoOverride,
          tintColor: Color = .insulinTintColor
     ) {
-        self.basalDisplayState = basalDisplayState
+        self.treatmentArrowState = basalDisplayState
         self.tintColor = tintColor
     }
 }
 
-struct WrappedBasalRateView: View {
+struct WrappedTreatmentArrowView: View {
     
-    @StateObject var viewModel: WrappedBasalRateViewModel
+    @StateObject var viewModel: WrappedTreatmentArrowViewModel
     
     var body: some View {
         VStack {
@@ -65,28 +48,20 @@ struct WrappedBasalRateView: View {
                     .font(.title)
                     .foregroundStyle(viewModel.tintColor)
             }
-            if let manualTempBasalAmountString = viewModel.manualTempBasalAmountString {
-                Text(manualTempBasalAmountString)
-                    .font(.system(size: 24))
-                    .fontWeight(.heavy)
-                    .bold()
-                    .fixedSize(horizontal: true, vertical: false)
-                    .foregroundStyle(viewModel.tintColor)
-            }
             if let basalStateCaptionString = viewModel.basalStateCaptionString {
                 Text(basalStateCaptionString)
                     .font(.caption2)
-                    .foregroundStyle(viewModel.isBasalTempManual ? .secondary : .primary)
+                    .foregroundStyle(.primary)
             }
         }
-        .animation(.default, value: viewModel.basalDisplayState)
+        .animation(.default, value: viewModel.treatmentArrowState)
     }
 }
 
-class BasalRateHostingController: UIHostingController<WrappedBasalRateView> {
-    init(viewModel: WrappedBasalRateViewModel) {
+class BasalRateHostingController: UIHostingController<WrappedTreatmentArrowView> {
+    init(viewModel: WrappedTreatmentArrowViewModel) {
         super.init(
-            rootView: WrappedBasalRateView(
+            rootView: WrappedTreatmentArrowView(
                 viewModel: viewModel
             )
         )
@@ -98,7 +73,7 @@ class BasalRateHostingController: UIHostingController<WrappedBasalRateView> {
 }
 
 
-public final class BasalStateView: UIView {
+public final class TreatmentArrowStateView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -112,9 +87,9 @@ public final class BasalStateView: UIView {
         setupViews()
     }
     
-    var basalDisplayState: BasalDisplayState = .basalScheduled {
+    var automatedTreatmentState: AutomatedTreatmentState = .neutralNoOverride {
         didSet {
-            viewModel.basalDisplayState = basalDisplayState
+            viewModel.treatmentArrowState = automatedTreatmentState
         }
     }
     
@@ -123,7 +98,7 @@ public final class BasalStateView: UIView {
         viewModel.tintColor = Color(uiColor: tintColor)
     }
     
-    private let viewModel = WrappedBasalRateViewModel()
+    private let viewModel = WrappedTreatmentArrowViewModel()
     
     private func setupViews() {
         let hostingController = BasalRateHostingController(viewModel: viewModel)

@@ -345,7 +345,7 @@ extension SettingsManager {
         case .legacyWorkout:
             return legacyWorkoutPresetGuardrail
         default:
-            return .correctionRange
+            return customPresetGuardRail
         }
     }
 
@@ -371,6 +371,10 @@ extension SettingsManager {
         } else {
             return Guardrail.correctionRange
         }
+    }
+
+    public var customPresetGuardRail: Guardrail<LoopQuantity> {
+        return Guardrail.temporaryPresetCorrectionRange(suspendThreshold: settings.suspendThreshold)
     }
 
     func savePreset(_ preset: SelectablePreset) {
