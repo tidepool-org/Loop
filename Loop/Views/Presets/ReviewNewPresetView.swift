@@ -60,7 +60,7 @@ struct ReviewNewPresetView: View {
             CardSection {
                 CorrectionRangePreview(
                     range: preset.correctionRange,
-                    guardrail: settingsManager.customPresetGuardRail,
+                    guardrail: settingsManager.customPresetGuardrail,
                     scheduledRange: scheduledRange
                 )
             }

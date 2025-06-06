@@ -345,7 +345,7 @@ extension SettingsManager {
         case .legacyWorkout:
             return legacyWorkoutPresetGuardrail
         default:
-            return customPresetGuardRail
+            return customPresetGuardrail
         }
     }
 
@@ -373,7 +373,7 @@ extension SettingsManager {
         }
     }
 
-    public var customPresetGuardRail: Guardrail<LoopQuantity> {
+    public var customPresetGuardrail: Guardrail<LoopQuantity> {
         return Guardrail.temporaryPresetCorrectionRange(suspendThreshold: settings.suspendThreshold)
     }
 
