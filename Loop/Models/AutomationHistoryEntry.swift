@@ -9,7 +9,7 @@
 import Foundation
 import LoopAlgorithm
 
-struct AutomationHistoryEntry: Codable {
+struct AutomationHistoryEntry: Codable, Hashable {
     var startDate: Date
     var enabled: Bool
 }
