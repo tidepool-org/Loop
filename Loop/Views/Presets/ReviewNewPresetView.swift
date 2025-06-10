@@ -14,7 +14,6 @@ import LoopAlgorithm
 
 struct ReviewNewPresetView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.settingsManager) private var settingsManager
 
     @Binding var preset: NewCustomPreset
     @Binding var path: NavigationPath
