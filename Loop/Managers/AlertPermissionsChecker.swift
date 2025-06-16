@@ -11,6 +11,7 @@ import Combine
 import LoopKit
 import SwiftUI
 
+@MainActor
 protocol AlertPermissionsCheckerDelegate: AnyObject {
     func notificationsPermissions(requiresRiskMitigation: Bool, scheduledDeliveryEnabled: Bool, permissions: NotificationCenterSettingsFlags)
 }
@@ -84,12 +85,7 @@ public class AlertPermissionsChecker: ObservableObject {
     }
 
     static func gotoSettings() {
-        // TODO with iOS 16 this API changes to UIApplication.openNotificationSettingsURLString
-        if #available(iOS 15.4, *) {
-            UIApplication.shared.open(URL(string: UIApplicationOpenNotificationSettingsURLString)!)
-        } else {
-            UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
-        }
+        UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
     }
 }
 
@@ -285,7 +281,13 @@ extension AlertPermissionsChecker {
                                                      trigger: .immediate)
 
     private func notificationCenterSettingsChanged(_ newValue: NotificationCenterSettingsFlags) {
-        delegate?.notificationsPermissions(requiresRiskMitigation: newValue.requiresRiskMitigation, scheduledDeliveryEnabled: newValue.scheduledDeliveryEnabled, permissions: newValue)
+        Task {
+            await delegate?.notificationsPermissions(
+                requiresRiskMitigation: newValue.requiresRiskMitigation,
+                scheduledDeliveryEnabled: newValue.scheduledDeliveryEnabled,
+                permissions: newValue
+            )
+        }
     }
 }
 

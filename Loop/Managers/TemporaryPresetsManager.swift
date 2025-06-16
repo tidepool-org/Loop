@@ -11,6 +11,7 @@ import LoopKit
 import os.log
 import LoopCore
 
+
 protocol PresetActivationObserver: AnyObject {
     func presetActivated(context: TemporaryScheduleOverride.Context, duration: TemporaryScheduleOverride.Duration)
     func presetDeactivated(context: TemporaryScheduleOverride.Context)
@@ -26,13 +27,16 @@ class TemporaryPresetsManager {
 
     var presetHistory: TemporaryScheduleOverrideHistory
 
+    @ObservationIgnored private var alertIssuer: AlertIssuer?
+
     @ObservationIgnored private var presetActivationObservers: [PresetActivationObserver] = []
 
     @ObservationIgnored private var overrideIntentObserver: NSKeyValueObservation? = nil
 
-    init(settingsProvider: SettingsProvider) {
+    init(settingsProvider: SettingsProvider, alertIssuer: AlertIssuer? = nil) {
         self.settingsProvider = settingsProvider
-        
+        self.alertIssuer = alertIssuer
+
         self.presetHistory = TemporaryScheduleOverrideHistoryContainer.shared.fetch()
         TemporaryScheduleOverrideHistory.relevantTimeWindow = Bundle.main.localCacheDuration
 
@@ -413,6 +417,54 @@ class TemporaryPresetsManager {
             }
         }
         return lastUsed![id]
+    }
+
+    var nextScheduledPresetReminderIdentifier = Alert.Identifier(managerIdentifier: AlertManager.managerIdentifier, alertIdentifier: "ScheduledPresetReminder")
+
+    func scheduleNextPresetReminder() {
+
+        alertIssuer?.retractAlert(identifier: nextScheduledPresetReminderIdentifier)
+
+        let settings = settingsProvider.settings
+
+        let now = Date()
+
+        let preset = settings.overridePresets.reduce(into: nil as TemporaryPreset?) { result, preset in
+            if let nextScheduledTime = preset.nextScheduledStartAfter(now) {
+                if result == nil || nextScheduledTime < (result!.nextScheduledStartAfter(now)!) {
+                    result = preset
+                }
+            }
+        }
+
+        if let preset {
+            let nextScheduledTime = preset.nextScheduledStartAfter(now)!
+
+            let formatter = DateFormatter()
+            formatter.dateStyle = .none
+            formatter.timeStyle = .short
+
+            let title = NSLocalizedString("Start Scheduled Preset?", comment: "Scheduled preset reminder title")
+            let body = String(
+                format: NSLocalizedString("Your %1$@ is scheduled for today at %2$@. Would you like to start it now?", comment: "Scheduled preset reminder alert body. (1: preset name) (2: time)"),
+                preset.name,
+                formatter.string(
+                    from: nextScheduledTime
+                )
+            )
+
+            let content = Alert.Content(title: title,
+                                        body: body,
+                                        acknowledgeActionButtonLabel: NSLocalizedString("Dismiss", comment: "Default alert dismissal"))
+            let alert = Alert(
+                identifier: nextScheduledPresetReminderIdentifier,
+                foregroundContent: content,
+                backgroundContent: content,
+                trigger: .delayed(interval: nextScheduledTime.timeIntervalSince(now)),
+                interruptionLevel: .timeSensitive)
+
+            alertIssuer?.issueAlert(alert)
+        }
     }
 
 }

@@ -74,7 +74,6 @@ class SettingsManager {
 
         settingsStore?.delegate = self
 
-        
 
         // Migrate old settings from UserDefaults
         if var legacyLoopSettings = UserDefaults.appGroup?.legacyLoopSettings {

@@ -835,19 +835,19 @@ extension DeviceDataManager: AlertIssuer {
 
 // MARK: - PersistedAlertStore
 extension DeviceDataManager: PersistedAlertStore {
-    func doesIssuedAlertExist(identifier: Alert.Identifier, completion: @escaping (Swift.Result<Bool, Error>) -> Void) {
+    func doesIssuedAlertExist(identifier: LoopKit.Alert.Identifier) async throws -> Bool {
         precondition(alertManager != nil)
-        alertManager.doesIssuedAlertExist(identifier: identifier, completion: completion)
-    }
-
-    func lookupAllUnretracted(managerIdentifier: String, completion: @escaping (Swift.Result<[PersistedAlert], Error>) -> Void) {
-        precondition(alertManager != nil)
-        alertManager.lookupAllUnretracted(managerIdentifier: managerIdentifier, completion: completion)
+        return try await alertManager.doesIssuedAlertExist(identifier: identifier)
     }
     
-    func lookupAllUnacknowledgedUnretracted(managerIdentifier: String, completion: @escaping (Swift.Result<[PersistedAlert], Error>) -> Void) {
+    func lookupAllUnretracted(managerIdentifier: String) async throws -> [LoopKit.PersistedAlert] {
         precondition(alertManager != nil)
-        alertManager.lookupAllUnacknowledgedUnretracted(managerIdentifier: managerIdentifier, completion: completion)
+        return try await alertManager.lookupAllUnretracted(managerIdentifier: managerIdentifier)
+    }
+    
+    func lookupAllUnacknowledgedUnretracted(managerIdentifier: String) async throws -> [LoopKit.PersistedAlert] {
+        precondition(alertManager != nil)
+        return try await alertManager.lookupAllUnacknowledgedUnretracted(managerIdentifier: managerIdentifier)
     }
 
     func recordRetractedAlert(_ alert: Alert, at date: Date) {

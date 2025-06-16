@@ -63,7 +63,9 @@ class CrashRecoveryManager {
                          trigger: .immediate,
                          interruptionLevel: .critical)
 
-        self.alertIssuer.issueAlert(alert)
+        Task {
+            await self.alertIssuer.issueAlert(alert)
+        }
     }
 }
 

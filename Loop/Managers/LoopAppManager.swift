@@ -250,11 +250,13 @@ class LoopAppManager: NSObject {
             observationStart: Date().addingTimeInterval(-CarbMath.maximumAbsorptionTimeInterval)
         )
 
-        temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsManager)
+        temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsManager, alertIssuer: alertManager)
         temporaryPresetsManager.presetHistory.delegate = self
 
         temporaryPresetsManager.addTemporaryPresetObserver(alertManager)
         temporaryPresetsManager.addTemporaryPresetObserver(analyticsServicesManager)
+
+        temporaryPresetsManager.scheduleNextPresetReminder()
 
         self.carbStore = CarbStore(
             healthKitSampleStore: carbHealthStore,

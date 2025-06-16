@@ -34,7 +34,11 @@ public class UserNotificationAlertScheduler {
 
     func scheduleAlert(_ alert: Alert, timestamp: Date, muted: Bool = false) {
         DispatchQueue.main.async {
-            let request = UNNotificationRequest(from: alert, timestamp: timestamp, muted: muted)
+            let content = alert.getUserNotificationContent(timestamp: timestamp, muted: muted)
+            let request = UNNotificationRequest(identifier: alert.identifier.value,
+                      content: content,
+                      trigger: UNTimeIntervalNotificationTrigger(from: alert.trigger))
+
             self.userNotificationCenter.add(request) { error in
                 if let error = error {
                     self.log.error("Something went wrong posting the user notification: %@", error.localizedDescription)
@@ -113,15 +117,6 @@ fileprivate extension Alert.InterruptionLevel {
         case .active:
             return .active
         }
-    }
-}
-
-fileprivate extension UNNotificationRequest {
-    convenience init(from alert: Alert, timestamp: Date, muted: Bool) {
-        let content = alert.getUserNotificationContent(timestamp: timestamp, muted: muted)
-        self.init(identifier: alert.identifier.value,
-                  content: content,
-                  trigger: UNTimeIntervalNotificationTrigger(from: alert.trigger))
     }
 }
 

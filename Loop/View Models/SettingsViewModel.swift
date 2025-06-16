@@ -111,6 +111,7 @@ class SettingsViewModel {
 
     @ObservationIgnored weak var favoriteFoodInsightsDelegate: FavoriteFoodInsightsViewModelDelegate?
 
+    @MainActor
     var showDeleteTestData: Bool {
         availableSupports.contains(where: { $0.showsDeleteTestDataUI })
     }

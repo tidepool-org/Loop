@@ -143,70 +143,58 @@ public class AlertStore {
                              completion: completion)
     }
 
-    public func lookupAllMatching(identifier: Alert.Identifier, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
-        managedObjectContext.perform {
-            do {
-                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                let predicates = [
-                    NSPredicate(format: "managerIdentifier = %@", identifier.managerIdentifier),
-                    NSPredicate(format: "alertIdentifier = %@", identifier.alertIdentifier),
-                ]
-                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
-                let result = try self.managedObjectContext.fetch(fetchRequest)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error))
-            }
+    public func lookupAllMatching(identifier: Alert.Identifier) async throws -> [StoredAlert] {
+        try await managedObjectContext.perform {
+            let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+            let predicates = [
+                NSPredicate(format: "managerIdentifier = %@", identifier.managerIdentifier),
+                NSPredicate(format: "alertIdentifier = %@", identifier.alertIdentifier),
+            ]
+            fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
+            return try self.managedObjectContext.fetch(fetchRequest)
         }
     }
 
-    public func lookupAllUnretracted(managerIdentifier: String? = nil, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
-        managedObjectContext.perform {
-            do {
-                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                var predicates = [
-                    NSPredicate(format: "retractedDate == nil"),
-                ]
-                if let managerIdentifier = managerIdentifier {
-                    predicates.insert(NSPredicate(format: "managerIdentifier = %@", managerIdentifier), at: 0)
-                }
-                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
-                let result = try self.managedObjectContext.fetch(fetchRequest)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error))
+    public func lookupAllUnretracted(managerIdentifier: String? = nil) async throws -> [StoredAlert] {
+        try await managedObjectContext.perform {
+            let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+            var predicates = [
+                NSPredicate(format: "retractedDate == nil"),
+            ]
+            if let managerIdentifier = managerIdentifier {
+                predicates.insert(NSPredicate(format: "managerIdentifier = %@", managerIdentifier), at: 0)
             }
+            fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
+            return try self.managedObjectContext.fetch(fetchRequest)
         }
     }
 
-    public func lookupAllUnacknowledgedUnretracted(managerIdentifier: String? = nil, filteredByTriggers triggersStoredType: [AlertTriggerStoredType]? = nil, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
-        managedObjectContext.perform {
-            do {
-                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                var predicates = [
-                    NSPredicate(format: "acknowledgedDate == nil"),
-                    NSPredicate(format: "retractedDate == nil"),
-                ]
-                if let managerIdentifier = managerIdentifier {
-                    predicates.insert(NSPredicate(format: "managerIdentifier = %@", managerIdentifier), at: 0)
-                }
-                if let triggersStoredType = triggersStoredType {
-                    var triggerPredicates: [NSPredicate] = []
-                    for triggerStoredType in triggersStoredType {
-                        triggerPredicates.append(NSPredicate(format: "triggerType == %d", triggerStoredType))
-                    }
-                    let triggerFilterPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: triggerPredicates)
-                    predicates.append(triggerFilterPredicate)
-                }
-                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
-                let result = try self.managedObjectContext.fetch(fetchRequest)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error))
+    public func lookupAllUnacknowledgedUnretracted(
+        managerIdentifier: String? = nil,
+        filteredByTriggers triggersStoredType: [AlertTriggerStoredType]? = nil
+    ) async throws -> [StoredAlert] {
+        try await managedObjectContext.perform {
+            let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+            var predicates = [
+                NSPredicate(format: "acknowledgedDate == nil"),
+                NSPredicate(format: "retractedDate == nil"),
+            ]
+            if let managerIdentifier = managerIdentifier {
+                predicates.insert(NSPredicate(format: "managerIdentifier = %@", managerIdentifier), at: 0)
             }
+            if let triggersStoredType = triggersStoredType {
+                var triggerPredicates: [NSPredicate] = []
+                for triggerStoredType in triggersStoredType {
+                    triggerPredicates.append(NSPredicate(format: "triggerType == %d", triggerStoredType))
+                }
+                let triggerFilterPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: triggerPredicates)
+                predicates.append(triggerFilterPredicate)
+            }
+            fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
+            return try self.managedObjectContext.fetch(fetchRequest)
         }
     }
     

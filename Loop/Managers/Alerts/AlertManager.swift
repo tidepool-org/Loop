@@ -10,6 +10,7 @@ import LoopKit
 import UIKit
 import Combine
 
+@MainActor
 protocol AlertManagerResponder: AnyObject {
     /// Method for our Handlers to call to kick off alert response.  Differs from AlertResponder because here we need the whole `Identifier`.
     func acknowledgeAlert(identifier: Alert.Identifier)
@@ -26,6 +27,7 @@ public enum AlertUserNotificationUserInfoKey: String {
 /// - etc.
 @MainActor
 public final class AlertManager {
+    nonisolated
     private static let soundsDirectoryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).last!.appendingPathComponent("Sounds")
 
     private let log = DiagnosticLog(category: "AlertManager")
@@ -307,14 +309,14 @@ public final class AlertManager {
         UserDefaults.standard.alertMuterConfiguration = newValue
         rescheduleLoopNotRunningNotifications()
 
-        lookupAllPendingDelayedOrRepeatingAlerts() { [weak self] result in
-            switch result {
-            case .success(let persistedAlerts):
+        Task {
+            do {
+                let persistedAlerts = try await lookupAllPendingDelayedOrRepeatingAlerts()
                 for persistedAlert in persistedAlerts {
-                    self?.rescheduleAlertWithSchedulers(persistedAlert.alert, issuedDate: persistedAlert.issuedDate)
+                    self.rescheduleAlertWithSchedulers(persistedAlert.alert, issuedDate: persistedAlert.issuedDate)
                 }
-            case .failure(let error):
-                self?.log.error("error looking up all delayed or repeating alerts: %{public}@", String(describing: error))
+            } catch {
+                self.log.error("error looking up all delayed or repeating alerts: %{public}@", String(describing: error))
             }
         }
     }
@@ -452,11 +454,9 @@ extension AlertManager {
     private func playbackAlertsFromAlertStore() {
         let updateGroup = DispatchGroup()
         updateGroup.enter()
-        alertStore.lookupAllUnacknowledgedUnretracted {
-            switch $0 {
-            case .failure(let error):
-                self.log.error("Could not fetch unacknowledged alerts: %@", error.localizedDescription)
-            case .success(let alerts):
+        Task {
+            do {
+                let alerts = try await alertStore.lookupAllUnacknowledgedUnretracted()
                 alerts.forEach { alert in
                     do {
                         if let alert = try Alert(from: alert, adjustedForStorageTime: true) {
@@ -466,6 +466,8 @@ extension AlertManager {
                         self.log.error("Error decoding alert from persistent storage: %@", error.localizedDescription)
                     }
                 }
+            } catch {
+                self.log.error("Could not fetch unacknowledged alerts: %@", error.localizedDescription)
             }
             updateGroup.leave()
         }
@@ -497,7 +499,6 @@ extension AlertManager {
             }
         }
     }
-
 }
 
 // MARK: Alert storage access
@@ -539,95 +540,57 @@ extension AlertManager {
 
 // MARK: PersistedAlertStore
 extension AlertManager: PersistedAlertStore {
-    public func doesIssuedAlertExist(identifier: Alert.Identifier, completion: @escaping (Result<Bool, Error>) -> Void) {
-        alertStore.lookupAllMatching(identifier: identifier) { result in
-            switch result {
-            case .success(let storedAlerts):
-                completion(.success(!storedAlerts.isEmpty))
-            case .failure(let error):
-                completion(.failure(error))
+    public func doesIssuedAlertExist(identifier: LoopKit.Alert.Identifier) async throws -> Bool {
+        let storedAlerts = try await alertStore.lookupAllMatching(identifier: identifier)
+        return !storedAlerts.isEmpty
+    }
+    
+    public func lookupAllUnretracted(managerIdentifier: String) async throws -> [LoopKit.PersistedAlert] {
+        let alerts = try await alertStore.lookupAllUnretracted(managerIdentifier: managerIdentifier)
+        return try alerts.compactMap {
+            if let alert = try Alert(from: $0, adjustedForStorageTime: false) {
+                return PersistedAlert(
+                    alert: alert,
+                    issuedDate: $0.issuedDate,
+                    retractedDate: $0.retractedDate,
+                    acknowledgedDate: $0.acknowledgedDate
+                )
+            } else {
+                return nil
             }
         }
     }
-
-    public func lookupAllUnretracted(managerIdentifier: String, completion: @escaping (Result<[PersistedAlert], Error>) -> Void) {
-        alertStore.lookupAllUnretracted(managerIdentifier: managerIdentifier) {
-            switch $0 {
-            case .success(let alerts):
-                do {
-                    let result = try alerts.compactMap {
-                        if let alert = try Alert(from: $0, adjustedForStorageTime: false) {
-                            return PersistedAlert(
-                                alert: alert,
-                                issuedDate: $0.issuedDate,
-                                retractedDate: $0.retractedDate,
-                                acknowledgedDate: $0.acknowledgedDate
-                            )
-                        } else {
-                            return nil
-                        }
-                    }
-                    completion(.success(result))
-                } catch {
-                    completion(.failure(error))
-                }
-            case .failure(let error):
-                completion(.failure(error))
+    
+    public func lookupAllUnacknowledgedUnretracted(managerIdentifier: String) async throws -> [LoopKit.PersistedAlert] {
+        let alerts = try await alertStore.lookupAllUnacknowledgedUnretracted(managerIdentifier: managerIdentifier)
+        let result = try alerts.compactMap {
+            if let alert = try Alert(from: $0, adjustedForStorageTime: false) {
+                return PersistedAlert(
+                    alert: alert,
+                    issuedDate: $0.issuedDate,
+                    retractedDate: $0.retractedDate,
+                    acknowledgedDate: $0.acknowledgedDate
+                )
+            } else {
+                return nil
             }
         }
+        return result
     }
 
-    public func lookupAllUnacknowledgedUnretracted(managerIdentifier: String, completion: @escaping (Result<[PersistedAlert], Error>) -> Void) {
-        alertStore.lookupAllUnacknowledgedUnretracted(managerIdentifier: managerIdentifier) {
-            switch $0 {
-            case .success(let alerts):
-                do {
-                    let result = try alerts.compactMap {
-                        if let alert = try Alert(from: $0, adjustedForStorageTime: false) {
-                            return PersistedAlert(
-                                alert: alert,
-                                issuedDate: $0.issuedDate,
-                                retractedDate: $0.retractedDate,
-                                acknowledgedDate: $0.acknowledgedDate
-                            )
-                        } else {
-                            return nil
-                        }
-                    }
-                    completion(.success(result))
-                } catch {
-                    completion(.failure(error))
-                }
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
-    }
-
-    private func lookupAllPendingDelayedOrRepeatingAlerts(completion: @escaping (Result<[PersistedAlert], Error>) -> Void) {
+    private func lookupAllPendingDelayedOrRepeatingAlerts() async throws -> [PersistedAlert] {
         // the interval provided is not used in the search. Just the trigger stored type value
-        alertStore.lookupAllUnacknowledgedUnretracted(filteredByTriggers: [Alert.Trigger.delayed(interval: 0).storedType, Alert.Trigger.repeating(repeatInterval: 0).storedType]) {
-            switch $0 {
-            case .success(let alerts):
-                do {
-                    let result = try alerts.compactMap {
-                        if let alert = try Alert(from: $0, adjustedForStorageTime: false) {
-                            return PersistedAlert(
-                                alert: alert,
-                                issuedDate: $0.issuedDate,
-                                retractedDate: $0.retractedDate,
-                                acknowledgedDate: $0.acknowledgedDate
-                            )
-                        } else {
-                            return nil
-                        }
-                    }
-                    completion(.success(result))
-                } catch {
-                    completion(.failure(error))
-                }
-            case .failure(let error):
-                completion(.failure(error))
+        let alerts = try await alertStore.lookupAllUnacknowledgedUnretracted(filteredByTriggers: [Alert.Trigger.delayed(interval: 0).storedType, Alert.Trigger.repeating(repeatInterval: 0).storedType])
+        return try alerts.compactMap {
+            if let alert = try Alert(from: $0, adjustedForStorageTime: false) {
+                return PersistedAlert(
+                    alert: alert,
+                    issuedDate: $0.issuedDate,
+                    retractedDate: $0.retractedDate,
+                    acknowledgedDate: $0.acknowledgedDate
+                )
+            } else {
+                return nil
             }
         }
     }
@@ -706,21 +669,27 @@ extension AlertManager: BluetoothObserver {
 
 // MARK: - PresetActivationObserver
 extension AlertManager: PresetActivationObserver {
+    nonisolated
     func presetActivated(context: TemporaryScheduleOverride.Context, duration: TemporaryScheduleOverride.Duration) {
         switch context {
         case .legacyWorkout:
             if duration == .indefinite {
-                scheduleWorkoutOverrideReminder()
+                Task {
+                    await scheduleWorkoutOverrideReminder()
+                }
             }
         default:
             break
         }
     }
 
+    nonisolated
     func presetDeactivated(context: TemporaryScheduleOverride.Context) {
         switch context {
         case .legacyWorkout:
-            retractWorkoutOverrideReminder()
+            Task {
+                await retractWorkoutOverrideReminder()
+            }
         default:
             break
         }
