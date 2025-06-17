@@ -501,7 +501,9 @@ class LoopAppManager: NSObject {
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
         withObservationTracking(of: self.automaticDosingStatus.isAutomaticDosingAllowed && self.settingsManager.dosingEnabled) { [weak self] enabled in
-            self?.automaticDosingStatus.automaticDosingEnabled = enabled
+            if self?.automaticDosingStatus.automaticDosingEnabled != enabled {
+                self?.automaticDosingStatus.automaticDosingEnabled = enabled
+            }
         }
 
         state = state.next
