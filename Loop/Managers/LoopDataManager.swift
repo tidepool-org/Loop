@@ -586,6 +586,9 @@ final class LoopDataManager: ObservableObject {
                     neutralBasalRateMatchesPump: activeOverride == nil
                 )
                 
+                dosingDecision.enactedTempBasal = basalAdjustment
+                dosingDecision.enactedBolusAmount = recommendationToEnact.bolusUnits
+                
                 if let basalAdjustment {
                     recommendationToEnact.basalAdjustment = basalAdjustment
                 }

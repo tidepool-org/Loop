@@ -40,7 +40,7 @@ extension TempBasalRecommendation {
         currentTempBasal: DoseEntry?,
         continuationInterval: TimeInterval,
         neutralBasalRateMatchesPump: Bool
-    ) -> TempBasalRecommendation? {
+    ) -> EnactedTempBasal? {
         // Adjust behavior for the currently active temp basal
         if let currentTempBasal, currentTempBasal.type == .tempBasal, currentTempBasal.endDate > date
         {
@@ -60,7 +60,7 @@ extension TempBasalRecommendation {
         return self
     }
 
-    public static var cancel: TempBasalRecommendation {
+    public static var cancel: EnactedTempBasal {
         return self.init(unitsPerHour: 0, duration: 0)
     }
 }
