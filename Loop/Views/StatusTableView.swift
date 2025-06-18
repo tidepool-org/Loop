@@ -184,6 +184,7 @@ struct StatusTableView: View {
                     }
                 }
             }
+            .toolbarBackground(.visible, for: .bottomBar)
     }
 }
 
