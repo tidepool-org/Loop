@@ -46,6 +46,7 @@ struct PresetDetentView: View {
                         case .finite:
                             let endTimeText = DateFormatter.localizedString(from: activeOverride.activeInterval.end, dateStyle: .none, timeStyle: .short)
                             Text(String(format: NSLocalizedString("on until %@", comment: "The format for the description of a custom preset end date"), endTimeText))
+                                .accessibilityIdentifier("text_PresetActionSheetActiveOn")
                         case .indefinite:
                             EmptyView()
                         }
@@ -123,6 +124,7 @@ struct PresetDetentView: View {
                         }
                         .tint(.accentColor)
                         .padding(.bottom, -8)
+                        .accessibilityIdentifier("button_EditPreset")
                     }
                 }
                 

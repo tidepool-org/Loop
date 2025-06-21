@@ -70,7 +70,6 @@ struct CreatePresetView: View {
 
     @State private var path = NavigationPath()
     @State private var preset = NewCustomPreset()
-    @State private var navigateToRangeEdit: Bool = false
 
     var scheduledRange: ClosedRange<LoopQuantity>? {
         settingsManager.settings.glucoseTargetRangeSchedule?.quantityRange(at: Date())
@@ -101,7 +100,7 @@ struct CreatePresetView: View {
                             NewPresetRangeEdit(
                                 preset: $preset,
                                 path: $path,
-                                guardrail: Guardrail.temporaryPresetCorrectionRange(suspendThreshold: suspendThreshold),
+                                guardrail: Guardrail.temporaryPresetCorrectionRange,
                                 scheduledRange: scheduledRange,
                                 onCancel: { dismiss() }
                             )

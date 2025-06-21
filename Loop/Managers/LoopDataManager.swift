@@ -614,6 +614,9 @@ final class LoopDataManager: ObservableObject {
                     logger.default("loop() completed successfully.")
                     lastLoopCompleted = Date()
                     let duration = lastLoopCompleted!.timeIntervalSince(loopBaseTime)
+                    
+                    dosingDecision.enactedTempBasal = basalAdjustment
+                    dosingDecision.enactedBolusAmount = recommendationToEnact.bolusUnits
 
                     analyticsServicesManager?.loopDidSucceed(duration)
                 } else {

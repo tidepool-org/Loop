@@ -82,7 +82,8 @@ public struct CorrectionRangePreview: View {
                 HStack(alignment: .top, spacing: 12) {
                     Text(Image(systemName: "exclamationmark.triangle.fill"))
                         .foregroundColor(color)
-                    Text(SafetyClassification.captionForCrossedThresholds(crossedThresholds, isRange: true));
+                    Text(SafetyClassification.captionForCrossedThresholds(crossedThresholds, isRange: true))
+                        .accessibilityIdentifier("text_CorrectionRangeWarning");
                 }
                 .padding(12)
                 .background(color.opacity(0.1))
@@ -104,10 +105,10 @@ public struct CorrectionRangePreview: View {
             }.padding(.bottom, 10)
             VStack(spacing: 4) {
                 if let range {
-                    correctionRangeLabel(range: range)
+                    correctionRangeLabel(range: range).accessibilityIdentifier("text_CorrectionRangePreview")
                     Text("Adjusted Range")
                 } else {
-                    correctionRangeLabel(range: scheduledRange)
+                    correctionRangeLabel(range: scheduledRange).accessibilityIdentifier("text_CorrectionRangePreview")
                     Text("Scheduled Range")
                 }
             }

@@ -222,7 +222,7 @@ extension SettingsView {
     private var dismissButton: some View {
         Button(action: dismiss) {
             Text("Done").bold()
-        }
+        }.accessibilityIdentifier("button_done")
     }
     
     private var loopSection: some View {

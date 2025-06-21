@@ -113,6 +113,7 @@ struct PresetsView: View {
                         HStack {
                             Text("All Presets")
                                 .font(.title2.bold())
+                                .accessibilityIdentifier("text_AllPresets")
                             Spacer()
                             
                             Button("Sort") {
@@ -287,7 +288,9 @@ struct PresetsView: View {
     private var dismissButton: some View {
         Button("Done") {
             dismiss()
-        }.bold()
+        }
+        .bold()
+        .accessibilityIdentifier("button_done")
     }
 }
 

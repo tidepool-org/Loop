@@ -951,6 +951,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     let attributedString = NSMutableAttributedString(attachment: symbolAttachment)
                     attributedString.append(NSAttributedString(string: NSLocalizedString(" Pre-meal Preset", comment: "Status row title for premeal override enabled (leading space is to separate from symbol)")))
                     cell.titleLabel.attributedText = attributedString
+                    cell.titleLabel.accessibilityIdentifier = "text_PreMealPresetCellTitle"
                 case .legacyWorkout:
                     let symbolAttachment = NSTextAttachment()
                     symbolAttachment.image = UIImage(named: "workout-symbol")?.withTintColor(.white)
@@ -958,6 +959,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     let attributedString = NSMutableAttributedString(attachment: symbolAttachment)
                     attributedString.append(NSAttributedString(string: NSLocalizedString(" Workout Preset", comment: "Status row title for workout override enabled (leading space is to separate from symbol)")))
                     cell.titleLabel.attributedText = attributedString
+                    cell.titleLabel.accessibilityIdentifier = "text_WorkoutPresetCellTitle"
                 case .preset(let preset):
                     cell.titleLabel.text = String(format: NSLocalizedString("%@ %@", comment: "The format for an active custom preset. (1: preset symbol)(2: preset name)"), preset.symbol, preset.name)
                 case .custom:
@@ -967,13 +969,16 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 if override.isActive() {
                     if let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == override.presetId }), case .preMeal(_) = preset {
                         cell.subtitleLabel.text = NSLocalizedString("on until carbs added", comment: "The format for the description of a premeal preset end date")
+                        cell.subtitleLabel.accessibilityIdentifier = "text_PresetActiveOn"
                     } else {
                         switch override.duration {
                         case .finite:
                             let endTimeText = DateFormatter.localizedString(from: override.activeInterval.end, dateStyle: .none, timeStyle: .short)
                             cell.subtitleLabel.text = String(format: NSLocalizedString("on until %@", comment: "The format for the description of a finite custom preset end date"), endTimeText)
+                            cell.subtitleLabel.accessibilityIdentifier = "text_PresetActiveOn"
                         case .indefinite:
                             cell.subtitleLabel.text = NSLocalizedString("on indefinitely", comment: "The format for the description of an indefinite custom preset end date")
+                            cell.subtitleLabel.accessibilityIdentifier = "text_PresetActiveOn"
                         }
                     }
                 } else {
@@ -1205,6 +1210,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.leading, 36)
             .padding(.vertical)
+            .accessibilityIdentifier("text_ActiveInsulinFooter")
         }
     }
 
@@ -1230,6 +1236,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             case .iob:
                 if let currentIOB = currentIOBDescription {
                     cell.setSubtitleLabel(label: currentIOB)
+                    cell.setTitleLabelAccessibilityIdentifier("ActiveInsulin_\(currentIOB.string)")
                 } else {
                     cell.setSubtitleLabel(label: nil)
                 }

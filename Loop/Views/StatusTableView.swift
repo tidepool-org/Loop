@@ -155,6 +155,7 @@ struct StatusTableView: View {
             .sheet(item: $viewModel.pendingPreset) { preset in
                 // This is the active preset; edit disabled
                 PresetDetentView(preset: preset, didTapEdit: { })
+                    .accessibilityIdentifier("bar_Presets")
             }
             .toolbar {
                 ToolbarItem(placement: .bottomBar) {
@@ -184,6 +185,7 @@ struct StatusTableView: View {
                     }
                 }
             }
+            .toolbarBackground(.visible, for: .bottomBar)
     }
 }
 
@@ -227,6 +229,7 @@ enum ToolbarAction: String, Identifiable, CaseIterable {
                     .resizable()
                     .renderingMode(.template)
                     .foregroundStyle(Color.presets)
+                    .accessibilityIdentifier("image_\(isActive ? "PresetsSelected" : "Presets")")
             case .settings:
                 Image("settings")
                     .resizable()

@@ -62,6 +62,7 @@ struct EditPresetDurationView: View {
                 .padding([.top, .horizontal])
                 .background(Color(UIColor.secondarySystemBackground))
                 .disabled(buttonDisabled)
+                .accessibilityIdentifier("button_Save")
             }
         }
         .onAppear {
