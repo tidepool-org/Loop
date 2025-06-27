@@ -26,6 +26,7 @@ enum SimulatorError: Error {
 }
 #endif
 
+@MainActor
 public protocol AlertPresenter: AnyObject {
     /// Present the alert view controller, with or without animation.
     /// - Parameters:
@@ -256,7 +257,7 @@ class LoopAppManager: NSObject {
         temporaryPresetsManager.addTemporaryPresetObserver(alertManager)
         temporaryPresetsManager.addTemporaryPresetObserver(analyticsServicesManager)
 
-        temporaryPresetsManager.scheduleNextPresetReminder()
+        await temporaryPresetsManager.scheduleNextPresetReminder()
 
         self.carbStore = CarbStore(
             healthKitSampleStore: carbHealthStore,
@@ -503,7 +504,16 @@ class LoopAppManager: NSObject {
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
         withObservationTracking(of: self.automaticDosingStatus.isAutomaticDosingAllowed && self.settingsManager.dosingEnabled) { [weak self] enabled in
-            self?.automaticDosingStatus.automaticDosingEnabled = enabled
+            self?.log.debug(
+                "***** withObservationTracking enabled = %{public}@, self.automaticDosingStatus.isAutomaticDosingAllowed = %{public}@, self.settingsManager.dosingEnabled = %{public}@ *****",
+                String(describing: enabled),
+                String(describing: self?.automaticDosingStatus.isAutomaticDosingAllowed),
+                String(describing: self?.settingsManager.dosingEnabled)
+            )
+
+            if (self?.automaticDosingStatus.automaticDosingEnabled != enabled) {
+                self?.automaticDosingStatus.automaticDosingEnabled = enabled
+            }
         }
 
         state = state.next
@@ -533,8 +543,8 @@ class LoopAppManager: NSObject {
         onboardingManager.launch {
             DispatchQueue.main.async {
                 self.state = self.state.next
-                self.alertManager.playbackAlertsFromPersistence()
                 Task {
+                    await self.alertManager.playbackAlertsFromPersistence()
                     await self.resumeLaunch()
                 }
             }
@@ -651,7 +661,7 @@ class LoopAppManager: NSObject {
 
         self.state = state.next
 
-        alertManager.playbackAlertsFromPersistence()
+        await alertManager.playbackAlertsFromPersistence()
     }
 
     // MARK: - Life Cycle
@@ -662,8 +672,10 @@ class LoopAppManager: NSObject {
         }
         settingsManager?.didBecomeActive()
         deviceDataManager?.didBecomeActive()
-        alertManager?.inferDeliveredLoopNotRunningNotifications()
-        
+        Task {
+            await alertManager?.inferDeliveredLoopNotRunningNotifications()
+        }
+
         widgetLog.default("Refreshing widget. Reason: App didBecomeActive")
         WidgetCenter.shared.reloadAllTimelines()
     }
@@ -909,8 +921,12 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
         case NotificationManager.Action.acknowledgeAlert.rawValue:
             let userInfo = response.notification.request.content.userInfo
             if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier,
-               let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String {
-                alertManager?.acknowledgeAlert(identifier: Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier))
+               let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String
+            {
+                Task {
+                    try await alertManager?.acknowledgeAlert(identifier: Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier:
+                                                                                        alertIdentifier))
+                }
             }
         case UNNotificationDefaultActionIdentifier:
             guard response.notification.request.identifier == LoopNotificationCategory.missedMeal.rawValue else {

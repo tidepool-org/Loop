@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import LoopKitUI
 
+@MainActor
 class DeliveryUncertaintyAlertManager {
     private let pumpManager: PumpManagerUI
     private let alertPresenter: AlertPresenter

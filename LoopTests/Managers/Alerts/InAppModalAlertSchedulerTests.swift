@@ -34,9 +34,11 @@ class InAppModalAlertSchedulerTests: XCTestCase {
     }
     
     class MockAlertManagerResponder: AlertManagerResponder {
+        var alertAcknowledgedExectation: XCTestExpectation?
         var identifierAcknowledged: Alert.Identifier?
         func acknowledgeAlert(identifier: Alert.Identifier) {
             identifierAcknowledged = identifier
+            alertAcknowledgedExectation?.fulfill()
         }
     }
     
@@ -186,8 +188,10 @@ class InAppModalAlertSchedulerTests: XCTestCase {
         waitOnMain()
         let action = (mockViewController.viewControllerPresented as? UIAlertController)?.actions[0] as? MockAlertAction
         XCTAssertNotNil(action)
+        mockAlertManagerResponder.alertAcknowledgedExectation = expectation(description: "alert acknowledged")
         XCTAssertNil(mockAlertManagerResponder.identifierAcknowledged)
         action?.callHandler()
+        wait(for: [mockAlertManagerResponder.alertAcknowledgedExectation!])
         XCTAssertEqual(alertIdentifier, mockAlertManagerResponder.identifierAcknowledged)
     }
     

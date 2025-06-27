@@ -824,12 +824,12 @@ extension DeviceDataManager: DeviceManagerDelegate {
 extension DeviceDataManager: AlertIssuer {
     static let managerIdentifier = "DeviceDataManager"
 
-    func issueAlert(_ alert: Alert) {
-        alertManager?.issueAlert(alert)
+    func issueAlert(_ alert: Alert) async {
+        await alertManager?.issueAlert(alert)
     }
 
-    func retractAlert(identifier: Alert.Identifier) {
-        alertManager?.retractAlert(identifier: identifier)
+    func retractAlert(identifier: Alert.Identifier) async {
+        await alertManager?.retractAlert(identifier: identifier)
     }
 }
 
@@ -850,9 +850,9 @@ extension DeviceDataManager: PersistedAlertStore {
         return try await alertManager.lookupAllUnacknowledgedUnretracted(managerIdentifier: managerIdentifier)
     }
 
-    func recordRetractedAlert(_ alert: Alert, at date: Date) {
+    func recordRetractedAlert(_ alert: Alert, at date: Date) async throws {
         precondition(alertManager != nil)
-        alertManager.recordRetractedAlert(alert, at: date)
+        try await alertManager.recordRetractedAlert(alert, at: date)
     }
 }
 

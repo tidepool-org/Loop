@@ -59,8 +59,11 @@ public class InAppModalAlertScheduler {
             completion?()
             return
         }
-        alertPresenter?.dismissAlert(alertPresented.0, animated: true, completion: completion)
-        clearPresentedAlert(identifier: identifier)
+
+        Task { @MainActor in
+            await alertPresenter?.dismissAlert(alertPresented.0, animated: true, completion: completion)
+            clearPresentedAlert(identifier: identifier)
+        }
     }
 
     func removePendingAlert(identifier: Alert.Identifier) {
@@ -95,7 +98,7 @@ extension InAppModalAlertScheduler {
         guard let content = alert.foregroundContent else {
             return
         }
-        DispatchQueue.main.async {
+        Task { @MainActor in
             if self.isAlertPresented(identifier: alert.identifier) {
                 return
             }
@@ -105,7 +108,9 @@ extension InAppModalAlertScheduler {
                                                       isCritical: alert.interruptionLevel == .critical) { [weak self] in
                 // the completion is called after the alert is acknowledged
                 self?.clearPresentedAlert(identifier: alert.identifier)
-                self?.alertManagerResponder?.acknowledgeAlert(identifier: alert.identifier)
+                Task {
+                    try await self?.alertManagerResponder?.acknowledgeAlert(identifier: alert.identifier)
+                }
             }
             self.alertPresenter?.present(alertController, animated: true) { [weak self] in
                 // the completion is called after the alert is presented

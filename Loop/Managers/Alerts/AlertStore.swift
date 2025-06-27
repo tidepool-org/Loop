@@ -82,65 +82,54 @@ public class AlertStore {
         self.expireAfter = expireAfter
     }
 
-    public func recordIssued(alert: Alert, at date: Date = Date(), completion: ((Result<Void, Error>) -> Void)? = nil) {
-        self.managedObjectContext.performAndWait {
+    public func recordIssued(alert: Alert, at date: Date = Date()) async {
+        await self.managedObjectContext.perform {
             _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
             do {
                 try self.managedObjectContext.save()
                 self.log.default("Recorded alert: %{public}@", alert.identifier.value)
                 self.purgeExpired()
                 self.delegate?.alertStoreHasUpdatedAlertData(self)
-                completion?(.success)
             } catch {
                 self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
-                completion?(.failure(error))
             }
         }
     }
 
-    public func recordRetractedAlert(_ alert: Alert, at date: Date, completion: ((Result<Void, Error>) -> Void)? = nil) {
-        self.managedObjectContext.performAndWait {
+    public func recordRetractedAlert(_ alert: Alert, at date: Date) async throws {
+        try await self.managedObjectContext.perform {
             let storedAlert = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
             storedAlert.retractedDate = date
-            do {
-                try self.managedObjectContext.save()
-                self.log.default("Recorded retracted alert: %{public}@", alert.identifier.value)
-                self.purgeExpired()
-                self.delegate?.alertStoreHasUpdatedAlertData(self)
-                completion?(.success)
-            } catch {
-                self.log.error("Could not store retracted alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
-                completion?(.failure(error))
-            }
+            try self.managedObjectContext.save()
+            self.log.default("Recorded retracted alert: %{public}@", alert.identifier.value)
+            self.purgeExpired()
+            self.delegate?.alertStoreHasUpdatedAlertData(self)
         }
     }
     
-    public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date(),
-                                      completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfAll(identifier: identifier,
+    public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date()) async throws {
+        try await recordUpdateOfAll(identifier: identifier,
                           addingPredicate: NSPredicate(format: "acknowledgedDate == nil"),
                           with: {
                               $0.acknowledgedDate = date
                               return .save
-                          },
-                          completion: completion)
+                          })
     }
     
-    public func recordRetraction(of identifier: Alert.Identifier, at date: Date = Date(),
-                                 completion: ((Result<Void, Error>) -> Void)? = nil) {
-        recordUpdateOfLatest(identifier: identifier,
-                             addingPredicate: NSPredicate(format: "retractedDate == nil"),
-                             with: {
-                                // if the alert was retracted before it was ever shown, delete it.
-                                // Note: this only applies to .delayed or .repeating alerts!
-                                if let delay = $0.trigger.interval, $0.issuedDate + delay >= date {
-                                    return .delete
-                                } else {
-                                    $0.retractedDate = date
-                                    return .save
-                                }
-                             },
-                             completion: completion)
+    public func recordRetraction(of identifier: Alert.Identifier, at date: Date = Date()) async throws {
+        try await recordUpdateOfLatest(
+            identifier: identifier,
+            addingPredicate: NSPredicate(format: "retractedDate == nil"),
+            with: {
+                // if the alert was retracted before it was ever shown, delete it.
+                // Note: this only applies to .delayed or .repeating alerts!
+                if let delay = $0.trigger.interval, $0.issuedDate + delay >= date {
+                    return .delete
+                } else {
+                    $0.retractedDate = date
+                    return .save
+                }
+            })
     }
 
     public func lookupAllMatching(identifier: Alert.Identifier) async throws -> [StoredAlert] {
@@ -198,22 +187,17 @@ public class AlertStore {
         }
     }
     
-    public func lookupAllAcknowledgedUnretractedRepeatingAlerts(completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
-        managedObjectContext.perform {
-            do {
-                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                let repeatingTrigger = Alert.Trigger.repeating(repeatInterval: 0)
-                fetchRequest.predicate =  NSCompoundPredicate(andPredicateWithSubpredicates: [
-                    NSPredicate(format: "acknowledgedDate != nil"),
-                    NSPredicate(format: "retractedDate == nil"),
-                    NSPredicate(format: "triggerType == \(repeatingTrigger.storedType)")
-                ])
-                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
-                let result = try self.managedObjectContext.fetch(fetchRequest)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error))
-            }
+    public func lookupAllAcknowledgedUnretractedRepeatingAlerts() async throws -> [StoredAlert] {
+        try await managedObjectContext.perform {
+            let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+            let repeatingTrigger = Alert.Trigger.repeating(repeatInterval: 0)
+            fetchRequest.predicate =  NSCompoundPredicate(andPredicateWithSubpredicates: [
+                NSPredicate(format: "acknowledgedDate != nil"),
+                NSPredicate(format: "retractedDate == nil"),
+                NSPredicate(format: "triggerType == \(repeatingTrigger.storedType)")
+            ])
+            fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
+            return try self.managedObjectContext.fetch(fetchRequest)
         }
     }
 
@@ -225,49 +209,35 @@ extension AlertStore {
     
     private func recordUpdateOfAll(identifier: Alert.Identifier,
                                    addingPredicate predicate: NSPredicate,
-                                   with updateBlock: @escaping ManagedObjectUpdateBlock,
-                                   completion: ((Result<Void, Error>) -> Void)?) {
-        managedObjectContext.performAndWait {
-            self.lookupAll(identifier: identifier, predicate: predicate) {
-                switch $0 {
-                case .success(let objects):
-                    if objects.count > 0 {
-                        let result = self.update(objects: objects, with: updateBlock)
-                        completion?(result)
-                    } else {
-                        self.log.error("Alert not found for update: %{public}@", identifier.value)
-                        completion?(.failure(AlertStoreError.notFound))
-                    }
-                case .failure(let error):
-                    completion?(.failure(error))
-                }
+                                   with updateBlock: @escaping ManagedObjectUpdateBlock) async throws
+    {
+        try await managedObjectContext.perform {
+            let objects = try self.lookupAll(identifier: identifier, predicate: predicate)
+            if objects.count > 0 {
+                try self.update(objects: objects, with: updateBlock)
+            } else {
+                self.log.error("Alert not found for update: %{public}@", identifier.value)
+                throw AlertStoreError.notFound
             }
         }
     }
     
     private func recordUpdateOfLatest(identifier: Alert.Identifier,
                                       addingPredicate predicate: NSPredicate,
-                                      with updateBlock: @escaping ManagedObjectUpdateBlock,
-                                      completion: ((Result<Void, Error>) -> Void)?) {
-        managedObjectContext.performAndWait {
-            self.lookupLatest(identifier: identifier, predicate: predicate) {
-                switch $0 {
-                case .success(let object):
-                    if let object = object {
-                        let result = self.update(objects: [object], with: updateBlock)
-                        completion?(result)
-                    } else {
-                        self.log.error("Alert not found for update: %{public}@", identifier.value)
-                        completion?(.failure(AlertStoreError.notFound))
-                    }
-                case .failure(let error):
-                    completion?(.failure(error))
-                }
+                                      with updateBlock: @escaping ManagedObjectUpdateBlock) async throws
+    {
+        try await managedObjectContext.perform {
+            let object = try self.lookupLatest(identifier: identifier, predicate: predicate)
+            if let object = object {
+                try self.update(objects: [object], with: updateBlock)
+            } else {
+                self.log.error("Alert not found for update: %{public}@", identifier.value)
+                throw AlertStoreError.notFound
             }
         }
     }
     
-    private func update(objects: [StoredAlert], with updateBlock: @escaping ManagedObjectUpdateBlock) -> Result<Void, Error> {
+    private func update(objects: [StoredAlert], with updateBlock: @escaping ManagedObjectUpdateBlock) throws {
         objects.forEach { alert in
             let shouldDelete = updateBlock(alert) == .delete
             if shouldDelete {
@@ -275,50 +245,31 @@ extension AlertStore {
             }
             self.log.default("%{public}@ alert: %{public}@", shouldDelete ? "Deleted" : "Recorded", alert.identifier.value)
         }
-        do {
-            try self.managedObjectContext.save()
-        } catch {
-            return .failure(error)
-        }
+        try self.managedObjectContext.save()
         self.purgeExpired()
         self.delegate?.alertStoreHasUpdatedAlertData(self)
-        return .success
     }
     
 
-    private func lookupAll(identifier: Alert.Identifier, predicate: NSPredicate, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
-        managedObjectContext.perform {
-            do {
-                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-                    identifier.equalsPredicate,
-                    predicate
-                ])
-                fetchRequest.fetchLimit = Self.totalFetchLimit
-                let result = try self.managedObjectContext.fetch(fetchRequest)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error))
-            }
-        }
+    private func lookupAll(identifier: Alert.Identifier, predicate: NSPredicate) throws -> [StoredAlert] {
+        let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+        fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            identifier.equalsPredicate,
+            predicate
+        ])
+        fetchRequest.fetchLimit = Self.totalFetchLimit
+        return try managedObjectContext.fetch(fetchRequest)
     }
 
-    private func lookupLatest(identifier: Alert.Identifier, predicate: NSPredicate, completion: @escaping (Result<StoredAlert?, Error>) -> Void) {
-        managedObjectContext.perform {
-            do {
-                let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
-                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-                    identifier.equalsPredicate,
-                    predicate
-                ])
-                fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: false) ]
-                fetchRequest.fetchLimit = 1
-                let result = try self.managedObjectContext.fetch(fetchRequest)
-                completion(.success(result.last))
-            } catch {
-                completion(.failure(error))
-            }
-        }
+    private func lookupLatest(identifier: Alert.Identifier, predicate: NSPredicate) throws -> StoredAlert? {
+        let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
+        fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            identifier.equalsPredicate,
+            predicate
+        ])
+        fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: false) ]
+        fetchRequest.fetchLimit = 1
+        return try self.managedObjectContext.fetch(fetchRequest).last
     }
 }
 
@@ -405,30 +356,50 @@ extension AlertStore {
         }
     }
 
-    public enum AlertQueryResult {
-        case success(QueryAnchor, [SyncAlertObject])
-        case failure(Error)
-    }
+    typealias AlertQueryResult = (QueryAnchor, [SyncAlertObject])
 
-    func executeQuery(fromQueryAnchor queryAnchor: QueryAnchor? = nil, since date: Date, excludingFutureAlerts: Bool = true, now: Date = Date(), limit: Int, ascending: Bool = true, completion: @escaping (AlertQueryResult) -> Void) {
+    func executeQuery(
+        fromQueryAnchor queryAnchor: QueryAnchor? = nil,
+        since date: Date,
+        excludingFutureAlerts: Bool = true,
+        now: Date = Date(),
+        limit: Int,
+        ascending: Bool = true
+    ) async throws -> AlertQueryResult {
         let sinceDateFilter = SinceDateFilter(predicateExpressionNotYetExpired: predicateExpressionNotYetExpired,
                                               date: date,
                                               excludingFutureAlerts: excludingFutureAlerts,
                                               now: now)
-        executeAlertQuery(fromQueryAnchor: queryAnchor, queryFilter: sinceDateFilter, limit: limit, ascending: ascending, completion: completion)
+        return try await executeAlertQuery(fromQueryAnchor: queryAnchor, queryFilter: sinceDateFilter, limit: limit, ascending: ascending)
     }
 
-    func executeAlertQuery(fromQueryAnchor queryAnchor: QueryAnchor?, queryFilter: QueryFilter? = nil, limit: Int, ascending: Bool = true, completion: @escaping (AlertQueryResult) -> Void) {
+    func executeAlertQuery(fromQueryAnchor queryAnchor: QueryAnchor?, queryFilter: QueryFilter? = nil, limit: Int, ascending: Bool = true, completion: @escaping (Result<AlertQueryResult, Error>) -> Void)
+    {
+        Task {
+            do {
+                let result = try await executeAlertQuery(fromQueryAnchor: queryAnchor, queryFilter: queryFilter, limit: limit, ascending: ascending)
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+
+    func executeAlertQuery(
+        fromQueryAnchor queryAnchor: QueryAnchor?,
+        queryFilter: QueryFilter? = nil,
+        limit: Int,
+        ascending: Bool = true
+    ) async throws -> AlertQueryResult {
         var queryAnchor = queryAnchor ?? QueryAnchor()
         var queryResult = [SyncAlertObject]()
         var queryError: Error?
 
         guard limit > 0 else {
-            completion(.success(queryAnchor, []))
-            return
+            return (queryAnchor, [])
         }
 
-        self.managedObjectContext.performAndWait {
+        await self.managedObjectContext.perform {
             let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
 
             let queryAnchorPredicate = NSPredicate(format: "modificationCounter > %d", queryAnchor.modificationCounter)
@@ -453,25 +424,20 @@ extension AlertStore {
         }
 
         if let queryError = queryError {
-            completion(.failure(queryError))
-            return
+            throw queryError
         }
 
-        completion(.success(queryAnchor, queryResult))
+        return (queryAnchor, queryResult)
     }
 
     // At the moment, this is only used for unit testing
-    internal func fetch(identifier: Alert.Identifier? = nil, completion: @escaping (Result<[StoredAlert], Error>) -> Void) {
-        self.managedObjectContext.perform {
+    internal func fetch(identifier: Alert.Identifier? = nil) async throws -> [StoredAlert] {
+        return try await self.managedObjectContext.perform {
             let storedRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
             storedRequest.predicate = identifier?.equalsPredicate
             storedRequest.sortDescriptors = [NSSortDescriptor(key: "modificationCounter", ascending: true)]
-            do {
-                let stored = try self.managedObjectContext.fetch(storedRequest)
-                completion(.success(stored))
-            } catch {
-                completion(.failure(error))
-            }
+            let stored = try self.managedObjectContext.fetch(storedRequest)
+            return stored
         }
     }
 }

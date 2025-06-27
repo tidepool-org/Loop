@@ -120,7 +120,9 @@ struct CreatePresetView: View {
                                 if let temporaryScheduleOverride = preset.temporaryScheduleOverride {
                                     if preset.savePreset, case .preset(let preset) = temporaryScheduleOverride.context {
                                         settingsManager.createPreset(preset)
-                                        temporaryPresetsManager.scheduleNextPresetReminder()
+                                        Task {
+                                            await temporaryPresetsManager.scheduleNextPresetReminder()
+                                        }
                                     }
                                     if startPreset {
                                         temporaryPresetsManager.scheduleOverride = temporaryScheduleOverride

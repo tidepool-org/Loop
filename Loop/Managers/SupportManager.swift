@@ -239,12 +239,12 @@ extension SupportManager: SupportUIDelegate {
         await deviceSupportDelegate.generateDiagnosticReport()
     }
     
-    public func issueAlert(_ alert: LoopKit.Alert) {
-        alertIssuer.issueAlert(alert)
+    public func issueAlert(_ alert: LoopKit.Alert) async {
+        await alertIssuer.issueAlert(alert)
     }
     
-    public func retractAlert(identifier: LoopKit.Alert.Identifier) {
-        alertIssuer.retractAlert(identifier: identifier)
+    public func retractAlert(identifier: LoopKit.Alert.Identifier) async {
+        await alertIssuer.retractAlert(identifier: identifier)
     }
 
 }

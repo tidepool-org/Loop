@@ -421,9 +421,9 @@ class TemporaryPresetsManager {
 
     var nextScheduledPresetReminderIdentifier = Alert.Identifier(managerIdentifier: AlertManager.managerIdentifier, alertIdentifier: "ScheduledPresetReminder")
 
-    func scheduleNextPresetReminder() {
+    func scheduleNextPresetReminder() async {
 
-        alertIssuer?.retractAlert(identifier: nextScheduledPresetReminderIdentifier)
+        await alertIssuer?.retractAlert(identifier: nextScheduledPresetReminderIdentifier)
 
         let settings = settingsProvider.settings
 
@@ -463,7 +463,7 @@ class TemporaryPresetsManager {
                 trigger: .delayed(interval: nextScheduledTime.timeIntervalSince(now)),
                 interruptionLevel: .timeSensitive)
 
-            alertIssuer?.issueAlert(alert)
+            await alertIssuer?.issueAlert(alert)
         }
     }
 

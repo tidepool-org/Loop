@@ -219,11 +219,15 @@ struct PresetsView: View {
                             scheduledRange: scheduledRange,
                             onSave: { updatedPreset in
                                 settingsManager.savePreset(updatedPreset)
-                                temporaryPresetsManager.scheduleNextPresetReminder()
+                                Task {
+                                    await temporaryPresetsManager.scheduleNextPresetReminder()
+                                }
                             },
                             onDelete: { preset in
                                 settingsManager.deletePreset(preset)
-                                temporaryPresetsManager.scheduleNextPresetReminder()
+                                Task {
+                                    await temporaryPresetsManager.scheduleNextPresetReminder()
+                                }
                             }
                         )
                     }

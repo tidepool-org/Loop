@@ -50,53 +50,53 @@ class AlertManagerTests: XCTestCase {
         mockAlertStore = nil
     }
     
-    func testIssueAlertOnHandlerCalled() {
-        alertManager.issueAlert(mockAlert)
+    func testIssueAlertOnHandlerCalled() async {
+        await alertManager.issueAlert(mockAlert)
         XCTAssertEqual(mockAlert.identifier, mockModalScheduler.scheduledAlert?.identifier)
         XCTAssertEqual(mockAlert.identifier, mockUserNotificationScheduler.scheduledAlert?.identifier)
         XCTAssertNil(mockModalScheduler.unscheduledAlertIdentifier)
         XCTAssertNil(mockUserNotificationScheduler.unscheduledAlertIdentifier)
     }
     
-    func testRetractAlertOnHandlerCalled() {
-        alertManager.retractAlert(identifier: mockAlert.identifier)
+    func testRetractAlertOnHandlerCalled() async {
+        await alertManager.retractAlert(identifier: mockAlert.identifier)
         XCTAssertNil(mockModalScheduler.scheduledAlert)
         XCTAssertNil(mockUserNotificationScheduler.scheduledAlert)
         XCTAssertEqual(mockAlert.identifier, mockModalScheduler.unscheduledAlertIdentifier)
         XCTAssertEqual(mockAlert.identifier, mockUserNotificationScheduler.unscheduledAlertIdentifier)
     }
     
-    func testAlertResponderAcknowledged() {
+    func testAlertResponderAcknowledged() async throws {
         let responder = MockResponder()
         alertManager.addAlertResponder(managerIdentifier: Self.mockManagerIdentifier, alertResponder: responder)
         XCTAssertTrue(responder.acknowledged.isEmpty)
-        alertManager.acknowledgeAlert(identifier: Self.mockIdentifier)
+        try await alertManager.acknowledgeAlert(identifier: Self.mockIdentifier)
         XCTAssert(responder.acknowledged[Self.mockTypeIdentifier] == true)
     }
     
-    func testAlertResponderNotAcknowledgedIfWrongManagerIdentifier() {
+    func testAlertResponderNotAcknowledgedIfWrongManagerIdentifier() async throws {
         let responder = MockResponder()
         alertManager.addAlertResponder(managerIdentifier: Self.mockManagerIdentifier, alertResponder: responder)
         XCTAssertTrue(responder.acknowledged.isEmpty)
-        alertManager.acknowledgeAlert(identifier: Alert.Identifier(managerIdentifier: "foo", alertIdentifier: Self.mockTypeIdentifier))
+        try await alertManager.acknowledgeAlert(identifier: Alert.Identifier(managerIdentifier: "foo", alertIdentifier: Self.mockTypeIdentifier))
         XCTAssertTrue(responder.acknowledged.isEmpty)
     }
     
-    func testRemovedAlertResponderDoesntAcknowledge() {
+    func testRemovedAlertResponderDoesntAcknowledge() async throws {
         let responder = MockResponder()
         alertManager.addAlertResponder(managerIdentifier: Self.mockManagerIdentifier, alertResponder: responder)
         XCTAssertTrue(responder.acknowledged.isEmpty)
-        alertManager.acknowledgeAlert(identifier: Self.mockIdentifier)
+        try await alertManager.acknowledgeAlert(identifier: Self.mockIdentifier)
         XCTAssert(responder.acknowledged[Self.mockTypeIdentifier] == true)
         
         responder.acknowledged[AlertManagerTests.mockTypeIdentifier] = false
         alertManager.removeAlertResponder(managerIdentifier: AlertManagerTests.mockManagerIdentifier)
-        alertManager.acknowledgeAlert(identifier: Self.mockIdentifier)
+        try await alertManager.acknowledgeAlert(identifier: Self.mockIdentifier)
         XCTAssert(responder.acknowledged[Self.mockTypeIdentifier] == false)
     }
     
-    func testAcknowledgedAlertsRemovedFromUserNotificationCenter() {
-        alertManager.acknowledgeAlert(identifier: Self.mockIdentifier)
+    func testAcknowledgedAlertsRemovedFromUserNotificationCenter() async throws {
+        try await alertManager.acknowledgeAlert(identifier: Self.mockIdentifier)
     }
     
     func testSoundVendorInitialization() {
@@ -108,235 +108,219 @@ class AlertManagerTests: XCTestCase {
         XCTAssertEqual(["\(Self.mockManagerIdentifier)-doesntExist", "\(Self.mockManagerIdentifier)-existsOlder"], mockFileManager.copiedDstURLs.map { $0.lastPathComponent })
     }
         
-    func testPlaybackPendingImmediateAlert() {
-        mockAlertStore.managedObjectContext.performAndWait {
-            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
-            let alert = Alert(identifier: Self.mockIdentifier,
-                              foregroundContent: content, backgroundContent: content, trigger: .immediate)
-            mockAlertStore.storedAlerts = [StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)]
+    func testPlaybackPendingImmediateAlert() async {
+        let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+        let alert = Alert(identifier: Self.mockIdentifier,
+                          foregroundContent: content, backgroundContent: content, trigger: .immediate)
+        mockAlertStore.storedAlerts = [StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)]
 
-            alertManager = AlertManager(alertPresenter: mockPresenter,
-                                        modalAlertScheduler: mockModalScheduler,
-                                        userNotificationAlertScheduler: mockUserNotificationScheduler,
-                                        fileManager: mockFileManager,
-                                        alertStore: mockAlertStore,
-                                        bluetoothProvider: MockBluetoothProvider(),
-                                        analyticsServicesManager: AnalyticsServicesManager())
-            alertManager.playbackAlertsFromPersistence()
-            XCTAssertEqual(alert, mockModalScheduler.scheduledAlert)
-            XCTAssertNil(mockUserNotificationScheduler.scheduledAlert)
+        alertManager = AlertManager(alertPresenter: mockPresenter,
+                                    modalAlertScheduler: mockModalScheduler,
+                                    userNotificationAlertScheduler: mockUserNotificationScheduler,
+                                    fileManager: mockFileManager,
+                                    alertStore: mockAlertStore,
+                                    bluetoothProvider: MockBluetoothProvider(),
+                                    analyticsServicesManager: AnalyticsServicesManager())
+        mockModalScheduler.alertScheduledExpectation = expectation(description: "alert scheduled")
+        await alertManager.playbackAlertsFromPersistence()
+        await fulfillment(of: [mockModalScheduler.alertScheduledExpectation!])
+        XCTAssertEqual(alert, mockModalScheduler.scheduledAlert)
+        XCTAssertNil(mockUserNotificationScheduler.scheduledAlert)
+    }
+    
+    func testPlaybackPendingExpiredDelayedNotification() async {
+        let date = Date.distantPast
+        let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+        let alert = Alert(identifier: Self.mockIdentifier,
+                          foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
+        let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+        storedAlert.issuedDate = date
+        mockAlertStore.storedAlerts = [storedAlert]
+        alertManager = AlertManager(alertPresenter: mockPresenter,
+                                    modalAlertScheduler: mockModalScheduler,
+                                    userNotificationAlertScheduler: mockUserNotificationScheduler,
+                                    fileManager: mockFileManager,
+                                    alertStore: mockAlertStore,
+                                    bluetoothProvider: MockBluetoothProvider(),
+                                    analyticsServicesManager: AnalyticsServicesManager())
+        await alertManager.playbackAlertsFromPersistence()
+        let expected = Alert(identifier: Self.mockIdentifier, foregroundContent: content, backgroundContent: content, trigger: .immediate)
+        XCTAssertEqual(expected, mockModalScheduler.scheduledAlert)
+        XCTAssertNil(mockUserNotificationScheduler.scheduledAlert)
+    }
+    
+    func testPlaybackPendingDelayedNotification() async {
+        let date = Date().addingTimeInterval(-15.0) // Pretend the 30-second-delayed alert was issued 15 seconds ago
+        let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+        let alert = Alert(identifier: Self.mockIdentifier,
+                          foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
+        let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+        storedAlert.issuedDate = date
+        mockAlertStore.storedAlerts = [storedAlert]
+        alertManager = AlertManager(alertPresenter: mockPresenter,
+                                    modalAlertScheduler: mockModalScheduler,
+                                    userNotificationAlertScheduler: mockUserNotificationScheduler,
+                                    fileManager: mockFileManager,
+                                    alertStore: mockAlertStore,
+                                    bluetoothProvider: MockBluetoothProvider(),
+                                    analyticsServicesManager: AnalyticsServicesManager())
+        await alertManager.playbackAlertsFromPersistence()
+
+        // The trigger for this should be `.delayed` by "something less than 15 seconds",
+        // but the exact value depends on the speed of executing this test.
+        // As long as it is <= 15 seconds, we call it good.
+        XCTAssertNotNil(mockModalScheduler.scheduledAlert)
+        switch mockModalScheduler.scheduledAlert?.trigger {
+        case .some(.delayed(let interval)):
+            XCTAssertLessThanOrEqual(interval, 15.0)
+        default:
+            XCTFail("Wrong trigger \(String(describing: mockModalScheduler.scheduledAlert?.trigger))")
         }
     }
     
-    func testPlaybackPendingExpiredDelayedNotification() {
-        mockAlertStore.managedObjectContext.performAndWait {
-            let date = Date.distantPast
-            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
-            let alert = Alert(identifier: Self.mockIdentifier,
-                              foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
-            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
-            storedAlert.issuedDate = date
-            mockAlertStore.storedAlerts = [storedAlert]
-            alertManager = AlertManager(alertPresenter: mockPresenter,
-                                        modalAlertScheduler: mockModalScheduler,
-                                        userNotificationAlertScheduler: mockUserNotificationScheduler,
-                                        fileManager: mockFileManager,
-                                        alertStore: mockAlertStore,
-                                        bluetoothProvider: MockBluetoothProvider(),
-                                        analyticsServicesManager: AnalyticsServicesManager())
-            alertManager.playbackAlertsFromPersistence()
-            let expected = Alert(identifier: Self.mockIdentifier, foregroundContent: content, backgroundContent: content, trigger: .immediate)
-            XCTAssertEqual(expected, mockModalScheduler.scheduledAlert)
-            XCTAssertNil(mockUserNotificationScheduler.scheduledAlert)
-        }
+    func testPlaybackPendingRepeatingNotification() async {
+        let date = Date.distantPast
+        let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+        let alert = Alert(identifier: Self.mockIdentifier,
+                          foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
+        let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+        storedAlert.issuedDate = date
+        mockAlertStore.storedAlerts = [storedAlert]
+        alertManager = AlertManager(alertPresenter: mockPresenter,
+                                    modalAlertScheduler: mockModalScheduler,
+                                    userNotificationAlertScheduler: mockUserNotificationScheduler,
+                                    fileManager: mockFileManager,
+                                    alertStore: mockAlertStore,
+                                    bluetoothProvider: MockBluetoothProvider(),
+                                    analyticsServicesManager: AnalyticsServicesManager())
+        await alertManager.playbackAlertsFromPersistence()
+
+        XCTAssertEqual(alert, mockModalScheduler.scheduledAlert)
+        XCTAssertNil(mockUserNotificationScheduler.scheduledAlert)
     }
     
-    func testPlaybackPendingDelayedNotification() {
-        mockAlertStore.managedObjectContext.performAndWait {
-            let date = Date().addingTimeInterval(-15.0) // Pretend the 30-second-delayed alert was issued 15 seconds ago
-            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
-            let alert = Alert(identifier: Self.mockIdentifier,
-                              foregroundContent: content, backgroundContent: content, trigger: .delayed(interval: 30.0))
-            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
-            storedAlert.issuedDate = date
-            mockAlertStore.storedAlerts = [storedAlert]
-            alertManager = AlertManager(alertPresenter: mockPresenter,
-                                        modalAlertScheduler: mockModalScheduler,
-                                        userNotificationAlertScheduler: mockUserNotificationScheduler,
-                                        fileManager: mockFileManager,
-                                        alertStore: mockAlertStore,
-                                        bluetoothProvider: MockBluetoothProvider(),
-                                        analyticsServicesManager: AnalyticsServicesManager())
-            alertManager.playbackAlertsFromPersistence()
-
-            // The trigger for this should be `.delayed` by "something less than 15 seconds",
-            // but the exact value depends on the speed of executing this test.
-            // As long as it is <= 15 seconds, we call it good.
-            XCTAssertNotNil(mockModalScheduler.scheduledAlert)
-            switch mockModalScheduler.scheduledAlert?.trigger {
-            case .some(.delayed(let interval)):
-                XCTAssertLessThanOrEqual(interval, 15.0)
-            default:
-                XCTFail("Wrong trigger \(String(describing: mockModalScheduler.scheduledAlert?.trigger))")
-            }
-        }
-    }
-    
-    func testPlaybackPendingRepeatingNotification() {
-        mockAlertStore.managedObjectContext.performAndWait {
-            let date = Date.distantPast
-            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
-            let alert = Alert(identifier: Self.mockIdentifier,
-                              foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
-            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
-            storedAlert.issuedDate = date
-            mockAlertStore.storedAlerts = [storedAlert]
-            alertManager = AlertManager(alertPresenter: mockPresenter,
-                                        modalAlertScheduler: mockModalScheduler,
-                                        userNotificationAlertScheduler: mockUserNotificationScheduler,
-                                        fileManager: mockFileManager,
-                                        alertStore: mockAlertStore,
-                                        bluetoothProvider: MockBluetoothProvider(),
-                                        analyticsServicesManager: AnalyticsServicesManager())
-            alertManager.playbackAlertsFromPersistence()
-
-            XCTAssertEqual(alert, mockModalScheduler.scheduledAlert)
-            XCTAssertNil(mockUserNotificationScheduler.scheduledAlert)
-        }
-    }
-    
-    func testPersistedAlertStoreLookupAllUnretracted() throws {
-        mockAlertStore.managedObjectContext.performAndWait {
-            let date = Date.distantPast
-            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
-            let alert = Alert(identifier: Self.mockIdentifier,
-                              foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
-            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
-            storedAlert.issuedDate = date
-            mockAlertStore.storedAlerts = [storedAlert]
-            alertManager = AlertManager(alertPresenter: mockPresenter,
-                                        modalAlertScheduler: mockModalScheduler,
-                                        userNotificationAlertScheduler: mockUserNotificationScheduler,
-                                        fileManager: mockFileManager,
-                                        alertStore: mockAlertStore,
-                                        bluetoothProvider: MockBluetoothProvider(),
-                                        analyticsServicesManager: AnalyticsServicesManager())
-            alertManager.lookupAllUnretracted(managerIdentifier: Self.mockManagerIdentifier) { result in
-                try? XCTAssertEqual([PersistedAlert(alert: alert, issuedDate: date, retractedDate: nil, acknowledgedDate: nil)],
-                                    XCTUnwrap(result.successValue))
-            }
-        }
+    func testPersistedAlertStoreLookupAllUnretracted() async throws {
+        let date = Date.distantPast
+        let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+        let alert = Alert(identifier: Self.mockIdentifier,
+                          foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
+        let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+        storedAlert.issuedDate = date
+        mockAlertStore.storedAlerts = [storedAlert]
+        alertManager = AlertManager(alertPresenter: mockPresenter,
+                                    modalAlertScheduler: mockModalScheduler,
+                                    userNotificationAlertScheduler: mockUserNotificationScheduler,
+                                    fileManager: mockFileManager,
+                                    alertStore: mockAlertStore,
+                                    bluetoothProvider: MockBluetoothProvider(),
+                                    analyticsServicesManager: AnalyticsServicesManager())
+        let alerts = try await alertManager.lookupAllUnretracted(managerIdentifier: Self.mockManagerIdentifier)
+        XCTAssertEqual([PersistedAlert(alert: alert, issuedDate: date, retractedDate: nil, acknowledgedDate: nil)], alerts)
     }
 
-    func testPersistedAlertStoreLookupAllUnacknowledgedUnretracted() throws {
-        mockAlertStore.managedObjectContext.performAndWait {
-            let date = Date.distantPast
-            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
-            let alert = Alert(identifier: Self.mockIdentifier,
-                              foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
-            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
-            storedAlert.issuedDate = date
-            mockAlertStore.storedAlerts = [storedAlert]
-            alertManager = AlertManager(alertPresenter: mockPresenter,
-                                        modalAlertScheduler: mockModalScheduler,
-                                        userNotificationAlertScheduler: mockUserNotificationScheduler,
-                                        fileManager: mockFileManager,
-                                        alertStore: mockAlertStore,
-                                        bluetoothProvider: MockBluetoothProvider(),
-                                        analyticsServicesManager: AnalyticsServicesManager())
-            alertManager.lookupAllUnacknowledgedUnretracted(managerIdentifier: Self.mockManagerIdentifier) { result in
-                try? XCTAssertEqual([PersistedAlert(alert: alert, issuedDate: date, retractedDate: nil, acknowledgedDate: nil)],
-                                    XCTUnwrap(result.successValue))
-            }
-        }
+    func testPersistedAlertStoreLookupAllUnacknowledgedUnretracted() async throws {
+        let date = Date.distantPast
+        let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+        let alert = Alert(identifier: Self.mockIdentifier,
+                          foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
+        let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+        storedAlert.issuedDate = date
+        mockAlertStore.storedAlerts = [storedAlert]
+        alertManager = AlertManager(alertPresenter: mockPresenter,
+                                    modalAlertScheduler: mockModalScheduler,
+                                    userNotificationAlertScheduler: mockUserNotificationScheduler,
+                                    fileManager: mockFileManager,
+                                    alertStore: mockAlertStore,
+                                    bluetoothProvider: MockBluetoothProvider(),
+                                    analyticsServicesManager: AnalyticsServicesManager())
+        let alerts = try await alertManager.lookupAllUnacknowledgedUnretracted(managerIdentifier: Self.mockManagerIdentifier)
+        XCTAssertEqual([PersistedAlert(alert: alert, issuedDate: date, retractedDate: nil, acknowledgedDate: nil)], alerts)
     }
 
-    func testPersistedAlertStoreDoesIssuedAlertExist() throws {
-        mockAlertStore.managedObjectContext.performAndWait {
-            let date = Date.distantPast
-            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
-            let alert = Alert(identifier: Self.mockIdentifier,
-                              foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
-            let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
-            storedAlert.issuedDate = date
-            mockAlertStore.storedAlerts = [storedAlert]
-            alertManager = AlertManager(alertPresenter: mockPresenter,
-                                        modalAlertScheduler: mockModalScheduler,
-                                        userNotificationAlertScheduler: mockUserNotificationScheduler,
-                                        fileManager: mockFileManager,
-                                        alertStore: mockAlertStore,
-                                        bluetoothProvider: MockBluetoothProvider(),
-                                        analyticsServicesManager: AnalyticsServicesManager())
-            let identifierExists = Self.mockIdentifier
-            let identifierDoesNotExist = Alert.Identifier(managerIdentifier: "TestManagerIdentifier", alertIdentifier: "TestAlertIdentifier")
-            alertManager.doesIssuedAlertExist(identifier: identifierExists) { result in
-                try? XCTAssertEqual(true, XCTUnwrap(result.successValue))
-            }
-            alertManager.doesIssuedAlertExist(identifier: identifierDoesNotExist) { result in
-                try? XCTAssertEqual(false, XCTUnwrap(result.successValue))
-            }
-        }
+    func testPersistedAlertStoreDoesIssuedAlertExist() async throws {
+        let date = Date.distantPast
+        let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+        let alert = Alert(identifier: Self.mockIdentifier,
+                          foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
+        let storedAlert = StoredAlert(from: alert, context: mockAlertStore.managedObjectContext)
+        storedAlert.issuedDate = date
+        mockAlertStore.storedAlerts = [storedAlert]
+        alertManager = AlertManager(alertPresenter: mockPresenter,
+                                    modalAlertScheduler: mockModalScheduler,
+                                    userNotificationAlertScheduler: mockUserNotificationScheduler,
+                                    fileManager: mockFileManager,
+                                    alertStore: mockAlertStore,
+                                    bluetoothProvider: MockBluetoothProvider(),
+                                    analyticsServicesManager: AnalyticsServicesManager())
+        let identifierExists = Self.mockIdentifier
+        let identifierDoesNotExist = Alert.Identifier(managerIdentifier: "TestManagerIdentifier", alertIdentifier: "TestAlertIdentifier")
+        let result = try await alertManager.doesIssuedAlertExist(identifier: identifierExists)
+        XCTAssertEqual(true, result)
+        let result2 = try await alertManager.doesIssuedAlertExist(identifier: identifierDoesNotExist)
+        XCTAssertEqual(false, result2)
     }
 
-    func testReportRetractedAlert() throws {
-        mockAlertStore.managedObjectContext.performAndWait {
-            let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
-            let alert = Alert(identifier: Self.mockIdentifier,
-                              foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
-            mockAlertStore.storedAlerts = []
-            alertManager = AlertManager(alertPresenter: mockPresenter,
-                                        modalAlertScheduler: mockModalScheduler,
-                                        userNotificationAlertScheduler: mockUserNotificationScheduler,
-                                        fileManager: mockFileManager,
-                                        alertStore: mockAlertStore,
-                                        bluetoothProvider: MockBluetoothProvider(),
-                                        analyticsServicesManager: AnalyticsServicesManager())
-            let now = Date()
-            alertManager.recordRetractedAlert(alert, at: now)
-            XCTAssertEqual(mockAlertStore.retractedAlert, alert)
-            XCTAssertEqual(mockAlertStore.retractedAlertDate, now)
-        }
+    func testReportRetractedAlert() async throws {
+        let content = Alert.Content(title: "title", body: "body", acknowledgeActionButtonLabel: "label")
+        let alert = Alert(identifier: Self.mockIdentifier,
+                          foregroundContent: content, backgroundContent: content, trigger: .repeating(repeatInterval: 60.0))
+        mockAlertStore.storedAlerts = []
+        alertManager = AlertManager(alertPresenter: mockPresenter,
+                                    modalAlertScheduler: mockModalScheduler,
+                                    userNotificationAlertScheduler: mockUserNotificationScheduler,
+                                    fileManager: mockFileManager,
+                                    alertStore: mockAlertStore,
+                                    bluetoothProvider: MockBluetoothProvider(),
+                                    analyticsServicesManager: AnalyticsServicesManager())
+        let now = Date()
+        try await alertManager.recordRetractedAlert(alert, at: now)
+        XCTAssertEqual(mockAlertStore.retractedAlert, alert)
+        XCTAssertEqual(mockAlertStore.retractedAlertDate, now)
     }
 
-    func testScheduleAlertForWorkoutReminder() {
+    func testScheduleAlertForWorkoutReminder() async {
+        mockModalScheduler.alertScheduledExpectation = expectation(description: "modal alert scheduled")
         alertManager.presetActivated(context: .legacyWorkout, duration: .indefinite)
+        await fulfillment(of: [mockModalScheduler.alertScheduledExpectation!], timeout: 1)
         XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockModalScheduler.scheduledAlert?.identifier)
         XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockUserNotificationScheduler.scheduledAlert?.identifier)
         XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockAlertStore.issuedAlert?.identifier)
 
+        mockModalScheduler.alertUnscheduledExpectation = expectation(description: "modal alert unscheduled")
         alertManager.presetDeactivated(context: .legacyWorkout)
+        await fulfillment(of: [mockModalScheduler.alertUnscheduledExpectation!], timeout: 1)
         XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockModalScheduler.unscheduledAlertIdentifier)
         XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockUserNotificationScheduler.unscheduledAlertIdentifier)
         XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockAlertStore.retractededAlertIdentifier)
     }
 
-    func testLoopDidCompleteRecordsNotifications() {
-        alertManager.loopDidComplete()
+    func testLoopDidCompleteRecordsNotifications() async {
+        await alertManager.loopDidComplete()
         XCTAssertEqual(4, UserDefaults.appGroup?.loopNotRunningNotifications.count)
     }
 
-    func testLoopFailureFor10MinutesDoesNotRecordAlert() {
-        alertManager.loopDidComplete()
+    func testLoopFailureFor10MinutesDoesNotRecordAlert() async {
+        await alertManager.loopDidComplete()
         XCTAssertNil(mockAlertStore.issuedAlert)
         alertManager.getCurrentDate = { return Date().addingTimeInterval(.minutes(10))}
-        alertManager.inferDeliveredLoopNotRunningNotifications()
+        await alertManager.inferDeliveredLoopNotRunningNotifications()
         XCTAssertNil(mockAlertStore.issuedAlert)
     }
 
-    func testLoopFailureFor30MinutesRecordsTimeSensitiveAlert() {
-        alertManager.loopDidComplete()
+    func testLoopFailureFor30MinutesRecordsTimeSensitiveAlert() async {
+        await alertManager.loopDidComplete()
         XCTAssertNil(mockAlertStore.issuedAlert)
         alertManager.getCurrentDate = { return Date().addingTimeInterval(.minutes(30))}
-        alertManager.inferDeliveredLoopNotRunningNotifications()
+        await alertManager.inferDeliveredLoopNotRunningNotifications()
         XCTAssertEqual(3, UserDefaults.appGroup?.loopNotRunningNotifications.count)
         XCTAssertNotNil(mockAlertStore.issuedAlert)
         XCTAssertEqual(.timeSensitive, mockAlertStore.issuedAlert!.interruptionLevel)
     }
 
-    func testLoopFailureFor65MinutesRecordsCriticalAlert() {
-        alertManager.loopDidComplete()
+    func testLoopFailureFor65MinutesRecordsCriticalAlert() async {
+        await alertManager.loopDidComplete()
         alertManager.getCurrentDate = { return Date().addingTimeInterval(.minutes(65))}
-        alertManager.inferDeliveredLoopNotRunningNotifications()
+        await alertManager.inferDeliveredLoopNotRunningNotifications()
         XCTAssertEqual(1, UserDefaults.appGroup?.loopNotRunningNotifications.count)
         XCTAssertNotNil(mockAlertStore.issuedAlert)
         XCTAssertEqual(.critical, mockAlertStore.issuedAlert!.interruptionLevel)
@@ -346,7 +330,7 @@ class AlertManagerTests: XCTestCase {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         
         let lastLoopDate = Date()
-        alertManager.loopDidComplete(lastLoopDate)
+        await alertManager.loopDidComplete(lastLoopDate)
         alertManager.alertMuter.configuration.startTime = Date()
         alertManager.alertMuter.configuration.duration = .hours(4)
         

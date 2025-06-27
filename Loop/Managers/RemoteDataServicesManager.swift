@@ -352,13 +352,13 @@ extension RemoteDataServicesManager {
                 case .success(let queryAnchor, let created, let deleted):
                     Task {
                         do {
-                            continueUpload = queryAnchor != previousQueryAnchor
                             try await remoteDataService.uploadDoseData(created: created, deleted: deleted)
                             UserDefaults.appGroup?.setQueryAnchor(for: remoteDataService, withRemoteDataType: .dose, queryAnchor)
-                            self.uploadSucceeded(key)
+                            continueUpload = queryAnchor != previousQueryAnchor
+                            await self.uploadSucceeded(key)
                         } catch {
                             self.log.error("Error synchronizing dose data: %{public}@", String(describing: error))
-                            self.uploadFailed(key)
+                            await self.uploadFailed(key)
                         }
                         semaphore.signal()
                     }
@@ -477,10 +477,10 @@ extension RemoteDataServicesManager {
                         try await remoteDataService.uploadPumpEventData(data)
                         UserDefaults.appGroup?.setQueryAnchor(for: remoteDataService, withRemoteDataType: .pumpEvent, queryAnchor)
                         continueUpload = queryAnchor != previousQueryAnchor
-                        self.uploadSucceeded(key)
+                        await self.uploadSucceeded(key)
                     } catch {
                         self.log.error("Error synchronizing pump event data: %{public}@", String(describing: error))
-                        self.uploadFailed(key)
+                        await self.uploadFailed(key)
                     }
                     semaphore.signal()
                 } catch {
@@ -521,10 +521,10 @@ extension RemoteDataServicesManager {
                             try await remoteDataService.uploadSettingsData(data)
                             UserDefaults.appGroup?.setQueryAnchor(for: remoteDataService, withRemoteDataType: .settings, queryAnchor)
                             continueUpload = queryAnchor != previousQueryAnchor
-                            self.uploadSucceeded(key)
+                            await self.uploadSucceeded(key)
                         } catch {
                             self.log.error("Error synchronizing settings data: %{public}@", String(describing: error))
-                            self.uploadFailed(key)
+                            await self.uploadFailed(key)
                         }
                         semaphore.signal()
                     }
@@ -558,10 +558,10 @@ extension RemoteDataServicesManager {
                 do {
                     try await remoteDataService.uploadTemporaryOverrideData(updated: overrides, deleted: deletedOverrides)
                     UserDefaults.appGroup?.setQueryAnchor(for: remoteDataService, withRemoteDataType: .overrides, newAnchor)
-                    self.uploadSucceeded(key)
+                    await self.uploadSucceeded(key)
                 } catch {
                     self.log.error("Error synchronizing temporary override data: %{public}@", String(describing: error))
-                    self.uploadFailed(key)
+                    await self.uploadFailed(key)
                 }
                 semaphore.signal()
             }
@@ -594,10 +594,10 @@ extension RemoteDataServicesManager {
                             try await remoteDataService.uploadCgmEventData(data)
                             UserDefaults.appGroup?.setQueryAnchor(for: remoteDataService, withRemoteDataType: .cgmEvent, queryAnchor)
                             continueUpload = queryAnchor != previousQueryAnchor
-                            self.uploadSucceeded(key)
+                            await self.uploadSucceeded(key)
                         } catch {
                             self.log.error("Error synchronizing pump event data: %{public}@", String(describing: error))
-                            self.uploadFailed(key)
+                            await self.uploadFailed(key)
                         }
                         semaphore.signal()
                     }
