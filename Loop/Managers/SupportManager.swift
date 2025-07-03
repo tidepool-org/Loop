@@ -331,6 +331,7 @@ extension SupportUI {
 }
 
 extension Bundle {
+    @MainActor
     fileprivate func loadAndInstantiateSupport() throws -> SupportUI? {
         try loadAndReturnError()
 

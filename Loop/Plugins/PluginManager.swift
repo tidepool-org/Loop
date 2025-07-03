@@ -11,6 +11,7 @@ import Foundation
 import LoopKit
 import LoopKitUI
 
+@MainActor
 class PluginManager {
     let pluginBundles: [Bundle]
 

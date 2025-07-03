@@ -12,6 +12,7 @@ import LoopKitUI
 
 typealias PumpManagerHUDViewRawValue = [String: Any]
 
+@MainActor
 func PumpManagerHUDViewFromRawValue(_ rawValue: PumpManagerHUDViewRawValue, pluginManager: PluginManager) -> BaseHUDView? {
     guard
         let identifier = rawValue["managerIdentifier"] as? String,
