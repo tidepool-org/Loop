@@ -1372,56 +1372,47 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                 loopDataManager: loopManager,
                                 pumpManager: deviceManager.pumpManager
                             ),
-                            onTapGesture: { [weak navigationController] event in
-                                switch event.type {
-                                case let .pumpEvent(_, pumpEvent):
-                                    guard let pumpEvent else {
-                                        return
+                            onTapGesture: { [weak navigationController] pumpEvent in
+                                Task {
+                                    var dosingDecision: StoredDosingDecision?
+                                    if let decisionId = pumpEvent.dose?.decisionId {
+                                        dosingDecision = try await self.loopManager.dosingDecisionStore.findDosingDecisionsById(decisionId)
                                     }
-
-                                    Task {
-                                        var dosingDecision: StoredDosingDecision?
-                                        if let decisionId = pumpEvent.dose?.decisionId {
-                                            dosingDecision = try await self.loopManager.dosingDecisionStore.findDosingDecisionsById(decisionId)
+                                    
+                                    let viewController = CommandResponseViewController(command: { (completionHandler) -> String in
+                                        var description = [String]()
+                                        
+                                        let timeFormatter: DateFormatter = {
+                                            let formatter = DateFormatter()
+                                            
+                                            formatter.dateStyle = .none
+                                            formatter.timeStyle = .short
+                                            
+                                            return formatter
+                                        }()
+                                        
+                                        description.append(timeFormatter.string(from: pumpEvent.date))
+                                        
+                                        if let title = pumpEvent.title {
+                                            description.append(title)
                                         }
                                         
-                                        let viewController = CommandResponseViewController(command: { (completionHandler) -> String in
-                                            var description = [String]()
-                                            
-                                            let timeFormatter: DateFormatter = {
-                                                let formatter = DateFormatter()
-                                                
-                                                formatter.dateStyle = .none
-                                                formatter.timeStyle = .short
-                                                
-                                                return formatter
-                                            }()
-                                            
-                                            description.append(timeFormatter.string(from: pumpEvent.date))
-                                            
-                                            if let title = pumpEvent.title {
-                                                description.append(title)
-                                            }
-                                            
-                                            if let dose = pumpEvent.dose {
-                                                description.append(String(describing: dose))
-                                            }
-                                            
-                                            if let dosingDecision {
-                                                description.append(String(describing: dosingDecision))
-                                            }
-                                            
-                                            if let raw = pumpEvent.raw {
-                                                description.append(raw.hexadecimalString)
-                                            }
-                                            
-                                            return description.joined(separator: "\n\n")
-                                        })
+                                        if let dose = pumpEvent.dose {
+                                            description.append(String(describing: dose))
+                                        }
                                         
-                                        navigationController?.pushViewController(viewController, animated: true)
-                                    }
-                                default:
-                                    break
+                                        if let dosingDecision {
+                                            description.append(String(describing: dosingDecision))
+                                        }
+                                        
+                                        if let raw = pumpEvent.raw {
+                                            description.append(raw.hexadecimalString)
+                                        }
+                                        
+                                        return description.joined(separator: "\n\n")
+                                    })
+                                    
+                                    navigationController?.pushViewController(viewController, animated: true)
                                 }
                             }
                         )

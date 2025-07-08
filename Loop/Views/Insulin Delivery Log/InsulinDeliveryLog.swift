@@ -30,7 +30,13 @@ class InsulinDeliveryLogViewModel {
         case error(FetchError)
     }
     
-    let bolusFormatter = QuantityFormatter(for: .internationalUnit)
+    let totalDeliveredFormatter: QuantityFormatter = {
+        let formatter = QuantityFormatter(for: .internationalUnit)
+        
+        formatter.numberFormatter.maximumFractionDigits = 0
+        
+        return formatter
+    }()
     
     private let loopDataManager: LoopDataManager
     private let pumpManager: PumpManager?
@@ -297,7 +303,7 @@ class InsulinDeliveryLogViewModel {
             case .suspend:
                 events.insert(InsulinDeliveryLogEvent(id: String(pumpEvent.hashValue), type: .pumpEvent(.insulin(.suspended), pumpEvent), date: pumpEvent.date))
             case .tempBasal:
-                if let deliveredUnits = dose.deliveredUnits, let basalSchedule = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory?.value(at: startDate) {
+                if let basalSchedule = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory?.value(at: pumpEvent.date) {
                     if dose.automatic == false {
                         events.insert(
                             InsulinDeliveryLogEvent(
@@ -342,7 +348,22 @@ class InsulinDeliveryLogViewModel {
                                         rate: LoopQuantity(
                                             unit: .internationalUnitsPerHour,
                                             doubleValue: dose.unitsPerHour
+                           
                                         ),
+                                    ),
+                                    pumpEvent
+                                ),
+                                date: dose.startDate
+                            )
+                        )
+                    } else if presetEnabledDuringDose && dose.unitsPerHour == basalSchedule {
+                        events.insert(
+                            InsulinDeliveryLogEvent(
+                                id: dose.syncIdentifier ?? UUID().uuidString,
+                                type: .pumpEvent(
+                                    .basal(
+                                        .automatedPresetBasal,
+                                        rate: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: dose.unitsPerHour)
                                     ),
                                     pumpEvent
                                 ),
@@ -353,8 +374,21 @@ class InsulinDeliveryLogViewModel {
                         fatalError()
                     }
                 } else {
-                    dump(dose)
-//                    fatalError()
+                    events.insert(
+                        InsulinDeliveryLogEvent(
+                            id: dose.syncIdentifier ?? UUID().uuidString,
+                            type: .pumpEvent(
+                                .basal(
+                                    .manualTempBasal(
+                                        endDate: dose.endDate
+                                    ),
+                                    rate: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: dose.value)
+                                ),
+                                pumpEvent
+                            ),
+                            date: dose.startDate
+                        )
+                    )
                 }
             default:
                 break
@@ -405,9 +439,9 @@ struct InsulinDeliveryLog: View {
     
     @State private var viewModel: InsulinDeliveryLogViewModel
     
-    let onTapGesture: (InsulinDeliveryLogEvent) -> Void
+    let onTapGesture: (PersistedPumpEvent) -> Void
     
-    init(viewModel: InsulinDeliveryLogViewModel, onTapGesture: @escaping (InsulinDeliveryLogEvent) -> Void) {
+    init(viewModel: InsulinDeliveryLogViewModel, onTapGesture: @escaping (PersistedPumpEvent) -> Void) {
         self.viewModel = viewModel
         self.onTapGesture = onTapGesture
     }
@@ -415,7 +449,7 @@ struct InsulinDeliveryLog: View {
     @ViewBuilder
     private func totalInsulinDeliveredLabel(from total: LoopQuantity) -> some View {
         LabeledContent {
-            Text(viewModel.bolusFormatter.string(from: total) ?? "Unknown")
+            Text(viewModel.totalDeliveredFormatter.string(from: total) ?? "Unknown")
                 .foregroundStyle(.secondary)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
@@ -436,10 +470,21 @@ struct InsulinDeliveryLog: View {
             
             Spacer()
             
-            Button("Filter") {
+            Menu("Filter") {
+                Button { } label: {
+                    Text("Filter")
+                    Text("Event")
+                }
                 
+                Picker("Filter", selection: .constant(0)) {
+                    Text("A")
+                        .tag(0)
+                    Text("B")
+                        .tag(1)
+                    Text("C")
+                        .tag(2)
+                }
             }
-            .font(.body.weight(.regular))
         }
         .textCase(nil)
     }
@@ -455,9 +500,18 @@ struct InsulinDeliveryLog: View {
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets())
             case .event(let event):
-                InsulinDeliveryLogEventRow(event: event)
-                    .contentShape(Rectangle())
-                    .onTapGesture { onTapGesture(event) }
+                ZStack {
+                    InsulinDeliveryLogEventRow(event: event)
+                    
+                    if case let .pumpEvent(pumpEventType, pumpEvent) = event.type, let pumpEvent {
+                        NavigationLink {
+                            InsulinDeliveryEventDetailsView(pumpEventType: pumpEventType, persistedPumpEvent: pumpEvent, onTapGesture: onTapGesture)
+                        } label: {
+                            EmptyView()
+                        }
+                        .opacity(0)
+                    }
+                }
             }
         }
         .alignmentGuide(.listRowSeparatorLeading) { _ in

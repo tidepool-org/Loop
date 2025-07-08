@@ -52,10 +52,6 @@ struct InsulinDeliveryLogEventRow: View {
         case .pumpEvent(.insulin(let insulinEventType), _):
             Group {
                 switch insulinEventType {
-//                case .noDelivery:
-//                    Image(systemName: "xmark.circle.fill")
-//                        .resizable()
-//                        .foregroundStyle(colorPalette.guidanceColors.critical)
                 case .suspended:
                     Image(systemName: "pause.circle.fill")
                         .resizable()
@@ -253,16 +249,6 @@ struct InsulinDeliveryLogEventRow: View {
                 }
             case .insulin(let insulinEventType):
                 switch insulinEventType {
-//                case .noDelivery:
-//                    HStack(spacing: 0) {
-//                        Text("No Delivery")
-//                        
-//                        Spacer()
-//                        
-//                        Text(event.date.formatted(date: .omitted, time: .shortened))
-//                            .font(.system(size: dateFontSize))
-//                            .foregroundStyle(.secondary)
-//                    }
                 case .suspended:
                     HStack(spacing: 0) {
                         Text("Insulin Suspended")
