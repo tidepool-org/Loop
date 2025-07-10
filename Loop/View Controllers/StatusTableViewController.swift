@@ -1372,10 +1372,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                 loopDataManager: loopManager,
                                 pumpManager: deviceManager.pumpManager
                             ),
-                            onTapGesture: { [weak navigationController] pumpEvent in
+                            onTapGesture: { [weak navigationController] doseEntry in
                                 Task {
                                     var dosingDecision: StoredDosingDecision?
-                                    if let decisionId = pumpEvent.dose?.decisionId {
+                                    if let decisionId = doseEntry.decisionId {
                                         dosingDecision = try await self.loopManager.dosingDecisionStore.findDosingDecisionsById(decisionId)
                                     }
                                     
@@ -1391,22 +1391,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
                                             return formatter
                                         }()
                                         
-                                        description.append(timeFormatter.string(from: pumpEvent.date))
+                                        description.append(timeFormatter.string(from: doseEntry.startDate))
                                         
-                                        if let title = pumpEvent.title {
-                                            description.append(title)
-                                        }
-                                        
-                                        if let dose = pumpEvent.dose {
-                                            description.append(String(describing: dose))
-                                        }
+                                        description.append(String(describing: doseEntry))
                                         
                                         if let dosingDecision {
                                             description.append(String(describing: dosingDecision))
-                                        }
-                                        
-                                        if let raw = pumpEvent.raw {
-                                            description.append(raw.hexadecimalString)
                                         }
                                         
                                         return description.joined(separator: "\n\n")

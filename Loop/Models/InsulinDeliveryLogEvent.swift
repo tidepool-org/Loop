@@ -44,7 +44,7 @@ struct InsulinDeliveryLogEvent: Hashable, Identifiable {
             case insulin(InsulinEventType)
         }
         
-        case pumpEvent(PumpEventType, PersistedPumpEvent?)
+        case pumpEvent(PumpEventType, DoseEntry?)
         
         enum AutomationEventType: Hashable {
             case on

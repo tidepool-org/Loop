@@ -141,16 +141,11 @@ class InsulinDeliveryLogViewModel {
         // Total Insulin Delivered
         totalInsulinDelivered = await LoopQuantity(unit: .internationalUnit, doubleValue: loopDataManager.totalDeliveredToday()?.value ?? 0)
         
-        let pumpEvents = (try? await getPumpEvents(since: startDate)) ?? []
-        for pumpEvent in pumpEvents {
-            guard let dose = pumpEvent.dose else {
-                return
-            }
-            
+        for dose in doses {
             let automationEnabledDuringDose = loopDataManager.automationHistory.toTimeline(from: dose.startDate, to: dose.endDate).first(where: { $0.startDate >= dose.startDate && $0.endDate <= dose.startDate })?.value ?? false
             let presetEnabledDuringDose = loopDataManager.temporaryPresetsManager.presetHistory.activeOverride(at: dose.startDate) != nil
             
-            switch pumpEvent.type {
+            switch dose.type {
             case .basal:
                 if automationEnabledDuringDose {
                     if let basalSchedule = loopDataManager.settings.basalRateSchedule?.value(at: dose.startDate) {
@@ -166,7 +161,7 @@ class InsulinDeliveryLogViewModel {
                                                 doubleValue: dose.unitsPerHour
                                             )
                                         ),
-                                        pumpEvent
+                                        dose
                                     ),
                                     date: dose.startDate
                                 )
@@ -183,7 +178,7 @@ class InsulinDeliveryLogViewModel {
                                                 doubleValue: dose.unitsPerHour
                                             )
                                         ),
-                                        pumpEvent
+                                        dose
                                     ),
                                     date: dose.startDate
                                 )
@@ -193,6 +188,7 @@ class InsulinDeliveryLogViewModel {
                         }
                     } else {
                         fatalError()
+                        // Correct, this should never happen
                     }
                 } else {
                     events.insert(
@@ -206,7 +202,7 @@ class InsulinDeliveryLogViewModel {
                                         doubleValue: dose.unitsPerHour
                                     )
                                 ),
-                                pumpEvent
+                                dose
                             ),
                             date: dose.startDate
                         )
@@ -229,7 +225,7 @@ class InsulinDeliveryLogViewModel {
                                         doubleValue: dose.deliveredUnits ?? dose.programmedUnits
                                     )
                                 ),
-                                pumpEvent
+                                dose
                             ),
                             date: dose.startDate
                         )
@@ -262,7 +258,7 @@ class InsulinDeliveryLogViewModel {
                                                 doubleValue: dose.deliveredUnits ?? dose.programmedUnits
                                             )
                                         ),
-                                        pumpEvent
+                                        dose
                                     ),
                                     date: decision.date
                                 )
@@ -288,7 +284,7 @@ class InsulinDeliveryLogViewModel {
                                                 doubleValue: dose.deliveredUnits ?? dose.programmedUnits
                                             )
                                         ),
-                                        pumpEvent
+                                        dose
                                     ),
                                     date: decision.date
                                 )
@@ -296,14 +292,15 @@ class InsulinDeliveryLogViewModel {
                         }
                     } else {
                         fatalError()
+                        // Can hit with pump with external events not handles by Loop
                     }
                 }
             case .resume:
-                events.insert(InsulinDeliveryLogEvent(id: String(pumpEvent.hashValue), type: .pumpEvent(.insulin(.resumed), pumpEvent), date: pumpEvent.date))
+                events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.resumed), dose), date: dose.startDate))
             case .suspend:
-                events.insert(InsulinDeliveryLogEvent(id: String(pumpEvent.hashValue), type: .pumpEvent(.insulin(.suspended), pumpEvent), date: pumpEvent.date))
+                events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.suspended), dose), date: dose.startDate))
             case .tempBasal:
-                if let basalSchedule = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory?.value(at: pumpEvent.date) {
+                if let basalSchedule = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory?.value(at: dose.startDate) {
                     if dose.automatic == false {
                         events.insert(
                             InsulinDeliveryLogEvent(
@@ -316,7 +313,7 @@ class InsulinDeliveryLogViewModel {
                                             doubleValue: dose.unitsPerHour
                                         )
                                     ),
-                                    pumpEvent
+                                    dose
                                 ),
                                 date: dose.startDate
                             )
@@ -333,7 +330,7 @@ class InsulinDeliveryLogViewModel {
                                             doubleValue: dose.unitsPerHour
                                         )
                                     ),
-                                    pumpEvent
+                                    dose
                                 ),
                                 date: dose.startDate
                             )
@@ -351,7 +348,7 @@ class InsulinDeliveryLogViewModel {
                            
                                         ),
                                     ),
-                                    pumpEvent
+                                    dose
                                 ),
                                 date: dose.startDate
                             )
@@ -365,7 +362,7 @@ class InsulinDeliveryLogViewModel {
                                         .automatedPresetBasal,
                                         rate: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: dose.unitsPerHour)
                                     ),
-                                    pumpEvent
+                                    dose
                                 ),
                                 date: dose.startDate
                             )
@@ -384,14 +381,12 @@ class InsulinDeliveryLogViewModel {
                                     ),
                                     rate: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: dose.value)
                                 ),
-                                pumpEvent
+                                dose
                             ),
                             date: dose.startDate
                         )
                     )
                 }
-            default:
-                break
             }
         }
         
@@ -417,13 +412,6 @@ class InsulinDeliveryLogViewModel {
         
         state = .fetched(.init(insulinDeliveryState: insulinDeliveryState, insulinDeliveryStateUpdatedDate: Date(), currentBasalRate: currentBasalRate, lastAutoBolus: lastAutoBolus, totalInsulinDelivered: totalInsulinDelivered, events: events))
     }
-    
-    private func getPumpEvents(since sinceDate: Date) async throws -> [PersistedPumpEvent] {
-        let events = try? await (loopDataManager.doseStore as? DoseStore)?.getPumpEventValues(since: sinceDate)
-        return events?.filter { event in
-            return event.dose != nil
-        } ?? []
-    }
 }
 
 enum LogEventDisplay: Hashable, Identifiable {
@@ -439,9 +427,9 @@ struct InsulinDeliveryLog: View {
     
     @State private var viewModel: InsulinDeliveryLogViewModel
     
-    let onTapGesture: (PersistedPumpEvent) -> Void
+    let onTapGesture: (DoseEntry) -> Void
     
-    init(viewModel: InsulinDeliveryLogViewModel, onTapGesture: @escaping (PersistedPumpEvent) -> Void) {
+    init(viewModel: InsulinDeliveryLogViewModel, onTapGesture: @escaping (DoseEntry) -> Void) {
         self.viewModel = viewModel
         self.onTapGesture = onTapGesture
     }
@@ -503,9 +491,9 @@ struct InsulinDeliveryLog: View {
                 ZStack {
                     InsulinDeliveryLogEventRow(event: event)
                     
-                    if case let .pumpEvent(pumpEventType, pumpEvent) = event.type, let pumpEvent {
+                    if case let .pumpEvent(pumpEventType, doseEntry) = event.type, let doseEntry {
                         NavigationLink {
-                            InsulinDeliveryEventDetailsView(pumpEventType: pumpEventType, persistedPumpEvent: pumpEvent, onTapGesture: onTapGesture)
+                            InsulinDeliveryEventDetailsView(pumpEventType: pumpEventType, doseEntry: doseEntry, onTapGesture: onTapGesture)
                         } label: {
                             EmptyView()
                         }

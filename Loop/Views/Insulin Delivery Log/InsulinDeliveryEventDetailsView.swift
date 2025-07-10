@@ -17,8 +17,8 @@ struct InsulinDeliveryEventDetailsView: View {
     let durationFormatter = DateComponentsFormatter()
     
     let pumpEventType: InsulinDeliveryLogEvent.EventType.PumpEventType
-    let persistedPumpEvent: PersistedPumpEvent
-    let onTapGesture: (PersistedPumpEvent) -> Void
+    let doseEntry: DoseEntry
+    let onTapGesture: (DoseEntry) -> Void
     
     var doseTypeValue: String {
         switch pumpEventType {
@@ -53,17 +53,13 @@ struct InsulinDeliveryEventDetailsView: View {
     }
     
     var startTimeValue: String? {
-        persistedPumpEvent.dose?.startDate.formatted(date: .omitted, time: .shortened)
+        doseEntry.startDate.formatted(date: .omitted, time: .shortened)
     }
     
     var durationValue: String? {
-        guard  let interval = persistedPumpEvent.dose?.duration else {
-            return nil
-        }
-        
         durationFormatter.unitsStyle = .abbreviated
         
-        return durationFormatter.string(from: interval)
+        return durationFormatter.string(from: doseEntry.duration)
     }
     
     var deliveredUnitsValue: String? {
@@ -128,7 +124,7 @@ struct InsulinDeliveryEventDetailsView: View {
             .navigationTitle(Text("Insulin Event"))
             .contentShape(Rectangle())
             .onTapGesture {
-                onTapGesture(persistedPumpEvent)
+                onTapGesture(doseEntry)
             }
         }
     }
