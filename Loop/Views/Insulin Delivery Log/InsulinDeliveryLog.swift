@@ -33,7 +33,7 @@ class InsulinDeliveryLogViewModel {
     let totalDeliveredFormatter: QuantityFormatter = {
         let formatter = QuantityFormatter(for: .internationalUnit)
         
-        formatter.numberFormatter.maximumFractionDigits = 0
+        formatter.numberFormatter.maximumFractionDigits = 1
         
         return formatter
     }()
@@ -118,6 +118,33 @@ class InsulinDeliveryLogViewModel {
         var events: Set<InsulinDeliveryLogEvent> = []
         
         let startDate = Date().addingTimeInterval(.days(-1))
+
+        // Status State
+        var insulinSuspended = false
+        if case .suspended = pumpManager?.status.basalDeliveryState {
+            insulinSuspended = true
+        }
+        
+        let automationEnabled = loopDataManager.automaticDosingStatus.automaticDosingEnabled
+        let automatedTreatmentState = pumpManager?.pumpManagerDelegate?.automatedTreatmentState ?? .neutralNoOverride
+
+        if insulinSuspended {
+            insulinDeliveryState = .error(status: .suspended)
+        } else if automationEnabled {
+            let basalStatus: InsulinDeliveryOverview.State.AutomatedBasalStatus
+            switch automatedTreatmentState {
+            case .neutralNoOverride, .neutralOverride:
+                basalStatus = .scheduled
+            case .increasedInsulin:
+                basalStatus = .moreThanScheduled
+            case .decreasedInsulin, .minimumDelivery:
+                basalStatus = .lessThanScheduled
+            }
+            
+            insulinDeliveryState = .automationOn(basalStatus: basalStatus, preset: loopDataManager.temporaryPresetsManager.activePreset)
+        } else {
+            insulinDeliveryState = .automationOff
+        }
         
         // Current Basal Rate
         guard let basalRateSchedule = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory ?? loopDataManager.settings.basalRateSchedule else {
@@ -125,13 +152,11 @@ class InsulinDeliveryLogViewModel {
             return
         }
     
-        let currentValue = basalRateSchedule.scheduleSegment(at: Date())
+        let currentValue = basalRateSchedule.scheduleSegment(at: startDate)
         currentBasalRate = DatedQuantity(date: currentValue.startDate, quantity: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: currentValue.value))
 
-        insulinDeliveryState = .automationOn(basalStatus: .scheduled) // FIXME: Update
-
         // Basal and Bolus
-        let doses: [DoseEntry] = (try? await loopDataManager.doseStore.getNormalizedDoseEntries(start: startDate, end: Date())) ?? []
+        let doses: [DoseEntry] = (try? await loopDataManager.doseStore.getNormalizedDoseEntries(start: startDate, end: nil)) ?? []
 
         // Last Auto Bolus
         if let lastAutoBolusDose = doses.filter({ $0.automatic == true }).last {
@@ -141,32 +166,38 @@ class InsulinDeliveryLogViewModel {
         // Total Insulin Delivered
         totalInsulinDelivered = await LoopQuantity(unit: .internationalUnit, doubleValue: loopDataManager.totalDeliveredToday()?.value ?? 0)
         
+        // Insulin Events
         for dose in doses {
-            let automationEnabledDuringDose = loopDataManager.automationHistory.toTimeline(from: dose.startDate, to: dose.endDate).first(where: { $0.startDate >= dose.startDate && $0.endDate <= dose.startDate })?.value ?? false
+            let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.automaticDosingStatus.automaticDosingEnabled
             let presetEnabledDuringDose = loopDataManager.temporaryPresetsManager.presetHistory.activeOverride(at: dose.startDate) != nil
             
+            var decision: StoredDosingDecision?
+            if let decisionId = dose.decisionId {
+                decision = try? await loopDataManager.dosingDecisionStore.findDosingDecisionsById(decisionId)
+            }
+            
             switch dose.type {
-            case .basal:
-                if automationEnabledDuringDose {
-                    if let basalSchedule = loopDataManager.settings.basalRateSchedule?.value(at: dose.startDate) {
-                        if dose.unitsPerHour == basalSchedule {
-                            events.insert(
-                                InsulinDeliveryLogEvent(
-                                    id: dose.syncIdentifier ?? UUID().uuidString,
-                                    type: .pumpEvent(
-                                        .basal(
-                                            .automationOn(basalStatus: .scheduled),
-                                            rate: LoopQuantity(
-                                                unit: .internationalUnitsPerHour,
-                                                doubleValue: dose.unitsPerHour
-                                            )
-                                        ),
-                                        dose
-                                    ),
-                                    date: dose.startDate
-                                )
-                            )
-                        } else if presetEnabledDuringDose {
+            case .basal, .tempBasal:
+                if dose.type == .tempBasal && dose.automatic == false {
+                    events.insert(
+                        InsulinDeliveryLogEvent(
+                            id: dose.syncIdentifier ?? UUID().uuidString,
+                            type: .pumpEvent(
+                                .basal(
+                                    .manualTempBasal(endDate: dose.endDate),
+                                    rate: LoopQuantity(
+                                        unit: .internationalUnitsPerHour,
+                                        doubleValue: dose.unitsPerHour
+                                    )
+                                ),
+                                dose
+                            ),
+                            date: dose.startDate
+                        )
+                    )
+                } else if automationEnabledDuringDose {
+                    if let decision {
+                        if presetEnabledDuringDose {
                             events.insert(
                                 InsulinDeliveryLogEvent(
                                     id: dose.syncIdentifier ?? UUID().uuidString,
@@ -184,11 +215,83 @@ class InsulinDeliveryLogViewModel {
                                 )
                             )
                         } else {
-                            fatalError()
+                            if let direction = decision.automaticDoseRecommendation?.direction {
+                                switch direction {
+                                case .decrease:
+                                    events.insert(
+                                        InsulinDeliveryLogEvent(
+                                            id: dose.syncIdentifier ?? UUID().uuidString,
+                                            type: .pumpEvent(
+                                                .basal(
+                                                    .automationOn(basalStatus: .lessThanScheduled),
+                                                    rate: LoopQuantity(
+                                                        unit: .internationalUnitsPerHour,
+                                                        doubleValue: dose.unitsPerHour
+                                                    )
+                                                ),
+                                                dose
+                                            ),
+                                            date: dose.startDate
+                                        )
+                                    )
+                                case .neutral:
+                                    events.insert(
+                                        InsulinDeliveryLogEvent(
+                                            id: dose.syncIdentifier ?? UUID().uuidString,
+                                            type: .pumpEvent(
+                                                .basal(
+                                                    .automationOn(basalStatus: .scheduled),
+                                                    rate: LoopQuantity(
+                                                        unit: .internationalUnitsPerHour,
+                                                        doubleValue: dose.unitsPerHour
+                                                    )
+                                                ),
+                                                dose
+                                            ),
+                                            date: dose.startDate
+                                        )
+                                    )
+                                case .increase:
+                                    events.insert(
+                                        InsulinDeliveryLogEvent(
+                                            id: dose.syncIdentifier ?? UUID().uuidString,
+                                            type: .pumpEvent(
+                                                .basal(
+                                                    .automationOn(basalStatus: .moreThanScheduled),
+                                                    rate: LoopQuantity(
+                                                        unit: .internationalUnitsPerHour,
+                                                        doubleValue: dose.unitsPerHour
+                                                    )
+                                                ),
+                                                dose
+                                            ),
+                                            date: dose.startDate
+                                        )
+                                    )
+                                }
+                            } else {
+                                fatalError("No `decision.automaticDoseRecommendation`")
+                            }
                         }
+                    } else if let scheduledBasalRate = dose.scheduledBasalRate, scheduledBasalRate.doubleValue(for: .internationalUnitsPerHour) == dose.value {
+                        events.insert(
+                            InsulinDeliveryLogEvent(
+                                id: dose.syncIdentifier ?? UUID().uuidString,
+                                type: .pumpEvent(
+                                    .basal(
+                                        .automationOn(basalStatus: .scheduled),
+                                        rate: LoopQuantity(
+                                            unit: .internationalUnitsPerHour,
+                                            doubleValue: dose.unitsPerHour
+                                        )
+                                    ),
+                                    dose
+                                ),
+                                date: dose.startDate
+                            )
+                        )
                     } else {
-                        fatalError()
-                        // Correct, this should never happen
+                        fatalError("No `decision` or `scheduledBasalRate`")
                     }
                 } else {
                     events.insert(
@@ -231,11 +334,11 @@ class InsulinDeliveryLogViewModel {
                         )
                     )
                 } else {
-                    if let decisionId = dose.decisionId, let decision = try? await loopDataManager.dosingDecisionStore.findDosingDecisionsById(decisionId), let recommendedUnits = decision.manualBolusRecommendation?.recommendation.amount {
-                        if let carbEntry = decision.carbEntry {
+                    if let recommendedUnits = decision?.manualBolusRecommendation?.recommendation.amount {
+                        if let carbEntry = decision?.carbEntry {
                             events.insert(
                                 InsulinDeliveryLogEvent(
-                                    id: decision.syncIdentifier.uuidString,
+                                    id: decision?.syncIdentifier.uuidString ?? UUID().uuidString,
                                     type: .pumpEvent(
                                         .bolus(
                                             .meal(
@@ -251,7 +354,7 @@ class InsulinDeliveryLogViewModel {
                                             ),
                                             programmedAmount: LoopQuantity(
                                                 unit: .internationalUnit,
-                                                doubleValue: decision.manualBolusRequested ?? 0
+                                                doubleValue: decision?.manualBolusRequested ?? 0
                                             ),
                                             deliveryAmount: LoopQuantity(
                                                 unit: .internationalUnit,
@@ -260,13 +363,13 @@ class InsulinDeliveryLogViewModel {
                                         ),
                                         dose
                                     ),
-                                    date: decision.date
+                                    date: dose.startDate
                                 )
                             )
                         } else {
                             events.insert(
                                 InsulinDeliveryLogEvent(
-                                    id: decision.syncIdentifier.uuidString,
+                                    id: decision?.syncIdentifier.uuidString ?? UUID().uuidString,
                                     type: .pumpEvent(
                                         .bolus(
                                             .correction(
@@ -277,7 +380,7 @@ class InsulinDeliveryLogViewModel {
                                             ),
                                             programmedAmount: LoopQuantity(
                                                 unit: .internationalUnit,
-                                                doubleValue: decision.manualBolusRequested ?? 0
+                                                doubleValue: decision?.manualBolusRequested ?? 0
                                             ),
                                             deliveryAmount: LoopQuantity(
                                                 unit: .internationalUnit,
@@ -286,107 +389,34 @@ class InsulinDeliveryLogViewModel {
                                         ),
                                         dose
                                     ),
-                                    date: decision.date
+                                    date: dose.startDate
                                 )
                             )
                         }
                     } else {
-                        fatalError()
-                        // Can hit with pump with external events not handles by Loop
+                        events.insert(
+                            InsulinDeliveryLogEvent(
+                                id: dose.syncIdentifier ?? UUID().uuidString,
+                                type: .pumpEvent(
+                                    .bolus(
+                                        .correction(recommendedAmount: nil),
+                                        programmedAmount: nil,
+                                        deliveryAmount: LoopQuantity(
+                                            unit: .internationalUnit,
+                                            doubleValue: dose.deliveredUnits ?? dose.programmedUnits
+                                        )
+                                    ),
+                                    dose
+                                ),
+                                date: dose.startDate
+                            )
+                        )
                     }
                 }
             case .resume:
                 events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.resumed), dose), date: dose.startDate))
             case .suspend:
                 events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.suspended), dose), date: dose.startDate))
-            case .tempBasal:
-                if let basalSchedule = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory?.value(at: dose.startDate) {
-                    if dose.automatic == false {
-                        events.insert(
-                            InsulinDeliveryLogEvent(
-                                id: dose.syncIdentifier ?? UUID().uuidString,
-                                type: .pumpEvent(
-                                    .basal(
-                                        .manualTempBasal(endDate: dose.endDate),
-                                        rate: LoopQuantity(
-                                            unit: .internationalUnitsPerHour,
-                                            doubleValue: dose.unitsPerHour
-                                        )
-                                    ),
-                                    dose
-                                ),
-                                date: dose.startDate
-                            )
-                        )
-                    } else if dose.unitsPerHour < basalSchedule {
-                        events.insert(
-                            InsulinDeliveryLogEvent(
-                                id: dose.syncIdentifier ?? UUID().uuidString,
-                                type: .pumpEvent(
-                                    .basal(
-                                        .automationOn(basalStatus: .lessThanScheduled),
-                                        rate: LoopQuantity(
-                                            unit: .internationalUnitsPerHour,
-                                            doubleValue: dose.unitsPerHour
-                                        )
-                                    ),
-                                    dose
-                                ),
-                                date: dose.startDate
-                            )
-                        )
-                    } else if dose.unitsPerHour > basalSchedule {
-                        events.insert(
-                            InsulinDeliveryLogEvent(
-                                id: dose.syncIdentifier ?? UUID().uuidString,
-                                type: .pumpEvent(
-                                    .basal(
-                                        .automationOn(basalStatus: .moreThanScheduled),
-                                        rate: LoopQuantity(
-                                            unit: .internationalUnitsPerHour,
-                                            doubleValue: dose.unitsPerHour
-                           
-                                        ),
-                                    ),
-                                    dose
-                                ),
-                                date: dose.startDate
-                            )
-                        )
-                    } else if presetEnabledDuringDose && dose.unitsPerHour == basalSchedule {
-                        events.insert(
-                            InsulinDeliveryLogEvent(
-                                id: dose.syncIdentifier ?? UUID().uuidString,
-                                type: .pumpEvent(
-                                    .basal(
-                                        .automatedPresetBasal,
-                                        rate: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: dose.unitsPerHour)
-                                    ),
-                                    dose
-                                ),
-                                date: dose.startDate
-                            )
-                        )
-                    } else {
-                        fatalError()
-                    }
-                } else {
-                    events.insert(
-                        InsulinDeliveryLogEvent(
-                            id: dose.syncIdentifier ?? UUID().uuidString,
-                            type: .pumpEvent(
-                                .basal(
-                                    .manualTempBasal(
-                                        endDate: dose.endDate
-                                    ),
-                                    rate: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: dose.value)
-                                ),
-                                dose
-                            ),
-                            date: dose.startDate
-                        )
-                    )
-                }
             }
         }
         

@@ -23,7 +23,7 @@ struct InsulinDeliveryOverview: View {
             case lessThanScheduled
         }
         
-        case automationOn(basalStatus: AutomatedBasalStatus)
+        case automationOn(basalStatus: AutomatedBasalStatus, preset: SelectablePreset?)
 
         case automationOff
         
@@ -58,7 +58,7 @@ struct InsulinDeliveryOverview: View {
     var icon: some View {
         VStack {
             switch state {
-            case .automationOn(let basalStatus):
+            case .automationOn(let basalStatus, _):
                 VStack {
                     switch basalStatus {
                     case .scheduled:
@@ -91,7 +91,7 @@ struct InsulinDeliveryOverview: View {
     
     var statusTitle: Text {
         switch state {
-        case .automationOn(let basalStatus):
+        case .automationOn(let basalStatus, _):
             switch basalStatus {
             case .scheduled:
                 Text("Scheduled basal")
@@ -114,10 +114,40 @@ struct InsulinDeliveryOverview: View {
     
     var statusSubtitle: Text? {
         switch state {
-        case .automationOn(.moreThanScheduled):
-            Text("Includes basal and automated boluses")
+        case .automationOn(let basalStatus, let preset):
+            if let preset, preset.insulinNeedsScaleFactor != 1.0 {
+                switch basalStatus {
+                case .scheduled:
+                    Text("A preset with \(preset.insulinNeedsScaleFactor.formatted(.percent)) overall insulin is on. This is your new preset baseline and it overrides your Scheduled Basal.")
+                case .moreThanScheduled:
+                    Text("A preset with \(preset.insulinNeedsScaleFactor.formatted(.percent)) overall insulin is on. The system is currently delivering more than your preset baseline.")
+                case .lessThanScheduled:
+                    Text("A preset with \(preset.insulinNeedsScaleFactor.formatted(.percent)) overall insulin is on. The system is currently delivering less than your preset baseline.")
+                }
+            } else if basalStatus == .moreThanScheduled {
+                Text("Includes basal and automated boluses")
+            } else {
+                nil
+            }
         default:
             nil
+        }
+    }
+    
+    private var errorAdjustedBasalRate: LoopQuantity {
+        if case .error = state {
+            return LoopQuantity(unit: currentBasalRate.quantity.unit, doubleValue: 0)
+        } else {
+            return currentBasalRate.quantity
+        }
+    }
+    
+    private var currentBasalRateForegroundColor: Color {
+        switch state {
+        case .error:
+            return .secondary
+        default:
+            return .primary
         }
     }
     
@@ -126,13 +156,35 @@ struct InsulinDeliveryOverview: View {
             Text("Current Basal Rate")
             
             Group {
-                Text(rateFormatter.string(from: currentBasalRate.quantity, includeUnit: false) ?? "Unknown").fontWeight(.semibold) + Text(" ") + Text(currentBasalRate.quantity.unit.localizedUnitString(in: .short) ?? "U/hr")
+                Text(rateFormatter.string(from: errorAdjustedBasalRate, includeUnit: false) ?? "Unknown").fontWeight(.semibold) + Text(" ") + Text(errorAdjustedBasalRate.unit.localizedUnitString(in: .short) ?? "U/hr")
             }
             .font(.title2)
             
             Text("since \(currentBasalRate.date.formatted(date: .omitted, time: .shortened))")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
+        }
+        .foregroundStyle(currentBasalRateForegroundColor)
+    }
+    
+    private var lastAutoBolusForegroundColor: Color {
+        guard lastAutoBolus != nil else {
+            return .secondary
+        }
+        
+        switch state {
+        case .automationOff, .error:
+            return .secondary
+        default:
+            return .primary
+        }
+    }
+    
+    private var isAutomationOff: Bool {
+        if case .automationOff = state {
+            return true
+        } else {
+            return false
         }
     }
     
@@ -141,10 +193,10 @@ struct InsulinDeliveryOverview: View {
             Text("Last Auto Bolus")
             
             Group {
-                if let lastAutoBolus, state != .automationOff {
+                if let lastAutoBolus, !isAutomationOff {
                     Text(bolusFormatter.string(from: lastAutoBolus.quantity, includeUnit: false) ?? "Unknown").fontWeight(.semibold) + Text(" ") + Text(lastAutoBolus.quantity.unit.localizedUnitString(in: .short) ?? "U")
                 } else {
-                    Text(" ")
+                    Text("-.--") + Text(" ") + Text(LoopUnit.internationalUnit.localizedUnitString(in: .short) ?? "U")
                 }
             }
             .font(.title2)
@@ -156,12 +208,13 @@ struct InsulinDeliveryOverview: View {
                 } else if let lastAutoBolus {
                     Text("at \(lastAutoBolus.date.formatted(date: .omitted, time: .shortened))")
                 } else {
-                    Text("")
+                    Text("None in last 24 hours")
                 }
             }
             .font(.footnote)
             .foregroundStyle(.secondary)
         }
+        .foregroundStyle(lastAutoBolusForegroundColor)
     }
     
     var body: some View {
@@ -196,60 +249,113 @@ struct InsulinDeliveryOverview: View {
                     Spacer()
                     
                     lastAutoBolusSection
-                        .foregroundStyle(state == .automationOn(basalStatus: .lessThanScheduled) ? .secondary : .primary)
                 }
             }
         }
     }
 }
 
-#Preview {
-    let time = Date()
-    let currentBasalRate = DatedQuantity(date: Date(), quantity: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: 0.5))
-    let lastAutoBolus = DatedQuantity(date: Date(), quantity: LoopQuantity(unit: .internationalUnit, doubleValue: 0.05))
-    
-    Group {
-        InsulinDeliveryOverview(
-            state: .automationOn(basalStatus: .scheduled),
-            time: time,
-            currentBasalRate: currentBasalRate,
-            lastAutoBolus: lastAutoBolus
-        )
-        
-        InsulinDeliveryOverview(
-            state: .automationOn(basalStatus: .moreThanScheduled),
-            time: time,
-            currentBasalRate: currentBasalRate,
-            lastAutoBolus: lastAutoBolus
-        )
-        
-        InsulinDeliveryOverview(
-            state: .automationOn(basalStatus: .lessThanScheduled),
-            time: time,
-            currentBasalRate: currentBasalRate,
-            lastAutoBolus: lastAutoBolus
-        )
-        
-        InsulinDeliveryOverview(
-            state: .automationOff,
-            time: time,
-            currentBasalRate: currentBasalRate,
-            lastAutoBolus: lastAutoBolus
-        )
-        
-        InsulinDeliveryOverview(
-            state: .error(status: .noDelivery),
-            time: time,
-            currentBasalRate: currentBasalRate,
-            lastAutoBolus: lastAutoBolus
-        )
-        
-        InsulinDeliveryOverview(
-            state: .error(status: .suspended),
-            time: time,
-            currentBasalRate: currentBasalRate,
-            lastAutoBolus: lastAutoBolus
-        )
-    }
+let time = Date()
+let currentBasalRate = DatedQuantity(date: Date(), quantity: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: 0.5))
+let lastAutoBolus = DatedQuantity(date: Date().addingTimeInterval(-57600), quantity: LoopQuantity(unit: .internationalUnit, doubleValue: 0.05))
+
+let preset = SelectablePreset.custom(TemporaryPreset(symbol: "🏃", name: "Running", settings: .init(targetRange: LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 80)...LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 120), insulinNeedsScaleFactor: 0.5), duration: .indefinite))
+
+#Preview("Automated Delivery (scheduled)", traits: .sizeThatFitsLayout) {
+    InsulinDeliveryOverview(
+        state: .automationOn(basalStatus: .scheduled, preset: nil),
+        time: time,
+        currentBasalRate: currentBasalRate,
+        lastAutoBolus: lastAutoBolus
+    )
     .environment(\.guidanceColors, .default)
+    .padding()
+}
+
+#Preview("Automated Delivery (less than scheduled)", traits: .sizeThatFitsLayout) {
+    InsulinDeliveryOverview(
+        state: .automationOn(basalStatus: .lessThanScheduled, preset: nil),
+        time: time,
+        currentBasalRate: currentBasalRate,
+        lastAutoBolus: lastAutoBolus
+    )
+    .environment(\.guidanceColors, .default)
+    .padding()
+}
+
+#Preview("Automated Delivery (more than scheduled)", traits: .sizeThatFitsLayout) {
+    InsulinDeliveryOverview(
+        state: .automationOn(basalStatus: .moreThanScheduled, preset: nil),
+        time: time,
+        currentBasalRate: currentBasalRate,
+        lastAutoBolus: nil
+    )
+    .environment(\.guidanceColors, .default)
+    .padding()
+}
+
+#Preview("Preset (scheduled)", traits: .sizeThatFitsLayout) {
+    InsulinDeliveryOverview(
+        state: .automationOn(basalStatus: .scheduled, preset: preset),
+        time: time,
+        currentBasalRate: currentBasalRate,
+        lastAutoBolus: lastAutoBolus
+    )
+    .environment(\.guidanceColors, .default)
+    .padding()
+}
+
+#Preview("Preset (less than scheduled)", traits: .sizeThatFitsLayout) {
+    InsulinDeliveryOverview(
+        state: .automationOn(basalStatus: .lessThanScheduled, preset: preset),
+        time: time,
+        currentBasalRate: currentBasalRate,
+        lastAutoBolus: lastAutoBolus
+    )
+    .environment(\.guidanceColors, .default)
+    .padding()
+}
+
+#Preview("Preset (more than scheduled)", traits: .sizeThatFitsLayout) {
+    InsulinDeliveryOverview(
+        state: .automationOn(basalStatus: .moreThanScheduled, preset: preset),
+        time: time,
+        currentBasalRate: currentBasalRate,
+        lastAutoBolus: lastAutoBolus
+    )
+    .environment(\.guidanceColors, .default)
+    .padding()
+}
+
+#Preview("Automation OFF", traits: .sizeThatFitsLayout) {
+    InsulinDeliveryOverview(
+        state: .automationOff,
+        time: time,
+        currentBasalRate: currentBasalRate,
+        lastAutoBolus: nil
+    )
+    .environment(\.guidanceColors, .default)
+    .padding()
+}
+
+#Preview("Error (No Delivery)", traits: .sizeThatFitsLayout) {
+    InsulinDeliveryOverview(
+        state: .error(status: .noDelivery),
+        time: time,
+        currentBasalRate: currentBasalRate,
+        lastAutoBolus: lastAutoBolus
+    )
+    .environment(\.guidanceColors, .default)
+    .padding()
+}
+
+#Preview("Error (Suspended)", traits: .sizeThatFitsLayout) {
+    InsulinDeliveryOverview(
+        state: .error(status: .suspended),
+        time: time,
+        currentBasalRate: currentBasalRate,
+        lastAutoBolus: lastAutoBolus
+    )
+    .environment(\.guidanceColors, .default)
+    .padding()
 }

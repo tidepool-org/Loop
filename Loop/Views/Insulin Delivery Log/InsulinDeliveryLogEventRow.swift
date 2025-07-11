@@ -207,6 +207,8 @@ struct InsulinDeliveryLogEventRow: View {
                     }
                 }
             case .bolus(let bolusEventType, let programmedAmount, let deliveryAmount):
+                let programmedAmount = programmedAmount ?? deliveryAmount
+                
                 switch bolusEventType {
                 case .automated:
                     HStack(spacing: 0) {
@@ -224,7 +226,7 @@ struct InsulinDeliveryLogEventRow: View {
                             .font(.system(size: dateFontSize))
                             .foregroundStyle(.secondary)
                     }
-                case .meal(let recommendedAmount, _, _), .correction(let recommendedAmount):
+                case .meal(let recommendedAmount as LoopQuantity?, _, _), .correction(let recommendedAmount):
                     HStack(spacing: 0) {
                         VStack(alignment: .leading, spacing: 0) {
                             if deliveryAmount != programmedAmount {
@@ -233,11 +235,13 @@ struct InsulinDeliveryLogEventRow: View {
                                 Text("Bolus: ") + Text(bolusFormatter.string(from: deliveryAmount, includeUnit: false) ?? "Unknown").fontWeight(.medium) + Text(" ") + Text(deliveryAmount.unit.localizedUnitString(in: .short) ?? "U")
                             }
                             
-                            Group {
-                                Text("Recommended: ") + Text(bolusFormatter.string(from: recommendedAmount, includeUnit: false) ?? "Unknown").fontWeight(.medium) + Text(" ") + Text(recommendedAmount.unit.localizedUnitString(in: .short) ?? "U")
+                            if let recommendedAmount {
+                                Group {
+                                    Text("Recommended: ") + Text(bolusFormatter.string(from: recommendedAmount, includeUnit: false) ?? "Unknown").fontWeight(.medium) + Text(" ") + Text(recommendedAmount.unit.localizedUnitString(in: .short) ?? "U")
+                                }
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                             }
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                         }
                         
                         Spacer()
@@ -424,6 +428,6 @@ struct InsulinDeliveryLogEventRow: View {
 }
 
 #Preview {
-    InsulinDeliveryLogEventRow(event: InsulinDeliveryLogEvent(id: UUID().uuidString, type: .pumpEvent(.basal(.automationOn(basalStatus: .scheduled), rate: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: 0.05)), nil), date: Date()))
+    InsulinDeliveryLogEventRow(event: InsulinDeliveryLogEvent(id: UUID().uuidString, type: .pumpEvent(.bolus(.correction(recommendedAmount: nil), programmedAmount: nil, deliveryAmount: LoopQuantity(unit: .internationalUnit, doubleValue: 5)), nil), date: Date()))
         .environment(\.colorPalette, .default)
 }

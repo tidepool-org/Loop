@@ -31,10 +31,10 @@ struct InsulinDeliveryLogEvent: Hashable, Identifiable {
             enum BolusEventType: Hashable {
                 case automated
                 case meal(recommendedAmount: LoopQuantity, carbAmount: LoopQuantity, emoji: String)
-                case correction(recommendedAmount: LoopQuantity)
+                case correction(recommendedAmount: LoopQuantity?)
             }
             
-            case bolus(BolusEventType, programmedAmount: LoopQuantity, deliveryAmount: LoopQuantity)
+            case bolus(BolusEventType, programmedAmount: LoopQuantity?, deliveryAmount: LoopQuantity)
             
             enum InsulinEventType: Hashable {
                 case suspended
