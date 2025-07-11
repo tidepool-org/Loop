@@ -92,8 +92,7 @@ class InsulinDeliveryLogViewModel {
     init(
         loopDataManager: LoopDataManager,
         pumpManager: PumpManager?,
-        initialState: State = .loading,
-        autoRefresh: Bool = true
+        initialState: State = .loading
     ) {
         self.loopDataManager = loopDataManager
         self.pumpManager = pumpManager
