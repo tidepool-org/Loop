@@ -11,6 +11,20 @@ import LoopKit
 import LoopKitUI
 import SwiftUI
 
+fileprivate enum FilterOptions: Hashable, CaseIterable {
+    case userInitiated
+    case all
+    
+    var localizedMenuTitle: String {
+        switch self {
+        case .userInitiated:
+            NSLocalizedString("Self-Initiated Events", comment: "")
+        case .all:
+            NSLocalizedString("All Events", comment: "")
+        }
+    }
+}
+
 @MainActor
 @Observable
 class InsulinDeliveryLogViewModel {
@@ -43,12 +57,33 @@ class InsulinDeliveryLogViewModel {
     
     private(set) var state: State
     
+    fileprivate var selectedFilterOption: FilterOptions = .all
+    
     var logEventDisplays: [LogEventDisplay] {
         var displayEvents: [LogEventDisplay] = []
         
         switch state {
         case .fetched(let data), .refreshing(let data):
-            Array(Array(data.events.filter({ $0.date >= Date().addingTimeInterval(.days(-1)) })).sortedByDate().segmentItemsByHour().sorted(by: { $0.key.lowerBound > $1.key.lowerBound })).forEach { range, events in
+            Array(Array(data.events.filter({
+                switch selectedFilterOption {
+                case .userInitiated:
+                    switch $0.type {
+                    case .automation,
+                            .preset,
+                            .pumpEvent(.basal(.manualTempBasal, rate: _), _),
+                            .pumpEvent(.insulin, _),
+                            .pumpEvent(.bolus(.correction, _, _), _),
+                            .pumpEvent(.bolus(.meal, _, _), _):
+                        return true
+                    default:
+                        return false
+                    }
+                case .all:
+                    return true
+                }
+            }).filter({
+                $0.date >= Date().addingTimeInterval(.days(-1))
+            })).sortedByDate().segmentItemsByHour().sorted(by: { $0.key.lowerBound > $1.key.lowerBound })).forEach { range, events in
                 displayEvents.append(.title(id: UUID(), "\(range.lowerBound.formatted(date: .omitted, time: .shortened)) - \(range.upperBound.formatted(date: .omitted, time: .shortened))"))
                 events.sortedByDate().forEach { event in
                     displayEvents.append(.event(event))
@@ -59,6 +94,17 @@ class InsulinDeliveryLogViewModel {
         }
         
         return displayEvents
+    }
+    
+    var eventCount: Int {
+        logEventDisplays.filter { display in
+            switch display {
+            case .event:
+                return true
+            case .title:
+                return false
+            }
+        }.count
     }
     
     private var doseStoreObserver: Any? {
@@ -455,6 +501,7 @@ enum LogEventDisplay: Hashable, Identifiable {
 struct InsulinDeliveryLog: View {
     
     @State private var viewModel: InsulinDeliveryLogViewModel
+    @State var showingFilterMenu = false
     
     let onTapGesture: (DoseEntry) -> Void
     
@@ -479,31 +526,58 @@ struct InsulinDeliveryLog: View {
         }
     }
     
-    private var deliveryLogHeader: some View {
-        HStack(spacing: 0) {
-            Text("Insulin Delivery Log")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(Color(UIColor.label))
+    private var filterMenu: some View {
+        Menu("Filter") {
+            Button { } label: {
+                Text("Filter")
+                Text("Event")
+            }
             
-            Spacer()
-            
-            Menu("Filter") {
-                Button { } label: {
-                    Text("Filter")
-                    Text("Event")
-                }
-                
-                Picker("Filter", selection: .constant(0)) {
-                    Text("A")
-                        .tag(0)
-                    Text("B")
-                        .tag(1)
-                    Text("C")
-                        .tag(2)
+            Picker("Filter", selection: $viewModel.selectedFilterOption) {
+                ForEach(FilterOptions.allCases, id: \.self) { option in
+                    Text(option.localizedMenuTitle)
+                        .tag(option)
                 }
             }
         }
+    }
+    
+    private var deliveryLogHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 0) {
+                Text("Insulin Delivery Log")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(Color(UIColor.label))
+                
+                Spacer()
+                
+                filterMenu
+            }
+            
+            if viewModel.selectedFilterOption != .all {
+                HStack(spacing: 8) {
+                    Text("Filtered by:")
+                        .foregroundStyle(Color(UIColor.systemGray))
+                    
+                    HStack(spacing: 4) {
+                        Text(viewModel.selectedFilterOption.localizedMenuTitle)
+                        
+                        Button {
+                            viewModel.selectedFilterOption = .all
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                        }
+                    }
+                    .padding(4)
+                    .padding(.leading, 4)
+                    .background(Color.accentColor.clipShape(Capsule()))
+                    .foregroundStyle(Color(UIColor.systemBackground))
+                }
+                .font(.subheadline)
+            }
+        }
         .textCase(nil)
+        .padding(.bottom, 4)
     }
     
     private var deliveryLog: some View {
