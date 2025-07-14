@@ -16,6 +16,7 @@ enum NotificationManager {
     enum Action: String {
         case retryBolus
         case acknowledgeAlert
+        case startPreset
     }
 }
 
@@ -40,7 +41,7 @@ extension NotificationManager {
         let acknowledgeAlertAction = UNNotificationAction(
             identifier: Action.acknowledgeAlert.rawValue,
             title: NSLocalizedString("OK", comment: "The title of the notification action to acknowledge a device alert"),
-            options: .foreground
+            options: []
         )
         
         categories.append(UNNotificationCategory(
@@ -49,6 +50,26 @@ extension NotificationManager {
             intentIdentifiers: [],
             options: .customDismissAction
         ))
+
+        let yesStartPresetAction = UNNotificationAction(
+            identifier: Action.startPreset.rawValue,
+            title: NSLocalizedString("Yes, Start Now", comment: "The title of the notification action to start a preset"),
+            options: .foreground
+        )
+
+        let doNotStartPresetAction = UNNotificationAction(
+            identifier: Action.acknowledgeAlert.rawValue,
+            title: NSLocalizedString("Don't Start", comment: "The title of the notification action to not start a preset"),
+            options: []
+        )
+
+        categories.append(UNNotificationCategory(
+            identifier: LoopNotificationCategory.presetReminder.rawValue,
+            actions: [yesStartPresetAction, doNotStartPresetAction],
+            intentIdentifiers: [],
+            options: .customDismissAction
+        ))
+
 
         return Set(categories)
     }

@@ -132,15 +132,18 @@ public class AlertStore {
             })
     }
 
-    public func lookupAllMatching(identifier: Alert.Identifier) async throws -> [StoredAlert] {
+    public func lookupAllMatching(identifier: Alert.Identifier, limit: Int? = nil, mostRecentFirst: Bool = false) async throws -> [StoredAlert] {
         try await managedObjectContext.perform {
             let fetchRequest: NSFetchRequest<StoredAlert> = StoredAlert.fetchRequest()
             let predicates = [
                 NSPredicate(format: "managerIdentifier = %@", identifier.managerIdentifier),
                 NSPredicate(format: "alertIdentifier = %@", identifier.alertIdentifier),
             ]
+            if let limit {
+                fetchRequest.fetchLimit = limit
+            }
             fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-            fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: true) ]
+            fetchRequest.sortDescriptors = [ NSSortDescriptor(key: "modificationCounter", ascending: !mostRecentFirst) ]
             return try self.managedObjectContext.fetch(fetchRequest)
         }
     }

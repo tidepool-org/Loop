@@ -14,6 +14,7 @@ protocol AlertManagerResponder: AnyObject {
     /// Method for our Handlers to call to kick off alert response.  Differs from AlertResponder because here we need the whole `Identifier`.
     @MainActor
     func acknowledgeAlert(identifier: Alert.Identifier) async throws
+    func userDidSelectAction(alertIdentifier: Alert.Identifier, actionIdentifier: String) async throws
 }
 
 public enum AlertUserNotificationUserInfoKey: String {
@@ -335,23 +336,49 @@ public final class AlertManager {
             }
         }
     }
+
 }
 
 // MARK: AlertManagerResponder implementation
 
 extension AlertManager: AlertManagerResponder {
-    func acknowledgeAlert(identifier: Alert.Identifier) async throws {
-        if let responder = responders[identifier.managerIdentifier]?.value {
-            responder.acknowledgeAlert(alertIdentifier: identifier.alertIdentifier) { (error) in
-                if let error = error {
-                    self.presentAcknowledgementFailedAlert(error: error)
+    func userDidSelectAction(alertIdentifier: Alert.Identifier, actionIdentifier: String) async throws {
+        print("AlertManager handling action \(alertIdentifier) \(actionIdentifier)")
+        if let responder = responders[alertIdentifier.managerIdentifier]?.value {
+            do {
+                let storedAlert = try await alertStore.lookupAllMatching(identifier: alertIdentifier, limit: 1).first
+
+                if let storedAlert,
+                   let alert = try? Alert(from: storedAlert, adjustedForStorageTime: false),
+                   let metadata = alert.metadata,
+                   let presetName = metadata["presetName"] as? String?
+                {
+                    try await responder.handleAlertAction(actionIdentifier: actionIdentifier, from: alert)
+
+                } else {
+                    log.error("Unable to get preset name from stored alert: %{public}@", String(describing: storedAlert))
                 }
+            } catch {
+                log.error("Unable to fetch alert for preset action: %{public}@, ${public}@", String(describing: alertIdentifier), String(describing: error))
             }
         }
-        userNotificationAlertScheduler.acknowledgeAlert(identifier: identifier)
-        try await alertStore.recordAcknowledgement(of: identifier)
+
+        try await acknowledgeAlert(identifier: alertIdentifier);
     }
     
+    func acknowledgeAlert(identifier: Alert.Identifier) async throws {
+        if let responder = responders[identifier.managerIdentifier]?.value {
+            do {
+                try await responder.acknowledgeAlert(alertIdentifier: identifier.alertIdentifier)
+            } catch {
+                self.presentAcknowledgementFailedAlert(error: error)
+            }
+        }
+        userNotificationAlertScheduler.alertWasAcknowledged(identifier: identifier)
+        try await alertStore.recordAcknowledgement(of: identifier)
+    }
+
+
     func presentAcknowledgementFailedAlert(error: Error) {
         DispatchQueue.main.async {
             let message: String

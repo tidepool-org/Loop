@@ -54,10 +54,8 @@ public class UserNotificationAlertScheduler {
             self.userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
         }
     }
-}
 
-extension UserNotificationAlertScheduler: AlertManagerResponder {
-    func acknowledgeAlert(identifier: Alert.Identifier) {
+    func alertWasAcknowledged(identifier: Alert.Identifier) {
         DispatchQueue.main.async {
             self.log.debug("Removing notification %@ from delivered notifications", identifier.value)
             self.userNotificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier.value])
@@ -74,8 +72,7 @@ fileprivate extension Alert {
         if #available(iOS 15.0, *) {
             userNotificationContent.interruptionLevel = interruptionLevel.userNotificationInterruptLevel
         }
-        // TODO: Once we have a final design and approval for custom UserNotification buttons, we'll need to set categoryIdentifier
-//        userNotificationContent.categoryIdentifier = LoopNotificationCategory.alert.rawValue
+        userNotificationContent.categoryIdentifier = categoryIdentifier ?? ""
         userNotificationContent.threadIdentifier = identifier.value // Used to match categoryIdentifier, but I /think/ we want multiple threads for multiple alert types, no?
         userNotificationContent.userInfo = [
             LoopNotificationUserInfoKey.managerIDForAlert.rawValue: identifier.managerIdentifier,

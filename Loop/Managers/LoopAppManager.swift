@@ -129,7 +129,7 @@ class LoopAppManager: NSObject {
 
         self.windowProvider = windowProvider
         self.launchOptions = launchOptions
-        
+
         if FeatureFlags.siriEnabled && INPreferences.siriAuthorizationStatus() == .notDetermined {
             INPreferences.requestSiriAuthorization { _ in }
         }
@@ -155,6 +155,8 @@ class LoopAppManager: NSObject {
 
     func launch() {
         precondition(isLaunchPending)
+
+        UNUserNotificationCenter.current().delegate = self
 
         registerBackgroundTasks()
 
@@ -202,7 +204,6 @@ class LoopAppManager: NSObject {
 
         windowProvider?.window?.tintColor = .loopAccent
         OrientationLock.deviceOrientationController = self
-        UNUserNotificationCenter.current().delegate = self
 
         resetLoopManager = ResetLoopManager(delegate: self)
 
@@ -331,10 +332,8 @@ class LoopAppManager: NSObject {
 
         cacheStore.delegate = loopDataManager
 
-
-        Task { @MainActor in
-            alertManager.addAlertResponder(managerIdentifier: crashRecoveryManager.managerIdentifier, alertResponder: crashRecoveryManager)
-        }
+        alertManager.addAlertResponder(managerIdentifier: crashRecoveryManager.managerIdentifier, alertResponder: crashRecoveryManager)
+        alertManager.addAlertResponder(managerIdentifier: temporaryPresetsManager.managerIdentifier, alertResponder: temporaryPresetsManager)
 
         cgmEventStore = CgmEventStore(cacheStore: cacheStore, cacheLength: localCacheDuration)
 
@@ -883,6 +882,7 @@ extension LoopAppManager: @preconcurrency DeviceOrientationController {
 // MARK: - UNUserNotificationCenterDelegate
 
 extension LoopAppManager: UNUserNotificationCenterDelegate {
+
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         switch notification.request.identifier {
         // TODO: Until these notifications are converted to use the new alert system, they shall still show in the foreground
@@ -902,7 +902,8 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
         }
     }
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         switch response.actionIdentifier {
         case NotificationManager.Action.retryBolus.rawValue:
             if  let units = response.notification.request.content.userInfo[LoopNotificationUserInfoKey.bolusAmount.rawValue] as? Double,
@@ -912,22 +913,17 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
                 startDate.timeIntervalSinceNow >= TimeInterval(minutes: -5)
             {
                 analyticsServicesManager.didRetryBolus()
-                
-                Task { @MainActor in
-                    try? await deviceDataManager?.enactBolus(units: units, decisionId: UUID(uuidString: response.notification.request.content.userInfo[LoopNotificationUserInfoKey.decisionId.rawValue] as? String ?? ""), activationType: activationType)
-                    completionHandler()
-                }
+                try? await deviceDataManager?.enactBolus(units: units, decisionId: UUID(uuidString: response.notification.request.content.userInfo[LoopNotificationUserInfoKey.decisionId.rawValue] as? String ?? ""), activationType: activationType)
             }
         case NotificationManager.Action.acknowledgeAlert.rawValue:
             let userInfo = response.notification.request.content.userInfo
             if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier,
                let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String
             {
-                Task {
-                    try await alertManager?.acknowledgeAlert(identifier: Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier:
-                                                                                        alertIdentifier))
-                }
+                try? await alertManager?.acknowledgeAlert(identifier: Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier:
+                                                                                    alertIdentifier))
             }
+
         case UNNotificationDefaultActionIdentifier:
             guard response.notification.request.identifier == LoopNotificationCategory.missedMeal.rawValue else {
                 break
@@ -951,10 +947,14 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
             rootViewController?.restoreUserActivityState(carbActivity)
             
         default:
-            break
+            let userInfo = response.notification.request.content.userInfo
+            if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier,
+               let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String
+            {
+                let identifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: alertIdentifier)
+                try? await alertManager.userDidSelectAction(alertIdentifier: identifier, actionIdentifier: response.actionIdentifier)
+            }
         }
-
-        completionHandler()
     }
 
 }

@@ -23,6 +23,8 @@ class TemporaryPresetsManager {
 
     @ObservationIgnored private let log = OSLog(category: "TemporaryPresetsManager")
 
+    let managerIdentifier = "TemporaryPresetsManager"
+
     @ObservationIgnored private var settingsProvider: SettingsProvider
 
     var presetHistory: TemporaryScheduleOverrideHistory
@@ -311,6 +313,15 @@ class TemporaryPresetsManager {
         )
     }
 
+    func startPreset(withIdentifier identifier: String) {
+        guard let preset = selectablePresets.first(where: { $0.id == identifier }) else {
+            log.error("Unable to find preset with identifier ${public}@", identifier)
+            return
+        }
+        startPreset(preset)
+    }
+
+
     func startPreset(_ preset: SelectablePreset) {
         switch preset {
         case .custom(let temporaryScheduleOverridePreset):
@@ -419,11 +430,7 @@ class TemporaryPresetsManager {
         return lastUsed![id]
     }
 
-    var nextScheduledPresetReminderIdentifier = Alert.Identifier(managerIdentifier: AlertManager.managerIdentifier, alertIdentifier: "ScheduledPresetReminder")
-
     func scheduleNextPresetReminder() async {
-
-        await alertIssuer?.retractAlert(identifier: nextScheduledPresetReminderIdentifier)
 
         let settings = settingsProvider.settings
 
@@ -438,6 +445,11 @@ class TemporaryPresetsManager {
         }
 
         if let preset {
+
+            let nextScheduledPresetReminderIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: preset.id.uuidString)
+            await alertIssuer?.retractAlert(identifier: nextScheduledPresetReminderIdentifier)
+
+
             let nextScheduledTime = preset.nextScheduledStartAfter(now)!
 
             let formatter = DateFormatter()
@@ -446,22 +458,41 @@ class TemporaryPresetsManager {
 
             let title = NSLocalizedString("Start Scheduled Preset?", comment: "Scheduled preset reminder title")
             let body = String(
-                format: NSLocalizedString("Your %1$@ is scheduled for today at %2$@. Would you like to start it now?", comment: "Scheduled preset reminder alert body. (1: preset name) (2: time)"),
+                format: NSLocalizedString("Your %1$@ preset is scheduled for today at %2$@. Would you like to start it now?\n\nThis will end any active preset.", comment: "Scheduled preset reminder alert body. (1: preset name) (2: time)"),
                 preset.name,
                 formatter.string(
                     from: nextScheduledTime
                 )
             )
 
+            let actions = [
+                Alert.UserAlertAction(
+                    label: NSLocalizedString("Don't Start", comment: "Label for do not start preset action on scheduled preset reminder alert"),
+                    identifier: "acknowledge",
+                    style: .default
+                ),
+                Alert.UserAlertAction(
+                    label: NSLocalizedString("Yes, Start Now", comment: "Label for do yes, start preset now action on scheduled preset reminder alert"),
+                    identifier: "startPreset",
+                    style: .cancel
+                )
+            ]
+
             let content = Alert.Content(title: title,
                                         body: body,
-                                        acknowledgeActionButtonLabel: NSLocalizedString("Dismiss", comment: "Default alert dismissal"))
+                                        actions: actions)
+
+            let metadata: Alert.Metadata = ["presetId": Alert.MetadataValue(preset.id.uuidString)]
+
             let alert = Alert(
                 identifier: nextScheduledPresetReminderIdentifier,
                 foregroundContent: content,
                 backgroundContent: content,
                 trigger: .delayed(interval: nextScheduledTime.timeIntervalSince(now)),
-                interruptionLevel: .timeSensitive)
+                interruptionLevel: .timeSensitive,
+                metadata: metadata,
+                categoryIdentifier: LoopNotificationCategory.presetReminder.rawValue
+            )
 
             await alertIssuer?.issueAlert(alert)
         }
@@ -472,6 +503,21 @@ class TemporaryPresetsManager {
 extension TemporaryPresetsManager {
     static var placeholder: TemporaryPresetsManager {
         .init(settingsProvider: SettingsManager.placeholder)
+    }
+}
+
+extension TemporaryPresetsManager : AlertResponder {
+    func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier) async throws { }
+
+    func handleAlertAction(actionIdentifier: String, from alert: Alert) async throws {
+        if actionIdentifier == NotificationManager.Action.startPreset.rawValue,
+           let metdata = alert.metadata,
+           let presetIdentifier = metdata["presetId"]?.wrapped as? String?
+        {
+            startPreset(withIdentifier: presetIdentifier!)
+        } else {
+            print("Here")
+        }
     }
 }
 

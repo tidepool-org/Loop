@@ -70,7 +70,7 @@ class CrashRecoveryManager {
 }
 
 extension CrashRecoveryManager: AlertResponder {
-    func acknowledgeAlert(alertIdentifier: LoopKit.Alert.AlertIdentifier, completion: @escaping (Error?) -> Void) {
+    func acknowledgeAlert(alertIdentifier: LoopKit.Alert.AlertIdentifier) async throws {
         UserDefaults.appGroup?.inFlightAutomaticDose = nil
         doseRecoveredFromCrash = nil
     }
