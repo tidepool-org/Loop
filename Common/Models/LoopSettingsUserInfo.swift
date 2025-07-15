@@ -23,7 +23,7 @@ struct LoopSettingsUserInfo: Equatable {
         }
         return TemporaryScheduleOverride(
             context: .preMeal,
-            settings: TemporaryScheduleOverrideSettings(targetRange: preMealTargetRange),
+            settings: TemporaryPresetSettings(targetRange: preMealTargetRange),
             startDate: date,
             duration: .finite(duration),
             enactTrigger: .local,
@@ -59,7 +59,7 @@ struct LoopSettingsUserInfo: Equatable {
 
         return TemporaryScheduleOverride(
             context: .legacyWorkout,
-            settings: TemporaryScheduleOverrideSettings(targetRange: legacyWorkoutTargetRange),
+            settings: TemporaryPresetSettings(targetRange: legacyWorkoutTargetRange),
             startDate: date,
             duration: duration.isInfinite ? .indefinite : .finite(duration),
             enactTrigger: .local,

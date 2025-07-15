@@ -46,6 +46,7 @@ struct PresetDetentView: View {
                         case .finite:
                             let endTimeText = DateFormatter.localizedString(from: activeOverride.activeInterval.end, dateStyle: .none, timeStyle: .short)
                             Text(String(format: NSLocalizedString("on until %@", comment: "The format for the description of a custom preset end date"), endTimeText))
+                                .accessibilityIdentifier("text_PresetActionSheetActiveOn")
                         case .indefinite:
                             EmptyView()
                         }
@@ -100,7 +101,7 @@ struct PresetDetentView: View {
     @State var sheetContentHeight: Double = 0
 
     var settingsImpact: TherapySettings.InsulinMultiplierImpact {
-        settingsManager.therapySettings.impact(for: preset.insulinMultiplier ?? 1.0)
+        settingsManager.therapySettings.impact(for: preset.insulinNeedsScaleFactor)
     }
 
     var body: some View {
@@ -114,7 +115,6 @@ struct PresetDetentView: View {
                     
                     if operation == .start {
                         Button {
-                            dismiss()
                             didTapEdit()
                         } label: {
                             Group {
@@ -124,13 +124,14 @@ struct PresetDetentView: View {
                         }
                         .tint(.accentColor)
                         .padding(.bottom, -8)
+                        .accessibilityIdentifier("button_EditPreset")
                     }
                 }
                 
                 Divider()
                 
                 PresetStatsView(
-                    insulinMultiplier: preset.insulinMultiplier,
+                    insulinMultiplier: preset.insulinNeedsScaleFactor,
                     correctionRange: preset.correctionRange,
                     guardrail: settingsManager.guardrailForPreset(preset),
                     therapySettingsImpactDisplayState: operation == .end ? .show(settingsImpact) : .hide

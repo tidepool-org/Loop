@@ -10,12 +10,6 @@ import Foundation
 import LoopAlgorithm
 
 enum Deeplink: Hashable {
-    
-    struct AppSource: Hashable {
-        let name: String
-        let bundleId: String?
-    }
-    
     enum Host: String, CaseIterable {
         case carbEntry = "carb-entry"
         case bolus = "manual-bolus"
@@ -24,7 +18,7 @@ enum Deeplink: Hashable {
     }
     
     enum CarbEntryLink: Hashable {
-        case carbEntryDetected(value: LoopQuantity, source: AppSource?)
+        case carbEntryDetected(value: LoopQuantity)
     }
     
     case carbEntry(CarbEntryLink?)
@@ -54,13 +48,7 @@ enum Deeplink: Hashable {
             if let value = components?.queryItems?.first(where: { $0.name == "value" })?.value, let doubleValue = Double(value) {
                 let sourceBundleId = components?.queryItems?.first(where: { $0.name == "sourceBundleId" })?.value
                 let sourceName = components?.queryItems?.first(where: { $0.name == "sourceName" })?.value
-                
-                var source: AppSource?
-                if let sourceName {
-                    source = AppSource(name: sourceName, bundleId: sourceBundleId)
-                }
-                
-                self = .carbEntry(.carbEntryDetected(value: LoopQuantity(unit: .gram, doubleValue: doubleValue), source: source))
+                self = .carbEntry(.carbEntryDetected(value: LoopQuantity(unit: .gram, doubleValue: doubleValue)))
             } else {
                 self = .carbEntry(nil)
             }

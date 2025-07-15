@@ -161,7 +161,7 @@ class TemporaryPresetsManager {
         case .legacyWorkout:
             return .legacyWorkout(range: range!, duration: override.duration.presetDurationType)
         case .custom:
-            let preset = TemporaryScheduleOverridePreset(
+            let preset = TemporaryPreset(
                 id: override.syncIdentifier,
                 symbol: "",
                 name: "Single Use Preset",
@@ -279,7 +279,7 @@ class TemporaryPresetsManager {
         }
         return TemporaryScheduleOverride(
             context: .preMeal,
-            settings: TemporaryScheduleOverrideSettings(targetRange: preMealTargetRange),
+            settings: TemporaryPresetSettings(targetRange: preMealTargetRange),
             startDate: date,
             duration: .finite(duration),
             enactTrigger: .local,
@@ -299,7 +299,7 @@ class TemporaryPresetsManager {
 
         return TemporaryScheduleOverride(
             context: .legacyWorkout,
-            settings: TemporaryScheduleOverrideSettings(targetRange: legacyWorkoutTargetRange),
+            settings: TemporaryPresetSettings(targetRange: legacyWorkoutTargetRange),
             startDate: date,
             duration: duration,
             enactTrigger: .local,

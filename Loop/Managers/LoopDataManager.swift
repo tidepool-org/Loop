@@ -43,9 +43,9 @@ protocol DeliveryDelegate: AnyObject {
     var pumpInsulinType: InsulinType? { get }
     var basalDeliveryState: PumpManagerStatus.BasalDeliveryState? { get }
     var isPumpConfigured: Bool { get }
-
-    func enact(_ recommendation: AutomaticDoseRecommendation) async throws
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws
+    
+    func enact(bolus: Double?, tempBasal: TempBasalRecommendation?, decisionId: UUID?) async throws
+    func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws
     func roundBasalRate(unitsPerHour: Double) -> Double
     func roundBolusVolume(units: Double) -> Double
 }
@@ -110,6 +110,7 @@ final class LoopDataManager: ObservableObject {
     let settingsProvider: SettingsProvider
     let dosingDecisionStore: DosingDecisionStoreProtocol
     let glucoseStore: GlucoseStoreProtocol
+    let crashRecoveryManager: CrashRecoveryManager
 
     let logger = DiagnosticLog(category: "LoopDataManager")
 
@@ -119,7 +120,7 @@ final class LoopDataManager: ObservableObject {
 
     private let now: () -> Date
 
-    private let automaticDosingStatus: AutomaticDosingStatus
+    let automaticDosingStatus: AutomaticDosingStatus
 
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
@@ -160,6 +161,7 @@ final class LoopDataManager: ObservableObject {
         doseStore: DoseStoreProtocol,
         glucoseStore: GlucoseStoreProtocol,
         carbStore: CarbStoreProtocol,
+        crashRecoveryManager: CrashRecoveryManager,
         dosingDecisionStore: DosingDecisionStoreProtocol,
         now: @escaping () -> Date = { Date() },
         automaticDosingStatus: AutomaticDosingStatus,
@@ -175,6 +177,7 @@ final class LoopDataManager: ObservableObject {
         self.doseStore = doseStore
         self.glucoseStore = glucoseStore
         self.carbStore = carbStore
+        self.crashRecoveryManager = crashRecoveryManager
         self.dosingDecisionStore = dosingDecisionStore
         self.now = now
         self.automaticDosingStatus = automaticDosingStatus
@@ -254,6 +257,7 @@ final class LoopDataManager: ObservableObject {
                     now.timeIntervalSince(entry.startDate) < .hours(36)
                 }) ?? []
             }
+            
             if !enabled {
                 temporaryPresetsManager.clearOverride(matching: .preMeal)
                 Task {
@@ -488,14 +492,16 @@ final class LoopDataManager: ObservableObject {
 
         logger.default("Cancelling active temp basal for reason: %{public}@", String(describing: reason))
 
-        let recommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel)
+        let recommendation = AutomaticDoseRecommendation(basalAdjustment: .cancel, direction: .decrease)
 
         var dosingDecision = StoredDosingDecision(reason: reason.rawValue)
         dosingDecision.settings = StoredDosingDecision.Settings(settingsProvider.settings)
         dosingDecision.automaticDoseRecommendation = recommendation
 
         do {
-            try await deliveryDelegate?.enact(recommendation)
+            crashRecoveryManager.dosingStarted(dose: recommendation)
+            try await deliveryDelegate?.enact(bolus: recommendation.bolusUnits, tempBasal: recommendation.basalAdjustment, decisionId: dosingDecision.id)
+            self.crashRecoveryManager.dosingFinished()
         } catch {
             dosingDecision.appendError(error as? LoopError ?? .unknownError(error))
             if reason == .maximumBasalRateChanged {
@@ -565,22 +571,25 @@ final class LoopDataManager: ObservableObject {
                     recommendationToEnact.bolusUnits = deliveryDelegate.roundBolusVolume(units: bolus)
                 }
 
-                if var basal = algoRecommendation.basalAdjustment {
-                    basal.unitsPerHour = deliveryDelegate.roundBasalRate(unitsPerHour: basal.unitsPerHour)
+                var basal = algoRecommendation.basalAdjustment
+                
+                basal.unitsPerHour = deliveryDelegate.roundBasalRate(unitsPerHour: basal.unitsPerHour)
 
-                    let scheduledBasalRate = input.basal.closestPrior(to: loopBaseTime)!.value
-                    let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: loopBaseTime)
+                let scheduledBasalRate = input.basal.closestPrior(to: loopBaseTime)!.value
+                let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: loopBaseTime)
 
-                    let basalAdjustment = basal.adjustForCurrentDelivery(
-                        at: loopBaseTime,
-                        neutralBasalRate: scheduledBasalRate,
-                        currentTempBasal: deliveryDelegate.basalDeliveryState?.currentTempBasal,
-                        continuationInterval: .minutes(11),
-                        neutralBasalRateMatchesPump: activeOverride == nil
-                    )
-
+                let basalAdjustment = basal.adjustForCurrentDelivery(
+                    at: loopBaseTime,
+                    neutralBasalRate: scheduledBasalRate,
+                    currentTempBasal: deliveryDelegate.basalDeliveryState?.currentTempBasal,
+                    continuationInterval: .minutes(11),
+                    neutralBasalRateMatchesPump: activeOverride == nil
+                )
+                
+                if let basalAdjustment {
                     recommendationToEnact.basalAdjustment = basalAdjustment
                 }
+                
                 output.recommendationResult = .success(.init(automatic: recommendationToEnact))
 
                 if recommendationToEnact != algoRecommendation {
@@ -598,14 +607,16 @@ final class LoopDataManager: ObservableObject {
                         throw LoopError.pumpSuspended
                     }
 
-                    if recommendationToEnact.hasDosingChange {
-                        logger.default("Enacting: %{public}@", String(describing: recommendationToEnact))
-                        try await deliveryDelegate.enact(recommendationToEnact)
-                    }
+                    logger.default("Enacting: %{public}@", String(describing: recommendationToEnact))
+
+                    try await deliveryDelegate.enact(bolus: recommendationToEnact.bolusUnits, tempBasal: basalAdjustment, decisionId: dosingDecision.id)
 
                     logger.default("loop() completed successfully.")
                     lastLoopCompleted = Date()
                     let duration = lastLoopCompleted!.timeIntervalSince(loopBaseTime)
+                    
+                    dosingDecision.enactedTempBasal = basalAdjustment
+                    dosingDecision.enactedBolusAmount = recommendationToEnact.bolusUnits
 
                     analyticsServicesManager?.loopDidSucceed(duration)
                 } else {
@@ -807,7 +818,7 @@ extension LoopDataManager {
     ///   - insulinModel: The type of insulin model that should be used for the dose.
     func addManuallyEnteredDose(startDate: Date, units: Double, insulinType: InsulinType? = nil) async {
         let syncIdentifier = Data(UUID().uuidString.utf8).hexadecimalString
-        let dose = DoseEntry(type: .bolus, startDate: startDate, value: units, unit: .units, syncIdentifier: syncIdentifier, insulinType: insulinType, manuallyEntered: true)
+        let dose = DoseEntry(type: .bolus, startDate: startDate, value: units, unit: .units, decisionId: nil, syncIdentifier: syncIdentifier, insulinType: insulinType, manuallyEntered: true)
 
         do {
             try await doseStore.addDoses([dose], from: nil)
@@ -818,7 +829,8 @@ extension LoopDataManager {
     }
 
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) async {
-        let dosingDecision = StoredDosingDecision(date: date,
+        let dosingDecision = StoredDosingDecision(id: bolusDosingDecision.id,
+                                                  date: date,
                                                   reason: bolusDosingDecision.reason.rawValue,
                                                   settings: StoredDosingDecision.Settings(settingsProvider.settings),
                                                   scheduleOverride: bolusDosingDecision.scheduleOverride,
@@ -1195,8 +1207,8 @@ extension LoopDataManager: SimpleBolusViewModelDelegate {
         settingsProvider.settings.suspendThreshold?.quantity
     }
     
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws {
-        try await deliveryDelegate?.enactBolus(units: units, activationType: activationType)
+    func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws {
+        try await deliveryDelegate?.enactBolus(units: units, decisionId: decisionId, activationType: activationType)
     }
     
 }
@@ -1376,12 +1388,6 @@ extension AutomaticDosingStrategy {
     }
 }
 
-extension AutomaticDoseRecommendation {
-    public var hasDosingChange: Bool {
-        return basalAdjustment != nil || bolusUnits != nil
-    }
-}
-
 extension StoredDosingDecision {
     mutating func updateFrom(input: StoredDataAlgorithmInput, output: AlgorithmOutput<StoredCarbEntry>) {
         self.historicalGlucose = input.glucoseHistory.map { HistoricalGlucoseValue(startDate: $0.startDate, quantity: $0.quantity) }
@@ -1486,7 +1492,50 @@ extension LoopDataManager: DiagnosticReportGenerator {
     }
 }
 
-extension LoopDataManager: LoopControl {}
+extension LoopDataManager: LoopControl {
+    var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
+        guard let input = displayState.input else {
+            return nil
+        }
+
+        let now = Date()
+
+        let neutralBasal = input.basal.closestPrior(to: now)!.value
+        var scheduledBasalRate: Double
+        if let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: now) {
+            scheduledBasalRate = neutralBasal / activeOverride.settings.effectiveInsulinNeedsScaleFactor
+        } else {
+            scheduledBasalRate = neutralBasal
+        }
+
+        var currentBasalRate: Double
+        if let currentTempBasal = deliveryDelegate?.basalDeliveryState?.currentTempBasal {
+            currentBasalRate = currentTempBasal.unitsPerHour
+        } else {
+            currentBasalRate = scheduledBasalRate
+        }
+
+        if currentBasalRate > neutralBasal {
+            return .increasedInsulin
+        } else if currentBasalRate < neutralBasal {
+            if currentBasalRate == 0 {
+                return .minimumDelivery
+            } else {
+                return .decreasedInsulin
+            }
+        } else {
+            let recentAutomaticBoluses = input.doses.filter({ dose in
+                dose.deliveryType == .bolus &&
+                dose.automatic &&
+                dose.startDate.addingTimeInterval(.minutes(5)) > now
+            })
+            if !recentAutomaticBoluses.isEmpty {
+                return .increasedInsulin
+            }
+            return scheduledBasalRate != neutralBasal ? .neutralOverride : .neutralNoOverride
+        }
+    }
+}
 
 extension LoopDataManager: AutomationHistoryProvider {
     func automationHistory(from start: Date, to end: Date) async throws -> [AbsoluteScheduleValue<Bool>] {

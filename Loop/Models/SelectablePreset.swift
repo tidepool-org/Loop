@@ -86,7 +86,7 @@ extension PresetDuration: Hashable {
 
 enum SelectablePreset: Hashable, Identifiable {
 
-    case custom(TemporaryScheduleOverridePreset)
+    case custom(TemporaryPreset)
     case preMeal(range: ClosedRange<LoopQuantity>)
     case legacyWorkout(range: ClosedRange<LoopQuantity>, duration: PresetDuration)
 
@@ -155,10 +155,60 @@ enum SelectablePreset: Hashable, Identifiable {
             case .legacyWorkout(let range, _):
                 self = .legacyWorkout(range: range, duration: newValue)
             case .custom(var preset):
-                preset.settings = TemporaryScheduleOverrideSettings(targetRange: preset.settings.targetRange, insulinNeedsScaleFactor: preset.settings.insulinNeedsScaleFactor)
+                preset.settings = TemporaryPresetSettings(targetRange: preset.settings.targetRange, insulinNeedsScaleFactor: preset.settings.insulinNeedsScaleFactor)
+                switch newValue {
+                case .indefinite:
+                    preset.duration = .indefinite
+                case .duration(let duration):
+                    preset.duration = .finite(duration)
+                default:
+                    break
+                }
+                self = .custom(preset)
             }
         }
     }
+
+    var scheduleStartDate: Date? {
+        get {
+            switch self {
+            case .custom(let preset):
+                return preset.scheduleStartDate
+            case .preMeal, .legacyWorkout:
+                return nil
+            }
+        }
+        set {
+            switch self {
+            case .custom(var preset):
+                preset.scheduleStartDate = newValue
+                self = .custom(preset)
+            default:
+                break
+            }
+        }
+    }
+
+    var repeatOptions: PresetScheduleRepeatOptions {
+        get {
+            switch self {
+            case .custom(let preset):
+                return preset.repeatOptions ?? .none
+            case .preMeal, .legacyWorkout:
+                return .none
+            }
+        }
+        set {
+            switch self {
+            case .custom(var preset):
+                preset.repeatOptions = newValue
+                self = .custom(preset)
+            default:
+                break
+            }
+        }
+    }
+
 
     var name: String {
         get {
@@ -192,7 +242,8 @@ enum SelectablePreset: Hashable, Identifiable {
             case .legacyWorkout(_, let duration):
                 self = .legacyWorkout(range: newValue!, duration: duration)
             case .custom(var preset):
-                preset.settings = TemporaryScheduleOverrideSettings(targetRange: newValue, insulinNeedsScaleFactor: preset.settings.insulinNeedsScaleFactor)
+                preset.settings = TemporaryPresetSettings(targetRange: newValue, insulinNeedsScaleFactor: preset.settings.insulinNeedsScaleFactor)
+                self = .custom(preset)
             }
         }
     }
@@ -205,12 +256,20 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
     
-    var insulinMultiplier: Double? {
-        guard let insulinSensitivityMultiplier else {
-            return nil
+    var insulinNeedsScaleFactor: Double {
+        get {
+            if case .custom(let preset) = self {
+                return 1.0 / (preset.settings.insulinSensitivityMultiplier ?? 1)
+            } else {
+                return 1.0
+            }
         }
-        
-        return 1.0 / insulinSensitivityMultiplier
+        set {
+            if case .custom(var preset) = self {
+                preset.settings = TemporaryPresetSettings(targetRange: preset.settings.targetRange, insulinNeedsScaleFactor: newValue)
+                self = .custom(preset)
+            }
+        }
     }
 
     var canAdjustSensitivity: Bool {
@@ -240,6 +299,23 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
+    var allowsScheduling: Bool {
+        switch self {
+        case .custom:
+            return true;
+        case .preMeal, .legacyWorkout:
+            return false;
+        }
+    }
+
+    var canBeDeleted: Bool {
+        switch self {
+        case .custom:
+            return true;
+        case .preMeal, .legacyWorkout:
+            return false;
+        }
+    }
 
     var isPreMeal: Bool {
         if case .preMeal = self {

@@ -77,7 +77,7 @@ fileprivate extension StoredSettings {
                                                                                                        start: date.addingTimeInterval(-.minutes(30)),
                                                                                                        end: date.addingTimeInterval(.minutes(30))))
         let preMealOverride = TemporaryScheduleOverride(context: .preMeal,
-                                                        settings: TemporaryScheduleOverrideSettings(unit: .milligramsPerDeciliter,
+                                                        settings: TemporaryPresetSettings(unit: .milligramsPerDeciliter,
                                                                                                     targetRange: DoubleRange(minValue: 80.0, maxValue: 90.0),
                                                                                                     insulinNeedsScaleFactor: 0.5),
                                                         startDate: date.addingTimeInterval(-.minutes(30)),

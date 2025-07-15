@@ -59,12 +59,13 @@ extension DosingDecisionStore {
 
 fileprivate extension StoredDosingDecision {
     static func simulated(date: Date) -> StoredDosingDecision {
+        let id = UUID(uuidString: "ebd31ac5-4345-4a81-a0fe-871aa0b0938d")!
         let controllerTimeZone = TimeZone(identifier: "America/Los_Angeles")!
         let scheduleTimeZone = TimeZone(secondsFromGMT: TimeZone(identifier: "America/Phoenix")!.secondsFromGMT())!
         let reason = "simulatedCoreData"
         let settings = StoredDosingDecision.Settings(syncIdentifier: UUID(uuidString: "18CF3948-0B3D-4B12-8BFE-14986B0E6784")!)
         let scheduleOverride = TemporaryScheduleOverride(context: .preMeal,
-                                                         settings: TemporaryScheduleOverrideSettings(unit: .milligramsPerDeciliter,
+                                                         settings: TemporaryPresetSettings(unit: .milligramsPerDeciliter,
                                                                                                      targetRange: DoubleRange(minValue: 80.0,
                                                                                                                               maxValue: 90.0),
                                                                                                      insulinNeedsScaleFactor: 1.5),
@@ -166,7 +167,7 @@ fileprivate extension StoredDosingDecision {
                                                           quantity: LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 125 + minutes / 5)))
         }
         let automaticDoseRecommendation = AutomaticDoseRecommendation(basalAdjustment: TempBasalRecommendation(unitsPerHour: 0.75,
-                                                                                                               duration: .minutes(30)),
+                                                                                                               duration: .minutes(30)), direction: .increase,
                                                                       bolusUnits: 1.25)
         let manualBolusRecommendation = ManualBolusRecommendationWithDate(recommendation: ManualBolusRecommendation(amount: 0.2,
                                                                                                                     notice: .predictedGlucoseBelowTarget(minGlucose: SimpleGlucoseValue(startDate: date.addingTimeInterval(.minutes(30)),
@@ -178,7 +179,8 @@ fileprivate extension StoredDosingDecision {
         let errors: [Issue] = [Issue(id: "alpha"),
                                Issue(id: "bravo", details: ["size": "tiny"])]
 
-        return StoredDosingDecision(date: date,
+        return StoredDosingDecision(id: id,
+                                    date: date,
                                     controllerTimeZone: controllerTimeZone,
                                     reason: reason,
                                     settings: settings,

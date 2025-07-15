@@ -15,19 +15,15 @@ public struct CorrectionRangePreview: View {
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.guidanceColors) private var guidanceColors
 
-    @Binding var range: ClosedRange<LoopQuantity>?
+    var range: ClosedRange<LoopQuantity>?
     var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
-    @State private var editedRange: ClosedRange<LoopQuantity>?
-    private var allowsScheduledRange: Bool
     var showDisclosure: Bool
 
-    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, allowsScheduledRange: Bool = true, showDisclosure: Bool = false) {
-        self._range = range
-        self.editedRange = range.wrappedValue
+    init(range: ClosedRange<LoopQuantity>?, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, showDisclosure: Bool = false) {
+        self.range = range
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
-        self.allowsScheduledRange = allowsScheduledRange
         self.showDisclosure = showDisclosure
     }
 
@@ -86,7 +82,8 @@ public struct CorrectionRangePreview: View {
                 HStack(alignment: .top, spacing: 12) {
                     Text(Image(systemName: "exclamationmark.triangle.fill"))
                         .foregroundColor(color)
-                    Text(SafetyClassification.captionForCrossedThresholds(crossedThresholds, isRange: true));
+                    Text(SafetyClassification.captionForCrossedThresholds(crossedThresholds, isRange: true))
+                        .accessibilityIdentifier("text_CorrectionRangeWarning");
                 }
                 .padding(12)
                 .background(color.opacity(0.1))
@@ -108,10 +105,10 @@ public struct CorrectionRangePreview: View {
             }.padding(.bottom, 10)
             VStack(spacing: 4) {
                 if let range {
-                    correctionRangeLabel(range: range)
+                    correctionRangeLabel(range: range).accessibilityIdentifier("text_CorrectionRangePreview")
                     Text("Adjusted Range")
                 } else {
-                    correctionRangeLabel(range: scheduledRange)
+                    correctionRangeLabel(range: scheduledRange).accessibilityIdentifier("text_CorrectionRangePreview")
                     Text("Scheduled Range")
                 }
             }

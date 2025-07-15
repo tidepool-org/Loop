@@ -21,7 +21,7 @@ public struct InsulinScaleAdjustView: View {
     @Binding var insulinMultiplier: Double
 
     var insulinPercentage: Double {
-        get { return (insulinMultiplier * 100).rounded() }
+        get { return (insulinMultiplier * 20).rounded() * 5 }
     }
 
     public var body: some View {
@@ -169,6 +169,7 @@ public struct InsulinScaleAdjustView: View {
 
                     SettingAdjustmentPreview(
                         value: carbRatio,
+                        displayUnit: .gramsPerUnit,
                         name: "Carb Ratio",
                         highlighted: insulinPercentage != 100
                     )

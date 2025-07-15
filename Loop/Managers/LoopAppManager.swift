@@ -308,6 +308,7 @@ class LoopAppManager: NSObject {
         }
 
         let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
+        crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
 
         loopDataManager = LoopDataManager(
             lastLoopCompleted: ExtensionDataManager.context?.lastLoopCompleted,
@@ -316,6 +317,7 @@ class LoopAppManager: NSObject {
             doseStore: doseStore,
             glucoseStore: glucoseStore,
             carbStore: carbStore,
+            crashRecoveryManager: crashRecoveryManager,
             dosingDecisionStore: dosingDecisionStore,
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset },
@@ -325,7 +327,6 @@ class LoopAppManager: NSObject {
 
         cacheStore.delegate = loopDataManager
 
-        crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
 
         Task { @MainActor in
             alertManager.addAlertResponder(managerIdentifier: crashRecoveryManager.managerIdentifier, alertResponder: crashRecoveryManager)
@@ -497,7 +498,9 @@ class LoopAppManager: NSObject {
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
         withObservationTracking(of: self.automaticDosingStatus.isAutomaticDosingAllowed && self.settingsManager.dosingEnabled) { [weak self] enabled in
-            self?.automaticDosingStatus.automaticDosingEnabled = enabled
+            if self?.automaticDosingStatus.automaticDosingEnabled != enabled {
+                self?.automaticDosingStatus.automaticDosingEnabled = enabled
+            }
         }
 
         state = state.next
@@ -635,6 +638,7 @@ class LoopAppManager: NSObject {
                     .environmentObject(deviceDataManager.displayGlucosePreference)
                     .environment(\.appName, Bundle.main.bundleDisplayName)
                     .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
+                    .environment(\.guidanceColors, .default)
                     .environment(\.loopStatusColorPalette, .loopStatus)
                     .environment(\.settingsManager, settingsManager)
                     .environment(\.temporaryPresetsManager, temporaryPresetsManager)
@@ -700,8 +704,8 @@ class LoopAppManager: NSObject {
         case let .carbEntry(carbEntryLink):
             if let carbEntryLink {
                 switch carbEntryLink {
-                case let .carbEntryDetected(value, source):
-                    statusTableViewController?.presentCarbEntryScreen(nil, value: value, source: source)
+                case let .carbEntryDetected(value):
+                    statusTableViewController?.presentCarbEntryScreen(nil, value: value)
                 }
             } else {
                 statusTableViewController?.presentCarbEntryScreen(nil)
@@ -925,7 +929,7 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
                 analyticsServicesManager.didRetryBolus()
                 
                 Task { @MainActor in
-                    try? await deviceDataManager?.enactBolus(units: units, activationType: activationType)
+                    try? await deviceDataManager?.enactBolus(units: units, decisionId: UUID(uuidString: response.notification.request.content.userInfo[LoopNotificationUserInfoKey.decisionId.rawValue] as? String ?? ""), activationType: activationType)
                     completionHandler()
                 }
             }
@@ -1025,8 +1029,8 @@ extension LoopAppManager: ResetLoopManagerDelegate {
 // MARK: - ServicesManagerDosingDelegate
 
 extension LoopAppManager: ServicesManagerDosingDelegate {
-    func deliverBolus(amountInUnits: Double) async throws {
-        try await deviceDataManager.enactBolus(units: amountInUnits, activationType: .manualNoRecommendation)
+    func deliverBolus(amountInUnits: Double, decisionId: UUID?) async throws {
+        try await deviceDataManager.enactBolus(units: amountInUnits, decisionId: decisionId, activationType: .manualNoRecommendation)
     }
 }
 

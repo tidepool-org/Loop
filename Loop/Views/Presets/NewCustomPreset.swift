@@ -10,51 +10,10 @@ import LoopAlgorithm
 import UIKit
 import LoopKit
 
-struct PresetScheduleRepeatOptions: OptionSet {
-    let rawValue: UInt8
-
-    static let none = PresetScheduleRepeatOptions([])
-    static let sunday = PresetScheduleRepeatOptions(rawValue: 1 << 0)
-    static let monday = PresetScheduleRepeatOptions(rawValue: 1 << 1)
-    static let tuesday = PresetScheduleRepeatOptions(rawValue: 1 << 2)
-    static let wednesday = PresetScheduleRepeatOptions(rawValue: 1 << 3)
-    static let thursday = PresetScheduleRepeatOptions(rawValue: 1 << 4)
-    static let friday = PresetScheduleRepeatOptions(rawValue: 1 << 5)
-    static let saturday = PresetScheduleRepeatOptions(rawValue: 1 << 6)
-
-    static let allCases: [PresetScheduleRepeatOptions] = [
-        .sunday,
-        .monday,
-        .tuesday,
-        .wednesday,
-        .thursday,
-        .friday,
-        .saturday,
-    ]
-
-    // Helper to map OptionSet to calendar weekday index (Sunday = 1 in Calendar)
-    private var calendarWeekdayIndex: Int? {
-        switch self {
-        case .sunday: return 1
-        case .monday: return 2
-        case .tuesday: return 3
-        case .wednesday: return 4
-        case .thursday: return 5
-        case .friday: return 6
-        case .saturday: return 7
-        default: return nil
-        }
-    }
-}
-
-extension PresetScheduleRepeatOptions: CustomStringConvertible {
-    var description: String {
+extension PresetScheduleRepeatOptions: @retroactive CustomStringConvertible {
+    public var description: String {
         let calendar = Calendar.current
         let weekdaySymbols = calendar.weekdaySymbols
-
-        if self == .none {
-            return NSLocalizedString("None", comment: "Preset schedule repeat option none")
-        }
 
         // Handle single day case
         if let weekdayIndex = calendarWeekdayIndex {
@@ -68,10 +27,6 @@ extension PresetScheduleRepeatOptions: CustomStringConvertible {
     var veryShortDescription: String {
         let calendar = Calendar.current
         let weekdaySymbols = calendar.veryShortWeekdaySymbols
-
-        if self == .none {
-            return NSLocalizedString("None", comment: "Preset schedule repeat option none")
-        }
 
         // Handle single day case
         if let weekdayIndex = calendarWeekdayIndex {
@@ -100,7 +55,7 @@ extension NewCustomPreset {
         }
 
         // Handle case where no days are selected
-        if repeatOptions.isEmpty || repeatOptions == .none {
+        if repeatOptions.isEmpty {
             return ""
         }
 
@@ -151,7 +106,7 @@ extension NewCustomPreset {
         }
         let overrideDuration = duration.presetDuration
 
-        let settings = TemporaryScheduleOverrideSettings(
+        let settings = TemporaryPresetSettings(
             targetRange: correctionRange,
             insulinNeedsScaleFactor: insulinMultiplier
         )
@@ -159,7 +114,7 @@ extension NewCustomPreset {
         let context: TemporaryScheduleOverride.Context
 
         if savePreset {
-            let preset = TemporaryScheduleOverridePreset(
+            let preset = TemporaryPreset(
                 symbol: "",
                 name: name,
                 settings: settings,

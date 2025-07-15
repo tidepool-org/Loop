@@ -37,4 +37,8 @@ class MockDosingDecisionStore: DosingDecisionStoreProtocol {
             completion(.success(queryAnchor, []))
         }
     }
+    
+    func findDosingDecisionsById(_ id: UUID) async throws -> StoredDosingDecision? {
+        nil
+    }
 }

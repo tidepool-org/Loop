@@ -20,14 +20,23 @@ struct ExistingPresetRangeEdit: View {
     @State private var editedRange: ClosedRange<LoopQuantity>?
     private var allowsScheduledRange: Bool
     private var isPreMeal: Bool = false
+    private var presetAdjustsInsulinNeeds: Bool = false
 
-    init(range: Binding<ClosedRange<LoopQuantity>?>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, allowsScheduledRange: Bool = true, isPreMeal: Bool = false) {
+    init(
+        range: Binding<ClosedRange<LoopQuantity>?>,
+        guardrail: Guardrail<LoopQuantity>,
+        scheduledRange: ClosedRange<LoopQuantity>,
+        allowsScheduledRange: Bool = true,
+        isPreMeal: Bool = false,
+        presetAdjustsInsulinNeeds: Bool
+    ) {
         self._range = range
         self.editedRange = range.wrappedValue
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
         self.allowsScheduledRange = allowsScheduledRange
         self.isPreMeal = isPreMeal
+        self.presetAdjustsInsulinNeeds = presetAdjustsInsulinNeeds
     }
 
     var body: some View {
@@ -42,7 +51,13 @@ struct ExistingPresetRangeEdit: View {
                 )
             }
         } actionArea: {
-            guardrailWarningIfNecessary
+            if !crossedThresholds.isEmpty {
+                CorrectionRangeGuardrailWarning(crossedThresholds: crossedThresholds)
+            } else if (editedRange == nil && !presetAdjustsInsulinNeeds) {
+                NoticeView(
+                    title: Text("Set an Adjusted Correction Range"),
+                    caption: Text("With overall insulin needs at 100%, an adjusted correction range is required."))
+            }
             actionButton
         }
         .navigationBarBackButtonHidden(editedRange != range)
@@ -60,6 +75,7 @@ struct ExistingPresetRangeEdit: View {
                     dismiss()
                 }
                 .foregroundColor(.blue)
+                .accessibilityIdentifier("button_Cancel")
             }
         }
     }
@@ -70,9 +86,9 @@ struct ExistingPresetRangeEdit: View {
             range = editedRange
             dismiss()
         }
-        .disabled(editedRange == range)
+        .disabled(editedRange == range || (editedRange == nil && !presetAdjustsInsulinNeeds))
         .buttonStyle(ActionButtonStyle(.primary))
-        .padding()
+        .accessibilityIdentifier("button_Save")
     }
 
 
@@ -91,15 +107,6 @@ struct ExistingPresetRangeEdit: View {
         } else {
             return []
         }
-    }
-
-    var guardrailWarningIfNecessary: some View {
-        let crossedThresholds = self.crossedThresholds
-        return Group {
-            if !crossedThresholds.isEmpty {
-                CorrectionRangeGuardrailWarning(crossedThresholds: crossedThresholds)
-            }
-        }.padding()
     }
 }
 

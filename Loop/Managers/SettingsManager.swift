@@ -345,7 +345,7 @@ extension SettingsManager {
         case .legacyWorkout:
             return legacyWorkoutPresetGuardrail
         default:
-            return .correctionRange
+            return Guardrail.temporaryPresetCorrectionRange
         }
     }
 
@@ -400,9 +400,20 @@ extension SettingsManager {
         }
     }
 
-    func createPreset(_ preset: TemporaryScheduleOverridePreset) {
+    func createPreset(_ preset: TemporaryPreset) {
         mutateLoopSettings { settings in
             settings.overridePresets.append(preset)
+        }
+    }
+
+    func deletePreset(_ preset: SelectablePreset) {
+        switch(preset) {
+        case .preMeal, .legacyWorkout:
+            break // cannot delete these
+        case .custom(let preset):
+            mutateLoopSettings { settings in
+                settings.overridePresets = settings.overridePresets.filter { $0.id != preset.id }
+            }
         }
     }
 }

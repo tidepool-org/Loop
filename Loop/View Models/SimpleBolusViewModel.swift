@@ -16,6 +16,7 @@ import Intents
 import LocalAuthentication
 import LoopAlgorithm
 
+@MainActor
 protocol SimpleBolusViewModelDelegate: AnyObject {
     
     func saveGlucose(sample: NewGlucoseSample) async throws -> StoredGlucoseSample
@@ -24,7 +25,7 @@ protocol SimpleBolusViewModelDelegate: AnyObject {
 
     func storeManualBolusDosingDecision(_ bolusDosingDecision: BolusDosingDecision, withDate date: Date) async
     
-    func enactBolus(units: Double, activationType: BolusActivationType) async throws
+    func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws
 
     func insulinOnBoard(at date: Date) async -> InsulinValue?
 
@@ -403,7 +404,7 @@ class SimpleBolusViewModel: ObservableObject {
 
         if let bolusVolume = bolus?.doubleValue(for: .internationalUnit), bolusVolume > 0 {
             do {
-                try await delegate.enactBolus(units: bolusVolume, activationType: .activationTypeFor(recommendedAmount: recommendation, bolusAmount: bolusVolume))
+                try await delegate.enactBolus(units: bolusVolume, decisionId: dosingDecision?.id, activationType: .activationTypeFor(recommendedAmount: recommendation, bolusAmount: bolusVolume))
                 dosingDecision?.manualBolusRequested = bolusVolume
             } catch {
                 log.error("Unable to enact bolus: %{public}@", String(describing: error))

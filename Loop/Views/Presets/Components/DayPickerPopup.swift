@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import LoopKit
 
 struct DayPickerPopup: View {
     @Binding var selectedDays: PresetScheduleRepeatOptions

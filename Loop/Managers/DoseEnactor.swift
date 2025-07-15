@@ -16,16 +16,15 @@ class DoseEnactor {
     
     private let log = DiagnosticLog(category: "DoseEnactor")
 
-    func enact(recommendation: AutomaticDoseRecommendation, with pumpManager: PumpManager) async throws {
-
-        if let basalAdjustment = recommendation.basalAdjustment {
+    func enact(decisionId: UUID?, bolus: Double?, tempBasal: TempBasalRecommendation?, with pumpManager: PumpManager) async throws {
+        if let tempBasal {
             self.log.default("Enacting recommended basal change")
-            try await pumpManager.enactTempBasal(unitsPerHour: basalAdjustment.unitsPerHour, for: basalAdjustment.duration)
+            try await pumpManager.enactTempBasal(decisionId: decisionId, unitsPerHour: tempBasal.unitsPerHour, for: tempBasal.duration)
         }
 
-        if let bolusUnits = recommendation.bolusUnits, bolusUnits > 0 {
+        if let bolus, bolus > 0 {
             self.log.default("Enacting recommended bolus dose")
-            try await pumpManager.enactBolus(units: bolusUnits, activationType: .automatic)
+            try await pumpManager.enactBolus(decisionId: decisionId, units: bolus, activationType: .automatic)
         }
     }
 }

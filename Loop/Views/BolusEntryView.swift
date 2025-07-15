@@ -89,7 +89,7 @@ struct BolusEntryView: View {
         Section {
             VStack(spacing: 8) {
                 HStack(spacing: 0) {
-                    activeCarbsLabel
+                    activeCarbsLabel.accessibilityIdentifier("text_ActiveCarbs")
                     Spacer(minLength: 8)
                     activeInsulinLabel
                 }
@@ -231,6 +231,7 @@ struct BolusEntryView: View {
                 Text(viewModel.recommendedBolusString)
                     .font(.title)
                     .foregroundColor(Color(.label))
+                    .accessibilityIdentifier("staticText_RecommendedBolus")
                 bolusUnitsLabel
             }
         }
@@ -263,6 +264,7 @@ struct BolusEntryView: View {
                 )
                 bolusUnitsLabel
             }
+            .accessibilityIdentifier("textField_Bolus")
         }
     }
 
@@ -343,6 +345,7 @@ struct BolusEntryView: View {
         )
         .buttonStyle(ActionButtonStyle(viewModel.primaryButton == .manualGlucoseEntry ? .primary : .secondary))
         .padding([.top, .horizontal])
+        .accessibilityIdentifier("button_EnterFingerstickGlucose")
     }
 
     private var actionButton: some View {

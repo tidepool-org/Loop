@@ -70,11 +70,15 @@ struct CreatePresetView: View {
 
     @State private var path = NavigationPath()
     @State private var preset = NewCustomPreset()
-    @State private var navigateToRangeEdit: Bool = false
 
     var scheduledRange: ClosedRange<LoopQuantity>? {
         settingsManager.settings.glucoseTargetRangeSchedule?.quantityRange(at: Date())
     }
+
+    var suspendThreshold: GlucoseThreshold? {
+        settingsManager.settings.suspendThreshold
+    }
+
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -96,7 +100,7 @@ struct CreatePresetView: View {
                             NewPresetRangeEdit(
                                 preset: $preset,
                                 path: $path,
-                                guardrail: Guardrail.correctionRange,
+                                guardrail: Guardrail.temporaryPresetCorrectionRange,
                                 scheduledRange: scheduledRange,
                                 onCancel: { dismiss() }
                             )
@@ -150,7 +154,7 @@ struct CreatePresetView: View {
     var guardrailWarningIfNecessary: some View {
         Group {
             if let threshold = exceededThreshold {
-                WarningView(title: threshold.warningTitle, caption: threshold.warningCaption, severity: threshold.severity)
+                WarningView(title: threshold.insulinNeedsScaleWarningTitle, caption: threshold.insulinNeedsScaleWarningCaption, severity: threshold.severity)
                     .padding()
             }
         }
@@ -174,7 +178,7 @@ struct CreatePresetView: View {
 }
 
 extension SafetyClassification.Threshold {
-    public var warningTitle: Text {
+    public var insulinNeedsScaleWarningTitle: Text {
         switch self {
         case .belowRecommended, .minimum:
             return Text("Insulin adjustment is below the safety threshold")
@@ -183,7 +187,7 @@ extension SafetyClassification.Threshold {
         }
     }
 
-    public var warningCaption: Text {
+    public var insulinNeedsScaleWarningCaption: Text {
         switch self {
         case .belowRecommended, .minimum:
             return Text("Using this adjustment may lead to an under delivery of insulin. Monitor your glucose while this preset is in use.")

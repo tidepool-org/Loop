@@ -116,6 +116,7 @@ final class DeviceDataManagerTests: XCTestCase {
             startDate: Date(),
             value: 3.0,
             unit: .unitsPerHour,
+            decisionId: nil,
             automatic: true
         )
         pumpManager.status.basalDeliveryState = .tempBasal(dose)
@@ -137,7 +138,8 @@ final class DeviceDataManagerTests: XCTestCase {
             startDate: Date(),
             endDate: nil,
             value: 5.0,
-            unit: .unitsPerHour
+            unit: .unitsPerHour,
+            decisionId: nil
         )
         pumpManager.status.basalDeliveryState = .tempBasal(dose)
 
@@ -156,7 +158,8 @@ final class DeviceDataManagerTests: XCTestCase {
             type: .tempBasal,
             startDate: Date(),
             value: 5.0,
-            unit: .unitsPerHour
+            unit: .unitsPerHour,
+            decisionId: nil
         )
         pumpManager.status.basalDeliveryState = .tempBasal(dose)
 

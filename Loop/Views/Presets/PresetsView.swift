@@ -28,19 +28,40 @@ enum PresetSortOption: Int, CaseIterable {
     }
 }
 
+// Define an enum to represent the active sheet
+enum ActiveSheet: Identifiable {
+    case editPreset(SelectablePreset) // For EditPresetView
+    case presetDetent(SelectablePreset) // For PresetDetentView
+
+    var id: String {
+        switch self {
+        case .editPreset(let preset):
+            return "edit_\(preset.id)" // Assuming Preset has an id
+        case .presetDetent(let preset):
+            return "detent_\(preset.id)"
+        }
+    }
+}
+
 struct PresetsView: View {
-    
+
+    // Define navigation routes
+    enum NavigationDestination: Hashable {
+        case presetsHistory
+    }
+
+
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.settingsManager) private var settingsManager
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var editMode: EditMode = .inactive
     @State private var showingMenu: Bool = false
     @State private var showTraining: Bool = false
     @State private var presentCreateView: Bool = false
-    @State private var editPresetPath: [String] = []
-    @State private var pendingPreset: SelectablePreset?
+    @State private var activeSheet: ActiveSheet?
+    @State private var navigationPath = NavigationPath()
 
     @AppStorage("presetsSortAscending") private var presetsSortAscending: Bool = true
     @AppStorage("presetsSortOrder") private var selectedSortOption: PresetSortOption = .name
@@ -68,13 +89,13 @@ struct PresetsView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $editPresetPath) {
+        NavigationStack(path: $navigationPath) {
             ScrollView {
                 VStack(spacing: 20) {
                     if !hasCompletedTraining {
                         PresetsTrainingCard(showTraining: $showTraining)
                     }
-
+                    
                     if let activePreset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == temporaryPresetsManager.activeOverride?.presetId })
                     {
                         PresetCard(
@@ -83,24 +104,25 @@ struct PresetsView: View {
                             expectedEndTime: temporaryPresetsManager.activeOverride?.expectedEndTime
                         )
                         .onTapGesture {
-                            pendingPreset = activePreset
+                            activeSheet = .presetDetent(activePreset)
                         }
                     }
-
+                    
                     // All Presets Section
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             Text("All Presets")
                                 .font(.title2.bold())
+                                .accessibilityIdentifier("text_AllPresets")
                             Spacer()
-
+                            
                             Button("Sort") {
                                 showingMenu.toggle()
                             }
                             .popover(isPresented: $showingMenu) {
                                 sortMenu
                             }
-
+                            
                             Button(action: {
                                 presentCreateView = true;
                             }) {
@@ -108,7 +130,7 @@ struct PresetsView: View {
                             }
                             .disabled(!hasCompletedTraining)
                         }
-
+                        
                         LazyVStack(spacing: 12) {
                             ForEach(presetsSorted) { preset in
                                 PresetCard(
@@ -117,25 +139,25 @@ struct PresetsView: View {
                                 )
                                 .cornerRadius(12)
                                 .onTapGesture {
-                                    pendingPreset = preset
+                                    activeSheet = .presetDetent(preset)
                                 }
                             }
                         }
                     }
-
+                    
                     // Support Section
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Support")
                             .font(.title2.bold())
-
-                        NavigationLink(destination: PresetsHistoryView()) {
+                        
+                        NavigationLink(value: NavigationDestination.presetsHistory) {
                             HStack {
                                 Image(systemName: "list.bullet")
                                     .foregroundColor(.white)
                                     .padding(8)
                                     .background(Color.presets)
                                     .cornerRadius(8)
-
+                                
                                 Text("Presets Performance History")
                                 Spacer()
                                 Image(systemName: "chevron.right")
@@ -148,7 +170,7 @@ struct PresetsView: View {
                             .fill(Color(UIColor.tertiarySystemBackground))
                             .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
                             .frame(maxWidth: .infinity))
-
+                        
                         if hasCompletedTraining {
                             Button {
                                 showTraining = true
@@ -167,7 +189,7 @@ struct PresetsView: View {
                                 .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
                                 .frame(maxWidth: .infinity))
                         }
-
+                        
                     }
                 }
                 .padding()
@@ -177,18 +199,35 @@ struct PresetsView: View {
             .background(Color(UIColor.secondarySystemBackground))
             .navigationTitle(Text("Presets", comment: "Presets screen title"))
             .navigationBarItems(trailing: dismissButton)
-            .navigationDestination(for: String.self) { presetId in
-                if let scheduledRange {
-                    EditPresetView(preset: temporaryPresetsManager.selectablePresets.first { $0.id == presetId }!, scheduledRange: scheduledRange) { preset in
-                        settingsManager.savePreset(preset)
-                    }
+            .navigationDestination(for: NavigationDestination.self) { route in
+                switch route {
+                case .presetsHistory:
+                    PresetsHistoryView()
                 }
             }
         }
-        .sheet(item: $pendingPreset) { preset in
-            PresetDetentView(preset: preset, didTapEdit: {
-                editPresetPath.append(preset.id)
-            })
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .presetDetent(let preset):
+                PresetDetentView(preset: preset, didTapEdit: {
+                    activeSheet = .editPreset(preset)
+                })
+            case .editPreset(let preset):
+                Group {
+                    if let scheduledRange {
+                        EditPresetView(
+                            preset: preset,
+                            scheduledRange: scheduledRange,
+                            onSave: { updatedPreset in
+                                settingsManager.savePreset(updatedPreset)
+                            },
+                            onDelete: { preset in
+                                settingsManager.deletePreset(preset)
+                            }
+                        )
+                    }
+                }
+            }
         }
         .sheet(isPresented: $showTraining) {
             PresetsTrainingView {
@@ -249,18 +288,9 @@ struct PresetsView: View {
     private var dismissButton: some View {
         Button("Done") {
             dismiss()
-        }.bold()
-    }
-
-    private var editButton: some View {
-        Button(action: {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                editMode.toggle()
-            }
-        }) {
-            Text(editMode.title)
-                .textCase(nil)
         }
+        .bold()
+        .accessibilityIdentifier("button_done")
     }
 }
 
@@ -270,7 +300,7 @@ extension PresetCard {
             icon: preset.icon,
             presetName: preset.name,
             duration: preset.duration,
-            insulinMultiplier: preset.insulinMultiplier,
+            insulinMultiplier: preset.insulinNeedsScaleFactor,
             correctionRange: preset.correctionRange,
             guardrail: guardrail,
             expectedEndTime: expectedEndTime

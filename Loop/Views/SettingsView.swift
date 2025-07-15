@@ -147,7 +147,6 @@ struct SettingsView: View {
                             viewModel: TherapySettingsViewModel(
                                 therapySettings: viewModel.therapySettings(),
                                 sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
-                                adultChildInsulinModelSelectionEnabled: FeatureFlags.adultChildInsulinModelSelectionEnabled,
                                 delegate: viewModel.therapySettingsViewModelDelegate
                             )
                         )
@@ -223,7 +222,7 @@ extension SettingsView {
     private var dismissButton: some View {
         Button(action: dismiss) {
             Text("Done").bold()
-        }
+        }.accessibilityIdentifier("button_done")
     }
     
     private var loopSection: some View {

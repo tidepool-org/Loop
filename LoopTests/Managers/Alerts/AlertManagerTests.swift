@@ -342,25 +342,17 @@ class AlertManagerTests: XCTestCase {
         XCTAssertEqual(.critical, mockAlertStore.issuedAlert!.interruptionLevel)
     }
 
-    func testRescheduleMutedLoopNotLoopingAlerts() {
+    func testRescheduleMutedLoopNotLoopingAlerts() async {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         
         let lastLoopDate = Date()
         alertManager.loopDidComplete(lastLoopDate)
         alertManager.alertMuter.configuration.startTime = Date()
         alertManager.alertMuter.configuration.duration = .hours(4)
-        waitOnMain()
         
-        let testExpectation = expectation(description: #function)
-        var loopNotRunningRequests: [UNNotificationRequest] = []
-        UNUserNotificationCenter.current().getPendingNotificationRequests() { notificationRequests in
-            loopNotRunningRequests = notificationRequests.filter({
-                $0.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
-            })
-            testExpectation.fulfill()
-        }
-
-        wait(for: [testExpectation], timeout: 1)
+        let loopNotRunningRequests = await UNUserNotificationCenter.current().pendingNotificationRequests().filter({
+            $0.content.categoryIdentifier == LoopNotificationCategory.loopNotRunning.rawValue
+        })
         XCTAssertNil(loopNotRunningRequests.first(where: { $0.content.interruptionLevel == .timeSensitive })?.content.sound)
         if let request = loopNotRunningRequests.first(where: { $0.content.interruptionLevel == .critical }) {
             XCTAssertEqual(request.content.sound, .defaultCriticalSound(withAudioVolume: 0))

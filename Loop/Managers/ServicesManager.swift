@@ -237,7 +237,7 @@ class ServicesManager {
 }
 
 public protocol ServicesManagerDosingDelegate: AnyObject {
-    func deliverBolus(amountInUnits: Double) async throws
+    func deliverBolus(amountInUnits: Double, decisionId: UUID?) async throws
 }
 
 public protocol ServicesManagerDelegate: AnyObject {
@@ -329,7 +329,7 @@ extension ServicesManager: ServiceDelegate {
         }
     }
     
-    func deliverRemoteBolus(amountInUnits: Double) async throws {
+    func deliverRemoteBolus(amountInUnits: Double, decisionId: UUID?) async throws {
         do {
             
             guard amountInUnits > 0 else {
@@ -344,7 +344,7 @@ extension ServicesManager: ServiceDelegate {
                 throw BolusActionError.exceedsMaxBolus
             }
             
-            try await servicesManagerDosingDelegate?.deliverBolus(amountInUnits: amountInUnits)
+            try await servicesManagerDosingDelegate?.deliverBolus(amountInUnits: amountInUnits, decisionId: decisionId)
             NotificationManager.sendRemoteBolusNotification(amount: amountInUnits)
             await remoteDataServicesManager.performUpload(for: .dose)
             analyticsServicesManager.didBolus(source: "Remote", units: amountInUnits)

@@ -57,6 +57,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         continueButton
+                            .accessibilityIdentifier("button_Continue")
                     }
                 }
         }
@@ -130,22 +131,6 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: amountConsumedFocused, title: NSLocalizedString("Amount Consumed", comment: "Label for carb quantity entry row on carb entry screen"), preferredCarbUnit: viewModel.preferredCarbUnit)
 
             CardSectionDivider()
-            
-            if let source = viewModel.carbsSource {
-                HStack(spacing: 2) {
-                    Text("Source")
-                        .foregroundColor(.primary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Spacer()
-                    
-                    Text(source.name)
-                        .foregroundColor(Color(.secondaryLabel))
-                }
-                .accessibilityElement(children: .combine)
-                
-                CardSectionDivider()
-            }
             
             DatePickerRow(date: $viewModel.time, isFocused: timeFocused, minimumDate: viewModel.minimumDate, maximumDate: viewModel.maximumDate)
             

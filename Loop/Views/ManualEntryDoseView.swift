@@ -204,6 +204,7 @@ struct ManualEntryDoseView: View {
             }
         }
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("textField_Bolus")
     }
 
     private var bolusUnitsLabel: some View {

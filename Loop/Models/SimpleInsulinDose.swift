@@ -15,6 +15,7 @@ import LoopAlgorithm
 // fast acting insulin model in settings. So until that is removed, we need this.
 struct SimpleInsulinDose: InsulinDose {
     var deliveryType: InsulinDeliveryType
+    var automatic: Bool
     var startDate: Date
     var endDate: Date
     var volume: Double
@@ -38,6 +39,7 @@ extension DoseEntry {
     func simpleDose(with model: InsulinModel) -> SimpleInsulinDose {
         SimpleInsulinDose(
             deliveryType: deliveryType,
+            automatic: automatic ?? false,
             startDate: startDate,
             endDate: endDate,
             volume: volume,
@@ -76,6 +78,7 @@ extension SimpleInsulinDose {
 
         return SimpleInsulinDose(
             deliveryType: self.deliveryType,
+            automatic: automatic,
             startDate: startDate,
             endDate: endDate,
             volume: trimmedVolume,

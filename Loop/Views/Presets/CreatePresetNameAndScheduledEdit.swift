@@ -7,6 +7,7 @@
 //
 
 
+import LoopKit
 import LoopKitUI
 import SwiftUI
 
@@ -231,7 +232,6 @@ struct CreatePresetNameAndScheduledEdit: View {
             }
             .disabled(!allowSave)
             .buttonStyle(ActionButtonStyle(.primary))
-            .padding()
         }
         .onChange(of: selectedRepeatOption, { oldValue, newValue in
             if newValue == .weekly {
