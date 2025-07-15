@@ -46,8 +46,6 @@ enum Deeplink: Hashable {
         switch deeplinkHost {
         case .carbEntry:
             if let value = components?.queryItems?.first(where: { $0.name == "value" })?.value, let doubleValue = Double(value) {
-                let sourceBundleId = components?.queryItems?.first(where: { $0.name == "sourceBundleId" })?.value
-                let sourceName = components?.queryItems?.first(where: { $0.name == "sourceName" })?.value
                 self = .carbEntry(.carbEntryDetected(value: LoopQuantity(unit: .gram, doubleValue: doubleValue)))
             } else {
                 self = .carbEntry(nil)
