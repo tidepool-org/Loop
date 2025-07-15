@@ -162,7 +162,8 @@ class InsulinDeliveryLogViewModel {
         var lastAutoBolus: DatedQuantity?
         var events: Set<InsulinDeliveryLogEvent> = []
         
-        let startDate = Date().addingTimeInterval(.days(-1))
+        let now = Date()
+        let startDate = now.addingTimeInterval(.days(-1))
 
         // Status State
         var insulinSuspended = false
@@ -462,7 +463,7 @@ class InsulinDeliveryLogViewModel {
             case .suspend:
                 events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.suspended), dose), date: dose.startDate))
                 
-                if dose.startDate != dose.endDate {
+                if dose.endDate <= now {
                     events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.resumed), dose), date: dose.endDate))
                 }
             }
