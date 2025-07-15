@@ -213,8 +213,7 @@ class InsulinDeliveryLogViewModel {
         
         // Insulin Events
         for dose in doses {
-            let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.automaticDosingStatus.automaticDosingEnabled
-            let presetEnabledDuringDose = loopDataManager.temporaryPresetsManager.presetHistory.activeOverride(at: dose.startDate) != nil
+//            let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.automaticDosingStatus.automaticDosingEnabled
             
             var decision: StoredDosingDecision?
             if let decisionId = dose.decisionId {
@@ -242,7 +241,7 @@ class InsulinDeliveryLogViewModel {
                     )
                 } else if automationEnabledDuringDose {
                     if let decision {
-                        if presetEnabledDuringDose {
+                        if decision.scheduleOverride != nil {
                             events.insert(
                                 InsulinDeliveryLogEvent(
                                     id: dose.syncIdentifier ?? UUID().uuidString,
