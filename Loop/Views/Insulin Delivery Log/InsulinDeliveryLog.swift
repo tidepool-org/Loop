@@ -213,7 +213,7 @@ class InsulinDeliveryLogViewModel {
         
         // Insulin Events
         for dose in doses {
-//            let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.automaticDosingStatus.automaticDosingEnabled
+            let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.automaticDosingStatus.automaticDosingEnabled
             
             var decision: StoredDosingDecision?
             if let decisionId = dose.decisionId {
@@ -458,9 +458,13 @@ class InsulinDeliveryLogViewModel {
                     }
                 }
             case .resume:
-                events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.resumed), dose), date: dose.startDate))
+                break
             case .suspend:
                 events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.suspended), dose), date: dose.startDate))
+                
+                if dose.startDate != dose.endDate {
+                    events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.resumed), dose), date: dose.endDate))
+                }
             }
         }
         
