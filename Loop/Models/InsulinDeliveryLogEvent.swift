@@ -94,7 +94,6 @@ extension Array<InsulinDeliveryLogEvent> {
                 isComparingSuspend = true
             }
             
-            // If a resume dose has the same date as any other event, always show the resume dose first unless comparing a suspend
             if $0.date == $1.date, case .pumpEvent(.insulin(.resumed), _) = $1.type, !isComparingSuspend {
                 return true
             } else {
