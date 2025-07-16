@@ -30,7 +30,7 @@ fileprivate enum FilterOptions: Hashable, CaseIterable {
 class InsulinDeliveryLogViewModel {
     
     struct DisplayData: Hashable {
-        let insulinDeliveryState: InsulinDeliveryOverview.State, insulinDeliveryStateUpdatedDate: Date, currentBasalRate: DatedQuantity, lastAutoBolus: DatedQuantity?, totalInsulinDelivered: LoopQuantity, events: Set<InsulinDeliveryLogEvent>
+        let insulinDeliveryState: InsulinDeliveryOverview.State, insulinDeliveryStateUpdatedDate: Date, currentBasalRate: DatedQuantity, lastAutoBolus: DatedQuantity?, totalInsulinDelivered: LoopQuantity, events: [InsulinDeliveryLogEvent]
     }
     
     enum State: Hashable {
@@ -64,7 +64,7 @@ class InsulinDeliveryLogViewModel {
         
         switch state {
         case .fetched(let data), .refreshing(let data):
-            Array(Array(data.events.filter({
+            data.events.filter {
                 switch selectedFilterOption {
                 case .userInitiated:
                     switch $0.type {
@@ -81,11 +81,11 @@ class InsulinDeliveryLogViewModel {
                 case .all:
                     return true
                 }
-            }).filter({
+            }.filter {
                 $0.date >= Date().addingTimeInterval(.days(-1))
-            })).sortedByDate().segmentItemsByHour().sorted(by: { $0.key.lowerBound > $1.key.lowerBound })).forEach { range, events in
-                displayEvents.append(.title(id: UUID(), "\(range.lowerBound.formatted(date: .omitted, time: .shortened)) - \(range.upperBound.formatted(date: .omitted, time: .shortened))"))
-                events.sortedByDate().forEach { event in
+            }.segmentItemsByHour().forEach { events in
+                displayEvents.append(.title(id: UUID(), "\(events.start.formatted(date: .omitted, time: .shortened)) - \(events.end.formatted(date: .omitted, time: .shortened))"))
+                events.events.forEach { event in
                     displayEvents.append(.event(event))
                 }
             }
@@ -160,7 +160,7 @@ class InsulinDeliveryLogViewModel {
         var totalInsulinDelivered: LoopQuantity
         var currentBasalRate: DatedQuantity
         var lastAutoBolus: DatedQuantity?
-        var events: Set<InsulinDeliveryLogEvent> = []
+        var events = [InsulinDeliveryLogEvent]()
         
         let fetchedDate = Date()
         let startDate = fetchedDate.addingTimeInterval(.days(-1))
@@ -224,7 +224,7 @@ class InsulinDeliveryLogViewModel {
             switch dose.type {
             case .basal, .tempBasal:
                 if dose.type == .tempBasal && dose.automatic == false {
-                    events.insert(
+                    events.append(
                         InsulinDeliveryLogEvent(
                             id: dose.syncIdentifier ?? UUID().uuidString,
                             type: .pumpEvent(
@@ -243,7 +243,7 @@ class InsulinDeliveryLogViewModel {
                 } else if automationEnabledDuringDose {
                     if let decision {
                         if decision.scheduleOverride != nil {
-                            events.insert(
+                            events.append(
                                 InsulinDeliveryLogEvent(
                                     id: dose.syncIdentifier ?? UUID().uuidString,
                                     type: .pumpEvent(
@@ -263,7 +263,7 @@ class InsulinDeliveryLogViewModel {
                             if let direction = decision.automaticDoseRecommendation?.direction {
                                 switch direction {
                                 case .decrease:
-                                    events.insert(
+                                    events.append(
                                         InsulinDeliveryLogEvent(
                                             id: dose.syncIdentifier ?? UUID().uuidString,
                                             type: .pumpEvent(
@@ -280,7 +280,7 @@ class InsulinDeliveryLogViewModel {
                                         )
                                     )
                                 case .neutral:
-                                    events.insert(
+                                    events.append(
                                         InsulinDeliveryLogEvent(
                                             id: dose.syncIdentifier ?? UUID().uuidString,
                                             type: .pumpEvent(
@@ -297,7 +297,7 @@ class InsulinDeliveryLogViewModel {
                                         )
                                     )
                                 case .increase:
-                                    events.insert(
+                                    events.append(
                                         InsulinDeliveryLogEvent(
                                             id: dose.syncIdentifier ?? UUID().uuidString,
                                             type: .pumpEvent(
@@ -319,7 +319,7 @@ class InsulinDeliveryLogViewModel {
                             }
                         }
                     } else if let scheduledBasalRate = dose.scheduledBasalRate, scheduledBasalRate.doubleValue(for: .internationalUnitsPerHour) == dose.value {
-                        events.insert(
+                        events.append(
                             InsulinDeliveryLogEvent(
                                 id: dose.syncIdentifier ?? UUID().uuidString,
                                 type: .pumpEvent(
@@ -339,7 +339,7 @@ class InsulinDeliveryLogViewModel {
                         fatalError("No `decision` or `scheduledBasalRate`")
                     }
                 } else {
-                    events.insert(
+                    events.append(
                         InsulinDeliveryLogEvent(
                             id: dose.syncIdentifier ?? UUID().uuidString,
                             type: .pumpEvent(
@@ -358,7 +358,7 @@ class InsulinDeliveryLogViewModel {
                 }
             case .bolus:
                 if dose.automatic == true {
-                    events.insert(
+                    events.append(
                         InsulinDeliveryLogEvent(
                             id: dose.syncIdentifier ?? UUID().uuidString,
                             type: .pumpEvent(
@@ -381,7 +381,7 @@ class InsulinDeliveryLogViewModel {
                 } else {
                     if let recommendedUnits = decision?.manualBolusRecommendation?.recommendation.amount {
                         if let carbEntry = decision?.carbEntry {
-                            events.insert(
+                            events.append(
                                 InsulinDeliveryLogEvent(
                                     id: decision?.syncIdentifier.uuidString ?? UUID().uuidString,
                                     type: .pumpEvent(
@@ -412,7 +412,7 @@ class InsulinDeliveryLogViewModel {
                                 )
                             )
                         } else {
-                            events.insert(
+                            events.append(
                                 InsulinDeliveryLogEvent(
                                     id: decision?.syncIdentifier.uuidString ?? UUID().uuidString,
                                     type: .pumpEvent(
@@ -439,7 +439,7 @@ class InsulinDeliveryLogViewModel {
                             )
                         }
                     } else {
-                        events.insert(
+                        events.append(
                             InsulinDeliveryLogEvent(
                                 id: dose.syncIdentifier ?? UUID().uuidString,
                                 type: .pumpEvent(
@@ -461,10 +461,10 @@ class InsulinDeliveryLogViewModel {
             case .resume:
                 break
             case .suspend:
-                events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.suspended), dose), date: dose.startDate))
+                events.append(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.suspended), dose), date: dose.startDate))
                 
                 if !dose.isMutable || dose.endDate <= fetchedDate {
-                    events.insert(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.resumed), dose), date: dose.endDate))
+                    events.append(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.resumed), dose), date: dose.endDate))
                 }
             }
         }
@@ -472,19 +472,19 @@ class InsulinDeliveryLogViewModel {
         // Automation
         loopDataManager.automationHistory.forEach { event in
             if event.enabled {
-                events.insert(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .automation(.on), date: event.startDate))
+                events.append(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .automation(.on), date: event.startDate))
             } else {
-                events.insert(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .automation(.off(endDate: nil)), date: event.startDate))
+                events.append(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .automation(.off(endDate: nil)), date: event.startDate))
             }
         }
         
         // Preset
         loopDataManager.temporaryPresetsManager.presetHistory.recentEvents.filter({ $0.override.actualEndDate >= startDate }).forEach { event in
             if let preset = loopDataManager.temporaryPresetsManager.selectablePresets.first(where: { $0.id == event.override.presetId }) {
-                events.insert(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .preset(.enabled, icon: preset.icon, name: preset.name), date: event.override.startDate))
+                events.append(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .preset(.enabled, icon: preset.icon, name: preset.name), date: event.override.startDate))
                 
                 if event.override.hasFinished() {
-                    events.insert(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .preset(.disabled, icon: preset.icon, name: preset.name), date: event.override.actualEndDate))
+                    events.append(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .preset(.disabled, icon: preset.icon, name: preset.name), date: event.override.actualEndDate))
                 }
             }
         }

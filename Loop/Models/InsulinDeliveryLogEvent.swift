@@ -80,16 +80,35 @@ extension InsulinDeliveryLogEvent {
 }
 
 extension Array<InsulinDeliveryLogEvent> {
-    func sortedByDate() -> [InsulinDeliveryLogEvent] {
-        sorted { $0.endDate ?? $0.date > $1.endDate ?? $1.date }
+    
+    struct LogSegment {
+        let start: Date
+        let end: Date
+        var events: [InsulinDeliveryLogEvent]
     }
-
-    func segmentItemsByHour() -> [Range<Date>: [Element]] {
+    
+    func sortedByDate() -> [InsulinDeliveryLogEvent] {
+        sorted {
+            var isComparingSuspend = false
+            if case .pumpEvent(.insulin(.suspended), _) = $0.type {
+                isComparingSuspend = true
+            }
+            
+            // If a resume dose has the same date as any other event, always show the resume dose first unless comparing a suspend
+            if $0.date == $1.date, case .pumpEvent(.insulin(.resumed), _) = $1.type, !isComparingSuspend {
+                return true
+            } else {
+                return $0.date > $1.date
+            }
+        }
+    }
+    
+    func segmentItemsByHour() -> [LogSegment] {
         let calendar = Calendar.current
         
-        var itemsByHourRange = [Range<Date>: [Element]]()
+        var itemsByHourRange = [LogSegment]()
         
-        for item in self {
+        for item in sortedByDate() {
             let components = calendar.dateComponents([.day, .hour], from: item.endDate ?? item.date)
             
             guard let hourStart = calendar.date(from: components), let hourEnd = calendar.date(byAdding: .hour, value: 1, to: hourStart) else {
@@ -98,12 +117,16 @@ extension Array<InsulinDeliveryLogEvent> {
             
             let hourRange = hourStart..<hourEnd
             
-            if var hourItems = itemsByHourRange[hourRange] {
-                hourItems.append(item)
-                
-                itemsByHourRange[hourRange] = hourItems
+            if let hourItemsIndex = itemsByHourRange.firstIndex(where: { hourRange.contains($0.start) }) {
+                itemsByHourRange[hourItemsIndex].events.append(item)
             } else {
-                itemsByHourRange[hourRange] = [item]
+                itemsByHourRange.append(
+                    LogSegment(
+                        start: hourStart,
+                        end: hourEnd,
+                        events: [item]
+                    )
+                )
             }
         }
         
