@@ -93,6 +93,20 @@ extension WCSession {
         })
     }
 
+    func sendUserSelectedNotificationActionMessage(alertIdentifier: String, managerIdentifier: String, actionIdentifier: String) async {
+        let msg = NotificationActionSelection(
+            alertIdentifier: alertIdentifier,
+            managerIdentifier: managerIdentifier,
+            actionIdentifier: actionIdentifier
+        )
+        
+        sendMessage(msg.rawValue, replyHandler: { (reply) in
+            log.error("Sent notication action selection: ${public}@", actionIdentifier)
+        }, errorHandler: { (error) in
+            log.error("sendUserSelectedNotificationActionMessage failed: ${public}@", String(describing: error))
+        })
+    }
+
     func sendCarbBackfillRequestMessage(_ userInfo: CarbBackfillRequestUserInfo, completionHandler: @escaping (WCSessionMessageResult<WatchHistoricalCarbs>) -> Void) {
         log.default("sendCarbBackfillRequestMessage: since %{public}@", String(describing: userInfo.startDate))
 

@@ -329,7 +329,7 @@ public final class AlertManager {
             do {
                 let persistedAlerts = try await lookupAllPendingDelayedOrRepeatingAlerts()
                 for persistedAlert in persistedAlerts {
-                    self.rescheduleAlertWithSchedulers(persistedAlert.alert, issuedDate: persistedAlert.issuedDate)
+                    await self.rescheduleAlertWithSchedulers(persistedAlert.alert, issuedDate: persistedAlert.issuedDate)
                 }
             } catch {
                 self.log.error("error looking up all delayed or repeating alerts: %{public}@", String(describing: error))
@@ -349,12 +349,9 @@ extension AlertManager: AlertManagerResponder {
                 let storedAlert = try await alertStore.lookupAllMatching(identifier: alertIdentifier, limit: 1).first
 
                 if let storedAlert,
-                   let alert = try? Alert(from: storedAlert, adjustedForStorageTime: false),
-                   let metadata = alert.metadata,
-                   let presetName = metadata["presetName"] as? String?
+                   let alert = try? Alert(from: storedAlert, adjustedForStorageTime: false)
                 {
                     try await responder.handleAlertAction(actionIdentifier: actionIdentifier, from: alert)
-
                 } else {
                     log.error("Unable to get preset name from stored alert: %{public}@", String(describing: storedAlert))
                 }
@@ -371,32 +368,31 @@ extension AlertManager: AlertManagerResponder {
             do {
                 try await responder.acknowledgeAlert(alertIdentifier: identifier.alertIdentifier)
             } catch {
-                self.presentAcknowledgementFailedAlert(error: error)
+                await self.presentAcknowledgementFailedAlert(error: error)
             }
         }
         userNotificationAlertScheduler.alertWasAcknowledged(identifier: identifier)
+        await modalAlertScheduler.removePresentedAlert(identifier: identifier)
         try await alertStore.recordAcknowledgement(of: identifier)
     }
 
 
-    func presentAcknowledgementFailedAlert(error: Error) {
-        DispatchQueue.main.async {
-            let message: String
-            if let localizedError = error as? LocalizedError {
-                message = [localizedError.localizedDescription, localizedError.recoverySuggestion].compactMap({$0}).joined(separator: "\n\n")
-            } else {
-                message = String(format: NSLocalizedString("%1$@ is unable to clear the alert from your device", comment: "Message for alert shown when alert acknowledgement fails for a device, and the device does not provide a LocalizedError. (1: app name)"), Bundle.main.bundleDisplayName)
-            }
-            self.log.info("Alert acknowledgement failed: %{public}@", message)
-
-            let alert = UIAlertController(
-                title: NSLocalizedString("Unable To Clear Alert", comment: "Title for alert shown when alert acknowledgement fails"),
-                message: message,
-                preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Default action for alert when alert acknowledgment fails"), style: .default))
-            
-            self.alertPresenter.present(alert, animated: true)
+    func presentAcknowledgementFailedAlert(error: Error) async {
+        let message: String
+        if let localizedError = error as? LocalizedError {
+            message = [localizedError.localizedDescription, localizedError.recoverySuggestion].compactMap({$0}).joined(separator: "\n\n")
+        } else {
+            message = String(format: NSLocalizedString("%1$@ is unable to clear the alert from your device", comment: "Message for alert shown when alert acknowledgement fails for a device, and the device does not provide a LocalizedError. (1: app name)"), Bundle.main.bundleDisplayName)
         }
+        self.log.info("Alert acknowledgement failed: %{public}@", message)
+
+        let alert = UIAlertController(
+            title: NSLocalizedString("Unable To Clear Alert", comment: "Title for alert shown when alert acknowledgement fails"),
+            message: message,
+            preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Default action for alert when alert acknowledgment fails"), style: .default))
+
+        await self.alertPresenter.present(alert, animated: true)
     }
 }
 
@@ -419,7 +415,7 @@ extension AlertManager: AlertIssuer {
             deferredRetractions.append(identifier)
             return
         }
-        unscheduleAlertWithSchedulers(identifier: identifier)
+        await unscheduleAlertWithSchedulers(identifier: identifier)
         do {
             try await alertStore.recordRetraction(of: identifier)
         } catch {
@@ -440,13 +436,13 @@ extension AlertManager: AlertIssuer {
         userNotificationAlertScheduler.scheduleAlert(alert, muted: alertMuter.shouldMuteAlert(alert, issuedDate: issuedDate))
     }
 
-    private func unscheduleAlertWithSchedulers(identifier: Alert.Identifier) {
-        modalAlertScheduler.unscheduleAlert(identifier: identifier)
+    private func unscheduleAlertWithSchedulers(identifier: Alert.Identifier) async {
+        await modalAlertScheduler.unscheduleAlert(identifier: identifier)
         userNotificationAlertScheduler.unscheduleAlert(identifier: identifier)
     }
 
-    private func rescheduleAlertWithSchedulers(_ alert: Alert, issuedDate: Date) {
-        unscheduleAlertWithSchedulers(identifier: alert.identifier)
+    private func rescheduleAlertWithSchedulers(_ alert: Alert, issuedDate: Date) async {
+        await unscheduleAlertWithSchedulers(identifier: alert.identifier)
         scheduleAlertWithSchedulers(alert, issuedDate: issuedDate)
     }
 }
@@ -527,7 +523,7 @@ extension AlertManager {
             self.log.error("Could not fetch acknowledged unretracted repeating alerts: %@", error.localizedDescription)
         }
         self.playbackFinished = true
-        Task {
+        Task { @MainActor in
             for alert in self.deferredAlerts {
                 await self.issueAlert(alert)
             }
@@ -758,7 +754,7 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
                 // need to dismiss the in-app alert outside of the alert system
                 Task {
                     try await self.recordRetractedAlert(alert, at: Date())
-                    self.dismissUnsafeNotificationPermissionsInAppAlert()
+                    await self.dismissUnsafeNotificationPermissionsInAppAlert()
                 }
             }
         ) {
@@ -815,23 +811,21 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
                 )
             }
 
-            self.alertPresenter.present(alertController, animated: true) { [weak self] in
-                // the completion is called after the alert is presented
-                self?.unsafeNotificationPermissionsAlertController = alertController
-            }
+            await self.alertPresenter.present(alertController, animated: true)
+            // the completion is called after the alert is presented
+            unsafeNotificationPermissionsAlertController = alertController
         }
     }
 
-    private func dismissUnsafeNotificationPermissionsInAppAlert() {
+    private func dismissUnsafeNotificationPermissionsInAppAlert() async {
         guard let alertController = unsafeNotificationPermissionsAlertController else { return }
-        alertPresenter.dismissAlert(alertController, animated: true) { [weak self] in
-            self?.unsafeNotificationPermissionsAlertController = nil
-        }
+        await alertPresenter.dismissAlert(alertController, animated: true)
+        unsafeNotificationPermissionsAlertController = nil
     }
 }
 
 extension AlertManager {
-    func presentLoopResetConfirmationAlert(confirmAction: @escaping (@escaping () -> Void) -> Void, cancelAction: @escaping () -> Void) {
+    func presentLoopResetConfirmationAlert(confirmAction: @escaping (@escaping () -> Void) -> Void, cancelAction: @escaping () -> Void) async {
         let alert = UIAlertController(title: "Loop Reset Requested", message: "We've detected a Loop reset may be needed. Tapping confirm will reset Loop and quit the app.", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Confirm", style: .default, handler: { _ in
             confirmAction() {
@@ -842,16 +836,16 @@ extension AlertManager {
             cancelAction()
         }))
         
-        alertPresenter.present(alert, animated: true)
+        await alertPresenter.present(alert, animated: true)
     }
     
-    func presentCouldNotResetLoopAlert(error: Error) {
+    func presentCouldNotResetLoopAlert(error: Error) async {
         let titleString = String(format: NSLocalizedString("Could Not Restart %1$@", comment: "Format string for title of reset loop alert. (1: App name)"), Bundle.main.bundleDisplayName)
         let message = String(format: NSLocalizedString("While trying to restart %1$@ an error occured.\n\n%2$@", comment: "Format string for message of reset loop alert. (1: App name) (2: error description)"), Bundle.main.bundleDisplayName, error.localizedDescription)
         let alert = UIAlertController(title: titleString, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: "Cancel button for reset loop alert"), style: .cancel))
         
-        alertPresenter.present(alert, animated: true)
+        await alertPresenter.present(alert, animated: true)
     }
 }
 

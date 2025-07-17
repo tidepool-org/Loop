@@ -8,6 +8,7 @@
 
 import LoopKit
 
+@MainActor
 protocol ResetLoopManagerDelegate: AnyObject {
     func loopWillReset()
     func loopDidReset()
@@ -42,33 +43,35 @@ class ResetLoopManager {
         
         if UserDefaults.appGroup?.userRequestedLoopReset == true && !resetAlertPresented {
             resetAlertPresented = true
-            
-            delegate?.presentConfirmationAlert(
-                confirmAction: { [weak self] pumpManager, completion in
-                    self?.resetAlertPresented = false
-                    
-                    guard let pumpManager else {
-                        self?.resetLoop {
-                            completion()
-                        }
-                        return
-                    }
-                    
-                    pumpManager.prepareForDeactivation() { [weak self] error in
-                        guard let error = error else {
-                            self?.resetLoop() {
+
+            Task { @MainActor in
+                delegate?.presentConfirmationAlert(
+                    confirmAction: { [weak self] pumpManager, completion in
+                        self?.resetAlertPresented = false
+
+                        guard let pumpManager else {
+                            self?.resetLoop {
                                 completion()
                             }
                             return
                         }
-                        
-                        self?.delegate?.presentCouldNotResetLoopAlert(error: error)
+
+                        pumpManager.prepareForDeactivation() { [weak self] error in
+                            guard let error = error else {
+                                self?.resetLoop() {
+                                    completion()
+                                }
+                                return
+                            }
+
+                            self?.delegate?.presentCouldNotResetLoopAlert(error: error)
+                        }
+                    }, cancelAction: { [weak self] in
+                        self?.resetAlertPresented = false
+                        UserDefaults.appGroup?.userRequestedLoopReset = false
                     }
-                }, cancelAction: { [weak self] in
-                    self?.resetAlertPresented = false
-                    UserDefaults.appGroup?.userRequestedLoopReset = false
-                }
-            )
+                )
+            }
         }
         
         checkIfLoopIsAlreadyReset()
@@ -89,13 +92,15 @@ class ResetLoopManager {
     }
     
     private func resetLoop(completion: @escaping () -> Void) {
-        delegate?.loopWillReset()
-
-        delegate?.resetTestingData { [weak self] in
-            self?.resetLoopDocuments()
-            self?.resetLoopUserDefaults()
-            self?.delegate?.loopDidReset()
-            completion()
+        Task { @MainActor in
+            delegate?.loopWillReset()
+            
+            delegate?.resetTestingData { [weak self] in
+                self?.resetLoopDocuments()
+                self?.resetLoopUserDefaults()
+                self?.delegate?.loopDidReset()
+                completion()
+            }
         }
     }
     

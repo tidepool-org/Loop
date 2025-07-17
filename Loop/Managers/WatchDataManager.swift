@@ -23,6 +23,7 @@ final class WatchDataManager: NSObject {
     private unowned let glucoseStore: GlucoseStore
     private unowned let analyticsServicesManager: AnalyticsServicesManager?
     private unowned let temporaryPresetsManager: TemporaryPresetsManager
+    private unowned let alertManager: AlertManager
 
     init(
         deviceManager: DeviceDataManager,
@@ -32,6 +33,7 @@ final class WatchDataManager: NSObject {
         glucoseStore: GlucoseStore,
         analyticsServicesManager: AnalyticsServicesManager?,
         temporaryPresetsManager: TemporaryPresetsManager,
+        alertManager: AlertManager,
         healthStore: HKHealthStore
     ) {
         self.deviceManager = deviceManager
@@ -41,6 +43,7 @@ final class WatchDataManager: NSObject {
         self.glucoseStore = glucoseStore
         self.analyticsServicesManager = analyticsServicesManager
         self.temporaryPresetsManager = temporaryPresetsManager
+        self.alertManager = alertManager
         self.sleepStore = SleepStore(healthStore: healthStore)
         self.lastBedtimeQuery = UserDefaults.appGroup?.lastBedtimeQuery ?? .distantPast
         self.bedtime = UserDefaults.appGroup?.bedtime
@@ -411,30 +414,21 @@ final class WatchDataManager: NSObject {
         // When we've started the bolus, send a new context with our new prediction
         self.sendWatchContextIfNeeded()
     }
-}
 
-
-extension WatchDataManager: WCSessionDelegate {
-    func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+    func handleWatchMessage(_ message: [String: Any]) async -> [String: Any] {
         switch message["name"] as? String {
         case PotentialCarbEntryUserInfo.name?:
             if let potentialCarbEntry = PotentialCarbEntryUserInfo(rawValue: message)?.carbEntry {
-                Task { @MainActor in
-                    let context = await createWatchContext(recommendingBolusFor: potentialCarbEntry)
-                    replyHandler(context.rawValue)
-                }
+                let context = await createWatchContext(recommendingBolusFor: potentialCarbEntry)
+                return context.rawValue
             } else {
                 log.error("Could not recommend bolus from from unknown message: %{public}@", String(describing: message))
-                replyHandler([:])
             }
         case SetBolusUserInfo.name?:
             // Add carbs if applicable; start the bolus and reply when it's successfully requested
-            Task { @MainActor in
+            Task {
                 try await addCarbEntryAndBolusFromWatchMessage(message)
             }
-            // Reply immediately
-            replyHandler([:])
-
         case LoopSettingsUserInfo.name?:
             if let userInfo = LoopSettingsUserInfo(rawValue: message) {
                 // So far we only support watch changes of temporary schedule overrides
@@ -446,107 +440,125 @@ extension WatchDataManager: WCSessionDelegate {
                 lastSentUserInfo?.scheduleOverride = userInfo.scheduleOverride
             }
 
-            // Since target range affects recommended bolus, send back a new one
-            Task { @MainActor in
-                let context = await createWatchContext()
-                replyHandler(context.rawValue)
-            }
+            let context = await createWatchContext()
+            return context.rawValue
         case CarbBackfillRequestUserInfo.name?:
             if let userInfo = CarbBackfillRequestUserInfo(rawValue: message) {
-                carbStore.getSyncCarbObjects(start: userInfo.startDate) { (result) in
-                    switch result {
-                    case .failure(let error):
-                        self.log.error("%{public}@", String(describing: error))
-                        replyHandler([:])
-                    case .success(let objects):
-                        replyHandler(WatchHistoricalCarbs(objects: objects).rawValue)
-                    }
+                do {
+                    let objects = try await carbStore.getSyncCarbObjects(start: userInfo.startDate)
+                    return WatchHistoricalCarbs(objects: objects).rawValue
+                } catch {
+                    self.log.error("%{public}@", String(describing: error))
+                    return [:]
                 }
             } else {
-                replyHandler([:])
+                return [:]
             }
         case GlucoseBackfillRequestUserInfo.name?:
             if let userInfo = GlucoseBackfillRequestUserInfo(rawValue: message) {
-                Task {
-                    do {
-                        let samples = try await glucoseStore.getSyncGlucoseSamples(start: userInfo.startDate.addingTimeInterval(1))
-                        replyHandler(WatchHistoricalGlucose(samples: samples).rawValue)
-                    } catch {
-                        self.log.error("Failure getting sync glucose objects: %{public}@", String(describing: error))
-                        replyHandler([:])
-                    }
+                do {
+                    let samples = try await glucoseStore.getSyncGlucoseSamples(start: userInfo.startDate.addingTimeInterval(1))
+                    return WatchHistoricalGlucose(samples: samples).rawValue
+                } catch {
+                    self.log.error("Failure getting sync glucose objects: %{public}@", String(describing: error))
+                    return [:]
                 }
             } else {
-                replyHandler([:])
+                return [:]
             }
         case WatchContextRequestUserInfo.name?:
-            Task { @MainActor in
-                let context = await createWatchContext()
-                replyHandler(context.rawValue)
+            return await createWatchContext().rawValue
+        case NotificationActionSelection.name?:
+            if let selection = NotificationActionSelection(rawValue: message) {
+                let identifier = Alert.Identifier(
+                    managerIdentifier: selection.managerIdentifier,
+                    alertIdentifier: selection.alertIdentifier
+                )
+                try? await alertManager.userDidSelectAction(alertIdentifier: identifier, actionIdentifier: selection.actionIdentifier)
             }
         default:
-            replyHandler([:])
+            return [:]
+        }
+
+        return [:]
+    }
+}
+
+
+extension WatchDataManager: WCSessionDelegate {
+    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+        Task { @MainActor in
+            let reply = await handleWatchMessage(message)
+            replyHandler(reply)
         }
     }
 
-    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
+    nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
         assertionFailure("We currently don't expect any userInfo messages transferred from the watch side")
     }
 
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        switch activationState {
-        case .activated:
-            if let error = error {
-                log.error("%{public}@", String(describing: error))
-            } else {
-                sendSettingsIfNeeded()
-                sendWatchContextIfNeeded()
-                sendSupportedBolusVolumesIfNeeded()
-            }
-        case .inactive, .notActivated:
-            break
-        @unknown default:
-            break
-        }
-    }
-
-    func session(_ session: WCSession, didFinish userInfoTransfer: WCSessionUserInfoTransfer, error: Error?) {
-        if let error = error {
-            log.error("%{public}@", String(describing: error))
-
-            // This might be useless, as userInfoTransfer.userInfo seems to be nil when error is non-nil.
-            switch userInfoTransfer.userInfo["name"] as? String {
-            case nil:
-                lastSentUserInfo = nil
-                sendSettingsIfNeeded()
-                lastSentBolusVolumes = nil
-                sendSupportedBolusVolumesIfNeeded()
-            case LoopSettingsUserInfo.name:
-                lastSentUserInfo = nil
-                sendSettingsIfNeeded()
-            case SupportedBolusVolumesUserInfo.name:
-                lastSentBolusVolumes = nil
-                sendSupportedBolusVolumesIfNeeded()
-            default:
+    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        Task { @MainActor in
+            switch activationState {
+            case .activated:
+                if let error = error {
+                    log.error("%{public}@", String(describing: error))
+                } else {
+                    sendSettingsIfNeeded()
+                    sendWatchContextIfNeeded()
+                    sendSupportedBolusVolumesIfNeeded()
+                }
+            case .inactive, .notActivated:
+                break
+            @unknown default:
                 break
             }
         }
     }
 
-    func sessionDidBecomeInactive(_ session: WCSession) {
+    nonisolated func session(_ session: WCSession, didFinish userInfoTransfer: WCSessionUserInfoTransfer, error: Error?) {
+        Task { @MainActor in
+            if let error = error {
+                log.error("%{public}@", String(describing: error))
+
+                // This might be useless, as userInfoTransfer.userInfo seems to be nil when error is non-nil.
+                switch userInfoTransfer.userInfo["name"] as? String {
+                case nil:
+                    lastSentUserInfo = nil
+                    sendSettingsIfNeeded()
+                    lastSentBolusVolumes = nil
+                    sendSupportedBolusVolumesIfNeeded()
+                case LoopSettingsUserInfo.name:
+                    lastSentUserInfo = nil
+                    sendSettingsIfNeeded()
+                case SupportedBolusVolumesUserInfo.name:
+                    lastSentBolusVolumes = nil
+                    sendSupportedBolusVolumesIfNeeded()
+                default:
+                    break
+                }
+            }
+        }
+    }
+
+    nonisolated func sessionDidBecomeInactive(_ session: WCSession) {
         // Nothing to do here
     }
 
-    func sessionDidDeactivate(_ session: WCSession) {
-        lastSentUserInfo = nil
-        watchSession = WCSession.default
-        watchSession?.delegate = self
-        watchSession?.activate()
+    nonisolated func sessionDidDeactivate(_ session: WCSession) {
+        Task { @MainActor in
+            lastSentUserInfo = nil
+            watchSession = WCSession.default
+            watchSession?.delegate = self
+            watchSession?.activate()
+        }
     }
 
-    func sessionReachabilityDidChange(_ session: WCSession) {
-        sendSettingsIfNeeded()
-        sendSupportedBolusVolumesIfNeeded()
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+        Task { @MainActor in
+            sendSettingsIfNeeded()
+            sendSupportedBolusVolumesIfNeeded()
+        }
     }
 }
 

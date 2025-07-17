@@ -254,7 +254,7 @@ extension ExtensionDelegate: WCSessionDelegate {
 
 
 extension ExtensionDelegate: UNUserNotificationCenterDelegate {
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         switch response.actionIdentifier {
         case UNNotificationDefaultActionIdentifier:
             guard
@@ -281,10 +281,14 @@ extension ExtensionDelegate: UNUserNotificationCenterDelegate {
                 statusController.addCarbs()
             }
         default:
+            let userInfo = response.notification.request.content.userInfo
+            if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier,
+               let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String
+            {
+                await loopManager.sendUserSelectedNotificationActionMessage(alertIdentifier: alertIdentifier, managerIdentifier: managerIdentifier, actionIdentifier: response.actionIdentifier)
+            }
             break
         }
-
-        completionHandler()
     }
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {

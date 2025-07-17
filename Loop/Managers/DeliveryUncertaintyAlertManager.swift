@@ -21,14 +21,14 @@ class DeliveryUncertaintyAlertManager {
         self.alertPresenter = alertPresenter
     }
 
-    private func showUncertainDeliveryRecoveryView() {
+    private func showUncertainDeliveryRecoveryView() async {
         var controller = pumpManager.deliveryUncertaintyRecoveryViewController(colorPalette: .default, allowDebugFeatures: FeatureFlags.allowDebugFeatures)
         controller.completionDelegate = self
         controller.modalPresentationStyle = .fullScreen
-        self.alertPresenter.present(controller, animated: true)
+        await self.alertPresenter.present(controller, animated: true)
     }
     
-    func showAlert(animated: Bool = true) {
+    func showAlert(animated: Bool = true) async {
         if self.uncertainDeliveryAlert == nil {
             let alert = UIAlertController(
                 title: NSLocalizedString("Unable To Reach Pump", comment: "Title for alert shown when delivery status is uncertain"),
@@ -37,13 +37,14 @@ class DeliveryUncertaintyAlertManager {
             
             let actionTitle = NSLocalizedString("Learn More", comment: "OK button title for alert shown when delivery status is uncertain")
             let action = UIAlertAction(title: actionTitle, style: .default) { (_) in
-                self.uncertainDeliveryAlert = nil
-                self.showUncertainDeliveryRecoveryView()
+                Task { @MainActor in
+                    self.uncertainDeliveryAlert = nil
+                    await self.showUncertainDeliveryRecoveryView()
+                }
             }
             alert.addAction(action)
-            self.alertPresenter.dismissTopMost(animated: false) {
-                self.alertPresenter.present(alert, animated: animated)
-            }
+            await self.alertPresenter.dismissTopMost(animated: false)
+            await self.alertPresenter.present(alert, animated: animated)
             self.uncertainDeliveryAlert = alert
         }
     }
@@ -60,8 +61,10 @@ extension DeliveryUncertaintyAlertManager: CompletionDelegate {
         // If delivery still uncertain after recovery view dismissal, present modal alert again.
         if let vc = object as? UIViewController {
             vc.dismiss(animated: true) {
-                if self.pumpManager.status.deliveryIsUncertain {
-                    self.showAlert(animated: false)
+                Task {
+                    if self.pumpManager.status.deliveryIsUncertain {
+                        await self.showAlert(animated: false)
+                    }
                 }
             }
         }

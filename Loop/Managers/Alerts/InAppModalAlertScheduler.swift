@@ -9,6 +9,7 @@
 import UIKit
 import LoopKit
 
+@MainActor
 public class InAppModalAlertScheduler {
 
     private weak var alertPresenter: AlertPresenter?
@@ -47,23 +48,18 @@ public class InAppModalAlertScheduler {
         }
     }
     
-    public func unscheduleAlert(identifier: Alert.Identifier) {
-        DispatchQueue.main.async {
-            self.removePendingAlert(identifier: identifier)
-            self.removePresentedAlert(identifier: identifier)
-        }
+    public func unscheduleAlert(identifier: Alert.Identifier) async {
+        removePendingAlert(identifier: identifier)
+        await removePresentedAlert(identifier: identifier)
     }
 
-    func removePresentedAlert(identifier: Alert.Identifier, completion: (() -> Void)? = nil) {
+    func removePresentedAlert(identifier: Alert.Identifier) async {
         guard let alertPresented = alertsPresented[identifier] else {
-            completion?()
             return
         }
 
-        Task { @MainActor in
-            alertPresenter?.dismissAlert(alertPresented.0, animated: true, completion: completion)
-            clearPresentedAlert(identifier: identifier)
-        }
+        await alertPresenter?.dismissAlert(alertPresented.0, animated: true)
+        clearPresentedAlert(identifier: identifier)
     }
 
     func removePendingAlert(identifier: Alert.Identifier) {
@@ -117,10 +113,8 @@ extension InAppModalAlertScheduler {
                     }
                 }
             }
-            self.alertPresenter?.present(alertController, animated: true) { [weak self] in
-                // the completion is called after the alert is presented
-                self?.addPresentedAlert(alert: alert, controller: alertController)
-            }
+            await self.alertPresenter?.present(alertController, animated: true)
+            addPresentedAlert(alert: alert, controller: alertController)
         }
     }
     

@@ -17,6 +17,7 @@ import os.log
 import LoopAlgorithm
 
 
+@MainActor
 protocol DeviceStatusProvider {
     var pumpManagerStatus: PumpManagerStatus? { get }
     var cgmManagerStatus: CGMManagerStatus? { get }

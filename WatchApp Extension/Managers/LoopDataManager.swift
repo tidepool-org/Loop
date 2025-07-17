@@ -116,6 +116,14 @@ extension LoopDataManager {
         }
     }
 
+    func sendUserSelectedNotificationActionMessage(alertIdentifier: String, managerIdentifier: String, actionIdentifier: String) async {
+        await WCSession.default.sendUserSelectedNotificationActionMessage(
+            alertIdentifier: alertIdentifier,
+            managerIdentifier: managerIdentifier,
+            actionIdentifier: actionIdentifier
+        )
+    }
+
     func requestCarbBackfill() {
         dispatchPrecondition(condition: .onQueue(.main))
 

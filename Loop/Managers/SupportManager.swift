@@ -12,6 +12,7 @@ import LoopKit
 import LoopKitUI
 import SwiftUI
 
+@MainActor
 public protocol DeviceSupportDelegate {
     var availableSupports: [SupportUI] { get }
     var pumpManagerStatus: LoopKit.PumpManagerStatus? { get }
