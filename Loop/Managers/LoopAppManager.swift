@@ -538,8 +538,8 @@ class LoopAppManager: NSObject {
             DispatchQueue.main.async {
                 self.state = self.state.next
                 Task {
-                    await self.alertManager.playbackAlertsFromPersistence()
                     await self.resumeLaunch()
+                    await self.alertManager.playbackAlertsFromPersistence()
                 }
             }
         }
