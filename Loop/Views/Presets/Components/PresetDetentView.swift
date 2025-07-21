@@ -38,7 +38,15 @@ struct PresetDetentView: View {
         Group {
             switch operation {
             case .start:
-                Text("Duration: \(preset.duration.localizedTitle)")
+                HStack {
+                    if preset.nextScheduledStartAfter(Date()) != nil {
+                        Text(Image(systemName: "alarm"))
+                            .font(.footnote)
+                            .foregroundColor(.carbs)
+                            .accessibilityLabel(Text("Scheduled reminder"))
+                    }
+                    Text("Duration: \(preset.duration.localizedTitle)")
+                }
             case .end:
                 if let activeOverride = temporaryPresetsManager.activeOverride {
                     if activeOverride.presetId == preset.id {
@@ -134,7 +142,8 @@ struct PresetDetentView: View {
                     insulinMultiplier: preset.insulinNeedsScaleFactor,
                     correctionRange: preset.correctionRange,
                     guardrail: settingsManager.guardrailForPreset(preset),
-                    therapySettingsImpactDisplayState: operation == .end ? .show(settingsImpact) : .hide
+                    therapySettingsImpactDisplayState: operation == .end ? .show(settingsImpact) : .hide,
+                    isScheduled: false
                 )
                 
                 actionArea

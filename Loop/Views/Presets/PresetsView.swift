@@ -136,6 +136,7 @@ struct PresetsView: View {
                                 PresetCard(
                                     preset,
                                     guardrail: settingsManager.guardrailForPreset(preset)
+                                    
                                 )
                                 .cornerRadius(12)
                                 .onTapGesture {
@@ -309,7 +310,8 @@ extension PresetCard {
             insulinMultiplier: preset.insulinNeedsScaleFactor,
             correctionRange: preset.correctionRange,
             guardrail: guardrail,
-            expectedEndTime: expectedEndTime
+            expectedEndTime: expectedEndTime,
+            isScheduled: preset.nextScheduledStartAfter(Date()) != nil
         )
     }
 }

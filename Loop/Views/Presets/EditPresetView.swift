@@ -181,7 +181,7 @@ struct EditPresetView: View {
                                 Spacer()
 
                                 Toggle("", isOn: Binding(get: {
-                                    return preset.scheduleStartDate != nil
+                                    return preset.nextScheduledStartAfter(Date()) != nil
                                 }, set: { newValue in
                                     withAnimation {
                                         if newValue {
@@ -207,7 +207,7 @@ struct EditPresetView: View {
                                 Divider()
                                 HStack {
                                     if preset.repeatOptions != .none {
-                                        Text("Date")
+                                        Text("Next Date")
                                     } else {
                                         Text("Start Date")
                                     }
@@ -215,7 +215,7 @@ struct EditPresetView: View {
                                     DatePicker(
                                         "",
                                         selection: Binding(get: {
-                                            preset.scheduleStartDate ?? Date()
+                                            preset.nextScheduledStartAfter(Date()) ?? Date()
                                         }, set: { newValue in
                                             preset.scheduleStartDate = newValue
                                         }),

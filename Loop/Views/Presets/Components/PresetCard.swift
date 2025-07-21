@@ -23,7 +23,8 @@ struct PresetCard: View {
     let correctionRange: ClosedRange<LoopQuantity>?
     let guardrail: Guardrail<LoopQuantity>?
     let expectedEndTime: PresetExpectedEndTime?
-    
+    let isScheduled: Bool
+
     var presetTitle: some View {
         HStack(spacing: 6) {
             switch icon {
@@ -42,7 +43,14 @@ struct PresetCard: View {
                 .accessibilityIdentifier("text_Preset\(presetName)")
         }
     }
-    
+
+    var reminderIcon: some View {
+        Text(Image(systemName: "alarm"))
+            .font(.footnote)
+            .foregroundColor(.carbs)
+            .accessibilityLabel(Text("Scheduled reminder"))
+    }
+
     var presetDuration: some View {
         Group { Text(Image(systemName: "timer")) + Text(" \(duration.localizedTitle)") }
             .font(.footnote)
@@ -76,7 +84,10 @@ struct PresetCard: View {
 
                     if expectedEndTime == nil {
                         presetDuration
-                    }                    
+                        if isScheduled {
+                            reminderIcon
+                        }
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 10) {
@@ -93,7 +104,8 @@ struct PresetCard: View {
                 insulinMultiplier: insulinMultiplier,
                 correctionRange: correctionRange,
                 guardrail: guardrail,
-                therapySettingsImpactDisplayState: .hide
+                therapySettingsImpactDisplayState: .hide,
+                isScheduled: isScheduled && expectedEndTime != nil
             )
         }
         .padding(10)

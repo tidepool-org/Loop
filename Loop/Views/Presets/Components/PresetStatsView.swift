@@ -24,7 +24,8 @@ struct PresetStatsView: View {
     let correctionRange: ClosedRange<LoopQuantity>?
     let guardrail: Guardrail<LoopQuantity>?
     let therapySettingsImpactDisplayState: TherapySettingsImpactDisplayState
-    
+    let isScheduled: Bool
+
     private var numberFormatter: NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .percent
@@ -139,6 +140,13 @@ struct PresetStatsView: View {
                     overallInsulinView
                     Spacer()
                     correctionRangeView
+                    if isScheduled {
+                        Spacer()
+                        Text(Image(systemName: "alarm"))
+                            .font(.footnote)
+                            .foregroundColor(.carbs)
+                            .accessibilityLabel(Text("Scheduled reminder"))
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 16) {
