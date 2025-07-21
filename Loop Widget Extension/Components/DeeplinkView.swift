@@ -10,7 +10,7 @@ import SwiftUI
 
 fileprivate extension Deeplink {
     var deeplinkURL: URL {
-        URL(string: "loop://\(rawValue)")!
+        URL(string: "loop://\(host.rawValue)")!
     }
     
     var accentColor: Color {

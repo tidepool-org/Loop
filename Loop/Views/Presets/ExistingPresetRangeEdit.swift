@@ -75,6 +75,7 @@ struct ExistingPresetRangeEdit: View {
                     dismiss()
                 }
                 .foregroundColor(.blue)
+                .accessibilityIdentifier("button_Cancel")
             }
         }
     }
@@ -87,6 +88,7 @@ struct ExistingPresetRangeEdit: View {
         }
         .disabled(editedRange == range || (editedRange == nil && !presetAdjustsInsulinNeeds))
         .buttonStyle(ActionButtonStyle(.primary))
+        .accessibilityIdentifier("button_Save")
     }
 
 

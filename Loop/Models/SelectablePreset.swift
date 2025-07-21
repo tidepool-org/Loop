@@ -63,7 +63,7 @@ extension TemporaryScheduleOverride {
     }
 }
 
-enum PresetIcon {
+enum PresetIcon: Hashable {
     case emoji(String)
     case image(String, Color)
 }

@@ -951,6 +951,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     let attributedString = NSMutableAttributedString(attachment: symbolAttachment)
                     attributedString.append(NSAttributedString(string: NSLocalizedString(" Pre-meal Preset", comment: "Status row title for premeal override enabled (leading space is to separate from symbol)")))
                     cell.titleLabel.attributedText = attributedString
+                    cell.titleLabel.accessibilityIdentifier = "text_PreMealPresetCellTitle"
                 case .legacyWorkout:
                     let symbolAttachment = NSTextAttachment()
                     symbolAttachment.image = UIImage(named: "workout-symbol")?.withTintColor(.white)
@@ -958,6 +959,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     let attributedString = NSMutableAttributedString(attachment: symbolAttachment)
                     attributedString.append(NSAttributedString(string: NSLocalizedString(" Workout Preset", comment: "Status row title for workout override enabled (leading space is to separate from symbol)")))
                     cell.titleLabel.attributedText = attributedString
+                    cell.titleLabel.accessibilityIdentifier = "text_WorkoutPresetCellTitle"
                 case .preset(let preset):
                     cell.titleLabel.text = String(format: NSLocalizedString("%@ %@", comment: "The format for an active custom preset. (1: preset symbol)(2: preset name)"), preset.symbol, preset.name)
                 case .custom:
@@ -967,13 +969,16 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 if override.isActive() {
                     if let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == override.presetId }), case .preMeal(_) = preset {
                         cell.subtitleLabel.text = NSLocalizedString("on until carbs added", comment: "The format for the description of a premeal preset end date")
+                        cell.subtitleLabel.accessibilityIdentifier = "text_PresetActiveOn"
                     } else {
                         switch override.duration {
                         case .finite:
                             let endTimeText = DateFormatter.localizedString(from: override.activeInterval.end, dateStyle: .none, timeStyle: .short)
                             cell.subtitleLabel.text = String(format: NSLocalizedString("on until %@", comment: "The format for the description of a finite custom preset end date"), endTimeText)
+                            cell.subtitleLabel.accessibilityIdentifier = "text_PresetActiveOn"
                         case .indefinite:
                             cell.subtitleLabel.text = NSLocalizedString("on indefinitely", comment: "The format for the description of an indefinite custom preset end date")
+                            cell.subtitleLabel.accessibilityIdentifier = "text_PresetActiveOn"
                         }
                     }
                 } else {
@@ -1174,13 +1179,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private func iobFooterViewContent() -> some View {
         let formatter = QuantityFormatter(for: .internationalUnit)
         
-        if let lastManualDose = lastDoseEntry, let formattedBolusValue = formatter.string(from: LoopQuantity(unit: .internationalUnit, doubleValue: lastManualDose.deliveredUnits ?? lastManualDose.value)) {
+        if let lastManualDose = lastDoseEntry, let formattedBolusValue = formatter.string(from: LoopQuantity(unit: .internationalUnit, doubleValue: lastManualDose.deliveredUnits ?? lastManualDose.value)), lastManualDose.endDate <= Date() {
+            
             let hoursDifference = Date().timeIntervalSince(lastManualDose.endDate) / 3600
             
             let lastBolusLabel = Text("Last Bolus: ")
             let lastBolusValue = Text("\(formattedBolusValue) ").fontWeight(.semibold)
             let icon = Text(Image(systemName: "hourglass.bottomhalf.filled")).foregroundStyle(.secondary)
-            let exactTime = Text("at \(lastManualDose.endDate.formatted(date: .omitted, time: .shortened))").foregroundStyle(.secondary)
+            let exactTime = Text("at \(lastManualDose.startDate.formatted(date: .omitted, time: .shortened))").foregroundStyle(.secondary)
             let roundedTime = Text(" \(Int(hoursDifference.rounded())) hours ago").foregroundStyle(.secondary)
             
             Group {
@@ -1204,6 +1210,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.leading, 36)
             .padding(.vertical)
+            .accessibilityIdentifier("text_ActiveInsulinFooter")
         }
     }
 
@@ -1229,6 +1236,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             case .iob:
                 if let currentIOB = currentIOBDescription {
                     cell.setSubtitleLabel(label: currentIOB)
+                    cell.setTitleLabelAccessibilityIdentifier("ActiveInsulin_\(currentIOB.string)")
                 } else {
                     cell.setSubtitleLabel(label: nil)
                 }
@@ -1355,7 +1363,63 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     performSegue(withIdentifier: PredictionTableViewController.className, sender: indexPath)
                 }
             case .iob:
-                performSegue(withIdentifier: InsulinDeliveryTableViewController.className, sender: indexPath)
+                let showLegacy = false
+                
+                if !showLegacy {
+                    let hostingController = UIHostingController(
+                        rootView: InsulinDeliveryLog(
+                            viewModel: InsulinDeliveryLogViewModel(
+                                loopDataManager: loopManager,
+                                pumpManager: deviceManager.pumpManager
+                            ),
+                            onTapGesture: { [weak navigationController] doseEntry in
+                                Task {
+                                    var dosingDecision: StoredDosingDecision?
+                                    if let decisionId = doseEntry.decisionId {
+                                        dosingDecision = try await self.loopManager.dosingDecisionStore.findDosingDecisionsById(decisionId)
+                                    }
+                                    
+                                    let viewController = CommandResponseViewController(command: { (completionHandler) -> String in
+                                        var description = [String]()
+                                        
+                                        let timeFormatter: DateFormatter = {
+                                            let formatter = DateFormatter()
+                                            
+                                            formatter.dateStyle = .none
+                                            formatter.timeStyle = .short
+                                            
+                                            return formatter
+                                        }()
+                                        
+                                        description.append(timeFormatter.string(from: doseEntry.startDate))
+                                        
+                                        description.append(String(describing: doseEntry))
+                                        
+                                        if let dosingDecision {
+                                            description.append(String(describing: dosingDecision))
+                                        }
+                                        
+                                        return description.joined(separator: "\n\n")
+                                    })
+                                    
+                                    navigationController?.pushViewController(viewController, animated: true)
+                                }
+                            }
+                        )
+                        .navigationTitle(Text("Insulin"))
+                        .environment(\.colorPalette, .default)
+                        .environment(\.loopStatusColorPalette, .loopStatus)
+                    )
+                    
+                    hostingController.hidesBottomBarWhenPushed = true
+                    
+                    navigationController?.pushViewController(
+                        hostingController,
+                        animated: true
+                    )
+                } else {
+                    performSegue(withIdentifier: InsulinDeliveryTableViewController.className, sender: indexPath)
+                }
             case .cob:
                 performSegue(withIdentifier: CarbAbsorptionViewController.className, sender: indexPath)
             }
@@ -1447,12 +1511,15 @@ final class StatusTableViewController: LoopChartsTableViewController {
         presentCarbEntryScreen(nil)
     }
 
-    func presentCarbEntryScreen(_ activity: NSUserActivity?) {
+    func presentCarbEntryScreen(_ activity: NSUserActivity?, value: LoopQuantity? = nil) {
         let navigationWrapper: UINavigationController
         if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingStatus.automaticDosingEnabled {
             let viewModel = SimpleBolusViewModel(delegate: loopManager, displayMealEntry: true, displayGlucosePreference: deviceManager.displayGlucosePreference)
             if let activity = activity {
                 viewModel.restoreUserActivityState(activity)
+            }
+            if let carbString = value?.doubleValue(for: .gram) {
+                viewModel.enteredCarbString = carbString.formatted()
             }
             let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(deviceManager.displayGlucosePreference)
             let hostingController = DismissibleHostingController(rootView: bolusEntryView, isModalInPresentation: false)
@@ -1461,6 +1528,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             present(navigationWrapper, animated: true)
         } else {
             let viewModel = CarbEntryViewModel(delegate: loopManager)
+            viewModel.carbsQuantity = value?.doubleValue(for: .gram)
             viewModel.deliveryDelegate = deviceManager
             viewModel.analyticsServicesManager = loopManager.analyticsServicesManager
             if let activity {

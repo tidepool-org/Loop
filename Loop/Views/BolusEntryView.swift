@@ -231,6 +231,7 @@ struct BolusEntryView: View {
                 Text(viewModel.recommendedBolusString)
                     .font(.title)
                     .foregroundColor(Color(.label))
+                    .accessibilityIdentifier("staticText_RecommendedBolus")
                 bolusUnitsLabel
             }
         }

@@ -9,13 +9,13 @@
 import Foundation
 import LoopAlgorithm
 
-struct AutomationHistoryEntry: Codable {
+struct AutomationHistoryEntry: Codable, Hashable {
     var startDate: Date
     var enabled: Bool
 }
 
 extension Array where Element == AutomationHistoryEntry {
-    func toTimeline(from start: Date, to end: Date) -> [AbsoluteScheduleValue<Bool>] {
+    func toTimeline(from start: Date, to end: Date = .now) -> [AbsoluteScheduleValue<Bool>] {
         guard !isEmpty else {
             return []
         }
@@ -45,5 +45,20 @@ extension Array where Element == AutomationHistoryEntry {
         }
 
         return out
+    }
+    
+    func automationEnabled(at date: Date) -> Bool? {
+        let clampedValues = toTimeline(from: date)
+        guard let first = clampedValues.first else {
+            return nil
+        }
+        
+        if date < first.startDate {
+            return !first.value
+        } else if let enabled = clampedValues.last(where: { $0.startDate <= date })?.value {
+            return enabled
+        } else {
+            return nil
+        }
     }
 }

@@ -113,6 +113,7 @@ struct PresetRangeEditor: View {
                     +
                     boundText(for: (displayedRange).upperBound)
                 )
+                .accessibilityIdentifier("text_AdjustedCorrectionRange")
 
 
                 Text("mg/dL")

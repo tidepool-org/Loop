@@ -89,7 +89,6 @@ class LoopAppManager: NSObject {
     private var analyticsServicesManager = AnalyticsServicesManager()
     private(set) var testingScenariosManager: TestingScenariosManager?
     private var resetLoopManager: ResetLoopManager!
-    private var deeplinkManager: DeeplinkManager!
     private var temporaryPresetsManager: TemporaryPresetsManager!
     private var loopDataManager: LoopDataManager!
     private var mealDetectionManager: MealDetectionManager!
@@ -113,7 +112,7 @@ class LoopAppManager: NSObject {
     private let log = DiagnosticLog(category: "LoopAppManager")
     private let widgetLog = DiagnosticLog(category: "LoopWidgets")
 
-    private let automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: false, isAutomaticDosingAllowed: false)
+    private var automaticDosingStatus: AutomaticDosingStatus!
 
     lazy private var cancellables = Set<AnyCancellable>()
 
@@ -307,6 +306,9 @@ class LoopAppManager: NSObject {
         }
 
         let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
+        
+        self.automaticDosingStatus = UserDefaults.standard.automaticDosingStatus ?? AutomaticDosingStatus(automaticDosingEnabled: UserDefaults.standard.automationHistory.last?.enabled ?? false, isAutomaticDosingAllowed: false)
+
         crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
 
         loopDataManager = LoopDataManager(
@@ -463,8 +465,6 @@ class LoopAppManager: NSObject {
                                               windowProvider: windowProvider,
                                               userDefaults: UserDefaults.appGroup!)
 
-        deeplinkManager = DeeplinkManager(rootViewController: rootViewController)
-
         for support in supportManager.availableSupports {
             if let analyticsService = support as? AnalyticsService {
                 analyticsServicesManager.addService(analyticsService)
@@ -498,14 +498,7 @@ class LoopAppManager: NSObject {
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
         withObservationTracking(of: self.automaticDosingStatus.isAutomaticDosingAllowed && self.settingsManager.dosingEnabled) { [weak self] enabled in
-            self?.log.debug(
-                "***** withObservationTracking enabled = %{public}@, self.automaticDosingStatus.isAutomaticDosingAllowed = %{public}@, self.settingsManager.dosingEnabled = %{public}@ *****",
-                String(describing: enabled),
-                String(describing: self?.automaticDosingStatus.isAutomaticDosingAllowed),
-                String(describing: self?.settingsManager.dosingEnabled)
-            )
-
-            if (self?.automaticDosingStatus.automaticDosingEnabled != enabled) {
+            if self?.automaticDosingStatus.automaticDosingEnabled != enabled {
                 self?.automaticDosingStatus.automaticDosingEnabled = enabled
             }
         }
@@ -630,22 +623,28 @@ class LoopAppManager: NSObject {
         )
 
         let statusTableView = StatusTableView(viewModel: viewModel)
-            .environmentObject(deviceDataManager.displayGlucosePreference)
-            .environment(\.appName, Bundle.main.bundleDisplayName)
-            .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
-            .environment(\.guidanceColors, .default)
-            .environment(\.loopStatusColorPalette, .loopStatus)
-            .environment(\.settingsManager, settingsManager)
-            .environment(\.temporaryPresetsManager, temporaryPresetsManager)
-            .edgesIgnoringSafeArea(.top)
 
+        self.statusTableViewController = statusTableView.viewController
+        
         var rootNavigationController = rootViewController as? RootNavigationController
         if rootNavigationController == nil {
             rootNavigationController = RootNavigationController()
             rootViewController = rootNavigationController
         }
 
-        rootNavigationController?.setViewControllers([UIHostingController(rootView: statusTableView)], animated: true)
+        rootNavigationController?.setViewControllers([
+            UIHostingController(
+                rootView: statusTableView
+                    .environmentObject(deviceDataManager.displayGlucosePreference)
+                    .environment(\.appName, Bundle.main.bundleDisplayName)
+                    .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
+                    .environment(\.guidanceColors, .default)
+                    .environment(\.loopStatusColorPalette, .loopStatus)
+                    .environment(\.settingsManager, settingsManager)
+                    .environment(\.temporaryPresetsManager, temporaryPresetsManager)
+                    .edgesIgnoringSafeArea(.top)
+            )
+        ], animated: true)
 
         await deviceDataManager.refreshDeviceData()
 
@@ -699,7 +698,29 @@ class LoopAppManager: NSObject {
     // MARK: - Deeplinking
     
     func handle(_ url: URL) -> Bool {
-        deeplinkManager.handle(url)
+        guard let deeplink = Deeplink(url: url) else {
+            return false
+        }
+        
+        switch deeplink {
+        case let .carbEntry(carbEntryLink):
+            if let carbEntryLink {
+                switch carbEntryLink {
+                case let .carbEntryDetected(value):
+                    statusTableViewController?.presentCarbEntryScreen(nil, value: value)
+                }
+            } else {
+                statusTableViewController?.presentCarbEntryScreen(nil)
+            }
+        case .preMeal:
+            statusTableViewController?.presentPresets()
+        case .bolus:
+            statusTableViewController?.presentBolusScreen()
+        case .customPresets:
+            statusTableViewController?.presentPresets()
+        }
+        
+        return true
     }
 
     // MARK: - Continuity
@@ -775,6 +796,8 @@ class LoopAppManager: NSObject {
         get { windowProvider?.window?.rootViewController }
         set { windowProvider?.window?.rootViewController = newValue }
     }
+    
+    private var statusTableViewController: StatusTableViewController?
 }
 
 // MARK: - AlertPresenter

@@ -39,6 +39,7 @@ struct PresetCard: View {
 
             Text(presetName)
                 .fontWeight(.semibold)
+                .accessibilityIdentifier("text_Preset\(presetName)")
         }
     }
     
