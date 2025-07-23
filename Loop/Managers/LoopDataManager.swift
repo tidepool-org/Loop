@@ -238,6 +238,7 @@ final class LoopDataManager: ObservableObject {
                     Task { @MainActor in
                         self.logger.default("Received notification of settings changing")
                         await self.updateDisplayState()
+                        self.notify(forChange: .forecast)
                     }
                 }
             }

@@ -42,7 +42,7 @@ class TemporaryPresetsManager {
         self.presetHistory = TemporaryScheduleOverrideHistoryContainer.shared.fetch()
         TemporaryScheduleOverrideHistory.relevantTimeWindow = Bundle.main.localCacheDuration
 
-        scheduleOverride = presetHistory.activeOverride(at: Date())
+        _scheduleOverride = presetHistory.activeOverride(at: Date())
 
         if scheduleOverride?.context == .preMeal {
             preMealOverride = scheduleOverride

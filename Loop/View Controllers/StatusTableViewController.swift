@@ -121,12 +121,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         self?.refreshContext.update(with: .carbs)
                     case .glucose?:
                         self?.refreshContext.formUnion([.glucose, .carbs])
-                    default:
-                        break
+                    case .forecast?:
+                        self?.refreshContext.update(with: .glucose)
                     }
 
                     self?.hudView?.loopCompletionHUD.loopInProgress = false
-                    self?.log.debug("[reloadData] from notification with context %{public}@", String(describing: context))
                     await self?.reloadData(animated: true)
                 }
 

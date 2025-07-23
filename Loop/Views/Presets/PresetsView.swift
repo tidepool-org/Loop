@@ -311,7 +311,7 @@ extension PresetCard {
             correctionRange: preset.correctionRange,
             guardrail: guardrail,
             expectedEndTime: expectedEndTime,
-            isScheduled: preset.nextScheduledStartAfter(Date()) != nil
+            isScheduled: preset.isScheduled
         )
     }
 }

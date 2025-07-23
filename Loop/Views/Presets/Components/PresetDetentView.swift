@@ -39,7 +39,7 @@ struct PresetDetentView: View {
             switch operation {
             case .start:
                 HStack {
-                    if preset.nextScheduledStartAfter(Date()) != nil {
+                    if preset.isScheduled {
                         Text(Image(systemName: "alarm"))
                             .font(.footnote)
                             .foregroundColor(.carbs)
