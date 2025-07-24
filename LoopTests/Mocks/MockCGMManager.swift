@@ -46,9 +46,7 @@ class MockCGMManager: CGMManager {
 
     var debugDescription: String = "MockCGMManager"
 
-    func acknowledgeAlert(alertIdentifier: LoopKit.Alert.AlertIdentifier, completion: @escaping (Error?) -> Void) {
-        completion(nil)
-    }
+    func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier) async throws { }
 
     func getSoundBaseURL() -> URL? {
         return nil

@@ -127,8 +127,7 @@ class MockPumpManager: PumpManager {
 
     var debugDescription: String = "MockPumpManager"
 
-    func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier, completion: @escaping (Error?) -> Void) {
-    }
+    func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier) async throws { }
 
     func getSoundBaseURL() -> URL? {
         return nil

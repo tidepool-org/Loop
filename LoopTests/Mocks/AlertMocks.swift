@@ -38,7 +38,8 @@ class MockModalAlertScheduler: InAppModalAlertScheduler {
         alertScheduledExpectation?.fulfill()
     }
     var unscheduledAlertIdentifier: Alert.Identifier?
-    override func unscheduleAlert(identifier: Alert.Identifier) {
+
+    override func unscheduleAlert(identifier: Alert.Identifier) async {
         unscheduledAlertIdentifier = identifier
         alertUnscheduledExpectation?.fulfill()
     }
@@ -59,9 +60,9 @@ class MockUserNotificationAlertScheduler: UserNotificationAlertScheduler {
 }
 
 class MockResponder: AlertResponder {
+
     var acknowledged: [Alert.AlertIdentifier: Bool] = [:]
-    func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier, completion: @escaping (Error?) -> Void) {
-        completion(nil)
+    func acknowledgeAlert(alertIdentifier: LoopKit.Alert.AlertIdentifier) async throws {
         acknowledged[alertIdentifier] = true
     }
 }
@@ -99,13 +100,14 @@ class MockFileManager: FileManager {
 }
 
 class MockPresenter: AlertPresenter {
-    func present(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (() -> Void)?) { completion?() }
-    func dismissTopMost(animated: Bool, completion: (() -> Void)?) { completion?() }
-    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool, completion: (() -> Void)?) { completion?() }
+    func present(_ viewControllerToPresent: UIViewController, animated flag: Bool) async { }
+    func dismissTopMost(animated: Bool) async { }
+    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool) async { }
 }
 
 class MockAlertManagerResponder: AlertManagerResponder {
-    func acknowledgeAlert(identifier: LoopKit.Alert.Identifier) { }
+    func userDidSelectAction(alertIdentifier: LoopKit.Alert.Identifier, actionIdentifier: String) async throws { }
+    func acknowledgeAlert(identifier: LoopKit.Alert.Identifier) async { }
 }
 
 class MockSoundVendor: AlertSoundVendor {

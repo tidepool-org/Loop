@@ -10,6 +10,7 @@ import LoopKit
 import XCTest
 @testable import Loop
 
+@MainActor
 class InAppModalAlertSchedulerTests: XCTestCase {
     
     class MockAlertAction: UIAlertAction {
@@ -69,7 +70,7 @@ class InAppModalAlertSchedulerTests: XCTestCase {
     var mockViewController: MockViewController!
     var inAppModalAlertScheduler: InAppModalAlertScheduler!
     
-    override func setUp() {
+    override func setUp() async throws {
         mockAlertManagerResponder = MockAlertManagerResponder()
         mockViewController = MockViewController()
 
