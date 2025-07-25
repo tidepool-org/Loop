@@ -189,7 +189,7 @@ final class DeviceDataManagerTests: XCTestCase {
 }
 
 extension DeviceDataManagerTests: ActiveServicesProvider {
-    var activeServices: [LoopKit.Service] {
+    nonisolated var activeServices: [LoopKit.Service] {
         return []
     }
     
@@ -197,7 +197,7 @@ extension DeviceDataManagerTests: ActiveServicesProvider {
 }
 
 extension DeviceDataManagerTests: ActiveStatefulPluginsProvider {
-    var activeStatefulPlugins: [LoopKit.StatefulPluggable] {
+    nonisolated var activeStatefulPlugins: [LoopKit.StatefulPluggable] {
         return []
     }
 }

@@ -11,7 +11,7 @@ import Foundation
 import LoopKit
 
 
-class HKHealthStoreMock: HKHealthStore {
+class HKHealthStoreMock: HKHealthStore, @unchecked Sendable {
     var saveError: Error?
     var deleteError: Error?
     var queryResults: (samples: [HKSample]?, error: Error?)?
