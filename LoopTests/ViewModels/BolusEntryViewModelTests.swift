@@ -980,7 +980,7 @@ fileprivate extension TimeInterval {
     }
 }
 
-extension BolusDosingDecision: Equatable {
+extension BolusDosingDecision: @retroactive Equatable {
     init(for reason: Reason, originalCarbEntry: StoredCarbEntry? = nil, carbEntry: StoredCarbEntry? = nil, manualGlucoseSample: StoredGlucoseSample? = nil, manualBolusRequested: Double? = nil) {
         self.init(for: reason)
         self.originalCarbEntry = originalCarbEntry
@@ -1002,7 +1002,7 @@ extension BolusDosingDecision: Equatable {
     }
 }
 
-extension ManualBolusRecommendationWithDate: Equatable {
+extension ManualBolusRecommendationWithDate: @retroactive Equatable {
     public static func == (lhs: ManualBolusRecommendationWithDate, rhs: ManualBolusRecommendationWithDate) -> Bool {
         return lhs.recommendation == rhs.recommendation && lhs.date == rhs.date
     }
