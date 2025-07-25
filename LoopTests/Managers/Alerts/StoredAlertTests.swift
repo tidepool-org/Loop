@@ -48,7 +48,7 @@ class StoredAlertEncodableTests: XCTestCase {
             try! assertStoredAlertEncodable(storedAlert, encodesJSON: #"""
              {
                "alertIdentifier" : "bar",
-               "backgroundContent" : "{\"acknowledgeActionButtonLabel\":\"OK\",\"body\":\"background\",\"title\":\"BACKGROUND\"}",
+               "backgroundContent" : "{\"actions\":[{\"identifier\":\"acknowledge\",\"label\":\"OK\",\"style\":0}],\"body\":\"background\",\"title\":\"BACKGROUND\"}",
                "interruptionLevel" : "active",
                "issuedDate" : "2020-05-14T21:00:12Z",
                "managerIdentifier" : "foo",
@@ -64,7 +64,7 @@ class StoredAlertEncodableTests: XCTestCase {
             try! assertStoredAlertEncodable(storedAlert, encodesJSON: #"""
                          {
                            "alertIdentifier" : "bar",
-                           "backgroundContent" : "{\"acknowledgeActionButtonLabel\":\"OK\",\"body\":\"background\",\"title\":\"BACKGROUND\"}",
+                           "backgroundContent" : "{\"actions\":[{\"identifier\":\"acknowledge\",\"label\":\"OK\",\"style\":0}],\"body\":\"background\",\"title\":\"BACKGROUND\"}",
                            "interruptionLevel" : "critical",
                            "issuedDate" : "2020-05-14T21:00:12Z",
                            "managerIdentifier" : "foo",

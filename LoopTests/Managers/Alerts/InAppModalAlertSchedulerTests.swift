@@ -45,16 +45,23 @@ class InAppModalAlertSchedulerTests: XCTestCase {
     }
     
     class MockViewController: UIViewController, AlertPresenter {
+
+        var alertPresentedExpectation: XCTestExpectation?
+        var alertDismissedExpectation: XCTestExpectation?
+
+
         var viewControllerPresented: UIViewController?
         var alertDismissed: UIAlertController?
 
         func present(_ viewControllerToPresent: UIViewController, animated flag: Bool) async {
             viewControllerPresented = viewControllerToPresent
+            alertPresentedExpectation?.fulfill()
         }
 
         func dismissTopMost(animated: Bool) async { }
         func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool) async {
             alertDismissed = alertToDismiss
+            alertDismissedExpectation?.fulfill()
         }
     }
 
@@ -62,7 +69,9 @@ class InAppModalAlertSchedulerTests: XCTestCase {
     let alertIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "bar")
     let foregroundContent = Alert.Content(title: "FOREGROUND", body: "foreground", acknowledgeActionButtonLabel: "")
     let backgroundContent = Alert.Content(title: "BACKGROUND", body: "background", acknowledgeActionButtonLabel: "")
-    
+
+    var timerCreatedExepctation: XCTestExpectation?
+
     var mockTimer: Timer?
     var mockTimerTimeInterval: TimeInterval?
     var mockTimerRepeats: Bool?
@@ -79,6 +88,7 @@ class InAppModalAlertSchedulerTests: XCTestCase {
             self.mockTimer = timer
             self.mockTimerTimeInterval = timeInterval
             self.mockTimerRepeats = repeats
+            self.timerCreatedExepctation?.fulfill()
             return timer
         }
         inAppModalAlertScheduler = InAppModalAlertScheduler(alertPresenter: mockViewController,
@@ -126,17 +136,21 @@ class InAppModalAlertSchedulerTests: XCTestCase {
         XCTAssertEqual("FOREGROUND", alertController?.title)
     }
 
-    @MainActor func testRemoveImmediateAlert() async {
+    @MainActor
+    func testRemoveImmediateAlert() async {
+        mockViewController.alertPresentedExpectation = expectation(description: "alert presented")
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .immediate)
         inAppModalAlertScheduler.scheduleAlert(alert)
-        
-        waitOnMain()
+
+        await fulfillment(of: [mockViewController.alertPresentedExpectation!])
         let alertControllerPresented = mockViewController.viewControllerPresented as? UIAlertController
         XCTAssertNotNil(alertControllerPresented)
 
+        mockViewController.alertDismissedExpectation = expectation(description: "alert dismissed")
+
         await inAppModalAlertScheduler.removePresentedAlert(identifier: alert.identifier)
 
-        waitOnMain()
+        await fulfillment(of: [mockViewController.alertDismissedExpectation!])
         let alertDimissed = mockViewController.alertDismissed
         XCTAssertNotNil(alertDimissed)
     }
@@ -220,14 +234,16 @@ class InAppModalAlertSchedulerTests: XCTestCase {
     }
     
     func testRetractAlert() async {
+
+        timerCreatedExepctation = expectation(description: "Timer created")
+
         let alert = Alert(identifier: alertIdentifier, foregroundContent: foregroundContent, backgroundContent: backgroundContent, trigger: .delayed(interval: 0.1))
         inAppModalAlertScheduler.scheduleAlert(alert)
-        
-        waitOnMain()
-        XCTAssert(mockTimer?.isValid == true)
-        await inAppModalAlertScheduler.unscheduleAlert(identifier: alert.identifier)
 
-        waitOnMain()
+        await fulfillment(of: [timerCreatedExepctation!])
+        XCTAssert(mockTimer?.isValid == true)
+
+        await inAppModalAlertScheduler.unscheduleAlert(identifier: alert.identifier)
         XCTAssert(mockTimer?.isValid == false)
     }
     

@@ -100,9 +100,17 @@ class MockFileManager: FileManager {
 }
 
 class MockPresenter: AlertPresenter {
-    func present(_ viewControllerToPresent: UIViewController, animated flag: Bool) async { }
-    func dismissTopMost(animated: Bool) async { }
-    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool) async { }
+    var presentedViewController: UIViewController?
+
+    func present(_ viewControllerToPresent: UIViewController, animated flag: Bool) async {
+        presentedViewController = viewControllerToPresent
+    }
+    func dismissTopMost(animated: Bool) async {
+        presentedViewController = nil
+    }
+    func dismissAlert(_ alertToDismiss: UIAlertController, animated: Bool) async {
+        presentedViewController = nil
+    }
 }
 
 class MockAlertManagerResponder: AlertManagerResponder {
