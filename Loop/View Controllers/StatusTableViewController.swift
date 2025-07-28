@@ -732,7 +732,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private var canceledDose: DoseEntry? = nil
     
     private func determinePresetsRowMode() -> PresetsRowMode {
-        print("temporaryPresetsManager.scheduleOverride = \(String(describing: temporaryPresetsManager.scheduleOverride))")
         if let preset = temporaryPresetsManager.scheduleOverride ?? temporaryPresetsManager.preMealOverride, !preset.hasFinished() {
             return .scheduleOverrideEnabled(preset)
         } else {

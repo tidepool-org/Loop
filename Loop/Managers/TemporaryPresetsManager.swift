@@ -87,7 +87,6 @@ class TemporaryPresetsManager {
 
     public var scheduleOverride: TemporaryScheduleOverride? {
         didSet {
-            print("didSet scheduleOverride called: \(scheduleOverride)")
             guard oldValue != scheduleOverride else {
                 return
             }
@@ -516,7 +515,7 @@ extension TemporaryPresetsManager : AlertResponder {
         {
             startPreset(withIdentifier: presetIdentifier!)
         } else {
-            print("Here")
+            log.error("Could not identify preset to activate for alert action: actionIdentifier=%{public}@, alert=%{public}@", actionIdentifier, String(describing: alert))
         }
     }
 }

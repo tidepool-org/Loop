@@ -343,7 +343,6 @@ public final class AlertManager {
 
 extension AlertManager: AlertManagerResponder {
     func userDidSelectAction(alertIdentifier: Alert.Identifier, actionIdentifier: String) async throws {
-        print("AlertManager handling action \(alertIdentifier) \(actionIdentifier)")
         if let responder = responders[alertIdentifier.managerIdentifier]?.value {
             do {
                 let storedAlert = try await alertStore.lookupAllMatching(identifier: alertIdentifier, limit: 1).first
