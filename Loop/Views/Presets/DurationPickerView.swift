@@ -80,51 +80,56 @@ struct DurationPickerView: View {
         )
     }
 
+    var picker: some View {
+        HStack(spacing: 16) {
+            HStack(spacing: 8) {
+                Picker("Hours", selection: hours) {
+                    ForEach(availableHours, id: \.self) { hour in
+                        Text("\(hour)")
+                            .tag(hour)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(width: 60)
+                .clipped()
+                .disabled(isIndefinite.wrappedValue)
+                .opacity(isIndefinite.wrappedValue ? 0.5 : 1)
+
+                Text("hour")
+                    .foregroundColor(isIndefinite.wrappedValue ? .gray.opacity(0.5) : .gray)
+            }
+
+            HStack(spacing: 8) {
+                Picker("Minutes", selection: minutes) {
+                    ForEach(availableMinutes, id: \.self) { minute in
+                        Text("\(minute)")
+                            .tag(minute)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(width: 60)
+                .clipped()
+                .disabled(isIndefinite.wrappedValue)
+                .opacity(isIndefinite.wrappedValue ? 0.5 : 1)
+
+                Text("min")
+                    .foregroundColor(isIndefinite.wrappedValue ? .gray.opacity(0.5) : .gray)
+            }
+        }
+        .padding(.horizontal)
+        .onChange(of: hours.wrappedValue) { _, _ in
+            enforceConstraints()
+        }
+        .onChange(of: minutes.wrappedValue) { _, _ in
+            enforceConstraints()
+        }
+    }
+
     var body: some View {
         VStack {
-            HStack(spacing: 16) {
-                HStack(spacing: 8) {
-                    Picker("Hours", selection: hours) {
-                        ForEach(availableHours, id: \.self) { hour in
-                            Text("\(hour)")
-                                .tag(hour)
-                        }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(width: 60)
-                    .clipped()
-                    .disabled(isIndefinite.wrappedValue)
-                    .opacity(isIndefinite.wrappedValue ? 0.5 : 1)
-
-                    Text("hour")
-                        .foregroundColor(isIndefinite.wrappedValue ? .gray.opacity(0.5) : .gray)
-                }
-
-                HStack(spacing: 8) {
-                    Picker("Minutes", selection: minutes) {
-                        ForEach(availableMinutes, id: \.self) { minute in
-                            Text("\(minute)")
-                                .tag(minute)
-                        }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(width: 60)
-                    .clipped()
-                    .disabled(isIndefinite.wrappedValue)
-                    .opacity(isIndefinite.wrappedValue ? 0.5 : 1)
-
-                    Text("min")
-                        .foregroundColor(isIndefinite.wrappedValue ? .gray.opacity(0.5) : .gray)
-                }
+            if !isIndefinite.wrappedValue {
+                picker
             }
-            .padding(.horizontal)
-            .onChange(of: hours.wrappedValue) { _, _ in
-                enforceConstraints()
-            }
-            .onChange(of: minutes.wrappedValue) { _, _ in
-                enforceConstraints()
-            }
-
             HStack {
                 Text("Until I turn off")
                 Spacer()
