@@ -264,7 +264,7 @@ class SimpleBolusViewModelTests: XCTestCase {
 extension SimpleBolusViewModelTests: SimpleBolusViewModelDelegate {
     func saveGlucose(sample: LoopKit.NewGlucoseSample) async throws -> StoredGlucoseSample {
         addedGlucose.append(sample)
-        return sample.asStoredGlucoseStample
+        return sample.asStoredGlucoseSample
     }
 
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?) async throws -> StoredCarbEntry {

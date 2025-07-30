@@ -383,7 +383,7 @@ final class LoopDataManager: ObservableObject {
             endDate: neededSensitivityTimeline.end
         )
 
-        let target = try await settingsProvider.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
+        var target = try await settingsProvider.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
 
         let dosingLimits = try await settingsProvider.getDosingLimits(at: baseTime)
 
@@ -396,7 +396,8 @@ final class LoopDataManager: ObservableObject {
         }
 
         var overrides = temporaryPresetsManager.presetHistory.getOverrideHistory(startDate: neededSensitivityTimeline.start, endDate: forecastEndTime)
-        
+
+        // For recommendation, we should consider preMeal override to be ending at time of dose
         if disablingPreMeal,
            let activeOverride = temporaryPresetsManager.activeOverride,
            activeOverride.context == .preMeal,
@@ -423,7 +424,22 @@ final class LoopDataManager: ObservableObject {
         guard !target.isEmpty else {
             throw LoopError.configurationError(.glucoseTargetRangeSchedule)
         }
-        let targetWithOverrides = overrides.applyTarget(over: target, at: baseTime)
+
+        // If we have an active override, and it's not a preMeal override that should be disabled,
+        // then override the target for the entire forecast.
+        if let activeOverride = temporaryPresetsManager.activeOverride,
+            let overriddenTargetRange = activeOverride.settings.targetRange
+        {
+            if !(disablingPreMeal && activeOverride.context == .preMeal) {
+                target = [
+                    AbsoluteScheduleValue(
+                        startDate: baseTime,
+                        endDate: forecastEndTime,
+                        value: overriddenTargetRange
+                    )
+                ]
+            }
+        }
 
         // Create dosing strategy based on user setting
         let applicationFactorStrategy: ApplicationFactorStrategy = UserDefaults.standard.glucoseBasedApplicationFactorEnabled
@@ -451,7 +467,7 @@ final class LoopDataManager: ObservableObject {
             basal: basalWithOverrides,
             sensitivity: sensitivityWithOverrides,
             carbRatio: carbRatioWithOverrides,
-            target: targetWithOverrides,
+            target: target,
             suspendThreshold: dosingLimits.suspendThreshold,
             maxBolus: maxBolus,
             maxBasalRate: maxBasalRate,
@@ -648,7 +664,7 @@ final class LoopDataManager: ObservableObject {
     ) async throws -> ManualBolusRecommendation? {
 
         var input = try await self.fetchData(for: now(), disablingPreMeal: potentialCarbEntry != nil)
-            .addingGlucoseSample(sample: manualGlucoseSample?.asStoredGlucoseStample)
+            .addingGlucoseSample(sample: manualGlucoseSample?.asStoredGlucoseSample)
             .removingCarbEntry(carbEntry: originalCarbEntry)
             .addingCarbEntry(carbEntry: potentialCarbEntry?.asStoredCarbEntry)
 
@@ -656,6 +672,8 @@ final class LoopDataManager: ObservableObject {
         input.recommendationType = .manualBolus
 
         let output = LoopAlgorithm.run(input: input)
+
+        //AlgorithmInputFixture.printFixture(input)
 
         switch output.recommendationResult {
         case .success(let prediction):
@@ -971,7 +989,7 @@ extension NewCarbEntry {
 }
 
 extension NewGlucoseSample {
-    var asStoredGlucoseStample: StoredGlucoseSample {
+    var asStoredGlucoseSample: StoredGlucoseSample {
         StoredGlucoseSample(
             syncIdentifier: syncIdentifier,
             syncVersion: syncVersion,

@@ -533,7 +533,7 @@ final class BolusEntryViewModel: ObservableObject {
             // Add potential bolus, carbs, manual glucose
             input = input
                 .addingDose(dose: enteredBolusDose)
-                .addingGlucoseSample(sample: manualGlucoseSample?.asStoredGlucoseStample)
+                .addingGlucoseSample(sample: manualGlucoseSample?.asStoredGlucoseSample)
                 .removingCarbEntry(carbEntry: originalCarbEntry)
                 .addingCarbEntry(carbEntry: potentialCarbEntry?.asStoredCarbEntry)
 
@@ -757,3 +757,4 @@ extension BolusEntryViewModel {
         }
     }
 }
+

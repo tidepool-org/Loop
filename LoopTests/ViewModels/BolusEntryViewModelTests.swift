@@ -902,7 +902,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         if let saveGlucoseError {
             throw saveGlucoseError
         } else {
-            return sample.asStoredGlucoseStample
+            return sample.asStoredGlucoseSample
         }
     }
     

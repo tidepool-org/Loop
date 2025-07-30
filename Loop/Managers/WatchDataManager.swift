@@ -175,7 +175,7 @@ final class WatchDataManager: NSObject {
         }
 
         let rawUserInfo = userInfo.rawValue
-        log.default("Transferring LoopSettingsUserInfo: %{public}@", rawUserInfo)
+        //log.default("Transferring LoopSettingsUserInfo: %{public}@", rawUserInfo)
         session.transferUserInfo(rawUserInfo)
     }
 
