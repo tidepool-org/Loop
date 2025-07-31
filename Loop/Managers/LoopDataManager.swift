@@ -673,8 +673,6 @@ final class LoopDataManager: ObservableObject {
 
         let output = LoopAlgorithm.run(input: input)
 
-        //AlgorithmInputFixture.printFixture(input)
-
         switch output.recommendationResult {
         case .success(let prediction):
             guard var manualBolusRecommendation = prediction.manual else { return nil }
