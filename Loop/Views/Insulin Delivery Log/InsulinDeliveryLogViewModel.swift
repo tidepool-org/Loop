@@ -179,52 +179,30 @@ class InsulinDeliveryLogViewModel {
             var dosingDecisions: [StoredDosingDecision] = []
             var totalInsulinDelivered: LoopQuantity? = nil
             
-            print("aaaaaaaaaaaaaaaaa 1")
-            
             group.addTask {
-                print("aaaaaaaaaaaaaaaaa 2")
                 doses = await self.fetchDoses(since: startDate)
-                print("aaaaaaaaaaaaaaaaa 3")
                 lastAutoBolus = await self.fetchLastAutoBolus(doses: doses)
-                print("aaaaaaaaaaaaaaaaa 4")
             }
             
-            print("aaaaaaaaaaaaaaaaa 5")
-            
             group.addTask {
-                print("aaaaaaaaaaaaaaaaa 6")
                 dosingDecisions = (try? await self.loopDataManager.dosingDecisionStore.findDosingDecisionsSinceDate(date: startDate)) ?? []
-                print("aaaaaaaaaaaaaaaaa 7")
             }
-            
-            print("aaaaaaaaaaaaaaaaa 8")
             
             group.addTask {
-                print("aaaaaaaaaaaaaaaaa 9")
                 totalInsulinDelivered = await self.fetchTotalInsulinDeliveredToday()
-                print("aaaaaaaaaaaaaaaaa 10")
             }
-            
-            print("aaaaaaaaaaaaaaaaa 11")
 
-            
             await group.waitForAll()
-            
-            print("aaaaaaaaaaaaaaaaa 12")
 
             guard let totalInsulinDelivered else {
                 return
             }
-            
-            print("aaaaaaaaaaaaaaaaa 13")
             
             // map raw event data into delivery log events for display
             var events = [InsulinDeliveryLogEvent]()
             handleDoseEvents(doses: doses, decisions: dosingDecisions, fetchedDate: fetchedDate, events: &events)
             handleAutomationEvents(&events)
             handlePresetEvents(startDate: startDate, &events)
-            
-            print("aaaaaaaaaaaaaaaaa 14")
             
             // update the state of delivery log with the fetched & mapped data
             state = .fetched(
@@ -237,8 +215,6 @@ class InsulinDeliveryLogViewModel {
                     events: events
                 )
             )
-            
-            print("aaaaaaaaaaaaaaaaa 15")
         }
     }
     
