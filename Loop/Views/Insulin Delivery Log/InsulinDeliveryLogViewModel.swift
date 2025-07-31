@@ -171,27 +171,75 @@ class InsulinDeliveryLogViewModel {
         }
         
         let statusState = fetchStatusState()
-        let doses = await fetchDoses(since: startDate)
-        let lastAutoBolus = fetchLastAutoBolus(doses: doses)
-        let totalInsulinDelivered = await fetchTotalInsulinDeliveredToday()
-        
-        // map raw event data into delivery log events for display
-        var events = [InsulinDeliveryLogEvent]()
-        await handleDoseEvents(doses: doses, fetchedDate: fetchedDate, events: &events)
-        handleAutomationEvents(&events)
-        handlePresetEvents(startDate: startDate, &events)
-        
-        // update the state of delivery log with the fetched & mapped data
-        state = .fetched(
-            .init(
-                insulinDeliveryState: statusState,
-                insulinDeliveryStateUpdatedDate: fetchedDate,
-                currentBasalRate: currentBasalRate,
-                lastAutoBolus: lastAutoBolus,
-                totalInsulinDelivered: totalInsulinDelivered,
-                events: events
+        await withTaskGroup { [weak self] group in
+            guard let self else { return }
+            
+            var doses: [DoseEntry] = []
+            var lastAutoBolus: DatedQuantity? = nil
+            var dosingDecisions: [StoredDosingDecision] = []
+            var totalInsulinDelivered: LoopQuantity? = nil
+            
+            print("aaaaaaaaaaaaaaaaa 1")
+            
+            group.addTask {
+                print("aaaaaaaaaaaaaaaaa 2")
+                doses = await self.fetchDoses(since: startDate)
+                print("aaaaaaaaaaaaaaaaa 3")
+                lastAutoBolus = await self.fetchLastAutoBolus(doses: doses)
+                print("aaaaaaaaaaaaaaaaa 4")
+            }
+            
+            print("aaaaaaaaaaaaaaaaa 5")
+            
+            group.addTask {
+                print("aaaaaaaaaaaaaaaaa 6")
+                dosingDecisions = (try? await self.loopDataManager.dosingDecisionStore.findDosingDecisionsSinceDate(date: startDate)) ?? []
+                print("aaaaaaaaaaaaaaaaa 7")
+            }
+            
+            print("aaaaaaaaaaaaaaaaa 8")
+            
+            group.addTask {
+                print("aaaaaaaaaaaaaaaaa 9")
+                totalInsulinDelivered = await self.fetchTotalInsulinDeliveredToday()
+                print("aaaaaaaaaaaaaaaaa 10")
+            }
+            
+            print("aaaaaaaaaaaaaaaaa 11")
+
+            
+            await group.waitForAll()
+            
+            print("aaaaaaaaaaaaaaaaa 12")
+
+            guard let totalInsulinDelivered else {
+                return
+            }
+            
+            print("aaaaaaaaaaaaaaaaa 13")
+            
+            // map raw event data into delivery log events for display
+            var events = [InsulinDeliveryLogEvent]()
+            handleDoseEvents(doses: doses, decisions: dosingDecisions, fetchedDate: fetchedDate, events: &events)
+            handleAutomationEvents(&events)
+            handlePresetEvents(startDate: startDate, &events)
+            
+            print("aaaaaaaaaaaaaaaaa 14")
+            
+            // update the state of delivery log with the fetched & mapped data
+            state = .fetched(
+                .init(
+                    insulinDeliveryState: statusState,
+                    insulinDeliveryStateUpdatedDate: fetchedDate,
+                    currentBasalRate: currentBasalRate,
+                    lastAutoBolus: lastAutoBolus,
+                    totalInsulinDelivered: totalInsulinDelivered,
+                    events: events
+                )
             )
-        )
+            
+            print("aaaaaaaaaaaaaaaaa 15")
+        }
     }
     
     private func fetchStatusState() -> InsulinDeliveryOverview.State {
@@ -247,7 +295,7 @@ class InsulinDeliveryLogViewModel {
         await LoopQuantity(unit: .internationalUnit, doubleValue: loopDataManager.totalDeliveredToday()?.value ?? 0)
     }
     
-    private func handleBasalEvent(dose: DoseEntry, events: inout [InsulinDeliveryLogEvent]) async {
+    private func handleBasalEvent(dose: DoseEntry, decision: StoredDosingDecision?, events: inout [InsulinDeliveryLogEvent]) {
         let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.automaticDosingStatus.automaticDosingEnabled
         
         if dose.type == .tempBasal && dose.automatic == false {
@@ -268,7 +316,7 @@ class InsulinDeliveryLogViewModel {
                 )
             )
         } else if automationEnabledDuringDose {
-            if let decision = await dose.dosingDecision(from: loopDataManager.dosingDecisionStore) {
+            if let decision {
                 if decision.scheduleOverride != nil {
                     events.append(
                         InsulinDeliveryLogEvent(
@@ -385,9 +433,7 @@ class InsulinDeliveryLogViewModel {
         }
     }
     
-    private func handleBolusEvents(dose: DoseEntry, events: inout [InsulinDeliveryLogEvent]) async {
-        let decision = await dose.dosingDecision(from: loopDataManager.dosingDecisionStore)
-        
+    private func handleBolusEvents(dose: DoseEntry, decision: StoredDosingDecision?, events: inout [InsulinDeliveryLogEvent]) {
         if dose.automatic == true {
             events.append(
                 InsulinDeliveryLogEvent(
@@ -491,13 +537,14 @@ class InsulinDeliveryLogViewModel {
         }
     }
     
-    private func handleDoseEvents(doses: [DoseEntry], fetchedDate: Date, events: inout [InsulinDeliveryLogEvent]) async {
+    private func handleDoseEvents(doses: [DoseEntry], decisions: [StoredDosingDecision], fetchedDate: Date, events: inout [InsulinDeliveryLogEvent]) {
         for dose in doses {
+            let decision = decisions.first(where: { $0.id == dose.decisionId })
             switch dose.type {
             case .basal, .tempBasal:
-                await handleBasalEvent(dose: dose, events: &events)
+                handleBasalEvent(dose: dose, decision: decision, events: &events)
             case .bolus:
-                await handleBolusEvents(dose: dose, events: &events)
+                handleBolusEvents(dose: dose, decision: decision, events: &events)
             case .resume, .suspend:
                 handleSuspendResumeEvents(dose: dose, fetchedDate: fetchedDate, events: &events)
             }
@@ -537,12 +584,3 @@ class InsulinDeliveryLogViewModel {
     }
 }
 
-private extension DoseEntry {
-    func dosingDecision(from store: DosingDecisionStoreProtocol) async -> StoredDosingDecision? {
-        if let decisionId = decisionId {
-            return try? await store.findDosingDecisionsById(decisionId)
-        } else {
-            return nil
-        }
-    }
-}
