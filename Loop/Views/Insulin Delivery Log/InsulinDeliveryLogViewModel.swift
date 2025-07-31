@@ -343,7 +343,7 @@ class InsulinDeliveryLogViewModel {
                             )
                         }
                     } else {
-                        fatalError("No `decision.automaticDoseRecommendation`")
+                        assertionFailure("No `decision.automaticDoseRecommendation`")
                     }
                 }
             } else if let scheduledBasalRate = dose.scheduledBasalRate, scheduledBasalRate.doubleValue(for: .internationalUnitsPerHour) == dose.value {
@@ -364,7 +364,7 @@ class InsulinDeliveryLogViewModel {
                     )
                 )
             } else {
-//                fatalError("No `decision` or `scheduledBasalRate`")
+                assertionFailure("No `decision` or `scheduledBasalRate`")
             }
         } else {
             events.append(
