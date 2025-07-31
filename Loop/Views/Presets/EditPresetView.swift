@@ -133,7 +133,7 @@ struct EditPresetView: View {
                     // Duration Section
                     if preset.canAdjustDuration {
                         CardSection {
-                            VStack(alignment: .leading, spacing: 0) {
+                            VStack(alignment: .leading) {
                                 HStack {
                                     Text("Duration")
                                         .foregroundColor(.primary)
@@ -298,6 +298,7 @@ struct EditPresetView: View {
                         .padding(.top)
                     }
                 }
+                .animation(.easeInOut, value: preset.duration)
             }
             .navigationBarItems(trailing: dismissButton)
             .navigationDestination(for: Destination.self) { dest in

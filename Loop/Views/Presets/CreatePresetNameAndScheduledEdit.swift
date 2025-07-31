@@ -89,7 +89,7 @@ struct CreatePresetNameAndScheduledEdit: View {
 
             // Duration Section
             CardSection {
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading) {
                     HStack {
                         Text("Duration")
                             .foregroundColor(.primary)
@@ -117,7 +117,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                         DurationPickerView(
                             durationType: Binding(
                                 get: {
-                                    return preset.duration ?? .duration(0)
+                                    return preset.duration ?? .duration(.hours(1))
                                 },
                                 set: { duration in
                                     preset.duration = duration
@@ -243,6 +243,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                 assignRepeatDays()
             }
         })
+        .animation(.easeInOut, value: preset.duration)
 
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Create a Preset")
