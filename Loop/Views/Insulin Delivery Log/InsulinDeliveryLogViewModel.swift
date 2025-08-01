@@ -172,13 +172,13 @@ class InsulinDeliveryLogViewModel {
         
         let statusState = fetchStatusState()
         let totalInsulinDelivered = await fetchTotalInsulinDeliveredToday()
-        async let doses = fetchDoses(since: startDate)
-        async let dosingDecisions = (try? self.loopDataManager.dosingDecisionStore.findDosingDecisionsSinceDate(date: startDate)) ?? []
-        let lastAutoBolus = await fetchLastAutoBolus(doses: doses)
+        let doses = await fetchDoses(since: startDate)
+        let lastAutoBolus = fetchLastAutoBolus(doses: doses)
+        let decisions = await fetchDosingDecisions(doses.compactMap(\.decisionId))
         
         // map raw event data into delivery log events for display
         var events = [InsulinDeliveryLogEvent]()
-        await handleDoseEvents(doses: doses, decisions: dosingDecisions, fetchedDate: fetchedDate, events: &events)
+        handleDoseEvents(doses: doses, decisions: decisions, fetchedDate: fetchedDate, events: &events)
         handleAutomationEvents(&events)
         handlePresetEvents(startDate: startDate, &events)
         
@@ -242,6 +242,10 @@ class InsulinDeliveryLogViewModel {
     
     private func fetchDoses(since startDate: Date) async -> [DoseEntry] {
         (try? await loopDataManager.doseStore.getNormalizedDoseEntries(start: startDate, end: nil)) ?? []
+    }
+    
+    private func fetchDosingDecisions(_ ids: [UUID]) async -> [StoredDosingDecision] {
+        (try? await loopDataManager.dosingDecisionStore.findDosingDecisionsByIds(ids)) ?? []
     }
     
     private func fetchTotalInsulinDeliveredToday() async -> LoopQuantity {
