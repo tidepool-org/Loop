@@ -244,7 +244,7 @@ class InsulinDeliveryLogViewModel {
         (try? await loopDataManager.doseStore.getNormalizedDoseEntries(start: startDate, end: nil)) ?? []
     }
     
-    private func fetchDosingDecisions(_ ids: [UUID]) async -> [StoredDosingDecision] {
+    private func fetchDosingDecisions(_ ids: [UUID]) async -> [LightDosingDecision] {
         (try? await loopDataManager.dosingDecisionStore.findDosingDecisionsByIds(ids)) ?? []
     }
     
@@ -252,7 +252,7 @@ class InsulinDeliveryLogViewModel {
         await LoopQuantity(unit: .internationalUnit, doubleValue: loopDataManager.totalDeliveredToday()?.value ?? 0)
     }
     
-    private func handleBasalEvent(dose: DoseEntry, decision: StoredDosingDecision?, events: inout [InsulinDeliveryLogEvent]) {
+    private func handleBasalEvent(dose: DoseEntry, decision: LightDosingDecision?, events: inout [InsulinDeliveryLogEvent]) {
         let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.automaticDosingStatus.automaticDosingEnabled
         
         if dose.type == .tempBasal && dose.automatic == false {
@@ -390,7 +390,7 @@ class InsulinDeliveryLogViewModel {
         }
     }
     
-    private func handleBolusEvents(dose: DoseEntry, decision: StoredDosingDecision?, events: inout [InsulinDeliveryLogEvent]) {
+    private func handleBolusEvents(dose: DoseEntry, decision: LightDosingDecision?, events: inout [InsulinDeliveryLogEvent]) {
         if dose.automatic == true {
             events.append(
                 InsulinDeliveryLogEvent(
@@ -494,7 +494,7 @@ class InsulinDeliveryLogViewModel {
         }
     }
     
-    private func handleDoseEvents(doses: [DoseEntry], decisions: [StoredDosingDecision], fetchedDate: Date, events: inout [InsulinDeliveryLogEvent]) {
+    private func handleDoseEvents(doses: [DoseEntry], decisions: [LightDosingDecision], fetchedDate: Date, events: inout [InsulinDeliveryLogEvent]) {
         for dose in doses {
             let decision = decisions.first(where: { $0.id == dose.decisionId })
             switch dose.type {
@@ -540,4 +540,3 @@ class InsulinDeliveryLogViewModel {
         }
     }
 }
-
