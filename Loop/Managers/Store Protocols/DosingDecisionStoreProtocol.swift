@@ -17,7 +17,6 @@ protocol DosingDecisionStoreProtocol: CriticalEventLog {
     
     func findDosingDecisionsById(_ id: UUID) async throws -> StoredDosingDecision?
     func findDosingDecisionsByIds(_ ids: [UUID]) async throws -> [StoredDosingDecision]
-    func findDosingDecisionsSinceDate(date: Date) async throws -> [StoredDosingDecision]
 }
 
 extension DosingDecisionStore: DosingDecisionStoreProtocol { }
