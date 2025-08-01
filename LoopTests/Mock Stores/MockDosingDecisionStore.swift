@@ -38,7 +38,11 @@ class MockDosingDecisionStore: DosingDecisionStoreProtocol {
         }
     }
     
-    func findDosingDecisionsById(_ id: UUID) async throws -> StoredDosingDecision? {
+    func findDosingDecisionsById<D: DosingDecision>(_ id: UUID) async throws -> D? {
         nil
+    }
+    
+    func findDosingDecisionsByIds<D: DosingDecision>(_ ids: [UUID]) async throws -> [D] {
+        []
     }
 }
