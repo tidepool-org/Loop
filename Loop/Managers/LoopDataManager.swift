@@ -553,7 +553,11 @@ final class LoopDataManager: ObservableObject {
             // Trim future basal
             input.doses =  input.doses.trimmed(to: loopBaseTime)
 
-            let dosingStrategy = settingsProvider.settings.automaticDosingStrategy
+            var dosingStrategy: AutomaticDosingStrategy = .automaticBolus
+
+            if FeatureFlags.dosingStrategySelectionEnabled {
+                dosingStrategy = settingsProvider.settings.automaticDosingStrategy
+            }
             input.recommendationType = dosingStrategy.recommendationType
 
             guard let latestGlucose = input.glucoseHistory.last else {
@@ -783,12 +787,16 @@ final class LoopDataManager: ObservableObject {
 
 // MARK: - Background task management
 extension LoopDataManager: PersistenceControllerDelegate {
-    func persistenceControllerWillSave(_ controller: PersistenceController) {
-        startBackgroundTask()
+    nonisolated func persistenceControllerWillSave(_ controller: PersistenceController) {
+        Task {
+            await startBackgroundTask()
+        }
     }
 
-    func persistenceControllerDidSave(_ controller: PersistenceController, error: PersistenceController.PersistenceControllerError?) {
-        endBackgroundTask()
+    nonisolated func persistenceControllerDidSave(_ controller: PersistenceController, error: PersistenceController.PersistenceControllerError?) {
+        Task {
+            await endBackgroundTask()
+        }
     }
 }
 

@@ -76,7 +76,7 @@ struct SettingsView: View {
                     if versionUpdateViewModel.softwareUpdateAvailable {
                         softwareUpdateSection
                     }
-                    if FeatureFlags.automaticBolusEnabled {
+                    if FeatureFlags.dosingStrategySelectionEnabled {
                         dosingStrategySection
                     }
                     alertManagementSection

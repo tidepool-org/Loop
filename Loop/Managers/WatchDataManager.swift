@@ -198,6 +198,13 @@ final class WatchDataManager: NSObject {
             return
         }
 
+        for xfer in session.outstandingUserInfoTransfers {
+            if (xfer.userInfo["name"] as? String) == SupportedBolusVolumesUserInfo.name {
+                // We have an outstanding SupportedBolusVolumesUserInfo xfer in progress
+                return
+            }
+        }
+
         lastSentBolusVolumes = volumes
 
         log.default("Transferring supported bolus volumes")

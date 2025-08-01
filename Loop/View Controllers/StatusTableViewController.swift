@@ -304,11 +304,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
         didSet {
             if oldValue != bolusState {
                 switch bolusState {
-                case .inProgress(_):
+                case .inProgress(let dose):
                     guard case .inProgress = oldValue else {
                         guard case .canceling = oldValue else {
                             // Bolus starting
-                            bolusProgressReporter = deviceManager.pumpManager?.createBolusProgressReporter(reportingOn: DispatchQueue.main)
+                            if dose.automatic != true {
+                                bolusProgressReporter = deviceManager.pumpManager?.createBolusProgressReporter(reportingOn: DispatchQueue.main)
+                            }
                             break
                         }
                         break

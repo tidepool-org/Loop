@@ -11,7 +11,7 @@ import Foundation
 let FeatureFlags = FeatureFlagConfiguration()
 
 struct FeatureFlagConfiguration: Decodable {
-    let automaticBolusEnabled: Bool
+    let dosingStrategySelectionEnabled: Bool
     let cgmManagerCategorizeManualGlucoseRangeEnabled: Bool
     let criticalAlertsEnabled: Bool
     let entryDeletionEnabled: Bool
@@ -42,10 +42,10 @@ struct FeatureFlagConfiguration: Decodable {
 
     fileprivate init() {
         // Swift compiler config is inverse, since the default state is enabled.
-        #if AUTOMATIC_BOLUS_DISABLED
-        self.automaticBolusEnabled = false
+        #if DOSING_STRATEGY_SELECTION_DISABLED
+        self.dosingStrategySelectionEnabled = false
         #else
-        self.automaticBolusEnabled = true
+        self.dosingStrategySelectionEnabled = true
         #endif
 
         #if CGM_MANAGER_CATEGORIZE_GLUCOSE_RANGE_ENABLED
@@ -257,7 +257,7 @@ extension FeatureFlagConfiguration : CustomDebugStringConvertible {
             "* showEventualBloodGlucoseOnWatchEnabled: \(showEventualBloodGlucoseOnWatchEnabled)",
             "* simulatedCoreDataEnabled: \(simulatedCoreDataEnabled)",
             "* siriEnabled: \(siriEnabled)",
-            "* automaticBolusEnabled: \(automaticBolusEnabled)",
+            "* dosingStrategySelectionEnabled: \(dosingStrategySelectionEnabled)",
             "* manualDoseEntryEnabled: \(manualDoseEntryEnabled)",
             "* allowDebugFeatures: \(allowDebugFeatures)",
             "* simpleBolusCalculatorEnabled: \(simpleBolusCalculatorEnabled)",
