@@ -210,8 +210,14 @@ class TemporaryPresetsManager {
     var clearOverrideTimer: Timer?
     public func scheduleClearOverride(override: TemporaryScheduleOverride) {
         clearOverrideTimer?.invalidate()
+        if override.duration.isInfinite { return }
+        log.default("Scheduling override end timer %{public}@", String(describing: override))
+
         clearOverrideTimer = Timer.scheduledTimer(withTimeInterval: override.scheduledEndDate.timeIntervalSince(Date()), repeats: false, block: { [weak self] _ in
-            Task { await self?.endOverride(override) }
+            Task {
+                self?.log.default("override end timer fired for %{public}@", String(describing: override))
+                await self?.endOverride(override)
+            }
         })
     }
 

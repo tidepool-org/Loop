@@ -221,10 +221,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     private var appearedOnce = false
     
-    func presentLegacyPresets() {
-        performSegue(withIdentifier: OverrideSelectionViewController.className, sender: view)
-    }
-
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
@@ -1484,14 +1480,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             vc.hidesBottomBarWhenPushed = true
             vc.enableEntryDeletion = FeatureFlags.entryDeletionEnabled
             vc.headerValueLabelColor = .insulinTintColor
-        case let vc as OverrideSelectionViewController:
-            if temporaryPresetsManager.futureOverrideEnabled() {
-                vc.scheduledOverride = temporaryPresetsManager.scheduleOverride
-            }
-            vc.presets = loopManager.settings.overridePresets
-            vc.glucoseUnit = statusCharts.glucose.glucoseUnit
-            vc.overrideHistory = temporaryPresetsManager.presetHistory.getEvents()
-            vc.delegate = self
         case let vc as PredictionTableViewController:
             vc.deviceManager = deviceManager
             vc.settingsManager = settingsManager
@@ -2112,47 +2100,6 @@ extension StatusTableViewController: DoseProgressObserver {
                 }
             })
         }
-    }
-}
-
-extension StatusTableViewController: OverrideSelectionViewControllerDelegate {
-    func overrideSelectionViewController(_ vc: OverrideSelectionViewController, didUpdatePresets presets: [TemporaryPreset]) {
-        settingsManager.mutateLoopSettings { settings in
-            settings.overridePresets = presets
-        }
-    }
-
-    func overrideSelectionViewController(_ vc: OverrideSelectionViewController, didConfirmOverride override: TemporaryScheduleOverride) {
-        temporaryPresetsManager.scheduleOverride = override
-    }
-
-    func overrideSelectionViewController(_ vc: OverrideSelectionViewController, didConfirmPreset preset: TemporaryPreset) {
-        let intent = EnableOverridePresetIntent()
-        intent.overrideName = preset.name
-
-        let interaction = INInteraction(intent: intent, response: nil)
-        interaction.identifier = preset.id.uuidString
-        interaction.groupIdentifier = preset.name
-        interaction.donate { (error) in
-            if let error = error {
-                os_log(.error, "Failed to donate intent: %{public}@", String(describing: error))
-            }
-        }
-        temporaryPresetsManager.scheduleOverride = preset.createOverride(enactTrigger: .local)
-    }
-
-    func overrideSelectionViewController(_ vc: OverrideSelectionViewController, didCancelOverride override: TemporaryScheduleOverride) {
-        temporaryPresetsManager.scheduleOverride = nil
-    }
-}
-
-extension StatusTableViewController: AddEditOverrideTableViewControllerDelegate {
-    func addEditOverrideTableViewController(_ vc: AddEditOverrideTableViewController, didSaveOverride override: TemporaryScheduleOverride) {
-        temporaryPresetsManager.scheduleOverride = override
-    }
-
-    func addEditOverrideTableViewController(_ vc: AddEditOverrideTableViewController, didCancelOverride override: TemporaryScheduleOverride) {
-        temporaryPresetsManager.scheduleOverride = nil
     }
 }
 

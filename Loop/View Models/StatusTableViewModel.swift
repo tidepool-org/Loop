@@ -30,11 +30,10 @@ class StatusTableViewModel {
     let onboardingManager: OnboardingManager
     let temporaryPresetsManager: TemporaryPresetsManager
     let settingsViewModel: SettingsViewModel
-    let legacyPresetsEnabled: Bool
 
     var pendingPreset: SelectablePreset?
 
-    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel, legacyPresetsEnabled: Bool = false) {
+    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel) {
         self.alertPermissionsChecker = alertPermissionsChecker
         self.alertMuter = alertMuter
         self.automaticDosingStatus = automaticDosingStatus
@@ -54,6 +53,5 @@ class StatusTableViewModel {
         self.criticalEventLogExportManager = criticalEventLogExportManager
         self.bluetoothStateManager = bluetoothStateManager
         self.settingsViewModel = settingsViewModel
-        self.legacyPresetsEnabled = legacyPresetsEnabled
     }
 }

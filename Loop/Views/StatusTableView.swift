@@ -172,11 +172,7 @@ struct StatusTableView: View {
                                 case .bolus:
                                     viewController.presentBolusScreen()
                                 case .presets:
-                                    if viewModel.legacyPresetsEnabled {
-                                        viewController.presentLegacyPresets()
-                                    } else {
-                                        viewController.presentPresets()
-                                    }
+                                    viewController.presentPresets()
                                 case .settings:
                                     viewController.presentSettings()
                                 }
