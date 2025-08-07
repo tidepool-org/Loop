@@ -310,6 +310,7 @@ final class LoopDataManager: ObservableObject {
 
     func fetchData(
         for baseTime: Date = Date(),
+        ignoringOverride: Bool = false,
         disablingPreMeal: Bool = false,
         ensureDosingCoverageStart: Date? = nil
     ) async throws -> StoredDataAlgorithmInput {
@@ -384,6 +385,7 @@ final class LoopDataManager: ObservableObject {
         )
 
         var target = try await settingsProvider.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
+        let targetIgnoringOverride = target
 
         let dosingLimits = try await settingsProvider.getDosingLimits(at: baseTime)
 
@@ -464,10 +466,10 @@ final class LoopDataManager: ObservableObject {
             doses: dosesWithModel,
             carbEntries: carbEntries,
             predictionStart: baseTime,
-            basal: basalWithOverrides,
-            sensitivity: sensitivityWithOverrides,
-            carbRatio: carbRatioWithOverrides,
-            target: target,
+            basal: ignoringOverride ? basal : basalWithOverrides,
+            sensitivity: ignoringOverride ? sensitivity : sensitivityWithOverrides,
+            carbRatio: ignoringOverride ? carbRatio : carbRatioWithOverrides,
+            target: ignoringOverride ? targetIgnoringOverride : target,
             suspendThreshold: dosingLimits.suspendThreshold,
             maxBolus: maxBolus,
             maxBasalRate: maxBasalRate,
@@ -660,10 +662,11 @@ final class LoopDataManager: ObservableObject {
     func recommendManualBolus(
         manualGlucoseSample: NewGlucoseSample? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
-        originalCarbEntry: StoredCarbEntry? = nil
+        originalCarbEntry: StoredCarbEntry? = nil,
+        ignoringOverride: Bool = false
     ) async throws -> ManualBolusRecommendation? {
 
-        var input = try await self.fetchData(for: now(), disablingPreMeal: potentialCarbEntry != nil)
+        var input = try await self.fetchData(for: now(), ignoringOverride: ignoringOverride, disablingPreMeal: potentialCarbEntry != nil)
             .addingGlucoseSample(sample: manualGlucoseSample?.asStoredGlucoseSample)
             .removingCarbEntry(carbEntry: originalCarbEntry)
             .addingCarbEntry(carbEntry: potentialCarbEntry?.asStoredCarbEntry)

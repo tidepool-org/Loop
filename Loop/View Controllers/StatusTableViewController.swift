@@ -773,7 +773,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     private func updateBannerRow(animated: Bool) {
         let warningWasVisible = tableView.numberOfRows(inSection: Section.alertWarning.rawValue) != 0
         if !shouldShowBannerWarning && warningWasVisible {
-            tableView.deleteRows(at: [IndexPath(row: 0, section: Section.alertWarning.rawValue)], with: animated ? .top : .none)
+            tableView.deleteRows(at: [IndexPath(row: 0, section: Section.alertWarning.rawValue)], with: animated ? .fade : .none)
         } else if shouldShowBannerWarning && !warningWasVisible {
             tableView.insertRows(at: [IndexPath(row: 0, section: Section.alertWarning.rawValue)], with: animated ? .top : .none)
         } else {
@@ -815,7 +815,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case (false, true):
             tableView.insertRows(at: [IndexPath(row: 0, section: Section.presets.rawValue)], with: animated ? .top : .none)
         case (true, false):
-            tableView.deleteRows(at: [IndexPath(row: 0, section: Section.presets.rawValue)], with: animated ? .top : .none)
+            tableView.deleteRows(at: [IndexPath(row: 0, section: Section.presets.rawValue)], with: animated ? .fade : .none)
         default:
             tableView.reloadRows(at: [IndexPath(row: 0, section: Section.presets.rawValue)], with: animated ? .automatic : .none)
         }
@@ -824,7 +824,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case (false, true):
             tableView.insertRows(at: [IndexPath(row: 0, section: Section.hud.rawValue)], with: animated ? .top : .none)
         case (true, false):
-            tableView.deleteRows(at: [IndexPath(row: 0, section: Section.hud.rawValue)], with: animated ? .top : .none)
+            tableView.deleteRows(at: [IndexPath(row: 0, section: Section.hud.rawValue)], with: animated ? .fade : .none)
         default:
             break
         }
@@ -916,69 +916,19 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         switch Section(rawValue: indexPath.section)! {
         case .presets:
-            func getTitleSubtitleCell() -> TitleSubtitleTableViewCell {
-                let cell = tableView.dequeueReusableCell(withIdentifier: TitleSubtitleTableViewCell.className, for: indexPath) as! TitleSubtitleTableViewCell
-                cell.selectionStyle = .none
-                cell.backgroundColor = .clear
-                cell.titleLabel.text = nil
-                cell.titleLabel.textColor = .white
-                cell.titleLabel.font = .systemFont(ofSize: 17, weight: .semibold)
-                cell.subtitleLabel.text = nil
-                cell.subtitleLabel.textColor = .white
-                cell.subtitleLabel.font = .systemFont(ofSize: 15)
-                cell.accessoryView = nil
-                cell.gradient.isHidden = true
-                return cell
-            }
-            
-            let cell = getTitleSubtitleCell()
+            let cell = UITableViewCell()
             
             switch presetsRowMode {
             case .hidden:
                 break
             case .scheduleOverrideEnabled(let override):
-                switch override.context {
-                case .preMeal:
-                    let symbolAttachment = NSTextAttachment()
-                    symbolAttachment.image = UIImage(named: "Pre-Meal-symbol")?.withTintColor(.white)
-
-                    let attributedString = NSMutableAttributedString(attachment: symbolAttachment)
-                    attributedString.append(NSAttributedString(string: NSLocalizedString(" Pre-meal Preset", comment: "Status row title for premeal override enabled (leading space is to separate from symbol)")))
-                    cell.titleLabel.attributedText = attributedString
-                    cell.titleLabel.accessibilityIdentifier = "text_PreMealPresetCellTitle"
-                case .legacyWorkout:
-                    let symbolAttachment = NSTextAttachment()
-                    symbolAttachment.image = UIImage(named: "workout-symbol")?.withTintColor(.white)
-
-                    let attributedString = NSMutableAttributedString(attachment: symbolAttachment)
-                    attributedString.append(NSAttributedString(string: NSLocalizedString(" Workout Preset", comment: "Status row title for workout override enabled (leading space is to separate from symbol)")))
-                    cell.titleLabel.attributedText = attributedString
-                    cell.titleLabel.accessibilityIdentifier = "text_WorkoutPresetCellTitle"
-                case .preset(let preset):
-                    cell.titleLabel.text = String(format: NSLocalizedString("%@ %@", comment: "The format for an active custom preset. (1: preset symbol)(2: preset name)"), preset.symbol, preset.name)
-                case .custom:
-                    cell.titleLabel.text = NSLocalizedString("Single Use Preset", comment: "The title of the cell indicating a generic custom preset is enabled")
+                cell.contentConfiguration = UIHostingConfiguration  {
+                    ActivePresetBanner(override: override)
                 }
-
-                if override.isActive() {
-                    if let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == override.presetId }), case .preMeal(_) = preset {
-                        cell.subtitleLabel.text = NSLocalizedString("on until carbs added", comment: "The format for the description of a premeal preset end date")
-                        cell.subtitleLabel.accessibilityIdentifier = "text_PresetActiveOn"
-                    } else {
-                        switch override.duration {
-                        case .finite:
-                            let endTimeText = DateFormatter.localizedString(from: override.activeInterval.end, dateStyle: .none, timeStyle: .short)
-                            cell.subtitleLabel.text = String(format: NSLocalizedString("on until %@", comment: "The format for the description of a finite custom preset end date"), endTimeText)
-                            cell.subtitleLabel.accessibilityIdentifier = "text_PresetActiveOn"
-                        case .indefinite:
-                            cell.subtitleLabel.text = NSLocalizedString("on indefinitely", comment: "The format for the description of an indefinite custom preset end date")
-                            cell.subtitleLabel.accessibilityIdentifier = "text_PresetActiveOn"
-                        }
-                    }
-                } else {
-                    let startTimeText = DateFormatter.localizedString(from: override.startDate, dateStyle: .none, timeStyle: .short)
-                    cell.subtitleLabel.text = String(format: NSLocalizedString("starting at %@", comment: "The format for the description of a custom preset start date"), startTimeText)
-                }
+                .margins(.all, 0)
+                
+                cell.backgroundColor = .presets
+                cell.selectionStyle = .none
             }
             
             return cell
