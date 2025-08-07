@@ -12,10 +12,12 @@ import SwiftUI
 import LoopKit
 
 struct PresetCard: View {
+    
     @Environment(\.guidanceColors) private var guidanceColors
-
+    @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     
+    let presetId: String
     let icon: PresetIcon
     let presetName: String
     let duration: PresetDuration
@@ -106,7 +108,7 @@ struct PresetCard: View {
                 guardrail: guardrail,
                 therapySettingsImpactDisplayState: .hide,
                 isScheduled: isScheduled && expectedEndTime != nil,
-                isActive: expectedEndTime != nil
+                isActive: temporaryPresetsManager.activePreset?.id == preset.id
             )
         }
         .padding(10)

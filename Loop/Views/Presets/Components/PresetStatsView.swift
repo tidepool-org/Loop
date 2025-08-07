@@ -19,6 +19,7 @@ struct PresetStatsView: View {
 
     @Environment(\.guidanceColors) private var guidanceColors
     @Environment(\.settingsManager) private var settingsManager
+    @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     
     let insulinMultiplier: Double?
