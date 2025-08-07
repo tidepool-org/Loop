@@ -143,7 +143,8 @@ struct PresetDetentView: View {
                     correctionRange: preset.correctionRange,
                     guardrail: settingsManager.guardrailForPreset(preset),
                     therapySettingsImpactDisplayState: operation == .end ? .show(settingsImpact) : .hide,
-                    isScheduled: false
+                    isScheduled: false,
+                    isActive: operation == .end
                 )
                 
                 actionArea

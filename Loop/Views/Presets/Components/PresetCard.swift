@@ -105,7 +105,8 @@ struct PresetCard: View {
                 correctionRange: correctionRange,
                 guardrail: guardrail,
                 therapySettingsImpactDisplayState: .hide,
-                isScheduled: isScheduled && expectedEndTime != nil
+                isScheduled: isScheduled && expectedEndTime != nil,
+                isActive: expectedEndTime != nil
             )
         }
         .padding(10)
