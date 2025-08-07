@@ -108,7 +108,7 @@ struct PresetCard: View {
                 guardrail: guardrail,
                 therapySettingsImpactDisplayState: .hide,
                 isScheduled: isScheduled && expectedEndTime != nil,
-                isActive: temporaryPresetsManager.activePreset?.id == preset.id
+                isActive: temporaryPresetsManager.activePreset?.id == presetId
             )
         }
         .padding(10)

@@ -144,7 +144,7 @@ struct PresetDetentView: View {
                     guardrail: settingsManager.guardrailForPreset(preset),
                     therapySettingsImpactDisplayState: operation == .end ? .show(settingsImpact) : .hide,
                     isScheduled: false,
-                    isActive: temporaryPresetsManager.activePreset.id == preset.id
+                    isActive: temporaryPresetsManager.activePreset?.id == preset.id
                 )
                 
                 actionArea
