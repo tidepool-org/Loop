@@ -130,7 +130,7 @@ struct BolusEntryView: View {
             .padding(.top, 12)
             .padding(.bottom, 8)
         } header: {
-            if let scheduleOverride = viewModel.scheduleOverride {
+            if let scheduleOverride = viewModel.scheduleOverride ?? viewModel.preMealOverride {
                 ActivePresetBanner(override: scheduleOverride)
                     .padding(.horizontal, -32)
                     .padding(.bottom, 8)
@@ -181,7 +181,7 @@ struct BolusEntryView: View {
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                if let presetEffectedRecommendation = viewModel.presetEffectedRecommendation, presetEffectedRecommendation.showPredictionDifference {
+                if (viewModel.scheduleOverride ?? viewModel.preMealOverride) != nil, let presetEffectedRecommendation = viewModel.presetEffectedRecommendation, presetEffectedRecommendation.showPredictionDifference {
                     HStack(alignment: .top, spacing: 12) {
                         Text(Image(systemName: "info.circle"))
                             .foregroundStyle(Color.accentColor)

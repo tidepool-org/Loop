@@ -642,7 +642,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func computeBolusRecommendation() async throws -> ManualBolusRecommendation? {
+    private func computeBolusRecommendation(ignoringOverride: Bool = false) async throws -> ManualBolusRecommendation? {
         guard let delegate else {
             return nil
         }
