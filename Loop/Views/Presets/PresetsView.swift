@@ -304,6 +304,7 @@ struct PresetsView: View {
 extension PresetCard {
     init (_ preset: SelectablePreset, guardrail: Guardrail<LoopQuantity>, expectedEndTime: PresetExpectedEndTime? = nil) {
         self.init(
+            presetId: preset.id,
             icon: preset.icon,
             presetName: preset.name,
             duration: preset.duration,
