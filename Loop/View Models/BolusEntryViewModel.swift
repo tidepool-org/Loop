@@ -27,7 +27,7 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     var mostRecentGlucoseDataDate: Date? { get }
     var mostRecentPumpDataDate: Date? { get }
 
-    func fetchData(for baseTime: Date, ignoringOverride: Bool, disablingPreMeal: Bool, ensureDosingCoverageStart: Date?) async throws -> StoredDataAlgorithmInput
+    func fetchData(for baseTime: Date, presumePresetEndingNow: Bool, ensureDosingCoverageStart: Date?) async throws -> StoredDataAlgorithmInput
     func effectiveGlucoseTargetRangeSchedule(presumingMealEntry: Bool) -> GlucoseRangeSchedule?
 
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?) async throws -> StoredCarbEntry
@@ -43,7 +43,6 @@ protocol BolusEntryViewModelDelegate: AnyObject {
         originalCarbEntry: StoredCarbEntry?,
         ignoringOverride: Bool
     ) async throws -> ManualBolusRecommendation?
-
 
     func generatePrediction(input: StoredDataAlgorithmInput) throws -> [PredictedGlucoseValue]
 
@@ -516,7 +515,7 @@ final class BolusEntryViewModel: ObservableObject {
 
         do {
             let startDate = now()
-            var input = try await delegate.fetchData(for: startDate, ignoringOverride: false, disablingPreMeal: potentialCarbEntry != nil, ensureDosingCoverageStart: nil)
+            var input = try await delegate.fetchData(for: startDate, presumePresetEndingNow: potentialCarbEntry != nil, ensureDosingCoverageStart: nil)
 
             let insulinModel = delegate.insulinModel(for: deliveryDelegate?.pumpInsulinType)
 

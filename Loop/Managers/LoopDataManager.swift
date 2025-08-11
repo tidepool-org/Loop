@@ -310,8 +310,7 @@ final class LoopDataManager: ObservableObject {
 
     func fetchData(
         for baseTime: Date = Date(),
-        ignoringOverride: Bool = false,
-        disablingPreMeal: Bool = false,
+        presumePresetEndingNow: Bool = false,
         ensureDosingCoverageStart: Date? = nil
     ) async throws -> StoredDataAlgorithmInput {
         // Need to fetch doses back as far as t - (DIA + DCA) for Dynamic carbs
@@ -385,7 +384,6 @@ final class LoopDataManager: ObservableObject {
         )
 
         var target = try await settingsProvider.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
-        let targetIgnoringOverride = target
 
         let dosingLimits = try await settingsProvider.getDosingLimits(at: baseTime)
 
@@ -400,9 +398,8 @@ final class LoopDataManager: ObservableObject {
         var overrides = temporaryPresetsManager.presetHistory.getOverrideHistory(startDate: neededSensitivityTimeline.start, endDate: forecastEndTime)
 
         // For recommendation, we should consider preMeal override to be ending at time of dose
-        if disablingPreMeal,
+        if presumePresetEndingNow,
            let activeOverride = temporaryPresetsManager.activeOverride,
-           activeOverride.context == .preMeal,
            let index = overrides.lastIndex(of: activeOverride) {
             overrides[index].scheduledEndDate = baseTime
         }
@@ -430,17 +427,16 @@ final class LoopDataManager: ObservableObject {
         // If we have an active override, and it's not a preMeal override that should be disabled,
         // then override the target for the entire forecast.
         if let activeOverride = temporaryPresetsManager.activeOverride,
-            let overriddenTargetRange = activeOverride.settings.targetRange
+           let overriddenTargetRange = activeOverride.settings.targetRange,
+           !presumePresetEndingNow
         {
-            if !(disablingPreMeal && activeOverride.context == .preMeal) {
-                target = [
-                    AbsoluteScheduleValue(
-                        startDate: baseTime,
-                        endDate: forecastEndTime,
-                        value: overriddenTargetRange
-                    )
-                ]
-            }
+            target = [
+                AbsoluteScheduleValue(
+                    startDate: baseTime,
+                    endDate: forecastEndTime,
+                    value: overriddenTargetRange
+                )
+            ]
         }
 
         // Create dosing strategy based on user setting
@@ -466,10 +462,10 @@ final class LoopDataManager: ObservableObject {
             doses: dosesWithModel,
             carbEntries: carbEntries,
             predictionStart: baseTime,
-            basal: ignoringOverride ? basal : basalWithOverrides,
-            sensitivity: ignoringOverride ? sensitivity : sensitivityWithOverrides,
-            carbRatio: ignoringOverride ? carbRatio : carbRatioWithOverrides,
-            target: ignoringOverride ? targetIgnoringOverride : target,
+            basal: basalWithOverrides,
+            sensitivity: sensitivityWithOverrides,
+            carbRatio: carbRatioWithOverrides,
+            target: target,
             suspendThreshold: dosingLimits.suspendThreshold,
             maxBolus: maxBolus,
             maxBasalRate: maxBasalRate,
@@ -666,7 +662,7 @@ final class LoopDataManager: ObservableObject {
         ignoringOverride: Bool = false
     ) async throws -> ManualBolusRecommendation? {
 
-        var input = try await self.fetchData(for: now(), ignoringOverride: ignoringOverride, disablingPreMeal: potentialCarbEntry != nil)
+        var input = try await self.fetchData(for: now(), presumePresetEndingNow: ignoringOverride || potentialCarbEntry != nil)
             .addingGlucoseSample(sample: manualGlucoseSample?.asStoredGlucoseSample)
             .removingCarbEntry(carbEntry: originalCarbEntry)
             .addingCarbEntry(carbEntry: potentialCarbEntry?.asStoredCarbEntry)

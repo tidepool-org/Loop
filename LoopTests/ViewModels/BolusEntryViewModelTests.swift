@@ -189,7 +189,7 @@ class BolusEntryViewModelTests: XCTestCase {
     
     func testUpdatePredictedGlucoseValues() async throws {
         do {
-            let input = try await delegate.fetchData(for: Self.exampleStartDate, disablingPreMeal: false, ensureDosingCoverageStart: nil)
+            let input = try await delegate.fetchData(for: Self.exampleStartDate, presumePresetEndingNow: false, ensureDosingCoverageStart: nil)
             let prediction = try input.predictGlucose()
             await bolusEntryViewModel.update()
             XCTAssertEqual(prediction, bolusEntryViewModel.predictedGlucoseValues.map { PredictedGlucoseValue(startDate: $0.startDate, quantity: $0.quantity) })
@@ -200,7 +200,7 @@ class BolusEntryViewModelTests: XCTestCase {
     
     func testUpdatePredictedGlucoseValuesWithManual() async throws {
         do {
-            let input = try await delegate.fetchData(for: Self.exampleStartDate, disablingPreMeal: false, ensureDosingCoverageStart: nil)
+            let input = try await delegate.fetchData(for: Self.exampleStartDate, presumePresetEndingNow: false, ensureDosingCoverageStart: nil)
             let prediction = try input.predictGlucose()
             await bolusEntryViewModel.update()
             bolusEntryViewModel.manualGlucoseQuantity = Self.exampleManualGlucoseQuantity
@@ -870,7 +870,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         automaticBolusApplicationFactor: 0.4
     )
 
-    func fetchData(for baseTime: Date, disablingPreMeal: Bool, ensureDosingCoverageStart: Date?) async throws -> StoredDataAlgorithmInput {
+    func fetchData(for baseTime: Date, presumePresetEndingNow: Bool, ensureDosingCoverageStart: Date?) async throws -> StoredDataAlgorithmInput {
         loopStateInput.predictionStart = baseTime
         return loopStateInput
     }
@@ -946,7 +946,8 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     func recommendManualBolus(
         manualGlucoseSample: NewGlucoseSample?,
         potentialCarbEntry: NewCarbEntry?,
-        originalCarbEntry: StoredCarbEntry?
+        originalCarbEntry: StoredCarbEntry?,
+        ignoringOverride: Bool
     ) async throws -> ManualBolusRecommendation? {
 
         manualGlucoseSampleForBolusRecommendation = manualGlucoseSample
