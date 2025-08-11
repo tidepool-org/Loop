@@ -570,7 +570,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
         
         var direction: String {
-            recommendedAmount > originalAmount ? "increase" : "decrease"
+            recommendedAmount > originalAmount ? NSLocalizedString("increase", comment: "") : NSLocalizedString("decrease", comment: "")
         }
     }
 
