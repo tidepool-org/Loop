@@ -171,13 +171,14 @@ class InsulinDeliveryLogViewModel {
         }
         
         let statusState = fetchStatusState()
+        let totalInsulinDelivered = await fetchTotalInsulinDeliveredToday()
         let doses = await fetchDoses(since: startDate)
         let lastAutoBolus = fetchLastAutoBolus(doses: doses)
-        let totalInsulinDelivered = await fetchTotalInsulinDeliveredToday()
+        let decisions = await fetchDosingDecisions(doses.compactMap(\.decisionId))
         
         // map raw event data into delivery log events for display
         var events = [InsulinDeliveryLogEvent]()
-        await handleDoseEvents(doses: doses, fetchedDate: fetchedDate, events: &events)
+        handleDoseEvents(doses: doses, decisions: decisions, fetchedDate: fetchedDate, events: &events)
         handleAutomationEvents(&events)
         handlePresetEvents(startDate: startDate, &events)
         
@@ -243,11 +244,15 @@ class InsulinDeliveryLogViewModel {
         (try? await loopDataManager.doseStore.getNormalizedDoseEntries(start: startDate, end: nil)) ?? []
     }
     
+    private func fetchDosingDecisions(_ ids: [UUID]) async -> [LightDosingDecision] {
+        (try? await loopDataManager.dosingDecisionStore.findDosingDecisionsByIds(ids)) ?? []
+    }
+    
     private func fetchTotalInsulinDeliveredToday() async -> LoopQuantity {
         await LoopQuantity(unit: .internationalUnit, doubleValue: loopDataManager.totalDeliveredToday()?.value ?? 0)
     }
     
-    private func handleBasalEvent(dose: DoseEntry, events: inout [InsulinDeliveryLogEvent]) async {
+    private func handleBasalEvent(dose: DoseEntry, decision: LightDosingDecision?, events: inout [InsulinDeliveryLogEvent]) {
         let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.automaticDosingStatus.automaticDosingEnabled
         
         if dose.type == .tempBasal && dose.automatic == false {
@@ -268,7 +273,7 @@ class InsulinDeliveryLogViewModel {
                 )
             )
         } else if automationEnabledDuringDose {
-            if let decision = await dose.dosingDecision(from: loopDataManager.dosingDecisionStore) {
+            if let decision {
                 if decision.scheduleOverride != nil {
                     events.append(
                         InsulinDeliveryLogEvent(
@@ -342,7 +347,7 @@ class InsulinDeliveryLogViewModel {
                             )
                         }
                     } else {
-                        fatalError("No `decision.automaticDoseRecommendation`")
+                        assertionFailure("No `decision.automaticDoseRecommendation`")
                     }
                 }
             } else if let scheduledBasalRate = dose.scheduledBasalRate, scheduledBasalRate.doubleValue(for: .internationalUnitsPerHour) == dose.value {
@@ -363,7 +368,7 @@ class InsulinDeliveryLogViewModel {
                     )
                 )
             } else {
-                fatalError("No `decision` or `scheduledBasalRate`")
+                assertionFailure("No `decision` or `scheduledBasalRate`")
             }
         } else {
             events.append(
@@ -385,9 +390,7 @@ class InsulinDeliveryLogViewModel {
         }
     }
     
-    private func handleBolusEvents(dose: DoseEntry, events: inout [InsulinDeliveryLogEvent]) async {
-        let decision = await dose.dosingDecision(from: loopDataManager.dosingDecisionStore)
-        
+    private func handleBolusEvents(dose: DoseEntry, decision: LightDosingDecision?, events: inout [InsulinDeliveryLogEvent]) {
         if dose.automatic == true {
             events.append(
                 InsulinDeliveryLogEvent(
@@ -491,13 +494,14 @@ class InsulinDeliveryLogViewModel {
         }
     }
     
-    private func handleDoseEvents(doses: [DoseEntry], fetchedDate: Date, events: inout [InsulinDeliveryLogEvent]) async {
+    private func handleDoseEvents(doses: [DoseEntry], decisions: [LightDosingDecision], fetchedDate: Date, events: inout [InsulinDeliveryLogEvent]) {
         for dose in doses {
+            let decision = decisions.first(where: { $0.id == dose.decisionId })
             switch dose.type {
             case .basal, .tempBasal:
-                await handleBasalEvent(dose: dose, events: &events)
+                handleBasalEvent(dose: dose, decision: decision, events: &events)
             case .bolus:
-                await handleBolusEvents(dose: dose, events: &events)
+                handleBolusEvents(dose: dose, decision: decision, events: &events)
             case .resume, .suspend:
                 handleSuspendResumeEvents(dose: dose, fetchedDate: fetchedDate, events: &events)
             }
@@ -533,16 +537,6 @@ class InsulinDeliveryLogViewModel {
                     events.append(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .preset(.disabled, icon: preset.icon, name: preset.name), date: event.override.actualEndDate))
                 }
             }
-        }
-    }
-}
-
-private extension DoseEntry {
-    func dosingDecision(from store: DosingDecisionStoreProtocol) async -> StoredDosingDecision? {
-        if let decisionId = decisionId {
-            return try? await store.findDosingDecisionsById(decisionId)
-        } else {
-            return nil
         }
     }
 }

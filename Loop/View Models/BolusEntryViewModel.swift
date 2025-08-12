@@ -27,7 +27,7 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     var mostRecentGlucoseDataDate: Date? { get }
     var mostRecentPumpDataDate: Date? { get }
 
-    func fetchData(for baseTime: Date, disablingPreMeal: Bool, ensureDosingCoverageStart: Date?) async throws -> StoredDataAlgorithmInput
+    func fetchData(for baseTime: Date, presumePresetEndingNow: Bool, ensureDosingCoverageStart: Date?) async throws -> StoredDataAlgorithmInput
     func effectiveGlucoseTargetRangeSchedule(presumingMealEntry: Bool) -> GlucoseRangeSchedule?
 
     func addCarbEntry(_ carbEntry: NewCarbEntry, replacing replacingEntry: StoredCarbEntry?) async throws -> StoredCarbEntry
@@ -40,9 +40,9 @@ protocol BolusEntryViewModelDelegate: AnyObject {
     func recommendManualBolus(
         manualGlucoseSample: NewGlucoseSample?,
         potentialCarbEntry: NewCarbEntry?,
-        originalCarbEntry: StoredCarbEntry?
+        originalCarbEntry: StoredCarbEntry?,
+        ignoringOverride: Bool
     ) async throws -> ManualBolusRecommendation?
-
 
     func generatePrediction(input: StoredDataAlgorithmInput) throws -> [PredictedGlucoseValue]
 
@@ -515,7 +515,7 @@ final class BolusEntryViewModel: ObservableObject {
 
         do {
             let startDate = now()
-            var input = try await delegate.fetchData(for: startDate, disablingPreMeal: potentialCarbEntry != nil, ensureDosingCoverageStart: nil)
+            var input = try await delegate.fetchData(for: startDate, presumePresetEndingNow: potentialCarbEntry != nil, ensureDosingCoverageStart: nil)
 
             let insulinModel = delegate.insulinModel(for: deliveryDelegate?.pumpInsulinType)
 
@@ -546,7 +546,36 @@ final class BolusEntryViewModel: ObservableObject {
         }
 
     }
+    
+    struct PresetEffectedRecommendation {
+        let originalAmount: Double
+        let recommendedAmount: Double
+        
+        let formatter = QuantityFormatter(for: .internationalUnit)
+        
+        var originalAmountString: String? {
+            formatter.string(from: LoopQuantity(unit: .internationalUnit, doubleValue: originalAmount))
+        }
+        
+        var recommendedAmountString: String? {
+            formatter.string(from: LoopQuantity(unit: .internationalUnit, doubleValue: recommendedAmount))
+        }
+        
+        var differenceString: String? {
+            formatter.string(from: LoopQuantity(unit: .internationalUnit, doubleValue: abs(recommendedAmount - originalAmount)))
+        }
+        
+        var showPredictionDifference: Bool {
+            originalAmount != recommendedAmount
+        }
+        
+        var direction: String {
+            recommendedAmount > originalAmount ? NSLocalizedString("increase", comment: "") : NSLocalizedString("decrease", comment: "")
+        }
+    }
 
+    @Published var presetEffectedRecommendation: PresetEffectedRecommendation?
+    
     private func updateRecommendedBolusAndNotice(isUpdatingFromUserInput: Bool) async {
 
         guard let delegate else {
@@ -561,8 +590,10 @@ final class BolusEntryViewModel: ObservableObject {
             recommendation = try await computeBolusRecommendation()
 
             if let recommendation, deliveryDelegate != nil {
+                if let originalAmount = try await computeBolusRecommendation(ignoringOverride: true)?.amount {
+                    presetEffectedRecommendation = PresetEffectedRecommendation(originalAmount: originalAmount, recommendedAmount: recommendation.amount)
+                }
                 recommendedBolus = LoopQuantity(unit: .internationalUnit, doubleValue: recommendation.amount)
-
                 switch recommendation.notice {
                 case .glucoseBelowSuspendThreshold:
                     if let suspendThreshold = delegate.settings.suspendThreshold {
@@ -610,7 +641,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func computeBolusRecommendation() async throws -> ManualBolusRecommendation? {
+    private func computeBolusRecommendation(ignoringOverride: Bool = false) async throws -> ManualBolusRecommendation? {
         guard let delegate else {
             return nil
         }
@@ -618,7 +649,8 @@ final class BolusEntryViewModel: ObservableObject {
         return try await delegate.recommendManualBolus(
             manualGlucoseSample: manualGlucoseSample,
             potentialCarbEntry: potentialCarbEntry,
-            originalCarbEntry: originalCarbEntry
+            originalCarbEntry: originalCarbEntry,
+            ignoringOverride: ignoringOverride
         )
     }
 

@@ -18,6 +18,8 @@ struct PresetStatsView: View {
     }
 
     @Environment(\.guidanceColors) private var guidanceColors
+    @Environment(\.settingsManager) private var settingsManager
+    @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     
     let insulinMultiplier: Double?
@@ -25,6 +27,7 @@ struct PresetStatsView: View {
     let guardrail: Guardrail<LoopQuantity>?
     let therapySettingsImpactDisplayState: TherapySettingsImpactDisplayState
     let isScheduled: Bool
+    let isActive: Bool
 
     private var numberFormatter: NumberFormatter {
         let formatter = NumberFormatter()
@@ -122,13 +125,15 @@ struct PresetStatsView: View {
             Group {
                 if let target = correctionRange {
                     annotatedRangeText(target: target)
+                } else if isActive, let therapySettingsCorrectionRange = settingsManager.therapySettings.glucoseTargetRangeSchedule?.quantityRange(at: Date()) {
+                    annotatedRangeText(target: therapySettingsCorrectionRange)
                 } else {
                     Text("Scheduled Range")
                         .bold()
                 }
             }
-                .font(.subheadline)
-                .accessibilitySortPriority(1)
+            .font(.subheadline)
+            .accessibilitySortPriority(1)
         }
         .accessibilityElement(children: .contain)
     }
@@ -140,7 +145,7 @@ struct PresetStatsView: View {
                     overallInsulinView
                     Spacer()
                     correctionRangeView
-                    if isScheduled {
+                    if isScheduled, !isActive {
                         Spacer()
                         Text(Image(systemName: "alarm"))
                             .font(.footnote)

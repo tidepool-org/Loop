@@ -30,51 +30,49 @@ struct BolusEntryView: View {
     @State private var editedBolusAmount = false
 
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                List {
-                    self.chartSection
-                    self.summarySection
-                }
-                .padding(.top, -28)
-                .insetGroupedListStyle()
-                
-                self.actionArea
-                    .frame(height: self.isKeyboardVisible || shouldBolusEntryBecomeFirstResponder ? 0 : nil)
-                    .opacity(self.isKeyboardVisible || shouldBolusEntryBecomeFirstResponder ? 0 : 1)
+        VStack(spacing: 0) {
+            List {
+                self.chartSection
+                self.summarySection
             }
-            .onKeyboardStateChange { state in
-                self.isKeyboardVisible = state.height > 0
-                
-                if state.height == 0 {
-                    // Ensure tapping 'Enter Bolus' can make the text field the first responder again
-                    self.shouldBolusEntryBecomeFirstResponder = false
-                }
+            .padding(.top, -28)
+            .insetGroupedListStyle()
+            
+            self.actionArea
+                .frame(height: self.isKeyboardVisible || shouldBolusEntryBecomeFirstResponder ? 0 : nil)
+                .opacity(self.isKeyboardVisible || shouldBolusEntryBecomeFirstResponder ? 0 : 1)
+        }
+        .onKeyboardStateChange { state in
+            self.isKeyboardVisible = state.height > 0
+            
+            if state.height == 0 {
+                // Ensure tapping 'Enter Bolus' can make the text field the first responder again
+                self.shouldBolusEntryBecomeFirstResponder = false
             }
-            .keyboardAware()
-            .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
-            .navigationBarTitle(self.title)
-            .supportedInterfaceOrientations(.portrait)
-            .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
-            .onReceive(self.viewModel.$recommendedBolus) { recommendation in
-                // If the recommendation changes, and the user has not edited the bolus amount, update the bolus amount
-                let amount = recommendation?.doubleValue(for: .internationalUnit) ?? 0
-                if !editedBolusAmount {
-                    var newEnteredBolusString: String
-                    if amount == 0 {
-                        newEnteredBolusString = ""
-                    } else {
-                        newEnteredBolusString = viewModel.formatBolusAmount(amount)
-                    }
-                    enteredBolusStringBinding.wrappedValue = newEnteredBolusString
+        }
+        .keyboardAware()
+        .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
+        .navigationBarTitle(self.title)
+        .supportedInterfaceOrientations(.portrait)
+        .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
+        .onReceive(self.viewModel.$recommendedBolus) { recommendation in
+            // If the recommendation changes, and the user has not edited the bolus amount, update the bolus amount
+            let amount = recommendation?.doubleValue(for: .internationalUnit) ?? 0
+            if !editedBolusAmount {
+                var newEnteredBolusString: String
+                if amount == 0 {
+                    newEnteredBolusString = ""
                 } else {
-                    // If the recommendation changes, and the user has edited the bolus amount, set the bolus amount to 0
-                    enteredBolusStringBinding.wrappedValue = "0"
+                    newEnteredBolusString = viewModel.formatBolusAmount(amount)
                 }
+                enteredBolusStringBinding.wrappedValue = newEnteredBolusString
+            } else {
+                // If the recommendation changes, and the user has edited the bolus amount, set the bolus amount to 0
+                enteredBolusStringBinding.wrappedValue = "0"
             }
-            .task {
-                await self.viewModel.generateRecommendationAndStartObserving()
-            }
+        }
+        .task {
+            await self.viewModel.generateRecommendationAndStartObserving()
         }
     }
     
@@ -131,6 +129,13 @@ struct BolusEntryView: View {
             }
             .padding(.top, 12)
             .padding(.bottom, 8)
+        } header: {
+            if let scheduleOverride = viewModel.scheduleOverride ?? viewModel.preMealOverride {
+                ActivePresetBanner(override: scheduleOverride)
+                    .padding(.horizontal, -32)
+                    .padding(.bottom, 8)
+                    .textCase(nil)
+            }
         }
     }
 
@@ -167,6 +172,8 @@ struct BolusEntryView: View {
         )
     }
 
+    @State private var expandedPresetSummary: Bool = false
+    
     private var summarySection: some View {
         Section {
             VStack(spacing: 16) {
@@ -174,6 +181,31 @@ struct BolusEntryView: View {
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
 
+                if (viewModel.scheduleOverride ?? viewModel.preMealOverride) != nil, let presetEffectedRecommendation = viewModel.presetEffectedRecommendation, presetEffectedRecommendation.showPredictionDifference {
+                    HStack(alignment: .top, spacing: 12) {
+                        Text(Image(systemName: "info.circle"))
+                            .foregroundStyle(Color.accentColor)
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Recommended bolus adjusted due to preset")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            if expandedPresetSummary, let differenceString = presetEffectedRecommendation.differenceString, let originalAmountString = presetEffectedRecommendation.originalAmountString {
+                                Text("This reflects a \(differenceString) \(presetEffectedRecommendation.direction) from the original \(originalAmountString) due to preset adjustments.")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .font(.subheadline)
+                        
+                        Text(Image(systemName: "chevron.up"))
+                            .foregroundStyle(.secondary)
+                            .rotationEffect(.degrees(expandedPresetSummary ? 180 : 0))
+                    }
+                    .onTapGesture {
+                        expandedPresetSummary.toggle()
+                    }
+                }
+                
                 if viewModel.isManualGlucoseEntryEnabled {
                     ManualGlucoseEntryRow(quantity: $viewModel.manualGlucoseQuantity)
                 } else if viewModel.potentialCarbEntry != nil {
