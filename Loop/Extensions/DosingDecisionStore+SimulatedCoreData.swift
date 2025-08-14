@@ -19,7 +19,7 @@ extension DosingDecisionStore {
     private var simulatedStartDateInterval: TimeInterval { .minutes(5) }
     private var simulatedLimit: Int { 10000 }
 
-    func generateSimulatedHistoricalDosingDecisionObjects(completion: @escaping (Error?) -> Void) {
+    func generateSimulatedHistoricalDosingDecisionObjects() async throws {
         var startDate = Calendar.current.startOfDay(for: expireDate)
         let endDate = Calendar.current.startOfDay(for: historicalEndDate)
         var simulated = [StoredDosingDecision]()
@@ -28,32 +28,18 @@ extension DosingDecisionStore {
             simulated.append(StoredDosingDecision.simulated(date: startDate))
 
             if simulated.count >= simulatedLimit {
-                if let error = addSimulatedHistoricalDosingDecisionObjects(dosingDecisions: simulated) {
-                    completion(error)
-                    return
-                }
+                try await addStoredDosingDecisions(dosingDecisions: simulated)
                 simulated = []
             }
 
             startDate = startDate.addingTimeInterval(simulatedStartDateInterval)
         }
-
-        completion(addSimulatedHistoricalDosingDecisionObjects(dosingDecisions: simulated))
+        
+        try await addStoredDosingDecisions(dosingDecisions: simulated)
     }
 
-    private func addSimulatedHistoricalDosingDecisionObjects(dosingDecisions: [StoredDosingDecision]) -> Error? {
-        var addError: Error?
-        let semaphore = DispatchSemaphore(value: 0)
-        addStoredDosingDecisions(dosingDecisions: dosingDecisions) { error in
-            addError = error
-            semaphore.signal()
-        }
-        semaphore.wait()
-        return addError
-    }
-
-    func purgeHistoricalDosingDecisionObjects(completion: @escaping (Error?) -> Void) {
-        purgeDosingDecisions(before: historicalEndDate, completion: completion)
+    func purgeHistoricalDosingDecisionObjects() async throws {
+        try await purgeDosingDecisionObjects(before: historicalEndDate)
     }
 }
 

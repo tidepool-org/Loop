@@ -144,6 +144,8 @@ final class LoopDataManager: ObservableObject {
 
     private var lastManualBolusRecommendation: ManualBolusRecommendation?
 
+    private var dosingStrategySelectionEnabled: Bool
+
     var usePositiveMomentumAndRCForManualBoluses: Bool
 
     var automationHistory: [AutomationHistoryEntry] {
@@ -168,7 +170,8 @@ final class LoopDataManager: ObservableObject {
         trustedTimeOffset: @escaping () async -> TimeInterval,
         analyticsServicesManager: AnalyticsServicesManager?,
         carbAbsorptionModel: CarbAbsorptionModel,
-        usePositiveMomentumAndRCForManualBoluses: Bool = true
+        usePositiveMomentumAndRCForManualBoluses: Bool = true,
+        dosingStrategySelectionEnabled: Bool = true,
     ) {
 
         self.lastLoopCompleted = lastLoopCompleted
@@ -187,6 +190,7 @@ final class LoopDataManager: ObservableObject {
         self.usePositiveMomentumAndRCForManualBoluses = usePositiveMomentumAndRCForManualBoluses
         self.automationHistory = UserDefaults.standard.automationHistory
         self.publishedMostRecentGlucoseDataDate = glucoseStore.latestGlucose?.startDate
+        self.dosingStrategySelectionEnabled = dosingStrategySelectionEnabled
         self.publishedMostRecentPumpDataDate = mostRecentPumpDataDate
 
         // Required for device settings in stored dosing decisions
@@ -553,7 +557,7 @@ final class LoopDataManager: ObservableObject {
 
             var dosingStrategy: AutomaticDosingStrategy = .automaticBolus
 
-            if FeatureFlags.dosingStrategySelectionEnabled {
+            if dosingStrategySelectionEnabled {
                 dosingStrategy = settingsProvider.settings.automaticDosingStrategy
             }
             input.recommendationType = dosingStrategy.recommendationType

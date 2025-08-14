@@ -35,14 +35,14 @@ class TemporaryPresetsManager {
 
     @ObservationIgnored private var overrideIntentObserver: NSKeyValueObservation? = nil
 
-    init(settingsProvider: SettingsProvider, alertIssuer: AlertIssuer? = nil) {
+    init(settingsProvider: SettingsProvider, alertIssuer: AlertIssuer? = nil, presetHistory: TemporaryScheduleOverrideHistory? = nil) {
         self.settingsProvider = settingsProvider
         self.alertIssuer = alertIssuer
 
-        self.presetHistory = TemporaryScheduleOverrideHistoryContainer.shared.fetch()
+        self.presetHistory = presetHistory ?? TemporaryScheduleOverrideHistoryContainer.shared.fetch()
         TemporaryScheduleOverrideHistory.relevantTimeWindow = Bundle.main.localCacheDuration
 
-        _scheduleOverride = presetHistory.activeOverride(at: Date())
+        _scheduleOverride = self.presetHistory.activeOverride(at: Date())
 
         if scheduleOverride?.context == .preMeal {
             preMealOverride = scheduleOverride

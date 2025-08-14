@@ -18,7 +18,7 @@ extension CarbStore {
     private var simulatedPerDay: Int { 10 }
     private var simulatedLimit: Int { 10000 }
 
-    func generateSimulatedHistoricalCarbObjects(completion: @escaping (Error?) -> Void) {
+    func generateSimulatedHistoricalCarbObjects() async throws {
         var startDate = Calendar.current.startOfDay(for: earliestCacheDate)
         let endDate = Calendar.current.startOfDay(for: historicalEndDate)
         var simulated = [NewCarbEntry]()
@@ -31,28 +31,26 @@ extension CarbStore {
             }
 
             if simulated.count >= simulatedLimit {
-                if let error = addSimulatedHistoricalCarbObjects(entries: simulated) {
-                    completion(error)
-                    return
-                }
+                try await addSimulatedHistoricalCarbObjects(entries: simulated)
                 simulated = []
             }
 
             startDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
         }
 
-        completion(addSimulatedHistoricalCarbObjects(entries: simulated))
+        try await addSimulatedHistoricalCarbObjects(entries: simulated)
     }
 
-    private func addSimulatedHistoricalCarbObjects(entries: [NewCarbEntry]) -> Error? {
-        var addError: Error?
-        let semaphore = DispatchSemaphore(value: 0)
-        addNewCarbEntries(entries: entries) { error in
-            addError = error
-            semaphore.signal()
+    private func addSimulatedHistoricalCarbObjects(entries: [NewCarbEntry]) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            addNewCarbEntries(entries: entries) { error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume()
+                }
+            }
         }
-        semaphore.wait()
-        return addError
     }
 
     func purgeHistoricalCarbObjects(completion: @escaping (Error?) -> Void) {

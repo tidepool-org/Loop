@@ -105,7 +105,7 @@ class LoopAppManager: NSObject {
     // HealthStorePreferredGlucoseUnitDidChange will be notified once the user completes the health access form. Set to .milligramsPerDeciliter until then
     public private(set) var displayGlucosePreference = DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter)
 
-    private var displayGlucoseUnitObservers = WeakSynchronizedSet<DisplayGlucoseUnitObserver>()
+    private var displayGlucoseUnitObservers = WeakSet<DisplayGlucoseUnitObserver>()
 
     private var state: State = .initialize
 
@@ -323,7 +323,8 @@ class LoopAppManager: NSObject {
             automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset },
             analyticsServicesManager: analyticsServicesManager,
-            carbAbsorptionModel: carbModel
+            carbAbsorptionModel: carbModel,
+            dosingStrategySelectionEnabled: FeatureFlags.dosingStrategySelectionEnabled
         )
 
         cacheStore.delegate = loopDataManager
@@ -843,15 +844,14 @@ protocol DisplayGlucoseUnitBroadcaster: AnyObject {
 
 extension LoopAppManager: DisplayGlucoseUnitBroadcaster {
     func addDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver) {
-        let queue = DispatchQueue.main
-        displayGlucoseUnitObservers.insert(observer, queue: queue)
-        queue.async {
+        displayGlucoseUnitObservers.insert(observer)
+        Task { @MainActor in
             observer.unitDidChange(to: self.displayGlucosePreference.unit)
         }
     }
 
     func removeDisplayGlucoseUnitObserver(_ observer: DisplayGlucoseUnitObserver) {
-        displayGlucoseUnitObservers.removeElement(observer)
+        displayGlucoseUnitObservers.remove(observer)
         displayGlucoseUnitObservers.cleanupDeallocatedElements()
     }
 
@@ -1094,50 +1094,20 @@ extension LoopAppManager: SimulatedData {
             fatalError("\(#function) invoke with no settings store")
         }
 
-        settingsManager.settingsStore?.generateSimulatedHistoricalSettingsObjects() { error in
-            guard error == nil else {
+        Task { @MainActor in
+            do {
+                try await settingsManager.settingsStore?.generateSimulatedHistoricalSettingsObjects()
+                try await self.doseStore.generateSimulatedHistoricalPumpEvents()
+                try await self.glucoseStore.generateSimulatedHistoricalGlucoseObjects()
+                try await self.carbStore.generateSimulatedHistoricalCarbObjects()
+                try await self.dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects()
+                try await self.deviceDataManager.deviceLog.generateSimulatedHistoricalDeviceLogEntries()
+                try await self.alertManager.alertStore.generateSimulatedHistoricalStoredAlerts()
+            } catch {
                 completion(error)
                 return
             }
-            Task { @MainActor in
-                guard FeatureFlags.simulatedCoreDataEnabled else {
-                    fatalError("\(#function) should be invoked only when simulated core data is enabled")
-                }
 
-                self.glucoseStore.generateSimulatedHistoricalGlucoseObjects() { error in
-                    guard error == nil else {
-                        completion(error)
-                        return
-                    }
-                    self.carbStore.generateSimulatedHistoricalCarbObjects() { error in
-                        guard error == nil else {
-                            completion(error)
-                            return
-                        }
-                        self.dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects() { error in
-                            Task {
-                                guard error == nil else {
-                                    completion(error)
-                                    return
-                                }
-                                do {
-                                    try await self.doseStore.generateSimulatedHistoricalPumpEvents()
-                                } catch {
-                                    completion(error)
-                                    return
-                                }
-                                self.deviceDataManager.deviceLog.generateSimulatedHistoricalDeviceLogEntries() { error in
-                                    guard error == nil else {
-                                        completion(error)
-                                        return
-                                    }
-                                    self.alertManager.alertStore.generateSimulatedHistoricalStoredAlerts(completion: completion)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -1160,22 +1130,17 @@ extension LoopAppManager: SimulatedData {
                     do {
                         try await self.doseStore.purgeHistoricalPumpEvents()
                         try await self.glucoseStore.purgeHistoricalGlucoseObjects()
+                        try await self.dosingDecisionStore.purgeHistoricalDosingDecisionObjects()
                     } catch {
                         completion(error)
                         return
                     }
-                    self.dosingDecisionStore.purgeHistoricalDosingDecisionObjects() { error in
+                    self.carbStore.purgeHistoricalCarbObjects() { error in
                         guard error == nil else {
                             completion(error)
                             return
                         }
-                        self.carbStore.purgeHistoricalCarbObjects() { error in
-                            guard error == nil else {
-                                completion(error)
-                                return
-                            }
-                            self.settingsManager.purgeHistoricalSettingsObjects(completion: completion)
-                        }
+                        self.settingsManager.purgeHistoricalSettingsObjects(completion: completion)
                     }
                 }
             }
