@@ -730,24 +730,22 @@ extension DeviceDataManager {
             throw LoopError.configurationError(.pumpManager)
         }
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            pumpManager.enactBolus(decisionId: decisionId, units: units, activationType: activationType) { (error) in
-                if let error = error {
-                    self.log.error("%{public}@", String(describing: error))
-                    switch error {
-                    case .uncertainDelivery:
-                        // Do not generate notification on uncertain delivery error
-                        break
-                    default:
-                        // Do not generate notifications for automatic boluses that fail.
-                        if !activationType.isAutomatic {
-                            NotificationManager.sendBolusFailureNotification(for: error, units: units, at: Date(), decisionId: decisionId, activationType: activationType)
-                        }
-                    }
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume()
-                }
+        var automaticBolusOngoing = false
+        if case .inProgress(let dose) = pumpManager.status.bolusState, dose.automatic == true {
+            automaticBolusOngoing = true
+        }
+
+        if automaticBolusOngoing && activationType != .automatic {
+            let _ = try? await pumpManager.cancelBolus()
+        }
+
+        do {
+            try await pumpManager.enactBolus(decisionId: decisionId, units: units, activationType: activationType)
+        } catch PumpManagerError.uncertainDelivery {
+            // Do not generate notification on uncertain delivery error
+        } catch {
+            if !activationType.isAutomatic, let error = error as? PumpManagerError {
+                NotificationManager.sendBolusFailureNotification(for: error, units: units, at: Date(), decisionId: decisionId, activationType: activationType)
             }
         }
     }
