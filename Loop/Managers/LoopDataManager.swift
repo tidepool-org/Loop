@@ -495,6 +495,7 @@ final class LoopDataManager: ObservableObject {
             input.recommendationType = .manualBolus
             newState.input = input
             newState.output = LoopAlgorithm.run(input: input)
+            
         } catch {
             let loopError = error as? LoopError ?? .unknownError(error)
             logger.error("Error updating Loop state: %{public}@", String(describing: loopError))
