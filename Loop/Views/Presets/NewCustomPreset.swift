@@ -100,7 +100,7 @@ extension NewCustomPreset {
 }
 
 extension NewCustomPreset {
-    var temporaryScheduleOverride: TemporaryScheduleOverride? {
+    var temporaryPreset: TemporaryPreset? {
         guard let duration else {
             return nil
         }
@@ -111,26 +111,12 @@ extension NewCustomPreset {
             insulinNeedsScaleFactor: insulinMultiplier
         )
 
-        let context: TemporaryScheduleOverride.Context
-
-        if savePreset {
-            let preset = TemporaryPreset(
-                symbol: "",
-                name: name,
-                settings: settings,
-                duration: overrideDuration
-            )
-            context = .preset(preset)
-        } else {
-            context = .custom
-        }
-        return TemporaryScheduleOverride(
-            context: context,
+        return TemporaryPreset(
+            symbol: "",
+            name: name,
             settings: settings,
-            startDate: startDate ?? Date(),
             duration: overrideDuration,
-            enactTrigger: .local,
-            syncIdentifier: UUID()
+            scheduleStartDate: startDate
         )
     }
 }
