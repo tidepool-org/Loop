@@ -17,7 +17,7 @@ extension PersistentDeviceLog {
     private var simulatedPerHour: Int { 60 }
     private var simulatedLimit: Int { 10000 }
 
-    func generateSimulatedHistoricalDeviceLogEntries(completion: @escaping (Error?) -> Void) {
+    func generateSimulatedHistoricalDeviceLogEntries() async throws {
         var startDate = Calendar.current.startOfDay(for: earliestLogEntryDate)
         let endDate = Calendar.current.startOfDay(for: historicalEndDate)
         var simulated = [StoredDeviceLogEntry]()
@@ -28,17 +28,14 @@ extension PersistentDeviceLog {
             }
 
             if simulated.count >= simulatedLimit {
-                if let error = addStoredDeviceLogEntries(entries: simulated) {
-                    completion(error)
-                    return
-                }
+                try await addStoredDeviceLogEntries(entries: simulated)
                 simulated = []
             }
 
             startDate = Calendar.current.date(byAdding: .hour, value: 1, to: startDate)!
         }
 
-        completion(addStoredDeviceLogEntries(entries: simulated))
+        try await addStoredDeviceLogEntries(entries: simulated)
     }
 
     func purgeHistoricalDeviceLogEntries(completion: @escaping (Error?) -> Void) {

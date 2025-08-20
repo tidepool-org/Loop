@@ -95,7 +95,16 @@ struct InsulinDeliveryLogEventRow: View {
                 .frame(width: 24, height: 24)
         }
     }
-    
+
+    func bolusTitle(deliveryAmount: LoopQuantity, programmedAmount: LoopQuantity) -> some View {
+        if deliveryAmount != programmedAmount {
+            Text("Bolus: ") + Text(bolusFormatter.string(from: deliveryAmount, includeUnit: false) ?? "Unknown").fontWeight(.medium) + Text(" ") + Text(deliveryAmount.unit.localizedUnitString(in: .short) ?? "U") + Text(" of ") + Text(bolusFormatter.string(from: programmedAmount, includeUnit: false) ?? "Unknown")  + Text(" ") + Text(programmedAmount.unit.localizedUnitString(in: .short) ?? "U")
+        } else {
+            Text("Bolus: ") + Text(bolusFormatter.string(from: deliveryAmount, includeUnit: false) ?? "Unknown").fontWeight(.medium) + Text(" ") + Text(deliveryAmount.unit.localizedUnitString(in: .short) ?? "U")
+        }
+    }
+
+
     @ViewBuilder
     var title: some View {
         switch event.type {
@@ -213,11 +222,7 @@ struct InsulinDeliveryLogEventRow: View {
                 case .automated:
                     HStack(spacing: 0) {
                         VStack(alignment: .leading, spacing: 0) {
-                            Text("Bolus: ") + Text(bolusFormatter.string(from: deliveryAmount, includeUnit: false) ?? "Unknown").fontWeight(.medium) + Text(" ") + Text(deliveryAmount.unit.localizedUnitString(in: .short) ?? "U")
-                            
-                            Text("Automated")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
+                            bolusTitle(deliveryAmount: deliveryAmount, programmedAmount: programmedAmount)
                         }
                         
                         Spacer()
@@ -229,12 +234,8 @@ struct InsulinDeliveryLogEventRow: View {
                 case .meal(let recommendedAmount as LoopQuantity?, _, _), .correction(let recommendedAmount):
                     HStack(spacing: 0) {
                         VStack(alignment: .leading, spacing: 0) {
-                            if deliveryAmount != programmedAmount {
-                                Text("Bolus: ") + Text(bolusFormatter.string(from: deliveryAmount, includeUnit: false) ?? "Unknown").fontWeight(.medium) + Text(" ") + Text(deliveryAmount.unit.localizedUnitString(in: .short) ?? "U") + Text(" of ") + Text(bolusFormatter.string(from: programmedAmount, includeUnit: false) ?? "Unknown")  + Text(" ") + Text(programmedAmount.unit.localizedUnitString(in: .short) ?? "U")
-                            } else {
-                                Text("Bolus: ") + Text(bolusFormatter.string(from: deliveryAmount, includeUnit: false) ?? "Unknown").fontWeight(.medium) + Text(" ") + Text(deliveryAmount.unit.localizedUnitString(in: .short) ?? "U")
-                            }
-                            
+                            bolusTitle(deliveryAmount: deliveryAmount, programmedAmount: programmedAmount)
+
                             if let recommendedAmount {
                                 Group {
                                     Text("Recommended: ") + Text(bolusFormatter.string(from: recommendedAmount, includeUnit: false) ?? "Unknown").fontWeight(.medium) + Text(" ") + Text(recommendedAmount.unit.localizedUnitString(in: .short) ?? "U")

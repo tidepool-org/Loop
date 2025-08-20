@@ -21,7 +21,7 @@ extension GlucoseStore {
     private var simulatedValueIncrement: Double { 2.0 * .pi / 72.0 }    // 6 hour period
     private var simulatedLimit: Int { 10000 }
 
-    func generateSimulatedHistoricalGlucoseObjects(completion: @escaping (Error?) -> Void) {
+    func generateSimulatedHistoricalGlucoseObjects() async throws {
         var startDate = Calendar.current.startOfDay(for: earliestCacheDate)
         let endDate = Calendar.current.startOfDay(for: historicalEndDate)
         var value = 0.0
@@ -57,10 +57,7 @@ extension GlucoseStore {
                                                         trendRate: LoopQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: trendRateValue)))
 
             if simulated.count >= simulatedLimit {
-                if let error = addSimulatedHistoricalGlucoseObjects(samples: simulated) {
-                    completion(error)
-                    return
-                }
+                try await addNewGlucoseSamples(samples: simulated)
                 simulated = []
             }
 
@@ -68,18 +65,7 @@ extension GlucoseStore {
             startDate = startDate.addingTimeInterval(simulatedStartDateInterval)
         }
 
-        completion(addSimulatedHistoricalGlucoseObjects(samples: simulated))
-    }
-
-    private func addSimulatedHistoricalGlucoseObjects(samples: [NewGlucoseSample]) -> Error? {
-        var addError: Error?
-        let semaphore = DispatchSemaphore(value: 0)
-        addNewGlucoseSamples(samples: samples) { error in
-            addError = error
-            semaphore.signal()
-        }
-        semaphore.wait()
-        return addError
+        try await addNewGlucoseSamples(samples: simulated)
     }
 
     func purgeHistoricalGlucoseObjects() async throws {

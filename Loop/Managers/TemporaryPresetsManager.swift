@@ -35,14 +35,14 @@ class TemporaryPresetsManager {
 
     @ObservationIgnored private var overrideIntentObserver: NSKeyValueObservation? = nil
 
-    init(settingsProvider: SettingsProvider, alertIssuer: AlertIssuer? = nil) {
+    init(settingsProvider: SettingsProvider, alertIssuer: AlertIssuer? = nil, presetHistory: TemporaryScheduleOverrideHistory? = nil) {
         self.settingsProvider = settingsProvider
         self.alertIssuer = alertIssuer
 
-        self.presetHistory = TemporaryScheduleOverrideHistoryContainer.shared.fetch()
+        self.presetHistory = presetHistory ?? TemporaryScheduleOverrideHistoryContainer.shared.fetch()
         TemporaryScheduleOverrideHistory.relevantTimeWindow = Bundle.main.localCacheDuration
 
-        _scheduleOverride = presetHistory.activeOverride(at: Date())
+        _scheduleOverride = self.presetHistory.activeOverride(at: Date())
 
         if scheduleOverride?.context == .preMeal {
             preMealOverride = scheduleOverride
@@ -443,7 +443,6 @@ class TemporaryPresetsManager {
             let nextScheduledPresetReminderIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: preset.id)
             await alertIssuer?.retractAlert(identifier: nextScheduledPresetReminderIdentifier)
 
-
             let nextScheduledTime = preset.nextScheduledStartAfter(now)!
 
             let formatter = DateFormatter()
@@ -452,11 +451,8 @@ class TemporaryPresetsManager {
 
             let title = NSLocalizedString("Start Scheduled Preset?", comment: "Scheduled preset reminder title")
             let body = String(
-                format: NSLocalizedString("Your %1$@ preset is scheduled for today at %2$@. Would you like to start it now?\n\nThis will end any active preset.", comment: "Scheduled preset reminder alert body. (1: preset name) (2: time)"),
-                preset.name,
-                formatter.string(
-                    from: nextScheduledTime
-                )
+                format: NSLocalizedString("Would you like to start your %1$@ preset? This will end any active preset.", comment: "Scheduled preset reminder alert body. (1: preset name)"),
+                preset.name
             )
 
             let actions = [

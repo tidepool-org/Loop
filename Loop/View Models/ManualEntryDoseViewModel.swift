@@ -21,6 +21,7 @@ enum ManualEntryDoseViewModelError: Error {
     case notAuthenticated
 }
 
+@MainActor
 protocol ManualDoseViewModelDelegate: AnyObject {
     var algorithmDisplayState: AlgorithmDisplayState { get async }
     var pumpInsulinType: InsulinType? { get }

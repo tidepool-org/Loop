@@ -144,6 +144,8 @@ final class LoopDataManager: ObservableObject {
 
     private var lastManualBolusRecommendation: ManualBolusRecommendation?
 
+    private var dosingStrategySelectionEnabled: Bool
+
     var usePositiveMomentumAndRCForManualBoluses: Bool
 
     var automationHistory: [AutomationHistoryEntry] {
@@ -168,7 +170,8 @@ final class LoopDataManager: ObservableObject {
         trustedTimeOffset: @escaping () async -> TimeInterval,
         analyticsServicesManager: AnalyticsServicesManager?,
         carbAbsorptionModel: CarbAbsorptionModel,
-        usePositiveMomentumAndRCForManualBoluses: Bool = true
+        usePositiveMomentumAndRCForManualBoluses: Bool = true,
+        dosingStrategySelectionEnabled: Bool = true,
     ) {
 
         self.lastLoopCompleted = lastLoopCompleted
@@ -187,6 +190,7 @@ final class LoopDataManager: ObservableObject {
         self.usePositiveMomentumAndRCForManualBoluses = usePositiveMomentumAndRCForManualBoluses
         self.automationHistory = UserDefaults.standard.automationHistory
         self.publishedMostRecentGlucoseDataDate = glucoseStore.latestGlucose?.startDate
+        self.dosingStrategySelectionEnabled = dosingStrategySelectionEnabled
         self.publishedMostRecentPumpDataDate = mostRecentPumpDataDate
 
         // Required for device settings in stored dosing decisions
@@ -491,6 +495,7 @@ final class LoopDataManager: ObservableObject {
             input.recommendationType = .manualBolus
             newState.input = input
             newState.output = LoopAlgorithm.run(input: input)
+            
         } catch {
             let loopError = error as? LoopError ?? .unknownError(error)
             logger.error("Error updating Loop state: %{public}@", String(describing: loopError))
@@ -551,7 +556,11 @@ final class LoopDataManager: ObservableObject {
             // Trim future basal
             input.doses =  input.doses.trimmed(to: loopBaseTime)
 
-            let dosingStrategy = settingsProvider.settings.automaticDosingStrategy
+            var dosingStrategy: AutomaticDosingStrategy = .automaticBolus
+
+            if dosingStrategySelectionEnabled {
+                dosingStrategy = settingsProvider.settings.automaticDosingStrategy
+            }
             input.recommendationType = dosingStrategy.recommendationType
 
             guard let latestGlucose = input.glucoseHistory.last else {
@@ -782,12 +791,16 @@ final class LoopDataManager: ObservableObject {
 
 // MARK: - Background task management
 extension LoopDataManager: PersistenceControllerDelegate {
-    func persistenceControllerWillSave(_ controller: PersistenceController) {
-        startBackgroundTask()
+    nonisolated func persistenceControllerWillSave(_ controller: PersistenceController) {
+        Task {
+            await startBackgroundTask()
+        }
     }
 
-    func persistenceControllerDidSave(_ controller: PersistenceController, error: PersistenceController.PersistenceControllerError?) {
-        endBackgroundTask()
+    nonisolated func persistenceControllerDidSave(_ controller: PersistenceController, error: PersistenceController.PersistenceControllerError?) {
+        Task {
+            await endBackgroundTask()
+        }
     }
 }
 

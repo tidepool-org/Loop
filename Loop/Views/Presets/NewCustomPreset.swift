@@ -100,7 +100,7 @@ extension NewCustomPreset {
 }
 
 extension NewCustomPreset {
-    var temporaryScheduleOverride: TemporaryScheduleOverride? {
+    var temporaryPreset: TemporaryPreset? {
         guard let duration else {
             return nil
         }
@@ -133,10 +133,8 @@ extension NewCustomPreset {
         return TemporaryScheduleOverride(
             context: context,
             settings: settings,
-            startDate: startDate ?? Date(),
             duration: overrideDuration,
-            enactTrigger: .local,
-            syncIdentifier: UUID()
+            scheduleStartDate: startDate
         )
     }
 }

@@ -117,14 +117,15 @@ struct CreatePresetView: View {
                             onCancel: { dismiss() },
                             onComplete: { startPreset in
                                 dismiss()
-                                if let temporaryScheduleOverride = preset.temporaryScheduleOverride {
-                                    if preset.savePreset, case .preset(let preset) = temporaryScheduleOverride.context {
-                                        settingsManager.createPreset(preset)
+                                if let temporaryPreset = preset.temporaryPreset {
+                                    if preset.savePreset {
+                                        settingsManager.createPreset(temporaryPreset)
                                         Task {
                                             await temporaryPresetsManager.scheduleNextPresetReminder()
                                         }
                                     }
                                     if startPreset {
+                                        let temporaryScheduleOverride = temporaryPreset.createOverride(enactTrigger: .local)
                                         temporaryPresetsManager.scheduleOverride = temporaryScheduleOverride
                                     }
                                 }

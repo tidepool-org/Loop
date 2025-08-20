@@ -9,6 +9,7 @@
 import CoreData
 import LoopKit
 
+@MainActor
 public protocol AlertStoreDelegate: AnyObject {
     /**
      Informs the delegate that the alert store has updated alert data.
@@ -83,16 +84,16 @@ public class AlertStore {
     }
 
     public func recordIssued(alert: Alert, at date: Date = Date()) async {
-        await self.managedObjectContext.perform {
-            _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
-            do {
+        do {
+            try await self.managedObjectContext.perform {
+                _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
                 try self.managedObjectContext.save()
                 self.log.default("Recorded alert: %{public}@", alert.identifier.value)
                 self.purgeExpired()
-                self.delegate?.alertStoreHasUpdatedAlertData(self)
-            } catch {
-                self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
             }
+            await delegate?.alertStoreHasUpdatedAlertData(self)
+        } catch {
+            self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
         }
     }
 
@@ -103,8 +104,8 @@ public class AlertStore {
             try self.managedObjectContext.save()
             self.log.default("Recorded retracted alert: %{public}@", alert.identifier.value)
             self.purgeExpired()
-            self.delegate?.alertStoreHasUpdatedAlertData(self)
         }
+        await delegate?.alertStoreHasUpdatedAlertData(self)
     }
     
     public func recordAcknowledgement(of identifier: Alert.Identifier, at date: Date = Date()) async throws {
@@ -223,6 +224,8 @@ extension AlertStore {
                 throw AlertStoreError.notFound
             }
         }
+        purgeExpired()
+        await delegate?.alertStoreHasUpdatedAlertData(self)
     }
     
     private func recordUpdateOfLatest(identifier: Alert.Identifier,
@@ -238,6 +241,8 @@ extension AlertStore {
                 throw AlertStoreError.notFound
             }
         }
+        purgeExpired()
+        await delegate?.alertStoreHasUpdatedAlertData(self)
     }
     
     private func update(objects: [StoredAlert], with updateBlock: @escaping ManagedObjectUpdateBlock) throws {
@@ -249,8 +254,6 @@ extension AlertStore {
             self.log.default("%{public}@ alert: %{public}@", shouldDelete ? "Deleted" : "Recorded", alert.identifier.value)
         }
         try self.managedObjectContext.save()
-        self.purgeExpired()
-        self.delegate?.alertStoreHasUpdatedAlertData(self)
     }
     
 
@@ -585,9 +588,12 @@ extension AlertStore {
             return error
         }
 
-        self.delegate?.alertStoreHasUpdatedAlertData(self)
+        Task { @MainActor in
+            self.delegate?.alertStoreHasUpdatedAlertData(self)
+        }
 
         self.log.info("Added %d StoredAlerts", alerts.count)
         return nil
     }
+    
 }

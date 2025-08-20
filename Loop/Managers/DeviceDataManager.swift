@@ -643,7 +643,6 @@ private extension DeviceDataManager {
         dispatchPrecondition(condition: .onQueue(.main))
 
         pumpManager?.pumpManagerDelegate = self
-        pumpManager?.delegateQueue = DispatchQueue.main
         reportPluginInitializationComplete()
 
         doseStore.device = pumpManager?.status.device
@@ -731,24 +730,22 @@ extension DeviceDataManager {
             throw LoopError.configurationError(.pumpManager)
         }
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            pumpManager.enactBolus(decisionId: decisionId, units: units, activationType: activationType) { (error) in
-                if let error = error {
-                    self.log.error("%{public}@", String(describing: error))
-                    switch error {
-                    case .uncertainDelivery:
-                        // Do not generate notification on uncertain delivery error
-                        break
-                    default:
-                        // Do not generate notifications for automatic boluses that fail.
-                        if !activationType.isAutomatic {
-                            NotificationManager.sendBolusFailureNotification(for: error, units: units, at: Date(), decisionId: decisionId, activationType: activationType)
-                        }
-                    }
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume()
-                }
+        var automaticBolusOngoing = false
+        if case .inProgress(let dose) = pumpManager.status.bolusState, dose.automatic == true {
+            automaticBolusOngoing = true
+        }
+
+        if automaticBolusOngoing && activationType != .automatic {
+            let _ = try? await pumpManager.cancelBolus()
+        }
+
+        do {
+            try await pumpManager.enactBolus(decisionId: decisionId, units: units, activationType: activationType)
+        } catch PumpManagerError.uncertainDelivery {
+            // Do not generate notification on uncertain delivery error
+        } catch {
+            if !activationType.isAutomatic, let error = error as? PumpManagerError {
+                NotificationManager.sendBolusFailureNotification(for: error, units: units, at: Date(), decisionId: decisionId, activationType: activationType)
             }
         }
     }
@@ -894,7 +891,7 @@ extension DeviceDataManager: CGMManagerDelegate {
 
     nonisolated
     func cgmManager(_ manager: LoopKit.CGMManager, hasNew events: [PersistedCgmEvent]) {
-        Task {
+        Task { @MainActor in
             do {
                 try await cgmEventStore.add(events: events)
             } catch {
@@ -1029,43 +1026,44 @@ extension DeviceDataManager: PumpManagerDelegate {
         }
     }
 
-    func pumpManagerPumpWasReplaced(_ pumpManager: PumpManager) {
+    nonisolated func pumpManagerPumpWasReplaced(_ pumpManager: PumpManager) {
     }
     
-    func pumpManagerWillDeactivate(_ pumpManager: PumpManager) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        log.default("Pump manager with identifier '%{public}@' will deactivate", pumpManager.pluginIdentifier)
+    nonisolated func pumpManagerWillDeactivate(_ pumpManager: PumpManager) {
+        Task { @MainActor in
+            log.default("Pump manager with identifier '%{public}@' will deactivate", pumpManager.pluginIdentifier)
 
-        self.pumpManager = nil
-        deliveryUncertaintyAlertManager = nil
-        settingsManager.storeSettings()
+            self.pumpManager = nil
+            deliveryUncertaintyAlertManager = nil
+            settingsManager.storeSettings()
+        }
     }
 
-    func pumpManager(_ pumpManager: PumpManager, didUpdatePumpRecordsBasalProfileStartEvents pumpRecordsBasalProfileStartEvents: Bool) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        log.default("PumpManager:%{public}@ did update pumpRecordsBasalProfileStartEvents to %{public}@", String(describing: type(of: pumpManager)), String(describing: pumpRecordsBasalProfileStartEvents))
-
-        doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
+    nonisolated func pumpManager(_ pumpManager: PumpManager, didUpdatePumpRecordsBasalProfileStartEvents pumpRecordsBasalProfileStartEvents: Bool) {
+        Task { @MainActor in
+            log.default("PumpManager:%{public}@ did update pumpRecordsBasalProfileStartEvents to %{public}@", String(describing: type(of: pumpManager)), String(describing: pumpRecordsBasalProfileStartEvents))
+            doseStore.pumpRecordsBasalProfileStartEvents = pumpRecordsBasalProfileStartEvents
+        }
     }
 
-    func pumpManager(_ pumpManager: PumpManager, didError error: PumpManagerError) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        log.error("PumpManager:%{public}@ did error: %{public}@", String(describing: type(of: pumpManager)), String(describing: error))
+    nonisolated func pumpManager(_ pumpManager: PumpManager, didError error: PumpManagerError) {
+        Task { @MainActor in
+            dispatchPrecondition(condition: .onQueue(.main))
+            log.error("PumpManager:%{public}@ did error: %{public}@", String(describing: type(of: pumpManager)), String(describing: error))
 
-        setLastError(error: error)
+            setLastError(error: error)
+        }
     }
 
-    func pumpManager(
+    nonisolated func pumpManager(
         _ pumpManager: PumpManager,
         hasNewPumpEvents events: [NewPumpEvent],
         lastReconciliation: Date?,
         replacePendingEvents: Bool,
         completion: @escaping (_ error: Error?) -> Void)
     {
-        dispatchPrecondition(condition: .onQueue(.main))
-        log.default("PumpManager:%{public}@ hasNewPumpEvents (lastReconciliation = %{public}@)", String(describing: type(of: pumpManager)), String(describing: lastReconciliation))
-
-        Task {
+        Task { @MainActor in
+            log.default("PumpManager:%{public}@ hasNewPumpEvents (lastReconciliation = %{public}@)", String(describing: type(of: pumpManager)), String(describing: lastReconciliation))
             do {
                 try await doseStore.addPumpEvents(events, lastReconciliation: lastReconciliation, replacePendingEvents: replacePendingEvents)
             } catch {
@@ -1078,7 +1076,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         }
     }
 
-    func pumpManager(
+    nonisolated func pumpManager(
         _ pumpManager: PumpManager,
         didReadReservoirValue units: Double,
         at date: Date,
@@ -1099,7 +1097,6 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
 
     func startDateToFilterNewPumpEvents(for manager: PumpManager) -> Date {
-        dispatchPrecondition(condition: .onQueue(.main))
         return doseStore.pumpEventQueryAfterDate
     }
 
@@ -1117,10 +1114,10 @@ extension DeviceDataManager: PumpManagerOnboardingDelegate {
     }
 
     func pumpManagerOnboarding(didOnboardPumpManager pumpManager: PumpManagerUI) {
-        Task { @MainActor in
-            precondition(pumpManager.isOnboarded)
-            log.default("Pump manager with identifier '%{public}@' onboarded", pumpManager.pluginIdentifier)
+        precondition(pumpManager.isOnboarded)
+        log.default("Pump manager with identifier '%{public}@' onboarded", pumpManager.pluginIdentifier)
 
+        Task {
             await refreshDeviceData()
             settingsManager.storeSettings()
         }
