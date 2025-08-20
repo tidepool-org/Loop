@@ -263,6 +263,7 @@
 		84D1F1A72D09053A00CB271F /* StatusTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D1F1A62D09053A00CB271F /* StatusTableView.swift */; };
 		84D1F1A92D09800700CB271F /* PresetDetentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D1F1A82D09800700CB271F /* PresetDetentView.swift */; };
 		84DEB10D2C18FABA00170734 /* IOSFocusModesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DEB10C2C18FABA00170734 /* IOSFocusModesView.swift */; };
+		84DEF35D2E566757006126F9 /* PresetSymbolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DEF35C2E566757006126F9 /* PresetSymbolView.swift */; };
 		84E8BBAE2CC9791E0078E6CF /* PresetsTrainingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBAD2CC9791E0078E6CF /* PresetsTrainingViewModel.swift */; };
 		84E8BBB12CC979820078E6CF /* PresetsTrainingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBB02CC9793C0078E6CF /* PresetsTrainingView.swift */; };
 		84E8BBB32CC97C480078E6CF /* CreatingYourOwnPresetsContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBB22CC97C480078E6CF /* CreatingYourOwnPresetsContentView.swift */; };
@@ -1174,6 +1175,7 @@
 		84D1F1A62D09053A00CB271F /* StatusTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTableView.swift; sourceTree = "<group>"; };
 		84D1F1A82D09800700CB271F /* PresetDetentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetDetentView.swift; sourceTree = "<group>"; };
 		84DEB10C2C18FABA00170734 /* IOSFocusModesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSFocusModesView.swift; sourceTree = "<group>"; };
+		84DEF35C2E566757006126F9 /* PresetSymbolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetSymbolView.swift; sourceTree = "<group>"; };
 		84E8BBAD2CC9791E0078E6CF /* PresetsTrainingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingViewModel.swift; sourceTree = "<group>"; };
 		84E8BBB02CC9793C0078E6CF /* PresetsTrainingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingView.swift; sourceTree = "<group>"; };
 		84E8BBB22CC97C480078E6CF /* CreatingYourOwnPresetsContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatingYourOwnPresetsContentView.swift; sourceTree = "<group>"; };
@@ -2623,6 +2625,7 @@
 				84D1F1A82D09800700CB271F /* PresetDetentView.swift */,
 				84F20DFA2D0A56CB0089DF02 /* PresetStatsView.swift */,
 				84F20DFC2D0B9C3A0089DF02 /* EditPresetDurationView.swift */,
+				84DEF35C2E566757006126F9 /* PresetSymbolView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -3781,6 +3784,7 @@
 				A9CBE45C248ACC03008E7BA2 /* SettingsStore+SimulatedCoreData.swift in Sources */,
 				433EA4C41D9F71C800CD78FB /* CommandResponseViewController.swift in Sources */,
 				E9B3552229358C440076AB04 /* MealDetectionManager.swift in Sources */,
+				84DEF35D2E566757006126F9 /* PresetSymbolView.swift in Sources */,
 				C16DA84222E8E112008624C2 /* PluginManager.swift in Sources */,
 				43785E932120A01B0057DED1 /* NewCarbEntryIntent+Loop.swift in Sources */,
 				439A7944211FE22F0041B75F /* NSUserActivity.swift in Sources */,

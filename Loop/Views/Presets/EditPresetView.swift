@@ -36,10 +36,10 @@ struct EditPresetView: View {
     private var onSave: (SelectablePreset) throws -> Void
     private var onDelete: (SelectablePreset) throws -> Void
 
-    private var presetIsVerified: Bool? {
+    private var activityPresetIsModified: Bool? {
         guard case let .activity(activityPreset) = preset else { return nil }
         
-        return !activityPreset.isModifiedFromDefault
+        return activityPreset.isModifiedFromDefault
     }
 
     init(
@@ -119,16 +119,9 @@ struct EditPresetView: View {
                         }.accessibilityIdentifier("button_CorrectionRange")
                     }
                     
-                    if let presetIsVerified {
+                    if let activityPresetIsModified {
                         Group {
-                            if presetIsVerified {
-                                Group {
-                                    Text(Image(systemName: "checkmark.seal.fill")) + Text(" ") + Text("Recommended starting values")
-                                }
-                                .font(.subheadline)
-                                .foregroundStyle(Color.accentColor)
-                                .frame(maxWidth: .infinity)
-                            } else {
+                            if activityPresetIsModified {
                                 Button {
                                     if case let .activity(activityPreset) = preset {
                                         withAnimation {
@@ -143,6 +136,13 @@ struct EditPresetView: View {
                                     .foregroundStyle(Color.accentColor)
                                 }
                                 .buttonStyle(ActionButtonStyle(.secondary))
+                            } else {
+                                Group {
+                                    Text(Image(systemName: "checkmark.seal.fill")) + Text(" ") + Text("Recommended starting values")
+                                }
+                                .font(.subheadline)
+                                .foregroundStyle(Color.accentColor)
+                                .frame(maxWidth: .infinity)
                             }
                         }
                         .padding(.vertical, 4)
@@ -399,24 +399,7 @@ struct EditPresetView: View {
     var presetTitle: some View {
         HStack(spacing: 6) {
             if let icon = preset.icon {
-                switch icon.symbolType {
-                case .emoji:
-                    Text(icon.value)
-                        .font(.system(size: 34, weight: .semibold))
-                        .foregroundColor(.primary)
-                case .image:
-                    Image(icon.value)
-                        .resizable()
-                        .renderingMode(.template)
-                        .foregroundStyle(Color(presetSymbolTint: icon.tint, palette: colorPalette))
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: UIFontMetrics.default.scaledValue(for: 34), height: UIFontMetrics.default.scaledValue(for: 34))
-                case .systemImage:
-                    Image(systemName: icon.value)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: UIFontMetrics.default.scaledValue(for: 34), height: UIFontMetrics.default.scaledValue(for: 34))
-                }
+                PresetSymbolView(icon, iconSize: 34)
             }
 
             Text(preset.name)

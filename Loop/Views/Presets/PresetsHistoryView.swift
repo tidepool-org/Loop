@@ -54,22 +54,7 @@ struct PresetsHistoryView: View {
                                 if let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == override.presetId }) {
                                     HStack(spacing: 4) {
                                         if let icon = preset.icon {
-                                            switch icon.symbolType {
-                                            case .emoji:
-                                                Text(icon.value)
-                                            case .image:
-                                                Image(icon.value)
-                                                    .resizable()
-                                                    .renderingMode(.template)
-                                                    .foregroundStyle(Color(presetSymbolTint: icon.tint, palette: colorPalette))
-                                                    .aspectRatio(contentMode: .fit)
-                                                    .frame(width: UIFontMetrics.default.scaledValue(for: 22), height: UIFontMetrics.default.scaledValue(for: 22))
-                                            case .systemImage:
-                                                Image(systemName: icon.value)
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fit)
-                                                    .frame(width: UIFontMetrics.default.scaledValue(for: 22), height: UIFontMetrics.default.scaledValue(for: 22))
-                                            }
+                                            PresetSymbolView(icon)
                                         }
                                         
                                         Text(preset.name)

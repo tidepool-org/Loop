@@ -303,10 +303,9 @@ struct PresetsView: View {
 
 extension PresetCard {
     init (_ preset: SelectablePreset, guardrail: Guardrail<LoopQuantity>, expectedEndTime: PresetExpectedEndTime? = nil) {
-        var isVerified = false
-        
+        var activityPresetIsModified: Bool? = nil
         if case let .activity(activityPreset) = preset {
-            isVerified = !activityPreset.isModifiedFromDefault
+            activityPresetIsModified = activityPreset.isModifiedFromDefault
         }
         
         self.init(
@@ -319,7 +318,7 @@ extension PresetCard {
             guardrail: guardrail,
             expectedEndTime: expectedEndTime,
             isScheduled: preset.isScheduled,
-            isVerified: isVerified
+            activityPresetIsModified: activityPresetIsModified
         )
     }
 }

@@ -367,24 +367,7 @@ enum SelectablePreset: Hashable, Identifiable {
     func title(font: Font, iconSize: Double, colorPalette: LoopUIColorPalette) -> some View {
         HStack(spacing: 6) {
             if let icon {
-                Group {
-                    switch icon.symbolType {
-                    case .emoji:
-                        Text(icon.value)
-                    case .image:
-                        Image(icon.value)
-                            .resizable()
-                            .renderingMode(.template)
-                            .foregroundStyle(Color(presetSymbolTint: icon.tint, palette: colorPalette))
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: UIFontMetrics.default.scaledValue(for: iconSize), height: UIFontMetrics.default.scaledValue(for: iconSize))
-                    case .systemImage:
-                        Image(systemName: icon.value)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: UIFontMetrics.default.scaledValue(for: iconSize), height: UIFontMetrics.default.scaledValue(for: iconSize))
-                    }
-                }
+                PresetSymbolView(icon)
             }
 
             Text(name)
