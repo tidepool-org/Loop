@@ -110,7 +110,6 @@ class SettingsManager {
                 basalRateSchedule: settings.basalRateSchedule,
                 carbRatioSchedule: settings.carbRatioSchedule,
                 preMealTargetRange: settings.preMealTargetRange,
-                legacyWorkoutTargetRange: settings.workoutTargetRange,
                 overridePresets: settings.overridePresets,
                 maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
                 maximumBolus: settings.maximumBolus,
@@ -129,8 +128,6 @@ class SettingsManager {
                               dosingEnabled: newLoopSettings.dosingEnabled,
                               glucoseTargetRangeSchedule: newLoopSettings.glucoseTargetRangeSchedule,
                               preMealTargetRange: newLoopSettings.preMealTargetRange,
-                              workoutTargetRange: newLoopSettings.legacyWorkoutTargetRange,
-                              workoutDefaultDuration: newLoopSettings.legacyWorkoutDuration,
                               overridePresets: newLoopSettings.overridePresets,
                               maximumBasalRatePerHour: newLoopSettings.maximumBasalRatePerHour,
                               maximumBolus: newLoopSettings.maximumBolus,
@@ -306,9 +303,7 @@ extension SettingsManager {
             return TherapySettings(
                 glucoseTargetRangeSchedule: settings.glucoseTargetRangeSchedule,
                 correctionRangeOverrides: CorrectionRangeOverrides(
-                    preMeal: settings.preMealTargetRange,
-                    workout: settings.workoutTargetRange,
-                    workoutDuration: settings.workoutDefaultDuration
+                    preMeal: settings.preMealTargetRange
                 ),
                 overridePresets: settings.overridePresets,
                 maximumBasalRatePerHour: settings.maximumBasalRatePerHour,
@@ -329,7 +324,6 @@ extension SettingsManager {
                 settings.basalRateSchedule = newValue.basalRateSchedule
                 settings.glucoseTargetRangeSchedule = newValue.glucoseTargetRangeSchedule
                 settings.preMealTargetRange = newValue.correctionRangeOverrides?.preMeal
-                settings.legacyWorkoutTargetRange = newValue.correctionRangeOverrides?.workout
                 settings.suspendThreshold = newValue.suspendThreshold
                 settings.maximumBolus = newValue.maximumBolus
                 settings.maximumBasalRatePerHour = newValue.maximumBasalRatePerHour
@@ -342,8 +336,6 @@ extension SettingsManager {
         switch preset {
         case .preMeal:
             return preMealGuardrail
-        case .legacyWorkout:
-            return legacyWorkoutPresetGuardrail
         default:
             return Guardrail.temporaryPresetCorrectionRange
         }
@@ -361,40 +353,26 @@ extension SettingsManager {
         }
     }
 
-    public var legacyWorkoutPresetGuardrail: Guardrail<LoopQuantity> {
-        if let scheduleRange = settings.glucoseTargetRangeSchedule?.scheduleRange() {
-            return Guardrail.correctionRangeOverride(
-                for: .workout,
-                correctionRangeScheduleRange: scheduleRange,
-                suspendThreshold: settings.suspendThreshold
-            )
-        } else {
-            return Guardrail.correctionRange
-        }
-    }
-
     func savePreset(_ preset: SelectablePreset) {
         switch(preset) {
         case .preMeal(let range):
             mutateLoopSettings { settings in
                 settings.preMealTargetRange = range
             }
-        case .legacyWorkout(let range, let duration):
-            mutateLoopSettings { settings in
-                settings.legacyWorkoutTargetRange = range
-                switch duration {
-                case .indefinite:
-                    settings.legacyWorkoutDuration = .indefinite
-                case .duration(let interval):
-                    settings.legacyWorkoutDuration = .finite(interval)
-                case .untilCarbsEntered:
-                    break
-                }
-            }
         case .custom(let preset):
             if let index = settings.overridePresets.firstIndex(where: { $0.id == preset.id }) {
                 mutateLoopSettings { settings in
                     settings.overridePresets[index] = preset
+                }
+            }
+        case .activity(let activity):
+            if let index = settings.overridePresets.firstIndex(where: { $0.id == activity.preset.id }) {
+                mutateLoopSettings { settings in
+                    settings.overridePresets[index] = activity.preset
+                }
+            } else {
+                mutateLoopSettings { settings in
+                    settings.overridePresets.append(activity.preset)
                 }
             }
         }
@@ -407,8 +385,10 @@ extension SettingsManager {
     }
 
     func deletePreset(_ preset: SelectablePreset) {
+        guard preset.canBeDeleted else { return }
+        
         switch(preset) {
-        case .preMeal, .legacyWorkout:
+        case .preMeal, .activity:
             break // cannot delete these
         case .custom(let preset):
             mutateLoopSettings { settings in

@@ -20,7 +20,6 @@ struct CreatingYourOwnPresetsContentView: View {
             
             BulletedListView {
                 Text(Image("Pre-Meal-symbol")).foregroundColor(.carbTintColor) + Text(" Pre-Meal")
-                Text(Image("workout-symbol")).foregroundColor(.glucoseTintColor) + Text(" Workout")
             }
         }
         

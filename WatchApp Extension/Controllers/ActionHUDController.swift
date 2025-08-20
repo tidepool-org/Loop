@@ -44,8 +44,6 @@ final class ActionHUDController: HUDInterfaceController {
         // Update the override button description based on the feature flag; this cannot be done earlier than `-willActivate` (e.g. didSet on the IBOutlet is too soon)
         if FeatureFlags.sensitivityOverridesEnabled {
             overrideButtonLabel?.setText(NSLocalizedString("Preset", comment: "The text for the Watch button for enabling a custom preset"))
-        } else {
-            overrideButtonLabel?.setText(NSLocalizedString("Workout", comment: "The text for the Watch button for enabling workout mode"))
         }
 
         let userActivity = NSUserActivity.forViewLoopStatus()
@@ -100,7 +98,7 @@ final class ActionHUDController: HUDInterfaceController {
         if FeatureFlags.sensitivityOverridesEnabled {
             return !loopManager.watchInfo.loopSettings.overridePresets.isEmpty
         } else {
-            return loopManager.watchInfo.loopSettings.legacyWorkoutTargetRange != nil
+            return false
         }
     }
 
@@ -118,7 +116,7 @@ final class ActionHUDController: HUDInterfaceController {
             overrideButtonGroup.turnOff()
         case .preset?, .custom?:
             overrideButtonGroup.state = .on
-        case .legacyWorkout?:
+        case .activity:
             preMealButtonGroup.turnOff()
             overrideButtonGroup.state = .on
         case .preMeal?:
@@ -158,7 +156,7 @@ final class ActionHUDController: HUDInterfaceController {
             watchInfo.enablePreMealOverride(for: .hours(1))
 
             if !FeatureFlags.sensitivityOverridesEnabled {
-                watchInfo.clearOverride(matching: .legacyWorkout)
+                // TODO: What to do here?
                 updateForOverrideContext(nil)
             }
         } else {
@@ -207,20 +205,6 @@ final class ActionHUDController: HUDInterfaceController {
             overrideButtonGroup.state == .on
                 ? sendOverride(nil)
                 : presentController(withName: OverrideSelectionController.className, context: self as OverrideSelectionControllerDelegate)
-        } else if let range = loopManager.watchInfo.loopSettings.legacyWorkoutTargetRange {
-            let buttonToSelect = loopManager.watchInfo.nonPreMealOverrideEnabled() == true ? SelectedButton.on : SelectedButton.off
-
-            let viewModel = OnOffSelectionViewModel(
-                title: NSLocalizedString("Workout", comment: "Title for sheet to enable/disable workout mode on watch"),
-                message: formattedGlucoseRangeString(from: range),
-                onSelection: { isWorkoutEnabled in
-                    let override = isWorkoutEnabled ? self.loopManager.watchInfo.legacyWorkoutOverride(for: .infinity) : nil
-                    self.sendOverride(override)
-                },
-                selectedButton: buttonToSelect,
-                selectedButtonTint: .glucose
-            )
-            presentController(withName: OnOffSelectionController.className, context: viewModel)
         }
     }
 
@@ -245,9 +229,6 @@ final class ActionHUDController: HUDInterfaceController {
 
         var watchInfo = loopManager.watchInfo
         let isPreMealEnabled = watchInfo.preMealOverride?.isActive() == true
-        if override?.context == .legacyWorkout {
-            watchInfo.preMealOverride = nil
-        }
         watchInfo.scheduleOverride = override
 
         do {

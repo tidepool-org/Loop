@@ -14,7 +14,7 @@ import LoopAlgorithm
 
 struct EditPresetView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.guidanceColors) private var guidanceColors
+    @Environment(\.colorPalette) private var colorPalette
     @Environment(\.settingsManager) private var settingsManager
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
 
@@ -36,6 +36,11 @@ struct EditPresetView: View {
     private var onSave: (SelectablePreset) throws -> Void
     private var onDelete: (SelectablePreset) throws -> Void
 
+    private var presetIsVerified: Bool? {
+        guard case let .activity(activityPreset) = preset else { return nil }
+        
+        return !activityPreset.isModifiedFromDefault
+    }
 
     init(
         preset: SelectablePreset,
@@ -113,6 +118,35 @@ struct EditPresetView: View {
                             )
                         }.accessibilityIdentifier("button_CorrectionRange")
                     }
+                    
+                    if let presetIsVerified {
+                        Group {
+                            if presetIsVerified {
+                                Group {
+                                    Text(Image(systemName: "checkmark.seal.fill")) + Text(" ") + Text("Recommended starting values")
+                                }
+                                .font(.subheadline)
+                                .foregroundStyle(Color.accentColor)
+                                .frame(maxWidth: .infinity)
+                            } else {
+                                Button {
+                                    if case let .activity(activityPreset) = preset {
+                                        withAnimation {
+                                            preset = .activity(ActivityPreset(activityType: activityPreset.activityType, preset: activityPreset.activityType.defaultPreset))
+                                        }
+                                    }
+                                } label: {
+                                    Group {
+                                        Text(Image(systemName: "arrow.uturn.backward")) + Text(" ") + Text("Revert to recommended values")
+                                    }
+                                    .font(.body.weight(.semibold))
+                                    .foregroundStyle(Color.accentColor)
+                                }
+                                .buttonStyle(ActionButtonStyle(.secondary))
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
 
                     CardSection("Preset Details") {
                         HStack {
@@ -124,8 +158,14 @@ struct EditPresetView: View {
                                     .focused($isTextFieldFocused)
                                     .foregroundColor(.secondary)
                             } else {
-                                Text(preset.name)
-                                    .foregroundColor(.secondary)
+                                HStack(spacing: 4) {
+                                    if case let .activity(activityPreset) = preset {
+                                        Text(Image(systemName: activityPreset.activityType.symbol.value))
+                                    }
+                                    
+                                    Text(preset.name)
+                                }
+                                .foregroundColor(.secondary)
                             }
                         }
                     }
@@ -358,17 +398,25 @@ struct EditPresetView: View {
 
     var presetTitle: some View {
         HStack(spacing: 6) {
-            switch preset.icon {
-            case .emoji(let emoji):
-                Text(emoji)
-                    .font(.system(size: 34, weight: .semibold))
-                    .foregroundColor(.primary)
-            case .image(let name, let iconColor):
-                Image(name)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .foregroundColor(iconColor)
-                    .frame(width: UIFontMetrics.default.scaledValue(for: 34), height: UIFontMetrics.default.scaledValue(for: 34))
+            if let icon = preset.icon {
+                switch icon.symbolType {
+                case .emoji:
+                    Text(icon.value)
+                        .font(.system(size: 34, weight: .semibold))
+                        .foregroundColor(.primary)
+                case .image:
+                    Image(icon.value)
+                        .resizable()
+                        .renderingMode(.template)
+                        .foregroundStyle(Color(presetSymbolTint: icon.tint, palette: colorPalette))
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: UIFontMetrics.default.scaledValue(for: 34), height: UIFontMetrics.default.scaledValue(for: 34))
+                case .systemImage:
+                    Image(systemName: icon.value)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: UIFontMetrics.default.scaledValue(for: 34), height: UIFontMetrics.default.scaledValue(for: 34))
+                }
             }
 
             Text(preset.name)

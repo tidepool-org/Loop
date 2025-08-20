@@ -107,7 +107,6 @@ class SettingsViewModel {
 
     
     var preMealGuardrail: Guardrail<LoopQuantity>?
-    var legacyWorkoutPresetGuardrail: Guardrail<LoopQuantity>?
 
     @ObservationIgnored weak var favoriteFoodInsightsDelegate: FavoriteFoodInsightsViewModelDelegate?
 

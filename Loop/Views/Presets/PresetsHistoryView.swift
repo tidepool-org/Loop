@@ -10,6 +10,7 @@ import LoopKit
 import SwiftUI
 
 struct PresetsHistoryView: View {
+    @Environment(\.colorPalette) private var colorPalette
     @Environment(\.settingsManager) private var settingsManager
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
 
@@ -52,15 +53,23 @@ struct PresetsHistoryView: View {
                                 
                                 if let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == override.presetId }) {
                                     HStack(spacing: 4) {
-                                        switch preset.icon {
-                                        case .emoji(let emoji):
-                                            Text(emoji)
-                                        case .image(let name, let iconColor):
-                                            Image(name)
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fit)
-                                                .foregroundColor(iconColor)
-                                                .frame(width: UIFontMetrics.default.scaledValue(for: 22), height: UIFontMetrics.default.scaledValue(for: 22))
+                                        if let icon = preset.icon {
+                                            switch icon.symbolType {
+                                            case .emoji:
+                                                Text(icon.value)
+                                            case .image:
+                                                Image(icon.value)
+                                                    .resizable()
+                                                    .renderingMode(.template)
+                                                    .foregroundStyle(Color(presetSymbolTint: icon.tint, palette: colorPalette))
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(width: UIFontMetrics.default.scaledValue(for: 22), height: UIFontMetrics.default.scaledValue(for: 22))
+                                            case .systemImage:
+                                                Image(systemName: icon.value)
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(width: UIFontMetrics.default.scaledValue(for: 22), height: UIFontMetrics.default.scaledValue(for: 22))
+                                            }
                                         }
                                         
                                         Text(preset.name)

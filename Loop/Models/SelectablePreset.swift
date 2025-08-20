@@ -9,6 +9,7 @@
 import LoopKit
 import SwiftUI
 import LoopAlgorithm
+import LoopKitUI
 
 enum PresetDuration: Equatable {
     case untilCarbsEntered
@@ -45,7 +46,7 @@ extension TemporaryScheduleOverride {
     var expectedEndTime: PresetExpectedEndTime? {
         switch context {
         case .preMeal: return .untilCarbsEntered
-        case .legacyWorkout, .custom, .preset:
+        case .activity, .custom, .preset:
             switch duration {
             case .indefinite: return .indefinite
             case .finite: return .scheduled(scheduledEndDate)
@@ -56,16 +57,11 @@ extension TemporaryScheduleOverride {
     var presetId: String {
         switch context {
         case .preMeal: return "preMeal"
-        case .legacyWorkout: return "legacyWorkout"
+        case .activity: return preset.id
         case .custom: return self.syncIdentifier.uuidString
-        case .preset(let preset): return preset.id.uuidString
+        case .preset(let preset): return preset.id
         }
     }
-}
-
-enum PresetIcon: Hashable {
-    case emoji(String)
-    case image(String, Color)
 }
 
 typealias RangeSafetyClassification = (lower: SafetyClassification, upper: SafetyClassification)
@@ -88,16 +84,14 @@ enum SelectablePreset: Hashable, Identifiable {
 
     case custom(TemporaryPreset)
     case preMeal(range: ClosedRange<LoopQuantity>)
-    case legacyWorkout(range: ClosedRange<LoopQuantity>, duration: PresetDuration)
+    case activity(ActivityPreset)
 
     func hash(into hasher: inout Hasher) {
         switch self {
         case .custom(let preset):
             hasher.combine(preset)
-        case .legacyWorkout(let range, let duration):
-            hasher.combine("legacyWorkout")
-            hasher.combine(range)
-            hasher.combine(duration)
+        case .activity(let activity):
+            hasher.combine(activity)
         case .preMeal(let range):
             hasher.combine("preMeal")
             hasher.combine(range)
@@ -108,8 +102,8 @@ enum SelectablePreset: Hashable, Identifiable {
         switch (lhs, rhs) {
         case (.custom(let lhsPreset), .custom(let rhsPreset)):
             return lhsPreset == rhsPreset
-        case (.legacyWorkout(let lhsRange, let lhsDuration), .legacyWorkout(let rhsRange, let rhsDuration)):
-            return lhsRange == rhsRange && lhsDuration == rhsDuration
+        case (.activity(let lhsActivity), .activity(let rhsActivity)):
+            return lhsActivity == rhsActivity
         case (.preMeal(let lhsRange), .preMeal(let rhsRange)):
             return lhsRange == rhsRange
         default:
@@ -119,17 +113,17 @@ enum SelectablePreset: Hashable, Identifiable {
 
     var id: String {
         switch self {
-        case .custom(let preset): return preset.id.uuidString
-        case .legacyWorkout: return "legacyWorkout"
+        case .custom(let preset): return preset.id
+        case .activity(let activity): return "activity-\(activity.id)"
         case .preMeal: return "preMeal"
         }
     }
 
-    var icon: PresetIcon {
+    var icon: PresetSymbol? {
         switch self {
-        case .custom(let preset): return .emoji(preset.symbol)
-        case .preMeal: return .image("Pre-Meal", .carbTintColor)
-        case .legacyWorkout: return .image("workout", .glucoseTintColor)
+        case .custom(let preset): return preset.symbol
+        case .preMeal: return .image("Pre-Meal", tint: .preMeal)
+        case .activity(let activity): return activity.preset.symbol
         }
     }
 
@@ -143,17 +137,31 @@ enum SelectablePreset: Hashable, Identifiable {
                 case .finite(let duration):
                     return .duration(duration)
                 }
+            case .activity(let activity):
+                switch activity.preset.duration {
+                case .indefinite:
+                    return .indefinite
+                case .finite(let duration):
+                    return .duration(duration)
+                }
             case .preMeal: return .untilCarbsEntered
-            case .legacyWorkout(_, let duration):
-                return duration
             }
         }
         set {
             switch self {
             case .preMeal(let range):
                 self = .preMeal(range: range)
-            case .legacyWorkout(let range, _):
-                self = .legacyWorkout(range: range, duration: newValue)
+            case .activity(var activity):
+                activity.preset.settings = TemporaryPresetSettings(targetRange: activity.preset.settings.targetRange, insulinNeedsScaleFactor: activity.preset.settings.insulinNeedsScaleFactor)
+                switch newValue {
+                case .indefinite:
+                    activity.preset.duration = .indefinite
+                case .duration(let duration):
+                    activity.preset.duration = .finite(duration)
+                default:
+                    break
+                }
+                self = .activity(activity)
             case .custom(var preset):
                 preset.settings = TemporaryPresetSettings(targetRange: preset.settings.targetRange, insulinNeedsScaleFactor: preset.settings.insulinNeedsScaleFactor)
                 switch newValue {
@@ -177,7 +185,7 @@ enum SelectablePreset: Hashable, Identifiable {
         switch self {
         case .custom(let preset):
             return preset.nextScheduledStartAfter(date)
-        case .preMeal, .legacyWorkout:
+        case .preMeal, .activity:
             return nil
         }
     }
@@ -187,7 +195,7 @@ enum SelectablePreset: Hashable, Identifiable {
             switch self {
             case .custom(let preset):
                 return preset.scheduleStartDate
-            case .preMeal, .legacyWorkout:
+            case .preMeal, .activity:
                 return nil
             }
         }
@@ -207,7 +215,7 @@ enum SelectablePreset: Hashable, Identifiable {
             switch self {
             case .custom(let preset):
                 return preset.repeatOptions ?? .none
-            case .preMeal, .legacyWorkout:
+            case .preMeal, .activity:
                 return .none
             }
         }
@@ -228,7 +236,7 @@ enum SelectablePreset: Hashable, Identifiable {
             switch self {
             case .custom(let preset): return preset.name
             case .preMeal: return "Pre-Meal"
-            case .legacyWorkout: return "Workout"
+            case .activity(let activity): return activity.activityType.name
             }
         }
         set {
@@ -244,7 +252,7 @@ enum SelectablePreset: Hashable, Identifiable {
             switch self {
             case .custom(let preset): return preset.settings.targetRange
             case .preMeal(let range): return range
-            case .legacyWorkout(let range, _): return range
+            case .activity(let activity): return activity.preset.settings.targetRange
             }
         }
 
@@ -252,8 +260,9 @@ enum SelectablePreset: Hashable, Identifiable {
             switch self {
             case .preMeal:
                 self = .preMeal(range: newValue!)
-            case .legacyWorkout(_, let duration):
-                self = .legacyWorkout(range: newValue!, duration: duration)
+            case .activity(var activity):
+                activity.preset.settings = TemporaryPresetSettings(targetRange: newValue, insulinNeedsScaleFactor: activity.preset.settings.insulinNeedsScaleFactor)
+                self = .activity(activity)
             case .custom(var preset):
                 preset.settings = TemporaryPresetSettings(targetRange: newValue, insulinNeedsScaleFactor: preset.settings.insulinNeedsScaleFactor)
                 self = .custom(preset)
@@ -264,6 +273,8 @@ enum SelectablePreset: Hashable, Identifiable {
     var insulinSensitivityMultiplier: Double? {
         if case .custom(let preset) = self {
             return preset.settings.insulinSensitivityMultiplier
+        } else if case .activity(let activity) = self {
+            return activity.preset.settings.insulinSensitivityMultiplier
         } else {
             return nil
         }
@@ -273,12 +284,17 @@ enum SelectablePreset: Hashable, Identifiable {
         get {
             if case .custom(let preset) = self {
                 return 1.0 / (preset.settings.insulinSensitivityMultiplier ?? 1)
+            } else if case .activity(let activity) = self {
+                return 1.0 / (activity.preset.settings.insulinSensitivityMultiplier ?? 1)
             } else {
                 return 1.0
             }
         }
         set {
-            if case .custom(var preset) = self {
+            if case .activity(var activity) = self {
+                activity.preset.settings = TemporaryPresetSettings(targetRange: activity.preset.settings.targetRange, insulinNeedsScaleFactor: newValue)
+                self = .activity(activity)
+            } else if case .custom(var preset) = self {
                 preset.settings = TemporaryPresetSettings(targetRange: preset.settings.targetRange, insulinNeedsScaleFactor: newValue)
                 self = .custom(preset)
             }
@@ -287,46 +303,46 @@ enum SelectablePreset: Hashable, Identifiable {
 
     var canAdjustSensitivity: Bool {
         switch self {
-        case .custom:
+        case .custom, .activity:
             return true
-        case .preMeal, .legacyWorkout:
+        case .preMeal:
             return false
         }
     }
 
     var canAdjustDuration: Bool {
         switch self {
-        case .custom, .legacyWorkout:
-            return true;
+        case .custom, .activity:
+            return true
         case .preMeal:
-            return false;
+            return false
         }
     }
 
     var canChangeName: Bool {
         switch self {
         case .custom:
-            return true;
-        case .preMeal, .legacyWorkout:
-            return false;
+            return true
+        case .preMeal, .activity:
+            return false
         }
     }
 
     var allowsScheduling: Bool {
         switch self {
         case .custom:
-            return true;
-        case .preMeal, .legacyWorkout:
-            return false;
+            return true
+        case .preMeal, .activity:
+            return false
         }
     }
 
     var canBeDeleted: Bool {
         switch self {
         case .custom:
-            return true;
-        case .preMeal, .legacyWorkout:
-            return false;
+            return true
+        case .preMeal, .activity:
+            return false
         }
     }
 
@@ -343,22 +359,32 @@ enum SelectablePreset: Hashable, Identifiable {
             return .distantPast // TODO
         case .preMeal:
             return .distantPast.addingTimeInterval(1)
-        case .legacyWorkout:
+        case .activity:
             return .distantPast
         }
     }
 
-    func title(font: Font, iconSize: Double) -> some View {
+    func title(font: Font, iconSize: Double, colorPalette: LoopUIColorPalette) -> some View {
         HStack(spacing: 6) {
-            switch icon {
-            case .emoji(let emoji):
-                Text(emoji)
-            case .image(let name, let iconColor):
-                Image(name)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .foregroundColor(iconColor)
-                    .frame(width: UIFontMetrics.default.scaledValue(for: iconSize), height: UIFontMetrics.default.scaledValue(for: iconSize))
+            if let icon {
+                Group {
+                    switch icon.symbolType {
+                    case .emoji:
+                        Text(icon.value)
+                    case .image:
+                        Image(icon.value)
+                            .resizable()
+                            .renderingMode(.template)
+                            .foregroundStyle(Color(presetSymbolTint: icon.tint, palette: colorPalette))
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: UIFontMetrics.default.scaledValue(for: iconSize), height: UIFontMetrics.default.scaledValue(for: iconSize))
+                    case .systemImage:
+                        Image(systemName: icon.value)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: UIFontMetrics.default.scaledValue(for: iconSize), height: UIFontMetrics.default.scaledValue(for: iconSize))
+                    }
+                }
             }
 
             Text(name)

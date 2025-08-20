@@ -96,7 +96,7 @@ struct PresetsView: View {
                         PresetsTrainingCard(showTraining: $showTraining)
                     }
                     
-                    if let activePreset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == temporaryPresetsManager.activeOverride?.presetId })
+                    if let activePreset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == temporaryPresetsManager.activePreset?.id })
                     {
                         PresetCard(
                             activePreset,
@@ -303,6 +303,12 @@ struct PresetsView: View {
 
 extension PresetCard {
     init (_ preset: SelectablePreset, guardrail: Guardrail<LoopQuantity>, expectedEndTime: PresetExpectedEndTime? = nil) {
+        var isVerified = false
+        
+        if case let .activity(activityPreset) = preset {
+            isVerified = !activityPreset.isModifiedFromDefault
+        }
+        
         self.init(
             presetId: preset.id,
             icon: preset.icon,
@@ -312,7 +318,8 @@ extension PresetCard {
             correctionRange: preset.correctionRange,
             guardrail: guardrail,
             expectedEndTime: expectedEndTime,
-            isScheduled: preset.isScheduled
+            isScheduled: preset.isScheduled,
+            isVerified: isVerified
         )
     }
 }

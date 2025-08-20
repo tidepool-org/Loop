@@ -248,7 +248,6 @@ class LoopAppManager: NSObject {
         temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsManager, alertIssuer: alertManager)
         temporaryPresetsManager.presetHistory.delegate = self
 
-        temporaryPresetsManager.addTemporaryPresetObserver(alertManager)
         temporaryPresetsManager.addTemporaryPresetObserver(analyticsServicesManager)
 
         await temporaryPresetsManager.scheduleNextPresetReminder()
