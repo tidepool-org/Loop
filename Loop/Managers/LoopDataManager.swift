@@ -1468,6 +1468,8 @@ extension LoopDataManager: DiagnosticReportGenerator {
             "## LoopDataManager",
             "settings: \(String(reflecting: settingsProvider.settings))",
 
+            "* presetHistory: \(temporaryPresetsManager.presetHistory.recentEvents.map(String.init(describing:)))",
+
             "insulinCounteractionEffects: [",
             "* GlucoseEffectVelocity(start, end, mg/dL/min)",
             (algoOutput?.effects.insulinCounteraction ?? []).reduce(into: "", { (entries, entry) in
