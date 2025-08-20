@@ -39,5 +39,5 @@ struct PresetSymbolView: View {
 }
 
 #Preview {
-    PresetSymbolView(symbol: .emoji("🍎"), iconSize: 22)
+    PresetSymbolView(.emoji("🍎"), iconSize: 22)
 }
