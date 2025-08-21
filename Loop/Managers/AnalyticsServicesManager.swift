@@ -241,7 +241,7 @@ extension AnalyticsServicesManager: PresetActivationObserver {
         case .preset(let preset):
             didEnactOverride(
                 name: preset.name,
-                symbol: preset.symbol?.textualRepresentation?.string ?? "",
+                symbol: preset.symbol?.textualRepresentation ?? "",
                 duration: duration,
                 insulinSensitivityMultiplier: preset.settings.effectiveInsulinNeedsScaleFactor,
                 targetRange: preset.settings.targetRange
@@ -249,7 +249,7 @@ extension AnalyticsServicesManager: PresetActivationObserver {
         case .activity(let activity):
             didEnactOverride(
                 name: activity.activityType.name,
-                symbol: activity.preset.symbol?.textualRepresentation?.string ?? "",
+                symbol: activity.preset.symbol?.textualRepresentation ?? "",
                 duration: activity.preset.duration,
                 insulinSensitivityMultiplier: activity.preset.settings.effectiveInsulinNeedsScaleFactor,
                 targetRange: activity.preset.settings.targetRange
