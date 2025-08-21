@@ -398,7 +398,7 @@ struct EditPresetView: View {
 
     var presetTitle: some View {
         HStack(spacing: 6) {
-            if let icon = preset.icon {
+            if let icon = preset.icon, !icon.isEmpty {
                 PresetSymbolView(icon, iconSize: 34)
             }
 

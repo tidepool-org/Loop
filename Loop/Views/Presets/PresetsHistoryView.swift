@@ -53,7 +53,7 @@ struct PresetsHistoryView: View {
                                 
                                 if let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == override.presetId }) {
                                     HStack(spacing: 4) {
-                                        if let icon = preset.icon {
+                                        if let icon = preset.icon, !icon.isEmpty {
                                             PresetSymbolView(icon)
                                         }
                                         

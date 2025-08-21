@@ -395,7 +395,7 @@ struct InsulinDeliveryLogEventRow: View {
                         .foregroundStyle(.secondary)
                     
                     HStack(spacing: 6) {
-                        if let icon {
+                        if let icon, !icon.isEmpty {
                             PresetSymbolView(icon)
                         }
 
