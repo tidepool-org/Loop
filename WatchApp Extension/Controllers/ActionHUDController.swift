@@ -42,9 +42,7 @@ final class ActionHUDController: HUDInterfaceController {
         super.willActivate()
 
         // Update the override button description based on the feature flag; this cannot be done earlier than `-willActivate` (e.g. didSet on the IBOutlet is too soon)
-        if FeatureFlags.sensitivityOverridesEnabled {
-            overrideButtonLabel?.setText(NSLocalizedString("Preset", comment: "The text for the Watch button for enabling a custom preset"))
-        }
+        overrideButtonLabel?.setText(NSLocalizedString("Preset", comment: "The text for the Watch button for enabling a custom preset"))
 
         let userActivity = NSUserActivity.forViewLoopStatus()
         if #available(watchOSApplicationExtension 5.0, *) {
@@ -95,11 +93,7 @@ final class ActionHUDController: HUDInterfaceController {
     }
     
     private var canEnableOverride: Bool {
-        if FeatureFlags.sensitivityOverridesEnabled {
-            return !loopManager.watchInfo.loopSettings.overridePresets.isEmpty
-        } else {
-            return false
-        }
+        !loopManager.watchInfo.loopSettings.overridePresets.isEmpty
     }
 
     private func updateForPreMeal(enabled: Bool) {
@@ -154,11 +148,6 @@ final class ActionHUDController: HUDInterfaceController {
         let overrideContext = watchInfo.scheduleOverride?.context
         if isPreMealEnabled {
             watchInfo.enablePreMealOverride(for: .hours(1))
-
-            if !FeatureFlags.sensitivityOverridesEnabled {
-                // TODO: What to do here?
-                updateForOverrideContext(nil)
-            }
         } else {
             watchInfo.clearOverride(matching: .preMeal)
         }
@@ -201,11 +190,9 @@ final class ActionHUDController: HUDInterfaceController {
     }
 
     @IBAction func toggleOverride() {
-        if FeatureFlags.sensitivityOverridesEnabled {
-            overrideButtonGroup.state == .on
-                ? sendOverride(nil)
-                : presentController(withName: OverrideSelectionController.className, context: self as OverrideSelectionControllerDelegate)
-        }
+        overrideButtonGroup.state == .on
+            ? sendOverride(nil)
+            : presentController(withName: OverrideSelectionController.className, context: self as OverrideSelectionControllerDelegate)
     }
 
     private func formattedGlucoseRangeString(from range: ClosedRange<LoopQuantity>) -> String {

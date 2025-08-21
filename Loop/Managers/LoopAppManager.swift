@@ -577,7 +577,6 @@ class LoopAppManager: NSObject {
                                           servicesViewModel: servicesViewModel,
                                           criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: criticalEventLogExportManager),
                                           therapySettings: { [weak self] in self?.settingsManager.therapySettings ?? TherapySettings() },
-                                          sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                           initialDosingEnabled: self.settingsManager.settings.dosingEnabled,
                                           automaticDosingStatus: self.automaticDosingStatus,
                                           automaticDosingStrategy: self.settingsManager.settings.automaticDosingStrategy,

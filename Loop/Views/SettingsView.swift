@@ -146,7 +146,6 @@ struct SettingsView: View {
                             mode: .settings,
                             viewModel: TherapySettingsViewModel(
                                 therapySettings: viewModel.therapySettings(),
-                                sensitivityOverridesEnabled: FeatureFlags.sensitivityOverridesEnabled,
                                 delegate: viewModel.therapySettingsViewModelDelegate
                             )
                         )
