@@ -200,20 +200,10 @@ class TemporaryPresetsManager {
             }
         })
         
-        if !settings.overridePresets.contains(where: { $0.id == ActivityPreset.ActivityType.biking.id }) {
-            presets.append(.activity(ActivityPreset(activityType: .biking, preset: ActivityPreset.ActivityType.biking.defaultPreset)))
-        }
-        
-        if !settings.overridePresets.contains(where: { $0.id == ActivityPreset.ActivityType.walking.id }) {
-            presets.append(.activity(ActivityPreset(activityType: .walking, preset: ActivityPreset.ActivityType.walking.defaultPreset)))
-        }
-        
-        if !settings.overridePresets.contains(where: { $0.id == ActivityPreset.ActivityType.jogging.id }) {
-            presets.append(.activity(ActivityPreset(activityType: .jogging, preset: ActivityPreset.ActivityType.jogging.defaultPreset)))
-        }
-        
-        if !settings.overridePresets.contains(where: { $0.id == ActivityPreset.ActivityType.strengthTraining.id }) {
-            presets.append(.activity(ActivityPreset(activityType: .strengthTraining, preset: ActivityPreset.ActivityType.strengthTraining.defaultPreset)))
+        ActivityPreset.ActivityType.allCases.forEach { activityType in
+            if !settings.overridePresets.contains(where: { $0.id == activityType.id }) {
+                presets.append(.activity(ActivityPreset(activityType: activityType, preset: activityType.defaultPreset)))
+            }
         }
 
         return presets

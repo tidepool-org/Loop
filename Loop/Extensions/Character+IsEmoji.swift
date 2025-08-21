@@ -10,6 +10,6 @@ import Foundation
 
 extension Character {
     public var isEmoji: Bool {
-        unicodeScalars.contains(where: { $0.properties.isEmoji })
+        unicodeScalars.contains(where: { $0.properties.isEmojiPresentation })
     }
 }
