@@ -142,7 +142,7 @@ extension PresetExpectedEndTime {
         case .untilCarbsEntered:
             return NSLocalizedString("on until carbs added", comment: "Presets card pre-meal expected end time accessibility label")
         case .indefinite:
-            return NSLocalizedString("on indefinitely", comment: "Presets card indefinite duration accessibility label")
+            return NSLocalizedString("on until turned off", comment: "Presets card indefinite duration accessibility label")
         case .scheduled(let date):
             let formatter = DateComponentsFormatter()
             formatter.allowedUnits = [.hour, .minute]

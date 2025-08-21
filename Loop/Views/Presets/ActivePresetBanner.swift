@@ -101,7 +101,7 @@ struct ActivePresetBanner: View {
                     Text(String(format: NSLocalizedString("on until %@", comment: "The format for the description of a finite custom preset end date"), endTimeText))
                         .accessibilityIdentifier("text_PresetActiveOn")
                 case .indefinite:
-                    Text(NSLocalizedString("on indefinitely", comment: "The format for the description of an indefinite custom preset end date"))
+                    Text(NSLocalizedString("on until turned off", comment: "The format for the description of an indefinite custom preset end date"))
                         .accessibilityIdentifier("text_PresetActiveOn")
                 }
             }
