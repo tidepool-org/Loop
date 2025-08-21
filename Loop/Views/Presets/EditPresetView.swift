@@ -125,7 +125,7 @@ struct EditPresetView: View {
                                 Button {
                                     if case let .activity(activityPreset) = preset {
                                         withAnimation {
-                                            preset = .activity(ActivityPreset(activityType: activityPreset.activityType, preset: activityPreset.activityType.defaultPreset))
+                                            preset = .activity(ActivityPreset(activityType: activityPreset.activityType, preset: activityPreset.activityType.defaultPreset(duration: activityPreset.preset.duration)))
                                         }
                                     }
                                 } label: {

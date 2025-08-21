@@ -202,7 +202,7 @@ class TemporaryPresetsManager {
         
         ActivityPreset.ActivityType.allCases.forEach { activityType in
             if !settings.overridePresets.contains(where: { $0.id == activityType.id }) {
-                presets.append(.activity(ActivityPreset(activityType: activityType, preset: activityType.defaultPreset)))
+                presets.append(.activity(ActivityPreset(activityType: activityType, preset: activityType.defaultPreset(duration: .finite(.hours(1))))))
             }
         }
 
