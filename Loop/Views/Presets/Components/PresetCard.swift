@@ -38,7 +38,7 @@ struct PresetCard: View {
                 .fontWeight(.semibold)
                 .accessibilityIdentifier("text_Preset\(presetName)")
             
-            if activityPresetIsModified == true {
+            if activityPresetIsModified == false {
                 Text(Image(systemName: "checkmark.seal.fill"))
                     .font(.subheadline)
                     .foregroundStyle(Color.accentColor)

@@ -26,15 +26,17 @@ struct PresetSymbolView: View {
             switch symbol.symbolType {
             case .emoji:
                 Text(symbol.value)
+                    .font(.system(size: UIFontMetrics.default.scaledValue(for: iconSize - 2)))
             case .image:
                 Text(Image(symbol.value))
                     .foregroundStyle(Color(presetSymbolTint: symbol.tint, palette: colorPalette))
+                    .font(.system(size: UIFontMetrics.default.scaledValue(for: iconSize)))
             case .systemImage:
                 Text(Image(systemName: symbol.value))
                     .foregroundStyle(Color(presetSymbolTint: symbol.tint, palette: colorPalette))
+                    .font(.system(size: UIFontMetrics.default.scaledValue(for: iconSize)))
             }
         }
-        .font(.system(size: UIFontMetrics.default.scaledValue(for: iconSize)))
     }
 }
 

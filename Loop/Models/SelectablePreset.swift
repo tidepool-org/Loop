@@ -122,7 +122,7 @@ enum SelectablePreset: Hashable, Identifiable {
     var icon: PresetSymbol? {
         switch self {
         case .custom(let preset): return preset.symbol
-        case .preMeal: return .image("Pre-Meal", tint: .preMeal)
+        case .preMeal: return .image("Pre-Meal-symbol", tint: .preMeal)
         case .activity(let activity): return activity.preset.symbol
         }
     }
