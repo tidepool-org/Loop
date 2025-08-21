@@ -30,7 +30,7 @@ struct PresetCard: View {
 
     var presetTitle: some View {
         HStack(spacing: 6) {
-            if let icon, icon.isEmpty, !icon.isEmpty {
+            if let icon, !icon.isEmpty {
                 PresetSymbolView(icon)
             }
 
