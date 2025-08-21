@@ -110,28 +110,16 @@ extension NewCustomPreset {
             targetRange: correctionRange,
             insulinNeedsScaleFactor: insulinMultiplier
         )
-
-        let context: TemporaryScheduleOverride.Context
-
-        if savePreset {
-            let split = name.splitSymbolAndTitle()
-            var symbol: PresetSymbol? = nil
-            if let emoji = split.emoji {
-                symbol = .emoji(emoji)
-            }
-            
-            let preset = TemporaryPreset(
-                symbol: symbol,
-                name: split.name,
-                settings: settings,
-                duration: overrideDuration
-            )
-            context = .preset(preset)
-        } else {
-            context = .custom
+        
+        let split = name.splitSymbolAndTitle()
+        var symbol: PresetSymbol? = nil
+        if let emoji = split.emoji {
+            symbol = .emoji(emoji)
         }
-        return TemporaryScheduleOverride(
-            context: context,
+
+        return TemporaryPreset(
+            symbol: symbol,
+            name: split.name,
             settings: settings,
             duration: overrideDuration,
             scheduleStartDate: startDate
