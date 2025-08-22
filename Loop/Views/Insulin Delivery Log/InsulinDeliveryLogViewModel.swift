@@ -212,9 +212,9 @@ class InsulinDeliveryLogViewModel {
             case .neutralNoOverride, .neutralOverride:
                 basalStatus = .scheduled
             case .increasedInsulin:
-                basalStatus = .moreThanScheduled
+                basalStatus = .increased
             case .decreasedInsulin, .minimumDelivery:
-                basalStatus = .lessThanScheduled
+                basalStatus = .decreased
             }
             
             return .automationOn(basalStatus: basalStatus, preset: loopDataManager.temporaryPresetsManager.activePreset)
