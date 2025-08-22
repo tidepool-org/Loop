@@ -1311,12 +1311,13 @@ final class StatusTableViewController: LoopChartsTableViewController {
             case .iob:
                 let showLegacy = false
                 
-                if !showLegacy {
+                if !showLegacy, let pumpManager = deviceManager.pumpManager {
                     let hostingController = UIHostingController(
                         rootView: InsulinDeliveryLog(
                             viewModel: InsulinDeliveryLogViewModel(
                                 loopDataManager: loopManager,
-                                pumpManager: deviceManager.pumpManager
+                                pumpManager: pumpManager,
+                                settingsManager: settingsManager
                             ),
                             onTapGesture: { [weak navigationController] doseEntry in
                                 Task {

@@ -60,7 +60,8 @@ class InsulinDeliveryLogViewModel {
     }()
     
     private let loopDataManager: LoopDataManager
-    private let pumpManager: PumpManager?
+    private let pumpManager: PumpManager
+    private let settingsManager: SettingsManager
     
     private(set) var state: State
     
@@ -142,11 +143,13 @@ class InsulinDeliveryLogViewModel {
     
     init(
         loopDataManager: LoopDataManager,
-        pumpManager: PumpManager?,
+        pumpManager: PumpManager,
+        settingsManager: SettingsManager,
         initialState: State = .loading
     ) {
         self.loopDataManager = loopDataManager
         self.pumpManager = pumpManager
+        self.settingsManager = settingsManager
         self.state = initialState
         
         self.doseStore = (loopDataManager.doseStore as? DoseStore)
@@ -197,12 +200,12 @@ class InsulinDeliveryLogViewModel {
     
     private func fetchStatusState() -> InsulinDeliveryOverview.State {
         var insulinSuspended = false
-        if case .suspended = pumpManager?.status.basalDeliveryState {
+        if case .suspended = pumpManager.status.basalDeliveryState {
             insulinSuspended = true
         }
         
         let automationEnabled = loopDataManager.automaticDosingStatus.automaticDosingEnabled
-        let automatedTreatmentState = pumpManager?.pumpManagerDelegate?.automatedTreatmentState ?? .neutralNoOverride
+        let automatedTreatmentState = pumpManager.pumpManagerDelegate?.automatedTreatmentState ?? .neutralNoOverride
 
         if insulinSuspended {
             return .error(status: .suspended)
@@ -224,12 +227,12 @@ class InsulinDeliveryLogViewModel {
     }
     
     private func fetchCurrentBasal(startDate: Date) -> DatedQuantity? {
-        guard let basalRateSchedule = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory ?? loopDataManager.settings.basalRateSchedule else {
+        guard let basalSchedule = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory ?? loopDataManager.settings.basalRateSchedule,
+              let netBasal = pumpManager.status.basalDeliveryState?.getNetBasal(basalSchedule: basalSchedule, maximumBasalRatePerHour: settingsManager.settings.maximumBasalRatePerHour) else {
             return nil
         }
-    
-        let currentValue = basalRateSchedule.scheduleSegment(at: startDate)
-        return DatedQuantity(date: currentValue.startDate, quantity: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: currentValue.value))
+        
+        return DatedQuantity(date: netBasal.start, quantity: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: netBasal.rate))
     }
     
     private func fetchLastAutoBolus(doses: [DoseEntry]) -> DatedQuantity? {
