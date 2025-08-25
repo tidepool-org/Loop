@@ -202,7 +202,8 @@ struct EditPresetView: View {
 
                                 if isDurationPickerExpanded {
                                     DurationPickerView(
-                                        durationType: $preset.duration
+                                        durationType: $preset.duration,
+                                        allowIndefinite: preset.allowsIndefiniteDuration
                                     )
                                     .id("durationPicker") // Assign an ID for scrolling
                                 }

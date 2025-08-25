@@ -310,6 +310,15 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
+    var allowsIndefiniteDuration: Bool {
+        switch self {
+        case .custom:
+            return true
+        case .preMeal, .activity:
+            return false
+        }
+    }
+    
     var canAdjustDuration: Bool {
         switch self {
         case .custom, .activity:

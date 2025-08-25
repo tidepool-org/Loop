@@ -21,7 +21,7 @@ public struct InsulinScaleAdjustView: View {
     @Binding var insulinMultiplier: Double
 
     var insulinPercentage: Double {
-        get { return (insulinMultiplier * 20).rounded() * 5 }
+        insulinMultiplier * 100
     }
 
     public var body: some View {
@@ -83,9 +83,7 @@ public struct InsulinScaleAdjustView: View {
     private var adjustInsulinControls: some View {
         HStack(spacing: 24) {
             Button(action: {
-                if insulinPercentage > 10 {
-                    insulinMultiplier = (insulinPercentage - 5) / 100
-                }
+                decreaseInsulinMultiplier()
             }) {
                 Text(Image(systemName: "minus.circle.fill").symbolRenderingMode(.hierarchical))
                     .font(.system(size: 44, weight: .bold))
@@ -99,9 +97,7 @@ public struct InsulinScaleAdjustView: View {
                 .foregroundColor(valueColor)
 
             Button(action: {
-                if insulinPercentage < 200 {
-                    insulinMultiplier = (insulinPercentage + 5) / 100
-                }
+                increaseInsulinMultiplier()
             }) {
                 Text(Image(systemName: "plus.circle.fill").symbolRenderingMode(.hierarchical))
                     .font(.system(size: 44, weight: .bold))
@@ -109,7 +105,18 @@ public struct InsulinScaleAdjustView: View {
             }
             .buttonStyle(BorderlessButtonStyle())
         }
-
+    }
+    
+    private func decreaseInsulinMultiplier() {
+        if insulinPercentage > 10 {
+            insulinMultiplier = insulinPercentage.snap(direction: .down) / 100
+        }
+    }
+    
+    private func increaseInsulinMultiplier() {
+        if insulinPercentage < 200 {
+            insulinMultiplier = insulinPercentage.snap(direction: .up) / 100
+        }
     }
 
     private var settingsImpact: some View {
@@ -183,6 +190,25 @@ public struct InsulinScaleAdjustView: View {
                         highlighted: insulinPercentage != 100
                     )
                 }
+            }
+        }
+    }
+}
+
+extension Double {
+    enum StepDirection { case up, down }
+    
+    func snap(step: Double = 5, direction: StepDirection) -> Double {
+        let remainder = truncatingRemainder(dividingBy: step)
+        
+        if remainder == 0 {
+            return direction == .up ? self + step : self - step
+        } else {
+            switch direction {
+            case .up:
+                return self + (step - remainder)
+            case .down:
+                return self - remainder
             }
         }
     }
