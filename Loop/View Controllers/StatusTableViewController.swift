@@ -1316,8 +1316,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                         rootView: InsulinDeliveryLog(
                             viewModel: InsulinDeliveryLogViewModel(
                                 loopDataManager: loopManager,
-                                pumpManager: pumpManager,
-                                settingsManager: settingsManager
+                                pumpManager: pumpManager
                             ),
                             onTapGesture: { [weak navigationController] doseEntry in
                                 Task {
