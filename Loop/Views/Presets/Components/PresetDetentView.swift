@@ -149,13 +149,11 @@ struct PresetDetentView: View {
                 )
                 
                 if case let .activity(activityPreset) = preset, !activityPreset.isModifiedFromDefault {
-                    Group {
-                        Text(Image(systemName: "checkmark.seal.fill")) + Text(" ") + Text("Recommended starting values")
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(Color.accentColor)
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom, 4)
+                    Text("\(Image(systemName: "checkmark.seal.fill")) Recommended starting values")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.accentColor)
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 4)
                 }
                 
                 actionArea
