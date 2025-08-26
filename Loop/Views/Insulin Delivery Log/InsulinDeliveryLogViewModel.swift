@@ -224,7 +224,7 @@ class InsulinDeliveryLogViewModel {
     }
     
     private func fetchCurrentBasal(from doses: [DoseEntry]) -> DatedQuantity? {
-        guard let lastDose = doses.last else {
+        guard let lastDose = doses.last(where: { $0.type == .basal || $0.type == .tempBasal }) else {
             return nil
         }
         
@@ -232,7 +232,7 @@ class InsulinDeliveryLogViewModel {
             date: lastDose.startDate,
             quantity: LoopQuantity(
                 unit: .internationalUnitsPerHour,
-                doubleValue: lastDose.netBasalUnitsPerHour
+                doubleValue: lastDose.value
             )
         )
     }
