@@ -224,11 +224,17 @@ class InsulinDeliveryLogViewModel {
     }
     
     private func fetchCurrentBasal(from doses: [DoseEntry]) -> DatedQuantity? {
-        guard let lastDose = doses.last, let scheduledBasalRate = lastDose.scheduledBasalRate else {
+        guard let lastDose = doses.last else {
             return nil
         }
         
-        return DatedQuantity(date: lastDose.startDate, quantity: scheduledBasalRate)
+        return DatedQuantity(
+            date: lastDose.startDate,
+            quantity: LoopQuantity(
+                unit: .internationalUnitsPerHour,
+                doubleValue: lastDose.netBasalUnitsPerHour
+            )
+        )
     }
     
     private func fetchLastAutoBolus(doses: [DoseEntry]) -> DatedQuantity? {
