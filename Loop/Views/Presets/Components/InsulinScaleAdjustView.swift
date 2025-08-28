@@ -199,16 +199,18 @@ extension Double {
     enum StepDirection { case up, down }
     
     func snap(step: Double = 5, direction: StepDirection) -> Double {
-        let remainder = truncatingRemainder(dividingBy: step)
+        let value = self / step
+        let tolerance = 1e-9 // Smooths out floating point math quirks
+        let isExactMultiple = abs(value.rounded() - value) < tolerance
         
-        if remainder == 0 {
+        if isExactMultiple {
             return direction == .up ? self + step : self - step
         } else {
             switch direction {
             case .up:
-                return self + (step - remainder)
+                return ceil(value) * step
             case .down:
-                return self - remainder
+                return floor(value) * step
             }
         }
     }
