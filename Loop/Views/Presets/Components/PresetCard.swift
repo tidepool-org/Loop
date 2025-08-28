@@ -14,6 +14,7 @@ import LoopKit
 struct PresetCard: View {
     
     @Environment(\.colorPalette) private var colorPalette
+    @Environment(\.isEnabled) private var isEnabled
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     
@@ -116,6 +117,7 @@ struct PresetCard: View {
             .fill(Color(UIColor.tertiarySystemBackground))
             .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
             .frame(maxWidth: .infinity))
+        .opacity(isEnabled ? 1 : 0.6)
     }
 }
 

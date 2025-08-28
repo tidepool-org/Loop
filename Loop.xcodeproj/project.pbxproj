@@ -248,8 +248,15 @@
 		84213C8B2D94948900642E78 /* InsulinDeliveryOverview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84213C8A2D94948900642E78 /* InsulinDeliveryOverview.swift */; };
 		84213C8D2D949E8100642E78 /* InsulinDeliveryLogEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84213C8C2D949E8100642E78 /* InsulinDeliveryLogEventRow.swift */; };
 		843F32EA2E2815D400B0B271 /* InsulinDeliveryLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 843F32E92E2815D400B0B271 /* InsulinDeliveryLogViewModel.swift */; };
+		84475DF02E5E644D00FC5E7C /* PresetsTraining.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84475DEF2E5E644D00FC5E7C /* PresetsTraining.swift */; };
+		84475DF22E5E64A700FC5E7C /* PresetsTrainingContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84475DF12E5E64A700FC5E7C /* PresetsTrainingContent.swift */; };
+		84475E0A2E5ECD4F00FC5E7C /* EstimatedReadTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84475E092E5ECD4F00FC5E7C /* EstimatedReadTime.swift */; };
+		84475E0C2E5EDF1800FC5E7C /* InsetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84475E0B2E5EDF1800FC5E7C /* InsetContent.swift */; };
+		84475E0E2E5F00B900FC5E7C /* TimelineSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84475E0D2E5F00B900FC5E7C /* TimelineSteps.swift */; };
+		84475E102E5F870800FC5E7C /* PresetsTrainingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84475E0F2E5F870800FC5E7C /* PresetsTrainingCard.swift */; };
 		847F23432E4543140035C864 /* ActivePresetBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847F23422E4543140035C864 /* ActivePresetBanner.swift */; };
 		8496F7312B5711C4003E672C /* ContentMargin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8496F7302B5711C4003E672C /* ContentMargin.swift */; };
+		849E06232E5E41BA00A71614 /* PresetsTrainingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849E06222E5E41BA00A71614 /* PresetsTrainingView.swift */; };
 		84A7B5502D2D972C00B6D202 /* Image+Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84A7B54F2D2D972C00B6D202 /* Image+Optional.swift */; };
 		84AA81D32A4A27A3000B658B /* LoopWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81D22A4A27A3000B658B /* LoopWidgets.swift */; };
 		84AA81D62A4A28AF000B658B /* WidgetBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81D52A4A28AF000B658B /* WidgetBackground.swift */; };
@@ -264,18 +271,10 @@
 		84D1F1A92D09800700CB271F /* PresetDetentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D1F1A82D09800700CB271F /* PresetDetentView.swift */; };
 		84DEB10D2C18FABA00170734 /* IOSFocusModesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DEB10C2C18FABA00170734 /* IOSFocusModesView.swift */; };
 		84DEF35D2E566757006126F9 /* PresetSymbolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DEF35C2E566757006126F9 /* PresetSymbolView.swift */; };
-		84E8BBAE2CC9791E0078E6CF /* PresetsTrainingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBAD2CC9791E0078E6CF /* PresetsTrainingViewModel.swift */; };
-		84E8BBB12CC979820078E6CF /* PresetsTrainingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBB02CC9793C0078E6CF /* PresetsTrainingView.swift */; };
-		84E8BBB32CC97C480078E6CF /* CreatingYourOwnPresetsContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBB22CC97C480078E6CF /* CreatingYourOwnPresetsContentView.swift */; };
-		84E8BBB52CC98C3F0078E6CF /* PresetsTrainingContentContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBB42CC98C3F0078E6CF /* PresetsTrainingContentContainerView.swift */; };
-		84E8BBB82CC9924B0078E6CF /* HowTheyWorkContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBB72CC9924B0078E6CF /* HowTheyWorkContentView.swift */; };
-		84E8BBBA2CC9925C0078E6CF /* PresetsAndExerciseContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBB92CC9925C0078E6CF /* PresetsAndExerciseContentView.swift */; };
-		84E8BBBC2CC992660078E6CF /* PresetsAndIllnessContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBBB2CC992660078E6CF /* PresetsAndIllnessContentView.swift */; };
 		84E8BBC42CC9B9890078E6CF /* AdjustedGlucoseRangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC32CC9B9800078E6CF /* AdjustedGlucoseRangeView.swift */; };
 		84E8BBC62CC9BF830078E6CF /* PercentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC52CC9BF830078E6CF /* PercentPickerView.swift */; };
 		84E8BBC82CC9D34B0078E6CF /* TherapySettingsExampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC72CC9D34B0078E6CF /* TherapySettingsExampleView.swift */; };
 		84E8BBCA2CCA16290078E6CF /* PresetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC92CCA16290078E6CF /* PresetsView.swift */; };
-		84E8BBCE2CCA1E070078E6CF /* PresetsTrainingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBCD2CCA1E070078E6CF /* PresetsTrainingCard.swift */; };
 		84EC162E2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 84EC162D2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan */; };
 		84F20DFB2D0A56CB0089DF02 /* PresetStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F20DFA2D0A56CB0089DF02 /* PresetStatsView.swift */; };
 		84F20DFD2D0B9C3A0089DF02 /* EditPresetDurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F20DFC2D0B9C3A0089DF02 /* EditPresetDurationView.swift */; };
@@ -1160,8 +1159,15 @@
 		84213C8A2D94948900642E78 /* InsulinDeliveryOverview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinDeliveryOverview.swift; sourceTree = "<group>"; };
 		84213C8C2D949E8100642E78 /* InsulinDeliveryLogEventRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinDeliveryLogEventRow.swift; sourceTree = "<group>"; };
 		843F32E92E2815D400B0B271 /* InsulinDeliveryLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinDeliveryLogViewModel.swift; sourceTree = "<group>"; };
+		84475DEF2E5E644D00FC5E7C /* PresetsTraining.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTraining.swift; sourceTree = "<group>"; };
+		84475DF12E5E64A700FC5E7C /* PresetsTrainingContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingContent.swift; sourceTree = "<group>"; };
+		84475E092E5ECD4F00FC5E7C /* EstimatedReadTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimatedReadTime.swift; sourceTree = "<group>"; };
+		84475E0B2E5EDF1800FC5E7C /* InsetContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsetContent.swift; sourceTree = "<group>"; };
+		84475E0D2E5F00B900FC5E7C /* TimelineSteps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineSteps.swift; sourceTree = "<group>"; };
+		84475E0F2E5F870800FC5E7C /* PresetsTrainingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingCard.swift; sourceTree = "<group>"; };
 		847F23422E4543140035C864 /* ActivePresetBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePresetBanner.swift; sourceTree = "<group>"; };
 		8496F7302B5711C4003E672C /* ContentMargin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentMargin.swift; sourceTree = "<group>"; };
+		849E06222E5E41BA00A71614 /* PresetsTrainingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingView.swift; sourceTree = "<group>"; };
 		84A7B54F2D2D972C00B6D202 /* Image+Optional.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Image+Optional.swift"; sourceTree = "<group>"; };
 		84AA81D22A4A27A3000B658B /* LoopWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopWidgets.swift; sourceTree = "<group>"; };
 		84AA81D52A4A28AF000B658B /* WidgetBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetBackground.swift; sourceTree = "<group>"; };
@@ -1176,18 +1182,10 @@
 		84D1F1A82D09800700CB271F /* PresetDetentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetDetentView.swift; sourceTree = "<group>"; };
 		84DEB10C2C18FABA00170734 /* IOSFocusModesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSFocusModesView.swift; sourceTree = "<group>"; };
 		84DEF35C2E566757006126F9 /* PresetSymbolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetSymbolView.swift; sourceTree = "<group>"; };
-		84E8BBAD2CC9791E0078E6CF /* PresetsTrainingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingViewModel.swift; sourceTree = "<group>"; };
-		84E8BBB02CC9793C0078E6CF /* PresetsTrainingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingView.swift; sourceTree = "<group>"; };
-		84E8BBB22CC97C480078E6CF /* CreatingYourOwnPresetsContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatingYourOwnPresetsContentView.swift; sourceTree = "<group>"; };
-		84E8BBB42CC98C3F0078E6CF /* PresetsTrainingContentContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingContentContainerView.swift; sourceTree = "<group>"; };
-		84E8BBB72CC9924B0078E6CF /* HowTheyWorkContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowTheyWorkContentView.swift; sourceTree = "<group>"; };
-		84E8BBB92CC9925C0078E6CF /* PresetsAndExerciseContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsAndExerciseContentView.swift; sourceTree = "<group>"; };
-		84E8BBBB2CC992660078E6CF /* PresetsAndIllnessContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsAndIllnessContentView.swift; sourceTree = "<group>"; };
 		84E8BBC32CC9B9800078E6CF /* AdjustedGlucoseRangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdjustedGlucoseRangeView.swift; sourceTree = "<group>"; };
 		84E8BBC52CC9BF830078E6CF /* PercentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PercentPickerView.swift; sourceTree = "<group>"; };
 		84E8BBC72CC9D34B0078E6CF /* TherapySettingsExampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TherapySettingsExampleView.swift; sourceTree = "<group>"; };
 		84E8BBC92CCA16290078E6CF /* PresetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsView.swift; sourceTree = "<group>"; };
-		84E8BBCD2CCA1E070078E6CF /* PresetsTrainingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingCard.swift; sourceTree = "<group>"; };
 		84EC162D2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = DIYLoopUnitTestPlan.xctestplan; sourceTree = "<group>"; };
 		84F20DFA2D0A56CB0089DF02 /* PresetStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetStatsView.swift; sourceTree = "<group>"; };
 		84F20DFC2D0B9C3A0089DF02 /* EditPresetDurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPresetDurationView.swift; sourceTree = "<group>"; };
@@ -2518,6 +2516,17 @@
 			path = "Insulin Delivery Log";
 			sourceTree = "<group>";
 		};
+		84475E082E5ECD3400FC5E7C /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				84475E092E5ECD4F00FC5E7C /* EstimatedReadTime.swift */,
+				84475E0B2E5EDF1800FC5E7C /* InsetContent.swift */,
+				84475E0D2E5F00B900FC5E7C /* TimelineSteps.swift */,
+				84475E0F2E5F870800FC5E7C /* PresetsTrainingCard.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		84AA81D12A4A2778000B658B /* Components */ = {
 			isa = PBXGroup;
 			children = (
@@ -2585,12 +2594,10 @@
 				C1AC039D2D6FC8BB004D4D2B /* NewPresetRangeEdit.swift */,
 				C16971F82D1231AB001B7DF6 /* PresetRangeEditor.swift */,
 				84FA9D322CF7FD0D004162B4 /* PresetsHistoryView.swift */,
-				84E8BBB02CC9793C0078E6CF /* PresetsTrainingView.swift */,
 				84E8BBC92CCA16290078E6CF /* PresetsView.swift */,
 				C105095E2D7A310B00118A37 /* ReviewNewPresetView.swift */,
 				84E8BBC22CC9B9780078E6CF /* Components */,
 				84E8BBB62CC990480078E6CF /* Training Content */,
-				847F23422E4543140035C864 /* ActivePresetBanner.swift */,
 			);
 			path = Presets;
 			sourceTree = "<group>";
@@ -2598,10 +2605,10 @@
 		84E8BBB62CC990480078E6CF /* Training Content */ = {
 			isa = PBXGroup;
 			children = (
-				84E8BBB22CC97C480078E6CF /* CreatingYourOwnPresetsContentView.swift */,
-				84E8BBB72CC9924B0078E6CF /* HowTheyWorkContentView.swift */,
-				84E8BBB92CC9925C0078E6CF /* PresetsAndExerciseContentView.swift */,
-				84E8BBBB2CC992660078E6CF /* PresetsAndIllnessContentView.swift */,
+				84475E082E5ECD3400FC5E7C /* Components */,
+				849E06222E5E41BA00A71614 /* PresetsTrainingView.swift */,
+				84475DEF2E5E644D00FC5E7C /* PresetsTraining.swift */,
+				84475DF12E5E64A700FC5E7C /* PresetsTrainingContent.swift */,
 			);
 			path = "Training Content";
 			sourceTree = "<group>";
@@ -2617,15 +2624,14 @@
 				C105095C2D7A1DB300118A37 /* CardSection.swift */,
 				84C170EC2CCA361F0098E52F /* ImpactView.swift */,
 				84E8BBC32CC9B9800078E6CF /* AdjustedGlucoseRangeView.swift */,
-				84E8BBCD2CCA1E070078E6CF /* PresetsTrainingCard.swift */,
 				84E8BBC52CC9BF830078E6CF /* PercentPickerView.swift */,
 				84E8BBC72CC9D34B0078E6CF /* TherapySettingsExampleView.swift */,
-				84E8BBB42CC98C3F0078E6CF /* PresetsTrainingContentContainerView.swift */,
 				84C170EE2CCA37680098E52F /* PresetCard.swift */,
 				84D1F1A82D09800700CB271F /* PresetDetentView.swift */,
 				84F20DFA2D0A56CB0089DF02 /* PresetStatsView.swift */,
 				84F20DFC2D0B9C3A0089DF02 /* EditPresetDurationView.swift */,
 				84DEF35C2E566757006126F9 /* PresetSymbolView.swift */,
+				847F23422E4543140035C864 /* ActivePresetBanner.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -2704,7 +2710,6 @@
 				1D49795724E7289700948F05 /* ServicesViewModel.swift */,
 				C174233B259BEB0F00399C9D /* ManualEntryDoseViewModel.swift */,
 				1DB619AB270BAD3D006C9D07 /* VersionUpdateViewModel.swift */,
-				84E8BBAD2CC9791E0078E6CF /* PresetsTrainingViewModel.swift */,
 			);
 			path = "View Models";
 			sourceTree = "<group>";
@@ -3600,7 +3605,6 @@
 				C14F68C92D4AC54300BC3B8D /* DurationPickerView.swift in Sources */,
 				14C9706E2C5A83AF00E8A01B /* IOBChartView.swift in Sources */,
 				E95D380324EADF36005E2F50 /* CarbStoreProtocol.swift in Sources */,
-				84E8BBCE2CCA1E070078E6CF /* PresetsTrainingCard.swift in Sources */,
 				B470F5842AB22B5100049695 /* StatefulPluggable.swift in Sources */,
 				E98A55ED24EDD6380008715D /* LatestStoredSettingsProvider.swift in Sources */,
 				C1FB428F217921D600FAB378 /* PumpManagerUI.swift in Sources */,
@@ -3618,7 +3622,6 @@
 				1452F4AD2A851F8800F8B9E4 /* HowAbsorptionTimeWorksView.swift in Sources */,
 				C16575712538A36B004AE16E /* CGMStalenessMonitor.swift in Sources */,
 				14C970822C5C2EC100E8A01B /* FavoriteFoodInsightsView.swift in Sources */,
-				84E8BBB12CC979820078E6CF /* PresetsTrainingView.swift in Sources */,
 				1D080CBD2473214A00356610 /* AlertStore.xcdatamodeld in Sources */,
 				C11BD0552523CFED00236B08 /* SimpleBolusViewModel.swift in Sources */,
 				C1F2CAAA2B76B3EE00D7F581 /* TempBasalRecommendation.swift in Sources */,
@@ -3626,17 +3629,21 @@
 				149A28BB2A853E5100052EDF /* CarbEntryViewModel.swift in Sources */,
 				C19008FE25225D3900721625 /* SimpleBolusCalculator.swift in Sources */,
 				C1AC039C2D6E7551004D4D2B /* ExistingPresetRangeEdit.swift in Sources */,
+				84475E0C2E5EDF1800FC5E7C /* InsetContent.swift in Sources */,
 				C1F8B243223E73FD00DD66CF /* BolusProgressTableViewCell.swift in Sources */,
 				89D6953E23B6DF8A002B3066 /* PotentialCarbEntryTableViewCell.swift in Sources */,
+				84475E0A2E5ECD4F00FC5E7C /* EstimatedReadTime.swift in Sources */,
 				89CA2B30226C0161004D9350 /* DirectoryObserver.swift in Sources */,
 				C18859AC2AF29BE50010F21F /* TemporaryPresetsManager.swift in Sources */,
 				84E8BBC62CC9BF830078E6CF /* PercentPickerView.swift in Sources */,
+				84475E0E2E5F00B900FC5E7C /* TimelineSteps.swift in Sources */,
 				84F20DFB2D0A56CB0089DF02 /* PresetStatsView.swift in Sources */,
 				1DA649A7244126CD00F61E75 /* UserNotificationAlertScheduler.swift in Sources */,
 				C16971F92D1231B5001B7DF6 /* PresetRangeEditor.swift in Sources */,
 				439A7942211F631C0041B75F /* RootNavigationController.swift in Sources */,
 				149A28BD2A853E6C00052EDF /* CarbEntryView.swift in Sources */,
 				4F11D3C020DCBEEC006E072C /* GlucoseBackfillRequestUserInfo.swift in Sources */,
+				849E06232E5E41BA00A71614 /* PresetsTrainingView.swift in Sources */,
 				84F20DFD2D0B9C3A0089DF02 /* EditPresetDurationView.swift in Sources */,
 				89E267FC2292456700A3F2AF /* FeatureFlags.swift in Sources */,
 				43A567691C94880B00334FAC /* LoopDataManager.swift in Sources */,
@@ -3646,11 +3653,10 @@
 				43B260491ED248FB008CAA77 /* CarbEntryTableViewCell.swift in Sources */,
 				142CB75B2A60BFC30075748A /* FavoriteFoodsView.swift in Sources */,
 				A9D5C5B625DC6C6A00534873 /* LoopAppManager.swift in Sources */,
+				84475DF22E5E64A700FC5E7C /* PresetsTrainingContent.swift in Sources */,
 				4302F4E11D4E9C8900F0FCAF /* TextFieldTableViewController.swift in Sources */,
-				84E8BBBA2CC9925C0078E6CF /* PresetsAndExerciseContentView.swift in Sources */,
 				C16F51192B891DB600EFD7A1 /* StoredDataAlgorithmInput.swift in Sources */,
 				1452F4AB2A851EDF00F8B9E4 /* FavoriteFoodAddEditView.swift in Sources */,
-				84E8BBAE2CC9791E0078E6CF /* PresetsTrainingViewModel.swift in Sources */,
 				C1742332259BEADC00399C9D /* ManualEntryDoseView.swift in Sources */,
 				43F64DD91D9C92C900D24DC6 /* TitleSubtitleTableViewCell.swift in Sources */,
 				84213C8D2D949E8100642E78 /* InsulinDeliveryLogEventRow.swift in Sources */,
@@ -3672,7 +3678,6 @@
 				C17824A01E19CF9800D9D25C /* GlucoseThresholdTableViewController.swift in Sources */,
 				4372E487213C86240068E043 /* SampleValue.swift in Sources */,
 				14C970682C5991CD00E8A01B /* LoopChartView.swift in Sources */,
-				84E8BBB52CC98C3F0078E6CF /* PresetsTrainingContentContainerView.swift in Sources */,
 				437CEEE41CDE5C0A003C8C80 /* UIImage.swift in Sources */,
 				C1201E2C23ECDBD0002DA84A /* WatchContextRequestUserInfo.swift in Sources */,
 				1D49795824E7289700948F05 /* ServicesViewModel.swift in Sources */,
@@ -3713,7 +3718,6 @@
 				A9347F3124E7521800C99C34 /* CarbBackfillRequestUserInfo.swift in Sources */,
 				C105095D2D7A1DB700118A37 /* CardSection.swift in Sources */,
 				A9CBE458248AB564008E7BA2 /* DoseStore+SimulatedCoreData.swift in Sources */,
-				84E8BBBC2CC992660078E6CF /* PresetsAndIllnessContentView.swift in Sources */,
 				897A5A9924C22DE800C4E71D /* BolusEntryViewModel.swift in Sources */,
 				4374B5EF209D84BF00D17AA8 /* OSLog.swift in Sources */,
 				1DB619AC270BAD3D006C9D07 /* VersionUpdateViewModel.swift in Sources */,
@@ -3755,7 +3759,6 @@
 				C1FB428C217806A400FAB378 /* StateColorPalette.swift in Sources */,
 				B43CF07E29434EC4008A520B /* HowMuteAlertWorkView.swift in Sources */,
 				14C970842C5C2FB400E8A01B /* HowCarbEffectsWorksView.swift in Sources */,
-				84E8BBB32CC97C480078E6CF /* CreatingYourOwnPresetsContentView.swift in Sources */,
 				1D6B1B6726866D89009AC446 /* AlertPermissionsChecker.swift in Sources */,
 				C16F511B2B89363A00EFD7A1 /* SimpleInsulinDose.swift in Sources */,
 				4F08DE8F1E7BB871006741EA /* CollectionType+Loop.swift in Sources */,
@@ -3803,6 +3806,7 @@
 				84E8BBC82CC9D34B0078E6CF /* TherapySettingsExampleView.swift in Sources */,
 				1D05219B2469E9DF000EBBDE /* StoredAlert.swift in Sources */,
 				E9B0802B253BBDFF00BAD8F8 /* IntentExtensionInfo.swift in Sources */,
+				84475E102E5F870800FC5E7C /* PresetsTrainingCard.swift in Sources */,
 				84FA9D332CF7FD0D004162B4 /* PresetsHistoryView.swift in Sources */,
 				C1E3862628247C6100F561A4 /* StoredLoopNotRunningNotification.swift in Sources */,
 				A97F250825E056D500F0EE19 /* OnboardingManager.swift in Sources */,
@@ -3817,7 +3821,6 @@
 				892A5D59222F0A27008961AB /* Debug.swift in Sources */,
 				431A8C401EC6E8AB00823B9C /* CircleMaskView.swift in Sources */,
 				1D05219D2469F1F5000EBBDE /* AlertStore.swift in Sources */,
-				84E8BBB82CC9924B0078E6CF /* HowTheyWorkContentView.swift in Sources */,
 				14C9706A2C5A833100E8A01B /* CarbEffectChartView.swift in Sources */,
 				439897371CD2F80600223065 /* AnalyticsServicesManager.swift in Sources */,
 				14D906F42A846510006EB79A /* FavoriteFoodsViewModel.swift in Sources */,
@@ -3827,6 +3830,7 @@
 				A9F66FC3247F451500096EA7 /* UIDevice+Loop.swift in Sources */,
 				84E8BBCA2CCA16290078E6CF /* PresetsView.swift in Sources */,
 				439706E622D2E84900C81566 /* PredictionSettingTableViewCell.swift in Sources */,
+				84475DF02E5E644D00FC5E7C /* PresetsTraining.swift in Sources */,
 				430D85891F44037000AF2D4F /* HUDViewTableViewCell.swift in Sources */,
 				43A51E211EB6DBDD000736CC /* LoopChartsTableViewController.swift in Sources */,
 				84A7B5502D2D972C00B6D202 /* Image+Optional.swift in Sources */,

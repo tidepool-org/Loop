@@ -50,12 +50,12 @@ struct PresetsView: View {
         case presetsHistory
     }
 
-
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.settingsManager) private var settingsManager
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
-
+    
+    @State private var trainingCompletion: PresetsTrainingCompletion = PresetsTrainingCompletion()
     @State private var editMode: EditMode = .inactive
     @State private var showingMenu: Bool = false
     @State private var showTraining: Bool = false
@@ -65,7 +65,6 @@ struct PresetsView: View {
 
     @AppStorage("presetsSortAscending") private var presetsSortAscending: Bool = true
     @AppStorage("presetsSortOrder") private var selectedSortOption: PresetSortOption = .name
-    @AppStorage("hasCompletedPresetsTraining") private var hasCompletedTraining: Bool = false
 
     var isDescending: Bool { !presetsSortAscending }
 
@@ -92,10 +91,6 @@ struct PresetsView: View {
         NavigationStack(path: $navigationPath) {
             ScrollView {
                 VStack(spacing: 20) {
-                    if !hasCompletedTraining {
-                        PresetsTrainingCard(showTraining: $showTraining)
-                    }
-                    
                     if let activePreset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == temporaryPresetsManager.activePreset?.id })
                     {
                         PresetCard(
@@ -112,7 +107,7 @@ struct PresetsView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             Text("All Presets")
-                                .font(.title2.bold())
+                                .font(.headline.weight(.semibold))
                                 .accessibilityIdentifier("text_AllPresets")
                             Spacer()
                             
@@ -128,10 +123,18 @@ struct PresetsView: View {
                             }) {
                                 Image(systemName: "plus")
                             }
-                            .disabled(!hasCompletedTraining)
+                            .disabled(!trainingCompletion.isComplete)
                         }
+                        .padding(.horizontal, 10)
                         
                         LazyVStack(spacing: 12) {
+                            if !trainingCompletion.isComplete {
+                                PresetsTrainingCard(trainingCompletion: trainingCompletion)
+                                    .onTapGesture {
+                                        showTraining = true
+                                    }
+                            }
+                            
                             ForEach(presetsSorted) { preset in
                                 PresetCard(
                                     preset,
@@ -142,6 +145,7 @@ struct PresetsView: View {
                                 .onTapGesture {
                                     activeSheet = .presetDetent(preset)
                                 }
+                                .disabled(preset.id.hasPrefix("activity-") && trainingCompletion.completedChapters[.introduction] != true)
                             }
                         }
                     }
@@ -149,7 +153,8 @@ struct PresetsView: View {
                     // Support Section
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Support")
-                            .font(.title2.bold())
+                            .font(.headline.weight(.semibold))
+                            .padding(.horizontal, 10)
                         
                         NavigationLink(value: NavigationDestination.presetsHistory) {
                             HStack {
@@ -172,7 +177,7 @@ struct PresetsView: View {
                             .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
                             .frame(maxWidth: .infinity))
                         
-                        if hasCompletedTraining {
+                        if trainingCompletion.isComplete {
                             Button {
                                 showTraining = true
                             } label: {
@@ -194,7 +199,6 @@ struct PresetsView: View {
                     }
                 }
                 .padding()
-                .animation(.default, value: hasCompletedTraining)
                 .animation(.default, value: temporaryPresetsManager.activeOverride)
             }
             .background(Color(UIColor.secondarySystemBackground))
@@ -205,6 +209,11 @@ struct PresetsView: View {
                 case .presetsHistory:
                     PresetsHistoryView()
                 }
+            }
+        }
+        .onAppear {
+            if trainingCompletion.completedChapters[.entry] != true {
+                showTraining = true
             }
         }
         .sheet(item: $activeSheet) { sheet in
@@ -237,9 +246,7 @@ struct PresetsView: View {
             }
         }
         .sheet(isPresented: $showTraining) {
-            PresetsTrainingView {
-                hasCompletedTraining = true
-            }
+            PresetsTrainingView(trainingCompletion: trainingCompletion)
         }
         .sheet(isPresented: $presentCreateView) {
             CreatePresetView()

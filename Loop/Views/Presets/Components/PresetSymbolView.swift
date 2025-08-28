@@ -37,6 +37,7 @@ struct PresetSymbolView: View {
                     .font(.system(size: UIFontMetrics.default.scaledValue(for: iconSize)))
             }
         }
+        .fontDesign(.monospaced)
     }
 }
 
