@@ -41,7 +41,7 @@ protocol BolusEntryViewModelDelegate: AnyObject {
         manualGlucoseSample: NewGlucoseSample?,
         potentialCarbEntry: NewCarbEntry?,
         originalCarbEntry: StoredCarbEntry?,
-        ignoringOverride: Bool
+        truncatingActiveOverride: Bool
     ) async throws -> ManualBolusRecommendation?
 
     func generatePrediction(input: StoredDataAlgorithmInput) throws -> [PredictedGlucoseValue]
@@ -590,7 +590,7 @@ final class BolusEntryViewModel: ObservableObject {
             recommendation = try await computeBolusRecommendation()
 
             if let recommendation, deliveryDelegate != nil {
-                if let originalAmount = try await computeBolusRecommendation(ignoringOverride: true)?.amount {
+                if let originalAmount = try await computeBolusRecommendation(truncatingActiveOverride: true)?.amount {
                     presetEffectedRecommendation = PresetEffectedRecommendation(originalAmount: originalAmount, recommendedAmount: recommendation.amount)
                 }
                 recommendedBolus = LoopQuantity(unit: .internationalUnit, doubleValue: recommendation.amount)
@@ -641,7 +641,7 @@ final class BolusEntryViewModel: ObservableObject {
         }
     }
 
-    private func computeBolusRecommendation(ignoringOverride: Bool = false) async throws -> ManualBolusRecommendation? {
+    private func computeBolusRecommendation(truncatingActiveOverride: Bool = false) async throws -> ManualBolusRecommendation? {
         guard let delegate else {
             return nil
         }
@@ -650,7 +650,7 @@ final class BolusEntryViewModel: ObservableObject {
             manualGlucoseSample: manualGlucoseSample,
             potentialCarbEntry: potentialCarbEntry,
             originalCarbEntry: originalCarbEntry,
-            ignoringOverride: ignoringOverride
+            truncatingActiveOverride: truncatingActiveOverride
         )
     }
 

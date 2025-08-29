@@ -668,10 +668,19 @@ final class LoopDataManager: ObservableObject {
         manualGlucoseSample: NewGlucoseSample? = nil,
         potentialCarbEntry: NewCarbEntry? = nil,
         originalCarbEntry: StoredCarbEntry? = nil,
-        ignoringOverride: Bool = false
+        truncatingActiveOverride: Bool = false
     ) async throws -> ManualBolusRecommendation? {
 
-        var input = try await self.fetchData(for: now(), presumePresetEndingNow: ignoringOverride || potentialCarbEntry != nil)
+        var endingPremealOverride = false
+
+        if potentialCarbEntry != nil,
+            let activeOverride = temporaryPresetsManager.activeOverride,
+            activeOverride.context == .preMeal
+        {
+            endingPremealOverride = true
+        }
+
+        var input = try await self.fetchData(for: now(), presumePresetEndingNow: truncatingActiveOverride || endingPremealOverride)
             .addingGlucoseSample(sample: manualGlucoseSample?.asStoredGlucoseSample)
             .removingCarbEntry(carbEntry: originalCarbEntry)
             .addingCarbEntry(carbEntry: potentialCarbEntry?.asStoredCarbEntry)
