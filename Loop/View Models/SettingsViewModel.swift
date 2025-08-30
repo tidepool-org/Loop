@@ -77,7 +77,6 @@ class SettingsViewModel {
     let servicesViewModel: ServicesViewModel
     let criticalEventLogExportViewModel: CriticalEventLogExportViewModel
     let therapySettings: () -> TherapySettings
-    let sensitivityOverridesEnabled: Bool
     var isOnboardingComplete: Bool
     let therapySettingsViewModelDelegate: TherapySettingsViewModelDelegate?
     let presetHistory: TemporaryScheduleOverrideHistory
@@ -107,7 +106,6 @@ class SettingsViewModel {
 
     
     var preMealGuardrail: Guardrail<LoopQuantity>?
-    var legacyWorkoutPresetGuardrail: Guardrail<LoopQuantity>?
 
     @ObservationIgnored weak var favoriteFoodInsightsDelegate: FavoriteFoodInsightsViewModelDelegate?
 
@@ -142,7 +140,6 @@ class SettingsViewModel {
                 servicesViewModel: ServicesViewModel,
                 criticalEventLogExportViewModel: CriticalEventLogExportViewModel,
                 therapySettings: @escaping () -> TherapySettings,
-                sensitivityOverridesEnabled: Bool,
                 initialDosingEnabled: Bool,
                 automaticDosingStatus: AutomaticDosingStatus,
                 automaticDosingStrategy: AutomaticDosingStrategy,
@@ -163,7 +160,6 @@ class SettingsViewModel {
         self.servicesViewModel = servicesViewModel
         self.criticalEventLogExportViewModel = criticalEventLogExportViewModel
         self.therapySettings = therapySettings
-        self.sensitivityOverridesEnabled = sensitivityOverridesEnabled
         self.closedLoopPreference = initialDosingEnabled
         self.automaticDosingStatus = automaticDosingStatus
         self.automaticDosingStrategy = automaticDosingStrategy
@@ -232,7 +228,6 @@ extension SettingsViewModel {
                                  servicesViewModel: ServicesViewModel.preview,
                                  criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory()),
                                  therapySettings: { TherapySettings() },
-                                 sensitivityOverridesEnabled: false,
                                  initialDosingEnabled: true,
                                  automaticDosingStatus: AutomaticDosingStatus(automaticDosingEnabled: true, isAutomaticDosingAllowed: true),
                                  automaticDosingStrategy: .automaticBolus,

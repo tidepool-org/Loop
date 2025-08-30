@@ -395,15 +395,8 @@ struct InsulinDeliveryLogEventRow: View {
                         .foregroundStyle(.secondary)
                     
                     HStack(spacing: 6) {
-                        switch icon {
-                        case .emoji(let emoji):
-                            Text(emoji)
-                        case .image(let name, let iconColor):
-                            Image(name)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .foregroundColor(iconColor)
-                                .frame(width: UIFontMetrics.default.scaledValue(for: 20), height: UIFontMetrics.default.scaledValue(for: 20))
+                        if let icon, !icon.isEmpty {
+                            PresetSymbolView(icon)
                         }
 
                         Text(name)

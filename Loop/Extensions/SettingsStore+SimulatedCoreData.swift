@@ -140,7 +140,6 @@ fileprivate extension StoredSettings {
                               dosingEnabled: true,
                               glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
                               preMealTargetRange: DoubleRange(minValue: 80.0, maxValue: 90.0).quantityRange(for: .milligramsPerDeciliter),
-                              workoutTargetRange: DoubleRange(minValue: 150.0, maxValue: 160.0).quantityRange(for: .milligramsPerDeciliter),
                               overridePresets: [],
                               maximumBasalRatePerHour: 3.5,
                               maximumBolus: 10.0,

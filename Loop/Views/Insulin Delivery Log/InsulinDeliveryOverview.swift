@@ -19,8 +19,8 @@ struct InsulinDeliveryOverview: View {
     enum State: Hashable {
         enum AutomatedBasalStatus: Hashable {
             case scheduled
-            case moreThanScheduled
-            case lessThanScheduled
+            case increased
+            case decreased
         }
         
         case automationOn(basalStatus: AutomatedBasalStatus, preset: SelectablePreset?)
@@ -63,9 +63,9 @@ struct InsulinDeliveryOverview: View {
                     switch basalStatus {
                     case .scheduled:
                         Text(Image(systemName: "arrow.right.square.fill"))
-                    case .moreThanScheduled:
+                    case .increased:
                         Text(Image(systemName: "arrow.up.square.fill"))
-                    case .lessThanScheduled:
+                    case .decreased:
                         Text(Image(systemName: "arrow.down.square.fill"))
                     }
                 }
@@ -94,11 +94,11 @@ struct InsulinDeliveryOverview: View {
         case .automationOn(let basalStatus, _):
             switch basalStatus {
             case .scheduled:
-                Text("Scheduled basal")
-            case .moreThanScheduled:
-                Text("More than scheduled")
-            case .lessThanScheduled:
-                Text("Less than scheduled")
+                Text("Scheduled Basal")
+            case .increased:
+                Text("Increased Delivery")
+            case .decreased:
+                Text("Decreased Delivery")
             }
         case .automationOff:
             Text("Scheduled basal")
@@ -119,12 +119,12 @@ struct InsulinDeliveryOverview: View {
                 switch basalStatus {
                 case .scheduled:
                     Text("A preset with \(preset.insulinNeedsScaleFactor.formatted(.percent)) overall insulin is on. This is your new preset baseline and it overrides your Scheduled Basal.")
-                case .moreThanScheduled:
+                case .increased:
                     Text("A preset with \(preset.insulinNeedsScaleFactor.formatted(.percent)) overall insulin is on. The system is currently delivering more than your preset baseline.")
-                case .lessThanScheduled:
+                case .decreased:
                     Text("A preset with \(preset.insulinNeedsScaleFactor.formatted(.percent)) overall insulin is on. The system is currently delivering less than your preset baseline.")
                 }
-            } else if basalStatus == .moreThanScheduled {
+            } else if basalStatus == .increased {
                 Text("Includes basal and automated boluses")
             } else {
                 nil
@@ -274,7 +274,7 @@ let preset = SelectablePreset.custom(TemporaryPreset(symbol: "🏃", name: "Runn
 
 #Preview("Automated Delivery (less than scheduled)", traits: .sizeThatFitsLayout) {
     InsulinDeliveryOverview(
-        state: .automationOn(basalStatus: .lessThanScheduled, preset: nil),
+        state: .automationOn(basalStatus: .decreased, preset: nil),
         time: time,
         currentBasalRate: currentBasalRate,
         lastAutoBolus: lastAutoBolus
@@ -285,7 +285,7 @@ let preset = SelectablePreset.custom(TemporaryPreset(symbol: "🏃", name: "Runn
 
 #Preview("Automated Delivery (more than scheduled)", traits: .sizeThatFitsLayout) {
     InsulinDeliveryOverview(
-        state: .automationOn(basalStatus: .moreThanScheduled, preset: nil),
+        state: .automationOn(basalStatus: .increased, preset: nil),
         time: time,
         currentBasalRate: currentBasalRate,
         lastAutoBolus: nil
@@ -307,7 +307,7 @@ let preset = SelectablePreset.custom(TemporaryPreset(symbol: "🏃", name: "Runn
 
 #Preview("Preset (less than scheduled)", traits: .sizeThatFitsLayout) {
     InsulinDeliveryOverview(
-        state: .automationOn(basalStatus: .lessThanScheduled, preset: preset),
+        state: .automationOn(basalStatus: .decreased, preset: preset),
         time: time,
         currentBasalRate: currentBasalRate,
         lastAutoBolus: lastAutoBolus
@@ -318,7 +318,7 @@ let preset = SelectablePreset.custom(TemporaryPreset(symbol: "🏃", name: "Runn
 
 #Preview("Preset (more than scheduled)", traits: .sizeThatFitsLayout) {
     InsulinDeliveryOverview(
-        state: .automationOn(basalStatus: .moreThanScheduled, preset: preset),
+        state: .automationOn(basalStatus: .increased, preset: preset),
         time: time,
         currentBasalRate: currentBasalRate,
         lastAutoBolus: lastAutoBolus

@@ -278,22 +278,6 @@ class AlertManagerTests: XCTestCase {
         XCTAssertEqual(mockAlertStore.retractedAlertDate, now)
     }
 
-    func testScheduleAlertForWorkoutReminder() async {
-        mockModalScheduler.alertScheduledExpectation = expectation(description: "modal alert scheduled")
-        alertManager.presetActivated(context: .legacyWorkout, duration: .indefinite)
-        await fulfillment(of: [mockModalScheduler.alertScheduledExpectation!], timeout: 1)
-        XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockModalScheduler.scheduledAlert?.identifier)
-        XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockUserNotificationScheduler.scheduledAlert?.identifier)
-        XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockAlertStore.issuedAlert?.identifier)
-
-        mockModalScheduler.alertUnscheduledExpectation = expectation(description: "modal alert unscheduled")
-        alertManager.presetDeactivated(context: .legacyWorkout)
-        await fulfillment(of: [mockModalScheduler.alertUnscheduledExpectation!], timeout: 1)
-        XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockModalScheduler.unscheduledAlertIdentifier)
-        XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockUserNotificationScheduler.unscheduledAlertIdentifier)
-        XCTAssertEqual(AlertManager.workoutOverrideReminderAlertIdentifier, mockAlertStore.retractededAlertIdentifier)
-    }
-
     func testLoopDidCompleteRecordsNotifications() async {
         await alertManager.loopDidComplete()
         XCTAssertEqual(4, UserDefaults.appGroup?.loopNotRunningNotifications.count)

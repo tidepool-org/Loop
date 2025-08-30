@@ -51,22 +51,6 @@ struct LoopSettingsUserInfo: Equatable {
     public func nonPreMealOverrideEnabled(at date: Date = Date()) -> Bool {
         return scheduleOverride?.isActive(at: date) == true
     }
-
-    public mutating func legacyWorkoutOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
-        guard let legacyWorkoutTargetRange = loopSettings.legacyWorkoutTargetRange else {
-            return nil
-        }
-
-        return TemporaryScheduleOverride(
-            context: .legacyWorkout,
-            settings: TemporaryPresetSettings(targetRange: legacyWorkoutTargetRange),
-            startDate: date,
-            duration: duration.isInfinite ? .indefinite : .finite(duration),
-            enactTrigger: .local,
-            syncIdentifier: UUID()
-        )
-    }
-
 }
 
 

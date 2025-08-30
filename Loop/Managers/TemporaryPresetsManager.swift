@@ -163,12 +163,12 @@ class TemporaryPresetsManager {
         switch override.context {
         case .preMeal:
             return .preMeal(range: range!)
-        case .legacyWorkout:
-            return .legacyWorkout(range: range!, duration: override.duration.presetDurationType)
+        case .activity(let activity):
+            return .activity(activity)
         case .custom:
             let preset = TemporaryPreset(
-                id: override.syncIdentifier,
-                symbol: "",
+                id: override.syncIdentifier.uuidString,
+                symbol: nil,
                 name: "Single Use Preset",
                 settings: override.settings,
                 duration: override.duration
@@ -192,15 +192,19 @@ class TemporaryPresetsManager {
             presets.append(.preMeal(range: preMealTargetRange))
         }
 
-        if let legacyWorkoutTargetRange = settings.workoutTargetRange {
-            let duration = settings.workoutDefaultDuration ?? .indefinite
-            presets.append(.legacyWorkout(
-                range: legacyWorkoutTargetRange,
-                duration: duration.presetDurationType
-            ))
+        presets.append(contentsOf: settings.overridePresets.map { override in
+            if override.id.hasPrefix("activity-"), let activityPreset = ActivityPreset(preset: override) {
+                return .activity(activityPreset)
+            } else {
+                return .custom(override)
+            }
+        })
+        
+        ActivityPreset.ActivityType.allCases.forEach { activityType in
+            if !settings.overridePresets.contains(where: { $0.id == activityType.id }) {
+                presets.append(.activity(ActivityPreset(activityType: activityType, preset: activityType.defaultPreset(duration: .finite(.minutes(90))))))
+            }
         }
-
-        presets.append(contentsOf: settings.overridePresets.map { .custom($0)} )
 
         return presets
     }
@@ -227,11 +231,6 @@ class TemporaryPresetsManager {
         } else if override == preMealOverride {
             clearOverride(matching: .preMeal)
         }
-    }
-
-    public var isScheduleOverrideInfiniteWorkout: Bool {
-        guard let scheduleOverride = scheduleOverride else { return false }
-        return scheduleOverride.context == .legacyWorkout && scheduleOverride.duration.isInfinite
     }
 
     public func effectiveGlucoseTargetRangeSchedule(presumingMealEntry: Bool = false) -> GlucoseRangeSchedule?  {
@@ -298,26 +297,6 @@ class TemporaryPresetsManager {
         )
     }
 
-    public func enableLegacyWorkoutOverride(at date: Date = Date(), for duration: TemporaryScheduleOverride.Duration) {
-        scheduleOverride = legacyWorkoutOverride(beginningAt: date, for: duration)
-        preMealOverride = nil
-    }
-
-    public func legacyWorkoutOverride(beginningAt date: Date = Date(), for duration: TemporaryScheduleOverride.Duration) -> TemporaryScheduleOverride? {
-        guard let legacyWorkoutTargetRange = settingsProvider.settings.workoutTargetRange else {
-            return nil
-        }
-
-        return TemporaryScheduleOverride(
-            context: .legacyWorkout,
-            settings: TemporaryPresetSettings(targetRange: legacyWorkoutTargetRange),
-            startDate: date,
-            duration: duration,
-            enactTrigger: .local,
-            syncIdentifier: UUID()
-        )
-    }
-
     func startPreset(withIdentifier identifier: String) {
         guard let preset = selectablePresets.first(where: { $0.id == identifier }) else {
             log.error("Unable to find preset with identifier ${public}@", identifier)
@@ -331,10 +310,10 @@ class TemporaryPresetsManager {
         switch preset {
         case .custom(let temporaryScheduleOverridePreset):
             scheduleOverride = temporaryScheduleOverridePreset.createOverride(enactTrigger: .local)
+        case .activity(let activity):
+            scheduleOverride = activity.preset.createOverride(enactTrigger: .local)
         case .preMeal:
             enablePreMealOverride(for: .hours(1))
-        case .legacyWorkout(_, let duration):
-            enableLegacyWorkoutOverride(for: duration.presetDuration)
         }
     }
 
@@ -425,8 +404,8 @@ class TemporaryPresetsManager {
                 var id: String
                 switch enact.context {
                     case .preMeal: id = "preMeal"
-                    case .legacyWorkout: id = "legacyWorkout"
-                    case .preset(let preset): id = preset.id.uuidString
+                    case .activity(let activity): id = activity.id
+                    case .preset(let preset): id = preset.id
                     case .custom: continue
                 }
                 lastUsed![id] = max(lastUsed![id] ?? .distantPast, enact.startDate)
@@ -451,7 +430,7 @@ class TemporaryPresetsManager {
 
         if let preset {
 
-            let nextScheduledPresetReminderIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: preset.id.uuidString)
+            let nextScheduledPresetReminderIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: preset.id)
             await alertIssuer?.retractAlert(identifier: nextScheduledPresetReminderIdentifier)
 
             let nextScheduledTime = preset.nextScheduledStartAfter(now)!
@@ -483,7 +462,7 @@ class TemporaryPresetsManager {
                                         body: body,
                                         actions: actions)
 
-            let metadata: Alert.Metadata = ["presetId": Alert.MetadataValue(preset.id.uuidString)]
+            let metadata: Alert.Metadata = ["presetId": Alert.MetadataValue(preset.id)]
 
             let alert = Alert(
                 identifier: nextScheduledPresetReminderIdentifier,

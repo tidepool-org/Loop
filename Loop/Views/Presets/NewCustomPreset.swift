@@ -110,13 +110,31 @@ extension NewCustomPreset {
             targetRange: correctionRange,
             insulinNeedsScaleFactor: insulinMultiplier
         )
+        
+        let split = name.splitSymbolAndTitle()
+        var symbol: PresetSymbol? = nil
+        if let emoji = split.emoji {
+            symbol = .emoji(emoji)
+        }
 
         return TemporaryPreset(
-            symbol: "",
-            name: name,
+            symbol: symbol,
+            name: split.name,
             settings: settings,
             duration: overrideDuration,
             scheduleStartDate: startDate
         )
+    }
+}
+
+private extension String {
+    func splitSymbolAndTitle() -> (emoji: String?, name: String) {
+        let trimmed = trimmingCharacters(in: .whitespaces)
+        if let first = trimmed.first, first.isEmoji {
+            let name = String(dropFirst()).trimmingCharacters(in: .whitespaces)
+            return (emoji: String(first), name: name)
+        } else {
+            return (emoji: nil, name: trimmed)
+        }
     }
 }

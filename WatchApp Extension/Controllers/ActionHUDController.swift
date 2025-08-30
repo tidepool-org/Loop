@@ -42,11 +42,7 @@ final class ActionHUDController: HUDInterfaceController {
         super.willActivate()
 
         // Update the override button description based on the feature flag; this cannot be done earlier than `-willActivate` (e.g. didSet on the IBOutlet is too soon)
-        if FeatureFlags.sensitivityOverridesEnabled {
-            overrideButtonLabel?.setText(NSLocalizedString("Preset", comment: "The text for the Watch button for enabling a custom preset"))
-        } else {
-            overrideButtonLabel?.setText(NSLocalizedString("Workout", comment: "The text for the Watch button for enabling workout mode"))
-        }
+        overrideButtonLabel?.setText(NSLocalizedString("Preset", comment: "The text for the Watch button for enabling a custom preset"))
 
         let userActivity = NSUserActivity.forViewLoopStatus()
         if #available(watchOSApplicationExtension 5.0, *) {
@@ -97,11 +93,7 @@ final class ActionHUDController: HUDInterfaceController {
     }
     
     private var canEnableOverride: Bool {
-        if FeatureFlags.sensitivityOverridesEnabled {
-            return !loopManager.watchInfo.loopSettings.overridePresets.isEmpty
-        } else {
-            return loopManager.watchInfo.loopSettings.legacyWorkoutTargetRange != nil
-        }
+        !loopManager.watchInfo.loopSettings.overridePresets.isEmpty
     }
 
     private func updateForPreMeal(enabled: Bool) {
@@ -118,7 +110,7 @@ final class ActionHUDController: HUDInterfaceController {
             overrideButtonGroup.turnOff()
         case .preset?, .custom?:
             overrideButtonGroup.state = .on
-        case .legacyWorkout?:
+        case .activity:
             preMealButtonGroup.turnOff()
             overrideButtonGroup.state = .on
         case .preMeal?:
@@ -156,11 +148,6 @@ final class ActionHUDController: HUDInterfaceController {
         let overrideContext = watchInfo.scheduleOverride?.context
         if isPreMealEnabled {
             watchInfo.enablePreMealOverride(for: .hours(1))
-
-            if !FeatureFlags.sensitivityOverridesEnabled {
-                watchInfo.clearOverride(matching: .legacyWorkout)
-                updateForOverrideContext(nil)
-            }
         } else {
             watchInfo.clearOverride(matching: .preMeal)
         }
@@ -203,25 +190,9 @@ final class ActionHUDController: HUDInterfaceController {
     }
 
     @IBAction func toggleOverride() {
-        if FeatureFlags.sensitivityOverridesEnabled {
-            overrideButtonGroup.state == .on
-                ? sendOverride(nil)
-                : presentController(withName: OverrideSelectionController.className, context: self as OverrideSelectionControllerDelegate)
-        } else if let range = loopManager.watchInfo.loopSettings.legacyWorkoutTargetRange {
-            let buttonToSelect = loopManager.watchInfo.nonPreMealOverrideEnabled() == true ? SelectedButton.on : SelectedButton.off
-
-            let viewModel = OnOffSelectionViewModel(
-                title: NSLocalizedString("Workout", comment: "Title for sheet to enable/disable workout mode on watch"),
-                message: formattedGlucoseRangeString(from: range),
-                onSelection: { isWorkoutEnabled in
-                    let override = isWorkoutEnabled ? self.loopManager.watchInfo.legacyWorkoutOverride(for: .infinity) : nil
-                    self.sendOverride(override)
-                },
-                selectedButton: buttonToSelect,
-                selectedButtonTint: .glucose
-            )
-            presentController(withName: OnOffSelectionController.className, context: viewModel)
-        }
+        overrideButtonGroup.state == .on
+            ? sendOverride(nil)
+            : presentController(withName: OverrideSelectionController.className, context: self as OverrideSelectionControllerDelegate)
     }
 
     private func formattedGlucoseRangeString(from range: ClosedRange<LoopQuantity>) -> String {
@@ -245,9 +216,6 @@ final class ActionHUDController: HUDInterfaceController {
 
         var watchInfo = loopManager.watchInfo
         let isPreMealEnabled = watchInfo.preMealOverride?.isActive() == true
-        if override?.context == .legacyWorkout {
-            watchInfo.preMealOverride = nil
-        }
         watchInfo.scheduleOverride = override
 
         do {

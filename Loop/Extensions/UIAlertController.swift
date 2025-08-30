@@ -11,40 +11,7 @@ import LoopKit
 import LoopKitUI
 
 
-extension UIAlertController {
-    /**
-     Initializes an ActionSheet-styled controller for selecting a workout duration
-     
-     - parameter handler: A closure to execute when the sheet is dismissed after selection. The closure has a single argument:
-        - duration: The duration for which the workout is to be enabled
-     */
-    internal convenience init(workoutDurationSelectionHandler handler: @escaping (_ duration: TimeInterval) -> Void) {
-        self.init(
-            title: NSLocalizedString("Use Workout Preset", comment: "The title of the alert controller used to select a duration for workout targets"),
-            message: nil,
-            preferredStyle: .actionSheet
-        )
-
-        let formatter = DateComponentsFormatter()
-        formatter.allowsFractionalUnits = false
-        formatter.unitsStyle = .full
-
-        for interval in [1, 2].map({ TimeInterval(hours: $0) }) {
-            let duration = NSLocalizedString("For %1$@", comment: "The format string used to describe a finite workout targets duration")
-
-            addAction(UIAlertAction(title: String(format: duration, formatter.string(from: interval)!), style: .default) { _ in
-                handler(interval)
-            })
-        }
-
-        let distantFuture = NSLocalizedString("Until I turn off", comment: "The title of a target alert action specifying workout targets duration until it is turned off by the user")
-        addAction(UIAlertAction(title: distantFuture, style: .default) { _ in
-            handler(.infinity)
-        })
-
-        addCancelAction()
-    }
-    
+extension UIAlertController {    
     /**
      Initializes an ActionSheet-styled controller for selecting a pre-meal preset duration
      
