@@ -100,7 +100,7 @@ extension NewCustomPreset {
 }
 
 extension NewCustomPreset {
-    var temporaryScheduleOverride: TemporaryScheduleOverride? {
+    var temporaryPreset: TemporaryPreset? {
         guard let duration else {
             return nil
         }
@@ -110,27 +110,31 @@ extension NewCustomPreset {
             targetRange: correctionRange,
             insulinNeedsScaleFactor: insulinMultiplier
         )
-
-        let context: TemporaryScheduleOverride.Context
-
-        if savePreset {
-            let preset = TemporaryPreset(
-                symbol: "",
-                name: name,
-                settings: settings,
-                duration: overrideDuration
-            )
-            context = .preset(preset)
-        } else {
-            context = .custom
+        
+        let split = name.splitSymbolAndTitle()
+        var symbol: PresetSymbol? = nil
+        if let emoji = split.emoji {
+            symbol = .emoji(emoji)
         }
-        return TemporaryScheduleOverride(
-            context: context,
+
+        return TemporaryPreset(
+            symbol: symbol,
+            name: split.name,
             settings: settings,
-            startDate: startDate ?? Date(),
             duration: overrideDuration,
-            enactTrigger: .local,
-            syncIdentifier: UUID()
+            scheduleStartDate: startDate
         )
+    }
+}
+
+private extension String {
+    func splitSymbolAndTitle() -> (emoji: String?, name: String) {
+        let trimmed = trimmingCharacters(in: .whitespaces)
+        if let first = trimmed.first, first.isEmoji {
+            let name = String(dropFirst()).trimmingCharacters(in: .whitespaces)
+            return (emoji: String(first), name: name)
+        } else {
+            return (emoji: nil, name: trimmed)
+        }
     }
 }

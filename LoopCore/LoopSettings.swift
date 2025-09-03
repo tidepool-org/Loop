@@ -32,10 +32,6 @@ public struct LoopSettings: Equatable {
 
     public var preMealTargetRange: ClosedRange<LoopQuantity>?
 
-    public var legacyWorkoutTargetRange: ClosedRange<LoopQuantity>?
-
-    public var legacyWorkoutDuration: TemporaryScheduleOverride.Duration?
-
     public var overridePresets: [TemporaryPreset] = []
 
     public var maximumBasalRatePerHour: Double?
@@ -59,8 +55,6 @@ public struct LoopSettings: Equatable {
         basalRateSchedule: BasalRateSchedule? = nil,
         carbRatioSchedule: CarbRatioSchedule? = nil,
         preMealTargetRange: ClosedRange<LoopQuantity>? = nil,
-        legacyWorkoutTargetRange: ClosedRange<LoopQuantity>? = nil,
-        legacyWorkoutDuration: TemporaryScheduleOverride.Duration = .indefinite,
         overridePresets: [TemporaryPreset]? = nil,
         maximumBasalRatePerHour: Double? = nil,
         maximumBolus: Double? = nil,
@@ -74,8 +68,6 @@ public struct LoopSettings: Equatable {
         self.basalRateSchedule = basalRateSchedule
         self.carbRatioSchedule = carbRatioSchedule
         self.preMealTargetRange = preMealTargetRange
-        self.legacyWorkoutTargetRange = legacyWorkoutTargetRange
-        self.legacyWorkoutDuration = legacyWorkoutDuration
         self.overridePresets = overridePresets ?? []
         self.maximumBasalRatePerHour = maximumBasalRatePerHour
         self.maximumBolus = maximumBolus
@@ -110,24 +102,13 @@ extension LoopSettings: RawRepresentable {
                 if let preMealTargetRawValue = overrideRangesRawValue["preMeal"] {
                     self.preMealTargetRange = DoubleRange(rawValue: preMealTargetRawValue)?.quantityRange(for: LoopSettings.codingGlucoseUnit)
                 }
-                if let legacyWorkoutTargetRawValue = overrideRangesRawValue["workout"] {
-                    self.legacyWorkoutTargetRange = DoubleRange(rawValue: legacyWorkoutTargetRawValue)?.quantityRange(for: LoopSettings.codingGlucoseUnit)
-                }
             }
         }
 
         if let rawPreMealTargetRange = rawValue["preMealTargetRange"] as? DoubleRange.RawValue {
             self.preMealTargetRange = DoubleRange(rawValue: rawPreMealTargetRange)?.quantityRange(for: LoopSettings.codingGlucoseUnit)
         }
-
-        if let rawLegacyWorkoutTargetRange = rawValue["legacyWorkoutTargetRange"] as? DoubleRange.RawValue {
-            self.legacyWorkoutTargetRange = DoubleRange(rawValue: rawLegacyWorkoutTargetRange)?.quantityRange(for: LoopSettings.codingGlucoseUnit)
-        }
-
-        if let rawLegacyWorkoutDuration = rawValue["legacyWorkoutDuration"] as? Double {
-            self.legacyWorkoutDuration = .finite(rawLegacyWorkoutDuration)
-        }
-
+        
         if let rawPresets = rawValue["overridePresets"] as? [TemporaryPreset.RawValue] {
             self.overridePresets = rawPresets.compactMap(TemporaryPreset.init(rawValue:))
         }
@@ -156,10 +137,6 @@ extension LoopSettings: RawRepresentable {
 
         raw["glucoseTargetRangeSchedule"] = glucoseTargetRangeSchedule?.rawValue
         raw["preMealTargetRange"] = preMealTargetRange?.doubleRange(for: LoopSettings.codingGlucoseUnit).rawValue
-        raw["legacyWorkoutTargetRange"] = legacyWorkoutTargetRange?.doubleRange(for: LoopSettings.codingGlucoseUnit).rawValue
-        if case .finite(let duration) = legacyWorkoutDuration {
-            raw["legacyWorkoutDuration"] = duration
-        }
         raw["maximumBasalRatePerHour"] = maximumBasalRatePerHour
         raw["maximumBolus"] = maximumBolus
         raw["minimumBGGuard"] = suspendThreshold?.rawValue

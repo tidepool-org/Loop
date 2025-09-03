@@ -11,12 +11,13 @@ import SwiftUI
 struct DurationPickerView: View {
     @Binding var durationType: PresetDuration
     @State private var lastUsedDuration: TimeInterval
+    @State private var allowIndefinite: Bool
 
     // Available values (respecting min 5min and max 8hr constraints)
     private let availableHours = Array(0...8)
     private let availableMinutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
 
-    init(durationType: Binding<PresetDuration>) {
+    init(durationType: Binding<PresetDuration>, allowIndefinite: Bool = true) {
         self._durationType = durationType
 
         // Initialize lastUsedDuration based on current durationType or default to 1 hour
@@ -28,6 +29,7 @@ struct DurationPickerView: View {
             initialDuration = 3600 // 1 hour default
         }
         self._lastUsedDuration = State(initialValue: initialDuration)
+        self.allowIndefinite = allowIndefinite
     }
 
     private var hours: Binding<Int> {
@@ -130,11 +132,14 @@ struct DurationPickerView: View {
             if !isIndefinite.wrappedValue {
                 picker
             }
-            HStack {
-                Text("Until I turn off")
-                Spacer()
-                Toggle("", isOn: isIndefinite)
-                    .labelsHidden()
+            
+            if allowIndefinite {
+                HStack {
+                    Text("Until I turn off")
+                    Spacer()
+                    Toggle("", isOn: isIndefinite)
+                        .labelsHidden()
+                }
             }
         }
     }

@@ -234,25 +234,30 @@ final class AnalyticsServicesManager {
 extension AnalyticsServicesManager: PresetActivationObserver {
     func presetActivated(context: TemporaryScheduleOverride.Context, duration: TemporaryScheduleOverride.Duration) {
         switch context {
-        case .legacyWorkout:
-            didEnactOverride(name: "workout", symbol: "", duration: duration)
         case .preMeal:
             didEnactOverride(name: "preMeal", symbol: "", duration: duration)
         case .custom:
             didEnactOverride(name: "custom", symbol: "", duration: duration)
         case .preset(let preset):
-            didEnactOverride(name: preset.name, symbol: preset.symbol, duration: duration, insulinSensitivityMultiplier: preset.settings.effectiveInsulinNeedsScaleFactor, targetRange: preset.settings.targetRange)
+            didEnactOverride(
+                name: preset.name,
+                symbol: preset.symbol?.textualRepresentation ?? "",
+                duration: duration,
+                insulinSensitivityMultiplier: preset.settings.effectiveInsulinNeedsScaleFactor,
+                targetRange: preset.settings.targetRange
+            )
+        case .activity(let activity):
+            didEnactOverride(
+                name: activity.activityType.name,
+                symbol: activity.preset.symbol?.textualRepresentation ?? "",
+                duration: activity.preset.duration,
+                insulinSensitivityMultiplier: activity.preset.settings.effectiveInsulinNeedsScaleFactor,
+                targetRange: activity.preset.settings.targetRange
+            )
         }
     }
 
-    func presetDeactivated(context: TemporaryScheduleOverride.Context) {
-        switch context {
-        case .legacyWorkout:
-            break
-        default:
-            break
-        }
-    }
+    func presetDeactivated(context: TemporaryScheduleOverride.Context) {}
 }
 
 extension AutomaticDosingStrategy {

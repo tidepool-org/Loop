@@ -53,9 +53,13 @@ struct InsulinDeliveryEventDetailsView: View {
     }
     
     var startTimeValue: String? {
-        doseEntry.startDate.formatted(date: .omitted, time: .shortened)
+        doseEntry.startDate.formatted(date: .omitted, time: .standard)
     }
-    
+
+    var endTimeValue: String? {
+        doseEntry.endDate.formatted(date: .omitted, time: .standard)
+    }
+
     var durationValue: String? {
         durationFormatter.unitsStyle = .abbreviated
         
@@ -93,7 +97,25 @@ struct InsulinDeliveryEventDetailsView: View {
                         Text(startTimeValue)
                     }
                 }
-                
+
+                if let endTimeValue {
+                    VStack(alignment: .leading) {
+                        Text("End Time")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        Text(endTimeValue)
+                    }
+                }
+
+                VStack(alignment: .leading) {
+                    Text("Mutable")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                    Text(doseEntry.isMutable ? "Yes" : "No")
+                }
+
                 switch pumpEventType {
                 case .basal, .bolus:
                     if let durationValue {

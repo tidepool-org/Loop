@@ -1295,8 +1295,6 @@ extension DeviceDataManager: TherapySettingsViewModelDelegate {
         settingsManager.mutateLoopSettings { settings in
             settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule
             settings.preMealTargetRange = therapySettings.correctionRangeOverrides?.preMeal
-            settings.legacyWorkoutTargetRange = therapySettings.correctionRangeOverrides?.workout
-            settings.legacyWorkoutDuration = therapySettings.correctionRangeOverrides?.workoutDuration
             settings.suspendThreshold = therapySettings.suspendThreshold
             settings.basalRateSchedule = therapySettings.basalRateSchedule
             settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour

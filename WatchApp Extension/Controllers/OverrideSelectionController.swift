@@ -45,7 +45,12 @@ final class OverrideSelectionController: WKInterfaceController, IdentifiableClas
         for index in presets.indices {
             let row = table.rowController(at: index) as! OverridePresetRow
             let preset = presets[index]
-            row.symbolLabel.setText(preset.symbol)
+            if let symbol = preset.symbol?.textualRepresentation {
+                row.symbolLabel.setText(symbol)
+                row.symbolLabel.setHidden(false)
+            } else {
+                row.symbolLabel.setHidden(true)
+            }
             row.nameLabel.setText(preset.name)
         }
     }

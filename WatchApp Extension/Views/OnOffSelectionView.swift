@@ -79,12 +79,6 @@ struct OnOffSelectionView_Previews: PreviewProvider {
             
             OnOffSelectionView(viewModel: OnOffSelectionViewModel(title: "Pre-Meal", message: "80-90 mg/dL", onSelection: {_ in print("hi")}, selectedButton: .off, selectedButtonTint: .carbsColor))
             .previewDevice(PreviewDevice(rawValue: "Apple Watch Series 2 - 42mm"))
-            
-            OnOffSelectionView(viewModel: OnOffSelectionViewModel(title: "Workout", message: "180-190 mg/dL", onSelection: {_ in print("hi")}, selectedButton: .on, selectedButtonTint: .glucose))
-            .previewDevice(PreviewDevice(rawValue: "Apple Watch Series 4 - 44mm"))
-            
-            OnOffSelectionView(viewModel: OnOffSelectionViewModel(title: "Workout", message: "180-190 mg/dL", onSelection: {_ in print("hi")}, selectedButton: .off, selectedButtonTint: .glucose))
-            .previewDevice(PreviewDevice(rawValue: "Apple Watch Series 4 - 40mm"))
         }
     }
 }

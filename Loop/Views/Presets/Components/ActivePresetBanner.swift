@@ -14,25 +14,78 @@ struct ActivePresetBanner: View {
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     
     let override: TemporaryScheduleOverride
-
-    @ViewBuilder
-    var title: some View {
+    
+    var symbol: Text? {
         switch override.context {
         case .preMeal:
-            Group {
-                Text(Image("Pre-Meal-symbol")) + Text(" ") + Text(NSLocalizedString("Pre-meal Preset", comment: "Status row title for premeal override enabled (leading space is to separate from symbol)"))
-            }
-            .accessibilityIdentifier("text_PreMealPresetCellTitle")
-        case .legacyWorkout:
-            Group {
-                Text(Image("workout-symbol")) + Text(" ") + Text( NSLocalizedString("Workout Preset", comment: "Status row title for workout override enabled (leading space is to separate from symbol)"))
-            }
-            .accessibilityIdentifier("text_WorkoutPresetCellTitle")
+            return Text(Image("Pre-Meal-symbol"))
         case .preset(let preset):
-            Text(String(format: NSLocalizedString("%@ %@", comment: "The format for an active custom preset. (1: preset symbol)(2: preset name)"), preset.symbol, preset.name))
+            guard let symbol = preset.symbol else {
+                return nil
+            }
+            
+            switch symbol.symbolType {
+            case .emoji:
+                return Text(symbol.value)
+            case .systemImage:
+                return Text(Image(systemName: symbol.value))
+            case .image:
+                return Text(Image(symbol.value))
+            }
+        case .activity(let activity):
+            guard let symbol = activity.preset.symbol else {
+                return nil
+            }
+            
+            switch symbol.symbolType {
+            case .emoji:
+                return Text(symbol.value)
+            case .systemImage:
+                return Text(Image(systemName: symbol.value))
+            case .image:
+                return Text(Image(symbol.value))
+            }
+        case .custom:
+            return nil
+        }
+    }
+
+    var titleText: Text {
+        switch override.context {
+        case .preMeal:
+            Text(NSLocalizedString("Pre-Meal", comment: "Status row title for premeal override enabled (leading space is to separate from symbol)"))
+        case .preset(let preset):
+            Text(String(format: NSLocalizedString("%@", comment: "The format for an active custom preset. (1: preset name)"), preset.name))
+        case .activity(let activity):
+            Text(String(format: NSLocalizedString("%@", comment: "The format for an active activity preset. (1: preset name)"), activity.preset.name))
         case .custom:
             Text(NSLocalizedString("Single Use Preset", comment: "The title of the cell indicating a generic custom preset is enabled"))
         }
+    }
+    
+    var accessibilityIdentifier: String {
+        switch override.context {
+        case .preMeal:
+            "text_PreMealPresetCellTitle"
+        case .preset:
+            "text_CustomPresetCellTitle"
+        case .activity:
+            "text_ActivityPresetCellTitle"
+        case .custom:
+            "text_OneTimePresetCellTitle"
+        }
+    }
+    
+    @ViewBuilder
+    var title: some View {
+        Group {
+            if let symbol {
+                symbol + Text(" ") + titleText
+            } else {
+                titleText
+            }
+        }
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
     
     @ViewBuilder
@@ -48,7 +101,7 @@ struct ActivePresetBanner: View {
                     Text(String(format: NSLocalizedString("on until %@", comment: "The format for the description of a finite custom preset end date"), endTimeText))
                         .accessibilityIdentifier("text_PresetActiveOn")
                 case .indefinite:
-                    Text(NSLocalizedString("on indefinitely", comment: "The format for the description of an indefinite custom preset end date"))
+                    Text(NSLocalizedString("on until turned off", comment: "The format for the description of an indefinite custom preset end date"))
                         .accessibilityIdentifier("text_PresetActiveOn")
                 }
             }

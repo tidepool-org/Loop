@@ -290,35 +290,6 @@ public final class AlertManager {
         ExtensionDataManager.lastLoopCompleted
     }
 
-    // MARK: - Workout reminder
-    private func scheduleWorkoutOverrideReminder() {
-        Task {
-            await issueAlert(workoutOverrideReminderAlert)
-        }
-    }
-
-    private func retractWorkoutOverrideReminder() {
-        Task {
-            await retractAlert(identifier: AlertManager.workoutOverrideReminderAlertIdentifier)
-        }
-    }
-
-    static var workoutOverrideReminderAlertIdentifier: Alert.Identifier {
-        return Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: "WorkoutOverrideReminder")
-    }
-
-    private var workoutOverrideReminderAlert: Alert {
-        let title = NSLocalizedString("Workout Temp Adjust Still On", comment: "Workout override still on reminder alert title")
-        let body = NSLocalizedString("Workout Temp Adjust has been turned on for more than 24 hours. Make sure you still want it enabled, or turn it off in the app.", comment: "Workout override still on reminder alert body.")
-        let content = Alert.Content(title: title,
-                                    body: body,
-                                    acknowledgeActionButtonLabel: NSLocalizedString("Dismiss", comment: "Default alert dismissal"))
-        return Alert(identifier: AlertManager.workoutOverrideReminderAlertIdentifier,
-                     foregroundContent: content,
-                     backgroundContent: content,
-                     trigger: .delayed(interval: .hours(24)))
-    }
-
     // MARK: - Rescheduling Muted Alerts
 
     func rescheduleMutedAlerts(_ newValue: AlertMuter.Configuration) {
@@ -690,36 +661,6 @@ extension AlertManager: BluetoothObserver {
             onBluetoothPermissionDenied()
         default:
             return
-        }
-    }
-}
-
-
-// MARK: - PresetActivationObserver
-extension AlertManager: PresetActivationObserver {
-    nonisolated
-    func presetActivated(context: TemporaryScheduleOverride.Context, duration: TemporaryScheduleOverride.Duration) {
-        switch context {
-        case .legacyWorkout:
-            if duration == .indefinite {
-                Task {
-                    await scheduleWorkoutOverrideReminder()
-                }
-            }
-        default:
-            break
-        }
-    }
-
-    nonisolated
-    func presetDeactivated(context: TemporaryScheduleOverride.Context) {
-        switch context {
-        case .legacyWorkout:
-            Task {
-                await retractWorkoutOverrideReminder()
-            }
-        default:
-            break
         }
     }
 }

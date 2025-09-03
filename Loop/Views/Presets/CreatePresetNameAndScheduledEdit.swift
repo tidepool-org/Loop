@@ -219,11 +219,12 @@ struct CreatePresetNameAndScheduledEdit: View {
                         }
                     }
                 }
-                if preset.repeatOptions != nil {
+                if let options = preset.repeatOptions, options != .none {
                     Text(preset.scheduleDescription())
                         .font(.footnote)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 10)
+                        .padding(.top, 4)
                 }
             }
         } actionArea: {
@@ -236,6 +237,9 @@ struct CreatePresetNameAndScheduledEdit: View {
         .onChange(of: selectedRepeatOption, { oldValue, newValue in
             if newValue == .weekly {
                 assignRepeatDays()
+            }
+            if newValue == .never {
+                preset.repeatOptions = nil
             }
         })
         .onChange(of: preset.startDate, { oldValue, newValue in

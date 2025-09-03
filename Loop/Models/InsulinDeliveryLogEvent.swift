@@ -59,7 +59,7 @@ struct InsulinDeliveryLogEvent: Hashable, Identifiable {
             case disabled
         }
         
-        case preset(PresetEventType, icon: PresetIcon, name: String)
+        case preset(PresetEventType, icon: PresetSymbol?, name: String)
     }
     
     let id: String

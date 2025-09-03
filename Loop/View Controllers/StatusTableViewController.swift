@@ -1311,12 +1311,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
             case .iob:
                 let showLegacy = false
                 
-                if !showLegacy {
+                if !showLegacy, let pumpManager = deviceManager.pumpManager {
                     let hostingController = UIHostingController(
                         rootView: InsulinDeliveryLog(
                             viewModel: InsulinDeliveryLogViewModel(
                                 loopDataManager: loopManager,
-                                pumpManager: deviceManager.pumpManager
+                                pumpManager: pumpManager
                             ),
                             onTapGesture: { [weak navigationController] doseEntry in
                                 Task {
@@ -1537,6 +1537,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 .environmentObject(deviceManager.displayGlucosePreference)
                 .environment(\.appName, Bundle.main.bundleDisplayName)
                 .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
+                .environment(\.colorPalette, .default)
                 .environment(\.loopStatusColorPalette, .loopStatus)
                 .environment(\.temporaryPresetsManager, temporaryPresetsManager)
                 .environment(\.settingsManager, settingsManager),
@@ -1843,7 +1844,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 self.settingsManager.mutateLoopSettings { settings in
                     settings.glucoseTargetRangeSchedule = therapySettings.glucoseTargetRangeSchedule
                     settings.preMealTargetRange = therapySettings.correctionRangeOverrides?.preMeal
-                    settings.legacyWorkoutTargetRange = therapySettings.correctionRangeOverrides?.workout
                     settings.suspendThreshold = therapySettings.suspendThreshold
                     settings.maximumBolus = therapySettings.maximumBolus
                     settings.maximumBasalRatePerHour = therapySettings.maximumBasalRatePerHour

@@ -18,6 +18,7 @@ struct PresetDetentView: View {
     }
     
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+    @Environment(\.colorPalette) private var colorPalette
     @Environment(\.settingsManager) private var settingsManager
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
@@ -117,7 +118,7 @@ struct PresetDetentView: View {
             VStack(spacing: 24) {
                 VStack(spacing: 16) {
                     VStack(spacing: 4) {
-                        preset.title(font: .title2, iconSize: 20)
+                        preset.title(font: .title2, iconSize: 20, colorPalette: colorPalette)
                         subtitle
                     }
                     
@@ -146,6 +147,14 @@ struct PresetDetentView: View {
                     isScheduled: false,
                     isActive: temporaryPresetsManager.activePreset?.id == preset.id
                 )
+                
+                if case let .activity(activityPreset) = preset, !activityPreset.isModifiedFromDefault {
+                    Text("\(Image(systemName: "checkmark.seal.fill")) Recommended starting values")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.accentColor)
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 4)
+                }
                 
                 actionArea
             }

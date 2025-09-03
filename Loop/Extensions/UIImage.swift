@@ -34,10 +34,6 @@ extension UIImage {
     static func preMealImage(selected: Bool) -> UIImage? {
         return UIImage(named: selected ? "Pre-Meal Selected" : "Pre-Meal")
     }
-
-    static func workoutImage(selected: Bool) -> UIImage? {
-        return UIImage(named: selected ? "workout-selected" : "workout")
-    }
 }
 
 private class FrameworkBundle {
