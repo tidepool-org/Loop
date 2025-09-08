@@ -21,7 +21,6 @@ struct ActionButton: View {
                 .animation(nil)
         })
         .buttonStyle(ActionButtonStyle(color: color))
-        .animation(.default)
         .frame(height: 40)
     }
 }

@@ -75,11 +75,9 @@ class HUDInterfaceController: WKInterfaceController {
             glucoseLabel.setText(NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"))
             glucoseLabel.setHidden(false)
             
-            let showEventualGlucose = FeatureFlags.showEventualBloodGlucoseOnWatchEnabled
-            if showEventualGlucose {
-                eventualGlucoseLabel.setHidden(true)
-            }
-                
+            let showEventualGlucose = true //FeatureFlags.showEventualBloodGlucoseOnWatchEnabled
+            eventualGlucoseLabel.setHidden(true)
+
             if let glucose = activeContext.glucose, let glucoseDate = activeContext.glucoseDate, let unit = activeContext.displayGlucoseUnit, glucoseDate.timeIntervalSinceNow > -LoopAlgorithm.inputDataRecencyInterval {
                 let formatter = NumberFormatter.glucoseFormatter(for: unit)
 

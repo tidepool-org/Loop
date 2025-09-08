@@ -434,7 +434,7 @@
             <color red="0.0080000003799796104" green="0.14100000262260437" blue="0.050999999046325684" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="insulin">
-            <color red="1" green="0.58399999141693115" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.33300000429153442" green="0.41200000047683716" blue="0.94900000095367432" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="insulin-dark">
             <color red="0.33300000429153442" green="0.41200000047683716" blue="0.94900000095367432" alpha="0.15000000596046448" colorSpace="custom" customColorSpace="sRGB"/>

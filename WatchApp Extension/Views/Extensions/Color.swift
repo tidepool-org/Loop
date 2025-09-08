@@ -16,5 +16,9 @@ extension Color {
     static let insulin = Color(.insulin)
     static let darkInsulin = Color(.darkInsulin)
 
+    static let fresh = Color(.fresh)
+    static let aging = Color(.agingColor)
+    static let stale = Color(.staleColor)
+
     static let defaultWatchButtonGray = Color(white: 35 / 255)
 }

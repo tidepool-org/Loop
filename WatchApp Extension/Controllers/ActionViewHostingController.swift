@@ -10,8 +10,8 @@ import WatchKit
 import SwiftUI
 
 class ActionViewHostingController: WKHostingController<ActionView> {
+    
     override var body: ActionView {
         return ActionView()
-            
     }
 }

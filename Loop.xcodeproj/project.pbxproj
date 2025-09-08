@@ -461,6 +461,7 @@
 		C14F68C92D4AC54300BC3B8D /* DurationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14F68C82D4AC54000BC3B8D /* DurationPickerView.swift */; };
 		C152B9F52C9C7D4A00ACBC06 /* AutomationHistoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C152B9F42C9C7D4A00ACBC06 /* AutomationHistoryEntry.swift */; };
 		C152B9F72C9C7EF100ACBC06 /* AutomationHistoryEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C152B9F62C9C7EF100ACBC06 /* AutomationHistoryEntryTests.swift */; };
+		C1550B0C2E6F249A009369DC /* LoopCircleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1550B0B2E6F249A009369DC /* LoopCircleView.swift */; };
 		C159C82F286787EF00A86EC0 /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C159C82E286787EF00A86EC0 /* LoopKit.framework */; };
 		C15A8C492A7305B1009D736B /* SwiftCharts in Frameworks */ = {isa = PBXBuildFile; productRef = C1E3DC4628595FAA00CA19FF /* SwiftCharts */; };
 		C1620D392DE0E5120033DEB5 /* NoticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1620D382DE0E50D0033DEB5 /* NoticeView.swift */; };
@@ -1448,6 +1449,7 @@
 		C14F68C82D4AC54000BC3B8D /* DurationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationPickerView.swift; sourceTree = "<group>"; };
 		C152B9F42C9C7D4A00ACBC06 /* AutomationHistoryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationHistoryEntry.swift; sourceTree = "<group>"; };
 		C152B9F62C9C7EF100ACBC06 /* AutomationHistoryEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationHistoryEntryTests.swift; sourceTree = "<group>"; };
+		C1550B0B2E6F249A009369DC /* LoopCircleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopCircleView.swift; sourceTree = "<group>"; };
 		C155A8F32986396E009BD257 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C155A8F42986396E009BD257 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C155A8F52986396E009BD257 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/ckcomplication.strings; sourceTree = "<group>"; };
@@ -2653,6 +2655,7 @@
 		895788A3242E6947002CB114 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				C1550B0B2E6F249A009369DC /* LoopCircleView.swift */,
 				C12D723F2E4FBC5D00BD628A /* ActionView.swift */,
 				895788B5242E6A25002CB114 /* Carb Entry & Bolus */,
 				895788B4242E69C8002CB114 /* Extensions */,
@@ -3878,6 +3881,7 @@
 				43511CEE220FC61700566C63 /* HUDRowController.swift in Sources */,
 				1D3F0F7526D59B6C004A5960 /* Debug.swift in Sources */,
 				892FB4CD22040104005293EC /* OverridePresetRow.swift in Sources */,
+				C1550B0C2E6F249A009369DC /* LoopCircleView.swift in Sources */,
 				4F75F00220FCFE8C00B5570E /* GlucoseChartScene.swift in Sources */,
 				89E26800229267DF00A3F2AF /* Optional.swift in Sources */,
 				4328E02F1CFBF81800E199AA /* WKInterfaceImage.swift in Sources */,

@@ -42,7 +42,9 @@ extension UIColor {
     static let chartPlatter = HIGWhiteColorDark()
    
     static let agingColor = UIColor(named: "warning") ?? HIGYellowColor()
-    
+
+    static let fresh = UIColor(named: "fresh") ?? .purple
+
     static let staleColor = HIGRedColor()
     
     // MARK: - HIG colors

@@ -62,14 +62,6 @@ fileprivate extension StoredSettings {
                                                                override: GlucoseRangeSchedule.Override(value: DoubleRange(minValue: 80.0, maxValue: 90.0),
                                                                                                        start: date.addingTimeInterval(-.minutes(30)),
                                                                                                        end: date.addingTimeInterval(.minutes(30))))
-        let preMealOverride = TemporaryScheduleOverride(context: .preMeal,
-                                                        settings: TemporaryPresetSettings(unit: .milligramsPerDeciliter,
-                                                                                                    targetRange: DoubleRange(minValue: 80.0, maxValue: 90.0),
-                                                                                                    insulinNeedsScaleFactor: 0.5),
-                                                        startDate: date.addingTimeInterval(-.minutes(30)),
-                                                        duration: .finite(.minutes(60)),
-                                                        enactTrigger: .local,
-                                                        syncIdentifier: UUID())
         let basalRateSchedule = BasalRateSchedule(dailyItems: [RepeatingScheduleValue(startTime: .hours(0), value: 1.0),
                                                                RepeatingScheduleValue(startTime: .hours(8), value: 1.125),
                                                                RepeatingScheduleValue(startTime: .hours(10), value: 1.25),

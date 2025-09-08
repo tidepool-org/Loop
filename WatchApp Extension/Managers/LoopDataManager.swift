@@ -14,12 +14,13 @@ import WatchConnectivity
 import os.log
 import LoopAlgorithm
 
-
+@Observable
 class LoopDataManager {
     let carbStore: CarbStore
 
     var glucoseStore: GlucoseStore!
 
+    @ObservationIgnored
     @PersistedProperty(key: "Settings")
     private var rawWatchInfo: LoopSettingsUserInfo.RawValue?
 
