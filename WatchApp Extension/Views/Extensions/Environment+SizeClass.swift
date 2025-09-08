@@ -35,6 +35,12 @@ extension WKInterfaceDevice {
         // Apple Watch Series 7
         case size41mm
         case size45mm
+
+        // Apple Watch Series 10
+        case size46mm
+
+        // Apple Watch Ultra
+        case size49mm
     }
 
     var sizeClass: SizeClass {
@@ -71,15 +77,43 @@ extension WKInterfaceDevice.SizeClass {
             return CGSize(width: 184, height: 224)
         case .size45mm:
             return CGSize(width: 198, height: 242)
+        case .size46mm: // For some reason, the Series 10 sim is showing different (208x248)
+            return CGSize(width: 200, height: 244)
+        case .size49mm:
+            return CGSize(width: 205, height: 251)
         }
     }
 
     var hasRoundedCorners: Bool {
         switch self {
-        case .size40mm, .size41mm, .size44mm, .size45mm:
+        case .size40mm, .size41mm, .size44mm, .size45mm, .size46mm, .size49mm:
             return true
         case .size38mm, .size42mm:
             return false
         }
     }
+
+    var isSmall: Bool {
+        switch self {
+        case .size38mm, .size40mm: return true
+        default: return false
+        }
+    }
+
+    var isLarge: Bool {
+        switch self {
+        case .size44mm, .size45mm, .size46mm, .size49mm: return true
+        default: return false
+        }
+    }
+
+    // Recommended horizontal padding per HIG
+    var recommendedHorizontalPadding: CGFloat {
+        switch self {
+        case .size40mm, .size41mm, .size42mm: return 8.5
+        case .size44mm, .size45mm, .size46mm, .size49mm: return 9.5
+        default: return 0  // Older or unknown
+        }
+    }
+
 }

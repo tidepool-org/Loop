@@ -14,6 +14,7 @@ import WatchConnectivity
 import os.log
 import LoopAlgorithm
 
+@MainActor
 @Observable
 class LoopDataManager {
     let carbStore: CarbStore
@@ -23,6 +24,10 @@ class LoopDataManager {
     @ObservationIgnored
     @PersistedProperty(key: "Settings")
     private var rawWatchInfo: LoopSettingsUserInfo.RawValue?
+
+    @ObservationIgnored
+    @PersistedProperty(key: "WatchContext")
+    private var rawWatchContext: WatchContext.RawValue?
 
     // Main queue only
     var watchInfo: LoopSettingsUserInfo {
@@ -47,6 +52,7 @@ class LoopDataManager {
     // Main queue only
     private(set) var activeContext: WatchContext? {
         didSet {
+            rawWatchContext = activeContext?.rawValue
             needsDidUpdateContextNotification = true
             sendDidUpdateContextNotificationIfNecessary()
         }
@@ -84,8 +90,12 @@ class LoopDataManager {
             )
         }
 
-        if let rawWatchInfo = rawWatchInfo, let watchInfo = LoopSettingsUserInfo(rawValue: rawWatchInfo) {
+        if let rawWatchInfo, let watchInfo = LoopSettingsUserInfo(rawValue: rawWatchInfo) {
             self.watchInfo = watchInfo
+        }
+
+        if let rawWatchContext, let watchContext = WatchContext(rawValue: rawWatchContext) {
+            self.activeContext = watchContext
         }
     }
 }

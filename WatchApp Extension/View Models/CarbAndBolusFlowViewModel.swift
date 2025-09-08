@@ -14,7 +14,7 @@ import WatchConnectivity
 import LoopKit
 import LoopCore
 
-
+@MainActor
 final class CarbAndBolusFlowViewModel: ObservableObject {
     enum Error: Swift.Error {
         case potentialCarbEntryMessageSendFailure
@@ -71,32 +71,35 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
             object: loopManager,
             queue: nil
         ) { [weak self] _ in
-            guard
-                let self = self,
-                !self.hasSentConfirmationMessage
-            else {
-                return
+            Task { @MainActor in
+                self?.handleContextUpdate(loopManager: loopManager)
             }
-            
-            self.bolusPickerValues = BolusPickerValues(
-                supportedVolumes: loopManager.supportedBolusVolumes ?? Self.defaultSupportedBolusVolumes,
-                maxBolus: loopManager.watchInfo.loopSettings.maximumBolus ?? Self.defaultMaxBolus
-            )
+        }
+    }
 
-            switch self.configuration {
-            case .carbEntry:
-                // If this new context wasn't generated in response to a potential carb entry message,
-                // recompute the recommended bolus for the carb entry under consideration.
-                let wasContextGeneratedFromPotentialCarbEntryMessage = loopManager.activeContext?.potentialCarbEntry != nil
-                if !wasContextGeneratedFromPotentialCarbEntryMessage, let entry = self.carbEntryUnderConsideration {
-                    self.recommendBolus(for: entry)
-                }
-            case .manualBolus:
-                let activeContext = loopManager.activeContext
-                self.contextDate = activeContext?.creationDate
-                if self.recommendedBolusAmount != activeContext?.recommendedBolusDose {
-                    self.recommendedBolusAmount = activeContext?.recommendedBolusDose
-                }
+    func handleContextUpdate(loopManager: LoopDataManager) {
+        guard hasSentConfirmationMessage else {
+            return
+        }
+
+        self.bolusPickerValues = BolusPickerValues(
+            supportedVolumes: loopManager.supportedBolusVolumes ?? Self.defaultSupportedBolusVolumes,
+            maxBolus: loopManager.watchInfo.loopSettings.maximumBolus ?? Self.defaultMaxBolus
+        )
+
+        switch self.configuration {
+        case .carbEntry:
+            // If this new context wasn't generated in response to a potential carb entry message,
+            // recompute the recommended bolus for the carb entry under consideration.
+            let wasContextGeneratedFromPotentialCarbEntryMessage = loopManager.activeContext?.potentialCarbEntry != nil
+            if !wasContextGeneratedFromPotentialCarbEntryMessage, let entry = self.carbEntryUnderConsideration {
+                self.recommendBolus(for: entry)
+            }
+        case .manualBolus:
+            let activeContext = loopManager.activeContext
+            self.contextDate = activeContext?.creationDate
+            if self.recommendedBolusAmount != activeContext?.recommendedBolusDose {
+                self.recommendedBolusAmount = activeContext?.recommendedBolusDose
             }
         }
     }

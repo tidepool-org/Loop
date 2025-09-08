@@ -61,19 +61,40 @@ struct ActionView: View {
                 }
             }
             .font(.system(size: 24, weight: .light))
-            Button("Action 1") {
-                // Handle action
+
+            HStack(spacing: 0) {
+                CircleTintedButton(
+                    label: "Carbs",
+                    image: Image("carbs"),
+                    foregroundTint: .carbs,
+                    backgroundTint: .darkCarbs
+                ) {
+                    // Handle action
+                }
+                CircleTintedButton(
+                    label: "Bolus",
+                    image: Image("bolus"),
+                    foregroundTint: .insulin,
+                    backgroundTint: .darkInsulin
+                ) {
+                    // Handle action
+                }
             }
-            Button("Action 2") {
-                // Handle action
-            }
-            Button("Action 3") {
-                // Handle action
-            }
-            Button("Action 4") {
-                // Handle action
+            .padding(.bottom, 4)
+            HStack {
+                CircleTintedButton(
+                    label: "Presets",
+                    image: Image("presets"),
+                    foregroundTint: .presets,
+                    backgroundTint: .darkPresets
+                ) {
+                    // Handle action
+                }
+                Spacer()
+                    .frame(maxWidth: .infinity)
             }
         }
+        .font(.system(size: 14, weight: .light))
         .toolbar(.hidden, for: .navigationBar)
     }
 }

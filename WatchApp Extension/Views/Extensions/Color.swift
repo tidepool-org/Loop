@@ -16,6 +16,9 @@ extension Color {
     static let insulin = Color(.insulin)
     static let darkInsulin = Color(.darkInsulin)
 
+    static let presets = Color(.presets)
+    static let darkPresets = Color(.darkPresets)
+
     static let fresh = Color(.fresh)
     static let aging = Color(.agingColor)
     static let stale = Color(.staleColor)

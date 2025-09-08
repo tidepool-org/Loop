@@ -172,7 +172,7 @@ extension CarbAndBolusFlow {
             } else {
                 return 19
             }
-        case .size44mm, .size45mm:
+        case .size44mm, .size45mm, .size46mm, .size49mm:
             return 5
         }
     }
@@ -242,7 +242,7 @@ extension CarbAndBolusFlow {
             return 0
         case .size40mm, .size41mm:
             return 20
-        case .size44mm, .size45mm:
+        case .size44mm, .size45mm, .size46mm, .size49mm:
             return 27
         }
     }

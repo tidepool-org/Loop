@@ -28,6 +28,11 @@ extension UIColor {
 
     static let overrideColor = UIColor(named: "workout")!
 
+    static let presets = UIColor(named: "presets")!
+
+    static let darkPresets = UIColor(named: "presets-dark")!
+
+
     // Equivalent to workoutColor with alpha 0.14 on a black background
     static let darkOverrideColor = UIColor(named: "workout-dark")!
 
