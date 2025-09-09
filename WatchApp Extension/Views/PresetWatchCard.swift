@@ -30,7 +30,7 @@ struct PresetSymbolView: View {
     let symbol: PresetSymbol
     let iconSize: Double
 
-    init(_ symbol: PresetSymbol, iconSize: Double = 15) {
+    init(_ symbol: PresetSymbol, iconSize: Double = 17) {
         self.symbol = symbol
         self.iconSize = iconSize
     }
@@ -86,16 +86,8 @@ struct PresetWatchCard: View {
                 PresetSymbolView(icon)
             }
             Text(presetName)
-                .font(.system(size: 15))
                 .accessibilityIdentifier("text_Preset\(presetName)")
         }
-    }
-
-    var reminderIcon: some View {
-        Text(Image(systemName: "alarm"))
-            .font(.footnote)
-            .foregroundColor(.carbs)
-            .accessibilityLabel(Text("Scheduled reminder"))
     }
 
     var presetDuration: some View {
@@ -105,7 +97,7 @@ struct PresetWatchCard: View {
             .accessibilityLabel(Text(duration.accessibilityLabel))
     }
 
-    var detailsText: Text {
+    var descriptionText: Text {
         let percent = numberFormatter.string(from: insulinMultiplier ?? 1)!
         var text = Text(percent).bold()
 
@@ -117,7 +109,8 @@ struct PresetWatchCard: View {
             text = text + Text(" " + glucoseDisplayUnit.localizedShortUnitString)
                 .foregroundStyle(.secondary)
         }
-        return text
+        return text.font(.footnote)
+
     }
 
     var body: some View {
@@ -126,7 +119,7 @@ struct PresetWatchCard: View {
                 .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
             VStack(alignment: .leading, spacing: 10) {
                 presetTitle
-                detailsText
+                descriptionText
             }
             .padding(10)
         }
