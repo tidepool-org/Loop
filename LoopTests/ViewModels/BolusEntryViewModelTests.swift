@@ -947,7 +947,7 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         manualGlucoseSample: NewGlucoseSample?,
         potentialCarbEntry: NewCarbEntry?,
         originalCarbEntry: StoredCarbEntry?,
-        ignoringOverride: Bool
+        truncatingActiveOverride: Bool
     ) async throws -> ManualBolusRecommendation? {
 
         manualGlucoseSampleForBolusRecommendation = manualGlucoseSample
