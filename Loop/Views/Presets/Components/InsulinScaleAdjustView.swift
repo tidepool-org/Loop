@@ -21,7 +21,7 @@ public struct InsulinScaleAdjustView: View {
     @Binding var insulinMultiplier: Double
 
     var insulinPercentage: Double {
-        insulinMultiplier * 100
+        (insulinMultiplier * 100).rounded()
     }
 
     public var body: some View {

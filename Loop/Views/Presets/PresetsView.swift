@@ -32,6 +32,7 @@ enum PresetSortOption: Int, CaseIterable {
 enum ActiveSheet: Identifiable {
     case editPreset(SelectablePreset) // For EditPresetView
     case presetDetent(SelectablePreset) // For PresetDetentView
+    case training(navigationPath: [PresetsTraining.Step] = [], startingAt: PresetsTraining.Chapter? = nil, editPresetWhenComplete: SelectablePreset? = nil)
 
     var id: String {
         switch self {
@@ -39,6 +40,8 @@ enum ActiveSheet: Identifiable {
             return "edit_\(preset.id)" // Assuming Preset has an id
         case .presetDetent(let preset):
             return "detent_\(preset.id)"
+        case .training:
+            return "training"
         }
     }
 }
@@ -51,6 +54,7 @@ struct PresetsView: View {
     }
 
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+    @Environment(\.appName) private var appName
     @Environment(\.settingsManager) private var settingsManager
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
@@ -58,7 +62,6 @@ struct PresetsView: View {
     @State private var trainingCompletion: PresetsTrainingCompletion = PresetsTrainingCompletion()
     @State private var editMode: EditMode = .inactive
     @State private var showingMenu: Bool = false
-    @State private var showTraining: Bool = false
     @State private var presentCreateView: Bool = false
     @State private var activeSheet: ActiveSheet?
     @State private var navigationPath = NavigationPath()
@@ -131,7 +134,7 @@ struct PresetsView: View {
                             if !trainingCompletion.isComplete {
                                 PresetsTrainingCard(trainingCompletion: trainingCompletion)
                                     .onTapGesture {
-                                        showTraining = true
+                                        activeSheet = .training()
                                     }
                             }
                             
@@ -179,7 +182,7 @@ struct PresetsView: View {
                         
                         if trainingCompletion.isComplete {
                             Button {
-                                showTraining = true
+                                activeSheet = .training()
                             } label: {
                                 HStack {
                                     Text("Review Presets Training")
@@ -195,7 +198,6 @@ struct PresetsView: View {
                                 .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
                                 .frame(maxWidth: .infinity))
                         }
-                        
                     }
                 }
                 .padding()
@@ -213,14 +215,18 @@ struct PresetsView: View {
         }
         .onAppear {
             if trainingCompletion.completedChapters[.entry] != true {
-                showTraining = true
+                activeSheet = .training()
             }
         }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .presetDetent(let preset):
                 PresetDetentView(preset: preset, didTapEdit: {
-                    activeSheet = .editPreset(preset)
+                    if case .activity(_) = preset, !trainingCompletion.isComplete {
+                        activeSheet = .training(editPresetWhenComplete: preset)
+                    } else {
+                        activeSheet = .editPreset(preset)
+                    }
                 })
             case .editPreset(let preset):
                 Group {
@@ -243,10 +249,13 @@ struct PresetsView: View {
                         )
                     }
                 }
+            case .training(let navigationPath, let startingAt, let editPresetWhenComplete):
+                PresetsTrainingView(navigationPath: navigationPath, startingAt: startingAt, trainingCompletion: trainingCompletion) {
+                    if let editPresetWhenComplete {
+                        activeSheet = .editPreset(editPresetWhenComplete)
+                    }
+                }
             }
-        }
-        .sheet(isPresented: $showTraining) {
-            PresetsTrainingView(trainingCompletion: trainingCompletion)
         }
         .sheet(isPresented: $presentCreateView) {
             CreatePresetView()

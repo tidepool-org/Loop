@@ -10,19 +10,34 @@ import LoopKitUI
 import SwiftUI
 
 struct PresetsTrainingView: View {
-    
+
     @Environment(\.appName) private var appName
     @Environment(\.colorPalette) private var colorPalette
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     
     @Bindable private var training: PresetsTraining
     
     @State private var confirmDismiss: Bool = false
+    @State private var showSkipToChapterSelector: Bool = false
     
-    init(trainingCompletion: PresetsTrainingCompletion) {
-        self.training = PresetsTraining(trainingCompletion: trainingCompletion)
+    private let onComplete: (() -> Void)?
+    
+    init(
+        navigationPath: [PresetsTraining.Step] = [],
+        startingAt: PresetsTraining.Chapter? = nil,
+        trainingCompletion: PresetsTrainingCompletion,
+        onComplete: (() -> Void)? = nil
+    ) {
+        self.training = PresetsTraining(
+            navigationPath: navigationPath,
+            startingAt: startingAt,
+            trainingCompletion: trainingCompletion
+        )
+        
+        self.onComplete = onComplete
     }
     
     @ViewBuilder
@@ -65,14 +80,27 @@ struct PresetsTrainingView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(.horizontal, 16)
+                            .onLongPressGesture {
+                                guard FeatureFlags.allowDebugFeatures else {
+                                    return
+                                }
+                                
+                                showSkipToChapterSelector = true
+                            }
                         
                         Divider()
                     }
                     .padding(.bottom, 24)
                     
-                    step.content(appName: appName, displayGlucosePreference: displayGlucosePreference, colorPalette: colorPalette)
-                        .padding(.bottom, 24)
-                        .padding(.horizontal, 16)
+                    step.content(
+                        appName: appName,
+                        displayGlucosePreference: displayGlucosePreference,
+                        colorPalette: colorPalette,
+                        dynamicTypeSize: dynamicTypeSize,
+                        next: training.next
+                    )
+                    .padding(.bottom, 24)
+                    .padding(.horizontal, 16)
                     
                     if let cta = step.cta {
                         Spacer(minLength: 0)
@@ -87,6 +115,13 @@ struct PresetsTrainingView: View {
                             case .continue:
                                 Button("Continue") {
                                     training.next()
+                                }
+                                .buttonStyle(ActionButtonStyle())
+                            case .close:
+                                Button("Close") {
+                                    close()
+                                    training.trainingCompletion.completedChapters[.trainingComplete] = true
+                                    onComplete?()
                                 }
                                 .buttonStyle(ActionButtonStyle())
                             case .closeOrContinue(let continueTo, let chapter):
@@ -114,10 +149,14 @@ struct PresetsTrainingView: View {
                 .frame(minHeight: proxy.size.height, alignment: .top)
             }
         }
+        .background(step.contentBackground.ignoresSafeArea(.all))
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(false)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                closeButton
+            if step != .trainingComplete {
+                ToolbarItem(placement: .topBarTrailing) {
+                    closeButton
+                }
             }
         }
         .alert(isPresented: $confirmDismiss) {
@@ -127,6 +166,18 @@ struct PresetsTrainingView: View {
                 primaryButton: .cancel(),
                 secondaryButton: .destructive(Text("End"), action: { close() })
             )
+        }
+        .confirmationDialog("Skip to Chapter", isPresented: $showSkipToChapterSelector) {
+            ForEach(PresetsTraining.Chapter.allCases, id: \.self) { chapter in
+                Button {
+                    dismiss()
+                    training.trainingCompletion.complete(to: chapter)
+                } label: {
+                    chapter.title
+                }
+            }
+        } message: {
+            Text("Skip and complete training up to")
         }
     }
 }
