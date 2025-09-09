@@ -533,13 +533,6 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                         )
                     }
                 case .presetsForExercise:
-                    if let image = Image("PresetsTrainingExerciseHero") {
-                        image
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: .infinity)
-                    }
-                    
                     Text("Exercise is a common reason to use a preset.")
                     
                     Text("Different kinds of exercise and their intensity levels can affect your glucose levels in different ways.")
