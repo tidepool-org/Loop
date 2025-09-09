@@ -71,6 +71,8 @@ struct IntensitySlider: UIViewRepresentable {
     @Binding var value: Double
     let snapToInteger: Bool = true
     
+    private let trackImage: UIImage? = TrackView().snapshot()
+    
     func makeUIView(context: Context) -> RoundedSlider {
         let sliderView = RoundedSlider()
         
@@ -87,8 +89,8 @@ struct IntensitySlider: UIViewRepresentable {
             ).snapshot(),
             for: .normal
         )
-        sliderView.setMinimumTrackImage(minimumTrackImage(), for: .normal)
-        sliderView.setMaximumTrackImage(maximumTrackImage(), for: .normal)
+        sliderView.setMinimumTrackImage(trackImage, for: .normal)
+        sliderView.setMaximumTrackImage(trackImage, for: .normal)
         
         sliderView.addTarget(context.coordinator, action: #selector(context.coordinator.sliderValueChanged(_:)), for: .valueChanged)
         
@@ -120,14 +122,6 @@ struct IntensitySlider: UIViewRepresentable {
     
     private func thumbColorForValue(_ value: Double, minimum: Double, maximum: Double) -> Color {
         DerivedGradientView().color(at: value / (maximum - minimum))
-    }
-    
-    private func minimumTrackImage() -> UIImage? {
-        TrackView().snapshot()
-    }
-    
-    private func maximumTrackImage() -> UIImage? {
-        TrackView().snapshot()
     }
 }
 

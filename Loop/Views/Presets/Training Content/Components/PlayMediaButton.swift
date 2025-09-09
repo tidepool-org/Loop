@@ -8,7 +8,6 @@
 
 import SwiftUI
 
-// TODO: Update for font sizes
 struct PlayMediaButton: View {
 
     let image: Image
@@ -24,19 +23,19 @@ struct PlayMediaButton: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-                image
-                    .resizable()
-                    .scaledToFill()
-                    .frame(height: 160)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
-                    .padding([.top, .horizontal], -8)
-                    .overlay {
-                        Image("Play")
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 64, height: 64)
-                    }
+            image
+                .resizable()
+                .scaledToFill()
+                .frame(height: 160)
+                .frame(maxWidth: .infinity)
+                .clipped()
+                .padding([.top, .horizontal], -8)
+                .overlay {
+                    Image("Play")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 64, height: 64)
+                }
             
             title
                 .font(.headline.weight(.semibold))
