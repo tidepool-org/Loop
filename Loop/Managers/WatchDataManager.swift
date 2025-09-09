@@ -424,6 +424,12 @@ final class WatchDataManager: NSObject {
 
     func handleWatchMessage(_ message: [String: Any]) async -> [String: Any] {
         switch message["name"] as? String {
+        case SettingsRequestUserInfo.name?:
+            let userInfo = LoopSettingsUserInfo(
+                loopSettings: settingsManager.loopSettings,
+                scheduleOverride: temporaryPresetsManager.scheduleOverride,
+                preMealOverride: temporaryPresetsManager.preMealOverride)
+            return userInfo.rawValue
         case PotentialCarbEntryUserInfo.name?:
             if let potentialCarbEntry = PotentialCarbEntryUserInfo(rawValue: message)?.carbEntry {
                 let context = await createWatchContext(recommendingBolusFor: potentialCarbEntry)

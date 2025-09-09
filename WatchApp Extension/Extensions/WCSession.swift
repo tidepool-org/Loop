@@ -26,6 +26,20 @@ enum WCSessionMessageResult<T> {
 private let log = OSLog(category: "WCSession Extension")
 
 extension WCSession {
+
+    func fetchSettings() async throws -> LoopSettingsUserInfo {
+        try await withCheckedThrowingContinuation { continuation in
+            sendMessage(SettingsRequestUserInfo().rawValue) { reply in
+                guard let settings = LoopSettingsUserInfo(rawValue: reply as LoopSettingsUserInfo.RawValue) else {
+                    log.error("fetchSettings: could not decode reply: %{public}@", reply)
+                    continuation.resume(throwing: MessageError.decoding)
+                    return
+                }
+                continuation.resume(returning: settings)
+            }
+        }
+    }
+
     func sendPotentialCarbEntryMessage(_ carbEntry: PotentialCarbEntryUserInfo, replyHandler: @escaping (WatchContext) -> Void, errorHandler: @escaping (Error) -> Void) throws {
         guard activationState == .activated else {
             throw MessageError.activation

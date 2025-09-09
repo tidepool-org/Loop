@@ -212,6 +212,9 @@ extension ExtensionDelegate: WCSessionDelegate {
         log.default("activationDidCompleteWith %{public}@", String(describing: activationState))
         if activationState == .activated {
             updateContext(session.receivedApplicationContext)
+            Task {
+                await loopManager.requestSettingsUpdate()
+            }
         }
     }
 

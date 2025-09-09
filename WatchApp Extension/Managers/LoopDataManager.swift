@@ -196,6 +196,12 @@ extension LoopDataManager {
         return true
     }
 
+    func requestSettingsUpdate() async {
+        if let settings = try? await WCSession.default.fetchSettings() {
+            self.watchInfo = settings
+        }
+    }
+
     func requestContextUpdate(completion: @escaping () -> Void = { }) {
         try? WCSession.default.sendContextRequestMessage(WatchContextRequestUserInfo(), completionHandler: { (result) in
             DispatchQueue.main.async {
