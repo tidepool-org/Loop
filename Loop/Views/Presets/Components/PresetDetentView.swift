@@ -9,6 +9,7 @@
 import LoopKit
 import LoopKitUI
 import SwiftUI
+import LoopCore
 
 struct PresetDetentView: View {
 
@@ -18,7 +19,6 @@ struct PresetDetentView: View {
     }
     
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
-    @Environment(\.colorPalette) private var colorPalette
     @Environment(\.settingsManager) private var settingsManager
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
@@ -118,7 +118,7 @@ struct PresetDetentView: View {
             VStack(spacing: 24) {
                 VStack(spacing: 16) {
                     VStack(spacing: 4) {
-                        preset.title(font: .title2, iconSize: 20, colorPalette: colorPalette)
+                        preset.title(font: .title2, iconSize: 20)
                         subtitle
                     }
                     
@@ -164,5 +164,19 @@ struct PresetDetentView: View {
             .readContentHeight(to: $sheetContentHeight)
         }
         .sheetDetent(height: sheetContentHeight)
+    }
+}
+
+extension SelectablePreset {
+    func title(font: Font, iconSize: Double) -> some View {
+        HStack(spacing: 6) {
+            if let icon, !icon.isEmpty {
+                PresetSymbolView(icon)
+            }
+
+            Text(name)
+                .font(font)
+                .fontWeight(.semibold)
+        }
     }
 }

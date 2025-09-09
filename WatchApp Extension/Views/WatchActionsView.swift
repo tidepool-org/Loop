@@ -13,6 +13,8 @@ import LoopKit
 struct WatchActionsView: View {
     @State private var loopManager = ExtensionDelegate.shared().loopManager
 
+    @State private var isShowingPresetList: Bool = false
+
     var freshness: LoopCompletionFreshness {
         return LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
     }
@@ -92,7 +94,7 @@ struct WatchActionsView: View {
                     foregroundTint: presetActive ? .darkPresets : .presets,
                     backgroundTint: presetActive ? .presets : .darkPresets
                 ) {
-                    // Handle action
+                    isShowingPresetList = true
                 }
                 Spacer()
                     .frame(maxWidth: .infinity)
@@ -100,5 +102,9 @@ struct WatchActionsView: View {
         }
         .font(.system(size: 14, weight: .light))
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $isShowingPresetList) {
+            PresetListView(presets: loopManager.selectablePresets)
+        }
+        .environment(\.glucoseDisplayUnit, loopManager.displayGlucoseUnit)
     }
 }

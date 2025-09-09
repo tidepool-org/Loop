@@ -9,11 +9,11 @@
 import LoopKit
 import LoopKitUI
 import SwiftUI
+import LoopCore
 
 struct EditPresetDurationView: View {
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.settingsManager) private var settingsManager
-    @Environment(\.colorPalette) private var colorPalette
     @Environment(\.dismiss) private var dismiss
     
     @State var dateSelection: Date = Date()
@@ -41,7 +41,7 @@ struct EditPresetDurationView: View {
             
             VStack(spacing: 0) {
                 VStack(spacing: 24) {
-                    preset?.title(font: .largeTitle, iconSize: 36, colorPalette: colorPalette)
+                    preset?.title(font: .largeTitle, iconSize: 36)
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     

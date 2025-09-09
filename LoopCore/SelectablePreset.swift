@@ -9,14 +9,13 @@
 import LoopKit
 import SwiftUI
 import LoopAlgorithm
-import LoopKitUI
 
-enum PresetDuration: Equatable {
+public enum PresetDuration: Equatable {
     case untilCarbsEntered
     case duration(TimeInterval)
     case indefinite
 
-    var presetDuration: TemporaryScheduleOverride.Duration {
+    public var presetDuration: TemporaryScheduleOverride.Duration {
         switch self {
         case .indefinite: return .indefinite
         case .duration(let duration): return .finite(duration)
@@ -25,14 +24,14 @@ enum PresetDuration: Equatable {
     }
 }
 
-enum PresetExpectedEndTime {
+public enum PresetExpectedEndTime {
     case untilCarbsEntered
     case scheduled(Date)
     case indefinite
 }
 
 extension TemporaryScheduleOverride.Duration {
-    var presetDurationType: PresetDuration {
+    public var presetDurationType: PresetDuration {
         switch self {
         case .finite(let interval):
             return .duration(interval)
@@ -43,7 +42,7 @@ extension TemporaryScheduleOverride.Duration {
 }
 
 extension TemporaryScheduleOverride {
-    var expectedEndTime: PresetExpectedEndTime? {
+    public var expectedEndTime: PresetExpectedEndTime? {
         switch context {
         case .preMeal: return .untilCarbsEntered
         case .activity, .custom, .preset:
@@ -54,20 +53,18 @@ extension TemporaryScheduleOverride {
         }
     }
 
-    var presetId: String {
+    public var presetId: String {
         switch context {
         case .preMeal: return "preMeal"
-        case .activity: return preset.id
+        case .activity: return "activity"
         case .custom: return self.syncIdentifier.uuidString
         case .preset(let preset): return preset.id
         }
     }
 }
 
-typealias RangeSafetyClassification = (lower: SafetyClassification, upper: SafetyClassification)
-
 extension PresetDuration: Hashable {
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         switch self {
         case .indefinite:
             hasher.combine("indefinite")
@@ -80,13 +77,13 @@ extension PresetDuration: Hashable {
     }
 }
 
-enum SelectablePreset: Hashable, Identifiable {
+public enum SelectablePreset: Hashable, Identifiable {
 
     case custom(TemporaryPreset)
     case preMeal(range: ClosedRange<LoopQuantity>)
     case activity(ActivityPreset)
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         switch self {
         case .custom(let preset):
             hasher.combine(preset)
@@ -98,7 +95,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    static func == (lhs: SelectablePreset, rhs: SelectablePreset) -> Bool {
+    public static func == (lhs: SelectablePreset, rhs: SelectablePreset) -> Bool {
         switch (lhs, rhs) {
         case (.custom(let lhsPreset), .custom(let rhsPreset)):
             return lhsPreset == rhsPreset
@@ -111,7 +108,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var id: String {
+    public var id: String {
         switch self {
         case .custom(let preset): return preset.id
         case .activity(let activity): return "activity-\(activity.id)"
@@ -119,7 +116,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var icon: PresetSymbol? {
+    public var icon: PresetSymbol? {
         switch self {
         case .custom(let preset): return preset.symbol
         case .preMeal: return .image("Pre-Meal-symbol", tint: .preMeal)
@@ -127,7 +124,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var duration: PresetDuration {
+    public var duration: PresetDuration {
         get {
             switch self {
             case .custom(let preset):
@@ -177,11 +174,11 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var isScheduled: Bool {
+    public var isScheduled: Bool {
         return nextScheduledStartAfter(Date()) != nil
     }
 
-    func nextScheduledStartAfter(_ date: Date) -> Date? {
+    public func nextScheduledStartAfter(_ date: Date) -> Date? {
         switch self {
         case .custom(let preset):
             return preset.nextScheduledStartAfter(date)
@@ -190,7 +187,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var scheduleStartDate: Date? {
+    public var scheduleStartDate: Date? {
         get {
             switch self {
             case .custom(let preset):
@@ -210,7 +207,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var repeatOptions: PresetScheduleRepeatOptions {
+    public var repeatOptions: PresetScheduleRepeatOptions {
         get {
             switch self {
             case .custom(let preset):
@@ -231,7 +228,7 @@ enum SelectablePreset: Hashable, Identifiable {
     }
 
 
-    var name: String {
+    public var name: String {
         get {
             switch self {
             case .custom(let preset): return preset.name
@@ -247,7 +244,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var correctionRange: ClosedRange<LoopQuantity>? {
+    public var correctionRange: ClosedRange<LoopQuantity>? {
         get {
             switch self {
             case .custom(let preset): return preset.settings.targetRange
@@ -270,7 +267,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var insulinSensitivityMultiplier: Double? {
+    public var insulinSensitivityMultiplier: Double? {
         if case .custom(let preset) = self {
             return preset.settings.insulinSensitivityMultiplier
         } else if case .activity(let activity) = self {
@@ -280,7 +277,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
     
-    var insulinNeedsScaleFactor: Double {
+    public var insulinNeedsScaleFactor: Double {
         get {
             if case .custom(let preset) = self {
                 return 1.0 / (preset.settings.insulinSensitivityMultiplier ?? 1)
@@ -301,7 +298,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var canAdjustSensitivity: Bool {
+    public var canAdjustSensitivity: Bool {
         switch self {
         case .custom, .activity:
             return true
@@ -310,7 +307,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var allowsIndefiniteDuration: Bool {
+    public var allowsIndefiniteDuration: Bool {
         switch self {
         case .custom:
             return true
@@ -319,7 +316,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
     
-    var canAdjustDuration: Bool {
+    public var canAdjustDuration: Bool {
         switch self {
         case .custom, .activity:
             return true
@@ -328,7 +325,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var canChangeName: Bool {
+    public var canChangeName: Bool {
         switch self {
         case .custom:
             return true
@@ -337,7 +334,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var allowsScheduling: Bool {
+    public var allowsScheduling: Bool {
         switch self {
         case .custom:
             return true
@@ -346,7 +343,7 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var canBeDeleted: Bool {
+    public var canBeDeleted: Bool {
         switch self {
         case .custom:
             return true
@@ -355,14 +352,14 @@ enum SelectablePreset: Hashable, Identifiable {
         }
     }
 
-    var isPreMeal: Bool {
+    public var isPreMeal: Bool {
         if case .preMeal = self {
             return true
         }
         return false
     }
 
-    var dateCreated: Date {
+    public var dateCreated: Date {
         switch self {
         case .custom:
             return .distantPast // TODO
@@ -372,16 +369,68 @@ enum SelectablePreset: Hashable, Identifiable {
             return .distantPast
         }
     }
+}
 
-    func title(font: Font, iconSize: Double, colorPalette: LoopUIColorPalette) -> some View {
-        HStack(spacing: 6) {
-            if let icon, !icon.isEmpty {
-                PresetSymbolView(icon)
-            }
+extension PresetExpectedEndTime {
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter
+    }()
 
-            Text(name)
-                .font(font)
-                .fontWeight(.semibold)
+    public var localizedTitle: String {
+        switch self {
+        case .untilCarbsEntered:
+            return NSLocalizedString("on until carbs added", comment: "Preset card pre-meal expected end time")
+        case .indefinite:
+            return NSLocalizedString("on until turned off", comment: "Preset card indefinite scheduled end time")
+        case .scheduled(let date):
+            return NSLocalizedString("on until \(Self.timeFormatter.string(from: date))", comment: "Presets card time duration accessibility label")
+        }
+    }
+
+    public var accessibilityLabel: String {
+        switch self {
+        case .untilCarbsEntered:
+            return NSLocalizedString("on until carbs added", comment: "Presets card pre-meal expected end time accessibility label")
+        case .indefinite:
+            return NSLocalizedString("on until turned off", comment: "Presets card indefinite duration accessibility label")
+        case .scheduled(let date):
+            let formatter = DateComponentsFormatter()
+            formatter.allowedUnits = [.hour, .minute]
+            formatter.unitsStyle = .spellOut
+            return NSLocalizedString("on until \(Self.timeFormatter.string(from: date))", comment: "Presets card time duration accessibility label")
+        }
+    }
+}
+
+extension PresetDuration {
+    public var localizedTitle: String {
+        switch self {
+        case .untilCarbsEntered:
+            return NSLocalizedString("until carbs added", comment: "Preset card pre-meal duration")
+        case .indefinite:
+            return NSLocalizedString("until turned off", comment: "Preset card indefinite duration")
+        case .duration(let duration):
+            let formatter = DateComponentsFormatter()
+            formatter.allowedUnits = [.hour, .minute]
+            formatter.unitsStyle = .short
+            return formatter.string(from: duration) ?? ""
+
+        }
+    }
+
+    public var accessibilityLabel: String {
+        switch self {
+        case .untilCarbsEntered:
+            return NSLocalizedString("Active until carbs are added", comment: "Presets card pre-meal duration accessibility label")
+        case .indefinite:
+            return NSLocalizedString("Active until turned off", comment: "Presets card indefinite duration accessibility label")
+        case .duration(let duration):
+            let formatter = DateComponentsFormatter()
+            formatter.allowedUnits = [.hour, .minute]
+            formatter.unitsStyle = .spellOut
+            return NSLocalizedString("Active for \(formatter.string(from: duration) ?? "")", comment: "Presets card time duration accessibility label")
         }
     }
 }

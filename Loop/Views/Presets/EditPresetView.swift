@@ -11,6 +11,7 @@ import LoopKit
 import SwiftUI
 import LoopKitUI
 import LoopAlgorithm
+import LoopCore
 
 struct EditPresetView: View {
     @Environment(\.dismiss) private var dismiss

@@ -9,6 +9,7 @@
 import LoopAlgorithm
 import UIKit
 import LoopKit
+import LoopCore
 
 extension PresetScheduleRepeatOptions: @retroactive CustomStringConvertible {
     public var description: String {

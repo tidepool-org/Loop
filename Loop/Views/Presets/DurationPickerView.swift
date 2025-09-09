@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import LoopCore
 
 struct DurationPickerView: View {
     @Binding var durationType: PresetDuration

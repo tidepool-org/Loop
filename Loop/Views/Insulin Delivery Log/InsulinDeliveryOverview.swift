@@ -9,6 +9,7 @@
 import LoopAlgorithm
 import LoopKit
 import SwiftUI
+import LoopCore
 
 struct DatedQuantity: Hashable {
     let date: Date

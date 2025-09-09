@@ -215,6 +215,33 @@ extension LoopDataManager {
             }
         })
     }
+
+    var selectablePresets: [SelectablePreset] {
+        var presets: [SelectablePreset] = []
+
+        let settings = watchInfo.loopSettings
+
+        if let preMealTargetRange = settings.preMealTargetRange {
+            presets.append(.preMeal(range: preMealTargetRange))
+        }
+
+        presets.append(contentsOf: settings.overridePresets.map { override in
+            if override.id.hasPrefix("activity-"), let activityPreset = ActivityPreset(preset: override) {
+                return .activity(activityPreset)
+            } else {
+                return .custom(override)
+            }
+        })
+
+        ActivityPreset.ActivityType.allCases.forEach { activityType in
+            if !settings.overridePresets.contains(where: { $0.id == activityType.id }) {
+                presets.append(.activity(ActivityPreset(activityType: activityType, preset: activityType.defaultPreset(duration: .finite(.minutes(90))))))
+            }
+        }
+
+        return presets
+    }
+
 }
 
 extension LoopDataManager {

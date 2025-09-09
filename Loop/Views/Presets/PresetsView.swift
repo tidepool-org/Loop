@@ -10,6 +10,7 @@ import LoopAlgorithm
 import LoopKit
 import LoopKitUI
 import SwiftUI
+import LoopCore
 
 enum PresetSortOption: Int, CaseIterable {
     case name

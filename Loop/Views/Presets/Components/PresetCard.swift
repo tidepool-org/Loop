@@ -10,6 +10,7 @@ import LoopAlgorithm
 import LoopKitUI
 import SwiftUI
 import LoopKit
+import LoopCore
 
 struct PresetCard: View {
     
@@ -118,70 +119,6 @@ struct PresetCard: View {
             .stroke(Color(UIColor.secondarySystemBackground), lineWidth: 1)
             .frame(maxWidth: .infinity))
         .opacity(isEnabled ? 1 : 0.6)
-    }
-}
-
-extension PresetExpectedEndTime {
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        return formatter
-    }()
-
-    var localizedTitle: String {
-        switch self {
-        case .untilCarbsEntered:
-            return NSLocalizedString("on until carbs added", comment: "Preset card pre-meal expected end time")
-        case .indefinite:
-            return NSLocalizedString("on until turned off", comment: "Preset card indefinite scheduled end time")
-        case .scheduled(let date):
-            return NSLocalizedString("on until \(Self.timeFormatter.string(from: date))", comment: "Presets card time duration accessibility label")
-        }
-    }
-
-    var accessibilityLabel: String {
-        switch self {
-        case .untilCarbsEntered:
-            return NSLocalizedString("on until carbs added", comment: "Presets card pre-meal expected end time accessibility label")
-        case .indefinite:
-            return NSLocalizedString("on until turned off", comment: "Presets card indefinite duration accessibility label")
-        case .scheduled(let date):
-            let formatter = DateComponentsFormatter()
-            formatter.allowedUnits = [.hour, .minute]
-            formatter.unitsStyle = .spellOut
-            return NSLocalizedString("on until \(Self.timeFormatter.string(from: date))", comment: "Presets card time duration accessibility label")
-        }
-    }
-}
-
-extension PresetDuration {
-    var localizedTitle: String {
-        switch self {
-        case .untilCarbsEntered:
-            return NSLocalizedString("until carbs added", comment: "Preset card pre-meal duration")
-        case .indefinite:
-            return NSLocalizedString("until turned off", comment: "Preset card indefinite duration")
-        case .duration(let duration):
-            let formatter = DateComponentsFormatter()
-            formatter.allowedUnits = [.hour, .minute]
-            formatter.unitsStyle = .short
-            return formatter.string(from: duration) ?? ""
-
-        }
-    }
-
-    var accessibilityLabel: String {
-        switch self {
-        case .untilCarbsEntered:
-            return NSLocalizedString("Active until carbs are added", comment: "Presets card pre-meal duration accessibility label")
-        case .indefinite:
-            return NSLocalizedString("Active until turned off", comment: "Presets card indefinite duration accessibility label")
-        case .duration(let duration):
-            let formatter = DateComponentsFormatter()
-            formatter.allowedUnits = [.hour, .minute]
-            formatter.unitsStyle = .spellOut
-            return NSLocalizedString("Active for \(formatter.string(from: duration) ?? "")", comment: "Presets card time duration accessibility label")
-        }
     }
 }
 
