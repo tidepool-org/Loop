@@ -9,9 +9,9 @@
 import WatchKit
 import SwiftUI
 
-class ActionViewHostingController: WKHostingController<ActionView> {
+class ActionViewHostingController: WKHostingController<WatchActionsView> {
     
-    override var body: ActionView {
-        return ActionView()
+    override var body: WatchActionsView {
+        return WatchActionsView()
     }
 }

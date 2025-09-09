@@ -209,6 +209,7 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
 
 extension ExtensionDelegate: WCSessionDelegate {
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        log.default("activationDidCompleteWith %{public}@", String(describing: activationState))
         if activationState == .activated {
             updateContext(session.receivedApplicationContext)
         }

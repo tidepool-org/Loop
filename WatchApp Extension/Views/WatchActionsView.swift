@@ -1,5 +1,5 @@
 //
-//  ActionView.swift
+//  WatchActionsView.swift
 //  Loop
 //
 //  Created by Pete Schwamb on 8/15/25.
@@ -10,11 +10,15 @@
 import SwiftUI
 import LoopKit
 
-struct ActionView: View {
+struct WatchActionsView: View {
     @State private var loopManager = ExtensionDelegate.shared().loopManager
 
     var freshness: LoopCompletionFreshness {
         return LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
+    }
+
+    var presetActive: Bool {
+        loopManager.watchInfo.scheduleOverride != nil
     }
 
     var glucoseValue: String {
@@ -85,8 +89,8 @@ struct ActionView: View {
                 CircleTintedButton(
                     label: "Presets",
                     image: Image("presets"),
-                    foregroundTint: .presets,
-                    backgroundTint: .darkPresets
+                    foregroundTint: presetActive ? .darkPresets : .presets,
+                    backgroundTint: presetActive ? .presets : .darkPresets
                 ) {
                     // Handle action
                 }
