@@ -40,15 +40,12 @@ final class CarbEntryViewModel: ObservableObject {
             switch self {
             case .entryIsMissedMeal:
                 return 1
-            case .overrideInProgress:
-                return 2
             case .glucoseRisingRapidly:
                 return 3
             }
         }
         
         case entryIsMissedMeal
-        case overrideInProgress
         case glucoseRisingRapidly
     }
     
@@ -344,18 +341,19 @@ final class CarbEntryViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    @Published var currentOverride: TemporaryScheduleOverride?
+    
     private func checkIfOverrideEnabled() {
         guard let delegate else {
             return
         }
 
         if delegate.isScheduleOverrideActive(at: Date()),
-           let overrideSettings = delegate.scheduleOverride?.settings,
-           overrideSettings.effectiveInsulinNeedsScaleFactor != 1.0 
+           let override = delegate.scheduleOverride ?? delegate.preMealOverride
         {
-            self.warnings.insert(.overrideInProgress)
+            currentOverride = override
         } else {
-            self.warnings.remove(.overrideInProgress)
+            currentOverride = nil
         }
     }
     

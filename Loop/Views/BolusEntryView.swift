@@ -132,7 +132,8 @@ struct BolusEntryView: View {
         } header: {
             if let scheduleOverride = viewModel.scheduleOverride ?? viewModel.preMealOverride {
                 ActivePresetBanner(override: scheduleOverride)
-                    .padding(.horizontal, -32)
+                    .listRowInsets(EdgeInsets(top: 30, leading: 0, bottom: 12, trailing: 0))
+                    .padding(.horizontal, -20)
                     .padding(.bottom, 8)
                     .textCase(nil)
             }
