@@ -237,7 +237,7 @@ class GlucoseChartScene: SKScene {
         // Keep track of the nodes we started this pass with so we can expire obsolete nodes at the end
         var inactiveNodes = nodes
 
-        let isOverrideActive = data.activePreMealOverride != nil || data.activeScheduleOverride != nil
+        let isOverrideActive = data.activeScheduleOverride != nil
         data.correctionRange?.quantityBetween(start: spannedInterval.start, end: spannedInterval.end).forEach { range in
             let (sprite, created) = getSprite(forHash: range.chartHashValue)
             sprite.color = UIColor.glucose.withAlphaComponent(isOverrideActive ? 0.2 : 0.3)
@@ -251,8 +251,7 @@ class GlucoseChartScene: SKScene {
         // extends to the end of the visible window.
         func plotOverride(
             _ override: TemporaryScheduleOverride,
-            pushingStartTo startDate: Date? = nil,
-            extendingToChartEnd shouldExtendToChartEnd: Bool
+            pushingStartTo startDate: Date? = nil
         ) {
             var override = override
             if let startDate = startDate {
@@ -273,7 +272,7 @@ class GlucoseChartScene: SKScene {
             sprite1.move(to: scaler.rect(for: overrideHashable, unit: unit), animated: !created)
             inactiveNodes.removeValue(forKey: overrideHashable.chartHashValue)
 
-            if override.scheduledEndDate < spannedInterval.end, shouldExtendToChartEnd {
+            if override.scheduledEndDate < spannedInterval.end {
                 var extendedOverride = override
                 extendedOverride.duration = .finite(spannedInterval.end.timeIntervalSince(overrideHashable.start))
                 // Target range already known to be non-nil
@@ -286,12 +285,8 @@ class GlucoseChartScene: SKScene {
             }
         }
 
-        if let preMealOverride = data.activePreMealOverride {
-            plotOverride(preMealOverride, extendingToChartEnd: true)
-        }
-
         if let override = data.activeScheduleOverride {
-            plotOverride(override, pushingStartTo: data.activePreMealOverride?.scheduledEndDate, extendingToChartEnd: data.activePreMealOverride == nil)
+            plotOverride(override)
         }
 
         data.historicalGlucose?.filter { scaler.dates.contains($0.startDate) }.forEach {

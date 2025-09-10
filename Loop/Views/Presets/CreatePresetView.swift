@@ -125,7 +125,7 @@ struct CreatePresetView: View {
                                         }
                                     }
                                     if startPreset {
-                                        let temporaryScheduleOverride = temporaryPreset.createOverride(enactTrigger: .local)
+                                        let temporaryScheduleOverride = temporaryPreset.createOverride(enactTrigger: .local, isCustom: !preset.savePreset)
                                         temporaryPresetsManager.scheduleOverride = temporaryScheduleOverride
                                     }
                                 }

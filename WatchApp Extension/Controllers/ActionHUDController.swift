@@ -62,7 +62,7 @@ final class ActionHUDController: HUDInterfaceController {
             activeOverrideContext = nil
         }
 
-        updateForPreMeal(enabled: loopManager.watchInfo.preMealOverride?.isActive() == true)
+        updateForPreMeal(enabled: activeOverrideContext == .preMeal)
         updateForOverrideContext(activeOverrideContext)
 
         let isClosedLoop = loopManager.activeContext?.isClosedLoop ?? false
@@ -114,7 +114,8 @@ final class ActionHUDController: HUDInterfaceController {
             preMealButtonGroup.turnOff()
             overrideButtonGroup.state = .on
         case .preMeal?:
-            assertionFailure()
+            preMealButtonGroup.state = .on
+            overrideButtonGroup.turnOff()
         }
     }
 
@@ -128,8 +129,11 @@ final class ActionHUDController: HUDInterfaceController {
         guard let range = loopManager.watchInfo.loopSettings.preMealTargetRange else {
             return
         }
-        
-        let buttonToSelect = loopManager.watchInfo.preMealOverride?.isActive() == true ? SelectedButton.on : SelectedButton.off
+
+
+        let premealActive = loopManager.watchInfo.scheduleOverride?.context == .preMeal && loopManager.watchInfo.scheduleOverride?.isActive() == true
+
+        let buttonToSelect = premealActive ? SelectedButton.on : SelectedButton.off
         let viewModel = OnOffSelectionViewModel(
             title: NSLocalizedString("Pre-Meal", comment: "Title for sheet to enable/disable pre-meal on watch"),
             message: formattedGlucoseRangeString(from: range),
@@ -141,52 +145,6 @@ final class ActionHUDController: HUDInterfaceController {
     }
 
     func setPreMealEnabled(_ isPreMealEnabled: Bool) {
-        updateForPreMeal(enabled: isPreMealEnabled)
-        pendingMessageResponses += 1
-
-        var watchInfo = loopManager.watchInfo
-        let overrideContext = watchInfo.scheduleOverride?.context
-        if isPreMealEnabled {
-            watchInfo.enablePreMealOverride(for: .hours(1))
-        } else {
-            watchInfo.clearOverride(matching: .preMeal)
-        }
-
-        do {
-            try WCSession.default.sendSettingsUpdateMessage(watchInfo, completionHandler: { (result) in
-                DispatchQueue.main.async {
-                    self.pendingMessageResponses -= 1
-
-                    switch result {
-                    case .success(let context):
-                        if self.pendingMessageResponses == 0 {
-                            self.loopManager.watchInfo.preMealOverride = watchInfo.preMealOverride
-                            self.loopManager.watchInfo.scheduleOverride = watchInfo.scheduleOverride
-                        }
-
-                        ExtensionDelegate.shared().loopManager.updateContext(context)
-                    case .failure(let error):
-                        if self.pendingMessageResponses == 0 {
-                            ExtensionDelegate.shared().present(error)
-                            self.updateForPreMeal(enabled: isPreMealEnabled)
-                            self.updateForOverrideContext(overrideContext)
-                        }
-                    }
-                }
-            })
-        } catch {
-            pendingMessageResponses -= 1
-            if pendingMessageResponses == 0 {
-                updateForPreMeal(enabled: isPreMealEnabled)
-                updateForOverrideContext(overrideContext)
-                presentAlert(
-                    withTitle: NSLocalizedString("Send Failed", comment: "The title of the alert controller displayed after a glucose range override send attempt fails"),
-                    message: NSLocalizedString("Make sure your iPhone is nearby and try again", comment: "The recovery message displayed after a glucose range override send attempt fails"),
-                    preferredStyle: .alert,
-                    actions: [.dismissAction()]
-                )
-            }
-        }
     }
 
     @IBAction func toggleOverride() {
@@ -211,48 +169,6 @@ final class ActionHUDController: HUDInterfaceController {
     }
 
     private func sendOverride(_ override: TemporaryScheduleOverride?) {
-        updateForOverrideContext(override?.context)
-        pendingMessageResponses += 1
-
-        var watchInfo = loopManager.watchInfo
-        let isPreMealEnabled = watchInfo.preMealOverride?.isActive() == true
-        watchInfo.scheduleOverride = override
-
-        do {
-            try WCSession.default.sendSettingsUpdateMessage(watchInfo, completionHandler: { (result) in
-                DispatchQueue.main.async {
-                    self.pendingMessageResponses -= 1
-
-                    switch result {
-                    case .success(let context):
-                        if self.pendingMessageResponses == 0 {
-                            self.loopManager.watchInfo.scheduleOverride = override
-                            self.loopManager.watchInfo.preMealOverride = watchInfo.preMealOverride
-                        }
-
-                        ExtensionDelegate.shared().loopManager.updateContext(context)
-                    case .failure(let error):
-                        if self.pendingMessageResponses == 0 {
-                            ExtensionDelegate.shared().present(error)
-                            self.updateForOverrideContext(override?.context)
-                            self.updateForPreMeal(enabled: isPreMealEnabled)
-                        }
-                    }
-                }
-            })
-        } catch {
-            pendingMessageResponses -= 1
-            if pendingMessageResponses == 0 {
-                updateForOverrideContext(override?.context)
-                updateForPreMeal(enabled: isPreMealEnabled)
-                presentAlert(
-                    withTitle: NSLocalizedString("Send Failed", comment: "The title of the alert controller displayed after a glucose range override send attempt fails"),
-                    message: NSLocalizedString("Make sure your iPhone is nearby and try again", comment: "The recovery message displayed after a glucose range override send attempt fails"),
-                    preferredStyle: .alert,
-                    actions: [.dismissAction()]
-                )
-            }
-        }
     }
 }
 

@@ -16,8 +16,6 @@ struct GlucoseChartData {
 
     var correctionRange: GlucoseRangeSchedule?
 
-    var preMealOverride: TemporaryScheduleOverride?
-
     var scheduleOverride: TemporaryScheduleOverride?
 
     var historicalGlucose: [SampleValue]? {
@@ -36,10 +34,9 @@ struct GlucoseChartData {
 
     private(set) var predictedGlucoseRange: ClosedRange<LoopQuantity>?
 
-    init(unit: LoopUnit?, correctionRange: GlucoseRangeSchedule?, preMealOverride: TemporaryScheduleOverride?, scheduleOverride: TemporaryScheduleOverride?, historicalGlucose: [SampleValue]?, predictedGlucose: [SampleValue]?) {
+    init(unit: LoopUnit?, correctionRange: GlucoseRangeSchedule?, scheduleOverride: TemporaryScheduleOverride?, historicalGlucose: [SampleValue]?, predictedGlucose: [SampleValue]?) {
         self.unit = unit
         self.correctionRange = correctionRange
-        self.preMealOverride = preMealOverride
         self.scheduleOverride = scheduleOverride
         self.historicalGlucose = historicalGlucose
         self.historicalGlucoseRange = historicalGlucose?.quantityRange
@@ -57,11 +54,6 @@ struct GlucoseChartData {
         for correction in correctionRange?.quantityBetween(start: interval.start, end: interval.end) ?? [] {
             min = Swift.min(min, correction.value.lowerBound.doubleValue(for: unit))
             max = Swift.max(max, correction.value.upperBound.doubleValue(for: unit))
-        }
-
-        if let override = activePreMealOverride?.settings.targetRange {
-            min = Swift.min(min, override.lowerBound.doubleValue(for: unit))
-            max = Swift.max(max, override.upperBound.doubleValue(for: unit))
         }
 
         if let override = activeScheduleOverride?.settings.targetRange {
@@ -92,13 +84,6 @@ struct GlucoseChartData {
 
     var activeScheduleOverride: TemporaryScheduleOverride? {
         guard let override = scheduleOverride, override.isActive() else {
-            return nil
-        }
-        return override
-    }
-
-    var activePreMealOverride: TemporaryScheduleOverride? {
-        guard let override = preMealOverride, override.isActive() else {
             return nil
         }
         return override

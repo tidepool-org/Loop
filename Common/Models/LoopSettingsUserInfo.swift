@@ -11,48 +11,7 @@ import LoopKit
 struct LoopSettingsUserInfo: Equatable {
     var loopSettings: LoopSettings
     var scheduleOverride: TemporaryScheduleOverride?
-    var preMealOverride: TemporaryScheduleOverride?
-
-    public mutating func enablePreMealOverride(at date: Date = Date(), for duration: TimeInterval) {
-        preMealOverride = makePreMealOverride(beginningAt: date, for: duration)
-    }
-
-    private func makePreMealOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
-        guard let preMealTargetRange = loopSettings.preMealTargetRange else {
-            return nil
-        }
-        return TemporaryScheduleOverride(
-            context: .preMeal,
-            settings: TemporaryPresetSettings(targetRange: preMealTargetRange),
-            startDate: date,
-            duration: .finite(duration),
-            enactTrigger: .local,
-            syncIdentifier: UUID()
-        )
-    }
-
-    public mutating func clearOverride(matching context: TemporaryScheduleOverride.Context? = nil) {
-        if context == .preMeal {
-            preMealOverride = nil
-            return
-        }
-
-        guard let scheduleOverride = scheduleOverride else { return }
-
-        if let context = context {
-            if scheduleOverride.context == context {
-                self.scheduleOverride = nil
-            }
-        } else {
-            self.scheduleOverride = nil
-        }
-    }
-
-    public func nonPreMealOverrideEnabled(at date: Date = Date()) -> Bool {
-        return scheduleOverride?.isActive(at: date) == true
-    }
 }
-
 
 extension LoopSettingsUserInfo: RawRepresentable {
     typealias RawValue = [String: Any]
@@ -76,12 +35,6 @@ extension LoopSettingsUserInfo: RawRepresentable {
         } else {
             self.scheduleOverride = nil
         }
-
-        if let rawPreMealOverride = rawValue["p"] as? TemporaryScheduleOverride.RawValue {
-            self.preMealOverride = TemporaryScheduleOverride(rawValue: rawPreMealOverride)
-        } else {
-            self.preMealOverride = nil
-        }
     }
 
     var rawValue: RawValue {
@@ -90,9 +43,7 @@ extension LoopSettingsUserInfo: RawRepresentable {
             "name": LoopSettingsUserInfo.name,
             "s": loopSettings.rawValue
         ]
-
         raw["o"] = scheduleOverride?.rawValue
-        raw["p"] = preMealOverride?.rawValue
 
         return raw
     }

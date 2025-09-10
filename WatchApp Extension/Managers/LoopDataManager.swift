@@ -79,8 +79,7 @@ class LoopDataManager {
 
         self.watchInfo = LoopSettingsUserInfo(
             loopSettings: LoopSettings(),
-            scheduleOverride: nil,
-            preMealOverride: nil
+            scheduleOverride: nil
         )
         
         Task {
@@ -216,6 +215,21 @@ extension LoopDataManager {
         })
     }
 
+    func clearOverride() async throws {
+        var watchInfoUpdate = self.watchInfo
+        watchInfoUpdate.scheduleOverride = nil
+        activeContext = try await WCSession.default.sendSettingsUpdateMessage(watchInfoUpdate)
+        watchInfo = watchInfoUpdate
+    }
+
+
+    func activateOverride(_ override: TemporaryScheduleOverride?) async throws {
+        var watchInfoUpdate = self.watchInfo
+        watchInfoUpdate.scheduleOverride = override
+        activeContext = try await WCSession.default.sendSettingsUpdateMessage(watchInfoUpdate)
+        watchInfo = watchInfoUpdate
+    }
+
     var selectablePresets: [SelectablePreset] {
         var presets: [SelectablePreset] = []
 
@@ -267,7 +281,6 @@ extension LoopDataManager {
             let chartData = GlucoseChartData(
                 unit: activeContext.displayGlucoseUnit,
                 correctionRange: self.watchInfo.loopSettings.glucoseTargetRangeSchedule,
-                preMealOverride: self.watchInfo.preMealOverride,
                 scheduleOverride: self.watchInfo.scheduleOverride,
                 historicalGlucose: historicalGlucose,
                 predictedGlucose: (activeContext.isClosedLoop ?? false) ? activeContext.predictedGlucose?.values : nil

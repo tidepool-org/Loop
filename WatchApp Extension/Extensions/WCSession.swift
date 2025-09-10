@@ -87,6 +87,23 @@ extension WCSession {
         )
     }
 
+    func sendSettingsUpdateMessage(_ userInfo: LoopSettingsUserInfo) async throws -> WatchContext {
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try sendSettingsUpdateMessage(userInfo) { result in
+                    switch result {
+                    case .success(let context):
+                        continuation.resume(returning: context)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+    }
+
     func sendSettingsUpdateMessage(_ userInfo: LoopSettingsUserInfo, completionHandler: @escaping (Result<WatchContext,Error>) -> Void) throws {
         guard activationState == .activated else {
             throw MessageError.activation

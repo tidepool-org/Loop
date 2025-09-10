@@ -148,8 +148,7 @@ final class WatchDataManager: NSObject {
     private func sendSettingsIfNeeded() {
         let userInfo = LoopSettingsUserInfo(
             loopSettings: settingsManager.loopSettings,
-            scheduleOverride: temporaryPresetsManager.scheduleOverride,
-            preMealOverride: temporaryPresetsManager.preMealOverride)
+            scheduleOverride: temporaryPresetsManager.scheduleOverride)
 
         guard let session = watchSession, session.isPaired, session.isWatchAppInstalled else {
             return
@@ -427,8 +426,7 @@ final class WatchDataManager: NSObject {
         case SettingsRequestUserInfo.name?:
             let userInfo = LoopSettingsUserInfo(
                 loopSettings: settingsManager.loopSettings,
-                scheduleOverride: temporaryPresetsManager.scheduleOverride,
-                preMealOverride: temporaryPresetsManager.preMealOverride)
+                scheduleOverride: temporaryPresetsManager.scheduleOverride)
             return userInfo.rawValue
         case PotentialCarbEntryUserInfo.name?:
             if let potentialCarbEntry = PotentialCarbEntryUserInfo(rawValue: message)?.carbEntry {
@@ -445,11 +443,9 @@ final class WatchDataManager: NSObject {
         case LoopSettingsUserInfo.name?:
             if let userInfo = LoopSettingsUserInfo(rawValue: message) {
                 // So far we only support watch changes of temporary schedule overrides
-                temporaryPresetsManager.preMealOverride = userInfo.preMealOverride
                 temporaryPresetsManager.scheduleOverride = userInfo.scheduleOverride
 
                 // Prevent re-sending these updated settings back to the watch
-                lastSentUserInfo?.preMealOverride = userInfo.preMealOverride
                 lastSentUserInfo?.scheduleOverride = userInfo.scheduleOverride
             }
 

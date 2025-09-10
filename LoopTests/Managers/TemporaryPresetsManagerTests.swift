@@ -67,7 +67,7 @@ class TemporaryPresetsManagerTests: XCTestCase {
     }
 
     func testScheduleOverrideWithExpiredPreMealOverride() {
-        manager.preMealOverride = TemporaryScheduleOverride(
+        manager.scheduleOverride = TemporaryScheduleOverride(
             context: .preMeal,
             settings: TemporaryPresetSettings(targetRange: preMealRange),
             startDate: Date(timeIntervalSinceNow: -2 /* hours */ * 60 * 60),

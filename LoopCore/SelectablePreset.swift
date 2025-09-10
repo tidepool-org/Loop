@@ -371,6 +371,27 @@ public enum SelectablePreset: Hashable, Identifiable {
     }
 }
 
+extension SelectablePreset {
+    public func createOverride(beginningAt: Date = Date()) -> TemporaryScheduleOverride {
+        switch self {
+        case .custom(let temporaryScheduleOverridePreset):
+            return temporaryScheduleOverridePreset.createOverride(enactTrigger: .local, beginningAt: beginningAt)
+        case .activity(let activity):
+            return activity.preset.createOverride(enactTrigger: .local, beginningAt: beginningAt)
+        case .preMeal(let targetRange):
+            return TemporaryScheduleOverride(
+                context: .preMeal,
+                settings: TemporaryPresetSettings(targetRange: targetRange),
+                startDate: beginningAt,
+                duration: .finite(.hours(1)),
+                enactTrigger: .local,
+                syncIdentifier: UUID()
+            )
+        }
+
+    }
+}
+
 extension PresetExpectedEndTime {
     private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()

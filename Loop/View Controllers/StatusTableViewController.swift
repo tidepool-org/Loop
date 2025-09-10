@@ -480,15 +480,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
             lastLoopError = nil
         }
 
-        // Net basal rate HUD
-        let netBasal: NetBasal?
-        if let basalSchedule = temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory {
-            netBasal = basalDeliveryState?.getNetBasal(basalSchedule: basalSchedule, maximumBasalRatePerHour: settingsManager.settings.maximumBasalRatePerHour)
-        } else {
-            netBasal = nil
-        }
-        self.log.debug("Update net basal to %{public}@", String(describing: netBasal))
-
         self.lastLoopError = lastLoopError
 
         if let automatedTreatmentState = loopManager.automatedTreatmentState {

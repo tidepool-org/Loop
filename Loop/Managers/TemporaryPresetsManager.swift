@@ -44,11 +44,6 @@ class TemporaryPresetsManager {
 
         _scheduleOverride = self.presetHistory.activeOverride(at: Date())
 
-        if scheduleOverride?.context == .preMeal {
-            preMealOverride = scheduleOverride
-            scheduleOverride = nil
-        }
-
         overrideIntentObserver = UserDefaults.appGroup?.observe(
             \.intentExtensionOverrideToSet,
              options: [.new],
@@ -85,16 +80,16 @@ class TemporaryPresetsManager {
         presetActivationObservers.append(observer)
     }
 
-    public var scheduleOverride: TemporaryScheduleOverride? {
+    var preMealOverride: TemporaryScheduleOverride? {
+        scheduleOverride?.context == .preMeal ? scheduleOverride : nil
+    }
+
+    var scheduleOverride: TemporaryScheduleOverride? {
         didSet {
             guard oldValue != scheduleOverride else {
                 return
             }
 
-            if scheduleOverride != nil {
-                preMealOverride = nil
-            }
-            
             if scheduleOverride != oldValue {
                 presetHistory.recordOverride(scheduleOverride)
 
@@ -116,38 +111,9 @@ class TemporaryPresetsManager {
         }
     }
 
-    public var preMealOverride: TemporaryScheduleOverride? {
-        didSet {
-            guard oldValue != preMealOverride else {
-                return
-            }
-            
-            if let newValue = preMealOverride, newValue.context != .preMeal || newValue.settings.insulinNeedsScaleFactor != nil {
-                preconditionFailure("The `preMealOverride` field should be used only for a pre-meal target range override")
-            }
-            
-            if preMealOverride != nil {
-                scheduleOverride = nil
-            }
-            
-            presetHistory.recordOverride(preMealOverride)
-
-            if let newPreset = preMealOverride {
-                for observer in self.presetActivationObservers {
-                    observer.presetActivated(context: newPreset.context, duration: newPreset.duration)
-                }
-                
-                scheduleClearOverride(override: newPreset)
-            }
-            
-            notify(forChange: .preferences)
-        }
-    }
-    
     public var activeOverride: TemporaryScheduleOverride? {
-        let override = (preMealOverride ?? scheduleOverride)
-        if override?.isActive() == true {
-            return override
+        if scheduleOverride?.isActive() == true {
+            return scheduleOverride
         } else {
             return nil
         }
@@ -228,8 +194,6 @@ class TemporaryPresetsManager {
     func endOverride(_ override: TemporaryScheduleOverride) {
         if override == scheduleOverride {
             clearOverride()
-        } else if override == preMealOverride {
-            clearOverride(matching: .preMeal)
         }
     }
 
@@ -239,23 +203,13 @@ class TemporaryPresetsManager {
             return nil
         }
 
-        let preMealOverride = presumingMealEntry ? nil : self.preMealOverride
+        var scheduleOverride = scheduleOverride
 
-        let currentEffectiveOverride: TemporaryScheduleOverride?
-        switch (preMealOverride, scheduleOverride) {
-        case (let preMealOverride?, nil):
-            currentEffectiveOverride = preMealOverride
-        case (nil, let scheduleOverride?):
-            currentEffectiveOverride = scheduleOverride
-        case (let preMealOverride?, let scheduleOverride?):
-            currentEffectiveOverride = preMealOverride.scheduledEndDate > Date()
-                ? preMealOverride
-                : scheduleOverride
-        case (nil, nil):
-            currentEffectiveOverride = nil
+        if presumingMealEntry && scheduleOverride?.context == .preMeal {
+            scheduleOverride = nil
         }
 
-        if let effectiveOverride = currentEffectiveOverride {
+        if let effectiveOverride = scheduleOverride {
             return glucoseTargetRangeSchedule.applyingOverride(effectiveOverride)
         } else {
             return glucoseTargetRangeSchedule
@@ -280,7 +234,7 @@ class TemporaryPresetsManager {
     }
 
     public func enablePreMealOverride(at date: Date = Date(), for duration: TimeInterval) {
-        preMealOverride = makePreMealOverride(beginningAt: date, for: duration)
+        scheduleOverride = makePreMealOverride(beginningAt: date, for: duration)
     }
 
     private func makePreMealOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
@@ -307,44 +261,18 @@ class TemporaryPresetsManager {
 
 
     func startPreset(_ preset: SelectablePreset) {
-        switch preset {
-        case .custom(let temporaryScheduleOverridePreset):
-            scheduleOverride = temporaryScheduleOverridePreset.createOverride(enactTrigger: .local)
-        case .activity(let activity):
-            scheduleOverride = activity.preset.createOverride(enactTrigger: .local)
-        case .preMeal:
-            enablePreMealOverride(for: .hours(1))
-        }
+        scheduleOverride = preset.createOverride()
     }
 
-    func endPreset() {
-        if activeOverride?.context == .preMeal {
-            clearOverride(matching: .preMeal)
-        } else {
+    public func endPreMealOverride() {
+        if let activeOverride = scheduleOverride, activeOverride.isActive(), activeOverride.context == .preMeal {
+            scheduleOverride?.scheduledEndDate = .now
             clearOverride()
         }
     }
 
-    public func endPreMealOverride() {
-        preMealOverride?.scheduledEndDate = .now
-        clearOverride(matching: .preMeal)
-    }
-
-    public func clearOverride(matching context: TemporaryScheduleOverride.Context? = nil) {
-        if context == .preMeal {
-            preMealOverride = nil
-            return
-        }
-
-        guard let scheduleOverride = scheduleOverride else { return }
-
-        if let context = context {
-            if scheduleOverride.context == context {
-                self.scheduleOverride = nil
-            }
-        } else {
-            self.scheduleOverride = nil
-        }
+    public func clearOverride() {
+        self.scheduleOverride = nil
     }
 
     public var basalRateScheduleApplyingOverrideHistory: BasalRateSchedule? {

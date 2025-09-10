@@ -83,7 +83,7 @@ struct PresetDetentView: View {
                 .accessibilityIdentifier("button_startPreset")
             case .end:
                 Button("End Preset") {
-                    temporaryPresetsManager.endPreset()
+                    temporaryPresetsManager.clearOverride()
                     dismiss()
                 }
                 .buttonStyle(ActionButtonStyle(.destructive))

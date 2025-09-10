@@ -1,8 +1,8 @@
 //
-//  PresetDetailView.swift
+//  ActivePresetView.swift
 //  Loop
 //
-//  Created by Pete Schwamb on 9/9/25.
+//  Created by Pete Schwamb on 9/10/25.
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 
@@ -10,7 +10,7 @@ import SwiftUI
 import LoopKit
 import LoopCore
 
-struct PresetDetailView: View {
+struct ActiveOverrideView: View {
     @State private var loopManager = ExtensionDelegate.shared().loopManager
     @Environment(\.glucoseDisplayUnit) private var glucoseDisplayUnit
 
@@ -19,15 +19,48 @@ struct PresetDetailView: View {
     private let threshold: CGFloat = 20 // Rotation threshold to trigger action
     private let maxProgress: CGFloat = 20 // Max progress for the bar
 
-    let preset: SelectablePreset
+    let override: TemporaryScheduleOverride
 
-    var presetTitle: some View {
-        HStack(spacing: 6) {
-            Text(preset.name)
-                .font(.title3)
-                .accessibilityIdentifier("text_Preset\(preset.name)")
+
+    var titleText: Text {
+        switch override.context {
+        case .preMeal:
+            Text(NSLocalizedString("Pre-Meal", comment: "Status row title for premeal override enabled (leading space is to separate from symbol)"))
+        case .preset(let preset):
+            Text(String(format: NSLocalizedString("%@", comment: "The format for an active custom preset. (1: preset name)"), preset.name))
+        case .activity(let activity):
+            Text(String(format: NSLocalizedString("%@", comment: "The format for an active activity preset. (1: preset name)"), activity.preset.name))
+        case .custom:
+            Text(NSLocalizedString("Single Use Preset", comment: "The title of the cell indicating a generic custom preset is enabled"))
         }
     }
+
+    var title: some View {
+        HStack(spacing: 6) {
+            titleText
+                .font(.system(size: 19))
+        }
+    }
+
+    var duration: Text {
+        if override.isActive() {
+            if override.context == .preMeal {
+                return Text(NSLocalizedString("on until carbs added", comment: "The format for the description of a premeal preset end date"))
+            } else {
+                switch override.duration {
+                case .finite:
+                    let endTimeText = DateFormatter.localizedString(from: override.activeInterval.end, dateStyle: .none, timeStyle: .short)
+                    return Text(String(format: NSLocalizedString("on until %@", comment: "The format for the description of a finite custom preset end date"), endTimeText))
+                case .indefinite:
+                    return Text(NSLocalizedString("on until turned off", comment: "The format for the description of an indefinite custom preset end date"))
+                }
+            }
+        } else {
+            let startTimeText = DateFormatter.localizedString(from: override.startDate, dateStyle: .none, timeStyle: .short)
+            return Text(String(format: NSLocalizedString("starting at %@", comment: "The format for the description of a custom preset start date"), startTimeText))
+        }
+    }
+
 
     private var numberFormatter: NumberFormatter {
         let formatter = NumberFormatter()
@@ -40,17 +73,16 @@ struct PresetDetailView: View {
     }
 
     var presetDuration: some View {
-        Group { Text(Image(systemName: "timer")) + Text(" \(preset.duration.localizedTitle)") }
+        Group { Text(Image(systemName: "timer")) + duration }
             .font(.footnote)
-            .foregroundColor(.secondary)
-            .accessibilityLabel(Text(preset.duration.accessibilityLabel))
+            .foregroundColor(.presets)
     }
 
     var descriptionText: Text {
-        let percent = numberFormatter.string(from: preset.insulinNeedsScaleFactor)!
+        let percent = numberFormatter.string(from: override.settings.insulinNeedsScaleFactor ?? 1)!
         var text = Text(percent).bold()
 
-        if let correctionRange = preset.correctionRange {
+        if let correctionRange = override.settings.targetRange {
             text = text + Text(" • ")
             text = text + (Text(glucoseFormatter.string(from: correctionRange.lowerBound, includeUnit: false)!) +
                            Text("-") +
@@ -71,7 +103,7 @@ struct PresetDetailView: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            presetTitle
+            title
             presetDuration
             descriptionText
                 .padding(.top, 8)
@@ -93,7 +125,7 @@ struct PresetDetailView: View {
             }
 
             // Status text
-            Text(startingPreset ? "Starting Preset..." : "Turn Digital Crown to Start")
+            Text(startingPreset ? "Ending Preset..." : "Turn Digital Crown to End")
                 .font(.system(size: 16))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -114,7 +146,7 @@ struct PresetDetailView: View {
                     startingPreset = true
                     Task {
                         do {
-                            try await loopManager.activateOverride(preset.createOverride())
+                            try await loopManager.clearOverride()
                         } catch {
                             print("Error! Could not activate preset: \(error)")
                         }
@@ -122,7 +154,6 @@ struct PresetDetailView: View {
                 }
             }
         }
-        .navigationTitle("Preset Details")
         .navigationBarBackButtonHidden(false) // Ensure back button is visible
     }
 }

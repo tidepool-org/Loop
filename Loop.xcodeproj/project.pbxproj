@@ -442,6 +442,7 @@
 		C10C57F82E7085D600A4825C /* PresetSymbolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DEF35C2E566757006126F9 /* PresetSymbolView.swift */; };
 		C10C57FA2E708B2D00A4825C /* PresetWatchCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10C57F92E708B1D00A4825C /* PresetWatchCard.swift */; };
 		C10C57FC2E70B8B900A4825C /* EnvironmentValues+GlucoseDisplayUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10C57FB2E70B87500A4825C /* EnvironmentValues+GlucoseDisplayUnit.swift */; };
+		C10C57FE2E71E87D00A4825C /* ActivePresetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10C57FD2E71E87400A4825C /* ActivePresetView.swift */; };
 		C110888D2A3913C600BA4898 /* BuildDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = C110888C2A3913C600BA4898 /* BuildDetails.swift */; };
 		C11445B22DA98A3400034864 /* CorrectionRangeInformationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11445B12DA98A2D00034864 /* CorrectionRangeInformationView.swift */; };
 		C11445B42DB2EBE400034864 /* ExistingPresetInsulinNeedsEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11445B32DB2EBDC00034864 /* ExistingPresetInsulinNeedsEdit.swift */; };
@@ -1415,6 +1416,7 @@
 		C10C57ED2E7081C900A4825C /* PresetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetDetailView.swift; sourceTree = "<group>"; };
 		C10C57F92E708B1D00A4825C /* PresetWatchCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetWatchCard.swift; sourceTree = "<group>"; };
 		C10C57FB2E70B87500A4825C /* EnvironmentValues+GlucoseDisplayUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EnvironmentValues+GlucoseDisplayUnit.swift"; sourceTree = "<group>"; };
+		C10C57FD2E71E87400A4825C /* ActivePresetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePresetView.swift; sourceTree = "<group>"; };
 		C110888C2A3913C600BA4898 /* BuildDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildDetails.swift; sourceTree = "<group>"; };
 		C11445B12DA98A2D00034864 /* CorrectionRangeInformationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectionRangeInformationView.swift; sourceTree = "<group>"; };
 		C11445B32DB2EBDC00034864 /* ExistingPresetInsulinNeedsEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExistingPresetInsulinNeedsEdit.swift; sourceTree = "<group>"; };
@@ -2671,6 +2673,7 @@
 		895788A3242E6947002CB114 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				C10C57FD2E71E87400A4825C /* ActivePresetView.swift */,
 				C10C57F92E708B1D00A4825C /* PresetWatchCard.swift */,
 				C10C57ED2E7081C900A4825C /* PresetDetailView.swift */,
 				C10C57EB2E7070FB00A4825C /* PresetsListView.swift */,
@@ -3938,6 +3941,7 @@
 				C10C57EE2E7081D200A4825C /* PresetDetailView.swift in Sources */,
 				C10C57E52E6F767A00A4825C /* CircleTintedButton.swift in Sources */,
 				4F7E8AC520E2AB9600AEA65E /* Date.swift in Sources */,
+				C10C57FE2E71E87D00A4825C /* ActivePresetView.swift in Sources */,
 				89F9119424358E4500ECCAF3 /* CarbAbsorptionTime.swift in Sources */,
 				895788B1242E69A2002CB114 /* Color.swift in Sources */,
 				89E08FC2242E73DC000D719B /* CarbAmountPositionKey.swift in Sources */,

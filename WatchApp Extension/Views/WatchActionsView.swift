@@ -14,13 +14,14 @@ struct WatchActionsView: View {
     @State private var loopManager = ExtensionDelegate.shared().loopManager
 
     @State private var isShowingPresetList: Bool = false
+    @State private var isShowingActivePreset: Bool = false
 
     var freshness: LoopCompletionFreshness {
         return LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
     }
 
     var presetActive: Bool {
-        loopManager.watchInfo.scheduleOverride != nil
+        return loopManager.watchInfo.scheduleOverride?.isActive() == true
     }
 
     var glucoseValue: String {
@@ -94,7 +95,11 @@ struct WatchActionsView: View {
                     foregroundTint: presetActive ? .darkPresets : .presets,
                     backgroundTint: presetActive ? .presets : .darkPresets
                 ) {
-                    isShowingPresetList = true
+                    if presetActive {
+                        isShowingActivePreset = true
+                    } else {
+                        isShowingPresetList = true
+                    }
                 }
                 Spacer()
                     .frame(maxWidth: .infinity)
@@ -105,6 +110,23 @@ struct WatchActionsView: View {
         .sheet(isPresented: $isShowingPresetList) {
             PresetListView(presets: loopManager.selectablePresets)
         }
+        .sheet(isPresented: $isShowingActivePreset) {
+            if let activeOverride = loopManager.watchInfo.scheduleOverride, activeOverride.isActive() {
+                ActiveOverrideView(override: activeOverride)
+            } else {
+                Text("Preset override not active")
+            }
+        }
+        .onChange(of: loopManager.watchInfo.scheduleOverride, { oldValue, newValue in
+            if oldValue == nil && newValue != nil && isShowingPresetList {
+                isShowingPresetList = false
+                isShowingActivePreset = true
+            }
+            if oldValue != nil && newValue == nil && isShowingActivePreset {
+                isShowingActivePreset = false
+            }
+
+        })
         .environment(\.glucoseDisplayUnit, loopManager.displayGlucoseUnit)
     }
 }

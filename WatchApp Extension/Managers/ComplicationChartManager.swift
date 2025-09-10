@@ -123,18 +123,9 @@ final class ComplicationChartManager {
         let spannedInterval = scaler.dates
 
         func drawOverride(
-            _ override: TemporaryScheduleOverride,
-            pushingStartTo startDate: Date? = nil,
-            extendingToChartEnd shouldExtendToChartEnd: Bool
+            _ override: TemporaryScheduleOverride
         ) {
             var override = override
-            if let startDate = startDate {
-                guard startDate < override.scheduledEndDate else {
-                    return
-                }
-
-                override.scheduledInterval = DateInterval(start: startDate, end: override.scheduledEndDate)
-            }
 
             guard let overrideHashable = TemporaryScheduleOverrideHashable(override) else {
                 return
@@ -144,7 +135,7 @@ final class ComplicationChartManager {
             let overrideRect = scaler.rect(for: overrideHashable, unit: unit)
             context.fill(overrideRect)
 
-            if spannedInterval.end > override.scheduledEndDate, shouldExtendToChartEnd {
+            if spannedInterval.end > override.scheduledEndDate {
                 var extendedOverride = override
                 extendedOverride.duration = .finite(spannedInterval.end.timeIntervalSince(override.startDate))
                 // Target range already known to be non-nil
@@ -155,12 +146,8 @@ final class ComplicationChartManager {
             }
         }
 
-        if let preMealOverride = data?.activePreMealOverride {
-            drawOverride(preMealOverride, extendingToChartEnd: true)
-        }
-
         if let override = data?.activeScheduleOverride {
-            drawOverride(override, pushingStartTo: data?.activePreMealOverride?.scheduledEndDate, extendingToChartEnd: data?.activePreMealOverride == nil)
+            drawOverride(override)
         }
     }
 
