@@ -229,7 +229,7 @@ class InsulinDeliveryLogViewModel {
         }
 
         return DatedQuantity(
-            date: Date(),
+            date: loopDataManager.lastLoopCompleted ?? Date(),
             quantity: LoopQuantity(
                 unit: .internationalUnitsPerHour,
                 doubleValue: currentBasalRate
