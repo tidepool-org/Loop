@@ -16,6 +16,9 @@ struct WatchActionsView: View {
     @State private var isShowingPresetList: Bool = false
     @State private var isShowingActivePreset: Bool = false
 
+    var presentAddCarbUI: () -> Void
+    var presentSetBolusUI: () -> Void
+
     var freshness: LoopCompletionFreshness {
         return LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
     }
@@ -60,7 +63,8 @@ struct WatchActionsView: View {
 
                     Spacer()
 
-                    if let eventualGlucose = activeContext.eventualGlucose,
+                    if FeatureFlags.showEventualBloodGlucoseOnWatchEnabled,
+                       let eventualGlucose = activeContext.eventualGlucose,
                        let eventualGlucoseValue = NumberFormatter.glucoseFormatter(for: unit).string(from: eventualGlucose.doubleValue(for: unit))
                     {
                         Text(eventualGlucoseValue)
@@ -76,7 +80,7 @@ struct WatchActionsView: View {
                     foregroundTint: .carbs,
                     backgroundTint: .darkCarbs
                 ) {
-                    // Handle action
+                    presentAddCarbUI()
                 }
                 CircleTintedButton(
                     label: "Bolus",
@@ -84,7 +88,7 @@ struct WatchActionsView: View {
                     foregroundTint: .insulin,
                     backgroundTint: .darkInsulin
                 ) {
-                    // Handle action
+                    presentSetBolusUI()
                 }
             }
             .padding(.bottom, 4)
