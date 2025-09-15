@@ -92,7 +92,6 @@
 		4311FB9B1F37FE1B00D4C0A7 /* TitleSubtitleTextFieldTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4311FB9A1F37FE1B00D4C0A7 /* TitleSubtitleTextFieldTableViewCell.swift */; };
 		431A8C401EC6E8AB00823B9C /* CircleMaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431A8C3F1EC6E8AB00823B9C /* CircleMaskView.swift */; };
 		4326BA641F3A44D9007CCAD4 /* ChartLineModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4326BA631F3A44D9007CCAD4 /* ChartLineModel.swift */; };
-		4328E01A1CFBE1DA00E199AA /* ActionHUDController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4328E0151CFBE1DA00E199AA /* ActionHUDController.swift */; };
 		4328E01E1CFBE25F00E199AA /* CarbAndBolusFlowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4328E01D1CFBE25F00E199AA /* CarbAndBolusFlowController.swift */; };
 		4328E0281CFBE2C500E199AA /* CLKComplicationTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4328E0221CFBE2C500E199AA /* CLKComplicationTemplate.swift */; };
 		4328E02A1CFBE2C500E199AA /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4328E0241CFBE2C500E199AA /* UIColor.swift */; };
@@ -282,7 +281,6 @@
 		892A5D59222F0A27008961AB /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892A5D58222F0A27008961AB /* Debug.swift */; };
 		892A5D692230C41D008961AB /* RangeReplaceableCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892A5D682230C41D008961AB /* RangeReplaceableCollection.swift */; };
 		892FB4CD22040104005293EC /* OverridePresetRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892FB4CC22040104005293EC /* OverridePresetRow.swift */; };
-		892FB4CF220402C0005293EC /* OverrideSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892FB4CE220402C0005293EC /* OverrideSelectionController.swift */; };
 		894F6DD3243BCBDB00CCE676 /* Environment+SizeClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894F6DD2243BCBDB00CCE676 /* Environment+SizeClass.swift */; };
 		894F6DD7243C047300CCE676 /* View+Position.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894F6DD6243C047300CCE676 /* View+Position.swift */; };
 		894F6DD9243C060600CCE676 /* ScalablePositionedText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894F6DD8243C060600CCE676 /* ScalablePositionedText.swift */; };
@@ -576,9 +574,6 @@
 		E98A55EF24EDD6E60008715D /* DosingDecisionStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55EE24EDD6E60008715D /* DosingDecisionStoreProtocol.swift */; };
 		E98A55F124EDD85E0008715D /* MockDosingDecisionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55F024EDD85E0008715D /* MockDosingDecisionStore.swift */; };
 		E98A55F324EDD9530008715D /* MockSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55F224EDD9530008715D /* MockSettingsStore.swift */; };
-		E98A55F524EEE15A0008715D /* OnOffSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55F424EEE15A0008715D /* OnOffSelectionController.swift */; };
-		E98A55F724EEE1E10008715D /* OnOffSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55F624EEE1E10008715D /* OnOffSelectionView.swift */; };
-		E98A55F924EEFC200008715D /* OnOffSelectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55F824EEFC200008715D /* OnOffSelectionViewModel.swift */; };
 		E9B07F7F253BBA6500BAD8F8 /* IntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B07F7E253BBA6500BAD8F8 /* IntentHandler.swift */; };
 		E9B07F94253BBA6500BAD8F8 /* Loop Intent Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E9B07F7C253BBA6500BAD8F8 /* Loop Intent Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E9B07FEE253BBC7100BAD8F8 /* OverrideIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B07FED253BBC7100BAD8F8 /* OverrideIntentHandler.swift */; };
@@ -834,7 +829,6 @@
 		431A8C3F1EC6E8AB00823B9C /* CircleMaskView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMaskView.swift; sourceTree = "<group>"; };
 		431E73471FF95A900069B5F7 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		4326BA631F3A44D9007CCAD4 /* ChartLineModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartLineModel.swift; sourceTree = "<group>"; };
-		4328E0151CFBE1DA00E199AA /* ActionHUDController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActionHUDController.swift; sourceTree = "<group>"; };
 		4328E01D1CFBE25F00E199AA /* CarbAndBolusFlowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarbAndBolusFlowController.swift; sourceTree = "<group>"; };
 		4328E0221CFBE2C500E199AA /* CLKComplicationTemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CLKComplicationTemplate.swift; sourceTree = "<group>"; };
 		4328E0231CFBE2C500E199AA /* NSUserDefaults+WatchApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSUserDefaults+WatchApp.swift"; sourceTree = "<group>"; };
@@ -1209,7 +1203,6 @@
 		892A5D5A222F0D7C008961AB /* LoopTestingKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; name = LoopTestingKit.framework; path = Carthage/Build/iOS/LoopTestingKit.framework; sourceTree = SOURCE_ROOT; };
 		892A5D682230C41D008961AB /* RangeReplaceableCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeReplaceableCollection.swift; sourceTree = "<group>"; };
 		892FB4CC22040104005293EC /* OverridePresetRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverridePresetRow.swift; sourceTree = "<group>"; };
-		892FB4CE220402C0005293EC /* OverrideSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverrideSelectionController.swift; sourceTree = "<group>"; };
 		894F6DD2243BCBDB00CCE676 /* Environment+SizeClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Environment+SizeClass.swift"; sourceTree = "<group>"; };
 		894F6DD6243C047300CCE676 /* View+Position.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "View+Position.swift"; path = "WatchApp Extension/Views/View+Position.swift"; sourceTree = SOURCE_ROOT; };
 		894F6DD8243C060600CCE676 /* ScalablePositionedText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScalablePositionedText.swift; sourceTree = "<group>"; };
@@ -1671,9 +1664,6 @@
 		E98A55EE24EDD6E60008715D /* DosingDecisionStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DosingDecisionStoreProtocol.swift; sourceTree = "<group>"; };
 		E98A55F024EDD85E0008715D /* MockDosingDecisionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDosingDecisionStore.swift; sourceTree = "<group>"; };
 		E98A55F224EDD9530008715D /* MockSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSettingsStore.swift; sourceTree = "<group>"; };
-		E98A55F424EEE15A0008715D /* OnOffSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnOffSelectionController.swift; sourceTree = "<group>"; };
-		E98A55F624EEE1E10008715D /* OnOffSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnOffSelectionView.swift; sourceTree = "<group>"; };
-		E98A55F824EEFC200008715D /* OnOffSelectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnOffSelectionViewModel.swift; sourceTree = "<group>"; };
 		E9B07F7C253BBA6500BAD8F8 /* Loop Intent Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Loop Intent Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9B07F7E253BBA6500BAD8F8 /* IntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentHandler.swift; sourceTree = "<group>"; };
 		E9B07F80253BBA6500BAD8F8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -1916,16 +1906,13 @@
 			isa = PBXGroup;
 			children = (
 				C12D723D2E4FBC1A00BD628A /* ActionViewHostingController.swift */,
-				4328E0151CFBE1DA00E199AA /* ActionHUDController.swift */,
 				4328E01D1CFBE25F00E199AA /* CarbAndBolusFlowController.swift */,
 				4345E40521F68E18009E00E5 /* CarbEntryListController.swift */,
 				4FFEDFBE20E5CF22000BFC58 /* ChartHUDController.swift */,
 				4F82654F20E69F9A0031A8F5 /* HUDInterfaceController.swift */,
 				43511CED220FC61700566C63 /* HUDRowController.swift */,
 				43A943891B926B7B0051FA24 /* NotificationController.swift */,
-				892FB4CE220402C0005293EC /* OverrideSelectionController.swift */,
 				4345E40321F68AD9009E00E5 /* TextRowController.swift */,
-				E98A55F424EEE15A0008715D /* OnOffSelectionController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -2665,7 +2652,6 @@
 			isa = PBXGroup;
 			children = (
 				891B508424342BE1005DA578 /* CarbAndBolusFlowViewModel.swift */,
-				E98A55F824EEFC200008715D /* OnOffSelectionViewModel.swift */,
 			);
 			path = "View Models";
 			sourceTree = "<group>";
@@ -2688,7 +2674,6 @@
 				89A605EE2432925D009C1096 /* CompletionCheckmark.swift */,
 				894F6DD8243C060600CCE676 /* ScalablePositionedText.swift */,
 				89A605EA243288E4009C1096 /* TopDownTriangle.swift */,
-				E98A55F624EEE1E10008715D /* OnOffSelectionView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -3946,7 +3931,6 @@
 				895788B1242E69A2002CB114 /* Color.swift in Sources */,
 				89E08FC2242E73DC000D719B /* CarbAmountPositionKey.swift in Sources */,
 				4F11D3C420DD881A006E072C /* WatchHistoricalGlucose.swift in Sources */,
-				E98A55F724EEE1E10008715D /* OnOffSelectionView.swift in Sources */,
 				89E08FCA242E7714000D719B /* UIFont.swift in Sources */,
 				4328E0281CFBE2C500E199AA /* CLKComplicationTemplate.swift in Sources */,
 				4328E01E1CFBE25F00E199AA /* CarbAndBolusFlowController.swift in Sources */,
@@ -3961,8 +3945,6 @@
 				898ECA69218ABDA9001E9D35 /* CLKTextProvider+Compound.m in Sources */,
 				4372E48C213CB6750068E043 /* Double.swift in Sources */,
 				89A605ED24328972009C1096 /* BolusArrow.swift in Sources */,
-				E98A55F924EEFC200008715D /* OnOffSelectionViewModel.swift in Sources */,
-				892FB4CF220402C0005293EC /* OverrideSelectionController.swift in Sources */,
 				89E08FD0242E8B2B000D719B /* BolusConfirmationView.swift in Sources */,
 				43785E972120E4500057DED1 /* INRelevantShortcutStore+Loop.swift in Sources */,
 				89A605E72432860C009C1096 /* PeriodicPublisher.swift in Sources */,
@@ -3979,9 +3961,7 @@
 				A9347F3224E7522400C99C34 /* CarbBackfillRequestUserInfo.swift in Sources */,
 				895788B3242E69A2002CB114 /* ActionButton.swift in Sources */,
 				894F6DD3243BCBDB00CCE676 /* Environment+SizeClass.swift in Sources */,
-				E98A55F524EEE15A0008715D /* OnOffSelectionController.swift in Sources */,
 				C10C57E92E705CD100A4825C /* SettingsRequestUserInfo.swift in Sources */,
-				4328E01A1CFBE1DA00E199AA /* ActionHUDController.swift in Sources */,
 				4F11D3C320DD84DB006E072C /* GlucoseBackfillRequestUserInfo.swift in Sources */,
 				435400351C9F878D00D5819C /* SetBolusUserInfo.swift in Sources */,
 				895788B2242E69A2002CB114 /* CircularAccessoryButtonStyle.swift in Sources */,

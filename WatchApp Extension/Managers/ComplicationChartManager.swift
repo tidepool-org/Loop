@@ -125,8 +125,6 @@ final class ComplicationChartManager {
         func drawOverride(
             _ override: TemporaryScheduleOverride
         ) {
-            var override = override
-
             guard let overrideHashable = TemporaryScheduleOverrideHashable(override) else {
                 return
             }

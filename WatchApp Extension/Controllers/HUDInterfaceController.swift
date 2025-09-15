@@ -110,9 +110,4 @@ class HUDInterfaceController: WKInterfaceController {
     func addCarbs(initialEntry: NewCarbEntry) {
         presentController(withName: CarbAndBolusFlowController.className, context: CarbAndBolusFlow.Configuration.carbEntry(initialEntry))
     }
-
-    @IBAction func setBolus() {
-        presentController(withName: CarbAndBolusFlowController.className, context: CarbAndBolusFlow.Configuration.manualBolus)
-    }
-
 }
