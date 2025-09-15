@@ -171,7 +171,7 @@ class InsulinDeliveryLogViewModel {
         let lastAutoBolus = fetchLastAutoBolus(doses: doses)
         let decisions = await fetchDosingDecisions(doses.compactMap(\.decisionId))
         
-        guard let currentBasalRate = fetchCurrentBasal(from: doses) else {
+        guard let currentBasalRate = fetchCurrentBasal() else {
             state = .error(.noBasalRateSchedule)
             return
         }
@@ -223,16 +223,16 @@ class InsulinDeliveryLogViewModel {
         }
     }
     
-    private func fetchCurrentBasal(from doses: [DoseEntry]) -> DatedQuantity? {
-        guard let lastDose = doses.last(where: { $0.type == .basal || $0.type == .tempBasal }) else {
+    private func fetchCurrentBasal() -> DatedQuantity? {
+        guard let currentBasalRate = loopDataManager.currentBasalRate() else {
             return nil
         }
-        
+
         return DatedQuantity(
-            date: lastDose.startDate,
+            date: Date(),
             quantity: LoopQuantity(
                 unit: .internationalUnitsPerHour,
-                doubleValue: lastDose.value
+                doubleValue: currentBasalRate
             )
         )
     }

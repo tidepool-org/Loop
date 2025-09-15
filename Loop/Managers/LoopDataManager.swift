@@ -1533,28 +1533,41 @@ extension LoopDataManager: DiagnosticReportGenerator {
 }
 
 extension LoopDataManager: LoopControl {
-    var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
+    private func neutralBasal(now: Date = Date()) -> Double? {
         guard let input = displayState.input else {
             return nil
         }
 
-        let now = Date()
-
-        let neutralBasal = input.basal.closestPrior(to: now)!.value
-        var scheduledBasalRate: Double
+        return input.basal.closestPrior(to: now)!.value
+    }
+    
+    func scheduledBasalRate(now: Date = Date()) -> Double? {
+        guard let neutralBasal = neutralBasal(now: now) else {
+            return nil
+        }
+        
         if let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: now) {
-            scheduledBasalRate = neutralBasal / activeOverride.settings.effectiveInsulinNeedsScaleFactor
+            return neutralBasal / activeOverride.settings.effectiveInsulinNeedsScaleFactor
         } else {
-            scheduledBasalRate = neutralBasal
+            return neutralBasal
         }
-
-        var currentBasalRate: Double
+    }
+    
+    func currentBasalRate(now: Date = Date()) -> Double? {
         if let currentTempBasal = deliveryDelegate?.basalDeliveryState?.currentTempBasal {
-            currentBasalRate = currentTempBasal.unitsPerHour
+            return currentTempBasal.unitsPerHour
         } else {
-            currentBasalRate = scheduledBasalRate
+            return scheduledBasalRate(now: now)
         }
-
+    }
+    
+    var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
+        let now = Date()
+        
+        guard let input = displayState.input, let currentBasalRate = currentBasalRate(now: now), let neutralBasal = neutralBasal(now: Date()), let scheduledBasalRate = scheduledBasalRate(now: now) else {
+            return nil
+        }
+        
         if currentBasalRate > neutralBasal {
             return .increasedInsulin
         } else if currentBasalRate < neutralBasal {
