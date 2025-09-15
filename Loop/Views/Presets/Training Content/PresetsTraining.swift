@@ -29,6 +29,24 @@ class PresetsTrainingCompletion {
     var isComplete: Bool {
         completedChapters.values.allSatisfy({ $0 })
     }
+    
+    func complete(to chapter: PresetsTraining.Chapter) {
+        guard FeatureFlags.allowDebugFeatures else { return }
+        
+        guard let chapterIndex = PresetsTraining.Chapter.allCases.firstIndex(of: chapter) else {
+            return
+        }
+        
+        for index in 0..<chapterIndex {
+            let chapterToComplete = PresetsTraining.Chapter.allCases[index]
+            completedChapters[chapterToComplete] = true
+        }
+        
+        for index in chapterIndex..<PresetsTraining.Chapter.allCases.count {
+            let chapterToIncomplete = PresetsTraining.Chapter.allCases[index]
+            completedChapters[chapterToIncomplete] = false
+        }
+    }
 }
 
 @Observable
@@ -36,11 +54,33 @@ public class PresetsTraining {
     public enum Chapter: CaseIterable, Hashable, Sendable, Codable {
         case entry
         case introduction
+        case customizingPresets
+        case illness
+        case dailyActivities
+        case exercise
+        case trainingComplete
+        
+        var title: Text {
+            switch self {
+            case .entry: Text("Entry")
+            case .introduction: Text("Introduction")
+            case .customizingPresets: Text("Customizing Presets")
+            case .illness: Text("Presets for Illness")
+            case .dailyActivities: Text("Presets for Daily Activities")
+            case .exercise: Text("Presets for Exercise")
+            case .trainingComplete: Text("Training Complete")
+            }
+        }
         
         var firstStep: Step {
             switch self {
             case .entry: .entryPoint
             case .introduction: .tier1(.introduction(.introduction))
+            case .customizingPresets: .tier2(.customizingPresets(.customizingPresets))
+            case .illness: .tier2(.illness(.commonUses))
+            case .dailyActivities: .tier2(.dailyActivities(.commonUses))
+            case .exercise: .tier2(.exercise(.commonUses))
+            case .trainingComplete: .trainingComplete
             }
         }
     }
@@ -63,76 +103,289 @@ public class PresetsTraining {
         
         case tier1(Tier1Chapter)
         
+        enum Tier2Chapter: Hashable, Sendable {
+            enum CustomizingPresets: CaseIterable, Hashable, Sendable {
+                case customizingPresets
+                case overallInsulin
+                case correctionRange
+            }
+            
+            case customizingPresets(CustomizingPresets)
+            
+            enum Illness: CaseIterable, Hashable, Sendable {
+                case commonUses
+                case presetsForIllness
+                case overallInsulin
+                case correctionRange
+                case duration
+                case impactOnBolusing
+            }
+            
+            case illness(Illness)
+            
+            enum DailyActivities: CaseIterable, Hashable, Sendable {
+                case commonUses
+                case presetsForDailyActivities
+                case overallInsulin
+                case correctionRange
+                case savedPresets
+            }
+            
+            case dailyActivities(DailyActivities)
+            
+            enum Exercise: CaseIterable, Hashable, Sendable {
+                case commonUses
+                case presetsForExercise
+                case perceivedIntensity
+                case lightToModerateExercise
+                case highIntensityExercise
+                case mixedIntensityExercise
+                case exerciseAndGlucoseActiveInsulin
+                case exerciseAndGlucoseTimeOfDay
+                case exerciseAndGlucoseMealTiming
+                case exerciseAndGlucoseCompetitionStress
+                case preventingLows
+                case unplannedActivity
+            }
+            
+            case exercise(Exercise)
+        }
+        
+        case tier2(Tier2Chapter)
+        
+        case trainingComplete
+        
         func title(appName: String) -> String {
             switch self {
             case .entryPoint:
-                return NSLocalizedString("Presets Training", comment: "")
+                NSLocalizedString("Presets Training", comment: "")
             case .tier1(let tier1Chapter):
                 switch tier1Chapter {
                 case .introduction(let introduction):
                     switch introduction {
                     case .introduction:
-                        return NSLocalizedString("Part 1: Introduction to Presets", comment: "")
+                        NSLocalizedString("Part 1: Introduction to Presets", comment: "")
                     case .exercisingWithLoop:
-                        return String(format: NSLocalizedString("Exercising with %1$@", comment: ""), appName)
+                        String(format: NSLocalizedString("Exercising with %1$@", comment: ""), appName)
                     case .timingYourPresets:
-                        return NSLocalizedString("Timing Your Presets for Exercise", comment: "")
+                        NSLocalizedString("Timing Your Presets for Exercise", comment: "")
                     case .safeGlucoseRanges:
-                        return NSLocalizedString("Safe Glucose Ranges for Exercise", comment: "")
+                        NSLocalizedString("Safe Glucose Ranges for Exercise", comment: "")
                     case .performanceHistory:
-                        return NSLocalizedString("Performance History", comment: "")
+                        NSLocalizedString("Performance History", comment: "")
                     case .complete:
-                        return NSLocalizedString("Part 1: Complete", comment: "")
+                        NSLocalizedString("Part 1: Complete", comment: "")
                     }
                 }
+            case .tier2(let tier2Chapter):
+                switch tier2Chapter {
+                case .customizingPresets(let customizingPresets):
+                    switch customizingPresets {
+                    case .customizingPresets:
+                        NSLocalizedString("Part 2: Customizing Presets", comment: "")
+                    case .overallInsulin:
+                        NSLocalizedString("Overall Insulin", comment: "")
+                    case .correctionRange:
+                        NSLocalizedString("Correction Range", comment: "")
+                    }
+                case .illness(let illness):
+                    switch illness {
+                    case .commonUses:
+                        NSLocalizedString("Common Uses of Presets", comment: "")
+                    case .presetsForIllness:
+                        NSLocalizedString("Presets for Illness", comment: "")
+                    case .overallInsulin:
+                        NSLocalizedString("Overall Insulin", comment: "")
+                    case .correctionRange:
+                        NSLocalizedString("Correction Range", comment: "")
+                    case .duration:
+                        NSLocalizedString("Duration", comment: "")
+                    case .impactOnBolusing:
+                        NSLocalizedString("Impact on Bolusing", comment: "")
+                    }
+                case .dailyActivities(let dailyActivities):
+                    switch dailyActivities {
+                    case .commonUses:
+                        NSLocalizedString("Common Uses of Presets", comment: "")
+                    case .presetsForDailyActivities:
+                        NSLocalizedString("Presets for Daily Activity", comment: "")
+                    case .overallInsulin:
+                        NSLocalizedString("Overall Insulin", comment: "")
+                    case .correctionRange:
+                        NSLocalizedString("Correction Range", comment: "")
+                    case .savedPresets:
+                        NSLocalizedString("Saved Presets", comment: "")
+                    }
+                case .exercise(let exercise):
+                    switch exercise {
+                    case .commonUses:
+                        NSLocalizedString("Common Uses of Presets", comment: "")
+                    case .presetsForExercise:
+                        NSLocalizedString("Presets for Exercise", comment: "")
+                    case .perceivedIntensity:
+                        NSLocalizedString("Perceived Intensity", comment: "")
+                    case .lightToModerateExercise:
+                        NSLocalizedString("Light-to-Moderate Intensity Exercise", comment: "")
+                    case .highIntensityExercise:
+                        NSLocalizedString("High-Intensity Exercise", comment: "")
+                    case .mixedIntensityExercise:
+                        NSLocalizedString("Mixed-Intensity Exercise", comment: "")
+                    case .exerciseAndGlucoseActiveInsulin,
+                         .exerciseAndGlucoseTimeOfDay,
+                         .exerciseAndGlucoseMealTiming,
+                         .exerciseAndGlucoseCompetitionStress:
+                        NSLocalizedString("Exercise and Your Glucose Levels", comment: "")
+                    case .preventingLows:
+                        NSLocalizedString("Preventing Lows", comment: "")
+                    case .unplannedActivity:
+                        NSLocalizedString("Unplanned Activity", comment: "")
+                    }
+                }
+            case .trainingComplete:
+                NSLocalizedString("Training Complete", comment: "")
             }
         }
         
         func previous(startingFrom: Chapter) -> Step? {
             switch self {
-            case .entryPoint:
-                return nil
+            case .entryPoint: nil
             case .tier1(let tier1Chapter):
                 switch tier1Chapter {
                 case .introduction(let introduction):
                     switch introduction {
-                    case .introduction:
-                        guard chapter != startingFrom else { return nil }
-                        return .entryPoint
-                    case .exercisingWithLoop: return .tier1(.introduction(.introduction))
-                    case .timingYourPresets: return .tier1(.introduction(.exercisingWithLoop))
-                    case .safeGlucoseRanges: return .tier1(.introduction(.timingYourPresets))
-                    case .performanceHistory: return .tier1(.introduction(.safeGlucoseRanges))
-                    case .complete: return .tier1(.introduction(.performanceHistory))
+                    case .introduction: chapter != startingFrom ? nil : .entryPoint
+                    case .exercisingWithLoop: .tier1(.introduction(.introduction))
+                    case .timingYourPresets: .tier1(.introduction(.exercisingWithLoop))
+                    case .safeGlucoseRanges: .tier1(.introduction(.timingYourPresets))
+                    case .performanceHistory: .tier1(.introduction(.safeGlucoseRanges))
+                    case .complete: .tier1(.introduction(.performanceHistory))
                     }
                 }
+            case .tier2(let tier2Chapter):
+                switch tier2Chapter {
+                case .customizingPresets(let customizingPresets):
+                    switch customizingPresets {
+                    case .customizingPresets: chapter != startingFrom ? nil : .tier1(.introduction(.complete))
+                    case .overallInsulin: .tier2(.customizingPresets(.customizingPresets))
+                    case .correctionRange: .tier2(.customizingPresets(.overallInsulin))
+                    }
+                case .illness(let illness):
+                    switch illness {
+                    case .commonUses: chapter != startingFrom ? nil : .tier2(.customizingPresets(.correctionRange))
+                    case .presetsForIllness: .tier2(.illness(.commonUses))
+                    case .overallInsulin: .tier2(.illness(.presetsForIllness))
+                    case .correctionRange: .tier2(.illness(.overallInsulin))
+                    case .duration: .tier2(.illness(.correctionRange))
+                    case .impactOnBolusing: .tier2(.illness(.duration))
+                    }
+                case .dailyActivities(let dailyActivities):
+                    switch dailyActivities {
+                    case .commonUses: chapter != startingFrom ? nil : .tier2(.illness(.impactOnBolusing))
+                    case .presetsForDailyActivities: .tier2(.dailyActivities(.commonUses))
+                    case .overallInsulin: .tier2(.dailyActivities(.presetsForDailyActivities))
+                    case .correctionRange: .tier2(.dailyActivities(.overallInsulin))
+                    case .savedPresets: .tier2(.dailyActivities(.correctionRange))
+                    }
+                case .exercise(let exercise):
+                    switch exercise {
+                    case .commonUses: chapter != startingFrom ? nil : .tier2(.dailyActivities(.savedPresets))
+                    case .presetsForExercise: .tier2(.exercise(.commonUses))
+                    case .perceivedIntensity: .tier2(.exercise(.presetsForExercise))
+                    case .lightToModerateExercise: .tier2(.exercise(.perceivedIntensity))
+                    case .highIntensityExercise: .tier2(.exercise(.lightToModerateExercise))
+                    case .mixedIntensityExercise: .tier2(.exercise(.highIntensityExercise))
+                    case .exerciseAndGlucoseActiveInsulin: .tier2(.exercise(.mixedIntensityExercise))
+                    case .exerciseAndGlucoseTimeOfDay: .tier2(.exercise(.exerciseAndGlucoseActiveInsulin))
+                    case .exerciseAndGlucoseMealTiming: .tier2(.exercise(.exerciseAndGlucoseTimeOfDay))
+                    case .exerciseAndGlucoseCompetitionStress: .tier2(.exercise(.exerciseAndGlucoseMealTiming))
+                    case .preventingLows: .tier2(.exercise(.exerciseAndGlucoseCompetitionStress))
+                    case .unplannedActivity: .tier2(.exercise(.preventingLows))
+                    }
+                }
+            case .trainingComplete: chapter != startingFrom ? nil : .tier2(.exercise(.unplannedActivity))
             }
         }
         
         func next() -> (Step?, completedChapter: Chapter?) {
             switch self {
-            case .entryPoint: return (.tier1(.introduction(.introduction)), .entry)
+            case .entryPoint: (.tier1(.introduction(.introduction)), .entry)
             case .tier1(let tier1Chapter):
                 switch tier1Chapter {
                 case .introduction(let introduction):
                     switch introduction {
-                    case .introduction: return (.tier1(.introduction(.exercisingWithLoop)), nil)
-                    case .exercisingWithLoop: return (.tier1(.introduction(.timingYourPresets)), nil)
-                    case .timingYourPresets: return (.tier1(.introduction(.safeGlucoseRanges)), nil)
-                    case .safeGlucoseRanges: return (.tier1(.introduction(.performanceHistory)), nil)
-                    case .performanceHistory: return (.tier1(.introduction(.complete)), nil)
-                    case .complete: return (nil, .introduction)
+                    case .introduction: (.tier1(.introduction(.exercisingWithLoop)), nil)
+                    case .exercisingWithLoop: (.tier1(.introduction(.timingYourPresets)), nil)
+                    case .timingYourPresets: (.tier1(.introduction(.safeGlucoseRanges)), nil)
+                    case .safeGlucoseRanges: (.tier1(.introduction(.performanceHistory)), nil)
+                    case .performanceHistory: (.tier1(.introduction(.complete)), nil)
+                    case .complete: (.tier2(.customizingPresets(.customizingPresets)), .introduction)
                     }
                 }
+            case .tier2(let tier2Chapter):
+                switch tier2Chapter {
+                case .customizingPresets(let customizingPresets):
+                    switch customizingPresets {
+                    case .customizingPresets: (.tier2(.customizingPresets(.overallInsulin)), nil)
+                    case .overallInsulin: (.tier2(.customizingPresets(.correctionRange)), nil)
+                    case .correctionRange: (.tier2(.illness(.commonUses)), .customizingPresets)
+                    }
+                case .illness(let illness):
+                    switch illness {
+                    case .commonUses: (.tier2(.illness(.presetsForIllness)), nil)
+                    case .presetsForIllness: (.tier2(.illness(.overallInsulin)), nil)
+                    case .overallInsulin: (.tier2(.illness(.correctionRange)), nil)
+                    case .correctionRange: (.tier2(.illness(.duration)), nil)
+                    case .duration: (.tier2(.illness(.impactOnBolusing)), nil)
+                    case .impactOnBolusing: (.tier2(.dailyActivities(.commonUses)), .illness)
+                    }
+                case .dailyActivities(let dailyActivities):
+                    switch dailyActivities {
+                    case .commonUses: (.tier2(.dailyActivities(.presetsForDailyActivities)), nil)
+                    case .presetsForDailyActivities: (.tier2(.dailyActivities(.overallInsulin)), nil)
+                    case .overallInsulin: (.tier2(.dailyActivities(.correctionRange)), nil)
+                    case .correctionRange: (.tier2(.dailyActivities(.savedPresets)), nil)
+                    case .savedPresets: (.tier2(.exercise(.commonUses)), .dailyActivities)
+                    }
+                case .exercise(let exercise):
+                    switch exercise {
+                    case .commonUses: (.tier2(.exercise(.presetsForExercise)), nil)
+                    case .presetsForExercise: (.tier2(.exercise(.perceivedIntensity)), nil)
+                    case .perceivedIntensity: (.tier2(.exercise(.lightToModerateExercise)), nil)
+                    case .lightToModerateExercise: (.tier2(.exercise(.highIntensityExercise)), nil)
+                    case .highIntensityExercise: (.tier2(.exercise(.mixedIntensityExercise)), nil)
+                    case .mixedIntensityExercise: (.tier2(.exercise(.exerciseAndGlucoseActiveInsulin)), nil)
+                    case .exerciseAndGlucoseActiveInsulin: (.tier2(.exercise(.exerciseAndGlucoseTimeOfDay)), nil)
+                    case .exerciseAndGlucoseTimeOfDay: (.tier2(.exercise(.exerciseAndGlucoseMealTiming)), nil)
+                    case .exerciseAndGlucoseMealTiming: (.tier2(.exercise(.exerciseAndGlucoseCompetitionStress)), nil)
+                    case .exerciseAndGlucoseCompetitionStress: (.tier2(.exercise(.preventingLows)), nil)
+                    case .preventingLows: (.tier2(.exercise(.unplannedActivity)), nil)
+                    case .unplannedActivity: (.trainingComplete, .exercise)
+                    }
+                }
+            case .trainingComplete: (nil, .trainingComplete)
             }
         }
         
         var chapter: Chapter {
             switch self {
-            case .entryPoint:
-                return .entry
-            case .tier1:
-                return .introduction
+            case .entryPoint: .entry
+            case .tier1: .introduction
+            case .tier2(.customizingPresets): .customizingPresets
+            case .tier2(.illness): .illness
+            case .tier2(.dailyActivities): .dailyActivities
+            case .tier2(.exercise): .exercise
+            case .trainingComplete: .trainingComplete
+            }
+        }
+        
+        var contentBackground: Color {
+            switch self {
+            case .tier2(.dailyActivities(.commonUses)),
+                 .tier2(.exercise(.commonUses)),
+                 .tier2(.illness(.commonUses)):
+                Color(UIColor.secondarySystemBackground)
+            default:
+                Color(UIColor.systemBackground)
             }
         }
     }
@@ -158,10 +411,16 @@ public class PresetsTraining {
         if let startingAt {
             self.startingAt = startingAt
         } else {
-            if trainingCompletion.completedChapters[.entry] != true {
-                self.startingAt = .entry
-            } else if trainingCompletion.completedChapters[.introduction] != true {
-                self.startingAt = .introduction
+            var startingAt: Chapter?
+            
+            Chapter.allCases.reversed().forEach { chapter in
+                if trainingCompletion.completedChapters[chapter] != true {
+                    startingAt = chapter
+                }
+            }
+            
+            if let startingAt {
+                self.startingAt = startingAt
             } else {
                 self.startingAt = .entry
             }

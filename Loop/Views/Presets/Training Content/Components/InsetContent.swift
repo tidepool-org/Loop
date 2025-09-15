@@ -11,19 +11,23 @@ import SwiftUI
 struct InsetContent<Content: View>: View {
     
     let alignment: HorizontalAlignment
-    let content: () -> Content
+    let spacing: Double
+    let padding: Double
+    let content: Content
     
-    init(alignment: HorizontalAlignment = .center, @ViewBuilder content: @escaping () -> Content) {
+    init(alignment: HorizontalAlignment = .center, spacing: Double = 24, padding: Double = 16, @ViewBuilder content: () -> Content) {
         self.alignment = alignment
-        self.content = content
+        self.spacing = spacing
+        self.padding = padding
+        self.content = content()
     }
     
     var body: some View {
-        VStack(alignment: alignment, spacing: 24) {
-            content()
+        VStack(alignment: alignment, spacing: spacing) {
+            content
                 .frame(maxWidth: .infinity, alignment: alignment == .leading ? .leading : .center)
         }
-        .padding(16)
+        .padding(padding)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(Color.gray.quinary, lineWidth: 1)

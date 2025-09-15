@@ -69,6 +69,11 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 .edgesIgnoringSafeArea(.all)
             
             ScrollView {
+               if let currentOverride = viewModel.currentOverride {
+                   ActivePresetBanner(override: currentOverride)
+                       .padding(.bottom, 8)
+               }
+                
                 warningsCard
 
                 mainCard
@@ -192,8 +197,6 @@ extension CarbEntryView {
         switch warning {
         case .entryIsMissedMeal:
             return .critical
-        case .overrideInProgress:
-            return .warning
         case .glucoseRisingRapidly:
             return .critical
         }
@@ -203,8 +206,6 @@ extension CarbEntryView {
         switch warning {
         case .entryIsMissedMeal:
             return NSLocalizedString("Loop has detected an missed meal and estimated its size. Edit the carb amount to match the amount of any carbs you may have eaten.", comment: "Warning displayed when user is adding a meal from an missed meal notification")
-        case .overrideInProgress:
-            return NSLocalizedString("An active override is modifying your carb ratio and insulin sensitivity. If you don't want this to affect your bolus calculation and projected glucose, consider turning off the override.", comment: "Warning to ensure the carb entry is accurate during an override")
         case .glucoseRisingRapidly:
             return NSLocalizedString("Your glucose is rapidly rising. Check that any carbs you've eaten were logged. If you logged carbs, check that the time you entered lines up with when you started eating.", comment: "Warning to ensure the carb entry is accurate")
         }
