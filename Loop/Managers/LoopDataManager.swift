@@ -1546,41 +1546,28 @@ extension LoopDataManager: DiagnosticReportGenerator {
 }
 
 extension LoopDataManager: LoopControl {
-    private func neutralBasal(now: Date = Date()) -> Double? {
+    var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
         guard let input = displayState.input else {
             return nil
         }
 
-        return input.basal.closestPrior(to: now)?.value
-    }
-    
-    private func scheduledBasalRate(now: Date = Date()) -> Double? {
-        guard let neutralBasal = neutralBasal(now: now) else {
-            return nil
-        }
-        
-        if let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: now) {
-            return neutralBasal / activeOverride.settings.effectiveInsulinNeedsScaleFactor
-        } else {
-            return neutralBasal
-        }
-    }
-    
-    func currentBasalRate(scheduledBasalRate: Double) -> Double? {
-        if let currentTempBasal = deliveryDelegate?.basalDeliveryState?.currentTempBasal {
-            return currentTempBasal.unitsPerHour
-        } else {
-            return scheduledBasalRate
-        }
-    }
-    
-    var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
         let now = Date()
-        
-        guard let input = displayState.input, let neutralBasal = neutralBasal(now: Date()), let scheduledBasalRate = scheduledBasalRate(now: now), let currentBasalRate = currentBasalRate(scheduledBasalRate: scheduledBasalRate) else {
-            return nil
+
+        let neutralBasal = input.basal.closestPrior(to: now)!.value
+        var scheduledBasalRate: Double
+        if let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: now) {
+            scheduledBasalRate = neutralBasal / activeOverride.settings.effectiveInsulinNeedsScaleFactor
+        } else {
+            scheduledBasalRate = neutralBasal
         }
-        
+
+        var currentBasalRate: Double
+        if let currentTempBasal = deliveryDelegate?.basalDeliveryState?.currentTempBasal {
+            currentBasalRate = currentTempBasal.unitsPerHour
+        } else {
+            currentBasalRate = scheduledBasalRate
+        }
+
         if currentBasalRate > neutralBasal {
             return .increasedInsulin
         } else if currentBasalRate < neutralBasal {
