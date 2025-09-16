@@ -1566,9 +1566,7 @@ extension LoopDataManager: LoopControl {
 
         let now = Date()
 
-        let neutralBasal = input.basal.closestPrior(to: now)!.value
-
-        guard let currentBasalRate = currentBasalRate(at: now) else {
+        guard let neutralBasal = input.basal.closestPrior(to: now)?.value, let currentBasalRate = currentBasalRate(at: now) else {
             return nil
         }
 
