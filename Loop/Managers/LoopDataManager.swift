@@ -1546,6 +1546,19 @@ extension LoopDataManager: DiagnosticReportGenerator {
 }
 
 extension LoopDataManager: LoopControl {
+    
+    func scheduledBasalRate(at date: Date = Date()) -> Double? {
+        settings.basalRateSchedule?.value(at: date)
+    }
+    
+    func currentBasalRate(at date: Date = Date(), scheduledBasalRate: Double? = nil) -> Double? {
+        guard let scheduledBasalRate = scheduledBasalRate ?? self.scheduledBasalRate(at: date) else {
+            return nil
+        }
+        
+        return deliveryDelegate?.basalDeliveryState?.currentBasalRate(currentScheduledBasalRate: scheduledBasalRate)
+    }
+    
     var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
         guard let input = displayState.input else {
             return nil
@@ -1561,7 +1574,9 @@ extension LoopDataManager: LoopControl {
             scheduledBasalRate = neutralBasal
         }
 
-        let currentBasalRate = deliveryDelegate?.basalDeliveryState?.currentBasalRate(currentScheduledBasalRate: scheduledBasalRate) ?? scheduledBasalRate
+        guard let currentBasalRate = currentBasalRate(at: now, scheduledBasalRate: scheduledBasalRate) else {
+            return nil
+        }
 
         if currentBasalRate > neutralBasal {
             return .increasedInsulin
