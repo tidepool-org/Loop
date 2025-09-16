@@ -116,7 +116,7 @@ struct TherapySettingsExampleView: View {
         case .carbRatio(let double):
             Text("\(numberFormatter.string(from: double) ?? "0")").bold() + Text("\u{00a0}\(LoopUnit.gramsPerUnit.shortLocalizedUnitString())")
         case .isf(let double):
-            Text(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: double), includeUnit: false)).bold() + Text("\u{00a0}\(displayGlucosePreference.unit.shortLocalizedUnitString())")
+            Text(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: double), includeUnit: false)).bold() + Text("\u{00a0}\(displayGlucosePreference.unitRate.shortLocalizedUnitString())")
         case .correctionRange(let closedRange):
             Text("\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: closedRange.lowerBound), includeUnit: false))").bold() + Text("\u{00a0}-\u{00a0}") + Text("\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: closedRange.upperBound), includeUnit: false))").bold() + Text("\u{00a0}\(displayGlucosePreference.unit.shortLocalizedUnitString())")
         case .bolusRecommendation(let starting, let ending, let action):
@@ -173,5 +173,11 @@ private extension View {
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                 )
         }
+    }
+}
+
+extension DisplayGlucosePreference {
+    var unitRate: LoopUnit {
+        unit.unitDivided(by: .internationalUnit)
     }
 }

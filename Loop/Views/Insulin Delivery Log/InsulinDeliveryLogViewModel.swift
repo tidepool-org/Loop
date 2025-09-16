@@ -224,12 +224,18 @@ class InsulinDeliveryLogViewModel {
     }
     
     private func fetchCurrentBasal() -> DatedQuantity? {
-        guard let currentBasalRate = loopDataManager.currentBasalRate() else {
+        let date = loopDataManager.lastLoopCompleted ?? Date()
+        
+        guard let scheduledBasalRate = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory?.value(at: date) else {
+            return nil
+        }
+        
+        guard let currentBasalRate = pumpManager.status.basalDeliveryState?.currentBasalRate(currentScheduledBasalRate: scheduledBasalRate) else {
             return nil
         }
 
         return DatedQuantity(
-            date: loopDataManager.lastLoopCompleted ?? Date(),
+            date: date,
             quantity: LoopQuantity(
                 unit: .internationalUnitsPerHour,
                 doubleValue: currentBasalRate

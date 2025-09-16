@@ -59,6 +59,19 @@ extension PumpManagerStatus.BasalDeliveryState {
             return nil
         }
     }
+    
+    func currentBasalRate(currentScheduledBasalRate: Double) -> Double? {
+        switch self {
+        case .tempBasal(let dose):
+            return dose.unitsPerHour
+        case .suspended:
+            return 0
+        case .pumpInoperable:
+            return nil
+        default:
+            return currentScheduledBasalRate
+        }
+    }
 }
 
 protocol DosingManagerDelegate {
@@ -1553,18 +1566,18 @@ extension LoopDataManager: LoopControl {
         }
     }
     
-    func currentBasalRate(now: Date = Date()) -> Double? {
+    func currentBasalRate(scheduledBasalRate: Double) -> Double? {
         if let currentTempBasal = deliveryDelegate?.basalDeliveryState?.currentTempBasal {
             return currentTempBasal.unitsPerHour
         } else {
-            return scheduledBasalRate(now: now)
+            return scheduledBasalRate
         }
     }
     
     var automatedTreatmentState: LoopKit.AutomatedTreatmentState? {
         let now = Date()
         
-        guard let input = displayState.input, let currentBasalRate = currentBasalRate(now: now), let neutralBasal = neutralBasal(now: Date()), let scheduledBasalRate = scheduledBasalRate(now: now) else {
+        guard let input = displayState.input, let neutralBasal = neutralBasal(now: Date()), let scheduledBasalRate = scheduledBasalRate(now: now), let currentBasalRate = currentBasalRate(scheduledBasalRate: scheduledBasalRate) else {
             return nil
         }
         
