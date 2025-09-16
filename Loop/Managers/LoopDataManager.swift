@@ -1551,8 +1551,8 @@ extension LoopDataManager: LoopControl {
         settings.basalRateSchedule?.value(at: date)
     }
     
-    func currentBasalRate(at date: Date = Date(), scheduledBasalRate: Double? = nil) -> Double? {
-        guard let scheduledBasalRate = scheduledBasalRate ?? self.scheduledBasalRate(at: date) else {
+    func currentBasalRate(at date: Date = Date()) -> Double? {
+        guard let scheduledBasalRate = scheduledBasalRate(at: date) else {
             return nil
         }
         
@@ -1567,14 +1567,8 @@ extension LoopDataManager: LoopControl {
         let now = Date()
 
         let neutralBasal = input.basal.closestPrior(to: now)!.value
-        var scheduledBasalRate: Double
-        if let activeOverride = temporaryPresetsManager.presetHistory.activeOverride(at: now) {
-            scheduledBasalRate = neutralBasal / activeOverride.settings.effectiveInsulinNeedsScaleFactor
-        } else {
-            scheduledBasalRate = neutralBasal
-        }
 
-        guard let currentBasalRate = currentBasalRate(at: now, scheduledBasalRate: scheduledBasalRate) else {
+        guard let currentBasalRate = currentBasalRate(at: now) else {
             return nil
         }
 
@@ -1595,7 +1589,7 @@ extension LoopDataManager: LoopControl {
             if !recentAutomaticBoluses.isEmpty {
                 return .increasedInsulin
             }
-            return scheduledBasalRate != neutralBasal ? .neutralOverride : .neutralNoOverride
+            return scheduledBasalRate(at: now) != neutralBasal ? .neutralOverride : .neutralNoOverride
         }
     }
 }
