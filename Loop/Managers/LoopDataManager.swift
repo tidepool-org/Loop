@@ -1561,12 +1561,7 @@ extension LoopDataManager: LoopControl {
             scheduledBasalRate = neutralBasal
         }
 
-        var currentBasalRate: Double
-        if let currentTempBasal = deliveryDelegate?.basalDeliveryState?.currentTempBasal {
-            currentBasalRate = currentTempBasal.unitsPerHour
-        } else {
-            currentBasalRate = scheduledBasalRate
-        }
+        let currentBasalRate = deliveryDelegate?.basalDeliveryState?.currentBasalRate(currentScheduledBasalRate: scheduledBasalRate) ?? scheduledBasalRate
 
         if currentBasalRate > neutralBasal {
             return .increasedInsulin
