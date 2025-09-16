@@ -226,7 +226,7 @@ class InsulinDeliveryLogViewModel {
     private func fetchCurrentBasal() -> DatedQuantity? {
         let date = loopDataManager.lastLoopCompleted ?? Date()
         
-        guard let scheduledBasalRate = loopDataManager.temporaryPresetsManager.basalRateScheduleApplyingOverrideHistory?.value(at: date) else {
+        guard let scheduledBasalRate = loopDataManager.settings.basalRateSchedule?.value(at: date) else {
             return nil
         }
         

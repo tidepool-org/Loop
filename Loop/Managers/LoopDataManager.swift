@@ -1554,7 +1554,7 @@ extension LoopDataManager: LoopControl {
         return input.basal.closestPrior(to: now)?.value
     }
     
-    func scheduledBasalRate(now: Date = Date()) -> Double? {
+    private func scheduledBasalRate(now: Date = Date()) -> Double? {
         guard let neutralBasal = neutralBasal(now: now) else {
             return nil
         }
