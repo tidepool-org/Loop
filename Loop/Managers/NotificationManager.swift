@@ -11,15 +11,6 @@ import UserNotifications
 import LoopKit
 import LoopCore
 
-enum NotificationManager {
-
-    enum Action: String {
-        case retryBolus
-        case acknowledgeAlert
-        case startPreset
-    }
-}
-
 @MainActor
 extension NotificationManager {
     private static var notificationCategories: Set<UNNotificationCategory> {

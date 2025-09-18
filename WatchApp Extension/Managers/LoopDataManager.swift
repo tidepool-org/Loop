@@ -19,7 +19,7 @@ import LoopAlgorithm
 class LoopDataManager {
     let carbStore: CarbStore
 
-    var glucoseStore: GlucoseStore!
+    var glucoseStore: GlucoseStore?
 
     @ObservationIgnored
     @PersistedProperty(key: "Settings")
@@ -37,6 +37,8 @@ class LoopDataManager {
             rawWatchInfo = watchInfo.rawValue
         }
     }
+
+    var pendingScheduledPresetActivationId: String?
 
     // Main queue only
     var supportedBolusVolumes = UserDefaults.standard.supportedBolusVolumes {
@@ -110,7 +112,7 @@ extension LoopDataManager {
         if activeContext == nil || context.shouldReplace(activeContext!) {
             if let newGlucoseSample = context.newGlucoseSample {
                 Task {
-                    try? await self.glucoseStore.addGlucoseSamples([newGlucoseSample])
+                    try? await self.glucoseStore?.addGlucoseSamples([newGlucoseSample])
                 }
             }
             activeContext = context
@@ -178,7 +180,7 @@ extension LoopDataManager {
             case .success(let context):
                 Task {
                     do {
-                        try await self.glucoseStore.setSyncGlucoseSamples(context.samples)
+                        try await self.glucoseStore?.setSyncGlucoseSamples(context.samples)
                     } catch {
                         self.log.error("Failure setting sync glucose samples: %{public}@", String(describing: error))
                     }
@@ -274,7 +276,7 @@ extension LoopDataManager {
         Task {
             var historicalGlucose: [StoredGlucoseSample]?
             do {
-                historicalGlucose = try await glucoseStore.getGlucoseSamples(start: .earliestGlucoseCutoff)
+                historicalGlucose = try await glucoseStore?.getGlucoseSamples(start: .earliestGlucoseCutoff)
             } catch {
                 self.log.error("Failure getting glucose samples: %{public}@", String(describing: error))
             }

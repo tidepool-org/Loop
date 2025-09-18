@@ -9,6 +9,7 @@
 
 import SwiftUI
 import LoopKit
+import LoopCore
 
 struct WatchActionsView: View {
     @State private var loopManager = ExtensionDelegate.shared().loopManager
@@ -111,6 +112,18 @@ struct WatchActionsView: View {
         }
         .font(.system(size: 14, weight: .light))
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: Binding(
+            get: { loopManager.pendingScheduledPresetActivationId != nil },
+            set: { if !$0 { loopManager.pendingScheduledPresetActivationId = nil } }
+        )) {
+            // This is for confirming preset activation from scheduled notification
+            if let preset = loopManager.selectablePresets.first(where: { $0.id == loopManager.pendingScheduledPresetActivationId })
+            {
+                PresetDetailView(preset: preset)
+            } else {
+                Text("Invalid preset activation id")
+            }
+        }
         .sheet(isPresented: $isShowingPresetList) {
             PresetListView(presets: loopManager.selectablePresets)
         }
@@ -122,9 +135,11 @@ struct WatchActionsView: View {
             }
         }
         .onChange(of: loopManager.watchInfo.scheduleOverride, { oldValue, newValue in
-            if oldValue == nil && newValue != nil && isShowingPresetList {
+            if oldValue == nil && newValue != nil {
+                // Preset activated
                 isShowingPresetList = false
                 isShowingActivePreset = true
+                loopManager.pendingScheduledPresetActivationId = nil
             }
             if oldValue != nil && newValue == nil && isShowingActivePreset {
                 isShowingActivePreset = false

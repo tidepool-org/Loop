@@ -15,6 +15,7 @@ import os
 import os.log
 import UserNotifications
 import LoopKit
+import LoopCore
 
 
 final class ExtensionDelegate: NSObject, WKExtensionDelegate {
@@ -40,6 +41,9 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
         // and that KVO is the "recommended" way to deal with it.
         observers.append(session.observe(\WCSession.activationState) { [weak self] (session, change) in
             self?.log.default("WCSession.applicationState did change to %d", session.activationState.rawValue)
+
+            self?.log.default("WCSession.applicationState did change rootInterfaceController = %{public}@", String(describing: WKExtension.shared().rootInterfaceController))
+            self?.log.default("WCSession.applicationState did change visibleInterfaceController = %{public}@", String(describing: WKExtension.shared().visibleInterfaceController))
 
             DispatchQueue.main.async {
                 self?.completePendingConnectivityTasksIfNeeded()
@@ -80,6 +84,11 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
         if WCSession.default.activationState != .activated {
             WCSession.default.activate()
         }
+        
+        log.default(">>> applicationDidBecomeActive")
+
+        log.default("applicationDidBecomeActive rootInterfaceController = %{public}@", String(describing: WKExtension.shared().rootInterfaceController))
+        log.default("applicationDidBecomeActive visibleInterfaceController = %{public}@", String(describing: WKExtension.shared().visibleInterfaceController))
 
         NotificationCenter.default.post(name: type(of: self).didBecomeActiveNotification, object: self)
     }
@@ -88,6 +97,7 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
         UserDefaults.standard.startOnChartPage = (WKExtension.shared().visibleInterfaceController as? ChartHUDController) != nil
 
         NotificationCenter.default.post(name: type(of: self).willResignActiveNotification, object: self)
+        log.default(">>> applicationWillResignActive")
     }
 
     // Presumably the main thread?
@@ -210,6 +220,10 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
 extension ExtensionDelegate: WCSessionDelegate {
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         log.default("activationDidCompleteWith %{public}@", String(describing: activationState))
+
+        log.default("activationDidCompleteWith rootInterfaceController = %{public}@", String(describing: WKExtension.shared().rootInterfaceController))
+        log.default("activationDidCompleteWith visibleInterfaceController = %{public}@", String(describing: WKExtension.shared().visibleInterfaceController))
+
         if activationState == .activated {
             updateContext(session.receivedApplicationContext)
             Task {
@@ -259,6 +273,10 @@ extension ExtensionDelegate: WCSessionDelegate {
 
 extension ExtensionDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+
+        log.default("UNNotificationResponse rootInterfaceController = %{public}@", String(describing: WKExtension.shared().rootInterfaceController))
+        log.default("UNNotificationResponse visibleInterfaceController = %{public}@", String(describing: WKExtension.shared().visibleInterfaceController))
+
         switch response.actionIdentifier {
         case UNNotificationDefaultActionIdentifier:
             guard
@@ -283,6 +301,19 @@ extension ExtensionDelegate: UNUserNotificationCenterDelegate {
             // Otherwise, just provide the ability to add carbs
             } else {
                 statusController.addCarbs()
+            }
+        case NotificationManager.Action.startPreset.rawValue:
+            let userInfo = response.notification.request.content.userInfo
+            if let presetId = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier {
+                loopManager.pendingScheduledPresetActivationId = presetId
+                guard let visibleVC = WKExtension.shared().visibleInterfaceController else {
+                    return
+                }
+
+                if visibleVC is ChartHUDController {
+                    // Show actions controller, so user can confirm preset activation
+                    visibleVC.pushController(withName: "ActionViewHostingController", context: nil)
+                }
             }
         default:
             let userInfo = response.notification.request.content.userInfo

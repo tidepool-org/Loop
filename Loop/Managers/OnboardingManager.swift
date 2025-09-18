@@ -10,6 +10,7 @@ import os.log
 import HealthKit
 import LoopKit
 import LoopKitUI
+import LoopCore
 
 @MainActor
 class OnboardingManager {
