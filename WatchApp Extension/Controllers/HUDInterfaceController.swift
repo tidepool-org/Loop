@@ -100,14 +100,5 @@ class HUDInterfaceController: WKInterfaceController {
                 }
             }
         }
-
-    }
-
-    @IBAction func addCarbs() {
-        presentController(withName: CarbAndBolusFlowController.className, context: CarbAndBolusFlow.Configuration.carbEntry(nil))
-    }
-    
-    func addCarbs(initialEntry: NewCarbEntry) {
-        presentController(withName: CarbAndBolusFlowController.className, context: CarbAndBolusFlow.Configuration.carbEntry(initialEntry))
     }
 }

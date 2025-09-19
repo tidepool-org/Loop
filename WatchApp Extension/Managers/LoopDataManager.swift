@@ -49,6 +49,9 @@ class LoopDataManager {
         }
     }
 
+    // When set, user will be navigated to carbs/bolus flow
+    var bolusViewModel: CarbAndBolusFlowViewModel?
+
     // Main queue only
     var supportedBolusVolumes = UserDefaults.standard.supportedBolusVolumes {
         didSet {

@@ -85,14 +85,10 @@ class ExtensionDelegate: NSObject, WKApplicationDelegate {
         if WCSession.default.activationState != .activated {
             WCSession.default.activate()
         }
-        
-        NotificationCenter.default.post(name: type(of: self).didBecomeActiveNotification, object: self)
     }
 
     func applicationWillResignActive() {
         UserDefaults.standard.startOnChartPage = (WKApplication.shared().visibleInterfaceController as? ChartHUDController) != nil
-
-        NotificationCenter.default.post(name: type(of: self).willResignActiveNotification, object: self)
     }
 
     // Presumably the main thread?
@@ -150,15 +146,11 @@ class ExtensionDelegate: NSObject, WKApplicationDelegate {
     }
 
     func handle(_ userActivity: NSUserActivity) {
-        if #available(watchOSApplicationExtension 5.0, *) {
-            switch userActivity.activityType {
-            case NSUserActivity.newCarbEntryActivityType, NSUserActivity.didAddCarbEntryOnWatchActivityType:
-                if let statusController = WKApplication.shared().visibleInterfaceController as? HUDInterfaceController {
-                    statusController.addCarbs()
-                }
-            default:
-                break
-            }
+        switch userActivity.activityType {
+        case NSUserActivity.newCarbEntryActivityType, NSUserActivity.didAddCarbEntryOnWatchActivityType:
+            loopManager.bolusViewModel = CarbAndBolusFlowViewModel(configuration: .carbEntry(nil))
+        default:
+            break
         }
     }
 
@@ -273,10 +265,7 @@ extension ExtensionDelegate: UNUserNotificationCenterDelegate {
 
         switch response.actionIdentifier {
         case UNNotificationDefaultActionIdentifier:
-            guard
-                response.notification.request.identifier == LoopNotificationCategory.missedMeal.rawValue,
-                let statusController = WKApplication.shared().visibleInterfaceController as? HUDInterfaceController
-            else {
+            guard response.notification.request.identifier == LoopNotificationCategory.missedMeal.rawValue else {
                 break
             }
 
@@ -291,10 +280,10 @@ extension ExtensionDelegate: UNUserNotificationCenterDelegate {
                                                     startDate: mealTime,
                                                     foodType: nil,
                                                     absorptionTime: nil)
-                statusController.addCarbs(initialEntry: missedEntry)
+                loopManager.bolusViewModel = CarbAndBolusFlowViewModel(configuration: .carbEntry(missedEntry))
             // Otherwise, just provide the ability to add carbs
             } else {
-                statusController.addCarbs()
+                loopManager.bolusViewModel = CarbAndBolusFlowViewModel(configuration: .carbEntry(nil))
             }
         case NotificationManager.Action.startPreset.rawValue:
             // Response contains the preset id and alert id
@@ -344,10 +333,6 @@ extension ExtensionDelegate: UNUserNotificationCenterDelegate {
 
 
 extension ExtensionDelegate {
-    static let didBecomeActiveNotification = Notification.Name("com.loopkit.Loop.LoopWatch.didBecomeActive")
-
-    static let willResignActiveNotification = Notification.Name("com.loopkit.Loop.LoopWatch.willResignActive")
-
     /// Global shortcut to present an alert for a specific error out-of-context with a specific interface controller.
     ///
     /// - parameter error: The error whose contents to display

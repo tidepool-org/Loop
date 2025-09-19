@@ -92,7 +92,6 @@
 		4311FB9B1F37FE1B00D4C0A7 /* TitleSubtitleTextFieldTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4311FB9A1F37FE1B00D4C0A7 /* TitleSubtitleTextFieldTableViewCell.swift */; };
 		431A8C401EC6E8AB00823B9C /* CircleMaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431A8C3F1EC6E8AB00823B9C /* CircleMaskView.swift */; };
 		4326BA641F3A44D9007CCAD4 /* ChartLineModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4326BA631F3A44D9007CCAD4 /* ChartLineModel.swift */; };
-		4328E01E1CFBE25F00E199AA /* CarbAndBolusFlowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4328E01D1CFBE25F00E199AA /* CarbAndBolusFlowController.swift */; };
 		4328E0281CFBE2C500E199AA /* CLKComplicationTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4328E0221CFBE2C500E199AA /* CLKComplicationTemplate.swift */; };
 		4328E02A1CFBE2C500E199AA /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4328E0241CFBE2C500E199AA /* UIColor.swift */; };
 		4328E02B1CFBE2C500E199AA /* WKAlertAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4328E0251CFBE2C500E199AA /* WKAlertAction.swift */; };
@@ -822,7 +821,6 @@
 		431A8C3F1EC6E8AB00823B9C /* CircleMaskView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMaskView.swift; sourceTree = "<group>"; };
 		431E73471FF95A900069B5F7 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		4326BA631F3A44D9007CCAD4 /* ChartLineModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartLineModel.swift; sourceTree = "<group>"; };
-		4328E01D1CFBE25F00E199AA /* CarbAndBolusFlowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarbAndBolusFlowController.swift; sourceTree = "<group>"; };
 		4328E0221CFBE2C500E199AA /* CLKComplicationTemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CLKComplicationTemplate.swift; sourceTree = "<group>"; };
 		4328E0231CFBE2C500E199AA /* NSUserDefaults+WatchApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSUserDefaults+WatchApp.swift"; sourceTree = "<group>"; };
 		4328E0241CFBE2C500E199AA /* UIColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
@@ -1878,7 +1876,6 @@
 			isa = PBXGroup;
 			children = (
 				C12D723D2E4FBC1A00BD628A /* ActionViewHostingController.swift */,
-				4328E01D1CFBE25F00E199AA /* CarbAndBolusFlowController.swift */,
 				4345E40521F68E18009E00E5 /* CarbEntryListController.swift */,
 				4FFEDFBE20E5CF22000BFC58 /* ChartHUDController.swift */,
 				4F82654F20E69F9A0031A8F5 /* HUDInterfaceController.swift */,
@@ -3201,27 +3198,6 @@
 							};
 						};
 					};
-					43A9437D1B926B7B0051FA24 = {
-						CreatedOnToolsVersion = 7.0;
-						LastSwiftMigration = 1020;
-						SystemCapabilities = {
-							com.apple.ApplicationGroups.iOS = {
-								enabled = 0;
-							};
-							com.apple.HealthKit = {
-								enabled = 0;
-							};
-							com.apple.HealthKit.watchos = {
-								enabled = 1;
-							};
-							com.apple.Keychain = {
-								enabled = 0;
-							};
-							com.apple.Siri = {
-								enabled = 1;
-							};
-						};
-					};
 					43D9001A21EB209400AF44BF = {
 						LastSwiftMigration = 1020;
 						ProvisioningStyle = Automatic;
@@ -3876,7 +3852,6 @@
 				4F11D3C420DD881A006E072C /* WatchHistoricalGlucose.swift in Sources */,
 				89E08FCA242E7714000D719B /* UIFont.swift in Sources */,
 				4328E0281CFBE2C500E199AA /* CLKComplicationTemplate.swift in Sources */,
-				4328E01E1CFBE25F00E199AA /* CarbAndBolusFlowController.swift in Sources */,
 				432CF87520D8AC950066B889 /* NSUserDefaults+WatchApp.swift in Sources */,
 				C10C57EC2E7070FF00A4825C /* PresetsListView.swift in Sources */,
 				43027F0F1DFE0EC900C51989 /* HKUnit.swift in Sources */,
@@ -4673,9 +4648,9 @@
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CODE_SIGN_ENTITLEMENTS = "Loop Widget Extension/Bootstrap/LoopWidgetExtension.entitlements";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -5010,9 +4985,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "$(APPICON_NAME)";
 				CODE_SIGN_ENTITLEMENTS = "$(LOOP_ENTITLEMENTS)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = Loop/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -5031,66 +5006,12 @@
 			};
 			name = Release;
 		};
-		43A943961B926B7B0051FA24 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
-				CODE_SIGN_ENTITLEMENTS = "WatchApp Extension/WatchApp Extension.entitlements";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				FRAMEWORK_SEARCH_PATHS = "";
-				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(MAIN_APP_BUNDLE_IDENTIFIER).LoopWatch.watchkitextension";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				SWIFT_INSTALL_OBJC_HEADER = NO;
-				SWIFT_OBJC_BRIDGING_HEADER = "WatchApp Extension/Extensions/WatchApp Extension-Bridging-Header.h";
-				SWIFT_PRECOMPILE_BRIDGING_HEADER = NO;
-				TARGETED_DEVICE_FAMILY = 4;
-			};
-			name = Debug;
-		};
-		43A943971B926B7B0051FA24 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
-				CODE_SIGN_ENTITLEMENTS = "WatchApp Extension/WatchApp Extension.entitlements";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				FRAMEWORK_SEARCH_PATHS = "";
-				INFOPLIST_FILE = "WatchApp Extension/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(MAIN_APP_BUNDLE_IDENTIFIER).LoopWatch.watchkitextension";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				SWIFT_INSTALL_OBJC_HEADER = NO;
-				SWIFT_OBJC_BRIDGING_HEADER = "WatchApp Extension/Extensions/WatchApp Extension-Bridging-Header.h";
-				SWIFT_PRECOMPILE_BRIDGING_HEADER = NO;
-				TARGETED_DEVICE_FAMILY = 4;
-			};
-			name = Release;
-		};
 		43A9439A1B926B7B0051FA24 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = WatchApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -5110,9 +5031,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "$(APPICON_NAME)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = WatchApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -5446,38 +5367,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "$(APPICON_NAME)";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				FRAMEWORK_SEARCH_PATHS = "";
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "$(MAIN_APP_BUNDLE_IDENTIFIER).LoopWatch";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = 4;
-			};
-			name = Testflight;
-		};
-		B4E7CF952AD00A39009B4DF2 /* Testflight */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
-				CODE_SIGN_ENTITLEMENTS = "WatchApp Extension/WatchApp Extension.entitlements";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				FRAMEWORK_SEARCH_PATHS = "";
-				INFOPLIST_FILE = WatchApp/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(MAIN_APP_BUNDLE_IDENTIFIER).LoopWatch";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5506,9 +5404,9 @@
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CODE_SIGN_ENTITLEMENTS = "Loop Widget Extension/Bootstrap/LoopWidgetExtension.entitlements";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -5540,9 +5438,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "Loop Intent Extension/Loop Intent Extension.entitlements";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "Loop Intent Extension/Info.plist";
@@ -5654,9 +5552,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "Loop Intent Extension/Loop Intent Extension.entitlements";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "Loop Intent Extension/Info.plist";
@@ -5681,9 +5579,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "Loop Intent Extension/Loop Intent Extension.entitlements";
-				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "$(LOOP_DEVELOPMENT_TEAM)";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "Loop Intent Extension/Info.plist";

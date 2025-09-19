@@ -17,9 +17,6 @@ struct WatchActionsView: View {
     @State private var isShowingPresetList: Bool = false
     @State private var isShowingActivePreset: Bool = false
 
-    var presentAddCarbUI: () -> Void
-    var presentSetBolusUI: () -> Void
-
     var freshness: LoopCompletionFreshness {
         return LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
     }
@@ -81,7 +78,7 @@ struct WatchActionsView: View {
                     foregroundTint: .carbs,
                     backgroundTint: .darkCarbs
                 ) {
-                    presentAddCarbUI()
+                    loopManager.bolusViewModel = CarbAndBolusFlowViewModel(configuration: .carbEntry(nil))
                 }
                 CircleTintedButton(
                     label: "Bolus",
@@ -89,7 +86,7 @@ struct WatchActionsView: View {
                     foregroundTint: .insulin,
                     backgroundTint: .darkInsulin
                 ) {
-                    presentSetBolusUI()
+                    loopManager.bolusViewModel = CarbAndBolusFlowViewModel(configuration: .manualBolus)
                 }
             }
             .padding(.bottom, 4)
@@ -121,6 +118,12 @@ struct WatchActionsView: View {
             } else {
                 Text("Preset override not active")
             }
+        }
+        .sheet(isPresented:Binding(
+            get: { loopManager.bolusViewModel != nil },
+            set: { if !$0 { loopManager.bolusViewModel = nil } }
+        )) {
+            CarbAndBolusFlow(viewModel: loopManager.bolusViewModel!)
         }
         .onChange(of: loopManager.watchInfo.scheduleOverride, { oldValue, newValue in
             if oldValue == nil && newValue != nil {

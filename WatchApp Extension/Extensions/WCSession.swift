@@ -40,51 +40,22 @@ extension WCSession {
         }
     }
 
-    func sendPotentialCarbEntryMessage(_ carbEntry: PotentialCarbEntryUserInfo, replyHandler: @escaping (WatchContext) -> Void, errorHandler: @escaping (Error) -> Void) throws {
-        guard activationState == .activated else {
-            throw MessageError.activation
+    func sendPotentialCarbEntryMessage(_ carbEntry: PotentialCarbEntryUserInfo) async throws -> WatchContext {
+        let reply = try await sendMessage(carbEntry.rawValue)
+        log.debug("Sending potential carbEntry: %{public}@", String(describing: carbEntry))
+
+        guard let context = WatchContext(rawValue: reply as WatchContext.RawValue) else {
+            log.error("sendPotentialCarbEntryMessage: could not decode reply: %{public}@", reply)
+            throw MessageError.decoding
         }
+        log.debug("sendPotentialCarbEntryMessage: recommendedBolusDose: %{public}@", String(describing: context.recommendedBolusDose))
 
-        guard isReachable else {
-            log.default("sendPotentialCarbEntryMessage: Phone is unreachable, taking no action")
-            return
-        }
-
-        sendMessage(carbEntry.rawValue,
-            replyHandler: { reply in
-                guard let context = WatchContext(rawValue: reply as WatchContext.RawValue) else {
-                    log.error("sendPotentialCarbEntryMessage: could not decode reply: %{public}@", reply)
-                    errorHandler(MessageError.decoding)
-                    return
-                }
-
-                replyHandler(context)
-            },
-            errorHandler: { error in
-                log.error("sendPotentialCarbEntryMessage: message send failed with error: %{public}@", String(describing: error))
-                errorHandler(error)
-            }
-        )
+        return context
     }
 
-    func sendBolusMessage(_ userInfo: SetBolusUserInfo, completionHandler: @escaping (Error?) -> Void) throws {
-        guard activationState == .activated else {
-            throw MessageError.activation
-        }
-
-        guard isReachable else {
-            throw MessageError.reachability
-        }
-
-        sendMessage(userInfo.rawValue,
-            replyHandler: { reply in
-                completionHandler(nil)
-            },
-            errorHandler: { error in
-                log.info("sendBolusMessage failure: %{public}@", error.localizedDescription)
-                completionHandler(error)
-            }
-        )
+    func sendBolusMessage(_ userInfo: SetBolusUserInfo) async throws {
+        let _ = try await sendMessage(userInfo.rawValue)
+        return
     }
 
     func sendSetPreset(presetIdentifier: String?, alertIdentifier: String?) async throws {

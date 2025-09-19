@@ -6,13 +6,6 @@
         <capability name="Named colors" minToolsVersion="9.0"/>
     </dependencies>
     <scenes>
-        <!--CarbAndBolusFlowController-->
-        <scene sceneID="wDd-ld-Qg8">
-            <objects>
-                <hostingController identifier="CarbAndBolusFlowController" id="YfQ-6P-aH4" customClass="CarbAndBolusFlowController" customModule="WatchApp"/>
-            </objects>
-            <point key="canvasLocation" x="38" y="370"/>
-        </scene>
         <!--Loop-->
         <scene sceneID="3Z2-ZE-636">
             <objects>

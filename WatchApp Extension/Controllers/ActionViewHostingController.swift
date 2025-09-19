@@ -11,10 +11,6 @@ import SwiftUI
 
 class ActionViewHostingController: WKHostingController<WatchActionsView> {
     override var body: WatchActionsView {
-        return WatchActionsView {
-            self.presentController(withName: CarbAndBolusFlowController.className, context: CarbAndBolusFlow.Configuration.carbEntry(nil))
-        } presentSetBolusUI: {
-            self.presentController(withName: CarbAndBolusFlowController.className, context: CarbAndBolusFlow.Configuration.manualBolus)
-        }
+        return WatchActionsView()
     }
 }
