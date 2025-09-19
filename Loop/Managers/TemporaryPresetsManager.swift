@@ -175,8 +175,6 @@ class TemporaryPresetsManager {
         return presets
     }
 
-
-
     var clearOverrideTimer: Timer?
     public func scheduleClearOverride(override: TemporaryScheduleOverride) {
         clearOverrideTimer?.invalidate()
@@ -390,7 +388,7 @@ class TemporaryPresetsManager {
                                         body: body,
                                         actions: actions)
 
-            let metadata: Alert.Metadata = ["presetId": Alert.MetadataValue(preset.id)]
+            let metadata: Alert.Metadata = [LoopNotificationUserInfoKey.presetId.rawValue: Alert.MetadataValue(preset.id)]
 
             let alert = Alert(
                 identifier: nextScheduledPresetReminderIdentifier,

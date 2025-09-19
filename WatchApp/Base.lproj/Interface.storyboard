@@ -217,6 +217,13 @@
             </objects>
             <point key="canvasLocation" x="38" y="769"/>
         </scene>
+        <!--PresetConfirmHostingController-->
+        <scene sceneID="bN4-Z9-qst">
+            <objects>
+                <hostingController identifier="PresetConfirmHostingController" id="mnP-MY-5B0" customClass="PresetConfirmHostingController" customModule="WatchApp_Extension"/>
+            </objects>
+            <point key="canvasLocation" x="369" y="370"/>
+        </scene>
     </scenes>
     <color key="tintColor" red="0.29803921570000003" green="0.85098039219999999" blue="0.3921568627" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
     <resources>

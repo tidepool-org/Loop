@@ -10,22 +10,30 @@ import Foundation
 import LoopKit
 
 
-struct SetBolusUserInfo {
-    let value: Double
-    let startDate: Date
-    let contextDate: Date?
-    let carbEntry: NewCarbEntry?
-    let activationType: BolusActivationType
+public struct SetBolusUserInfo {
+    public let value: Double
+    public let startDate: Date
+    public let contextDate: Date?
+    public let carbEntry: NewCarbEntry?
+    public let activationType: BolusActivationType
+
+    public init(value: Double, startDate: Date, contextDate: Date?, carbEntry: NewCarbEntry?, activationType: BolusActivationType) {
+        self.value = value
+        self.startDate = startDate
+        self.contextDate = contextDate
+        self.carbEntry = carbEntry
+        self.activationType = activationType
+    }
 }
 
 
 extension SetBolusUserInfo: RawRepresentable {
-    typealias RawValue = [String: Any]
+    public typealias RawValue = [String: Any]
 
-    static let version = 1
-    static let name = "SetBolusUserInfo"
+    public static let version = 1
+    public static let name = "SetBolusUserInfo"
 
-    init?(rawValue: RawValue) {
+    public init?(rawValue: RawValue) {
         guard rawValue["v"] as? Int == type(of: self).version &&
                 rawValue["name"] as? String == SetBolusUserInfo.name,
               let value = rawValue["bv"] as? Double,
@@ -43,7 +51,7 @@ extension SetBolusUserInfo: RawRepresentable {
         self.activationType = activationType
     }
 
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
         var raw: RawValue = [
             "v": type(of: self).version,
             "name": SetBolusUserInfo.name,

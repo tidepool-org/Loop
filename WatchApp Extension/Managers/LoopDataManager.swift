@@ -13,6 +13,7 @@ import LoopCore
 import WatchConnectivity
 import os.log
 import LoopAlgorithm
+import UserNotifications
 
 @MainActor
 @Observable
@@ -38,7 +39,15 @@ class LoopDataManager {
         }
     }
 
-    var pendingScheduledPresetActivationId: String?
+    var pendingPresetReminder: PendingPresetReminder?
+
+    var pendingPreset: SelectablePreset {
+        if let presetIdentifier = pendingPresetReminder?.presetIdentifier {
+            return selectablePresets.first(where: { $0.id == presetIdentifier })!
+        } else {
+            return selectablePresets.first!
+        }
+    }
 
     // Main queue only
     var supportedBolusVolumes = UserDefaults.standard.supportedBolusVolumes {
@@ -220,16 +229,20 @@ extension LoopDataManager {
     func clearOverride() async throws {
         var watchInfoUpdate = self.watchInfo
         watchInfoUpdate.scheduleOverride = nil
-        activeContext = try await WCSession.default.sendSettingsUpdateMessage(watchInfoUpdate)
+        try await WCSession.default.sendSetPreset(presetIdentifier: nil, alertIdentifier: nil)
         watchInfo = watchInfoUpdate
     }
 
-
-    func activateOverride(_ override: TemporaryScheduleOverride?) async throws {
+    func activateOverride(_ override: TemporaryScheduleOverride, alertIdentifierToAcknowledge: String? = nil) async throws {
         var watchInfoUpdate = self.watchInfo
         watchInfoUpdate.scheduleOverride = override
-        activeContext = try await WCSession.default.sendSettingsUpdateMessage(watchInfoUpdate)
+        try await WCSession.default.sendSetPreset(presetIdentifier: override.presetId, alertIdentifier: alertIdentifierToAcknowledge)
         watchInfo = watchInfoUpdate
+    }
+
+    func acknowledgeAlert(alertIdentifier: String, managerIdentifier: String) async throws {
+        self.log.default("Acknowledging alert %{public}@ : %{public}@", alertIdentifier, managerIdentifier)
+        try await WCSession.default.sendAcknowledgeAlert(alertIdentifier: alertIdentifier, managerIdentifier: managerIdentifier)
     }
 
     var selectablePresets: [SelectablePreset] {

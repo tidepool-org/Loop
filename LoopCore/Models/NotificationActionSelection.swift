@@ -7,19 +7,25 @@
 //
 
 
-struct NotificationActionSelection {
+public struct NotificationActionSelection {
     let version = 1
-    let alertIdentifier: String
-    let managerIdentifier: String
-    let actionIdentifier: String
+    public let alertIdentifier: String
+    public let managerIdentifier: String
+    public let actionIdentifier: String
+
+    public init(alertIdentifier: String, managerIdentifier: String, actionIdentifier: String) {
+        self.alertIdentifier = alertIdentifier
+        self.managerIdentifier = managerIdentifier
+        self.actionIdentifier = actionIdentifier
+    }
 }
 
 extension NotificationActionSelection: RawRepresentable {
-    typealias RawValue = [String: Any]
+    public typealias RawValue = [String: Any]
 
-    static let name = "NotificationActionSelection"
+    public static let name = "NotificationActionSelection"
 
-    init?(rawValue: RawValue) {
+    public init?(rawValue: RawValue) {
         guard
             rawValue["v"] as? Int == version,
             rawValue["name"] as? String == NotificationActionSelection.name,
@@ -35,7 +41,7 @@ extension NotificationActionSelection: RawRepresentable {
         self.actionIdentifier = actionIdentifier
     }
 
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
         return [
             "v": version,
             "name": NotificationActionSelection.name,

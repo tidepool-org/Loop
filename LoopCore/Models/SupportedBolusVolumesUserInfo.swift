@@ -6,12 +6,16 @@
 //  Copyright © 2020 LoopKit Authors. All rights reserved.
 //
 
-struct SupportedBolusVolumesUserInfo {
-    var supportedBolusVolumes: [Double]
+public struct SupportedBolusVolumesUserInfo {
+    public var supportedBolusVolumes: [Double]
+
+    public init(supportedBolusVolumes: [Double]) {
+        self.supportedBolusVolumes = supportedBolusVolumes
+    }
 }
 
 extension SupportedBolusVolumesUserInfo: RawRepresentable {
-    typealias RawValue = [String: Any]
+    public typealias RawValue = [String: Any]
 
     private enum Key: String {
         case version = "v"
@@ -19,10 +23,10 @@ extension SupportedBolusVolumesUserInfo: RawRepresentable {
         case supportedBolusVolumes = "sbv"
     }
 
-    static let name = "SupportedBolusVolumesUserInfo"
+    public static let name = "SupportedBolusVolumesUserInfo"
     static let version = 1
 
-    init?(rawValue: RawValue) {
+    public init?(rawValue: RawValue) {
         guard
             rawValue[Key.version.rawValue] as? Int == Self.version,
             rawValue[Key.name.rawValue] as? String == Self.name,
@@ -34,7 +38,7 @@ extension SupportedBolusVolumesUserInfo: RawRepresentable {
         self.init(supportedBolusVolumes: supportedBolusVolumes)
     }
 
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
         [
             Key.version.rawValue: Self.version,
             Key.name.rawValue: Self.name,

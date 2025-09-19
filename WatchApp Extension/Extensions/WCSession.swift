@@ -87,41 +87,30 @@ extension WCSession {
         )
     }
 
-    func sendSettingsUpdateMessage(_ userInfo: LoopSettingsUserInfo) async throws -> WatchContext {
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try sendSettingsUpdateMessage(userInfo) { result in
-                    switch result {
-                    case .success(let context):
-                        continuation.resume(returning: context)
-                    case .failure(let error):
-                        continuation.resume(throwing: error)
-                    }
-                }
-            } catch {
-                continuation.resume(throwing: error)
-            }
-        }
+    func sendSetPreset(presetIdentifier: String?, alertIdentifier: String?) async throws {
+        let _ = try await sendMessage(SetPresetUserInfo(presetIdentifier: presetIdentifier, alertIdentifier: alertIdentifier).rawValue)
     }
 
-    func sendSettingsUpdateMessage(_ userInfo: LoopSettingsUserInfo, completionHandler: @escaping (Result<WatchContext,Error>) -> Void) throws {
+    func sendAcknowledgeAlert(alertIdentifier: String, managerIdentifier: String) async throws {
+        let _ = try await sendMessage(AcknowledgeAlertUserInfo(alertIdentifier: alertIdentifier, managerIdentifier: managerIdentifier).rawValue)
+    }
+
+    func sendMessage(_ msg: [String : Any]) async throws -> [String : Any] {
         guard activationState == .activated else {
             throw MessageError.activation
         }
-
+        
         guard isReachable else {
             throw MessageError.reachability
         }
 
-        sendMessage(userInfo.rawValue, replyHandler: { (reply) in
-            if let context = WatchContext(rawValue: reply) {
-                completionHandler(.success(context))
-            } else {
-                completionHandler(.failure(MessageError.decoding))
-            }
-        }, errorHandler: { (error) in
-            completionHandler(.failure(error))
-        })
+        return try await withCheckedThrowingContinuation { continuation in
+            sendMessage(msg, replyHandler: { result in
+                continuation.resume(returning: result)
+            }, errorHandler: { error in
+                continuation.resume(throwing: error)
+            })
+        }
     }
 
     func sendUserSelectedNotificationActionMessage(alertIdentifier: String, managerIdentifier: String, actionIdentifier: String) async {

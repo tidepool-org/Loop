@@ -440,17 +440,32 @@ final class WatchDataManager: NSObject {
             Task {
                 try await addCarbEntryAndBolusFromWatchMessage(message)
             }
-        case LoopSettingsUserInfo.name?:
-            if let userInfo = LoopSettingsUserInfo(rawValue: message) {
-                // So far we only support watch changes of temporary schedule overrides
-                temporaryPresetsManager.scheduleOverride = userInfo.scheduleOverride
+        case SetPresetUserInfo.name?:
+            if let userInfo = SetPresetUserInfo(rawValue: message) {
+                if let presetIdentifier = userInfo.presetIdentifier {
+                    temporaryPresetsManager.startPreset(withIdentifier: presetIdentifier)
+                } else {
+                    temporaryPresetsManager.clearOverride()
+                }
 
                 // Prevent re-sending these updated settings back to the watch
-                lastSentUserInfo?.scheduleOverride = userInfo.scheduleOverride
+                lastSentUserInfo?.scheduleOverride = temporaryPresetsManager.scheduleOverride
+
+                if let alertIdentifier = userInfo.alertIdentifier {
+                    let id = Alert.Identifier(managerIdentifier: temporaryPresetsManager.managerIdentifier, alertIdentifier: alertIdentifier)
+                    try? await alertManager.acknowledgeAlert(identifier: id)
+                }
+                return [:]
             }
 
             let context = await createWatchContext()
             return context.rawValue
+        case AcknowledgeAlertUserInfo.name?:
+            if let userInfo = AcknowledgeAlertUserInfo(rawValue: message) {
+                let id = Alert.Identifier(managerIdentifier: userInfo.managerIdentifier, alertIdentifier: userInfo.alertIdentifier)
+                try? await alertManager.acknowledgeAlert(identifier: id)
+            }
+            return [:]
         case CarbBackfillRequestUserInfo.name?:
             if let userInfo = CarbBackfillRequestUserInfo(rawValue: message) {
                 do {

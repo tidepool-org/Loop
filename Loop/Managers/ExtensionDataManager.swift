@@ -9,6 +9,7 @@
 import LoopAlgorithm
 import UIKit
 import LoopKit
+import LoopCore
 
 @MainActor
 final class ExtensionDataManager {
@@ -39,11 +40,11 @@ final class ExtensionDataManager {
         }
     }
 
-    fileprivate static var defaults: UserDefaults? {
+    nonisolated fileprivate static var defaults: UserDefaults? {
         return UserDefaults.appGroup
     }
 
-    static var context: StatusExtensionContext? {
+    nonisolated static var context: StatusExtensionContext? {
         get {
             return defaults?.statusExtensionContext
         }
@@ -179,7 +180,7 @@ final class ExtensionDataManager {
 
 
 extension ExtensionDataManager: CustomDebugStringConvertible {
-    var debugDescription: String {
+    nonisolated var debugDescription: String {
         return [
             "## StatusExtensionDataManager",
             "appGroupName: \(Bundle.main.appGroupSuiteName)",

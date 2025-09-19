@@ -5,21 +5,25 @@
 //  Copyright © 2018 LoopKit Authors. All rights reserved.
 //
 
-import LoopCore
 import LoopKit
 
-struct LoopSettingsUserInfo: Equatable {
-    var loopSettings: LoopSettings
-    var scheduleOverride: TemporaryScheduleOverride?
+public struct LoopSettingsUserInfo: Equatable {
+    public var loopSettings: LoopSettings
+    public var scheduleOverride: TemporaryScheduleOverride?
+
+    public init(loopSettings: LoopSettings, scheduleOverride: TemporaryScheduleOverride? = nil) {
+        self.loopSettings = loopSettings
+        self.scheduleOverride = scheduleOverride
+    }
 }
 
 extension LoopSettingsUserInfo: RawRepresentable {
-    typealias RawValue = [String: Any]
+    public typealias RawValue = [String: Any]
 
-    static let name = "LoopSettingsUserInfo"
+    public static let name = "LoopSettingsUserInfo"
     static let version = 1
 
-    init?(rawValue: RawValue) {
+    public init?(rawValue: RawValue) {
         guard rawValue["v"] as? Int == LoopSettingsUserInfo.version,
             rawValue["name"] as? String == LoopSettingsUserInfo.name,
             let settingsRaw = rawValue["s"] as? LoopSettings.RawValue,
@@ -37,7 +41,7 @@ extension LoopSettingsUserInfo: RawRepresentable {
         }
     }
 
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
         var raw: RawValue = [
             "v": LoopSettingsUserInfo.version,
             "name": LoopSettingsUserInfo.name,

@@ -270,7 +270,6 @@ extension ExtensionDelegate: WCSessionDelegate {
     }
 }
 
-
 extension ExtensionDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
 
@@ -303,18 +302,35 @@ extension ExtensionDelegate: UNUserNotificationCenterDelegate {
                 statusController.addCarbs()
             }
         case NotificationManager.Action.startPreset.rawValue:
+            // Response contains the preset id and alert id
             let userInfo = response.notification.request.content.userInfo
-            if let presetId = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier {
-                loopManager.pendingScheduledPresetActivationId = presetId
-                guard let visibleVC = WKExtension.shared().visibleInterfaceController else {
-                    return
-                }
-
-                if visibleVC is ChartHUDController {
-                    // Show actions controller, so user can confirm preset activation
-                    visibleVC.pushController(withName: "ActionViewHostingController", context: nil)
-                }
+            guard let presetIdentifier = userInfo[LoopNotificationUserInfoKey.presetId.rawValue] as? String,
+                  let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier,
+                  let managerIdentifier = userInfo[LoopNotificationUserInfoKey.managerIDForAlert.rawValue] as? String
+            else {
+                log.default("Unable to find keys in userInfo: %{public}@", String(describing: userInfo))
+                return
             }
+            log.default("Setting up PendingPresetReminder(presetIdentifier: %{public}@, alertIdentifier: %{public}@), managerIdentifier: %{public}@", presetIdentifier, alertIdentifier, managerIdentifier)
+
+            loopManager.pendingPresetReminder = PendingPresetReminder(
+                presetIdentifier: presetIdentifier,
+                alertIdentifier: alertIdentifier,
+                managerIdentifier: managerIdentifier
+            )
+
+            guard let visibleVC = WKExtension.shared().visibleInterfaceController else {
+                log.error("no visible interface controller for presenting preset reminder!")
+                return
+            }
+
+            guard let preset = loopManager.selectablePresets.first(where: { $0.id == presetIdentifier }) else {
+                log.error("Unable to find preset %{public}@", presetIdentifier)
+                return
+            }
+
+            visibleVC.presentController(withName: "PresetConfirmHostingController", context: preset)
+
         default:
             let userInfo = response.notification.request.content.userInfo
             if let alertIdentifier = userInfo[LoopNotificationUserInfoKey.alertTypeID.rawValue] as? LoopKit.Alert.AlertIdentifier,

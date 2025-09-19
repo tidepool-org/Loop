@@ -78,6 +78,14 @@ fileprivate extension Alert {
             LoopNotificationUserInfoKey.managerIDForAlert.rawValue: identifier.managerIdentifier,
             LoopNotificationUserInfoKey.alertTypeID.rawValue: identifier.alertIdentifier,
         ]
+
+        if let metadata {
+            for (key, value) in metadata {
+                guard let value = value.wrapped as? String else { continue }
+                userNotificationContent.userInfo[key] = value
+            }
+        }
+    
         return userNotificationContent
     }
     

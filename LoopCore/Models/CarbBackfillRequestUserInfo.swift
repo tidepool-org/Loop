@@ -8,17 +8,21 @@
 
 import Foundation
 
-struct CarbBackfillRequestUserInfo {
+public struct CarbBackfillRequestUserInfo {
     let version = 1
-    let startDate: Date
+    public let startDate: Date
+
+    public init(startDate: Date) {
+        self.startDate = startDate
+    }
 }
 
 extension CarbBackfillRequestUserInfo: RawRepresentable {
-    typealias RawValue = [String: Any]
+    public typealias RawValue = [String: Any]
 
-    static let name = "CarbBackfillRequestUserInfo"
+    public static let name = "CarbBackfillRequestUserInfo"
 
-    init?(rawValue: RawValue) {
+    public init?(rawValue: RawValue) {
         guard
             rawValue["v"] as? Int == version,
             rawValue["name"] as? String == CarbBackfillRequestUserInfo.name,
@@ -30,7 +34,7 @@ extension CarbBackfillRequestUserInfo: RawRepresentable {
         self.startDate = startDate
     }
 
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
         return [
             "v": version,
             "name": CarbBackfillRequestUserInfo.name,

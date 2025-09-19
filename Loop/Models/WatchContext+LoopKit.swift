@@ -9,6 +9,7 @@
 import Foundation
 import LoopKit
 import LoopAlgorithm
+import LoopCore
 
 extension WatchContext {
     convenience init(glucose: GlucoseSampleValue?, glucoseUnit: LoopUnit?) {

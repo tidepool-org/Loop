@@ -11,49 +11,97 @@ import LoopKit
 import LoopAlgorithm
 
 
-final class WatchContext: RawRepresentable {
-    typealias RawValue = [String: Any]
+public final class WatchContext: RawRepresentable {
+    public typealias RawValue = [String: Any]
 
     private let version = 5
 
-    var creationDate = Date()
+    public var creationDate = Date()
 
-    var displayGlucoseUnit: LoopUnit?
+    public var displayGlucoseUnit: LoopUnit?
 
-    var glucose: LoopQuantity?
-    var glucoseCondition: GlucoseCondition?
-    var glucoseTrend: GlucoseTrend?
-    var glucoseTrendRate: LoopQuantity?
-    var glucoseDate: Date?
-    var glucoseIsDisplayOnly: Bool?
-    var glucoseWasUserEntered: Bool?
-    var glucoseSyncIdentifier: String?
+    public var glucose: LoopQuantity?
+    public var glucoseCondition: GlucoseCondition?
+    public var glucoseTrend: GlucoseTrend?
+    public var glucoseTrendRate: LoopQuantity?
+    public var glucoseDate: Date?
+    public var glucoseIsDisplayOnly: Bool?
+    public var glucoseWasUserEntered: Bool?
+    public var glucoseSyncIdentifier: String?
 
-    var predictedGlucose: WatchPredictedGlucose?
-    var eventualGlucose: LoopQuantity? {
+    public var predictedGlucose: WatchPredictedGlucose?
+    public var eventualGlucose: LoopQuantity? {
         return predictedGlucose?.values.last?.quantity
     }
 
-    var loopLastRunDate: Date?
-    var lastNetTempBasalDose: Double?
-    var lastNetTempBasalDate: Date?
-    var recommendedBolusDose: Double?
+    public var loopLastRunDate: Date?
+    public var lastNetTempBasalDose: Double?
+    public var lastNetTempBasalDate: Date?
+    public var recommendedBolusDose: Double?
 
-    var potentialCarbEntry: NewCarbEntry?
+    public var potentialCarbEntry: NewCarbEntry?
 
-    var cob: Double?
-    var iob: Double?
-    var reservoir: Double?
-    var reservoirPercentage: Double?
-    var batteryPercentage: Double?
+    public var cob: Double?
+    public var iob: Double?
+    public var reservoir: Double?
+    public var reservoirPercentage: Double?
+    public var batteryPercentage: Double?
 
-    var cgmManagerState: CGMManager.RawStateValue?
+    public var cgmManagerState: CGMManager.RawStateValue?
 
-    var isClosedLoop: Bool?
-    
-    init() {}
+    public var isClosedLoop: Bool?
 
-    required init?(rawValue: RawValue) {
+    public init(
+        creationDate: Date = Date(),
+        glucose: LoopQuantity? = nil,
+        displayGlucoseUnit: LoopUnit? = nil,
+        glucoseCondition: GlucoseCondition? = nil,
+        glucoseTrend: GlucoseTrend? = nil,
+        glucoseTrendRate: LoopQuantity? = nil,
+        glucoseDate: Date? = nil,
+        glucoseIsDisplayOnly: Bool? = nil,
+        glucoseWasUserEntered: Bool? = nil,
+        glucoseSyncIdentifier: String? = nil,
+        predictedGlucose: WatchPredictedGlucose? = nil,
+        loopLastRunDate: Date? = nil,
+        lastNetTempBasalDose: Double? = nil,
+        lastNetTempBasalDate: Date? = nil,
+        recommendedBolusDose: Double? = nil,
+        potentialCarbEntry: NewCarbEntry? = nil,
+        cob: Double? = nil,
+        iob: Double? = nil,
+        reservoir: Double? = nil,
+        reservoirPercentage: Double? = nil,
+        batteryPercentage: Double? = nil,
+        cgmManagerState: CGMManager.RawStateValue? = nil,
+        isClosedLoop: Bool? = nil
+    ) {
+        self.creationDate = creationDate
+        self.displayGlucoseUnit = displayGlucoseUnit
+        self.glucose = glucose
+        self.glucoseCondition = glucoseCondition
+        self.glucoseTrend = glucoseTrend
+        self.glucoseTrendRate = glucoseTrendRate
+        self.glucoseDate = glucoseDate
+        self.glucoseIsDisplayOnly = glucoseIsDisplayOnly
+        self.glucoseWasUserEntered = glucoseWasUserEntered
+        self.glucoseSyncIdentifier = glucoseSyncIdentifier
+        self.predictedGlucose = predictedGlucose
+        self.loopLastRunDate = loopLastRunDate
+        self.lastNetTempBasalDose = lastNetTempBasalDose
+        self.lastNetTempBasalDate = lastNetTempBasalDate
+        self.recommendedBolusDose = recommendedBolusDose
+        self.potentialCarbEntry = potentialCarbEntry
+        self.cob = cob
+        self.iob = iob
+        self.reservoir = reservoir
+        self.reservoirPercentage = reservoirPercentage
+        self.batteryPercentage = batteryPercentage
+        self.cgmManagerState = cgmManagerState
+        self.isClosedLoop = isClosedLoop
+    }
+
+    public required init?(rawValue: RawValue) {
         guard rawValue["v"] as? Int == version, let creationDate = rawValue["cd"] as? Date else {
             return nil
         }
@@ -103,7 +151,7 @@ final class WatchContext: RawRepresentable {
         }
     }
 
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
         var raw: [String: Any] = [
             "v": version,
             "cd": creationDate
@@ -148,7 +196,7 @@ final class WatchContext: RawRepresentable {
 
 
 extension WatchContext {
-    func shouldReplace(_ other: WatchContext) -> Bool {
+    public func shouldReplace(_ other: WatchContext) -> Bool {
         if let date = self.glucoseDate, let otherDate = other.glucoseDate {
             return date >= otherDate
         } else {
@@ -158,7 +206,7 @@ extension WatchContext {
 }
 
 extension WatchContext {
-    var newGlucoseSample: NewGlucoseSample? {
+    public var newGlucoseSample: NewGlucoseSample? {
         if let quantity = glucose, let date = glucoseDate, let syncIdentifier = glucoseSyncIdentifier {
             return NewGlucoseSample(date: date,
                                     quantity: quantity,

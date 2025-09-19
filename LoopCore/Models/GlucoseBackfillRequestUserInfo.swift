@@ -8,17 +8,21 @@
 
 import Foundation
 
-struct GlucoseBackfillRequestUserInfo {
+public struct GlucoseBackfillRequestUserInfo {
     let version = 1
-    let startDate: Date
+    public let startDate: Date
+
+    public init(startDate: Date) {
+        self.startDate = startDate
+    }
 }
 
 extension GlucoseBackfillRequestUserInfo: RawRepresentable {
-    typealias RawValue = [String: Any]
+    public typealias RawValue = [String: Any]
 
-    static let name = "GlucoseBackfillRequestUserInfo"
+    public static let name = "GlucoseBackfillRequestUserInfo"
 
-    init?(rawValue: RawValue) {
+    public init?(rawValue: RawValue) {
         guard
             rawValue["v"] as? Int == version,
             rawValue["name"] as? String == GlucoseBackfillRequestUserInfo.name,
@@ -30,7 +34,7 @@ extension GlucoseBackfillRequestUserInfo: RawRepresentable {
         self.startDate = startDate
     }
 
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
         return [
             "v": version,
             "name": GlucoseBackfillRequestUserInfo.name,

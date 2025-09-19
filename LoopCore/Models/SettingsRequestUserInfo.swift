@@ -8,16 +8,18 @@
 
 import Foundation
 
-struct SettingsRequestUserInfo {
+public struct SettingsRequestUserInfo {
     let version = 1
+
+    public init() {}
 }
 
 extension SettingsRequestUserInfo: RawRepresentable {
-    typealias RawValue = [String: Any]
+    public typealias RawValue = [String: Any]
 
-    static let name = "SettingsRequestUserInfo"
+    public static let name = "SettingsRequestUserInfo"
 
-    init?(rawValue: RawValue) {
+    public init?(rawValue: RawValue) {
         guard
             rawValue["v"] as? Int == version,
             rawValue["name"] as? String == SettingsRequestUserInfo.name
@@ -26,7 +28,7 @@ extension SettingsRequestUserInfo: RawRepresentable {
         }
     }
 
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
         return [
             "v": version,
             "name": SettingsRequestUserInfo.name,

@@ -8,22 +8,22 @@
 
 import Foundation
 
-struct IntentExtensionInfo: RawRepresentable {
-    typealias RawValue = [String: Any]
+public struct IntentExtensionInfo: RawRepresentable {
+    public typealias RawValue = [String: Any]
 
-    var overridePresetNames: [String]?
-    
+    public var overridePresetNames: [String]?
+
     init() { }
     
-    init(rawValue: RawValue) {
+    public init(rawValue: RawValue) {
         overridePresetNames = rawValue["overridePresetNames"] as? [String]
     }
     
-    init(overridePresetNames: [String]?) {
+    public init(overridePresetNames: [String]?) {
         self.overridePresetNames = overridePresetNames
     }
     
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
         var raw: RawValue = [:]
         
         raw["overridePresetNames"] = overridePresetNames

@@ -9,6 +9,7 @@
 import Foundation
 import LoopAlgorithm
 import LoopKit
+import LoopCore
 
 extension WatchContext {
     var activeInsulin: LoopQuantity? {

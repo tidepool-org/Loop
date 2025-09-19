@@ -10,11 +10,10 @@ import Foundation
 import LoopKit
 import LoopAlgorithm
 
+public struct WatchPredictedGlucose: Equatable {
+    public let values: [PredictedGlucoseValue]
 
-struct WatchPredictedGlucose: Equatable {
-    let values: [PredictedGlucoseValue]
-
-    init?(values: [PredictedGlucoseValue]) {
+    public init?(values: [PredictedGlucoseValue]) {
         guard values.count > 1 else {
             return nil
         }
@@ -24,9 +23,9 @@ struct WatchPredictedGlucose: Equatable {
 
 
 extension WatchPredictedGlucose: RawRepresentable {
-    typealias RawValue = [String: Any]
+    public typealias RawValue = [String: Any]
 
-    var rawValue: RawValue {
+    public var rawValue: RawValue {
 
         return [
             "v": values.map { Int16($0.quantity.doubleValue(for: .milligramsPerDeciliter).clamped(to: Double(Int16.min)...Double(Int16.max))) },
@@ -35,7 +34,7 @@ extension WatchPredictedGlucose: RawRepresentable {
         ]
     }
 
-    init?(rawValue: RawValue) {
+    public init?(rawValue: RawValue) {
         guard
             let values = rawValue["v"] as? [Int16],
             let firstDate = rawValue["d"] as? Date,

@@ -9,7 +9,9 @@
 import Foundation
 
 
-struct WatchContextRequestUserInfo { }
+public struct WatchContextRequestUserInfo {
+    public init() {}
+}
 
 extension WatchContextRequestUserInfo: RawRepresentable {
     public typealias RawValue = [String: Any]

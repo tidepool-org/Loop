@@ -13,6 +13,7 @@ import LoopCore
 struct PresetDetailView: View {
     @State private var loopManager = ExtensionDelegate.shared().loopManager
     @Environment(\.glucoseDisplayUnit) private var glucoseDisplayUnit
+    @Environment(\.dismiss) private var dismiss
 
     @State private var crownValue: CGFloat = 0 // Tracks Digital Crown rotation
     @State private var startingPreset: Bool = false
@@ -108,13 +109,35 @@ struct PresetDetailView: View {
             sensitivity: .medium,
             isContinuous: false
         )
+        .onDisappear() {
+            if let reminder = loopManager.pendingPresetReminder, reminder.presetIdentifier == preset.id {
+                // If this was shown for confirming preset activation from a reminder notification, and we
+                // are being dismissed, treat the dismissal as an acknowledgement
+                loopManager.pendingPresetReminder = nil
+                Task {
+                    try await loopManager.acknowledgeAlert(alertIdentifier: reminder.alertIdentifier, managerIdentifier: reminder.managerIdentifier)
+                }
+            }
+        }
+        .onChange(of: loopManager.pendingPresetReminder) { oldValue, newValue in
+            if newValue != nil && oldValue == nil {
+                // If the user is currently looking a preset detail, and a reminder notification is being handled,
+                // we need to dismiss this one to avoid confusion.
+                dismiss()
+            }
+        }
         .onChange(of: crownValue) { (oldValue, newValue) in
             if newValue >= threshold && !startingPreset {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
                     startingPreset = true
                     Task {
                         do {
-                            try await loopManager.activateOverride(preset.createOverride())
+                            var alertIdentifier: String? = nil
+                            // If we're starting the preset from a reminder alert, then set alert identifier to acknowledge the alert
+                            if let reminder = loopManager.pendingPresetReminder, reminder.presetIdentifier == preset.id {
+                                alertIdentifier = reminder.presetIdentifier
+                            }
+                            try await loopManager.activateOverride(preset.createOverride(), alertIdentifierToAcknowledge: alertIdentifier)
                         } catch {
                             print("Error! Could not activate preset: \(error)")
                         }
