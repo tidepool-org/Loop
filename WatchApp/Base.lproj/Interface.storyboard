@@ -9,14 +9,14 @@
         <!--CarbAndBolusFlowController-->
         <scene sceneID="wDd-ld-Qg8">
             <objects>
-                <hostingController identifier="CarbAndBolusFlowController" id="YfQ-6P-aH4" customClass="CarbAndBolusFlowController" customModule="WatchApp_Extension"/>
+                <hostingController identifier="CarbAndBolusFlowController" id="YfQ-6P-aH4" customClass="CarbAndBolusFlowController" customModule="WatchApp"/>
             </objects>
             <point key="canvasLocation" x="38" y="370"/>
         </scene>
         <!--Loop-->
         <scene sceneID="3Z2-ZE-636">
             <objects>
-                <controller identifier="ChartHUDController" title="Loop" spacing="7" alwaysBounce="YES" id="v5b-sO-bb8" customClass="ChartHUDController" customModule="WatchApp_Extension">
+                <controller identifier="ChartHUDController" title="Loop" spacing="7" alwaysBounce="YES" id="v5b-sO-bb8" customClass="ChartHUDController" customModule="WatchApp">
                     <items>
                         <group width="1" alignment="left" id="z0r-4k-Z7h">
                             <items>
@@ -123,7 +123,7 @@
         <!--CarbEntryListController-->
         <scene sceneID="d2g-lD-eT2">
             <objects>
-                <controller identifier="CarbEntryListController" id="nc2-n8-Qns" customClass="CarbEntryListController" customModule="WatchApp_Extension">
+                <controller identifier="CarbEntryListController" id="nc2-n8-Qns" customClass="CarbEntryListController" customModule="WatchApp">
                     <items>
                         <group width="1" alignment="left" layout="vertical" id="ftH-mR-zE1">
                             <items>
@@ -182,7 +182,7 @@
         <!--Static Notification Interface Controller-->
         <scene sceneID="AEw-b0-oYE">
             <objects>
-                <notificationController id="YCC-NB-fut" customClass="NotificationController" customModule="WatchApp_Extension">
+                <notificationController id="YCC-NB-fut" customClass="NotificationController" customModule="WatchApp">
                     <items>
                         <group width="1" alignment="left" layout="vertical" id="gMp-VZ-EBe">
                             <items>
@@ -209,7 +209,7 @@
         <!--Loop-->
         <scene sceneID="Bol-Ks-r7L">
             <objects>
-                <controller identifier="ActionViewHostingController" title="Loop" contentMode="scaleAspectFit" id="wmR-dV-5Rm" customClass="ActionViewHostingController" customModule="WatchApp_Extension">
+                <controller identifier="ActionViewHostingController" title="Loop" contentMode="scaleAspectFit" id="wmR-dV-5Rm" customClass="ActionViewHostingController" customModule="WatchApp">
                     <connections>
                         <segue destination="v5b-sO-bb8" kind="relationship" relationship="nextPage" id="dKT-2d-vNq"/>
                     </connections>
@@ -220,7 +220,7 @@
         <!--PresetConfirmHostingController-->
         <scene sceneID="bN4-Z9-qst">
             <objects>
-                <hostingController identifier="PresetConfirmHostingController" id="mnP-MY-5B0" customClass="PresetConfirmHostingController" customModule="WatchApp_Extension"/>
+                <hostingController identifier="PresetConfirmHostingController" id="mnP-MY-5B0" customClass="PresetConfirmHostingController" customModule="WatchApp"/>
             </objects>
             <point key="canvasLocation" x="369" y="370"/>
         </scene>

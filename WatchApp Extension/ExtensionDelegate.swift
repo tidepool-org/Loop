@@ -16,9 +16,10 @@ import os.log
 import UserNotifications
 import LoopKit
 import LoopCore
+import ClockKit
 
-
-final class ExtensionDelegate: NSObject, WKExtensionDelegate {
+@main
+class ExtensionDelegate: NSObject, WKApplicationDelegate {
     private(set) lazy var loopManager = LoopDataManager()
 
     private let log = OSLog(category: "ExtensionDelegate")
@@ -27,7 +28,7 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
     private var notifications: [NSObjectProtocol] = []
 
     static func shared() -> ExtensionDelegate {
-        return WKExtension.shared().extensionDelegate
+        return WKApplication.shared().extensionDelegate
     }
 
     override init() {
@@ -42,8 +43,8 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
         observers.append(session.observe(\WCSession.activationState) { [weak self] (session, change) in
             self?.log.default("WCSession.applicationState did change to %d", session.activationState.rawValue)
 
-            self?.log.default("WCSession.applicationState did change rootInterfaceController = %{public}@", String(describing: WKExtension.shared().rootInterfaceController))
-            self?.log.default("WCSession.applicationState did change visibleInterfaceController = %{public}@", String(describing: WKExtension.shared().visibleInterfaceController))
+            self?.log.default("WCSession.applicationState did change rootInterfaceController = %{public}@", String(describing: WKApplication.shared().rootInterfaceController))
+            self?.log.default("WCSession.applicationState did change visibleInterfaceController = %{public}@", String(describing: WKApplication.shared().visibleInterfaceController))
 
             DispatchQueue.main.async {
                 self?.completePendingConnectivityTasksIfNeeded()
@@ -87,14 +88,14 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
         
         log.default(">>> applicationDidBecomeActive")
 
-        log.default("applicationDidBecomeActive rootInterfaceController = %{public}@", String(describing: WKExtension.shared().rootInterfaceController))
-        log.default("applicationDidBecomeActive visibleInterfaceController = %{public}@", String(describing: WKExtension.shared().visibleInterfaceController))
+        log.default("applicationDidBecomeActive rootInterfaceController = %{public}@", String(describing: WKApplication.shared().rootInterfaceController))
+        log.default("applicationDidBecomeActive visibleInterfaceController = %{public}@", String(describing: WKApplication.shared().visibleInterfaceController))
 
         NotificationCenter.default.post(name: type(of: self).didBecomeActiveNotification, object: self)
     }
 
     func applicationWillResignActive() {
-        UserDefaults.standard.startOnChartPage = (WKExtension.shared().visibleInterfaceController as? ChartHUDController) != nil
+        UserDefaults.standard.startOnChartPage = (WKApplication.shared().visibleInterfaceController as? ChartHUDController) != nil
 
         NotificationCenter.default.post(name: type(of: self).willResignActiveNotification, object: self)
         log.default(">>> applicationWillResignActive")
@@ -158,7 +159,7 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
         if #available(watchOSApplicationExtension 5.0, *) {
             switch userActivity.activityType {
             case NSUserActivity.newCarbEntryActivityType, NSUserActivity.didAddCarbEntryOnWatchActivityType:
-                if let statusController = WKExtension.shared().visibleInterfaceController as? HUDInterfaceController {
+                if let statusController = WKApplication.shared().visibleInterfaceController as? HUDInterfaceController {
                     statusController.addCarbs()
                 }
             default:
@@ -199,8 +200,8 @@ final class ExtensionDelegate: NSObject, WKExtensionDelegate {
     private func loopManagerDidUpdateContext() {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        if WKExtension.shared().applicationState != .active {
-            WKExtension.shared().scheduleSnapshotRefresh(withPreferredDate: Date(), userInfo: nil) { (error) in
+        if WKApplication.shared().applicationState != .active {
+            WKApplication.shared().scheduleSnapshotRefresh(withPreferredDate: Date(), userInfo: nil) { (error) in
                 if let error = error {
                     self.log.error("scheduleSnapshotRefresh error: %{public}@", String(describing: error))
                 }
@@ -221,8 +222,8 @@ extension ExtensionDelegate: WCSessionDelegate {
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         log.default("activationDidCompleteWith %{public}@", String(describing: activationState))
 
-        log.default("activationDidCompleteWith rootInterfaceController = %{public}@", String(describing: WKExtension.shared().rootInterfaceController))
-        log.default("activationDidCompleteWith visibleInterfaceController = %{public}@", String(describing: WKExtension.shared().visibleInterfaceController))
+        log.default("activationDidCompleteWith rootInterfaceController = %{public}@", String(describing: WKApplication.shared().rootInterfaceController))
+        log.default("activationDidCompleteWith visibleInterfaceController = %{public}@", String(describing: WKApplication.shared().visibleInterfaceController))
 
         if activationState == .activated {
             updateContext(session.receivedApplicationContext)
@@ -273,14 +274,14 @@ extension ExtensionDelegate: WCSessionDelegate {
 extension ExtensionDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
 
-        log.default("UNNotificationResponse rootInterfaceController = %{public}@", String(describing: WKExtension.shared().rootInterfaceController))
-        log.default("UNNotificationResponse visibleInterfaceController = %{public}@", String(describing: WKExtension.shared().visibleInterfaceController))
+        log.default("UNNotificationResponse rootInterfaceController = %{public}@", String(describing: WKApplication.shared().rootInterfaceController))
+        log.default("UNNotificationResponse visibleInterfaceController = %{public}@", String(describing: WKApplication.shared().visibleInterfaceController))
 
         switch response.actionIdentifier {
         case UNNotificationDefaultActionIdentifier:
             guard
                 response.notification.request.identifier == LoopNotificationCategory.missedMeal.rawValue,
-                let statusController = WKExtension.shared().visibleInterfaceController as? HUDInterfaceController
+                let statusController = WKApplication.shared().visibleInterfaceController as? HUDInterfaceController
             else {
                 break
             }
@@ -319,7 +320,7 @@ extension ExtensionDelegate: UNUserNotificationCenterDelegate {
                 managerIdentifier: managerIdentifier
             )
 
-            guard let visibleVC = WKExtension.shared().visibleInterfaceController else {
+            guard let visibleVC = WKApplication.shared().visibleInterfaceController else {
                 log.error("no visible interface controller for presenting preset reminder!")
                 return
             }
@@ -359,12 +360,12 @@ extension ExtensionDelegate {
     func present(_ error: Error) {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        WKExtension.shared().rootInterfaceController?.presentAlert(withTitle: error.localizedDescription, message: (error as NSError).localizedRecoverySuggestion ?? (error as NSError).localizedFailureReason, preferredStyle: .alert, actions: [WKAlertAction.dismissAction()])
+        WKApplication.shared().rootInterfaceController?.presentAlert(withTitle: error.localizedDescription, message: (error as NSError).localizedRecoverySuggestion ?? (error as NSError).localizedFailureReason, preferredStyle: .alert, actions: [WKAlertAction.dismissAction()])
     }
 }
 
 
-fileprivate extension WKExtension {
+fileprivate extension WKApplication {
     var extensionDelegate: ExtensionDelegate! {
         return delegate as? ExtensionDelegate
     }

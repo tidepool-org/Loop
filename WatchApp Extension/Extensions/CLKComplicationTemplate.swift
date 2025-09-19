@@ -190,7 +190,7 @@ extension CLKComplicationTemplate {
         case .graphicRectangular:
             if #available(watchOSApplicationExtension 5.0, *) {
                 return CLKComplicationTemplateGraphicRectangularLargeImage(
-                    textProvider: CLKTextProvider(byJoining: [glucoseAndTrendText, timeText], separator: " "),
+                    textProvider: CLKTextProvider(format: "%1%@ %2%@", glucoseAndTrendText, timeText),
                     imageProvider: CLKFullColorImageProvider(fullColorImage: makeChart() ?? UIImage())
                 )
             } else {

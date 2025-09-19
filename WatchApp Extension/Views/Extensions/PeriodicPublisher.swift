@@ -7,7 +7,7 @@
 //
 
 import Combine
-
+import Foundation
 
 /// A publisher which emits a value at a defined interval, which can be delayed via acknowledgment.
 final class PeriodicPublisher {
