@@ -86,11 +86,6 @@ class ExtensionDelegate: NSObject, WKApplicationDelegate {
             WCSession.default.activate()
         }
         
-        log.default(">>> applicationDidBecomeActive")
-
-        log.default("applicationDidBecomeActive rootInterfaceController = %{public}@", String(describing: WKApplication.shared().rootInterfaceController))
-        log.default("applicationDidBecomeActive visibleInterfaceController = %{public}@", String(describing: WKApplication.shared().visibleInterfaceController))
-
         NotificationCenter.default.post(name: type(of: self).didBecomeActiveNotification, object: self)
     }
 
@@ -98,7 +93,6 @@ class ExtensionDelegate: NSObject, WKApplicationDelegate {
         UserDefaults.standard.startOnChartPage = (WKApplication.shared().visibleInterfaceController as? ChartHUDController) != nil
 
         NotificationCenter.default.post(name: type(of: self).willResignActiveNotification, object: self)
-        log.default(">>> applicationWillResignActive")
     }
 
     // Presumably the main thread?
