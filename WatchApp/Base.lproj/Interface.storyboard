@@ -69,7 +69,7 @@
                         </group>
                         <table alignment="left" spacing="8" id="Atz-83-hgn">
                             <items>
-                                <tableRow identifier="HUDRowController" id="ybx-To-WWV" customClass="HUDRowController" customModule="WatchApp_Extension">
+                                <tableRow identifier="HUDRowController" id="ybx-To-WWV" customClass="HUDRowController" customModule="WatchApp">
                                     <group key="rootItem" width="1" height="0.0" alignment="left" layout="vertical" radius="0.0" spacing="8" id="wRf-z0-V74">
                                         <items>
                                             <group width="1" alignment="left" layout="vertical" radius="0.0" spacing="0.0" id="MFc-xF-JSZ">
@@ -147,7 +147,7 @@
                         </group>
                         <table alignment="left" id="1Mx-6H-bjw">
                             <items>
-                                <tableRow identifier="TextRowController" selectable="NO" id="PQm-cy-ElB" customClass="TextRowController" customModule="WatchApp_Extension">
+                                <tableRow identifier="TextRowController" selectable="NO" id="PQm-cy-ElB" customClass="TextRowController" customModule="WatchApp">
                                     <group key="rootItem" width="1" alignment="left" id="7B0-hj-ThD">
                                         <items>
                                             <label alignment="left" verticalAlignment="center" text="Label" id="T4U-wP-dSW"/>
