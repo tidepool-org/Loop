@@ -217,6 +217,7 @@ struct IntensityInfo: View {
             .foregroundStyle(.secondary)
             
             IntensitySlider(value: $value.animation(.easeInOut))
+                .sensoryFeedback(lastValue > value ? .decrease : .increase, trigger: Int(value.rounded()))
             
             HStack {
                 Text("Very Easy")

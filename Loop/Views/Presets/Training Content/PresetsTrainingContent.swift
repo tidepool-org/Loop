@@ -598,18 +598,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                             HStack(alignment: .firstTextBaseline, spacing: 16) {
                                 Bullet(color: .secondary)
                                 
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Walking")
-                                    
-                                    HStack(alignment: .center, spacing: 2) {
-                                        Text("\(Image(systemName: "lightbulb.max"))")
-                                             
-                                        Text(" **Tip** Use your \(Image(systemName: "figure.walk")) **Walking** preset")
-                                    }
-                                    .padding(.vertical, 4)
-                                    .padding(.horizontal, 6)
-                                    .background(Color(UIColor.secondarySystemBackground).cornerRadius(5))
-                                }
+                                Text("Walking")
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             

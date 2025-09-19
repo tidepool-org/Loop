@@ -182,7 +182,7 @@ public class PresetsTraining {
                 case .customizingPresets(let customizingPresets):
                     switch customizingPresets {
                     case .customizingPresets:
-                        NSLocalizedString("Part 2: Customizing Presets", comment: "")
+                        NSLocalizedString("Customizing Presets", comment: "")
                     case .overallInsulin:
                         NSLocalizedString("Overall Insulin", comment: "")
                     case .correctionRange:
