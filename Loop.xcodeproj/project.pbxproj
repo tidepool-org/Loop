@@ -475,6 +475,7 @@
 		C17824A01E19CF9800D9D25C /* GlucoseThresholdTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C178249F1E19CF9800D9D25C /* GlucoseThresholdTableViewController.swift */; };
 		C17824A51E1AD4D100D9D25C /* ManualBolusRecommendation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17824A41E1AD4D100D9D25C /* ManualBolusRecommendation.swift */; };
 		C17D52022E7F03D0001D2AD2 /* LoopHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17D52012E7F03CF001D2AD2 /* LoopHeader.swift */; };
+		C17D52042E7F0578001D2AD2 /* LabelValueRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17D52032E7F0568001D2AD2 /* LabelValueRow.swift */; };
 		C17DDC9C28AC339E005FBF4C /* PersistedProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DA986B2843B6F9001D04CC /* PersistedProperty.swift */; };
 		C17DDC9D28AC33A1005FBF4C /* PersistedProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DA986B2843B6F9001D04CC /* PersistedProperty.swift */; };
 		C188599B2AF15E1B0010F21F /* DeviceDataManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C188599A2AF15E1B0010F21F /* DeviceDataManagerTests.swift */; };
@@ -1475,6 +1476,7 @@
 		C178249F1E19CF9800D9D25C /* GlucoseThresholdTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlucoseThresholdTableViewController.swift; sourceTree = "<group>"; };
 		C17824A41E1AD4D100D9D25C /* ManualBolusRecommendation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ManualBolusRecommendation.swift; sourceTree = "<group>"; };
 		C17D52012E7F03CF001D2AD2 /* LoopHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopHeader.swift; sourceTree = "<group>"; };
+		C17D52032E7F0568001D2AD2 /* LabelValueRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelValueRow.swift; sourceTree = "<group>"; };
 		C1814B85225E507C008D2D8E /* Sequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence.swift; sourceTree = "<group>"; };
 		C186B73F298309A700F83024 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C188599A2AF15E1B0010F21F /* DeviceDataManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDataManagerTests.swift; sourceTree = "<group>"; };
@@ -2626,23 +2628,24 @@
 		895788A3242E6947002CB114 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				C17D52012E7F03CF001D2AD2 /* LoopHeader.swift */,
-				C1FAD5182E7E0C3100F7FAD9 /* ChartPageView.swift */,
+				895788AB242E69A2002CB114 /* ActionButton.swift */,
 				C10C57FD2E71E87400A4825C /* ActivePresetView.swift */,
-				C10C57F92E708B1D00A4825C /* PresetWatchCard.swift */,
+				895788B5242E6A25002CB114 /* Carb Entry & Bolus */,
+				C1FAD5182E7E0C3100F7FAD9 /* ChartPageView.swift */,
+				89A605E824328862009C1096 /* Checkmark.swift */,
+				C10C57E42E6F767500A4825C /* CircleTintedButton.swift */,
+				895788AA242E69A1002CB114 /* CircularAccessoryButtonStyle.swift */,
+				89A605EE2432925D009C1096 /* CompletionCheckmark.swift */,
+				895788B4242E69C8002CB114 /* Extensions */,
+				C17D52032E7F0568001D2AD2 /* LabelValueRow.swift */,
+				C1550B0B2E6F249A009369DC /* LoopCircleView.swift */,
+				C17D52012E7F03CF001D2AD2 /* LoopHeader.swift */,
 				C10C57ED2E7081C900A4825C /* PresetDetailView.swift */,
 				C10C57EB2E7070FB00A4825C /* PresetsListView.swift */,
-				C10C57E42E6F767500A4825C /* CircleTintedButton.swift */,
-				C1550B0B2E6F249A009369DC /* LoopCircleView.swift */,
-				C12D723F2E4FBC5D00BD628A /* WatchActionsView.swift */,
-				895788B5242E6A25002CB114 /* Carb Entry & Bolus */,
-				895788B4242E69C8002CB114 /* Extensions */,
-				895788AB242E69A2002CB114 /* ActionButton.swift */,
-				895788AA242E69A1002CB114 /* CircularAccessoryButtonStyle.swift */,
-				89A605E824328862009C1096 /* Checkmark.swift */,
-				89A605EE2432925D009C1096 /* CompletionCheckmark.swift */,
+				C10C57F92E708B1D00A4825C /* PresetWatchCard.swift */,
 				894F6DD8243C060600CCE676 /* ScalablePositionedText.swift */,
 				89A605EA243288E4009C1096 /* TopDownTriangle.swift */,
+				C12D723F2E4FBC5D00BD628A /* WatchActionsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -3887,6 +3890,7 @@
 				43517917230A0E1A0072ECC0 /* WKInterfaceLabel.swift in Sources */,
 				895788B3242E69A2002CB114 /* ActionButton.swift in Sources */,
 				894F6DD3243BCBDB00CCE676 /* Environment+SizeClass.swift in Sources */,
+				C17D52042E7F0578001D2AD2 /* LabelValueRow.swift in Sources */,
 				895788B2242E69A2002CB114 /* CircularAccessoryButtonStyle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
