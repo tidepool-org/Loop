@@ -148,6 +148,9 @@ struct ChartPageView: View {
                     label: "Active Carbs",
                     value: activeCarbohydrates
                 )
+                .onTapGesture {
+                    isShowingCarbList = true
+                }
                 Divider()
                 LabelValueRow(
                     label: "Net Basal Rate",
@@ -170,6 +173,10 @@ struct ChartPageView: View {
         .onChange(of: loopManager.activeContext?.predictedGlucose) { oldValue, newValue in
             updateGlucoseChart()
         }
+        .sheet(isPresented: $isShowingCarbList) {
+            CarbList()
+        }
+
     }
 
     private func updateGlucoseChart() {

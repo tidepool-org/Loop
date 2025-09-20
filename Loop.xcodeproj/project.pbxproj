@@ -476,6 +476,7 @@
 		C17824A51E1AD4D100D9D25C /* ManualBolusRecommendation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17824A41E1AD4D100D9D25C /* ManualBolusRecommendation.swift */; };
 		C17D52022E7F03D0001D2AD2 /* LoopHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17D52012E7F03CF001D2AD2 /* LoopHeader.swift */; };
 		C17D52042E7F0578001D2AD2 /* LabelValueRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17D52032E7F0568001D2AD2 /* LabelValueRow.swift */; };
+		C17D52082E7F0E1B001D2AD2 /* CarbList.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17D52072E7F0E18001D2AD2 /* CarbList.swift */; };
 		C17DDC9C28AC339E005FBF4C /* PersistedProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DA986B2843B6F9001D04CC /* PersistedProperty.swift */; };
 		C17DDC9D28AC33A1005FBF4C /* PersistedProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DA986B2843B6F9001D04CC /* PersistedProperty.swift */; };
 		C188599B2AF15E1B0010F21F /* DeviceDataManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C188599A2AF15E1B0010F21F /* DeviceDataManagerTests.swift */; };
@@ -1477,6 +1478,7 @@
 		C17824A41E1AD4D100D9D25C /* ManualBolusRecommendation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ManualBolusRecommendation.swift; sourceTree = "<group>"; };
 		C17D52012E7F03CF001D2AD2 /* LoopHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopHeader.swift; sourceTree = "<group>"; };
 		C17D52032E7F0568001D2AD2 /* LabelValueRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelValueRow.swift; sourceTree = "<group>"; };
+		C17D52072E7F0E18001D2AD2 /* CarbList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbList.swift; sourceTree = "<group>"; };
 		C1814B85225E507C008D2D8E /* Sequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequence.swift; sourceTree = "<group>"; };
 		C186B73F298309A700F83024 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C188599A2AF15E1B0010F21F /* DeviceDataManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDataManagerTests.swift; sourceTree = "<group>"; };
@@ -2631,6 +2633,7 @@
 				895788AB242E69A2002CB114 /* ActionButton.swift */,
 				C10C57FD2E71E87400A4825C /* ActivePresetView.swift */,
 				895788B5242E6A25002CB114 /* Carb Entry & Bolus */,
+				C17D52072E7F0E18001D2AD2 /* CarbList.swift */,
 				C1FAD5182E7E0C3100F7FAD9 /* ChartPageView.swift */,
 				89A605E824328862009C1096 /* Checkmark.swift */,
 				C10C57E42E6F767500A4825C /* CircleTintedButton.swift */,
@@ -3876,6 +3879,7 @@
 				894F6DD7243C047300CCE676 /* View+Position.swift in Sources */,
 				898ECA69218ABDA9001E9D35 /* CLKTextProvider+Compound.m in Sources */,
 				4372E48C213CB6750068E043 /* Double.swift in Sources */,
+				C17D52082E7F0E1B001D2AD2 /* CarbList.swift in Sources */,
 				89A605ED24328972009C1096 /* BolusArrow.swift in Sources */,
 				89E08FD0242E8B2B000D719B /* BolusConfirmationView.swift in Sources */,
 				43785E972120E4500057DED1 /* INRelevantShortcutStore+Loop.swift in Sources */,
