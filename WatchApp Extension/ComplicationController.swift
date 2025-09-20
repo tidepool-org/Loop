@@ -56,7 +56,8 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
             return
         }
 
-        ExtensionDelegate.shared().loopManager.generateChartData { chartData in
+        Task { @MainActor in
+            let chartData = await ExtensionDelegate.shared().loopManager.generateChartData()
             self.chartManager.data = chartData
             completion()
         }

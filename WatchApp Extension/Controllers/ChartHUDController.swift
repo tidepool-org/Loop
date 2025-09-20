@@ -61,7 +61,6 @@ final class ChartHUDController: HUDInterfaceController, WKCrownDelegate {
 
     override init() {
         super.init()
-
         glucoseScene.presentScene(scene)
     }
 
@@ -185,11 +184,10 @@ final class ChartHUDController: HUDInterfaceController, WKCrownDelegate {
     }
 
     private func updateGlucoseChart() {
-        loopManager.generateChartData { chartData in
-            DispatchQueue.main.async {
-                self.scene.data = chartData
-                self.scene.setNeedsUpdate()
-            }
+        Task { @MainActor in
+            let chartData = await loopManager.generateChartData()
+            self.scene.data = chartData
+            self.scene.setNeedsUpdate()
         }
     }
 

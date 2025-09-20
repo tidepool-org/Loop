@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="23727" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="wmR-dV-5Rm">
+<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="24127" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="wmR-dV-5Rm">
     <device id="watch38"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="23705"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="24017"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
     </dependencies>
     <scenes>
-        <!--Loop-->
+        <!--ChartHUDController-->
         <scene sceneID="3Z2-ZE-636">
             <objects>
-                <controller identifier="ChartHUDController" title="Loop" spacing="7" alwaysBounce="YES" id="v5b-sO-bb8" customClass="ChartHUDController" customModule="WatchApp">
+                <controller identifier="ChartHUDController" spacing="7" alwaysBounce="YES" id="v5b-sO-bb8" customClass="ChartHUDController" customModule="WatchApp">
                     <items>
                         <group width="1" alignment="left" id="z0r-4k-Z7h">
                             <items>
@@ -111,7 +111,7 @@
                     </connections>
                 </controller>
             </objects>
-            <point key="canvasLocation" x="369" y="769"/>
+            <point key="canvasLocation" x="725" y="769"/>
         </scene>
         <!--CarbEntryListController-->
         <scene sceneID="d2g-lD-eT2">
@@ -170,7 +170,7 @@
                     </connections>
                 </controller>
             </objects>
-            <point key="canvasLocation" x="706" y="769"/>
+            <point key="canvasLocation" x="1034" y="769"/>
         </scene>
         <!--Static Notification Interface Controller-->
         <scene sceneID="AEw-b0-oYE">
@@ -199,12 +199,12 @@
             </objects>
             <point key="canvasLocation" x="38" y="1153"/>
         </scene>
-        <!--Loop-->
+        <!--ActionViewHostingController-->
         <scene sceneID="Bol-Ks-r7L">
             <objects>
-                <controller identifier="ActionViewHostingController" title="Loop" contentMode="scaleAspectFit" id="wmR-dV-5Rm" customClass="ActionViewHostingController" customModule="WatchApp">
+                <controller identifier="ActionViewHostingController" contentMode="scaleAspectFit" id="wmR-dV-5Rm" customClass="ActionViewHostingController" customModule="WatchApp">
                     <connections>
-                        <segue destination="v5b-sO-bb8" kind="relationship" relationship="nextPage" id="dKT-2d-vNq"/>
+                        <segue destination="sQX-TR-STi" kind="relationship" relationship="nextPage" id="5jB-Ey-ocH"/>
                     </connections>
                 </controller>
             </objects>
@@ -215,14 +215,25 @@
             <objects>
                 <hostingController identifier="PresetConfirmHostingController" id="mnP-MY-5B0" customClass="PresetConfirmHostingController" customModule="WatchApp"/>
             </objects>
-            <point key="canvasLocation" x="369" y="370"/>
+            <point key="canvasLocation" x="457" y="395"/>
+        </scene>
+        <!--ChartPageHostingController-->
+        <scene sceneID="bbH-pd-f6J">
+            <objects>
+                <hostingController identifier="ChartPageHostingController" contentMode="scaleAspectFit" id="sQX-TR-STi" customClass="ChartPageHostingController" customModule="WatchApp">
+                    <connections>
+                        <segue destination="v5b-sO-bb8" kind="relationship" relationship="nextPage" id="Uxd-8f-QBg"/>
+                    </connections>
+                </hostingController>
+            </objects>
+            <point key="canvasLocation" x="385" y="769"/>
         </scene>
     </scenes>
     <color key="tintColor" red="0.29803921570000003" green="0.85098039219999999" blue="0.3921568627" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
     <resources>
         <image name="loop_unknown" width="29" height="29"/>
         <namedColor name="insulin">
-            <color red="0.33300000429153442" green="0.41200000047683716" blue="0.94900000095367432" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="1" green="0.58431372549019611" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="insulin-notification-background">
             <color red="0.33300000429153442" green="0.41200000047683716" blue="0.94900000095367432" alpha="0.5" colorSpace="custom" customColorSpace="sRGB"/>

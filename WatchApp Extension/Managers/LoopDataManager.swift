@@ -274,6 +274,27 @@ extension LoopDataManager {
         return presets
     }
 
+    var glucoseValue: String {
+        guard let activeContext = activeContext,
+              let glucose = activeContext.glucose,
+              let unit = activeContext.displayGlucoseUnit else
+        {
+            return "- - -"
+        }
+
+        let formatter = NumberFormatter.glucoseFormatter(for: unit)
+
+        var glucoseValue: String
+
+        if let glucoseCondition = activeContext.glucoseCondition {
+            glucoseValue = glucoseCondition.localizedDescription
+        } else {
+            glucoseValue = formatter.string(from: glucose.doubleValue(for: unit)) ?? "???"
+        }
+
+        let trend = activeContext.glucoseTrend?.symbol ?? ""
+        return glucoseValue + trend
+    }
 }
 
 extension LoopDataManager {
@@ -283,27 +304,25 @@ extension LoopDataManager {
 }
 
 extension LoopDataManager {
-    func generateChartData(completion: @escaping (GlucoseChartData?) -> Void) {
+
+    func generateChartData() async -> GlucoseChartData? {
         guard let activeContext = activeContext else {
-            completion(nil)
-            return
+            return nil
         }
 
-        Task {
-            var historicalGlucose: [StoredGlucoseSample]?
-            do {
-                historicalGlucose = try await glucoseStore?.getGlucoseSamples(start: .earliestGlucoseCutoff)
-            } catch {
-                self.log.error("Failure getting glucose samples: %{public}@", String(describing: error))
-            }
-            let chartData = GlucoseChartData(
-                unit: activeContext.displayGlucoseUnit,
-                correctionRange: self.watchInfo.loopSettings.glucoseTargetRangeSchedule,
-                scheduleOverride: self.watchInfo.scheduleOverride,
-                historicalGlucose: historicalGlucose,
-                predictedGlucose: (activeContext.isClosedLoop ?? false) ? activeContext.predictedGlucose?.values : nil
-            )
-            completion(chartData)
+        var historicalGlucose: [StoredGlucoseSample]?
+        do {
+            historicalGlucose = try await glucoseStore?.getGlucoseSamples(start: .earliestGlucoseCutoff)
+        } catch {
+            self.log.error("Failure getting glucose samples: %{public}@", String(describing: error))
         }
+        let chartData = GlucoseChartData(
+            unit: activeContext.displayGlucoseUnit,
+            correctionRange: self.watchInfo.loopSettings.glucoseTargetRangeSchedule,
+            scheduleOverride: self.watchInfo.scheduleOverride,
+            historicalGlucose: historicalGlucose,
+            predictedGlucose: (activeContext.isClosedLoop ?? false) ? activeContext.predictedGlucose?.values : nil
+        )
+        return chartData
     }
 }
