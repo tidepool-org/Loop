@@ -173,9 +173,10 @@ class LoopAppManager: NSObject {
             launchOnboarding()
         }
         if state == .launchHomeScreen {
+            NotificationManager.setNotificationCategories()
             await launchHomeScreen()
         }
-        
+
         askUserToConfirmLoopReset()
     }
 

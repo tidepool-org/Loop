@@ -58,6 +58,8 @@
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>
 	<string>$(MAIN_APP_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>WKPrincipalClass</key>
 	<string>$(PRODUCT_MODULE_NAME).ExtensionDelegate</string>
 </dict>

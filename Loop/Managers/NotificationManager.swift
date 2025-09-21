@@ -86,13 +86,19 @@ extension NotificationManager {
                 }
             }
         }
+    }
+
+    static func setNotificationCategories() {
+        let center = UNUserNotificationCenter.current()
         center.setNotificationCategories(notificationCategories)
     }
-    
+
+
 
     // MARK: - Notifications
-    
-    static func sendBolusFailureNotification(for error: PumpManagerError, units: Double, at startDate: Date, decisionId: UUID?, activationType: BolusActivationType) {
+
+    @MainActor
+    static func sendBolusFailureNotification(for error: PumpManagerError, units: Double, at startDate: Date, decisionId: UUID?, activationType: BolusActivationType) async throws {
         let notification = UNMutableNotificationContent()
 
         notification.title = NSLocalizedString("Bolus Issue", comment: "The notification title for a bolus issue")
@@ -119,7 +125,7 @@ extension NotificationManager {
         ]
         
         if let decisionId {
-            notification.userInfo[LoopNotificationUserInfoKey.decisionId.rawValue] = decisionId
+            notification.userInfo[LoopNotificationUserInfoKey.decisionId.rawValue] = decisionId.uuidString
         }
 
         let request = UNNotificationRequest(
@@ -129,7 +135,7 @@ extension NotificationManager {
             trigger: nil
         )
 
-        UNUserNotificationCenter.current().add(request)
+        try await UNUserNotificationCenter.current().add(request)
     }
     
     static func sendRemoteBolusNotification(amount: Double) {
