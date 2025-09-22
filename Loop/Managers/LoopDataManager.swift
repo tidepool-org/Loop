@@ -509,9 +509,6 @@ final class LoopDataManager: ObservableObject {
             newState.input = input
             newState.output = LoopAlgorithm.run(input: input)
 
-            AlgorithmInputFixture.printFixture(input)
-            print("Here")
-
         } catch {
             let loopError = error as? LoopError ?? .unknownError(error)
             logger.error("Error updating Loop state: %{public}@", String(describing: loopError))
