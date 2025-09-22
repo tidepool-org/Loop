@@ -47,8 +47,6 @@
 	<array>
 		<string>com.loopkit.Loop.AddCarbEntryOnWatch</string>
 	</array>
-	<key>RemoteInterfacePrincipalClass</key>
-	<string>$(PRODUCT_MODULE_NAME).StatusInterfaceController</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -60,7 +58,7 @@
 	<string>$(MAIN_APP_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
-	<key>WKPrincipalClass</key>
+	<key>WKExtensionDelegateClassName</key>
 	<string>$(PRODUCT_MODULE_NAME).ExtensionDelegate</string>
 </dict>
 </plist>

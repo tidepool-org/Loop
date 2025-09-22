@@ -56,10 +56,16 @@ extension TemporaryScheduleOverride {
     public var presetId: String {
         switch context {
         case .preMeal: return "preMeal"
-        case .activity: return "activity"
+        case .activity(let activity): return activity.presetId
         case .custom: return self.syncIdentifier.uuidString
         case .preset(let preset): return preset.id
         }
+    }
+}
+
+extension ActivityPreset {
+    var presetId: String {
+        "activity-\(id)"
     }
 }
 
@@ -111,7 +117,7 @@ public enum SelectablePreset: Hashable, Identifiable {
     public var id: String {
         switch self {
         case .custom(let preset): return preset.id
-        case .activity(let activity): return "activity-\(activity.id)"
+        case .activity(let activity): return activity.presetId
         case .preMeal: return "preMeal"
         }
     }

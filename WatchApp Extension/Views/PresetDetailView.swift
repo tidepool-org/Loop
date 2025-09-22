@@ -11,7 +11,7 @@ import LoopKit
 import LoopCore
 
 struct PresetDetailView: View {
-    @State private var loopManager = ExtensionDelegate.shared().loopManager
+    @Environment(LoopDataManager.self) var loopManager
     @Environment(\.glucoseDisplayUnit) private var glucoseDisplayUnit
     @Environment(\.dismiss) private var dismiss
 
@@ -119,13 +119,6 @@ struct PresetDetailView: View {
                 }
             }
         }
-        .onChange(of: loopManager.pendingPresetReminder) { oldValue, newValue in
-            if newValue != nil && oldValue == nil {
-                // If the user is currently looking a preset detail, and a reminder notification is being handled,
-                // we need to dismiss this one to avoid confusion.
-                dismiss()
-            }
-        }
         .onChange(of: crownValue) { (oldValue, newValue) in
             if newValue >= threshold && !startingPreset {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
@@ -138,14 +131,15 @@ struct PresetDetailView: View {
                                 alertIdentifier = reminder.presetIdentifier
                             }
                             try await loopManager.activateOverride(preset.createOverride(), alertIdentifierToAcknowledge: alertIdentifier)
+                            WKInterfaceDevice.current().play(.success)
                         } catch {
                             print("Error! Could not activate preset: \(error)")
+                            WKInterfaceDevice.current().play(.failure)
                         }
                     }
                 }
             }
         }
-        .navigationTitle("Preset Details")
         .navigationBarBackButtonHidden(false) // Ensure back button is visible
     }
 }

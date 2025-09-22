@@ -11,7 +11,7 @@ import LoopKit
 import LoopAlgorithm
 
 struct CarbList: View {
-    @State private var loopManager = ExtensionDelegate.shared().loopManager
+    @Environment(LoopDataManager.self) var loopManager
 
     var timeFormatter: DateFormatter = {
         let timeFormatter = DateFormatter()

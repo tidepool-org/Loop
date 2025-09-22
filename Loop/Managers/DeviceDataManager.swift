@@ -15,6 +15,10 @@ import UserNotifications
 import Combine
 import LoopAlgorithm
 
+public enum DemoError: LocalizedError {
+    case CommsError
+}
+
 @MainActor
 protocol LoopControl {
     var lastLoopCompleted: Date? { get }
@@ -738,6 +742,20 @@ extension DeviceDataManager {
         if automaticBolusOngoing && activationType != .automatic {
             let _ = try? await pumpManager.cancelBolus()
         }
+
+        try await Task.sleep(for: .seconds(5))
+        do {
+            try await NotificationManager.sendBolusFailureNotification(
+                for: PumpManagerError.communication(DemoError.CommsError),
+                units: units,
+                at: Date(),
+                decisionId: decisionId,
+                activationType: activationType
+            )
+        } catch {
+            log.error("Error sending notification %{public}@", String(describing: error))
+        }
+        return
 
         do {
             try await pumpManager.enactBolus(decisionId: decisionId, units: units, activationType: activationType)

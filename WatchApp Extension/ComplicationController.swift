@@ -23,7 +23,7 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     func getTimelineStartDate(for complication: CLKComplication, withHandler handler: @escaping (Date?) -> Void) {
-        if let date = ExtensionDelegate.shared().loopManager.activeContext?.glucoseDate {
+        if let date = LoopDataManager.shared.activeContext?.glucoseDate {
             handler(date)
         } else {
             handler(nil)
@@ -31,7 +31,7 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     func getTimelineEndDate(for complication: CLKComplication, withHandler handler: @escaping (Date?) -> Void) {
-        if let date = ExtensionDelegate.shared().loopManager.activeContext?.glucoseDate {
+        if let date = LoopDataManager.shared.activeContext?.glucoseDate {
             handler(date)
         } else {
             handler(nil)
@@ -57,7 +57,7 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
         }
 
         Task { @MainActor in
-            let chartData = await ExtensionDelegate.shared().loopManager.generateChartData()
+            let chartData = await LoopDataManager.shared.generateChartData()
             self.chartManager.data = chartData
             completion()
         }
@@ -86,7 +86,7 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
             
             self.log.default("Updating current complication timeline entry")
             
-            if let context = ExtensionDelegate.shared().loopManager.activeContext,
+            if let context = LoopDataManager.shared.activeContext,
                 let template = CLKComplicationTemplate.templateForFamily(complication.family,
                                                                          from: context,
                                                                          at: timelineDate,
@@ -112,7 +112,7 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
         updateChartManagerIfNeeded {
             let entries: [CLKComplicationTimelineEntry]?
             
-            guard let context = ExtensionDelegate.shared().loopManager.activeContext,
+            guard let context = LoopDataManager.shared.activeContext,
                 let glucoseDate = context.glucoseDate else
             {
                 handler(nil)

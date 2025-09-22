@@ -11,7 +11,7 @@ import LoopKit
 import LoopCore
 
 struct ActiveOverrideView: View {
-    @State private var loopManager = ExtensionDelegate.shared().loopManager
+    @Environment(LoopDataManager.self) var loopManager
     @Environment(\.glucoseDisplayUnit) private var glucoseDisplayUnit
 
     @State private var crownValue: CGFloat = 0 // Tracks Digital Crown rotation
@@ -20,7 +20,6 @@ struct ActiveOverrideView: View {
     private let maxProgress: CGFloat = 20 // Max progress for the bar
 
     let override: TemporaryScheduleOverride
-
 
     var titleText: Text {
         switch override.context {

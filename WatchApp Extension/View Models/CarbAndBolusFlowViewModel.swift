@@ -43,7 +43,7 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
     init(
         configuration: CarbAndBolusFlow.Configuration
     ) {
-        let loopManager = ExtensionDelegate.shared().loopManager
+        let loopManager = LoopDataManager.shared
         switch configuration {
         case .carbEntry:
             break
@@ -132,7 +132,7 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
         do {
             isComputingRecommendedBolus = true
             let context = try await WCSession.default.sendPotentialCarbEntryMessage(potentialEntry)
-            let loopManager = ExtensionDelegate.shared().loopManager
+            let loopManager = LoopDataManager.shared
             loopManager.updateContext(context)
 
             // Only update if this recommendation corresponds to the current carb entry under consideration.

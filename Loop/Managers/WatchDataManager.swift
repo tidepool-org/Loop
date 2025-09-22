@@ -215,8 +215,6 @@ final class WatchDataManager: NSObject {
             return
         }
 
-        log.default("*** sendWatchContextIfNeeded")
-
         guard case .activated = session.activationState else {
             session.activate()
             return

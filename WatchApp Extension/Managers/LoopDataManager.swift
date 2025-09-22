@@ -14,10 +14,13 @@ import WatchConnectivity
 import os.log
 import LoopAlgorithm
 import UserNotifications
+import WatchKit
 
 @MainActor
 @Observable
 class LoopDataManager {
+    static let shared = LoopDataManager()
+
     let carbStore: CarbStore
 
     var glucoseStore: GlucoseStore?
@@ -41,13 +44,26 @@ class LoopDataManager {
 
     var pendingPresetReminder: PendingPresetReminder?
 
-    var pendingPreset: SelectablePreset {
+    var pendingPreset: SelectablePreset? {
         if let presetIdentifier = pendingPresetReminder?.presetIdentifier {
             return selectablePresets.first(where: { $0.id == presetIdentifier })!
         } else {
-            return selectablePresets.first!
+            return nil
         }
     }
+
+    var activePreset: SelectablePreset? {
+        guard let presetId = watchInfo.scheduleOverride?.presetId else {
+            return nil
+        }
+        return selectablePresets.first(where: { $0.id == presetId })
+    }
+
+    var glucoseChartScene: GlucoseChartScene = {
+        let s = GlucoseChartScene()
+        s.size = WKInterfaceDevice.current().screenBounds.size
+        return s
+    }()
 
     // When set, user will be navigated to carbs/bolus flow
     var bolusViewModel: CarbAndBolusFlowViewModel?

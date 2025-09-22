@@ -18,9 +18,7 @@ import LoopKit
 import LoopCore
 import ClockKit
 
-@main
 class ExtensionDelegate: NSObject, WKApplicationDelegate {
-    private(set) lazy var loopManager = LoopDataManager()
 
     private let log = OSLog(category: "ExtensionDelegate")
 
@@ -30,6 +28,8 @@ class ExtensionDelegate: NSObject, WKApplicationDelegate {
     static func shared() -> ExtensionDelegate {
         return WKApplication.shared().extensionDelegate
     }
+
+    let loopManager = LoopDataManager.shared
 
     override init() {
         super.init()
@@ -88,7 +88,6 @@ class ExtensionDelegate: NSObject, WKApplicationDelegate {
     }
 
     func applicationWillResignActive() {
-        UserDefaults.standard.startOnChartPage = (WKApplication.shared().visibleInterfaceController as? ChartHUDController) != nil
     }
 
     // Presumably the main thread?

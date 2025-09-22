@@ -416,6 +416,8 @@ extension TemporaryPresetsManager : AlertResponder {
     func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier) async throws { }
 
     func handleAlertAction(actionIdentifier: String, from alert: Alert) async throws {
+        if actionIdentifier == UNNotificationDismissActionIdentifier { return }
+
         if actionIdentifier == NotificationManager.Action.startPreset.rawValue,
            let metdata = alert.metadata,
            let presetIdentifier = metdata["presetId"]?.wrapped as? String?

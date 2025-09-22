@@ -11,29 +11,25 @@ import LoopKit
 import LoopCore
 
 struct PresetListView: View {
+    @Environment(LoopDataManager.self) var loopManager
+    @Environment(\.dismiss) private var dismiss
+
     let presets: [SelectablePreset]
+    @Binding var path: NavigationPath
 
     var body: some View {
-        NavigationStack {
-            ScrollView(.vertical) {
-                VStack(spacing: 8) {
-                    ForEach(presets) { preset in
-                        NavigationLink(value: preset) {
-                            PresetWatchCard(preset)
-                        }
-                        .buttonStyle(.plain)
+        ScrollView(.vertical) {
+            ForEach(presets) { preset in
+                PresetWatchCard(preset)
+                    .onTapGesture {
+                        path.append(preset)
                     }
-                }
-                .padding()
             }
-            .navigationTitle("Select Preset")
-            .navigationDestination(for: SelectablePreset.self) { preset in
-                PresetDetailView(preset: preset)
-            }
+            .padding()
+        }
+        .navigationTitle("Select Preset")
+        .navigationDestination(for: SelectablePreset.self) { preset in
+            PresetConfirmationView(preset: preset)
         }
     }
-}
-
-extension TemporaryPreset: @retroactive Identifiable {
-
 }

@@ -12,12 +12,12 @@ import LoopKit
 import LoopCore
 
 struct WatchActionsView: View {
-    @State private var loopManager = ExtensionDelegate.shared().loopManager
+    @Environment(LoopDataManager.self) var loopManager
 
-    @State private var isShowingPresetList: Bool = false
-    @State private var isShowingActivePreset: Bool = false
+    @State private var isShowingPresets: Bool = false
+    @State private var overrideToShow: TemporaryScheduleOverride?
 
-    var presetActive: Bool {
+    var overrideActive: Bool {
         return loopManager.watchInfo.scheduleOverride?.isActive() == true
     }
 
@@ -48,13 +48,13 @@ struct WatchActionsView: View {
                 CircleTintedButton(
                     label: "Presets",
                     image: Image("presets"),
-                    foregroundTint: presetActive ? .darkPresets : .presets,
-                    backgroundTint: presetActive ? .presets : .darkPresets
+                    foregroundTint: overrideActive ? .darkPresets : .presets,
+                    backgroundTint: overrideActive ? .presets : .darkPresets
                 ) {
-                    if presetActive {
-                        isShowingActivePreset = true
+                    if overrideActive {
+                        overrideToShow = loopManager.watchInfo.scheduleOverride
                     } else {
-                        isShowingPresetList = true
+                        isShowingPresets = true
                     }
                 }
                 Spacer()
@@ -63,15 +63,16 @@ struct WatchActionsView: View {
         }
         .font(.system(size: 14, weight: .light))
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $isShowingPresetList) {
-            PresetListView(presets: loopManager.selectablePresets)
+        .sheet(isPresented: $isShowingPresets) {
+            PresetsView()
         }
-        .sheet(isPresented: $isShowingActivePreset) {
-            if let activeOverride = loopManager.watchInfo.scheduleOverride, activeOverride.isActive() {
-                ActiveOverrideView(override: activeOverride)
-            } else {
-                Text("Preset override not active")
-            }
+        .sheet(isPresented: Binding(get: {
+            overrideToShow != nil
+        }, set: {
+            if !$0 { overrideToShow = nil }
+        })) {
+            let preset = loopManager.selectablePresets.first(where: { $0.id == overrideToShow!.presetId })
+            PresetConfirmationView(preset: preset)
         }
         .sheet(isPresented:Binding(
             get: { loopManager.bolusViewModel != nil },
@@ -79,17 +80,6 @@ struct WatchActionsView: View {
         )) {
             CarbAndBolusFlow(viewModel: loopManager.bolusViewModel!)
         }
-        .onChange(of: loopManager.watchInfo.scheduleOverride, { oldValue, newValue in
-            if oldValue == nil && newValue != nil {
-                // Preset activated
-                isShowingPresetList = false
-                isShowingActivePreset = true
-            }
-            if oldValue != nil && newValue == nil && isShowingActivePreset {
-                isShowingActivePreset = false
-            }
-
-        })
         .environment(\.glucoseDisplayUnit, loopManager.displayGlucoseUnit)
     }
 

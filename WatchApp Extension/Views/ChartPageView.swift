@@ -14,19 +14,13 @@ import SpriteKit
 struct ChartPageView: View {
     @Environment(\.sizeClass) private var sizeClass
 
-    @State private var loopManager = ExtensionDelegate.shared().loopManager
+    @Environment(LoopDataManager.self) var loopManager
 
     @State private var isShowingCarbList: Bool = false
 
     var presetActive: Bool {
         return loopManager.watchInfo.scheduleOverride?.isActive() == true
     }
-
-    private let glucoseChartScene: GlucoseChartScene = {
-        let s = GlucoseChartScene()
-        s.size = WKInterfaceDevice.current().screenBounds.size
-        return s
-    }()
 
     private var chartHeight: CGFloat {
         switch sizeClass {
@@ -42,21 +36,21 @@ struct ChartPageView: View {
     }
 
     var chartView: some View {
-        SpriteView(scene: glucoseChartScene)
+        SpriteView(scene: loopManager.glucoseChartScene)
             .frame(height: chartHeight)
             .ignoresSafeArea()
             .gesture(
                 // Handle double tap
                 TapGesture(count: 2)
                     .onEnded {
-                        glucoseChartScene.increaseVisibleDuration()
+                        loopManager.glucoseChartScene.increaseVisibleDuration()
                     }
             )
             .gesture(
                 // Handle single tap
                 TapGesture()
                     .onEnded {
-                        glucoseChartScene.decreaseVisibleDuration()
+                        loopManager.glucoseChartScene.decreaseVisibleDuration()
                     }
             )
     }
@@ -176,15 +170,13 @@ struct ChartPageView: View {
         .sheet(isPresented: $isShowingCarbList) {
             CarbList()
         }
-
     }
 
     private func updateGlucoseChart() {
         Task { @MainActor in
             let chartData = await loopManager.generateChartData()
-            glucoseChartScene.data = chartData
-            glucoseChartScene.setNeedsUpdate()
+            loopManager.glucoseChartScene.data = chartData
+            loopManager.glucoseChartScene.setNeedsUpdate()
         }
     }
-
 }
