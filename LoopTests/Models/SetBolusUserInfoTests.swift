@@ -9,6 +9,7 @@
 import XCTest
 import LoopAlgorithm
 import LoopKit
+import LoopCore
 @testable import Loop
 
 class SetBolusUserInfoTests: XCTestCase {

@@ -7,7 +7,7 @@
 //
 
 import XCTest
-
+@testable import LoopCore
 @testable import Loop
 
 class CarbBackfillRequestUserInfoTests: XCTestCase {
