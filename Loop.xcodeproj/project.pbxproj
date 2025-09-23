@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1419606428D9550400BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
 		1419606928D9554E00BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
 		1419606A28D955BC00BA86E0 /* MockKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C101947127DD473C004E7EB8 /* MockKitUI.framework */; };
 		142CB7592A60BF2E0075748A /* EditMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142CB7582A60BF2E0075748A /* EditMode.swift */; };
@@ -30,7 +29,7 @@
 		149A28E42A8A63A700052EDF /* FavoriteFoodDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149A28E32A8A63A700052EDF /* FavoriteFoodDetailView.swift */; };
 		14B1735E28AED9EC006CCD7C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14B1735D28AED9EC006CCD7C /* WidgetKit.framework */; };
 		14B1736028AED9EC006CCD7C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14B1735F28AED9EC006CCD7C /* SwiftUI.framework */; };
-		14B1736928AED9EE006CCD7C /* Loop Widget Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 14B1735C28AED9EC006CCD7C /* Loop Widget Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		14B1736928AED9EE006CCD7C /* Loop Widget Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 14B1735C28AED9EC006CCD7C /* Loop Widget Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		14B1737228AEDBF6006CCD7C /* BasalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B1736E28AEDBF6006CCD7C /* BasalView.swift */; };
 		14B1737328AEDBF6006CCD7C /* SystemStatusWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B1736F28AEDBF6006CCD7C /* SystemStatusWidget.swift */; };
 		14B1737428AEDBF6006CCD7C /* GlucoseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B1737028AEDBF6006CCD7C /* GlucoseView.swift */; };
@@ -587,7 +586,7 @@
 		E98A55F124EDD85E0008715D /* MockDosingDecisionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55F024EDD85E0008715D /* MockDosingDecisionStore.swift */; };
 		E98A55F324EDD9530008715D /* MockSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E98A55F224EDD9530008715D /* MockSettingsStore.swift */; };
 		E9B07F7F253BBA6500BAD8F8 /* IntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B07F7E253BBA6500BAD8F8 /* IntentHandler.swift */; };
-		E9B07F94253BBA6500BAD8F8 /* Loop Intent Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E9B07F7C253BBA6500BAD8F8 /* Loop Intent Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E9B07F94253BBA6500BAD8F8 /* Loop Intent Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E9B07F7C253BBA6500BAD8F8 /* Loop Intent Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E9B07FEE253BBC7100BAD8F8 /* OverrideIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B07FED253BBC7100BAD8F8 /* OverrideIntentHandler.swift */; };
 		E9B08016253BBD7300BAD8F8 /* UserDefaults+LoopIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B08015253BBD7300BAD8F8 /* UserDefaults+LoopIntents.swift */; };
 		E9B080B1253BDA6300BAD8F8 /* UserDefaults+LoopIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B08015253BBD7300BAD8F8 /* UserDefaults+LoopIntents.swift */; };
@@ -724,16 +723,16 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4F70C1EC1DE8DCA8006380B7 /* Embed App Extensions */ = {
+		4F70C1EC1DE8DCA8006380B7 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				14B1736928AED9EE006CCD7C /* Loop Widget Extension.appex in Embed App Extensions */,
-				E9B07F94253BBA6500BAD8F8 /* Loop Intent Extension.appex in Embed App Extensions */,
+				14B1736928AED9EE006CCD7C /* Loop Widget Extension.appex in Embed Foundation Extensions */,
+				E9B07F94253BBA6500BAD8F8 /* Loop Intent Extension.appex in Embed Foundation Extensions */,
 			);
-			name = "Embed App Extensions";
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		C1275DE02E81FD470013B99D /* Embed Frameworks */ = {
@@ -1707,7 +1706,6 @@
 				1419606928D9554E00BA86E0 /* LoopKitUI.framework in Frameworks */,
 				1419606A28D955BC00BA86E0 /* MockKitUI.framework in Frameworks */,
 				1481F9BB28DA26F4004C5AEB /* LoopUI.framework in Frameworks */,
-				1419606428D9550400BA86E0 /* LoopKitUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3019,7 +3017,7 @@
 				C16DA84322E8E5FF008624C2 /* Install Plugins */,
 				C1D19800232CFA2A0096D646 /* Capture Build Details */,
 				C1092BFE29F88F0600AE3D1C /* Apply Info Customizations */,
-				4F70C1EC1DE8DCA8006380B7 /* Embed App Extensions */,
+				4F70C1EC1DE8DCA8006380B7 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -3166,7 +3164,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1520;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2600;
 				ORGANIZATIONNAME = "LoopKit Authors";
 				TargetAttributes = {
 					14B1735B28AED9EC006CCD7C = {
