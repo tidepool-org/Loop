@@ -31,7 +31,7 @@ struct BolusArrow: View {
         .padding(.top, 4)
         // Animate the arrow down off-screen once finished
         .offset(y: isFinished ? sizeClass.screenSize.height : 0)
-        .animation(Animation.default.speed(isFinished ? 0.35 : 1.0))
+        .animation(.default.speed(isFinished ? 0.35 : 1.0), value: progress)
     }
 
     private var arrow: some View {

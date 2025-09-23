@@ -19,7 +19,7 @@ struct BolusConfirmationVisual: View {
             Circle()
                 .fill(Color.darkInsulin)
                 .opacity(isFinished ? 0 : 1)
-                .animation(Animation.default.speed(0.5))
+                .animation(Animation.default.speed(0.5), value: progress)
                 .overlay(BolusArrow(progress: progress))
 
             if isFinished {
