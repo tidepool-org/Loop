@@ -140,6 +140,7 @@ extension CLKComplicationTemplate {
                 eventualGlucoseText = eventualGlucoseString
             }
 
+            // 106↗108 8:47 PM
             let format = NSLocalizedString("UtilitarianLargeFlat", tableName: "ckcomplication", comment: "Utilitarian large flat format string (1: Glucose & Trend symbol) (2: Eventual Glucose) (3: Time)")
 
             return CLKComplicationTemplateUtilitarianLargeFlat(
@@ -190,7 +191,7 @@ extension CLKComplicationTemplate {
         case .graphicRectangular:
             if #available(watchOSApplicationExtension 5.0, *) {
                 return CLKComplicationTemplateGraphicRectangularLargeImage(
-                    textProvider: CLKTextProvider(format: "%1%@ %2%@", glucoseAndTrendText, timeText),
+                    textProvider: CLKTextProvider(format: "%@ %@", glucoseAndTrendText, timeText),
                     imageProvider: CLKFullColorImageProvider(fullColorImage: makeChart() ?? UIImage())
                 )
             } else {

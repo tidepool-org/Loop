@@ -18,10 +18,6 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
 
     // MARK: - Timeline Configuration
     
-    func getSupportedTimeTravelDirections(for complication: CLKComplication, withHandler handler: @escaping (CLKComplicationTimeTravelDirections) -> Void) {
-        handler([.backward])
-    }
-    
     func getTimelineStartDate(for complication: CLKComplication, withHandler handler: @escaping (Date?) -> Void) {
         if let date = LoopDataManager.shared.activeContext?.glucoseDate {
             handler(date)
@@ -37,7 +33,22 @@ final class ComplicationController: NSObject, CLKComplicationDataSource {
             handler(nil)
         }
     }
-    
+
+    func complicationDescriptors() async -> [CLKComplicationDescriptor] {
+        return [
+            CLKComplicationDescriptor(
+                identifier: "glucosegraph",
+                displayName: "Glucose Graph",
+                supportedFamilies: [.graphicRectangular, .graphicExtraLarge,]
+            ),
+            CLKComplicationDescriptor(
+                identifier: "glucosegraph",
+                displayName: "Loop Status",
+                supportedFamilies: [.circularSmall, .extraLarge, .graphicBezel, .graphicCircular, .graphicCorner, .modularLarge, .modularSmall, .utilitarianLarge, .utilitarianSmall, .utilitarianSmallFlat]
+            )
+        ]
+    }
+
     func getPrivacyBehavior(for complication: CLKComplication, withHandler handler: @escaping (CLKComplicationPrivacyBehavior) -> Void) {
         handler(.hideOnLockScreen)
     }

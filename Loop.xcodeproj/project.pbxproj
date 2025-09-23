@@ -1424,6 +1424,7 @@
 		C1275DE12E81FD530013B99D /* LoopKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LoopKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1275E1A2E82269A0013B99D /* LoopKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LoopKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1275E1D2E8227260013B99D /* LoopKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LoopKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1275E202E8235E90013B99D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/ckcomplication.strings; sourceTree = "<group>"; };
 		C129BF492B2791EE00DF15CB /* TemporaryPresetsManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryPresetsManagerTests.swift; sourceTree = "<group>"; };
 		C129D3BE2B8697F100FEA6A9 /* TempBasalRecommendationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempBasalRecommendationTests.swift; sourceTree = "<group>"; };
 		C12BCCF929BBFA480066A158 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -4283,6 +4284,7 @@
 				C1B2679C2995824000BCB7C1 /* tr */,
 				C1AD630029BBFAA80002685D /* ro */,
 				C122DEFE29BBFAAE00321F8D /* ru */,
+				C1275E202E8235E90013B99D /* en */,
 			);
 			name = ckcomplication.strings;
 			sourceTree = "<group>";
