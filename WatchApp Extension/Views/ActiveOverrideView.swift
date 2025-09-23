@@ -15,9 +15,12 @@ struct ActiveOverrideView: View {
     @Environment(\.glucoseDisplayUnit) private var glucoseDisplayUnit
 
     @State private var crownValue: CGFloat = 0 // Tracks Digital Crown rotation
-    @State private var startingPreset: Bool = false
+    @State private var endingPreset: Bool = false
+    @State private var lastInteractionTime: Date? // Tracks last crown interaction
+
     private let threshold: CGFloat = 20 // Rotation threshold to trigger action
     private let maxProgress: CGFloat = 20 // Max progress for the bar
+    private let resetDelay: TimeInterval = 0.25 // pause for reset
 
     let override: TemporaryScheduleOverride
 
@@ -93,7 +96,7 @@ struct ActiveOverrideView: View {
     }
 
     var progress: CGFloat {
-        if startingPreset {
+        if endingPreset {
             return 1
         } else {
             return min(crownValue, maxProgress)/threshold
@@ -108,26 +111,20 @@ struct ActiveOverrideView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 10)
 
-            // Progress bar
-            ZStack(alignment: .leading) {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 150, height: 10)
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
+            Spacer()
 
-                Rectangle()
-                    .fill(startingPreset ? Color.green : Color.blue)
-                    .frame(width: progress * 150, height: 10)
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
-                    .animation(.easeInOut(duration: 0.2), value: crownValue) // Smooth animation for progress
-                    .animation(.easeOut(duration: 0.3), value: startingPreset) // Fast animation for trigger
+            ZStack(alignment: .center) {
+                if progress == 0 {
+                    Text(endingPreset ? "Ending Preset..." : "Turn Digital Crown to End")
+                        .font(.system(size: 16))
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    CircularProgressWithCheckmark(progress: progress, isComplete: endingPreset)
+                                    .animation(.easeInOut(duration: 0.2), value: crownValue) // Smooth animation for progress
+                                    .animation(.easeOut(duration: 0.3), value: endingPreset) // Fast animation for completion
+                }
             }
-
-            // Status text
-            Text(startingPreset ? "Ending Preset..." : "Turn Digital Crown to End")
-                .font(.system(size: 16))
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .padding()
         .focusable() // Required for Digital Crown interaction
@@ -140,14 +137,26 @@ struct ActiveOverrideView: View {
             isContinuous: false
         )
         .onChange(of: crownValue) { (oldValue, newValue) in
-            if newValue >= threshold && !startingPreset {
+            lastInteractionTime = Date()
+
+            Task {
+                try? await Task.sleep(nanoseconds: UInt64(resetDelay * 1_000_000_000)) // Wait for 1 second
+                if let lastTime = lastInteractionTime, Date().timeIntervalSince(lastTime) >= resetDelay && !endingPreset {
+                    withAnimation {
+                        crownValue = 0 // Reset progress
+                    }
+                }
+            }
+
+            if newValue >= threshold && !endingPreset {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-                    startingPreset = true
+                    endingPreset = true
                     Task {
                         do {
                             try await loopManager.clearOverride()
+                            WKInterfaceDevice.current().play(.directionDown)
                         } catch {
-                            print("Error! Could not activate preset: \(error)")
+                            WKInterfaceDevice.current().play(.failure)
                         }
                     }
                 }

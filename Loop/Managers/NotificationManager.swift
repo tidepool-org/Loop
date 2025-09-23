@@ -44,7 +44,7 @@ extension NotificationManager {
 
         let yesStartPresetAction = UNNotificationAction(
             identifier: Action.startPreset.rawValue,
-            title: NSLocalizedString("Yes, Start Now", comment: "The title of the notification action to start a preset"),
+            title: NSLocalizedString("Start Preset", comment: "The title of the notification action to start a preset"),
             options: .foreground
         )
 

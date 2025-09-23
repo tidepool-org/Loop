@@ -16,8 +16,11 @@ struct PresetConfirmationView: View {
 
     let preset: SelectablePreset?
 
+    @State private var confirmedViaButton: Bool = false
+
     enum DisplayState: Equatable {
-        case confirming(SelectablePreset)
+        case confirmingViaButton(SelectablePreset)
+        case confirmingViaCrown(SelectablePreset)
         case activated(TemporaryScheduleOverride)
         case oneTimeUseOverrideEnded
     }
@@ -26,7 +29,11 @@ struct PresetConfirmationView: View {
         if let override = loopManager.watchInfo.scheduleOverride {
             return .activated(override)
         } else if let preset {
-            return .confirming(preset)
+            if isConfirmingFromPresetReminder && !confirmedViaButton {
+                return .confirmingViaButton(preset)
+            } else {
+                return .confirmingViaCrown(preset)
+            }
         } else {
             return .oneTimeUseOverrideEnded
         }
@@ -45,8 +52,10 @@ struct PresetConfirmationView: View {
     var body: some View {
         ZStack {
             switch displayState {
-            case .confirming(let preset):
-                PresetDetailView(preset: preset)
+            case .confirmingViaButton(let preset):
+                PresetActivateButtonConfirm(preset: preset, confirmed: $confirmedViaButton)
+            case .confirmingViaCrown(let preset):
+                PresetActivateCrownConfirm(preset: preset)
             case .activated(let override):
                 ActiveOverrideView(override: override)
             case .oneTimeUseOverrideEnded:
@@ -61,7 +70,7 @@ struct PresetConfirmationView: View {
             }
         }
         .onChange(of: displayState, { oldValue, newValue in
-            if case .confirming = oldValue,
+            if case .confirmingViaCrown = oldValue,
                 case .activated = newValue,
                isConfirmingFromPresetReminder
             {
