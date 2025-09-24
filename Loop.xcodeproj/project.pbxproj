@@ -104,8 +104,8 @@
 		4344629220A7C19800C4BE6F /* ButtonGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4344629120A7C19800C4BE6F /* ButtonGroup.swift */; };
 		4344629820A8B2D700C4BE6F /* OSLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4374B5EE209D84BE00D17AA8 /* OSLog.swift */; };
 		4345E3FC21F04911009E00E5 /* UIColor+HIG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BFF0C31E4659E700FF19A9 /* UIColor+HIG.swift */; };
-		4345E40121F67300009E00E5 /* PotentialCarbEntryUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DE92581C5479E4001FFDE1 /* PotentialCarbEntryUserInfo.swift */; };
-		4345E40221F67300009E00E5 /* PotentialCarbEntryUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DE92581C5479E4001FFDE1 /* PotentialCarbEntryUserInfo.swift */; };
+		4345E40121F67300009E00E5 /* GetBolusRecommendationUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DE92581C5479E4001FFDE1 /* GetBolusRecommendationUserInfo.swift */; };
+		4345E40221F67300009E00E5 /* GetBolusRecommendationUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DE92581C5479E4001FFDE1 /* GetBolusRecommendationUserInfo.swift */; };
 		434FF1EE1CF27EEF000DB779 /* UITableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 434FF1ED1CF27EEF000DB779 /* UITableViewCell.swift */; };
 		43517917230A0E1A0072ECC0 /* WKInterfaceLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43517916230A0E1A0072ECC0 /* WKInterfaceLabel.swift */; };
 		436A0DA51D236A2A00104B24 /* LoopError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436A0DA41D236A2A00104B24 /* LoopError.swift */; };
@@ -943,7 +943,7 @@
 		43D9FFD121EAE05D00AF44BF /* LoopCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoopCore.h; sourceTree = "<group>"; };
 		43D9FFD221EAE05D00AF44BF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		43DBF0521C93EC8200B3C386 /* DeviceDataManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = DeviceDataManager.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		43DE92581C5479E4001FFDE1 /* PotentialCarbEntryUserInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PotentialCarbEntryUserInfo.swift; sourceTree = "<group>"; };
+		43DE92581C5479E4001FFDE1 /* GetBolusRecommendationUserInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GetBolusRecommendationUserInfo.swift; sourceTree = "<group>"; };
 		43E2D90B1D20C581004DA55F /* LoopTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LoopTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		43E2D90F1D20C581004DA55F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		43E3449E1B9D68E900C85C07 /* StatusTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = StatusTableViewController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -2125,7 +2125,7 @@
 				C1ED6C602E79BB9C002F91C2 /* NotificationManager.swift */,
 				C105097A2D8B947700118A37 /* SelectablePreset.swift */,
 				C1DA986B2843B6F9001D04CC /* PersistedProperty.swift */,
-				43DE92581C5479E4001FFDE1 /* PotentialCarbEntryUserInfo.swift */,
+				43DE92581C5479E4001FFDE1 /* GetBolusRecommendationUserInfo.swift */,
 				43C05CB721EBEA54006FB252 /* HKUnit.swift */,
 				434FF1E91CF26C29000DB779 /* IdentifiableClass.swift */,
 				430B29892041F54A00BA9F93 /* NSUserDefaults.swift */,
@@ -3902,7 +3902,7 @@
 				E9B3552B293591E70076AB04 /* MissedMealNotification.swift in Sources */,
 				C1ED6C6B2E7C6E58002F91C2 /* LoopSettingsUserInfo.swift in Sources */,
 				C1ED6C7D2E7C811A002F91C2 /* SetPresetUserInfo.swift in Sources */,
-				4345E40221F67300009E00E5 /* PotentialCarbEntryUserInfo.swift in Sources */,
+				4345E40221F67300009E00E5 /* GetBolusRecommendationUserInfo.swift in Sources */,
 				C1ED6C692E7C6E41002F91C2 /* GlucoseBackfillRequestUserInfo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3937,7 +3937,7 @@
 				E9B3552A293591E70076AB04 /* MissedMealNotification.swift in Sources */,
 				C1ED6C6A2E7C6E58002F91C2 /* LoopSettingsUserInfo.swift in Sources */,
 				C1ED6C7E2E7C811A002F91C2 /* SetPresetUserInfo.swift in Sources */,
-				4345E40121F67300009E00E5 /* PotentialCarbEntryUserInfo.swift in Sources */,
+				4345E40121F67300009E00E5 /* GetBolusRecommendationUserInfo.swift in Sources */,
 				C1ED6C682E7C6E41002F91C2 /* GlucoseBackfillRequestUserInfo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

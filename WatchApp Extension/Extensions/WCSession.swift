@@ -8,6 +8,7 @@
 
 import LoopCore
 import WatchConnectivity
+import LoopKit
 import os.log
 
 
@@ -40,22 +41,27 @@ extension WCSession {
         }
     }
 
-    func sendPotentialCarbEntryMessage(_ carbEntry: PotentialCarbEntryUserInfo) async throws -> WatchContext {
-        let reply = try await sendMessage(carbEntry.rawValue)
-        log.debug("Sending potential carbEntry: %{public}@", String(describing: carbEntry))
+    func fetchBolusRecommendation(_ carbEntry: NewCarbEntry?) async throws -> WatchContext {
+        let request = GetBolusRecommendationUserInfo(carbEntry: carbEntry)
+        let reply = try await sendMessage(request.rawValue)
+        log.debug("Requesting bolus recommendation with carbEntry: %{public}@", String(describing: carbEntry))
 
         guard let context = WatchContext(rawValue: reply as WatchContext.RawValue) else {
-            log.error("sendPotentialCarbEntryMessage: could not decode reply: %{public}@", reply)
+            log.error("fetchBolusRecommendation: could not decode reply: %{public}@", reply)
             throw MessageError.decoding
         }
-        log.debug("sendPotentialCarbEntryMessage: recommendedBolusDose: %{public}@", String(describing: context.recommendedBolusDose))
+        log.debug("fetchBolusRecommendation: recommendedBolusDose: %{public}@", String(describing: context.recommendedBolusDose))
 
         return context
     }
 
-    func sendBolusMessage(_ userInfo: SetBolusUserInfo) async throws {
-        let _ = try await sendMessage(userInfo.rawValue)
-        return
+    func sendBolusMessage(_ userInfo: SetBolusUserInfo) async throws -> WatchContext {
+        let reply = try await sendMessage(userInfo.rawValue)
+        guard let context = WatchContext(rawValue: reply as WatchContext.RawValue) else {
+            log.error("sendBolusMessage: could not decode reply: %{public}@", reply)
+            throw MessageError.decoding
+        }
+        return context
     }
 
     func sendSetPreset(presetIdentifier: String?, alertIdentifier: String?) async throws {

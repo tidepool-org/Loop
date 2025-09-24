@@ -44,14 +44,7 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
         configuration: CarbAndBolusFlow.Configuration
     ) {
         let loopManager = LoopDataManager.shared
-        switch configuration {
-        case .carbEntry:
-            break
-        case .manualBolus:
-            let activeContext = loopManager.activeContext
-            self.contextDate = activeContext?.creationDate
-            self._recommendedBolusAmount = Published(initialValue: activeContext?.recommendedBolusDose)
-        }
+        self.configuration = configuration
 
         self._bolusPickerValues = Published(
             initialValue: BolusPickerValues(
@@ -60,7 +53,18 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
             )
         )
 
-        self.configuration = configuration
+        switch configuration {
+        case .carbEntry:
+            break
+        case .manualBolus:
+            // If we start out on the manual bolus screen, fetch a fresh recommendation immediately
+            let activeContext = loopManager.activeContext
+            self.contextDate = activeContext?.creationDate
+            self._recommendedBolusAmount = Published(initialValue: activeContext?.recommendedBolusDose)
+            Task { @MainActor in
+                await recommendBolus()
+            }
+        }
 
         contextUpdateObservation = NotificationCenter.default.addObserver(
             forName: LoopDataManager.didUpdateContextNotification,
@@ -87,7 +91,7 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
             let wasContextGeneratedFromPotentialCarbEntryMessage = loopManager.activeContext?.potentialCarbEntry != nil
             if !wasContextGeneratedFromPotentialCarbEntryMessage, let entry = self.carbEntryUnderConsideration {
                 Task { @MainActor in
-                    await self.recommendBolus(for: entry)
+                    await self.recommendBolus(with: entry)
                 }
             }
         case .manualBolus:
@@ -124,16 +128,13 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
         }
 
         carbEntryUnderConsideration = entry
-        await recommendBolus(for: entry)
+        await recommendBolus(with: entry)
     }
 
-    private func recommendBolus(for entry: NewCarbEntry) async {
-        let potentialEntry = PotentialCarbEntryUserInfo(carbEntry: entry)
+    private func recommendBolus(with entry: NewCarbEntry? = nil) async {
         do {
             isComputingRecommendedBolus = true
-            let context = try await WCSession.default.sendPotentialCarbEntryMessage(potentialEntry)
-            let loopManager = LoopDataManager.shared
-            loopManager.updateContext(context)
+            let context = try await WCSession.default.fetchBolusRecommendation(entry)
 
             // Only update if this recommendation corresponds to the current carb entry under consideration.
             guard context.potentialCarbEntry == self.carbEntryUnderConsideration else {
@@ -187,13 +188,14 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
 
     private func sendSetBolusUserInfo(carbEntry: NewCarbEntry?, bolus: Double) async throws {
         let bolus = SetBolusUserInfo(value: bolus, startDate: Date(), contextDate: self.contextDate, carbEntry: carbEntry, activationType: .activationTypeFor(recommendedAmount: recommendedBolusAmount, bolusAmount: bolus))
-        try await WCSession.default.sendBolusMessage(bolus)
+        let updatedContext = try await WCSession.default.sendBolusMessage(bolus)
         if bolus.carbEntry != nil {
             if bolus.value == 0 {
                 // Notify for a successful carb entry (sans bolus)
                 WKInterfaceDevice.current().play(.success)
             }
         }
+        LoopDataManager.shared.updateContext(updatedContext)
     }
 }
 
