@@ -161,12 +161,12 @@ extension CarbAndBolusFlow {
     }
 
     private func transitionToBolusEntry() {
+        withAnimation {
+            flowState = .bolusEntry
+            inputMode = .carbs
+        }
         Task { @MainActor in
             await viewModel.recommendBolus(forGrams: carbAmount, eatenAt: carbEntryDate, absorptionTime: carbAbsorptionTime, lastEntryDate: carbLastEntryDate)
-            withAnimation {
-                flowState = .bolusEntry
-                inputMode = .carbs
-            }
         }
     }
 
@@ -338,6 +338,10 @@ extension CarbAndBolusFlow {
 extension CarbAndBolusFlow {
     private func handleNewBolusRecommendation(_ recommendedBolus: Double?) {
         guard flowState != .carbEntry else {
+            return
+        }
+
+        if !receivedInitialBolusRecommendation && recommendedBolus == nil {
             return
         }
 

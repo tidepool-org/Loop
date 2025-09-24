@@ -58,9 +58,6 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
             break
         case .manualBolus:
             // If we start out on the manual bolus screen, fetch a fresh recommendation immediately
-            let activeContext = loopManager.activeContext
-            self.contextDate = activeContext?.creationDate
-            self._recommendedBolusAmount = Published(initialValue: activeContext?.recommendedBolusDose)
             Task { @MainActor in
                 await recommendBolus()
             }
