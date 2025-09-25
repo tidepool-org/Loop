@@ -434,7 +434,6 @@
 		C1275DDB2E8175B40013B99D /* PresetConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1275DDA2E8175AF0013B99D /* PresetConfirmationView.swift */; };
 		C1275DDD2E8185990013B99D /* PresetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1275DDC2E8185960013B99D /* PresetsView.swift */; };
 		C1275DDE2E81FD470013B99D /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43F78D4B1C914197002152D1 /* LoopKit.framework */; };
-		C1275DDF2E81FD470013B99D /* LoopKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 43F78D4B1C914197002152D1 /* LoopKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C1275DE22E81FD530013B99D /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1275DE12E81FD530013B99D /* LoopKit.framework */; };
 		C1275E1C2E82269A0013B99D /* LoopKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C1275E1A2E82269A0013B99D /* LoopKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C1275E1F2E822CEE0013B99D /* DerivedAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A966152923EA5A37005D8B29 /* DerivedAssets.xcassets */; };
@@ -734,17 +733,6 @@
 				E9B07F94253BBA6500BAD8F8 /* Loop Intent Extension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C1275DE02E81FD470013B99D /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				C1275DDF2E81FD470013B99D /* LoopKit.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		C1E3DC4828595FAA00CA19FF /* Embed Frameworks */ = {
@@ -3072,7 +3060,6 @@
 				43D9FFCB21EAE05D00AF44BF /* Sources */,
 				43D9FFCC21EAE05D00AF44BF /* Frameworks */,
 				43D9FFCD21EAE05D00AF44BF /* Resources */,
-				C1275DE02E81FD470013B99D /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
