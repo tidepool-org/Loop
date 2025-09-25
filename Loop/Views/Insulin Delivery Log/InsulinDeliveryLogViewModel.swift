@@ -8,6 +8,7 @@
 
 import LoopAlgorithm
 import LoopKit
+import os.log
 
 @MainActor
 @Observable
@@ -61,6 +62,8 @@ class InsulinDeliveryLogViewModel {
     
     private let loopDataManager: LoopDataManager
     private let pumpManager: PumpManager
+    
+    private let log = OSLog(category: "InsulinDeliveryLogViewModel")
     
     private(set) var state: State
     
@@ -358,7 +361,7 @@ class InsulinDeliveryLogViewModel {
                             )
                         }
                     } else {
-                        assertionFailure("No `decision.automaticDoseRecommendation`")
+                        log.error("No `decision.automaticDoseRecommendation`")
                     }
                 }
             } else if let scheduledBasalRate = dose.scheduledBasalRate, scheduledBasalRate.doubleValue(for: .internationalUnitsPerHour) == dose.value {
@@ -379,7 +382,7 @@ class InsulinDeliveryLogViewModel {
                     )
                 )
             } else {
-                assertionFailure("No `decision` or `scheduledBasalRate`")
+                log.error("No `decision` or `scheduledBasalRate`")
             }
         } else {
             events.append(
