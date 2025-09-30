@@ -43,10 +43,23 @@ struct CreatePresetNameAndScheduledEdit: View {
 
     @FocusState private var isTextFieldFocused: Bool
 
-    @State private var selectedRepeatOption: RepeatOption = .never
+    @State private var selectedRepeatOption: RepeatOption
     @State private var showingDayPicker: Bool = false
 
     var onCancel: () -> Void
+
+    init(
+        preset: Binding<NewCustomPreset>,
+        path: Binding<NavigationPath>,
+        isDurationPickerExpanded: Bool = false,
+        onCancel: @escaping () -> Void
+    ) {
+        self._preset = preset
+        self._path = path
+        self.isDurationPickerExpanded = isDurationPickerExpanded
+        self.selectedRepeatOption = preset.wrappedValue.repeatOptions == .none ? .never : .weekly
+        self.onCancel = onCancel
+    }
 
     var body: some View {
         CardSectionScrollView {
@@ -145,7 +158,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                                     preset.startDate = Date().addingTimeInterval(.hours(1))
                                 } else {
                                     preset.startDate = nil
-                                    preset.repeatOptions = nil
+                                    preset.repeatOptions = .none
                                 }
                             }
                         }))
@@ -197,7 +210,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                                     .foregroundColor(.primary)
                                 HStack {
                                     Spacer()
-                                    RepeatOptionView(repeatOptions: preset.repeatOptions ?? .none)
+                                    RepeatOptionView(repeatOptions: preset.repeatOptions)
                                         .padding(.vertical, 6)
                                         .onTapGesture {
                                             withAnimation {
@@ -208,7 +221,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                                 .popover(isPresented: $showingDayPicker, arrowEdge: .bottom) {
                                     DayPickerPopup(selectedDays: Binding(
                                         get: {
-                                            preset.repeatOptions ?? .none
+                                            preset.repeatOptions
                                         }, set: { newValue in
                                             preset.repeatOptions = newValue.union(requiredRepeatOption ?? .none)
                                         }))
@@ -219,7 +232,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                         }
                     }
                 }
-                if let options = preset.repeatOptions, options != .none {
+                if preset.repeatOptions != .none {
                     Text(preset.scheduleDescription())
                         .font(.footnote)
                         .foregroundColor(.secondary)
@@ -239,7 +252,7 @@ struct CreatePresetNameAndScheduledEdit: View {
                 assignRepeatDays()
             }
             if newValue == .never {
-                preset.repeatOptions = nil
+                preset.repeatOptions = .none
             }
         })
         .onChange(of: preset.startDate, { oldValue, newValue in

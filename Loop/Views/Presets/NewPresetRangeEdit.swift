@@ -22,6 +22,15 @@ struct NewPresetRangeEdit: View {
 
     @State private var editedRange: ClosedRange<LoopQuantity>?
 
+    init(preset: Binding<NewCustomPreset>, path: Binding<NavigationPath>, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, onCancel: @escaping () -> Void) {
+        self._preset = preset
+        self._path = path
+        self._editedRange = .init(initialValue: preset.wrappedValue.correctionRange)
+        self.guardrail = guardrail
+        self.scheduledRange = scheduledRange
+        self.onCancel = onCancel
+    }
+
     var body: some View {
         CardSectionScrollView {
             CardSection {

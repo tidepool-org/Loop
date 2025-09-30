@@ -104,7 +104,7 @@ struct ReviewNewPresetView: View {
             if preset.savePreset, let startDate = preset.startDate {
                 CardSection {
                     HStack {
-                        if preset.repeatOptions != nil  {
+                        if preset.repeatOptions != .none  {
                             Text("Start Date")
                         } else {
                             Text("Start at")
@@ -113,12 +113,12 @@ struct ReviewNewPresetView: View {
                         Text(DateFormatter.localizedString(from: startDate, dateStyle: .short, timeStyle: .short))
                             .foregroundColor(.secondary)
                     }
-                    if let repeatOptions = preset.repeatOptions {
+                    if preset.repeatOptions != .none {
                         Divider()
                         HStack {
                             Text("Repeat weekly on")
                             Spacer()
-                            RepeatOptionView(repeatOptions: repeatOptions)
+                            RepeatOptionView(repeatOptions: preset.repeatOptions)
                         }
                         .padding(.vertical, 4)
                     }

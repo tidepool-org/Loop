@@ -40,23 +40,36 @@ extension PresetScheduleRepeatOptions: @retroactive CustomStringConvertible {
 }
 
 struct NewCustomPreset {
-    var savePreset: Bool = true
+    var savePreset: Bool
     var insulinMultiplier: Double = 1
     var correctionRange: ClosedRange<LoopQuantity>?
     var name: String = ""
     var duration: PresetDuration?
     var startDate: Date?
-    var repeatOptions: PresetScheduleRepeatOptions?
+    var repeatOptions: PresetScheduleRepeatOptions
+
+    init(
+        savePreset: Bool = true,
+        insulinMultiplier: Double = 1,
+        correctionRange: ClosedRange<LoopQuantity>? = nil,
+        name: String = "",
+        duration: PresetDuration? = nil,
+        startDate: Date? = nil,
+        repeatOptions: PresetScheduleRepeatOptions = .none
+    ) {
+        self.savePreset = savePreset
+        self.insulinMultiplier = insulinMultiplier
+        self.correctionRange = correctionRange
+        self.name = name
+        self.duration = duration
+        self.startDate = startDate
+        self.repeatOptions = repeatOptions
+    }
 }
 
 extension NewCustomPreset {
     func scheduleDescription() -> String {
-        guard let startDate = startDate, let repeatOptions = repeatOptions else {
-            return ""
-        }
-
-        // Handle case where no days are selected
-        if repeatOptions.isEmpty {
+        guard let startDate = startDate, !repeatOptions.isEmpty else {
             return ""
         }
 
@@ -124,7 +137,7 @@ extension NewCustomPreset {
             settings: settings,
             duration: overrideDuration,
             scheduleStartDate: startDate,
-            repeatOptions: repeatOptions ?? .none
+            repeatOptions: repeatOptions
         )
     }
 }
