@@ -123,7 +123,8 @@ extension NewCustomPreset {
             name: split.name,
             settings: settings,
             duration: overrideDuration,
-            scheduleStartDate: startDate
+            scheduleStartDate: startDate,
+            repeatOptions: repeatOptions ?? .none
         )
     }
 }
