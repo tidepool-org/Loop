@@ -18,16 +18,20 @@ struct BolusEntryView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.dismissAction) var dismiss
     @Environment(\.appName) var appName
-    
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     @ObservedObject var viewModel: BolusEntryViewModel
 
     @State private var enteredBolusString = ""
-    @State private var shouldBolusEntryBecomeFirstResponder = false
 
     @State private var isInteractingWithChart = false
-    @State private var isKeyboardVisible = false
-    @State private var pickerShouldExpand = false
     @State private var editedBolusAmount = false
+
+    @FocusState private var bolusFieldFocused: Bool
+
+    private var accessoryClearance: CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? 72 : 52
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -37,21 +41,11 @@ struct BolusEntryView: View {
             }
             .padding(.top, -28)
             .insetGroupedListStyle()
-            
-            self.actionArea
-                .frame(height: self.isKeyboardVisible || shouldBolusEntryBecomeFirstResponder ? 0 : nil)
-                .opacity(self.isKeyboardVisible || shouldBolusEntryBecomeFirstResponder ? 0 : 1)
-        }
-        .onKeyboardStateChange { state in
-            self.isKeyboardVisible = state.height > 0
-            
-            if state.height == 0 {
-                // Ensure tapping 'Enter Bolus' can make the text field the first responder again
-                self.shouldBolusEntryBecomeFirstResponder = false
+            if !bolusFieldFocused {
+                actionArea
             }
+
         }
-        .keyboardAware()
-        .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
         .navigationBarTitle(self.title)
         .supportedInterfaceOrientations(.portrait)
         .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
@@ -71,6 +65,7 @@ struct BolusEntryView: View {
                 enteredBolusStringBinding.wrappedValue = "0"
             }
         }
+        .edgesIgnoringSafeArea(self.bolusFieldFocused ? [] : .bottom)
         .task {
             await self.viewModel.generateRecommendationAndStartObserving()
         }
@@ -283,18 +278,31 @@ struct BolusEntryView: View {
             Text("Bolus", comment: "Label for bolus entry row on bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
-                DismissibleKeyboardTextField(
-                    text: enteredBolusStringBinding,
-                    placeholder: viewModel.formatBolusAmount(0.0),
-                    font: .preferredFont(forTextStyle: .title1),
-                    textColor: .loopAccent,
-                    textAlignment: .right,
-                    keyboardType: .decimalPad,
-                    shouldBecomeFirstResponder: shouldBolusEntryBecomeFirstResponder,
-                    maxLength: 5,
-                    doneButtonColor: .loopAccent,
-                    textFieldDidBeginEditing: didBeginEditing
-                )
+                TextField(viewModel.formatBolusAmount(0.0), text: enteredBolusStringBinding)
+                    .keyboardType(.decimalPad)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .font(.title)
+                    .multilineTextAlignment(.trailing)
+                    .foregroundColor(.loopAccent)
+                    .focused($bolusFieldFocused)
+                    .onChange(of: bolusFieldFocused) { oldValue, focused in
+                        if focused {
+                            didBeginEditing()
+                        }
+                    }
+                    .onChange(of: enteredBolusString) { oldValue, newValue in
+                        if newValue.count > 5 {
+                            enteredBolusString = String(newValue.prefix(5))
+                            viewModel.updateEnteredBolus(enteredBolusString)
+                        }
+                    }
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Done") { bolusFieldFocused = false }
+                        }
+                    }
                 bolusUnitsLabel
             }
             .accessibilityIdentifier("textField_Bolus")
@@ -328,7 +336,6 @@ struct BolusEntryView: View {
                 enterManualGlucoseButton
                     .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
             }
-
             actionButton
         }
         .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
@@ -385,7 +392,7 @@ struct BolusEntryView: View {
         Button<Text>(
             action: {
                 if self.viewModel.actionButtonAction == .enterBolus {
-                    self.shouldBolusEntryBecomeFirstResponder = true
+                    self.bolusFieldFocused = true
                 } else {
                     Task {
                         if await self.viewModel.didPressActionButton() {

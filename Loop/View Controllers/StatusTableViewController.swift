@@ -425,6 +425,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     override func reloadData(animated: Bool = false) async {
         dispatchPrecondition(condition: .onQueue(.main))
+
+        guard view.window != nil else {
+            return
+        }
+        
         // This should be kept up to date immediately
         hudView?.loopCompletionHUD.lastLoopCompleted = loopManager.lastLoopCompleted
         hudView?.loopCompletionHUD.mostRecentGlucoseDataDate = loopManager.mostRecentGlucoseDataDate
