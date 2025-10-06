@@ -44,7 +44,12 @@ protocol BolusEntryViewModelDelegate: AnyObject {
         truncatingActiveOverride: Bool
     ) async throws -> ManualBolusRecommendation?
 
-    func generatePrediction(input: StoredDataAlgorithmInput) throws -> [PredictedGlucoseValue]
+    func generatePrediction(
+        originalCarbEntry: StoredCarbEntry?,
+        potentialCarbEntry: NewCarbEntry?,
+        potentialDose: SimpleInsulinDose?,
+        manualGlucose: NewGlucoseSample?
+    ) async throws -> (historicGlucose: [StoredGlucoseSample], predictedGlucose: [PredictedGlucoseValue])
 
     var activeInsulin: InsulinValue? { get }
     var activeCarbs: CarbValue? { get }
@@ -236,6 +241,7 @@ final class BolusEntryViewModel: ObservableObject {
 
     private func observeEnteredManualGlucoseChanges() {
         $manualGlucoseQuantity
+            .dropFirst()
             .sink { [weak self] manualGlucoseQuantity in
                 guard let self = self else { return }
 
@@ -515,7 +521,6 @@ final class BolusEntryViewModel: ObservableObject {
 
         do {
             let startDate = now()
-            var input = try await delegate.fetchData(for: startDate, presumePresetEndingNow: potentialCarbEntry != nil, ensureDosingCoverageStart: nil)
 
             let insulinModel = delegate.insulinModel(for: deliveryDelegate?.pumpInsulinType)
 
@@ -528,16 +533,14 @@ final class BolusEntryViewModel: ObservableObject {
                 insulinModel: insulinModel
             )
 
-            storedGlucoseValues = input.glucoseHistory
+            let (glucoseHistory, prediction) = try await delegate.generatePrediction(
+                originalCarbEntry: originalCarbEntry,
+                potentialCarbEntry: potentialCarbEntry,
+                potentialDose: enteredBolusDose,
+                manualGlucose: manualGlucoseSample
+            )
 
-            // Add potential bolus, carbs, manual glucose
-            input = input
-                .addingDose(dose: enteredBolusDose)
-                .addingGlucoseSample(sample: manualGlucoseSample?.asStoredGlucoseSample)
-                .removingCarbEntry(carbEntry: originalCarbEntry)
-                .addingCarbEntry(carbEntry: potentialCarbEntry?.asStoredCarbEntry)
-
-            let prediction = try delegate.generatePrediction(input: input)
+            storedGlucoseValues = glucoseHistory
             predictedGlucoseValues = prediction
             dosingDecision.predictedGlucose = prediction
         } catch {
