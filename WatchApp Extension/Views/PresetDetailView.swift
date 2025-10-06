@@ -21,6 +21,7 @@ struct PresetDetailView: View {
                 PresetSymbolView(icon)
             }
             Text(preset.name)
+                .font(.title3)
                 .accessibilityIdentifier("text_Preset\(preset.name)")
         }
     }
