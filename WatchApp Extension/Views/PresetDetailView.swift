@@ -17,8 +17,10 @@ struct PresetDetailView: View {
 
     var presetTitle: some View {
         HStack(spacing: 6) {
+            if let icon = preset.icon, !icon.isEmpty {
+                PresetSymbolView(icon)
+            }
             Text(preset.name)
-                .font(.title3)
                 .accessibilityIdentifier("text_Preset\(preset.name)")
         }
     }
