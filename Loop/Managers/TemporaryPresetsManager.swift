@@ -120,29 +120,7 @@ class TemporaryPresetsManager {
     }
 
     public var activePreset: SelectablePreset? {
-        guard let override = activeOverride else {
-            return nil
-        }
-
-        let range = override.settings.targetRange
-
-        switch override.context {
-        case .preMeal:
-            return .preMeal(range: range!)
-        case .activity(let activity):
-            return .activity(activity)
-        case .custom:
-            let preset = TemporaryPreset(
-                id: override.syncIdentifier.uuidString,
-                symbol: nil,
-                name: "Single Use Preset",
-                settings: override.settings,
-                duration: override.duration
-            )
-            return .custom(preset)
-        case .preset(let preset):
-            return .custom(preset)
-        }
+        return activeOverride?.createPreset()
     }
 
     var selectablePresets: [SelectablePreset] {

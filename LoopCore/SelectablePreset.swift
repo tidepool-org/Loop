@@ -238,7 +238,7 @@ public enum SelectablePreset: Hashable, Identifiable {
         get {
             switch self {
             case .custom(let preset): return preset.name
-            case .preMeal: return "Pre-Meal"
+            case .preMeal: return NSLocalizedString("Pre-Meal", comment: "The title of pre-meal preset")
             case .activity(let activity): return activity.activityType.name
             }
         }
@@ -397,6 +397,31 @@ extension SelectablePreset {
 
     }
 }
+
+extension TemporaryScheduleOverride {
+    public func createPreset() -> SelectablePreset {
+        let range = settings.targetRange
+
+        switch context {
+        case .preMeal:
+            return .preMeal(range: range!)
+        case .activity(let activity):
+            return .activity(activity)
+        case .custom:
+            let preset = TemporaryPreset(
+                id: syncIdentifier.uuidString,
+                symbol: nil,
+                name: NSLocalizedString("Single Use Preset", comment: "The title shown for a single use preset"),
+                settings: settings,
+                duration: duration
+            )
+            return .custom(preset)
+        case .preset(let preset):
+            return .custom(preset)
+        }
+    }
+}
+
 
 extension PresetExpectedEndTime {
     private static let timeFormatter: DateFormatter = {

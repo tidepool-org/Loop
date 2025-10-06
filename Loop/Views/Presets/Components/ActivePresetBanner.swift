@@ -51,16 +51,7 @@ struct ActivePresetBanner: View {
     }
 
     var titleText: Text {
-        switch override.context {
-        case .preMeal:
-            Text(NSLocalizedString("Pre-Meal", comment: "Status row title for premeal override enabled (leading space is to separate from symbol)"))
-        case .preset(let preset):
-            Text(String(format: NSLocalizedString("%@", comment: "The format for an active custom preset. (1: preset name)"), preset.name))
-        case .activity(let activity):
-            Text(String(format: NSLocalizedString("%@", comment: "The format for an active activity preset. (1: preset name)"), activity.preset.name))
-        case .custom:
-            Text(NSLocalizedString("Single Use Preset", comment: "The title of the cell indicating a generic custom preset is enabled"))
-        }
+        Text(override.createPreset().name)
     }
     
     var accessibilityIdentifier: String {

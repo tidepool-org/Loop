@@ -23,23 +23,16 @@ struct ActiveOverrideView: View {
     private let resetDelay: TimeInterval = 0.25 // pause for reset
 
     let override: TemporaryScheduleOverride
-
-    var titleText: Text {
-        switch override.context {
-        case .preMeal:
-            Text(NSLocalizedString("Pre-Meal", comment: "Status row title for premeal override enabled (leading space is to separate from symbol)"))
-        case .preset(let preset):
-            Text(String(format: NSLocalizedString("%@", comment: "The format for an active custom preset. (1: preset name)"), preset.name))
-        case .activity(let activity):
-            Text(String(format: NSLocalizedString("%@", comment: "The format for an active activity preset. (1: preset name)"), activity.preset.name))
-        case .custom:
-            Text(NSLocalizedString("Single Use Preset", comment: "The title of the cell indicating a generic custom preset is enabled"))
-        }
+    var preset: SelectablePreset {
+        return override.createPreset()
     }
 
     var title: some View {
         HStack(spacing: 6) {
-            titleText
+            if let icon = preset.icon, !icon.isEmpty {
+                PresetSymbolView(icon)
+            }
+            Text(preset.name)
                 .font(.system(size: 19))
         }
     }
