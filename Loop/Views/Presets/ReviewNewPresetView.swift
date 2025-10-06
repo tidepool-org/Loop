@@ -54,7 +54,9 @@ struct ReviewNewPresetView: View {
             .cornerRadius(10)
             .padding(.top, 10)
 
-            sensitivitySection
+            CardSection("Temporary Settings Adjustments") {
+                InsulinNeedsAdjustmentPreview(insulinPercentage: preset.insulinMultiplier * 100, guardrail: Guardrail.presetInsulinNeeds)
+            }
 
             CardSection {
                 CorrectionRangePreview(
@@ -178,29 +180,4 @@ struct ReviewNewPresetView: View {
             currentDate = Date()
         }
     }
-
-    var sensitivitySection: some View {
-        CardSection("Temporary Settings Adjustments") {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Overall Insulin")
-                    .font(.headline)
-                    .padding(.bottom, 10)
-
-
-                HStack {
-                    Spacer()
-                    VStack(alignment: .center) {
-                        Text("\(Int(preset.insulinMultiplier * 100))%")
-                            .font(.system(size: 34, weight: .semibold))
-                            .foregroundColor(.accentColor)
-                        Text("of scheduled")
-                            .foregroundColor(.primary)
-                    }
-                    Spacer()
-                }
-            }
-            .foregroundColor(.primary)
-        }
-    }
-
 }

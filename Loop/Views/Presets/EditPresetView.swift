@@ -63,36 +63,17 @@ struct EditPresetView: View {
             }
         } label: {
             CardSection("Temporary Settings Adjustments") {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Overall Insulin")
-                            .font(.headline)
-                        if preset.canAdjustSensitivity {
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.secondary)
-                        }
-                    }.padding(.bottom, 10)
-
-                    HStack {
-                        Spacer()
-                        VStack(alignment: .center) {
-                            Text("\(Int(((1.0 / (preset.insulinSensitivityMultiplier ?? 1)) * 100).rounded()))%")
-                                .font(.system(size: 34, weight: .bold))
-                                .foregroundColor(.accentColor)
-                            Text("of scheduled")
-                                .foregroundColor(.primary)
-                        }
-                        Spacer()
-                    }
-
-                    if (!preset.canAdjustSensitivity) {
-                        (Text(Image(systemName: "info.circle")) + Text(" Overall insulin cannot be adjusted for this preset"))
-                            .foregroundColor(.secondary)
-                            .font(.footnote)
-                            .italic()
-                            .padding(.top, 4)
-                    }
+                InsulinNeedsAdjustmentPreview(
+                    insulinPercentage: preset.insulinNeedsScaleFactor * 100,
+                    guardrail: Guardrail.presetInsulinNeeds,
+                    showDisclosure: preset.canAdjustSensitivity
+                )
+                if (!preset.canAdjustSensitivity) {
+                    (Text(Image(systemName: "info.circle")) + Text(" Overall insulin cannot be adjusted for this preset"))
+                        .foregroundColor(.secondary)
+                        .font(.footnote)
+                        .italic()
+                        .padding(.top, 4)
                 }
             }
             .foregroundColor(.primary)
