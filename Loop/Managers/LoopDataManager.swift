@@ -701,8 +701,6 @@ final class LoopDataManager: ObservableObject {
         input.includePositiveVelocityAndRC = usePositiveMomentumAndRCForManualBoluses
         input.recommendationType = .manualBolus
 
-        AlgorithmInputFixture.printFixture(input)
-
         let output = LoopAlgorithm.run(input: input)
 
 
