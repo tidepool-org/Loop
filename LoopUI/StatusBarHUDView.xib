@@ -155,7 +155,7 @@
                     <subviews>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="4 min ago" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" minimumScaleFactor="0.80000001192092896" adjustsLetterSpacingToFitWidth="YES" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XFc-Ul-doX">
                             <rect key="frame" x="-30" y="53.5" width="104" height="13.5"/>
-                            <fontDescription key="fontDescription" style="UICTFontTextStyleCaption2"/>
+                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="11"/>
                             <nil key="textColor"/>
                             <nil key="highlightedColor"/>
                         </label>

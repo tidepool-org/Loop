@@ -165,7 +165,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
                      UIContentSizeCategory.medium,
                      UIContentSizeCategory.large:
                     // Use a longer form only for smaller text sizes
-                    caption?.attributedText = formattedTimeAgoString(timeString)
+                    caption?.attributedText = formattedTimeAgoString(timeString, includeGreaterThan: ago > .hours(1))
                 default:
                     caption?.text = timeString
                 }
@@ -199,7 +199,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
                     UIContentSizeCategory.medium,
                     UIContentSizeCategory.large:
                     // Use a longer form only for smaller text sizes
-                    caption?.attributedText = formattedTimeAgoString(timeString)
+                    caption?.attributedText = formattedTimeAgoString(timeString, includeGreaterThan: ago > .hours(1))
                 default:
                     caption?.text = timeString
                 }
@@ -223,7 +223,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
         }
     }
     
-    private func formattedTimeAgoString(_ timeString: String) -> NSAttributedString {
+    private func formattedTimeAgoString(_ timeString: String, includeGreaterThan: Bool = false) -> NSAttributedString {
         let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
         let symbol = UIImage(systemName: "arrow.trianglehead.2.clockwise", withConfiguration: config)
         let tintedSymbol = symbol?.withTintColor(freshnessColor, renderingMode: .alwaysOriginal)
@@ -233,7 +233,12 @@ public final class LoopCompletionHUDView: BaseHUDView {
         attachment.bounds = CGRect(x: 0, y: -1, width: 12, height: 10)
         let imageString = NSAttributedString(attachment: attachment)
         
-        let timeAgoString = NSAttributedString(string: String(format: LocalizedString(" %@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString))
+        let timeAgoString: NSAttributedString
+        if includeGreaterThan {
+            timeAgoString = NSAttributedString(string: String(format: LocalizedString(" >%@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString))
+        } else {
+            timeAgoString = NSAttributedString(string: String(format: LocalizedString(" %@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString))
+        }
         
         let combined = NSMutableAttributedString()
         combined.append(imageString)
