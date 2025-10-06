@@ -21,7 +21,20 @@ public final class LoopCompletionHUDView: BaseHUDView {
     private(set) var freshness = LoopCompletionFreshness.stale {
         didSet {
             loopStateView.freshness = freshness
+            updateLabelColor()
         }
+    }
+    
+    private var freshnessColor: UIColor {
+        switch freshness {
+        case .fresh: return .label
+        case .aging: return loopStatusColors.warning
+        case .stale: return loopStatusColors.error
+        }
+    }
+    
+    private func updateLabelColor() {
+        caption?.textColor = freshnessColor
     }
 
     override public func awakeFromNib() {
@@ -137,6 +150,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
     @objc private func updateDisplay(_: Timer?) {
         lastLoopMessage = ""
+        caption?.isHidden = false
         let timeAgoToIncludeTimeStamp: TimeInterval = .minutes(20)
         let timeAgoToIncludeDate: TimeInterval = .hours(4)
         if loopIconClosed, let date = lastLoopCompleted {
@@ -151,7 +165,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
                      UIContentSizeCategory.medium,
                      UIContentSizeCategory.large:
                     // Use a longer form only for smaller text sizes
-                    caption?.text = String(format: LocalizedString("%@ ago", comment: "Format string describing the time interval since the last completion date. (1: The localized date components"), timeString)
+                    caption?.attributedText = formattedTimeAgoString(timeString)
                 default:
                     caption?.text = timeString
                 }
@@ -185,18 +199,18 @@ public final class LoopCompletionHUDView: BaseHUDView {
                     UIContentSizeCategory.medium,
                     UIContentSizeCategory.large:
                     // Use a longer form only for smaller text sizes
-                    caption?.text = String(format: LocalizedString("%@ ago", comment: "Format string describing the time interval since the last cgm or pump communication date. (1: The localized date components"), timeString)
+                    caption?.attributedText = formattedTimeAgoString(timeString)
                 default:
                     caption?.text = timeString
                 }
                 
                 accessibilityLabel = String(format: LocalizedString("Last device communication ran %@ ago", comment: "Accessbility format label describing the time interval since the last device communication date. (1: The localized date components)"), timeString)
             } else {
-                caption?.text = "–"
+                caption?.text = ""
                 accessibilityLabel = nil
             }
         } else {
-            caption?.text = "–"
+            caption?.text = ""
             accessibilityLabel = LocalizedString("Waiting for first run", comment: "Accessibility label describing completion HUD waiting for first run")
         }
 
@@ -207,6 +221,45 @@ public final class LoopCompletionHUDView: BaseHUDView {
             accessibilityHint = LocalizedString("Open loop", comment: "Accessbility hint describing completion HUD for an open loop")
             accessibilityIdentifier = "loopCompletionHUDLoopStatusOpen"
         }
+    }
+    
+    private func formattedTimeAgoString(_ timeString: String) -> NSAttributedString {
+        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+        let symbol = UIImage(systemName: "arrow.trianglehead.2.clockwise", withConfiguration: config)
+        let tintedSymbol = symbol?.withTintColor(freshnessColor, renderingMode: .alwaysOriginal)
+        let rotatedImage = tintedSymbol.flatMap { rotateImage90DegreesClockwise($0) }
+        let attachment = NSTextAttachment()
+        attachment.image = rotatedImage
+        attachment.bounds = CGRect(x: 0, y: -1, width: 12, height: 10)
+        let imageString = NSAttributedString(attachment: attachment)
+        
+        let timeAgoString = NSAttributedString(string: String(format: LocalizedString(" %@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString))
+        
+        let combined = NSMutableAttributedString()
+        combined.append(imageString)
+        combined.append(timeAgoString)
+        
+        return combined
+    }
+    
+    private func rotateImage90DegreesClockwise(_ image: UIImage) -> UIImage? {
+        let size = CGSize(width: image.size.height, height: image.size.width)
+
+        UIGraphicsBeginImageContextWithOptions(size, false, image.scale)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+
+        // Move origin to middle
+        context.translateBy(x: size.width / 2, y: size.height / 2)
+        // Rotate 90° (π/2 radians)
+        context.rotate(by: .pi / 2)
+        // Draw the image offset by half its size
+        context.translateBy(x: -image.size.width / 2, y: -image.size.height / 2)
+        image.draw(at: .zero)
+
+        let rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return rotatedImage
     }
 
     override public func didMoveToWindow() {
