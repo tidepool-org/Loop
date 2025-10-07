@@ -925,9 +925,14 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
     var prediction: [PredictedGlucoseValue] = []
     var lastGeneratePredictionInput: StoredDataAlgorithmInput?
 
-    func generatePrediction(input: StoredDataAlgorithmInput) throws -> [PredictedGlucoseValue] {
-        lastGeneratePredictionInput = input
-        return prediction
+
+    func generatePrediction(
+        originalCarbEntry: StoredCarbEntry?,
+        potentialCarbEntry: NewCarbEntry?,
+        potentialDose: SimpleInsulinDose?,
+        manualGlucose: NewGlucoseSample?
+    ) async throws -> (historicGlucose: [StoredGlucoseSample], predictedGlucose: [PredictedGlucoseValue]) {
+        return (historicGlucose: loopStateInput.glucoseHistory, predictedGlucose: prediction)
     }
 
     var algorithmOutput: AlgorithmOutput = AlgorithmOutput<StoredCarbEntry>(
