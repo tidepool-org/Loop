@@ -224,13 +224,12 @@ public final class LoopCompletionHUDView: BaseHUDView {
     }
     
     private func formattedTimeAgoString(_ timeString: String, includeGreaterThan: Bool = false) -> NSAttributedString {
-        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-        let symbol = UIImage(systemName: "arrow.trianglehead.2.clockwise", withConfiguration: config)
+        let config = UIImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+        let symbol = UIImage(systemName: "arrow.trianglehead.2.clockwise.rotate.90", withConfiguration: config)
         let tintedSymbol = symbol?.withTintColor(freshnessColor, renderingMode: .alwaysOriginal)
-        let rotatedImage = tintedSymbol.flatMap { rotateImage90DegreesClockwise($0) }
         let attachment = NSTextAttachment()
-        attachment.image = rotatedImage
-        attachment.bounds = CGRect(x: 0, y: -1, width: 12, height: 10)
+        attachment.image = tintedSymbol
+        attachment.bounds = CGRect(x: 0, y: -2, width: 11, height: 11)
         let imageString = NSAttributedString(attachment: attachment)
         
         let timeAgoString: NSAttributedString
@@ -245,26 +244,6 @@ public final class LoopCompletionHUDView: BaseHUDView {
         combined.append(timeAgoString)
         
         return combined
-    }
-    
-    private func rotateImage90DegreesClockwise(_ image: UIImage) -> UIImage? {
-        let size = CGSize(width: image.size.height, height: image.size.width)
-
-        UIGraphicsBeginImageContextWithOptions(size, false, image.scale)
-        guard let context = UIGraphicsGetCurrentContext() else { return nil }
-
-        // Move origin to middle
-        context.translateBy(x: size.width / 2, y: size.height / 2)
-        // Rotate 90° (π/2 radians)
-        context.rotate(by: .pi / 2)
-        // Draw the image offset by half its size
-        context.translateBy(x: -image.size.width / 2, y: -image.size.height / 2)
-        image.draw(at: .zero)
-
-        let rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-
-        return rotatedImage
     }
 
     override public func didMoveToWindow() {
