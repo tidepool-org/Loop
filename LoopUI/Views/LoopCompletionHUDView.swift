@@ -154,7 +154,8 @@ public final class LoopCompletionHUDView: BaseHUDView {
         let timeAgoToIncludeTimeStamp: TimeInterval = .minutes(20)
         let timeAgoToIncludeDate: TimeInterval = .hours(4)
         if loopIconClosed, let date = lastLoopCompleted {
-            let ago = abs(min(0, date.timeIntervalSinceNow))
+            // restrict time ago from 0 to 7 days
+            let ago = min(abs(min(0, date.timeIntervalSinceNow)), TimeInterval.days(7))
 
             freshness = LoopCompletionFreshness(age: ago)
 
