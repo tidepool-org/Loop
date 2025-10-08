@@ -14,7 +14,14 @@ import UIKit
 class WrappedLoopStateViewModel: ObservableObject {
     @Published var loopStatusColors: StateColorPalette
     @Published var closedLoop: Bool
-    @Published var freshness: LoopCompletionFreshness
+    @Published var freshness: LoopCompletionFreshness {
+        didSet {
+            switch freshness {
+            case .aging, .stale: animating = true
+            default: animating = false
+            }
+        }
+    }
     @Published var animating: Bool
     
     init(
