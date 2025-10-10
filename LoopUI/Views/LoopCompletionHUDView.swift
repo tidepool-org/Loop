@@ -63,6 +63,12 @@ public final class LoopCompletionHUDView: BaseHUDView {
         }
     }
     
+    public var deviceInoperable: Bool = false {
+        didSet {
+            loopStateView.deviceInoperable = deviceInoperable
+        }
+    }
+    
     public var mostRecentGlucoseDataDate: Date?
     public var mostRecentPumpDataDate: Date?
 

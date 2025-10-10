@@ -432,6 +432,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         // This should be kept up to date immediately
         hudView?.loopCompletionHUD.lastLoopCompleted = loopManager.lastLoopCompleted
+        hudView?.loopCompletionHUD.deviceInoperable = basalDeliveryState == .pumpInoperable
         hudView?.loopCompletionHUD.mostRecentGlucoseDataDate = loopManager.mostRecentGlucoseDataDate
         hudView?.loopCompletionHUD.mostRecentPumpDataDate = loopManager.mostRecentPumpDataDate
 

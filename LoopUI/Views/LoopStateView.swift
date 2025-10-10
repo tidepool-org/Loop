@@ -23,17 +23,20 @@ class WrappedLoopStateViewModel: ObservableObject {
         }
     }
     @Published var animating: Bool
+    @Published var deviceInoperable: Bool
     
     init(
         loopStatusColors: StateColorPalette = StateColorPalette(unknown: .black, normal: .black, warning: .black, error: .black),
         closedLoop: Bool = true,
         freshness: LoopCompletionFreshness = .stale,
-        animating: Bool = false
+        animating: Bool = false,
+        deviceInoperable: Bool = false
     ) {
         self.loopStatusColors = loopStatusColors
         self.closedLoop = closedLoop
         self.freshness = freshness
         self.animating = animating
+        self.deviceInoperable = deviceInoperable
     }
 }
 
@@ -42,7 +45,7 @@ struct WrappedLoopCircleView: View {
     @StateObject var viewModel: WrappedLoopStateViewModel
     
     var body: some View {
-        LoopCircleView(closedLoop: viewModel.closedLoop, freshness: viewModel.freshness, animating: viewModel.animating)
+        LoopCircleView(closedLoop: viewModel.closedLoop, freshness: viewModel.freshness, animating: viewModel.animating, deviceInoperable: viewModel.deviceInoperable)
             .environment(\.loopStatusColorPalette, viewModel.loopStatusColors)
     }
 }
@@ -97,6 +100,12 @@ final class LoopStateView: UIView {
     var animated: Bool = false {
         didSet {
             viewModel.animating = animated
+        }
+    }
+    
+    var deviceInoperable: Bool = false {
+        didSet {
+            viewModel.deviceInoperable = deviceInoperable
         }
     }
     
