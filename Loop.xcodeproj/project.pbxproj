@@ -363,6 +363,7 @@
 		B4001CEE28CBBC82002FB414 /* AlertManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4001CED28CBBC82002FB414 /* AlertManagementView.swift */; };
 		B405E35A24D2B1A400DD058D /* HUDAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4F2C15961E09E94E00E160D4 /* HUDAssets.xcassets */; };
 		B40D07C7251A89D500C1C6D7 /* GlucoseDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40D07C6251A89D500C1C6D7 /* GlucoseDisplay.swift */; };
+		B429CAB42E97C97000FA988E /* LoopStatusModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B429CAB22E97C7F300FA988E /* LoopStatusModalView.swift */; };
 		B42C951424A3C76000857C73 /* CGMStatusHUDViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42C951324A3C76000857C73 /* CGMStatusHUDViewModel.swift */; };
 		B42D124328D371C400E43D22 /* AlertMuter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42D124228D371C400E43D22 /* AlertMuter.swift */; };
 		B43CF07E29434EC4008A520B /* HowMuteAlertWorkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43CF07D29434EC4008A520B /* HowMuteAlertWorkView.swift */; };
@@ -1275,6 +1276,7 @@
 		A9FB75F0252BE320004C7D3F /* BolusDosingDecision.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BolusDosingDecision.swift; sourceTree = "<group>"; };
 		B4001CED28CBBC82002FB414 /* AlertManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertManagementView.swift; sourceTree = "<group>"; };
 		B40D07C6251A89D500C1C6D7 /* GlucoseDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseDisplay.swift; sourceTree = "<group>"; };
+		B429CAB22E97C7F300FA988E /* LoopStatusModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopStatusModalView.swift; sourceTree = "<group>"; };
 		B42C951324A3C76000857C73 /* CGMStatusHUDViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGMStatusHUDViewModel.swift; sourceTree = "<group>"; };
 		B42D124228D371C400E43D22 /* AlertMuter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlertMuter.swift; sourceTree = "<group>"; };
 		B43CF07D29434EC4008A520B /* HowMuteAlertWorkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowMuteAlertWorkView.swift; sourceTree = "<group>"; };
@@ -2241,6 +2243,7 @@
 				DD3DBD282A33AFE9000F8B5B /* IntegralRetrospectiveCorrectionSelectionView.swift */,
 				84DEB10C2C18FABA00170734 /* IOSFocusModesView.swift */,
 				84D1F1A62D09053A00CB271F /* StatusTableView.swift */,
+				B429CAB22E97C7F300FA988E /* LoopStatusModalView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -3549,6 +3552,7 @@
 				43776F901B8022E90074EA36 /* AppDelegate.swift in Sources */,
 				4372E48B213CB5F00068E043 /* Double.swift in Sources */,
 				430B29932041F5B300BA9F93 /* UserDefaults+Loop.swift in Sources */,
+				B429CAB42E97C97000FA988E /* LoopStatusModalView.swift in Sources */,
 				43CE7CDE1CA8B63E003CC1B0 /* Data.swift in Sources */,
 				E9BB27AB23B85C3500FB4987 /* SleepStore.swift in Sources */,
 				C1F7822627CC056900C0919A /* SettingsManager.swift in Sources */,

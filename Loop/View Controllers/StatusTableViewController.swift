@@ -1666,13 +1666,23 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     private func presentLoopCompletionMessage(title: String, message: String) {
-        let action = UIAlertAction(title: NSLocalizedString("Dismiss", comment: "The button label of the action used to dismiss an error alert"),
-                                   style: .default)
-        let alertController = UIAlertController(title: title,
-                                                message: message,
-                                                preferredStyle: .alert)
-        alertController.addAction(action)
-        present(alertController, animated: true)
+        // TODO remove the title
+        let viewModel = LoopStatusModalViewModel(lastLoopCompleted: loopManager.lastLoopCompleted, loopIconClosed: automaticDosingStatus.automaticDosingEnabled)
+        
+        let modalVC = UIHostingController(
+            rootView: LoopStatusModalView(viewModel: viewModel,
+                                          message: message,
+                                          onDismiss: { [weak self] in
+                                             self?.dismiss(animated: false)
+                                         })
+                .environment(\.loopStatusColorPalette, .loopStatus)
+        )
+        modalVC.modalPresentationStyle = .overCurrentContext
+        modalVC.view.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        modalVC.view.frame = view.bounds
+        modalVC.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+
+        present(modalVC, animated: false)
     }
 
     @objc private func showLastError(_: Any) {
