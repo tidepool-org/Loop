@@ -156,7 +156,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
     @objc private func updateDisplay(_: Timer?) {
         lastLoopMessage = ""
-        caption?.isHidden = false
+        caption?.isHidden = !loopIconClosed
         let timeAgoToIncludeTimeStamp: TimeInterval = .minutes(20)
         let timeAgoToIncludeDate: TimeInterval = .hours(4)
         if loopIconClosed, let date = lastLoopCompleted {

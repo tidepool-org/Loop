@@ -307,7 +307,7 @@ class LoopAppManager: NSObject {
 
         let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
         
-        self.automaticDosingStatus = UserDefaults.standard.automaticDosingStatus ?? AutomaticDosingStatus(automaticDosingEnabled: UserDefaults.standard.automationHistory.last?.enabled ?? false, isAutomaticDosingAllowed: false)
+        self.automaticDosingStatus = UserDefaults.standard.automaticDosingStatus ?? AutomaticDosingStatus(automaticDosingEnabled: UserDefaults.standard.automationHistory.last?.enabled ?? false, isAutomaticDosingAllowed: true)
 
         crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
 
