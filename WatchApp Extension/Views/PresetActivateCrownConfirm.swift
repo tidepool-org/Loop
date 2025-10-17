@@ -18,8 +18,6 @@ struct PresetActivateCrownConfirm: View {
     @State private var startingPreset: Bool = false
     @State private var lastInteractionTime: Date? // Tracks last crown interaction
 
-    private let threshold: CGFloat = 20 // Rotation threshold to trigger action
-    private let maxProgress: CGFloat = 20 // Max progress for the bar
     private let resetDelay: TimeInterval = 0.25 // pause for reset
 
     let preset: SelectablePreset
@@ -28,7 +26,7 @@ struct PresetActivateCrownConfirm: View {
         if startingPreset {
             return 1
         } else {
-            return min(crownValue, maxProgress)/threshold
+            return abs(crownValue)
         }
     }
 
@@ -56,11 +54,9 @@ struct PresetActivateCrownConfirm: View {
         .focusable() // Required for Digital Crown interaction
         .digitalCrownRotation(
             $crownValue,
-            from: 0,
-            through: threshold,
-            by: 1,
-            sensitivity: .medium,
-            isContinuous: false
+            over: -1...1,
+            sensitivity: .low,
+            scalingRotationBy: 4
         )
         .onDisappear() {
             if let reminder = loopManager.pendingPresetReminder, reminder.presetIdentifier == preset.id {
@@ -84,7 +80,7 @@ struct PresetActivateCrownConfirm: View {
                 }
             }
 
-            if newValue >= threshold && !startingPreset {
+            if abs(newValue) >= 1 && !startingPreset {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
                     startingPreset = true
                     Task {

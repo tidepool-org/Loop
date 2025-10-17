@@ -18,8 +18,6 @@ struct ActiveOverrideView: View {
     @State private var endingPreset: Bool = false
     @State private var lastInteractionTime: Date? // Tracks last crown interaction
 
-    private let threshold: CGFloat = 20 // Rotation threshold to trigger action
-    private let maxProgress: CGFloat = 20 // Max progress for the bar
     private let resetDelay: TimeInterval = 0.25 // pause for reset
 
     let override: TemporaryScheduleOverride
@@ -92,7 +90,7 @@ struct ActiveOverrideView: View {
         if endingPreset {
             return 1
         } else {
-            return min(crownValue, maxProgress)/threshold
+            return abs(crownValue)
         }
     }
 
@@ -123,11 +121,9 @@ struct ActiveOverrideView: View {
         .focusable() // Required for Digital Crown interaction
         .digitalCrownRotation(
             $crownValue,
-            from: 0,
-            through: threshold,
-            by: 1,
-            sensitivity: .medium,
-            isContinuous: false
+            over: -1...1,
+            sensitivity: .low,
+            scalingRotationBy: 4
         )
         .onChange(of: crownValue) { (oldValue, newValue) in
             lastInteractionTime = Date()
@@ -141,7 +137,7 @@ struct ActiveOverrideView: View {
                 }
             }
 
-            if newValue >= threshold && !endingPreset {
+            if abs(newValue) >= 1 && !endingPreset {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
                     endingPreset = true
                     Task {
