@@ -17,11 +17,9 @@ final class ExtensionDataManager {
     unowned let loopDataManager: LoopDataManager
     unowned let settingsManager: SettingsManager
     unowned let temporaryPresetsManager: TemporaryPresetsManager
-    private let automaticDosingStatus: AutomaticDosingStatus
 
     init(deviceDataManager: DeviceDataManager,
          loopDataManager: LoopDataManager,
-         automaticDosingStatus: AutomaticDosingStatus,
          settingsManager: SettingsManager,
          temporaryPresetsManager: TemporaryPresetsManager
     ) {
@@ -29,7 +27,6 @@ final class ExtensionDataManager {
         self.loopDataManager = loopDataManager
         self.settingsManager = settingsManager
         self.temporaryPresetsManager = temporaryPresetsManager
-        self.automaticDosingStatus = automaticDosingStatus
 
         NotificationCenter.default.addObserver(self, selector: #selector(notificationReceived(_:)), name: .LoopDataUpdated, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(notificationReceived(_:)), name: .PumpManagerChanged, object: nil)
@@ -122,9 +119,9 @@ final class ExtensionDataManager {
         context.mostRecentGlucoseDataDate = loopDataManager.mostRecentGlucoseDataDate
         context.mostRecentPumpDataDate = loopDataManager.mostRecentPumpDataDate
 
-        context.isClosedLoop = self.automaticDosingStatus.automaticDosingEnabled
+        context.isClosedLoop = self.settingsManager.automaticDosingEnabled
 
-        context.preMealPresetAllowed = self.automaticDosingStatus.automaticDosingEnabled && self.settingsManager.settings.preMealTargetRange != nil
+        context.preMealPresetAllowed = self.settingsManager.automaticDosingEnabled && self.settingsManager.settings.preMealTargetRange != nil
         context.preMealPresetActive = self.temporaryPresetsManager.isPreMealTargetActive()
         context.customPresetActive = self.temporaryPresetsManager.isNonPreMealOverrideActive()
 

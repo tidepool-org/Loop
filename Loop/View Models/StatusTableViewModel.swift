@@ -27,17 +27,15 @@ class StatusTableViewModel {
     let criticalEventLogExportManager: CriticalEventLogExportManager
     let bluetoothStateManager: BluetoothStateManager
     let settingsManager: SettingsManager
-    let automaticDosingStatus: AutomaticDosingStatus
     let onboardingManager: OnboardingManager
     let temporaryPresetsManager: TemporaryPresetsManager
     let settingsViewModel: SettingsViewModel
 
     var pendingPreset: SelectablePreset?
 
-    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel) {
+    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, settingsViewModel: SettingsViewModel) {
         self.alertPermissionsChecker = alertPermissionsChecker
         self.alertMuter = alertMuter
-        self.automaticDosingStatus = automaticDosingStatus
         self.deviceDataManager = deviceDataManager
         self.onboardingManager = onboardingManager
         self.supportManager = supportManager

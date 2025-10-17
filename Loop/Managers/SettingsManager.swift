@@ -401,6 +401,7 @@ extension SettingsManager {
 @MainActor
 protocol SettingsProvider {
     var settings: StoredSettings { get }
+    var automaticDosingEnabled: Bool { get }
 
     func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>]
     func getCarbRatioHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>]
@@ -412,6 +413,7 @@ protocol SettingsProvider {
 
 extension SettingsManager: SettingsProvider {
     var settings: StoredSettings { storedSettings }
+    var automaticDosingEnabled: Bool { dosingEnabled }
 
     func executeSettingsQuery(fromQueryAnchor queryAnchor: SettingsStore.QueryAnchor?, limit: Int, completion: @escaping (SettingsStore.SettingsQueryResult) -> Void) {
         settingsStore!.executeSettingsQuery(fromQueryAnchor: queryAnchor, limit: limit, completion: completion)

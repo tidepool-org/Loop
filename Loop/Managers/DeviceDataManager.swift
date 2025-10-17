@@ -70,8 +70,6 @@ final class DeviceDataManager {
 
     private var lastCGMLoopTrigger: Date = .distantPast
 
-    private let automaticDosingStatus: AutomaticDosingStatus
-
     var closedLoopDisallowedLocalizedDescription: String? {
         if !cgmHasValidSensorSession {
             return NSLocalizedString("Closed Loop requires an active CGM Sensor Session", comment: "The description text for the looping enabled switch cell when closed loop is not allowed because the sensor is inactive")
@@ -253,7 +251,6 @@ final class DeviceDataManager {
          activeStatefulPluginsProvider: ActiveStatefulPluginsProvider,
          bluetoothProvider: BluetoothProvider,
          alertPresenter: AlertPresenter,
-         automaticDosingStatus: AutomaticDosingStatus,
          cacheStore: PersistenceController,
          localCacheDuration: TimeInterval,
          displayGlucosePreference: DisplayGlucosePreference,
@@ -273,7 +270,6 @@ final class DeviceDataManager {
         self.analyticsServicesManager = analyticsServicesManager
         self.bluetoothProvider = bluetoothProvider
         self.alertPresenter = alertPresenter
-        self.automaticDosingStatus = automaticDosingStatus
         self.cacheStore = cacheStore
         self.crashRecoveryManager = crashRecoveryManager
         self.activeStatefulPluginsProvider = activeStatefulPluginsProvider
@@ -1099,7 +1095,7 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
 
     var automaticDosingEnabled: Bool {
-        automaticDosingStatus.automaticDosingEnabled
+        settingsManager.automaticDosingEnabled
     }
 }
 

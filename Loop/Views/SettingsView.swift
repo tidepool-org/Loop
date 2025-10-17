@@ -253,7 +253,7 @@ extension SettingsView {
             ) {
                 HStack(spacing: 12) {
                     LoopCircleView(
-                        closedLoop: viewModel.automaticDosingStatus.automaticDosingEnabled,
+                        closedLoop: viewModel.automaticDosingEnabled,
                         freshness: viewModel.loopStatusCircleFreshness
                     )
                     .frame(width: 36, height: 36)

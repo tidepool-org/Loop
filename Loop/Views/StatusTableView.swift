@@ -16,7 +16,6 @@ private struct WrappedStatusTableViewController: UIViewControllerRepresentable {
     
     private let alertPermissionsChecker: AlertPermissionsChecker
     private let alertMuter: AlertMuter
-    private let automaticDosingStatus: AutomaticDosingStatus
     private let deviceDataManager: DeviceDataManager
     private let onboardingManager: OnboardingManager
     private let supportManager: SupportManager
@@ -36,10 +35,9 @@ private struct WrappedStatusTableViewController: UIViewControllerRepresentable {
     
     let viewController: StatusTableViewController
     
-    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, automaticDosingStatus: AutomaticDosingStatus, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, statusTableViewModel: StatusTableViewModel) {
+    init(alertPermissionsChecker: AlertPermissionsChecker, alertMuter: AlertMuter, deviceDataManager: DeviceDataManager, onboardingManager: OnboardingManager, supportManager: SupportManager, testingScenariosManager: TestingScenariosManager?, settingsManager: SettingsManager, temporaryPresetsManager: TemporaryPresetsManager, loopDataManager: LoopDataManager, diagnosticReportGenerator: DiagnosticReportGenerator, simulatedData: SimulatedData, analyticsServicesManager: AnalyticsServicesManager, servicesManager: ServicesManager, carbStore: CarbStore, doseStore: DoseStore, criticalEventLogExportManager: CriticalEventLogExportManager, bluetoothStateManager: BluetoothStateManager, statusTableViewModel: StatusTableViewModel) {
         self.alertPermissionsChecker = alertPermissionsChecker
         self.alertMuter = alertMuter
-        self.automaticDosingStatus = automaticDosingStatus
         self.deviceDataManager = deviceDataManager
         self.onboardingManager = onboardingManager
         self.supportManager = supportManager
@@ -61,7 +59,6 @@ private struct WrappedStatusTableViewController: UIViewControllerRepresentable {
         let statusTableViewController = storyboard.instantiateViewController(withIdentifier: "MainStatusViewController") as! StatusTableViewController
         statusTableViewController.alertPermissionsChecker = alertPermissionsChecker
         statusTableViewController.alertMuter = alertMuter
-        statusTableViewController.automaticDosingStatus = automaticDosingStatus
         statusTableViewController.deviceManager = deviceDataManager
         statusTableViewController.onboardingManager = onboardingManager
         statusTableViewController.supportManager = supportManager
@@ -108,7 +105,6 @@ struct StatusTableView: View {
         self.wrapped = WrappedStatusTableViewController(
             alertPermissionsChecker: viewModel.alertPermissionsChecker,
             alertMuter: viewModel.alertMuter,
-            automaticDosingStatus: viewModel.automaticDosingStatus,
             deviceDataManager: viewModel.deviceDataManager,
             onboardingManager: viewModel.onboardingManager,
             supportManager: viewModel.supportManager,

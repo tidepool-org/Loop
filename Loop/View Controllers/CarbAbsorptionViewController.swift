@@ -28,7 +28,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
 
     var isOnboardingComplete: Bool = true
 
-    var automaticDosingStatus: AutomaticDosingStatus!
+    var automaticDosingEnabled: Bool!
 
     var loopDataManager: LoopDataManager!
     var carbStore: CarbStore!
@@ -70,7 +70,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
 
         navigationItem.rightBarButtonItem?.isEnabled = isOnboardingComplete
         
-        allowEditing = automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
+        allowEditing = automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
 
         if allowEditing {
             navigationItem.rightBarButtonItems?.append(editButtonItem)
@@ -494,7 +494,7 @@ final class CarbAbsorptionViewController: LoopChartsTableViewController, Identif
     
     // MARK: - Navigation
     @IBAction func presentCarbEntryScreen() {
-        if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingStatus.automaticDosingEnabled {
+        if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingEnabled {
             let displayGlucosePreference = DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter)
             let viewModel = SimpleBolusViewModel(delegate: loopDataManager, displayMealEntry: true, displayGlucosePreference: displayGlucosePreference)
             let bolusEntryView = SimpleBolusView(viewModel: viewModel).environmentObject(displayGlucosePreference)

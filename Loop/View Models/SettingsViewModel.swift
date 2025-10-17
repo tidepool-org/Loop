@@ -54,6 +54,7 @@ public protocol SettingsViewModelDelegate: AnyObject {
     func dosingStrategyChanged(_: AutomaticDosingStrategy)
     func didTapIssueReport()
     var closedLoopDescriptiveText: String? { get }
+    var automaticDosingEnabled: Bool { get set }
 }
 
 @Observable
@@ -81,16 +82,22 @@ class SettingsViewModel {
     let therapySettingsViewModelDelegate: TherapySettingsViewModelDelegate?
     let presetHistory: TemporaryScheduleOverrideHistory
 
-    private(set) var automaticDosingStatus: AutomaticDosingStatus
+    private(set) var automaticDosingEnabled: Bool {
+        get {
+            delegate?.automaticDosingEnabled ?? closedLoopPreference
+        }
+        set {
+            delegate?.automaticDosingEnabled = newValue
+        }
+    }
     
     private(set) var lastLoopCompletion: Date?
     private(set) var mostRecentGlucoseDataDate: Date?
     private(set) var mostRecentPumpDataDate: Date?
     
     var closedLoopDescriptiveText: String? {
-        return delegate?.closedLoopDescriptiveText
+        delegate?.closedLoopDescriptiveText
     }
-
 
     var automaticDosingStrategy: AutomaticDosingStrategy {
         didSet {
@@ -104,7 +111,6 @@ class SettingsViewModel {
        }
     }
 
-    
     var preMealGuardrail: Guardrail<LoopQuantity>?
 
     @ObservationIgnored weak var favoriteFoodInsightsDelegate: FavoriteFoodInsightsViewModelDelegate?
@@ -117,7 +123,7 @@ class SettingsViewModel {
     var loopStatusCircleFreshness: LoopCompletionFreshness {
         var age: TimeInterval
         
-        if automaticDosingStatus.automaticDosingEnabled {
+        if automaticDosingEnabled {
             let lastLoopCompletion = lastLoopCompletion ?? Date().addingTimeInterval(.minutes(16))
             age = abs(min(0, lastLoopCompletion.timeIntervalSinceNow))
         } else {
@@ -141,7 +147,6 @@ class SettingsViewModel {
                 criticalEventLogExportViewModel: CriticalEventLogExportViewModel,
                 therapySettings: @escaping () -> TherapySettings,
                 initialDosingEnabled: Bool,
-                automaticDosingStatus: AutomaticDosingStatus,
                 automaticDosingStrategy: AutomaticDosingStrategy,
                 lastLoopCompletion: Published<Date?>.Publisher,
                 mostRecentGlucoseDataDate: Published<Date?>.Publisher,
@@ -161,7 +166,6 @@ class SettingsViewModel {
         self.criticalEventLogExportViewModel = criticalEventLogExportViewModel
         self.therapySettings = therapySettings
         self.closedLoopPreference = initialDosingEnabled
-        self.automaticDosingStatus = automaticDosingStatus
         self.automaticDosingStrategy = automaticDosingStrategy
         self.lastLoopCompletion = nil
         self.mostRecentGlucoseDataDate = nil
@@ -193,6 +197,7 @@ extension SettingsViewModel {
     
     fileprivate class FakeSettingsProvider: SettingsProvider {
         let settings = StoredSettings()
+        let automaticDosingEnabled = true
         
         func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>] {
             []
@@ -229,7 +234,6 @@ extension SettingsViewModel {
                                  criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: MockCriticalEventLogExporterFactory()),
                                  therapySettings: { TherapySettings() },
                                  initialDosingEnabled: true,
-                                 automaticDosingStatus: AutomaticDosingStatus(automaticDosingEnabled: true),
                                  automaticDosingStrategy: .automaticBolus,
                                  lastLoopCompletion: FakeLastLoopCompletionPublisher().$mockLastLoopCompletion,
                                  mostRecentGlucoseDataDate: FakeLastLoopCompletionPublisher().$mockLastLoopCompletion,
