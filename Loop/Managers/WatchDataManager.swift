@@ -341,7 +341,18 @@ final class WatchDataManager: NSObject {
         } else if deviceManager.isSuspended {
             context.insulinDeliveryState = .suspended
         } else if let automatedTreatmentState = loopDataManager.automatedTreatmentState {
-            context.insulinDeliveryState = InsulinDeliveryWatchState(automatedTreatmentState: automatedTreatmentState)
+            switch automatedTreatmentState {
+            case .neutralNoOverride:
+                context.insulinDeliveryState = .neutralNoOverride
+            case .neutralOverride:
+                context.insulinDeliveryState = .neutralOverride
+            case .increasedInsulin:
+                context.insulinDeliveryState = .increasedInsulin
+            case .decreasedInsulin:
+                context.insulinDeliveryState = .decreasedInsulin
+            case .minimumDelivery:
+                context.insulinDeliveryState = .minimumDelivery
+            }
         }
 
         context.lastManualBolus = loopDataManager.lastManualBolus

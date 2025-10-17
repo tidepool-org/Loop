@@ -18,21 +18,6 @@ public enum InsulinDeliveryWatchState: Int, Equatable {
     case minimumDelivery
     case suspended
     case noDelivery
-
-    public init(automatedTreatmentState: AutomatedTreatmentState) {
-        switch automatedTreatmentState {
-        case .neutralNoOverride:
-            self = .neutralNoOverride
-        case .neutralOverride:
-            self = .neutralOverride
-        case .increasedInsulin:
-            self = .increasedInsulin
-        case .decreasedInsulin:
-            self = .decreasedInsulin
-        case .minimumDelivery:
-            self = .minimumDelivery
-        }
-    }
 }
 
 public final class WatchContext: RawRepresentable {
