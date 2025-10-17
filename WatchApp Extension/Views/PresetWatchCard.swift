@@ -77,8 +77,6 @@ struct PresetWatchCard: View {
         self.insulinMultiplier = insulinMultiplier
         self.correctionRange = correctionRange
         self.isScheduled = isScheduled
-
-        print("preset \(presetName), icon = \(icon)")
     }
 
     private var numberFormatter: NumberFormatter {
