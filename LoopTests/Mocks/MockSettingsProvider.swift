@@ -12,6 +12,8 @@ import LoopAlgorithm
 @testable import Loop
 
 class MockSettingsProvider: SettingsProvider {
+    var automaticDosingEnabled: Bool { settings.dosingEnabled }
+    
     var basalHistory: [AbsoluteScheduleValue<Double>]?
     func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>] {
         return basalHistory ?? settings.basalRateSchedule?.between(start: startDate, end: endDate) ?? []

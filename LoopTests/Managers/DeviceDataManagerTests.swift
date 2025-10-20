@@ -39,7 +39,6 @@ final class DeviceDataManagerTests: XCTestCase {
         let mockUserNotificationCenter = MockUserNotificationCenter()
         let mockBluetoothProvider = MockBluetoothProvider()
         let alertPresenter = MockPresenter()
-        let automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true)
 
         let alertManager = AlertManager(
             alertPresenter: alertPresenter,
@@ -99,7 +98,6 @@ final class DeviceDataManagerTests: XCTestCase {
             activeStatefulPluginsProvider: self,
             bluetoothProvider: mockBluetoothProvider,
             alertPresenter: alertPresenter,
-            automaticDosingStatus: automaticDosingStatus,
             cacheStore: persistenceController,
             localCacheDuration: .days(1),
             displayGlucosePreference: DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter),
