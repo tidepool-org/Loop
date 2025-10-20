@@ -197,7 +197,7 @@ extension SettingsViewModel {
     
     fileprivate class FakeSettingsProvider: SettingsProvider {
         let settings = StoredSettings()
-        let automaticDosingEnabled = true
+        var dosingEnabled: Bool { settings.dosingEnabled }
         
         func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>] {
             []

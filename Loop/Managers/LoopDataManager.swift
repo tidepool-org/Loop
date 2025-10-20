@@ -261,7 +261,7 @@ final class LoopDataManager: ObservableObject {
         // Cancel any active temp basal when going into closed loop off mode
         // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
         
-        withObservationTracking(of: settingsProvider.automaticDosingEnabled) { [weak self] enabled in
+        withObservationTracking(of: settingsProvider.dosingEnabled) { [weak self] enabled in
             if self?.automationHistory.last?.enabled != enabled {
                 self?.automationHistory.append(AutomationHistoryEntry(startDate: Date(), enabled: enabled))
 
@@ -631,7 +631,7 @@ final class LoopDataManager: ObservableObject {
 
                 dosingDecision.updateFrom(input: input, output: output)
 
-                if self.settingsProvider.automaticDosingEnabled {
+                if self.settingsProvider.dosingEnabled {
                     if deliveryDelegate.basalDeliveryState == .pumpInoperable {
                         throw LoopError.pumpInoperable
                     }

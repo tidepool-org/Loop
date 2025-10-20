@@ -1095,7 +1095,7 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
 
     var automaticDosingEnabled: Bool {
-        settingsManager.automaticDosingEnabled
+        settingsManager.dosingEnabled
     }
 }
 
