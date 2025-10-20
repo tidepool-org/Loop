@@ -51,11 +51,7 @@ struct SettingsView: View {
             }
             
             case favoriteFoods
-<<<<<<< Updated upstream
-            case therapySettings
             case presets
-=======
->>>>>>> Stashed changes
         }
     }
     
@@ -144,19 +140,8 @@ struct SettingsView: View {
             .sheet(item: $sheet) { sheet in
                 Group {
                     switch sheet {
-<<<<<<< Updated upstream
-                    case .therapySettings:
-                        TherapySettingsView(
-                            mode: .settings,
-                            viewModel: TherapySettingsViewModel(
-                                therapySettings: viewModel.therapySettings(),
-                                delegate: viewModel.therapySettingsViewModelDelegate
-                            )
-                        )
                     case .presets:
-                        presetsView
-=======
->>>>>>> Stashed changes
+                        PresetsView()
                     case .favoriteFoods:
                         FavoriteFoodsView(insightsDelegate: viewModel.favoriteFoodInsightsDelegate)
                     }
@@ -172,10 +157,6 @@ struct SettingsView: View {
             }
         }
         .navigationViewStyle(.stack)
-    }
-
-    public var presetsView: some View {
-        PresetsView(addDismissButton: false)
     }
 
     private func menuItemsForSection(name: String) -> some View {
@@ -337,16 +318,28 @@ extension SettingsView {
             }
         }
     }
-        
+
+    private var therapySettingsView: some View {
+        TherapySettingsView(
+            mode: .settings,
+            viewModel: TherapySettingsViewModel(
+                therapySettings: viewModel.therapySettings(),
+                delegate: viewModel.therapySettingsViewModelDelegate
+            )
+        )
+    }
+
     private var therapySection: some View {
         Section {
-            LargeButton(action: { sheet = .therapySettings },
-                        includeArrow: true,
-                        imageView: Image("Therapy Icon"),
-                        label: NSLocalizedString("Therapy Settings", comment: "Title text for button to Therapy Settings"),
-                        descriptiveText: NSLocalizedString("Diabetes Treatment", comment: "Descriptive text for Therapy Settings"))
-            .accessibilityIdentifier("button_TherapySettings")
-            
+            NavigationLink(destination: therapySettingsView) {
+                LargeButton(action: {},
+                            includeArrow: false,
+                            imageView: Image("Therapy Icon"),
+                            label: NSLocalizedString("Therapy Settings", comment: "Title text for button to Therapy Settings"),
+                            descriptiveText: NSLocalizedString("Diabetes Treatment", comment: "Descriptive text for Therapy Settings"))
+                .accessibilityIdentifier("button_TherapySettings")
+            }
+
             ForEach(pluginMenuItems.filter {$0.section == .configuration}) { item in
                 item.view
             }
@@ -359,15 +352,13 @@ extension SettingsView {
 
     private var presetsSection: some View {
         Section {
-            NavigationLink(destination: presetsView) {
-                LargeButton(
-                    action: {},
-                    includeArrow: false,
-                    imageView: Image("Presets Icon"),
-                    label: NSLocalizedString("Presets", comment: "Title text for button to Preset Settings"),
-                    descriptiveText: NSLocalizedString("Temporary Settings Adjustments", comment: "Descriptive text for Preset Settings")
-                ).accessibilityIdentifier("button_Presets")
-            }
+            LargeButton(
+                action: { sheet = .presets },
+                includeArrow: true,
+                imageView: Image("Presets Icon"),
+                label: NSLocalizedString("Presets", comment: "Title text for button to Preset Settings"),
+                descriptiveText: NSLocalizedString("Temporary Settings Adjustments", comment: "Descriptive text for Preset Settings")
+            ).accessibilityIdentifier("button_Presets")
         }
     }
 

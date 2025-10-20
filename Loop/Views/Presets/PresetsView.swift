@@ -72,8 +72,6 @@ struct PresetsView: View {
 
     var isDescending: Bool { !presetsSortAscending }
 
-    var addDismissButton: Bool = true
-
     var presetsSorted: [SelectablePreset] {
         temporaryPresetsManager.selectablePresets
             .filter { $0.id != temporaryPresetsManager.activeOverride?.presetId }
@@ -208,7 +206,7 @@ struct PresetsView: View {
             }
             .background(Color(UIColor.secondarySystemBackground))
             .navigationTitle(Text("Presets", comment: "Presets screen title"))
-            .navigationBarItems(trailing: addDismissButton ? dismissButton : nil)
+            .navigationBarItems(trailing: dismissButton)
             .navigationDestination(for: NavigationDestination.self) { route in
                 switch route {
                 case .presetsHistory:
