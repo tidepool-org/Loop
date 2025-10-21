@@ -204,8 +204,8 @@ class InsulinDeliveryLogViewModel {
             insulinSuspended = true
         }
         
-        let automationEnabled = loopDataManager.automaticDosingStatus.automaticDosingEnabled
-        let automatedTreatmentState = loopDataManager.automatedTreatmentState ?? .neutralNoOverride
+        let automationEnabled = loopDataManager.settingsProvider.dosingEnabled
+        let automatedTreatmentState = pumpManager.pumpManagerDelegate?.automatedTreatmentState ?? .neutralNoOverride
 
         if insulinSuspended {
             return .error(status: .suspended)
@@ -267,7 +267,7 @@ class InsulinDeliveryLogViewModel {
     }
     
     private func handleBasalEvent(dose: DoseEntry, decision: LightDosingDecision?, events: inout [InsulinDeliveryLogEvent]) {
-        let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.automaticDosingStatus.automaticDosingEnabled
+        let automationEnabledDuringDose = loopDataManager.automationHistory.automationEnabled(at: dose.startDate) ?? loopDataManager.settingsProvider.dosingEnabled
         
         if dose.type == .tempBasal && dose.automatic == false {
             events.append(

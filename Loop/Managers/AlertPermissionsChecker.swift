@@ -234,11 +234,11 @@ extension AlertPermissionsChecker {
         }
     }
 
+    @MainActor
     static func constructUnsafeNotificationPermissionsInAppAlert(alert: UnsafeNotificationPermissionAlert) async -> UIAlertController {
-        dispatchPrecondition(condition: .onQueue(.main))
-        let alertController = await UIAlertController(title: alert.alertTitle,
-                                                      message: alert.alertBody,
-                                                      preferredStyle: .alert)
+        let alertController = UIAlertController(title: alert.alertTitle,
+                                                message: alert.alertBody,
+                                                preferredStyle: .alert)
         let titleImageAttachment = NSTextAttachment()
         titleImageAttachment.image = UIImage(systemName: "exclamationmark.triangle.fill")?.withTintColor(.critical)
         titleImageAttachment.bounds = CGRect(x: titleImageAttachment.bounds.origin.x, y: -10, width: 40, height: 35)

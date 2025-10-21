@@ -135,8 +135,6 @@ final class LoopDataManager: ObservableObject {
 
     private let now: () -> Date
 
-    let automaticDosingStatus: AutomaticDosingStatus
-
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
 
@@ -181,7 +179,6 @@ final class LoopDataManager: ObservableObject {
         crashRecoveryManager: CrashRecoveryManager,
         dosingDecisionStore: DosingDecisionStoreProtocol,
         now: @escaping () -> Date = { Date() },
-        automaticDosingStatus: AutomaticDosingStatus,
         trustedTimeOffset: @escaping () async -> TimeInterval,
         analyticsServicesManager: AnalyticsServicesManager?,
         carbAbsorptionModel: CarbAbsorptionModel,
@@ -198,7 +195,6 @@ final class LoopDataManager: ObservableObject {
         self.crashRecoveryManager = crashRecoveryManager
         self.dosingDecisionStore = dosingDecisionStore
         self.now = now
-        self.automaticDosingStatus = automaticDosingStatus
         self.trustedTimeOffset = trustedTimeOffset
         self.analyticsServicesManager = analyticsServicesManager
         self.carbAbsorptionModel = carbAbsorptionModel
@@ -263,7 +259,7 @@ final class LoopDataManager: ObservableObject {
         // Cancel any active temp basal when going into closed loop off mode
         // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
         
-        withObservationTracking(of: automaticDosingStatus.automaticDosingEnabled) { [weak self] enabled in
+        withObservationTracking(of: settingsProvider.dosingEnabled) { [weak self] enabled in
             if self?.automationHistory.last?.enabled != enabled {
                 self?.automationHistory.append(AutomationHistoryEntry(startDate: Date(), enabled: enabled))
 
@@ -644,7 +640,7 @@ final class LoopDataManager: ObservableObject {
 
                 dosingDecision.updateFrom(input: input, output: output)
 
-                if self.automaticDosingStatus.automaticDosingEnabled {
+                if self.settingsProvider.dosingEnabled {
                     if deliveryDelegate.basalDeliveryState == .pumpInoperable {
                         throw LoopError.pumpInoperable
                     }

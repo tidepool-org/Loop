@@ -11,7 +11,10 @@ import LoopKit
 import LoopAlgorithm
 @testable import Loop
 
+@Observable
 class MockSettingsProvider: SettingsProvider {
+    var dosingEnabled: Bool = false
+    
     var basalHistory: [AbsoluteScheduleValue<Double>]?
     func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>] {
         return basalHistory ?? settings.basalRateSchedule?.between(start: startDate, end: endDate) ?? []
@@ -46,7 +49,8 @@ class MockSettingsProvider: SettingsProvider {
 
     var settings: StoredSettings
 
-    init(settings: StoredSettings) {
+    init(settings: StoredSettings, dosingEnabled: Bool = true) {
         self.settings = settings
+        self.dosingEnabled = dosingEnabled
     }
 }

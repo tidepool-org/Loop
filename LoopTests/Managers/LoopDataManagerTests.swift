@@ -77,7 +77,6 @@ class LoopDataManagerTests: XCTestCase {
     var glucoseStore = MockGlucoseStore()
     var carbStore = MockCarbStore()
     var dosingDecisionStore: MockDosingDecisionStore!
-    var automaticDosingStatus: AutomaticDosingStatus!
     var loopDataManager: LoopDataManager!
     var deliveryDelegate: MockDeliveryDelegate!
     var settingsProvider: MockSettingsProvider!
@@ -105,7 +104,7 @@ class LoopDataManagerTests: XCTestCase {
         )!
 
         let settings = StoredSettings(
-            dosingEnabled: false,
+            dosingEnabled: true,
             glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
             maximumBasalRatePerHour: 6,
             maximumBolus: 5,
@@ -123,7 +122,6 @@ class LoopDataManagerTests: XCTestCase {
         doseStore.lastAddedPumpData = now
 
         dosingDecisionStore = MockDosingDecisionStore()
-        automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: true)
 
         let temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsProvider, presetHistory: TemporaryScheduleOverrideHistory())
 
@@ -137,7 +135,6 @@ class LoopDataManagerTests: XCTestCase {
             crashRecoveryManager: CrashRecoveryManager(alertIssuer: MockAlertIssuer()),
             dosingDecisionStore: dosingDecisionStore,
             now: { [weak self] in self?.now ?? Date() },
-            automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { 0 },
             analyticsServicesManager: nil,
             carbAbsorptionModel: .piecewiseLinear
@@ -200,7 +197,7 @@ class LoopDataManagerTests: XCTestCase {
         )!
 
         settingsProvider.settings = StoredSettings(
-            dosingEnabled: false,
+            dosingEnabled: true,
             glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
             maximumBasalRatePerHour: 10,
             maximumBolus: 5,
@@ -349,8 +346,7 @@ class LoopDataManagerTests: XCTestCase {
         deliveryDelegate.basalDeliveryState = .tempBasal(dose)
 
         dosingDecisionStore.storeExpectation = expectation(description: #function)
-
-        automaticDosingStatus.automaticDosingEnabled = false
+        settingsProvider.dosingEnabled = false
 
         await fulfillment(of: [dosingDecisionStore.storeExpectation!], timeout: 1.0)
 
@@ -429,7 +425,7 @@ class LoopDataManagerTests: XCTestCase {
         glucoseStore.storedGlucose = [
             StoredGlucoseSample(startDate: d(.minutes(-1)), quantity: .glucose(value: 150)),
         ]
-        automaticDosingStatus.automaticDosingEnabled = false
+        settingsProvider.dosingEnabled = false
         settingsProvider.settings.automaticDosingStrategy = .tempBasalOnly
 
         await loopDataManager.loop()

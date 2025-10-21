@@ -96,8 +96,8 @@ struct SettingsView: View {
                         servicesSection
                     }
 
-                    ForEach(customSections) { customSectionName in
-                        menuItemsForSection(name: customSectionName)
+                    ForEach(pluginMenuItems) { item in
+                        item.view
                     }
 
                     supportSection
@@ -141,7 +141,7 @@ struct SettingsView: View {
                 Group {
                     switch sheet {
                     case .presets:
-                        presetsView
+                        PresetsView()
                     case .favoriteFoods:
                         FavoriteFoodsView(insightsDelegate: viewModel.favoriteFoodInsightsDelegate)
                     }
@@ -159,10 +159,6 @@ struct SettingsView: View {
         .navigationViewStyle(.stack)
     }
 
-    public var presetsView: some View {
-        PresetsView()
-    }
-
     private func menuItemsForSection(name: String) -> some View {
         Section(header: SectionHeader(label: name)) {
             ForEach(pluginMenuItems.filter {$0.section.customLocalizedTitle == name}) { item in
@@ -171,28 +167,11 @@ struct SettingsView: View {
         }
     }
 
-    private var customSections: [String] {
-        pluginMenuItems.compactMap { item in
-            if case .custom(let name) = item.section {
-                return name
-            } else {
-                return nil
-            }
-        }
-    }
-    
     private var closedLoopToggleState: Binding<Bool> {
         Binding(
             get: { self.viewModel.closedLoopPreference },
             set: { self.viewModel.closedLoopPreference = $0 }
         )
-    }
-}
-
-extension String: Identifiable {
-    public typealias ID = Int
-    public var id: Int {
-        return hash
     }
 }
 
@@ -244,7 +223,7 @@ extension SettingsView {
             ) {
                 HStack(spacing: 12) {
                     LoopCircleView(
-                        closedLoop: viewModel.automaticDosingStatus.automaticDosingEnabled,
+                        closedLoop: viewModel.automaticDosingEnabled,
                         freshness: viewModel.loopStatusCircleFreshness
                     )
                     .frame(width: 36, height: 36)
@@ -342,8 +321,8 @@ extension SettingsView {
                             label: NSLocalizedString("Therapy Settings", comment: "Title text for button to Therapy Settings"),
                             descriptiveText: NSLocalizedString("Diabetes Treatment", comment: "Descriptive text for Therapy Settings"))
                 .accessibilityIdentifier("button_TherapySettings")
-
             }
+            
             ForEach(pluginMenuItems.filter {$0.section == .configuration}) { item in
                 item.view
             }
@@ -353,7 +332,7 @@ extension SettingsView {
             }
         }
     }
-    
+
     private var presetsSection: some View {
         Section {
             LargeButton(

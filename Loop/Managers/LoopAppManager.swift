@@ -112,8 +112,6 @@ class LoopAppManager: NSObject {
     private let log = DiagnosticLog(category: "LoopAppManager")
     private let widgetLog = DiagnosticLog(category: "LoopWidgets")
 
-    private var automaticDosingStatus: AutomaticDosingStatus!
-
     lazy private var cancellables = Set<AnyCancellable>()
 
     func initialize(windowProvider: WindowProvider, launchOptions: [UIApplication.LaunchOptionsKey: Any]?) {
@@ -307,8 +305,6 @@ class LoopAppManager: NSObject {
 
         let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
         
-        self.automaticDosingStatus = AutomaticDosingStatus(automaticDosingEnabled: settingsManager.dosingEnabled)
-
         crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
 
         loopDataManager = LoopDataManager(
@@ -320,7 +316,6 @@ class LoopAppManager: NSObject {
             carbStore: carbStore,
             crashRecoveryManager: crashRecoveryManager,
             dosingDecisionStore: dosingDecisionStore,
-            automaticDosingStatus: automaticDosingStatus,
             trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset },
             analyticsServicesManager: analyticsServicesManager,
             carbAbsorptionModel: carbModel,
@@ -395,7 +390,6 @@ class LoopAppManager: NSObject {
                                               activeStatefulPluginsProvider: statefulPluginManager,
                                               bluetoothProvider: bluetoothStateManager,
                                               alertPresenter: self,
-                                              automaticDosingStatus: automaticDosingStatus,
                                               cacheStore: cacheStore,
                                               localCacheDuration: localCacheDuration,
                                               displayGlucosePreference: displayGlucosePreference,
@@ -413,7 +407,6 @@ class LoopAppManager: NSObject {
         statusExtensionManager = ExtensionDataManager(
             deviceDataManager: deviceDataManager,
             loopDataManager: loopDataManager,
-            automaticDosingStatus: automaticDosingStatus,
             settingsManager: settingsManager,
             temporaryPresetsManager: temporaryPresetsManager
         )
@@ -498,12 +491,6 @@ class LoopAppManager: NSObject {
 
         analyticsServicesManager.application(didFinishLaunchingWithOptions: launchOptions)
 
-        withObservationTracking(of: self.settingsManager.dosingEnabled) { [weak self] enabled in
-            if self?.automaticDosingStatus.automaticDosingEnabled != enabled {
-                self?.automaticDosingStatus.automaticDosingEnabled = enabled
-            }
-        }
-
         state = state.next
 
         await loopDataManager.updateDisplayState()
@@ -579,7 +566,6 @@ class LoopAppManager: NSObject {
                                           criticalEventLogExportViewModel: CriticalEventLogExportViewModel(exporterFactory: criticalEventLogExportManager),
                                           therapySettings: { [weak self] in self?.settingsManager.therapySettings ?? TherapySettings() },
                                           initialDosingEnabled: self.settingsManager.settings.dosingEnabled,
-                                          automaticDosingStatus: self.automaticDosingStatus,
                                           automaticDosingStrategy: self.settingsManager.settings.automaticDosingStrategy,
                                           lastLoopCompletion: loopDataManager.$lastLoopCompleted,
                                           mostRecentGlucoseDataDate: loopDataManager.$publishedMostRecentGlucoseDataDate,
@@ -603,7 +589,6 @@ class LoopAppManager: NSObject {
         let viewModel = StatusTableViewModel(
             alertPermissionsChecker: alertPermissionsChecker,
             alertMuter: alertManager.alertMuter,
-            automaticDosingStatus: automaticDosingStatus,
             deviceDataManager: deviceDataManager,
             onboardingManager: onboardingManager,
             supportManager: supportManager,

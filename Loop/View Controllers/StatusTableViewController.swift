@@ -41,8 +41,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     var testingScenariosManager: TestingScenariosManager!
 
-    var automaticDosingStatus: AutomaticDosingStatus!
-    
     var alertPermissionsChecker: AlertPermissionsChecker!
 
     var settingsManager: SettingsManager!
@@ -163,7 +161,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             },
         ]
 
-        withObservationTracking(of: self.automaticDosingStatus.automaticDosingEnabled) { [weak self] enabled in
+        withObservationTracking(of: self.settingsManager.dosingEnabled) { [weak self] enabled in
             self?.automaticDosingStatusChanged(enabled)
         }
 
@@ -473,7 +471,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         var carbsOnBoard: LoopQuantity?
         let startDate = charts.startDate
         let basalDeliveryState = self.basalDeliveryState
-        let automaticDosingEnabled = automaticDosingStatus.automaticDosingEnabled
+        let automaticDosingEnabled = settingsManager.dosingEnabled
 
         let state = await loopManager.algorithmDisplayState
         predictedGlucoseValues = state.output?.predictedGlucose ?? []
@@ -999,7 +997,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 })
                 cell.setTitleLabelText(label: NSLocalizedString("Glucose", comment: "The title of the glucose and prediction graph"))
                 cell.setTitleTextColor(color: ChartColorPalette.primary.glucoseTint)
-                cell.doesNavigate = automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
+                cell.doesNavigate = settingsManager.dosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
             case .iob:
                 cell.setSupplementalChartGenerator(generator: { [weak self] (frame) in
                     return self?.statusCharts.doseChart(withFrame: frame)?.view
@@ -1171,7 +1169,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     cell.setSubtitleLabel(label: nil)
                     cell.setTitleLabelAccessibilityIdentifier("Glucose")
                 }
-                cell.doesNavigate = automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
+                cell.doesNavigate = settingsManager.dosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled
             case .iob:
                 if let currentIOB = currentIOBDescription {
                     cell.setSubtitleLabel(label: currentIOB)
@@ -1298,7 +1296,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         case .charts:
             switch ChartRow(rawValue: indexPath.row)! {
             case .glucose:
-                if automaticDosingStatus.automaticDosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled {
+                if settingsManager.dosingEnabled || !FeatureFlags.simpleBolusCalculatorEnabled {
                     performSegue(withIdentifier: PredictionTableViewController.className, sender: indexPath)
                 }
             case .iob:
@@ -1413,7 +1411,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         switch targetViewController {
         case let vc as CarbAbsorptionViewController:
             vc.isOnboardingComplete = onboardingManager.isComplete
-            vc.automaticDosingStatus = automaticDosingStatus
+            vc.automaticDosingEnabled = settingsManager.dosingEnabled
             vc.deviceManager = deviceManager
             vc.loopDataManager = loopManager
             vc.analyticsServicesManager = analyticsServicesManager
@@ -1444,7 +1442,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     func presentCarbEntryScreen(_ activity: NSUserActivity?, value: LoopQuantity? = nil) {
         let navigationWrapper: UINavigationController
-        if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingStatus.automaticDosingEnabled {
+        if FeatureFlags.simpleBolusCalculatorEnabled && !settingsManager.dosingEnabled {
             let viewModel = SimpleBolusViewModel(delegate: loopManager, displayMealEntry: true, displayGlucosePreference: deviceManager.displayGlucosePreference)
             if let activity = activity {
                 viewModel.restoreUserActivityState(activity)
@@ -1479,7 +1477,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     @ViewBuilder
     func bolusEntryView(enableManualGlucoseEntry: Bool = false) -> some View {
-        if FeatureFlags.simpleBolusCalculatorEnabled && !automaticDosingStatus.automaticDosingEnabled {
+        if FeatureFlags.simpleBolusCalculatorEnabled && !settingsManager.dosingEnabled {
             SimpleBolusView(
                 viewModel: SimpleBolusViewModel(
                     delegate: loopManager,
@@ -1616,7 +1614,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
             // when HUD view is initialized, update loop completion HUD (e.g., icon and last loop completed)
             hudView.loopCompletionHUD.stateColors = .loopStatus
-            hudView.loopCompletionHUD.loopIconClosed = automaticDosingStatus.automaticDosingEnabled
+            hudView.loopCompletionHUD.loopIconClosed = settingsManager.dosingEnabled
             hudView.loopCompletionHUD.lastLoopCompleted = loopManager.lastLoopCompleted
             hudView.loopCompletionHUD.mostRecentGlucoseDataDate = loopManager.mostRecentGlucoseDataDate
             hudView.loopCompletionHUD.mostRecentPumpDataDate = loopManager.mostRecentPumpDataDate
@@ -2105,6 +2103,17 @@ extension StatusTableViewController: BluetoothObserver {
 
 // MARK: - SettingsViewModel delegation
 extension StatusTableViewController: SettingsViewModelDelegate {
+    var automaticDosingEnabled: Bool {
+        get {
+            settingsManager.dosingEnabled
+        }
+        set {
+            if settingsManager.dosingEnabled != newValue {
+                settingsManager.dosingEnabled = newValue
+            }
+        }
+    }
+    
     var closedLoopDescriptiveText: String? {
         return deviceManager.closedLoopDisallowedLocalizedDescription
     }

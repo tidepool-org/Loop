@@ -399,8 +399,9 @@ extension SettingsManager {
 }
 
 @MainActor
-protocol SettingsProvider {
+protocol SettingsProvider: Observable {
     var settings: StoredSettings { get }
+    var dosingEnabled: Bool { get }
 
     func getBasalHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>]
     func getCarbRatioHistory(startDate: Date, endDate: Date) async throws -> [AbsoluteScheduleValue<Double>]
