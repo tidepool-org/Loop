@@ -96,8 +96,8 @@ struct SettingsView: View {
                         servicesSection
                     }
 
-                    ForEach(customSections) { customSectionName in
-                        menuItemsForSection(name: customSectionName)
+                    ForEach(pluginMenuItems) { item in
+                        item.view
                     }
 
                     supportSection
@@ -167,28 +167,11 @@ struct SettingsView: View {
         }
     }
 
-    private var customSections: [String] {
-        pluginMenuItems.compactMap { item in
-            if case .custom(let name) = item.section {
-                return name
-            } else {
-                return nil
-            }
-        }
-    }
-    
     private var closedLoopToggleState: Binding<Bool> {
         Binding(
             get: { self.viewModel.closedLoopPreference },
             set: { self.viewModel.closedLoopPreference = $0 }
         )
-    }
-}
-
-extension String: @retroactive Identifiable {
-    public typealias ID = Int
-    public var id: Int {
-        return hash
     }
 }
 
