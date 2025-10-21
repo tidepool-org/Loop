@@ -129,15 +129,35 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
     private var lastLoopMessage: String = ""
 
-    private lazy var timeAgoFormatter: DateComponentsFormatter = {
-        let formatter = DateComponentsFormatter()
+    /// Formats a time interval as a truncated "time ago" string (e.g., "1 hr", "2 mins")
+    private func truncatedTimeAgoString(from interval: TimeInterval) -> String? {
+        let calendar = Calendar.current
+        let now = Date()
+        let past = now.addingTimeInterval(-interval)
 
-        formatter.allowedUnits = [.day, .hour, .minute]
-        formatter.maximumUnitCount = 1
-        formatter.unitsStyle = .short
-
-        return formatter
-    }()
+        let components = calendar.dateComponents([.day, .hour, .minute], from: past, to: now)
+        if let days = components.day, days > 0 {
+            if days == 1 {
+                return String(format: LocalizedString("%d day", comment: "Singular day count"), days)
+            } else {
+                return String(format: LocalizedString("%d days", comment: "Plural days count"), days)
+            }
+        } else if let hours = components.hour, hours > 0 {
+            if hours == 1 {
+                return String(format: LocalizedString("%d hr", comment: "Singular hour count"), hours)
+            } else {
+                return String(format: LocalizedString("%d hrs", comment: "Plural hours count"), hours)
+            }
+        } else if let minutes = components.minute {
+            if minutes == 1 {
+                return String(format: LocalizedString("%d min", comment: "Singular minute count"), minutes)
+            } else {
+                return String(format: LocalizedString("%d mins", comment: "Plural minute count"), minutes)
+            }
+        } else {
+            return nil
+        }
+    }
 
     private lazy var timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -165,7 +185,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
             freshness = LoopCompletionFreshness(age: ago)
 
-            if let timeString = timeAgoFormatter.string(from: ago) {
+            if let timeString = truncatedTimeAgoString(from: ago) {
                 switch traitCollection.preferredContentSizeCategory {
                 case UIContentSizeCategory.extraSmall,
                      UIContentSizeCategory.small,
@@ -183,11 +203,11 @@ public final class LoopCompletionHUDView: BaseHUDView {
                 if ago >= timeAgoToIncludeDate {
                     fullTimeStr = String(format: LocalizedString("was at %1$@", comment: "Format string describing last completion. (1: the date"), timeDateFormatter.string(from: date))
                 } else if ago >= timeAgoToIncludeTimeStamp {
-                    fullTimeStr = String(format: LocalizedString("%1$@ ago at %2$@", comment: "Format string describing last completion. (1: time ago, (2: the date"), timeAgoFormatter.string(from: ago)!, timeFormatter.string(from: date))
+                    fullTimeStr = String(format: LocalizedString("%1$@ ago at %2$@", comment: "Format string describing last completion. (1: time ago, (2: the date"), truncatedTimeAgoString(from: ago)!, timeFormatter.string(from: date))
                 } else if ago < .minutes(1) {
                     fullTimeStr = String(format: LocalizedString("<1 min ago", comment: "Format string describing last completion"))
                 } else {
-                    fullTimeStr = String(format: LocalizedString("%1$@ ago", comment: "Format string describing last completion. (1: time ago"), timeAgoFormatter.string(from: ago)!)
+                    fullTimeStr = String(format: LocalizedString("%1$@ ago", comment: "Format string describing last completion. (1: time ago"), truncatedTimeAgoString(from: ago)!)
                 }
                 lastLoopMessage = String(format: LocalizedString("Last completed loop %1$@.", comment: "Last loop time completed message (1: last loop time string)"), fullTimeStr)
             } else {
@@ -199,7 +219,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
             freshness = LoopCompletionFreshness(age: ago)
             
-            if let timeString = timeAgoFormatter.string(from: ago) {
+            if let timeString = truncatedTimeAgoString(from: ago) {
                 switch traitCollection.preferredContentSizeCategory {
                 case UIContentSizeCategory.extraSmall,
                     UIContentSizeCategory.small,
