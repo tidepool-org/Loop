@@ -137,23 +137,20 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
         let components = calendar.dateComponents([.day, .hour, .minute], from: past, to: now)
         if let days = components.day, days > 0 {
-            if days == 1 {
-                return String(format: LocalizedString("%d day", comment: "Singular day count"), days)
-            } else {
-                return String(format: LocalizedString("%d days", comment: "Plural days count"), days)
-            }
+            return String.localizedStringWithFormat(
+                NSLocalizedString("%d day", tableName: "LocalizablePlural", bundle: .main, value: "%d day", comment: "Singular/plural day count"),
+                days
+            )
         } else if let hours = components.hour, hours > 0 {
-            if hours == 1 {
-                return String(format: LocalizedString("%d hr", comment: "Singular hour count"), hours)
-            } else {
-                return String(format: LocalizedString("%d hrs", comment: "Plural hours count"), hours)
-            }
+            return String.localizedStringWithFormat(
+                NSLocalizedString("%d hr", tableName: "LocalizablePlural", bundle: .main, value: "%d hr", comment: "Singular/plural hour count"),
+                hours
+            )
         } else if let minutes = components.minute {
-            if minutes == 1 {
-                return String(format: LocalizedString("%d min", comment: "Singular minute count"), minutes)
-            } else {
-                return String(format: LocalizedString("%d mins", comment: "Plural minute count"), minutes)
-            }
+            return String.localizedStringWithFormat(
+                NSLocalizedString("%d min", tableName: "LocalizablePlural", bundle: .main, value: "%d min", comment: "Singular/plural minute count"),
+                minutes
+            )
         } else {
             return nil
         }
