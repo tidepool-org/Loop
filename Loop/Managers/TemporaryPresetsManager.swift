@@ -345,7 +345,7 @@ class TemporaryPresetsManager {
 
             let title = NSLocalizedString("Start Scheduled Preset?", comment: "Scheduled preset reminder title")
             let body = String(
-                format: NSLocalizedString("Would you like to start your %1$@ preset? This will end any active preset.", comment: "Scheduled preset reminder alert body. (1: preset name)"),
+                format: NSLocalizedString("Would you like to start your %1$@ preset?\n\nThis will end any active preset.", comment: "Scheduled preset reminder alert body. (1: preset name)"),
                 preset.name
             )
 
