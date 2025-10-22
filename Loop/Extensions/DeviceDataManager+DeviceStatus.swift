@@ -11,6 +11,10 @@ import LoopKitUI
 import LoopCore
 
 extension DeviceDataManager {
+    var hasBluetoothIssue: Bool {
+        bluetoothProvider.bluetoothState == .poweredOff || bluetoothProvider.bluetoothState == .unauthorized || bluetoothProvider.bluetoothState == .unsupported
+    }
+    
     var cgmStatusHighlight: DeviceStatusHighlight? {
         let bluetoothState = bluetoothProvider.bluetoothState
         if bluetoothState == .unsupported || bluetoothState == .unauthorized {

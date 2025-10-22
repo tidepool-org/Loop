@@ -10,6 +10,10 @@ import Foundation
 import LoopKit
 
 class MockCGMManager: CGMManager {
+    var inSignalLoss: Bool = false
+    
+    var isInoperable: Bool = false
+    
     var cgmManagerDelegate: LoopKit.CGMManagerDelegate?
 
     var providesBLEHeartbeat: Bool = false

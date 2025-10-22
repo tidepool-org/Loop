@@ -129,33 +129,6 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
     private var lastLoopMessage: String = ""
 
-    /// Formats a time interval as a truncated "time ago" string (e.g., "1 hr", "2 mins")
-    private func truncatedTimeAgoString(from interval: TimeInterval) -> String? {
-        let calendar = Calendar.current
-        let now = Date()
-        let past = now.addingTimeInterval(-interval)
-
-        let components = calendar.dateComponents([.day, .hour, .minute], from: past, to: now)
-        if let days = components.day, days > 0 {
-            return String.localizedStringWithFormat(
-                NSLocalizedString("%d day", tableName: "LocalizablePlural", bundle: .main, value: "%d day", comment: "Singular/plural day count"),
-                days
-            )
-        } else if let hours = components.hour, hours > 0 {
-            return String.localizedStringWithFormat(
-                NSLocalizedString("%d hr", tableName: "LocalizablePlural", bundle: .main, value: "%d hr", comment: "Singular/plural hour count"),
-                hours
-            )
-        } else if let minutes = components.minute {
-            return String.localizedStringWithFormat(
-                NSLocalizedString("%d min", tableName: "LocalizablePlural", bundle: .main, value: "%d min", comment: "Singular/plural minute count"),
-                minutes
-            )
-        } else {
-            return nil
-        }
-    }
-
     private lazy var timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .none
@@ -182,7 +155,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
             freshness = LoopCompletionFreshness(age: ago)
 
-            if let timeString = truncatedTimeAgoString(from: ago) {
+            if let timeString = ago.truncatedTimeAgoString {
                 switch traitCollection.preferredContentSizeCategory {
                 case UIContentSizeCategory.extraSmall,
                      UIContentSizeCategory.small,
@@ -200,11 +173,11 @@ public final class LoopCompletionHUDView: BaseHUDView {
                 if ago >= timeAgoToIncludeDate {
                     fullTimeStr = String(format: LocalizedString("was at %1$@", comment: "Format string describing last completion. (1: the date"), timeDateFormatter.string(from: date))
                 } else if ago >= timeAgoToIncludeTimeStamp {
-                    fullTimeStr = String(format: LocalizedString("%1$@ ago at %2$@", comment: "Format string describing last completion. (1: time ago, (2: the date"), truncatedTimeAgoString(from: ago)!, timeFormatter.string(from: date))
+                    fullTimeStr = String(format: LocalizedString("%1$@ ago at %2$@", comment: "Format string describing last completion. (1: time ago, (2: the date"), ago.truncatedTimeAgoString!, timeFormatter.string(from: date))
                 } else if ago < .minutes(1) {
                     fullTimeStr = String(format: LocalizedString("<1 min ago", comment: "Format string describing last completion"))
                 } else {
-                    fullTimeStr = String(format: LocalizedString("%1$@ ago", comment: "Format string describing last completion. (1: time ago"), truncatedTimeAgoString(from: ago)!)
+                    fullTimeStr = String(format: LocalizedString("%1$@ ago", comment: "Format string describing last completion. (1: time ago"), ago.truncatedTimeAgoString!)
                 }
                 lastLoopMessage = String(format: LocalizedString("Last completed loop %1$@.", comment: "Last loop time completed message (1: last loop time string)"), fullTimeStr)
             } else {
@@ -216,7 +189,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
             freshness = LoopCompletionFreshness(age: ago)
             
-            if let timeString = truncatedTimeAgoString(from: ago) {
+            if let timeString = ago.truncatedTimeAgoString {
                 switch traitCollection.preferredContentSizeCategory {
                 case UIContentSizeCategory.extraSmall,
                     UIContentSizeCategory.small,
@@ -274,105 +247,5 @@ public final class LoopCompletionHUDView: BaseHUDView {
         super.didMoveToWindow()
 
         assertTimer()
-    }
-}
-
-extension LoopCompletionHUDView {
-    public var loopCompletionMessage: (title: String, message: String) {
-        switch freshness {
-        case .fresh:
-            if !loopIconClosed {
-                let reason = closedLoopDisallowedLocalizedDescription ?? LocalizedString(
-                    "Tap Settings to toggle Closed Loop ON if you wish for the app to automate your insulin.",
-                    comment: "Instructions for user to close loop if it is allowed."
-                )
-                
-                return (
-                    title: LocalizedString(
-                        "Closed Loop OFF",
-                        comment: "Title of fresh loop OFF message"
-                    ),
-                    message: String(
-                        format: LocalizedString(
-                            "\n%1$@ is operating with Closed Loop in the OFF position. Your pump and CGM will continue operating, but the app will not adjust dosing automatically.\n\n%2$@",
-                            comment: "Fresh closed loop OFF message (1: app name)(2: reason for open loop)"
-                        ),
-                        Bundle.main.bundleDisplayName,
-                        reason
-                    )
-                )
-            } else {
-                return (
-                    title: LocalizedString(
-                        "Closed Loop ON",
-                        comment: "Title of fresh closed loop ON message"
-                    ),
-                    message: String(
-                        format: LocalizedString(
-                            "\n%1$@\n\n%2$@ is operating with Closed Loop in the ON position.",
-                            comment: "Fresh closed loop ON message (1: last loop string) (2: app name)"
-                        ),
-                        lastLoopMessage,
-                        Bundle.main.bundleDisplayName
-                    )
-                )
-            }
-        case .aging:
-            if !loopIconClosed {
-                return (
-                    title: LocalizedString(
-                        "Caution",
-                        comment: "Title of aging open loop message"
-                    ),
-                    message: LocalizedString(
-                        "Tap your CGM and insulin pump status icons for more information. Check for potential communication issues with your pump and CGM.",
-                        comment: "Aging open loop message"
-                    )
-                )
-            } else {
-                return (
-                    title: LocalizedString(
-                        "Loop Warning",
-                        comment: "Title of aging closed loop message"
-                    ),
-                    message: String(
-                        format: LocalizedString(
-                            "\n%1$@\n\nTap your CGM and insulin pump status icons for more information. %2$@ will continue trying to complete a loop, but watch for potential communication issues with your pump and CGM.",
-                            comment: "Aging loop message (1: last loop string) (2: app name)"
-                        ),
-                        lastLoopMessage,
-                        Bundle.main.bundleDisplayName
-                    )
-                )
-            }
-        case .stale:
-            if !loopIconClosed {
-                return (
-                    title: LocalizedString(
-                        "Device Error",
-                        comment: "Title of stale loop message"
-                    ),
-                    message: LocalizedString(
-                        "Tap your CGM and insulin pump status icons for more information. Check for potential communication issues with your pump and CGM.",
-                        comment: "Stale open loop message"
-                    )
-                )
-            } else {
-                return (
-                    title: LocalizedString(
-                        "Loop Failure",
-                        comment: "Title of red loop message"
-                    ),
-                    message: String(
-                        format: LocalizedString(
-                            "\n%1$@\n\nTap your CGM and insulin pump status icons for more information. %2$@ will continue trying to complete a loop, but check for potential communication issues with your pump and CGM.",
-                            comment: "Red loop message (1: last loop  string) (2: app name)"
-                        ),
-                        lastLoopMessage,
-                        Bundle.main.bundleDisplayName
-                    )
-                )
-            }
-        }
     }
 }

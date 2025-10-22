@@ -430,7 +430,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         // This should be kept up to date immediately
         hudView?.loopCompletionHUD.lastLoopCompleted = loopManager.lastLoopCompleted
-        hudView?.loopCompletionHUD.deviceInoperable = deviceManager.cgmManager == nil || deviceManager.pumpManager == nil || basalDeliveryState == .pumpInoperable
+        hudView?.loopCompletionHUD.deviceInoperable = deviceManager.cgmManager == nil || deviceManager.cgmManager?.isInoperable == true || deviceManager.pumpManager == nil || deviceManager.pumpManager?.isInoperable == true || deviceManager.hasBluetoothIssue
         hudView?.loopCompletionHUD.mostRecentGlucoseDataDate = loopManager.mostRecentGlucoseDataDate
         hudView?.loopCompletionHUD.mostRecentPumpDataDate = loopManager.mostRecentPumpDataDate
 
@@ -1661,17 +1661,19 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     @objc private func showLoopCompletionMessage(_: Any) {
-        guard let loopCompletionMessage = hudView?.loopCompletionHUD.loopCompletionMessage else { return }
-        presentLoopCompletionMessage(title: loopCompletionMessage.title, message: loopCompletionMessage.message)
-    }
-
-    private func presentLoopCompletionMessage(title: String, message: String) {
-        // TODO remove the title
-        let viewModel = LoopStatusModalViewModel(lastLoopCompleted: loopManager.lastLoopCompleted, loopIconClosed: automaticDosingStatus.automaticDosingEnabled)
+        let viewModel = LoopStatusModalViewModel(
+            lastLoopCompleted: loopManager.lastLoopCompleted,
+            loopIconClosed: automaticDosingEnabled,
+            hasBluetoothIssue: deviceManager.hasBluetoothIssue,
+            isDeliverySuspended: deviceManager.isSuspended,
+            isPumpInSignalLoss: deviceManager.pumpManager?.inSignalLoss == true,
+            isPumpInoperable: deviceManager.pumpManager == nil || deviceManager.pumpManager?.isInoperable == true,
+            isCGMInWarmup: deviceManager.cgmManager?.cgmManagerStatus.inSensorWarmup == true,
+            isCGMInSignalLoss: deviceManager.cgmManager?.inSignalLoss == true,
+            isCGMInoperable: deviceManager.cgmManager == nil || deviceManager.cgmManager?.isInoperable == true)
         
         let modalVC = UIHostingController(
             rootView: LoopStatusModalView(viewModel: viewModel,
-                                          message: message,
                                           onDismiss: { [weak self] in
                                              self?.dismiss(animated: false)
                                          })

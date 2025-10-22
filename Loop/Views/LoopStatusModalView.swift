@@ -16,7 +16,6 @@ struct LoopStatusModalView: View {
     @State private var appear = false
     
     let viewModel: LoopStatusModalViewModel
-    let message: String
     var onDismiss: () -> Void
 
     private var freshnessColor: Color {
@@ -51,7 +50,7 @@ struct LoopStatusModalView: View {
         .background(Color.white)
         .cornerRadius(10)
         .shadow(radius: 5)
-        .frame(maxWidth: 300)
+        .frame(maxWidth: 340)
         .animation(.spring(), value: appear)
         .onAppear {
             withAnimation {
@@ -78,6 +77,10 @@ struct LoopStatusModalView: View {
             Text("Last loop completed")
             Text("\(Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90")) \(lastLoopCompletedString)")
                 .foregroundStyle(freshnessColor)
+            if viewModel.includeTimeStamp {
+                Text(viewModel.formattedLastLoopCompleted)
+                    .foregroundStyle(freshnessColor)
+            }
         }
         .font(.footnote)
         .fontWeight(.semibold)
@@ -91,63 +94,139 @@ struct LoopStatusModalView: View {
     }
         
     private var automationTitle: some View {
-        Text(viewModel.title)
+        Text(viewModel.copy.title)
             .font(.title2)
             .bold()
             .multilineTextAlignment(.center)
     }
     
     private var automationMessage: some View {
-        Text(message)
+        Text(viewModel.copy.message)
             .multilineTextAlignment(.center)
     }
 }
 
 struct LoopStatusModalViewModel {
-    private var timeAgoFormatter: DateComponentsFormatter = {
-        let formatter = DateComponentsFormatter()
-
-        formatter.allowedUnits = [.day, .hour, .minute]
-        formatter.maximumUnitCount = 1
-        formatter.unitsStyle = .short
-
+    private var timeDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale.current
         return formatter
     }()
     
+    var lastLoopCompleted: Date?
     var freshness: LoopCompletionFreshness {
         LoopCompletionFreshness(age: ago)
     }
-    var lastLoopCompleted: Date?
     var ago: TimeInterval? {
         guard let lastLoopCompleted else { return nil }
         return abs(min(0, lastLoopCompleted.timeIntervalSinceNow))
     }
+    var includeTimeStamp: Bool { // only include if last loop was before today
+        guard let lastLoopCompleted else { return false }
+        let startOfToday = Calendar.current.startOfDay(for: Date())
+        return lastLoopCompleted < startOfToday
+    }
+    var formattedLastLoopCompleted: String {
+        guard let lastLoopCompleted else { return "Unknown" }
+        return String(format: NSLocalizedString("at %1$@", comment: "when adding a timestamp. (1: the formatted timestamp)"), timeDateFormatter.string(from: lastLoopCompleted))
+    }
+
     var loopIconClosed: Bool
     
-    var title: String {
+    var hasBluetoothIssue: Bool
+
+    var isPumpInSignalLoss: Bool
+    var isPumpInoperable: Bool
+    var isDeliverySuspended: Bool
+
+    var isCGMInWarmup: Bool
+    var isCGMInSignalLoss: Bool
+    var isCGMInoperable: Bool
+    
+    var copy: (title: String, message: String) {
         guard loopIconClosed else {
-            return NSLocalizedString("Automation is off", comment: "label for when automation is off")
+            if hasBluetoothIssue || isPumpInoperable || isPumpInSignalLoss {
+                return (titleDeviceIssue, NSLocalizedString("Tap your CGM or insulin pump status icons right away for more information and steps to resolve the issue.", comment: "message when automation is off and there is a bluetooth or pump issue"))
+            } else if isDeliverySuspended {
+                return (titleAutomationOff, NSLocalizedString("Resume insulin if you wish for the app to restart insulin delivery.\n\nIf you wish for the app to automate your insulin, go to Settings and toggle Closed Loop to on.", comment: "message when automation is off and insulin delivery is suspended"))
+            } else if isCGMInoperable {
+                return (titleDeviceIssue, NSLocalizedString("Tap your CGM status icon right away for more information and steps to resolve the issue.\n\nIn the meantime, your pump is still able to deliver insulin.", comment: "message when automation is off and CGM is inoperable"))
+            } else if isCGMInSignalLoss {
+                return (titleDeviceIssue, NSLocalizedString("Check for potential communication issues with your CGM.\n\nIn the meantime, your pump is still able to deliver insulin.", comment: "message when automation is off and CGM is in signal loss"))
+            } else if isCGMInWarmup {
+                return (titleAutomationOff, NSLocalizedString("Your CGM sensor is warming up.\n\nIn the meantime, your pump is still able to deliver insulin.\n\nIf you wish for the app to automate your insulin, go to Settings and toggle Closed Loop to on.", comment: "message when automation is off and CGM is in warmup"))
+            } else {
+                return (titleAutomationOff, NSLocalizedString("Your pump and CGM will continue to operate, but the app will not adjust insulin dosing automatically.\n\nIf you wish for the app to automate your insulin, go to Settings and toggle Closed Loop to on.", comment: "message when automation is off and devices are good"))
+            }
         }
         
         if freshness == .fresh {
-            return  NSLocalizedString("Automation is on", comment: "label for when automation is off")
+            return (titleAutomationOn, NSLocalizedString("Tidepool Loop will actively adjust your insulin dosing in response to your glucose as often as every 5 minutes.", comment: "message when automation is on and the glucose value is fresh"))
+        } else if hasBluetoothIssue || isPumpInoperable {
+            return (titleUnavailable, NSLocalizedString("Tap your CGM or insulin pump status icons right away for more information and steps to resolve the issue.", comment: "message when automation is on and there is a bluetooth or pump issue"))
+        } else if isPumpInSignalLoss {
+            return (titleUnsucessful, NSLocalizedString("Tidepool Loop will continue trying to restore automation, but check for potential communication issues with your CGM or insulin pump.", comment: "message when automation is on and pump is in signal loss"))
+        } else if isDeliverySuspended {
+            return (titleUnavailable, NSLocalizedString("Automation is unavailable while your insulin is suspended.\n\nResume insulin if you wish for the app to automate insulin delivery.", comment: "message when automation is on and insulin delivery is suspended"))
+        } else if isCGMInoperable {
+            return (titleUnavailable, NSLocalizedString("Tap your CGM status icon right away for more information and steps to resolve the issue.\n\nIn the meantime, your pump is still able to deliver insulin.", comment: "message when automation is on and CGM is inoperable"))
+        } else if isCGMInSignalLoss {
+            return (titleUnsucessful, NSLocalizedString("Tidepool Loop will continue trying to restore automation, but check for potential communication issues with your CGM.\n\nIn the meantime, your pump is still able to deliver insulin.", comment: "message when automation is on and CGM is in signal loss"))
+        } else if isCGMInWarmup {
+            return (titleUnavailable, NSLocalizedString("Automation is unavailable while your CGM sensor is warming up.\n\nIn the meantime, your pump is still able to deliver insulin.\n\nAutomation will resume when CGM readings are received.", comment: "message when automation is on and CGM is in warmup"))
         } else {
-            return NSLocalizedString("Automation is unavailable", comment: "label for when automation is unavailable")
+            return (titleUnsucessful, NSLocalizedString("Tidepool Loop will continue trying to restore automation, but check for potential communication issues with your CGM or insulin pump.", comment: "message when automation is on and the glucose value is not fresh"))
         }
     }
     
+    var titleDeviceIssue: String {
+        return NSLocalizedString("Device Issue", comment: "title for when automation is off and there is a device issue")
+    }
+    
+    var titleAutomationOff: String {
+        return NSLocalizedString("Automation is off", comment: "title for when automation is off")
+    }
+    
+    var titleUnavailable: String {
+        return NSLocalizedString("Automation is unavailable", comment: "title for when automation is unavailable")
+    }
+    
+    var titleUnsucessful: String {
+        return NSLocalizedString("Automation was unsuccessful", comment: "title for when automation was unsuccessful")
+    }
+    
+    var titleAutomationOn: String {
+        return NSLocalizedString("Automation is on", comment: "title for when automation is on")
+    }
+
     var lastLoopCompletedFormattedTime: String? {
         guard let ago,
-              let timeString = timeAgoFormatter.string(from: ago)
+              let timeString = ago.truncatedTimeAgoString
         else { return nil }
         
         return NSLocalizedString("\(timeString) ago", comment: "last loop completed string")
     }
     
     init(lastLoopCompleted: Date? = nil,
-         loopIconClosed: Bool)
+         loopIconClosed: Bool,
+         hasBluetoothIssue: Bool,
+         isDeliverySuspended: Bool,
+         isPumpInSignalLoss: Bool,
+         isPumpInoperable: Bool,
+         isCGMInWarmup: Bool,
+         isCGMInSignalLoss: Bool,
+         isCGMInoperable: Bool)
     {
         self.lastLoopCompleted = lastLoopCompleted
         self.loopIconClosed = loopIconClosed
+        self.hasBluetoothIssue = hasBluetoothIssue
+        self.isDeliverySuspended = isDeliverySuspended
+        self.isPumpInSignalLoss = isPumpInSignalLoss
+        self.isPumpInoperable = isPumpInoperable
+        self.isCGMInWarmup = isCGMInWarmup
+        self.isCGMInSignalLoss = isCGMInSignalLoss
+        self.isCGMInoperable = isCGMInoperable
     }
 }

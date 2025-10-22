@@ -13,6 +13,10 @@ import HealthKit
 @testable import Loop
 
 class MockPumpManager: PumpManager {
+    var inSignalLoss: Bool = false
+    
+    var isInoperable: Bool = false
+    
     var enactBolusCalled: ((Double, BolusActivationType) -> Void)?
 
     var enactTempBasalCalled: ((Double, TimeInterval) -> Void)?
