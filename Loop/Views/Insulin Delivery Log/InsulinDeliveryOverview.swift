@@ -92,10 +92,14 @@ struct InsulinDeliveryOverview: View {
     
     var statusTitle: Text {
         switch state {
-        case .automationOn(let basalStatus, _):
+        case .automationOn(let basalStatus, let preset):
             switch basalStatus {
             case .scheduled:
-                Text("Scheduled Basal")
+                if let preset, preset.insulinNeedsScaleFactor != 1.0 {
+                    Text("Preset Delivery")
+                } else {
+                    Text("Scheduled Basal")
+                }
             case .increased:
                 Text("Increased Delivery")
             case .decreased:
