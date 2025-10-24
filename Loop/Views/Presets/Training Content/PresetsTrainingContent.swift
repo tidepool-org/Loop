@@ -842,7 +842,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                     TintedContent(
                         tint: .orange,
                         icon: Image(systemName: "fork.knife"),
-                        title: Text("Active Insulin")
+                        title: Text("Meal Timing")
                     ) {
                         Text("If you often experience low glucose, you may need to reduce how much insulin you deliver for meals eaten 1-2 hours before exercising.")
                         
