@@ -94,6 +94,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
         tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
         tableView.register(InsulinSuspendedTableViewCell.nib(), forCellReuseIdentifier: InsulinSuspendedTableViewCell.className)
+        tableView.register(RecentGlucoseTableViewCell.nib(), forCellReuseIdentifier: RecentGlucoseTableViewCell.className)
 
         if FeatureFlags.predictedGlucoseChartClampEnabled {
             statusCharts.glucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBoundClamped
@@ -1099,14 +1100,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     cell.accessoryView = nil
                     return cell
                 case .recommendManualGlucoseEntry:
-                    let cell = getTitleSubtitleCell()
-                    cell.titleLabel.text = NSLocalizedString("No Recent Glucose", comment: "The title of the cell indicating that there is no recent glucose")
-                    cell.subtitleLabel.text = NSLocalizedString("Tap to Add", comment: "The subtitle of the cell displaying an action to add a manually measurement glucose value")
+                    let cell = tableView.dequeueReusableCell(withIdentifier: RecentGlucoseTableViewCell.className, for: indexPath) as! RecentGlucoseTableViewCell
                     cell.selectionStyle = .default
-                    let imageView = UIImageView(image: UIImage(named: "drop.circle"))
-                    imageView.tintColor = .glucoseTintColor
-                    cell.accessoryView = imageView
-                    cell.titleLabel.accessibilityIdentifier = "text_NoRecentGlucose"
                     return cell
                 }
             }
