@@ -93,6 +93,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         }
 
         tableView.register(BolusProgressTableViewCell.nib(), forCellReuseIdentifier: BolusProgressTableViewCell.className)
+        tableView.register(InsulinSuspendedTableViewCell.nib(), forCellReuseIdentifier: InsulinSuspendedTableViewCell.className)
 
         if FeatureFlags.predictedGlucoseChartClampEnabled {
             statusCharts.glucose.glucoseDisplayRange = LoopConstants.glucoseChartDefaultDisplayBoundClamped
@@ -1069,19 +1070,17 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     progressCell.configuration = .canceled(delivered: dose.deliveredUnits ?? 0, ofTotalVolume: dose.programmedUnits)
                     return progressCell
                 case .pumpSuspended(let resuming):
-                    let cell = getTitleSubtitleCell()
-                    cell.titleLabel.text = NSLocalizedString("Insulin Suspended", comment: "The title of the cell indicating the pump is suspended")
-                    cell.titleLabel.accessibilityIdentifier = "text_InsulinSuspended"
-                    
-                    if resuming {
-                        let indicatorView = UIActivityIndicatorView(style: .default)
-                        indicatorView.startAnimating()
-                        cell.accessoryView = indicatorView
-                    } else {
-                        cell.subtitleLabel.text = NSLocalizedString("Tap to Resume", comment: "The subtitle of the cell displaying an action to resume insulin delivery")
-                        cell.subtitleLabel.accessibilityIdentifier = "text_InsulinTapToResume"
-                    }
+                    let cell = tableView.dequeueReusableCell(withIdentifier: InsulinSuspendedTableViewCell.className, for: indexPath) as! InsulinSuspendedTableViewCell
                     cell.selectionStyle = .default
+                    if resuming {
+                        cell.activityIndicator.startAnimating()
+                        cell.activityIndicator.isHidden = false
+                    } else {
+                        cell.tapToResumeLabel.text = NSLocalizedString("Tap to Resume", comment: "The subtitle of the cell displaying an action to resume insulin delivery")
+                        cell.tapToResumeLabel.accessibilityIdentifier = "text_InsulinTapToResume"
+                        cell.activityIndicator.stopAnimating()
+                        cell.activityIndicator.isHidden = true
+                    }
                     return cell
                 case .onboardingSuspended:
                     let cell = tableView.dequeueReusableCell(withIdentifier: IconTitleSubtitleTableViewCell.className, for: indexPath) as! IconTitleSubtitleTableViewCell

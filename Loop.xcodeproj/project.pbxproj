@@ -366,6 +366,8 @@
 		B429CAB42E97C97000FA988E /* LoopStatusModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B429CAB22E97C7F300FA988E /* LoopStatusModalView.swift */; };
 		B42C951424A3C76000857C73 /* CGMStatusHUDViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42C951324A3C76000857C73 /* CGMStatusHUDViewModel.swift */; };
 		B42D124328D371C400E43D22 /* AlertMuter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42D124228D371C400E43D22 /* AlertMuter.swift */; };
+		B43B5C502EAFB17D0096A6AE /* InsulinSuspendedTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = B43B5C4F2EAFB17D0096A6AE /* InsulinSuspendedTableViewCell.xib */; };
+		B43B5C522EAFB1BE0096A6AE /* InsulinSuspendedTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43B5C512EAFB1B60096A6AE /* InsulinSuspendedTableViewCell.swift */; };
 		B43CF07E29434EC4008A520B /* HowMuteAlertWorkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43CF07D29434EC4008A520B /* HowMuteAlertWorkView.swift */; };
 		B43DA44124D9C12100CAFF4E /* DismissibleHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43DA44024D9C12100CAFF4E /* DismissibleHostingController.swift */; };
 		B455C7332BD14E25002B847E /* Comparable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B455C7322BD14E25002B847E /* Comparable.swift */; };
@@ -1281,6 +1283,8 @@
 		B429CAB22E97C7F300FA988E /* LoopStatusModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopStatusModalView.swift; sourceTree = "<group>"; };
 		B42C951324A3C76000857C73 /* CGMStatusHUDViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGMStatusHUDViewModel.swift; sourceTree = "<group>"; };
 		B42D124228D371C400E43D22 /* AlertMuter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlertMuter.swift; sourceTree = "<group>"; };
+		B43B5C4F2EAFB17D0096A6AE /* InsulinSuspendedTableViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = InsulinSuspendedTableViewCell.xib; sourceTree = "<group>"; };
+		B43B5C512EAFB1B60096A6AE /* InsulinSuspendedTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinSuspendedTableViewCell.swift; sourceTree = "<group>"; };
 		B43CF07D29434EC4008A520B /* HowMuteAlertWorkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowMuteAlertWorkView.swift; sourceTree = "<group>"; };
 		B43DA44024D9C12100CAFF4E /* DismissibleHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissibleHostingController.swift; sourceTree = "<group>"; };
 		B455C7322BD14E25002B847E /* Comparable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comparable.swift; sourceTree = "<group>"; };
@@ -2230,6 +2234,8 @@
 				B43CF07D29434EC4008A520B /* HowMuteAlertWorkView.swift */,
 				430D85881F44037000AF2D4F /* HUDViewTableViewCell.swift */,
 				A91D2A3E26CF0FF80023B075 /* IconTitleSubtitleTableViewCell.swift */,
+				B43B5C512EAFB1B60096A6AE /* InsulinSuspendedTableViewCell.swift */,
+				B43B5C4F2EAFB17D0096A6AE /* InsulinSuspendedTableViewCell.xib */,
 				C1742331259BEADC00399C9D /* ManualEntryDoseView.swift */,
 				1DA46B5F2492E2E300D71A63 /* NotificationsCriticalAlertPermissionsView.swift */,
 				899433B723FE129700FA4BEA /* OverrideBadgeView.swift */,
@@ -3294,6 +3300,7 @@
 				B4C6D2422EA7E38C006F5755 /* LocalizablePlural.xcstrings in Resources */,
 				7D70764F1FE06EE1004AC8EA /* InfoPlist.strings in Resources */,
 				7D7076631FE06EE4004AC8EA /* Localizable.strings in Resources */,
+				B43B5C502EAFB17D0096A6AE /* InsulinSuspendedTableViewCell.xib in Resources */,
 				43776F971B8022E90074EA36 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3578,6 +3585,7 @@
 				C18859AC2AF29BE50010F21F /* TemporaryPresetsManager.swift in Sources */,
 				84E8BBC62CC9BF830078E6CF /* PercentPickerView.swift in Sources */,
 				84475E0E2E5F00B900FC5E7C /* TimelineSteps.swift in Sources */,
+				B43B5C522EAFB1BE0096A6AE /* InsulinSuspendedTableViewCell.swift in Sources */,
 				84F20DFB2D0A56CB0089DF02 /* PresetStatsView.swift in Sources */,
 				1DA649A7244126CD00F61E75 /* UserNotificationAlertScheduler.swift in Sources */,
 				C16971F92D1231B5001B7DF6 /* PresetRangeEditor.swift in Sources */,

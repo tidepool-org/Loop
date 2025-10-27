@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="61" id="zPb-V5-6AF" customClass="InsulinSuspendedTableViewCell" customModule="Loop" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="416" height="61"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="zPb-V5-6AF" id="w2Z-cc-Oi1">
+                <rect key="frame" x="0.0" y="0.0" width="416" height="61"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Ox9-va-rBX" userLabel="Padded View">
+                        <rect key="frame" x="8" y="0.0" width="400" height="53"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="ykl-5f-TVL">
+                                <rect key="frame" x="12" y="12" width="376" height="29"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" text="Insulin Suspended" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Lrb-cS-EbB">
+                                        <rect key="frame" x="0.0" y="0.0" width="266.33333333333331" height="29"/>
+                                        <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Tap to Resume" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UhW-PJ-0PX">
+                                        <rect key="frame" x="274.33333333333331" y="0.0" width="101.66666666666669" height="29"/>
+                                        <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="YZg-bh-eNa">
+                                        <rect key="frame" x="376" y="0.0" width="0.0" height="29"/>
+                                    </activityIndicatorView>
+                                </subviews>
+                            </stackView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstAttribute="bottom" secondItem="ykl-5f-TVL" secondAttribute="bottom" constant="12" id="7jW-mM-q7Y"/>
+                            <constraint firstItem="ykl-5f-TVL" firstAttribute="top" secondItem="Ox9-va-rBX" secondAttribute="top" constant="12" id="NSr-Fn-kKh"/>
+                            <constraint firstItem="ykl-5f-TVL" firstAttribute="leading" secondItem="Ox9-va-rBX" secondAttribute="leading" constant="12" id="dVI-8a-Is0"/>
+                            <constraint firstAttribute="trailing" secondItem="ykl-5f-TVL" secondAttribute="trailing" constant="12" id="tW4-Md-oz4"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
+                <constraints>
+                    <constraint firstAttribute="trailing" secondItem="Ox9-va-rBX" secondAttribute="trailing" constant="8" id="3TZ-IE-FuM"/>
+                    <constraint firstItem="Ox9-va-rBX" firstAttribute="top" secondItem="w2Z-cc-Oi1" secondAttribute="top" id="BLv-bg-UeA"/>
+                    <constraint firstItem="Ox9-va-rBX" firstAttribute="leading" secondItem="w2Z-cc-Oi1" secondAttribute="leading" constant="8" id="mae-sg-UiA"/>
+                    <constraint firstAttribute="bottom" secondItem="Ox9-va-rBX" secondAttribute="bottom" constant="8" id="sCG-iG-BTt"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="activityIndicator" destination="YZg-bh-eNa" id="8wz-y6-104"/>
+                <outlet property="label" destination="Lrb-cS-EbB" id="45f-vb-Ug3"/>
+                <outlet property="paddedView" destination="Ox9-va-rBX" id="4rA-NJ-9pp"/>
+                <outlet property="tapToResumeLabel" destination="UhW-PJ-0PX" id="d4e-zQ-FkF"/>
+            </connections>
+            <point key="canvasLocation" x="207.63358778625954" y="-114.43661971830987"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <systemColor name="secondarySystemBackgroundColor">
+            <color red="0.94901960784313721" green="0.94901960784313721" blue="0.96862745098039216" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
