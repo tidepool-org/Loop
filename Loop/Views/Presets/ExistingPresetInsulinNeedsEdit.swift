@@ -30,7 +30,7 @@ struct ExistingPresetInsulinNeedsEdit: View {
     var body: some View {
         CardSectionScrollView {
             CardSection {
-                InsulinScaleAdjustView(insulinMultiplier: $editedScale)
+                InsulinScaleAdjustView(insulinMultiplier: $editedScale, guardrail: Guardrail.presetInsulinNeeds)
             }
         } actionArea: {
             if let crossedThreshold {
