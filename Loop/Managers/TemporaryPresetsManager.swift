@@ -89,21 +89,31 @@ class TemporaryPresetsManager {
             guard oldValue != scheduleOverride else {
                 return
             }
+         
+            presetHistory.recordOverride(scheduleOverride)
 
-            if scheduleOverride != oldValue {
-                presetHistory.recordOverride(scheduleOverride)
-
-                if let oldPreset = oldValue {
-                    for observer in self.presetActivationObservers {
-                        observer.presetDeactivated(context: oldPreset.context)
+            if let oldPreset = oldValue {
+                for observer in self.presetActivationObservers {
+                    observer.presetDeactivated(context: oldPreset.context)
+                }
+                
+                if oldPreset.duration == .indefinite {
+                    Task { @MainActor in
+                        await clearIndefinitePresetReminder(oldPreset)
                     }
                 }
-                if let newPreset = scheduleOverride {
-                    for observer in self.presetActivationObservers {
-                        observer.presetActivated(context: newPreset.context, duration: newPreset.duration)
+            }
+            if let newPreset = scheduleOverride {
+                for observer in self.presetActivationObservers {
+                    observer.presetActivated(context: newPreset.context, duration: newPreset.duration)
+                }
+                
+                scheduleClearOverride(override: newPreset)
+                
+                if newPreset.duration == .indefinite {
+                    Task { @MainActor in
+                        await scheduleIndefinitePresetReminder(newPreset)
                     }
-                    
-                    scheduleClearOverride(override: newPreset)
                 }
             }
 
@@ -171,6 +181,58 @@ class TemporaryPresetsManager {
         if override == scheduleOverride {
             clearOverride()
         }
+    }
+    
+    func scheduleIndefinitePresetReminder(_ override: TemporaryScheduleOverride) async {
+        let preset = override.createPreset()
+        let indefinitePresetIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: preset.id)
+        
+        let title = String(format: NSLocalizedString("%1$@ Still Active", comment: "The format title for the preset still active alert. (1: preset name)"), preset.name)
+
+        let foregroundBody = String(
+            format: NSLocalizedString("%1$@ has been active for more than 24 hours. Make sure you still want it enabled, or turn it off.", comment: "Active preset reminder alert foreground body. (1: preset name)"),
+            preset.name
+        )
+        
+        let backgroundBody = String(
+            format: NSLocalizedString("%1$@ has been active for more than 24 hours. Make sure you still want it enabled, or turn it off in the app.", comment: "Active preset reminder alert background body. (1: preset name)"),
+            preset.name
+        )
+
+        let actions = [
+            Alert.UserAlertAction(
+                label: NSLocalizedString("OK", comment: "Label for acknowledging the preset has been active for 24 hours"),
+                identifier: "ok",
+                style: .default
+            ),
+        ]
+
+        let foregroundContent = Alert.Content(title: title,
+                                              body: foregroundBody,
+                                              actions: actions)
+
+        let backgroundContent = Alert.Content(title: title,
+                                              body: backgroundBody,
+                                              actions: actions)
+
+        let metadata: Alert.Metadata = [LoopNotificationUserInfoKey.presetId.rawValue: Alert.MetadataValue(preset.id)]
+
+        let alert = Alert(
+            identifier: indefinitePresetIdentifier,
+            foregroundContent: foregroundContent,
+            backgroundContent: backgroundContent,
+            trigger: .repeating(repeatInterval: .hours(24)),
+            interruptionLevel: .timeSensitive,
+            metadata: metadata,
+            categoryIdentifier: LoopNotificationCategory.presetReminder.rawValue
+        )
+
+        await alertIssuer?.issueAlert(alert)
+    }
+    
+    func clearIndefinitePresetReminder(_ preset: TemporaryScheduleOverride) async {
+        let indefinitePresetIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: preset.syncIdentifier.uuidString)
+        await alertIssuer?.retractAlert(identifier: indefinitePresetIdentifier)
     }
 
     public func effectiveGlucoseTargetRangeSchedule(presumingMealEntry: Bool = false) -> GlucoseRangeSchedule?  {
