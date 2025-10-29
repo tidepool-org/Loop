@@ -16,7 +16,8 @@ struct LoopStatusModalView: View {
     @State private var appear = false
     
     let viewModel: LoopStatusModalViewModel
-    var onDismiss: () -> Void
+    let onDismiss: () -> Void
+    let onNavigateToSettings: () -> Void
 
     private var freshnessColor: Color {
         switch viewModel.freshness {
@@ -100,9 +101,32 @@ struct LoopStatusModalView: View {
             .multilineTextAlignment(.center)
     }
     
+    @ViewBuilder
     private var automationMessage: some View {
-        Text(viewModel.copy.message)
+        let message = viewModel.copy.message
+
+        // Use a localized search for the "Settings" word within the message
+        let settingsWord = viewModel.localizedSettingsWord
+        
+        if let range = message.range(of: settingsWord) {
+            let prefix = String(message[..<range.lowerBound])
+            let suffix = String(message[range.upperBound...])
+            
+            Group {(
+                Text(prefix) +
+                Text(settingsWord)
+                    .foregroundColor(.accentColor) +
+                Text(suffix)
+            )}
             .multilineTextAlignment(.center)
+            .onTapGesture {
+                onDismiss()
+                onNavigateToSettings()
+            }
+        } else {
+            Text(message)
+                .multilineTextAlignment(.center)
+        }
     }
 }
 
@@ -202,6 +226,10 @@ struct LoopStatusModalViewModel {
     
     var titleAutomationOn: String {
         return NSLocalizedString("Automation is on", comment: "title for when automation is on")
+    }
+    
+    var localizedSettingsWord: String {
+        NSLocalizedString("Settings", comment: "Word referring to the app's settings screen")
     }
 
     var lastLoopCompletedFormattedTime: String? {
