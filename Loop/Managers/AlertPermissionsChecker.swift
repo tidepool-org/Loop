@@ -235,7 +235,7 @@ extension AlertPermissionsChecker {
     }
 
     @MainActor
-    static func constructUnsafeNotificationPermissionsInAppAlert(alert: UnsafeNotificationPermissionAlert) async -> UIAlertController {
+    static func constructUnsafeNotificationPermissionsInAppAlert(alert: UnsafeNotificationPermissionAlert, acknowledgementCompletion: @escaping (UnsafeNotificationPermissionAlert) -> Void) -> UIAlertController {
         let alertController = UIAlertController(title: alert.alertTitle,
                                                 message: alert.alertBody,
                                                 preferredStyle: .alert)
@@ -247,19 +247,16 @@ extension AlertPermissionsChecker {
         titleWithImage.append(NSMutableAttributedString(string: alert.alertTitle, attributes: [.font: UIFont.preferredFont(forTextStyle: .headline)]))
         alertController.setValue(titleWithImage, forKey: "attributedTitle")
 
-        await withCheckedContinuation { continuation in
-            alertController.addAction(UIAlertAction(title: NSLocalizedString("Settings", comment: "Label of button that navigation user to iOS Settings"),
-                                                    style: .default,
-                                                    handler: { _ in
-                AlertPermissionsChecker.gotoSettings()
-                continuation.resume()
-            }))
-            alertController.addAction(UIAlertAction(title: NSLocalizedString("Close", comment: "The button label of the action used to dismiss the unsafe notification permission alert"),
-                                                    style: .cancel,
-                                                    handler: { _ in
-                continuation.resume()
-            }))
-        }
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Settings", comment: "Label of button that navigation user to iOS Settings"),
+                                                style: .default,
+                                                handler: { _ in
+            AlertPermissionsChecker.gotoSettings()
+            acknowledgementCompletion(alert)
+        }))
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Close", comment: "The button label of the action used to dismiss the unsafe notification permission alert"),
+                                                style: .cancel,
+                                                handler: { _ in acknowledgementCompletion(alert) })
+        )
 
         return alertController
     }

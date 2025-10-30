@@ -743,16 +743,15 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
 
     private func presentUnsafeNotificationPermissionsInAppAlert(_ alert: AlertPermissionsChecker.UnsafeNotificationPermissionAlert) {
         Task { @MainActor in
-            let alertController = await AlertPermissionsChecker.constructUnsafeNotificationPermissionsInAppAlert(alert: alert)
-            for alert in AlertPermissionsChecker.UnsafeNotificationPermissionAlert.allCases {
+            let alertController = AlertPermissionsChecker.constructUnsafeNotificationPermissionsInAppAlert(alert: alert) { [weak self] alert in
                 UserDefaults.standard.hasIssuedNotificationPermissionsAlert = false
-                try await self.acknowledgeAlert(
-                    identifier: alert.alertIdentifier
-                )
+                Task {
+                    try await self?.acknowledgeAlert(identifier: alert.alertIdentifier)
+                }
             }
 
             await self.alertPresenter.present(alertController, animated: true)
-            // the completion is called after the alert is presented
+            // this is called after the alert is presented
             unsafeNotificationPermissionsAlertController = alertController
         }
     }
