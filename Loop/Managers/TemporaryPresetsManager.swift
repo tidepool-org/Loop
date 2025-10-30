@@ -230,8 +230,9 @@ class TemporaryPresetsManager {
         await alertIssuer?.issueAlert(alert)
     }
     
-    func clearIndefinitePresetReminder(_ preset: TemporaryScheduleOverride) async {
-        let indefinitePresetIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: preset.syncIdentifier.uuidString)
+    func clearIndefinitePresetReminder(_ override: TemporaryScheduleOverride) async {
+        let preset = override.createPreset()
+        let indefinitePresetIdentifier = Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: preset.id)
         await alertIssuer?.retractAlert(identifier: indefinitePresetIdentifier)
     }
 
