@@ -1670,7 +1670,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
             rootView: LoopStatusModalView(viewModel: viewModel,
                                           onDismiss: { [weak self] in
                                              self?.dismiss(animated: false)
-                                         })
+                                          },
+                                          onNavigateToSettings: { [weak self] in
+                                              self?.presentSettings()
+                                          })
                 .environment(\.loopStatusColorPalette, .loopStatus)
         )
         modalVC.modalPresentationStyle = .overCurrentContext
