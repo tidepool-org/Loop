@@ -19,6 +19,7 @@ public struct InsulinScaleAdjustView: View {
     @State private var presentInfoView: Bool = false
 
     @Binding var insulinMultiplier: Double
+    let guardrail: Guardrail<LoopQuantity>
 
     var insulinPercentage: Double {
         (insulinMultiplier * 100).rounded()
@@ -74,6 +75,8 @@ public struct InsulinScaleAdjustView: View {
             switch threshold {
             case .minimum, .maximum:
                 return guidanceColors.critical
+            case .belowWarning, .aboveWarning:
+                return guidanceColors.critical
             case .belowRecommended, .aboveRecommended:
                 return guidanceColors.warning
             }
@@ -108,13 +111,13 @@ public struct InsulinScaleAdjustView: View {
     }
     
     private func decreaseInsulinMultiplier() {
-        if insulinPercentage > 10 {
+        if insulinPercentage > guardrail.absoluteBounds.lowerBound.doubleValue(for: .percent) {
             insulinMultiplier = insulinPercentage.snap(direction: .down) / 100
         }
     }
     
     private func increaseInsulinMultiplier() {
-        if insulinPercentage < 200 {
+        if insulinPercentage < guardrail.absoluteBounds.upperBound.doubleValue(for: .percent) {
             insulinMultiplier = insulinPercentage.snap(direction: .up) / 100
         }
     }

@@ -72,6 +72,8 @@ struct PresetStatsView: View {
             switch threshold {
             case .aboveRecommended, .belowRecommended:
                 return guidanceColors.warning
+            case .aboveWarning, .belowWarning:
+                return guidanceColors.critical
             case .maximum, .minimum:
                 return guidanceColors.critical
             }

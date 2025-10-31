@@ -84,7 +84,7 @@ struct CreatePresetView: View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
                 Form {
-                    InsulinScaleAdjustView(insulinMultiplier: $preset.insulinMultiplier)
+                    InsulinScaleAdjustView(insulinMultiplier: $preset.insulinMultiplier, guardrail: Guardrail.presetInsulinNeeds)
                 }
 
                 actionArea
@@ -184,19 +184,21 @@ struct CreatePresetView: View {
 extension SafetyClassification.Threshold {
     public var insulinNeedsScaleWarningTitle: Text {
         switch self {
-        case .belowRecommended, .minimum:
+        case .belowRecommended, .belowWarning, .minimum:
             return Text("Insulin adjustment is below the safety threshold")
-        case .aboveRecommended, .maximum:
+        case .aboveRecommended, .aboveWarning, .maximum:
             return Text("Insulin adjustment is above the safety threshold")
         }
     }
 
     public var insulinNeedsScaleWarningCaption: Text {
         switch self {
-        case .belowRecommended, .minimum:
+        case .belowRecommended, .belowWarning, .minimum:
             return Text("Using this adjustment may lead to an under delivery of insulin. Monitor your glucose while this preset is in use.")
-        case .aboveRecommended, .maximum:
+        case .aboveRecommended:
             return Text("Using this adjustment may lead to an over delivery of insulin. Monitor your glucose while this preset is in use.")
+        case .aboveWarning, .maximum:
+            return Text("Using this adjustment may lead to an over delivery of insulin and result in serious injury. Monitor your glucose while this preset is in use.")
         }
     }
 
