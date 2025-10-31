@@ -332,7 +332,7 @@ extension SettingsManager {
         }
     }
 
-    public func guardrailForPreset(_ preset: SelectablePreset) -> Guardrail<LoopQuantity> {
+    public func correctionRangeGuardrailForPreset(_ preset: SelectablePreset) -> Guardrail<LoopQuantity> {
         switch preset {
         case .preMeal:
             return preMealGuardrail

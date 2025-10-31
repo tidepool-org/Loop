@@ -390,7 +390,7 @@ final class WatchDataManager: NSObject {
         dosingDecision.scheduleOverride = scheduleOverride
 
         if scheduleOverride != nil || preMealOverride != nil {
-            dosingDecision.glucoseTargetRangeSchedule = self.temporaryPresetsManager.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: potentialCarbEntry != nil)
+            dosingDecision.glucoseTargetRangeSchedule = self.temporaryPresetsManager.effectiveCorrectionRangeSchedule(presumingMealEntry: potentialCarbEntry != nil)
         } else {
             dosingDecision.glucoseTargetRangeSchedule = settings.glucoseTargetRangeSchedule
         }

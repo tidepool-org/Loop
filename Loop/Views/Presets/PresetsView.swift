@@ -99,7 +99,7 @@ struct PresetsView: View {
                     {
                         PresetCard(
                             activePreset,
-                            guardrail: settingsManager.guardrailForPreset(activePreset),
+                            guardrail: settingsManager.correctionRangeGuardrailForPreset(activePreset),
                             expectedEndTime: temporaryPresetsManager.activeOverride?.expectedEndTime
                         )
                         .onTapGesture {
@@ -142,7 +142,7 @@ struct PresetsView: View {
                             ForEach(presetsSorted) { preset in
                                 PresetCard(
                                     preset,
-                                    guardrail: settingsManager.guardrailForPreset(preset)
+                                    guardrail: settingsManager.correctionRangeGuardrailForPreset(preset)
                                     
                                 )
                                 .cornerRadius(12)

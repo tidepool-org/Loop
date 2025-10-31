@@ -94,8 +94,9 @@ struct EditPresetView: View {
                         } label: {
                             CorrectionRangePreview(
                                 range: preset.correctionRange,
-                                guardrail: settingsManager.guardrailForPreset(preset),
+                                guardrail: settingsManager.correctionRangeGuardrailForPreset(preset),
                                 scheduledRange: scheduledRange,
+                                presetInsulinMultiplier: preset.insulinNeedsScaleFactor,
                                 showDisclosure: true
                             )
                         }.accessibilityIdentifier("button_CorrectionRange")
@@ -334,11 +335,12 @@ struct EditPresetView: View {
                 case .editCorrectionRange:
                     ExistingPresetRangeEdit(
                         range: $preset.correctionRange,
-                        guardrail: settingsManager.guardrailForPreset(preset),
+                        guardrail: settingsManager.correctionRangeGuardrailForPreset(preset),
                         scheduledRange: scheduledRange,
                         allowsScheduledRange: preset.canAdjustSensitivity,
                         isPreMeal: preset.isPreMeal,
-                        presetAdjustsInsulinNeeds: preset.insulinNeedsScaleFactor != 1
+                        presetAdjustsInsulinNeeds: preset.insulinNeedsScaleFactor != 1,
+                        requiresHighInsulinNeedsMitigation: preset.veryHighInsulinNeeds
                     )
                 }
             }

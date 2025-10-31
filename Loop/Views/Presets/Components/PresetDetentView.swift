@@ -22,7 +22,8 @@ struct PresetDetentView: View {
     @Environment(\.settingsManager) private var settingsManager
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
-    
+    @Environment(\.appName) private var appName
+
     let preset: SelectablePreset
     let didTapEdit: () -> Void
 
@@ -113,6 +114,15 @@ struct PresetDetentView: View {
         settingsManager.therapySettings.impact(for: preset.insulinNeedsScaleFactor)
     }
 
+    var highInsulinNeedsWarningText: String {
+        switch operation {
+        case .start:
+            String(format: NSLocalizedString("%1$@ will set your correction range to 110 mg/dL or higher when this preset is enabled.", comment: "The format string for the high insulin needs preset warning text on the preset detent screen when starting a preset. (1: app name)"), appName)
+        case .end:
+            String(format: NSLocalizedString("%1$@ has set your correction range to 110 mg/dL or higher.", comment: "The format string for the high insulin needs preset warning text on the preset detent screen when stopping a preset. (1: app name)"), appName)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -142,12 +152,13 @@ struct PresetDetentView: View {
                 PresetStatsView(
                     insulinMultiplier: preset.insulinNeedsScaleFactor,
                     correctionRange: preset.correctionRange,
-                    guardrail: settingsManager.guardrailForPreset(preset),
+                    guardrail: settingsManager.correctionRangeGuardrailForPreset(preset),
                     therapySettingsImpactDisplayState: operation == .end ? .show(settingsImpact) : .hide,
                     isScheduled: false,
                     isActive: temporaryPresetsManager.activePreset?.id == preset.id
                 )
-                
+                .padding(.horizontal)
+
                 if case let .activity(activityPreset) = preset, !activityPreset.isModifiedFromDefault {
                     Text("\(Image(systemName: "checkmark.seal.fill")) Recommended starting values")
                         .font(.subheadline)
@@ -155,7 +166,15 @@ struct PresetDetentView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 4)
                 }
-                
+
+                if preset.veryHighInsulinNeeds {
+                    WarningPanel {
+                        Text(highInsulinNeedsWarningText)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                    }
+                }
+
                 actionArea
             }
             .toolbar(.hidden)

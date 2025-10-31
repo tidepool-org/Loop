@@ -13,6 +13,7 @@ import LoopKitUI
 
 struct ExistingPresetRangeEdit: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appName) private var appName
 
     @Binding var range: ClosedRange<LoopQuantity>?
     var guardrail: Guardrail<LoopQuantity>
@@ -20,7 +21,8 @@ struct ExistingPresetRangeEdit: View {
     @State private var editedRange: ClosedRange<LoopQuantity>?
     private var allowsScheduledRange: Bool
     private var isPreMeal: Bool = false
-    private var presetAdjustsInsulinNeeds: Bool = false
+    private var presetAdjustsInsulinNeeds: Bool
+    private var requiresHighInsulinNeedsMitigation: Bool
 
     init(
         range: Binding<ClosedRange<LoopQuantity>?>,
@@ -28,7 +30,8 @@ struct ExistingPresetRangeEdit: View {
         scheduledRange: ClosedRange<LoopQuantity>,
         allowsScheduledRange: Bool = true,
         isPreMeal: Bool = false,
-        presetAdjustsInsulinNeeds: Bool
+        presetAdjustsInsulinNeeds: Bool,
+        requiresHighInsulinNeedsMitigation: Bool
     ) {
         self._range = range
         self.editedRange = range.wrappedValue
@@ -37,6 +40,11 @@ struct ExistingPresetRangeEdit: View {
         self.allowsScheduledRange = allowsScheduledRange
         self.isPreMeal = isPreMeal
         self.presetAdjustsInsulinNeeds = presetAdjustsInsulinNeeds
+        self.requiresHighInsulinNeedsMitigation = requiresHighInsulinNeedsMitigation
+    }
+
+    var highInsulinNeedsWarningText: String {
+        String(format: NSLocalizedString("For presets with insulin needs of 170%% or greater, %1$@ will set your correction range to 110 mg/dL or higher when this preset is enabled.", comment: "The format string for the high insulin needs preset warning text. (1: app name)"), appName)
     }
 
     var body: some View {
@@ -57,6 +65,10 @@ struct ExistingPresetRangeEdit: View {
                 NoticeView(
                     title: Text("Set an Adjusted Correction Range"),
                     caption: Text("With overall insulin needs at 100%, an adjusted correction range is required."))
+            } else if requiresHighInsulinNeedsMitigation {
+                WarningView(
+                    title: Text("Correction range adjustment when preset is enabled"),
+                    caption: Text(highInsulinNeedsWarningText))
             }
             actionButton
         }

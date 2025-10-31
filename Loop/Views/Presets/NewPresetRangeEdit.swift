@@ -13,6 +13,7 @@ import LoopKitUI
 
 struct NewPresetRangeEdit: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appName) private var appName
 
     @Binding var preset: NewCustomPreset
     @Binding var path: NavigationPath
@@ -29,6 +30,10 @@ struct NewPresetRangeEdit: View {
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
         self.onCancel = onCancel
+    }
+
+    var highInsulinNeedsWarningText: String {
+        String(format: NSLocalizedString("For presets with insulin needs of 170%% or greater, %1$@ will set your correction range to 110 mg/dL or higher when this is preset enabled.", comment: "The format string for the high insulin needs preset warning text. (1: app name)"), appName)
     }
 
     var body: some View {
@@ -48,6 +53,10 @@ struct NewPresetRangeEdit: View {
                 NoticeView(
                     title: Text("Set an Adjusted Correction Range"),
                     caption: Text("With overall insulin needs at 100%, an adjusted correction range is required."))
+            } else if preset.veryHighInsulinNeeds {
+                WarningView(
+                    title: Text("Correction range adjustment when preset is enabled"),
+                    caption: Text(highInsulinNeedsWarningText))
             }
             actionButton
         }

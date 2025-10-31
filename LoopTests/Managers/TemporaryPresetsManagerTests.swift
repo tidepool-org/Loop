@@ -36,14 +36,14 @@ class TemporaryPresetsManagerTests: XCTestCase {
     func testPreMealOverride() {
         let preMealStart = Date()
         manager.enablePreMealOverride(at: preMealStart, for: 1 /* hour */ * 60 * 60)
-        let actualPreMealRange = manager.effectiveGlucoseTargetRangeSchedule()?.quantityRange(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
+        let actualPreMealRange = manager.effectiveCorrectionRangeSchedule()?.quantityRange(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
         XCTAssertEqual(preMealRange, actualPreMealRange)
     }
 
     func testPreMealOverrideWithPotentialCarbEntry() {
         let preMealStart = Date()
         manager.enablePreMealOverride(at: preMealStart, for: 1 /* hour */ * 60 * 60)
-        let actualRange = manager.effectiveGlucoseTargetRangeSchedule(presumingMealEntry: true)?.value(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
+        let actualRange = manager.effectiveCorrectionRangeSchedule(presumingMealEntry: true)?.value(at: preMealStart.addingTimeInterval(30 /* minutes */ * 60))
         XCTAssertEqual(targetRange, actualRange)
     }
 
@@ -62,7 +62,7 @@ class TemporaryPresetsManagerTests: XCTestCase {
             syncIdentifier: UUID()
         )
         manager.scheduleOverride = override
-        let actualOverrideRange = manager.effectiveGlucoseTargetRangeSchedule()?.value(at: overrideStart.addingTimeInterval(30 /* minutes */ * 60))
+        let actualOverrideRange = manager.effectiveCorrectionRangeSchedule()?.value(at: overrideStart.addingTimeInterval(30 /* minutes */ * 60))
         XCTAssertEqual(actualOverrideRange, overrideTargetRange)
     }
 
@@ -91,7 +91,7 @@ class TemporaryPresetsManagerTests: XCTestCase {
         )
         manager.scheduleOverride = override
 
-        let actualOverrideRange = manager.effectiveGlucoseTargetRangeSchedule()?.value(at: overrideStart.addingTimeInterval(2 /* hours */ * 60 * 60))
+        let actualOverrideRange = manager.effectiveCorrectionRangeSchedule()?.value(at: overrideStart.addingTimeInterval(2 /* hours */ * 60 * 60))
         XCTAssertEqual(actualOverrideRange, overrideTargetRange)
     }
 }

@@ -34,7 +34,12 @@ struct PresetStatsView: View {
         formatter.numberStyle = .percent
         return formatter
     }
-    
+
+    private var insulinMultiplierSafetyClassification: SafetyClassification? {
+        guard let insulinMultiplier else { return nil }
+        return Guardrail.presetInsulinNeeds.classification(for: LoopQuantity(unit: .percent, doubleValue: insulinMultiplier * 100))
+    }
+
     var overallInsulinView: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Overall Insulin")
@@ -43,9 +48,18 @@ struct PresetStatsView: View {
                 .accessibilitySortPriority(2)
 
             let percent = numberFormatter.string(from: insulinMultiplier ?? 1)!
-            Group { Text(percent).bold() + Text(" of scheduled") }
-                .font(.subheadline)
-                .accessibilitySortPriority(1)
+            let color = guidanceColor(for: insulinMultiplierSafetyClassification) ?? .primary
+            HStack(alignment: .top) {
+                if insulinMultiplierSafetyClassification != .withinRecommendedRange {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(color)
+                }
+
+                Group { Text(percent).bold() + Text(" of scheduled") }
+                    .font(.subheadline)
+                    .accessibilitySortPriority(1)
+                    .foregroundStyle(color)
+            }
         }
         .accessibilityElement(children: .contain)
     }
@@ -125,8 +139,8 @@ struct PresetStatsView: View {
             Group {
                 if let target = correctionRange {
                     annotatedRangeText(target: target)
-                } else if isActive, let therapySettingsCorrectionRange = settingsManager.therapySettings.glucoseTargetRangeSchedule?.quantityRange(at: Date()) {
-                    annotatedRangeText(target: therapySettingsCorrectionRange)
+                } else if isActive, let range = temporaryPresetsManager.effectiveCorrectionRange() {
+                    annotatedRangeText(target: range)
                 } else {
                     Text("Scheduled Range")
                         .bold()

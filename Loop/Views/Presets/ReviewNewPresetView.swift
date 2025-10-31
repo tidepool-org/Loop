@@ -62,7 +62,8 @@ struct ReviewNewPresetView: View {
                 CorrectionRangePreview(
                     range: preset.correctionRange,
                     guardrail: Guardrail.temporaryPresetCorrectionRange,
-                    scheduledRange: scheduledRange
+                    scheduledRange: scheduledRange,
+                    presetInsulinMultiplier: preset.insulinMultiplier
                 )
             }
 

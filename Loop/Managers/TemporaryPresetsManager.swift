@@ -10,7 +10,7 @@ import Foundation
 import LoopKit
 import os.log
 import LoopCore
-
+import LoopAlgorithm
 
 protocol PresetActivationObserver: AnyObject {
     func presetActivated(context: TemporaryScheduleOverride.Context, duration: TemporaryScheduleOverride.Duration)
@@ -173,7 +173,7 @@ class TemporaryPresetsManager {
         }
     }
 
-    public func effectiveGlucoseTargetRangeSchedule(presumingMealEntry: Bool = false) -> GlucoseRangeSchedule?  {
+    public func effectiveCorrectionRangeSchedule(presumingMealEntry: Bool = false) -> GlucoseRangeSchedule?  {
 
         guard let glucoseTargetRangeSchedule = settingsProvider.settings.glucoseTargetRangeSchedule else {
             return nil
@@ -190,6 +190,38 @@ class TemporaryPresetsManager {
         } else {
             return glucoseTargetRangeSchedule
         }
+    }
+
+    public func effectiveCorrectionRange() -> ClosedRange<LoopQuantity>? {
+        var correctionRange: ClosedRange<LoopQuantity>? = nil
+
+        if let override = activeOverride {
+            if let range = override.settings.targetRange {
+                correctionRange = range
+            }
+        }
+
+        if correctionRange == nil, let schedule = settingsProvider.settings.glucoseTargetRangeSchedule {
+            correctionRange = schedule.quantityRange(at: Date())
+        }
+
+        guard correctionRange != nil else { return nil }
+
+        // High insulin needs preset mitigation
+        if let correctionRange,
+           let activeOverride,
+           activeOverride.veryHighInsulinNeeds
+        {
+            let mitigationBound = LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 110)
+            return ClosedRange(
+                uncheckedBounds: (
+                    lower: Swift.max(correctionRange.lowerBound, mitigationBound),
+                    upper: Swift.max(correctionRange.upperBound, mitigationBound),
+                )
+            )
+        }
+
+        return correctionRange
     }
 
     public func isScheduleOverrideActive(at date: Date = Date()) -> Bool {

@@ -14,16 +14,19 @@ import LoopKitUI
 public struct CorrectionRangePreview: View {
     @EnvironmentObject var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.guidanceColors) private var guidanceColors
+    @Environment(\.appName) private var appName
 
-    var range: ClosedRange<LoopQuantity>?
-    var guardrail: Guardrail<LoopQuantity>
+    private var range: ClosedRange<LoopQuantity>?
+    private var guardrail: Guardrail<LoopQuantity>
     private var scheduledRange: ClosedRange<LoopQuantity>
-    var showDisclosure: Bool
+    private var showDisclosure: Bool
+    private var veryHighInsulinNeeds: Bool
 
-    init(range: ClosedRange<LoopQuantity>?, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, showDisclosure: Bool = false) {
+    init(range: ClosedRange<LoopQuantity>?, guardrail: Guardrail<LoopQuantity>, scheduledRange: ClosedRange<LoopQuantity>, veryHighInsulinNeeds: Bool, showDisclosure: Bool = false) {
         self.range = range
         self.guardrail = guardrail
         self.scheduledRange = scheduledRange
+        self.veryHighInsulinNeeds = veryHighInsulinNeeds
         self.showDisclosure = showDisclosure
     }
 
@@ -72,22 +75,23 @@ public struct CorrectionRangePreview: View {
         return thresholds
     }
 
+    var highInsulinNeedsWarningText: String {
+        String(format: NSLocalizedString("%1$@ will set your correction range to 110 mg/dL or higher when this preset is enabled.", comment: "The format string for the high insulin needs preset warning text on the preset preview screen. (1: app name)"), appName)
+    }
+
     private var guardrailWarningIfNecessary: some View {
         let crossedThresholds = self.correctionRangeCrossedThresholds
-        let severity = crossedThresholds.map { $0.severity }.max()
 
         return Group {
-            if let severity, !crossedThresholds.isEmpty {
-                let color: Color = severity > .default ? guidanceColors.critical : guidanceColors.warning
-                HStack(alignment: .top, spacing: 12) {
-                    Text(Image(systemName: "exclamationmark.triangle.fill"))
-                        .foregroundColor(color)
+            if !crossedThresholds.isEmpty {
+                WarningPanel(severity: crossedThresholds.map { $0.severity }.max()!) {
                     Text(SafetyClassification.captionForCrossedThresholds(crossedThresholds, isRange: true))
                         .accessibilityIdentifier("text_CorrectionRangeWarning");
                 }
-                .padding(12)
-                .background(color.opacity(0.1))
-                .cornerRadius(12)
+            } else if veryHighInsulinNeeds {
+                WarningPanel {
+                    Text(highInsulinNeedsWarningText)
+                }
             }
         }
     }

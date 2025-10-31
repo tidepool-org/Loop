@@ -46,17 +46,10 @@ public struct InsulinNeedsAdjustmentPreview: View {
 
         return Group {
             if case .outsideRecommendedRange(let threshold) = classification {
-                let severity = threshold.severity
-                let color: Color = severity > .default ? guidanceColors.critical : guidanceColors.warning
-                HStack(alignment: .top, spacing: 12) {
-                    Text(Image(systemName: "exclamationmark.triangle.fill"))
-                        .foregroundColor(color)
+                WarningPanel(severity: threshold.severity) {
                     Text(SafetyClassification.captionForCrossedThresholds([threshold], isRange: true))
                         .accessibilityIdentifier("text_InsulinNeedsWarning");
                 }
-                .padding(12)
-                .background(color.opacity(0.1))
-                .cornerRadius(12)
             }
         }
     }
