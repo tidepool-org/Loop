@@ -275,7 +275,6 @@ class TemporaryPresetsManager {
            let activeOverride,
            activeOverride.veryHighInsulinNeeds
         {
-            let mitigationBound = LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 110)
             return ClosedRange(
                 uncheckedBounds: (
                     lower: Swift.max(correctionRange.lowerBound, mitigationBound),

@@ -65,6 +65,10 @@ struct NewCustomPreset {
         self.startDate = startDate
         self.repeatOptions = repeatOptions
     }
+
+    var veryHighInsulinNeeds: Bool {
+        return Temporary
+    }
 }
 
 extension NewCustomPreset {

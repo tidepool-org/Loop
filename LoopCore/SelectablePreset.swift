@@ -62,11 +62,6 @@ extension TemporaryScheduleOverride {
         }
     }
 
-    public var veryHighInsulinNeeds: Bool {
-        guard let insulinNeedsScaleFactor = settings.insulinNeedsScaleFactor else { return false }
-        return insulinNeedsScaleFactor * 100 > Guardrail.presetInsulinNeeds.recommendedBounds.upperBound.doubleValue(for: .percent)
-    }
-
     public func createPreset() -> SelectablePreset {
         let range = settings.targetRange
 
@@ -404,7 +399,7 @@ public enum SelectablePreset: Hashable, Identifiable {
     }
 
     public var veryHighInsulinNeeds: Bool {
-        return insulinNeedsScaleFactor * 100 > Guardrail.presetInsulinNeeds.recommendedBounds.upperBound.doubleValue(for: .percent)
+        return TemporaryScheduleOverride.isInMitigationRange(insulinNeedsScaleFactor: insulinNeedsScaleFactor)
     }
 
 }
