@@ -133,7 +133,7 @@ final class LoopDataManager: ObservableObject {
 
     private let trustedTimeOffset: () async -> TimeInterval
 
-    private let now: () -> Date
+    private var now: Date { TestingDate.currentTestingDate() }
 
     // References to registered notification center observers
     private var notificationObservers: [Any] = []
@@ -178,7 +178,6 @@ final class LoopDataManager: ObservableObject {
         carbStore: CarbStoreProtocol,
         crashRecoveryManager: CrashRecoveryManager,
         dosingDecisionStore: DosingDecisionStoreProtocol,
-        now: @escaping () -> Date = { Date() },
         trustedTimeOffset: @escaping () async -> TimeInterval,
         analyticsServicesManager: AnalyticsServicesManager?,
         carbAbsorptionModel: CarbAbsorptionModel,
@@ -194,7 +193,6 @@ final class LoopDataManager: ObservableObject {
         self.carbStore = carbStore
         self.crashRecoveryManager = crashRecoveryManager
         self.dosingDecisionStore = dosingDecisionStore
-        self.now = now
         self.trustedTimeOffset = trustedTimeOffset
         self.analyticsServicesManager = analyticsServicesManager
         self.carbAbsorptionModel = carbAbsorptionModel
@@ -268,16 +266,16 @@ final class LoopDataManager: ObservableObject {
                 self?.automationHistory = self?.automationHistory.filter({ entry in
                     now.timeIntervalSince(entry.startDate) < .hours(36)
                 }) ?? []
+
+                Task {
+                    await self?.updateDisplayState()
+                }
             }
             
             if !enabled {
                 temporaryPresetsManager.endPreMealOverride()
                 Task {
                     try? await self?.cancelActiveTempBasal(for: .automaticDosingDisabled)
-                }
-            } else {
-                Task {
-                    await self?.updateDisplayState()
                 }
             }
         }
@@ -394,8 +392,6 @@ final class LoopDataManager: ObservableObject {
             endDate: neededSensitivityTimeline.end
         )
 
-        var target = try await settingsProvider.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
-
         let dosingLimits = try await settingsProvider.getDosingLimits(at: baseTime)
 
         guard let maxBolus = dosingLimits.maxBolus else {
@@ -431,16 +427,25 @@ final class LoopDataManager: ObservableObject {
         }
         let carbRatioWithOverrides = overrides.applyCarbRatio(over: carbRatio)
 
-        guard !target.isEmpty else {
-            throw LoopError.configurationError(.glucoseTargetRangeSchedule)
+
+        var target: [AbsoluteScheduleValue<ClosedRange<LoopQuantity>>]
+
+        guard var suspendThreshold = dosingLimits.suspendThreshold else {
+            throw LoopError.configurationError(.suspendThreshold)
         }
 
         // If we have an active override, and it's not a preMeal override that should be disabled,
-        // then override the target for the entire forecast.
+        // or ended for other reasons (like comparing effects without preset), then override the
+        // target for the entire forecast.
         if let activeOverride = temporaryPresetsManager.activeOverride,
-           let overriddenTargetRange = activeOverride.settings.targetRange,
            !presumePresetEndingNow
         {
+            guard let schedule = settingsProvider.settings.glucoseTargetRangeSchedule else
+            {
+                throw LoopError.configurationError(.glucoseTargetRangeSchedule)
+            }
+            let scheduledRange = schedule.quantityRange(at: baseTime)
+            let overriddenTargetRange = activeOverride.effectiveCorrectionRangeDuring(scheduledRange: scheduledRange)
             target = [
                 AbsoluteScheduleValue(
                     startDate: baseTime,
@@ -448,7 +453,19 @@ final class LoopDataManager: ObservableObject {
                     value: overriddenTargetRange
                 )
             ]
+
+            if activeOverride.veryHighInsulinNeeds {
+                suspendThreshold = max(TemporaryScheduleOverride.highInsulinNeedsMitigationCorrrectionRangeLimit, suspendThreshold)
+            }
+
+        } else {
+            target = try await settingsProvider.getTargetRangeHistory(startDate: baseTime, endDate: forecastEndTime)
         }
+
+        guard !target.isEmpty else {
+            throw LoopError.configurationError(.glucoseTargetRangeSchedule)
+        }
+
 
         // Create dosing strategy based on user setting
         let applicationFactorStrategy: ApplicationFactorStrategy = UserDefaults.standard.glucoseBasedApplicationFactorEnabled
@@ -477,7 +494,7 @@ final class LoopDataManager: ObservableObject {
             sensitivity: sensitivityWithOverrides,
             carbRatio: carbRatioWithOverrides,
             target: target,
-            suspendThreshold: dosingLimits.suspendThreshold,
+            suspendThreshold: suspendThreshold,
             maxBolus: maxBolus,
             maxBasalRate: maxBasalRate,
             useIntegralRetrospectiveCorrection: UserDefaults.standard.integralRetrospectiveCorrectionEnabled,
@@ -499,7 +516,7 @@ final class LoopDataManager: ObservableObject {
         do {
             let lastManualBolusVisibilityWindowStartDate = Date().addingTimeInterval(.days(-1))
 
-            var input = try await fetchData(for: now(), ensureDosingCoverageStart: lastManualBolusVisibilityWindowStartDate)
+            var input = try await fetchData(for: now, ensureDosingCoverageStart: lastManualBolusVisibilityWindowStartDate)
             input.recommendationType = .manualBolus
             newState.input = input
             newState.output = LoopAlgorithm.run(input: input)
@@ -553,7 +570,7 @@ final class LoopDataManager: ObservableObject {
     }
 
     func loop() async {
-        let loopBaseTime = now()
+        let loopBaseTime = now
 
         var dosingDecision = StoredDosingDecision(
             date: loopBaseTime,
@@ -698,7 +715,7 @@ final class LoopDataManager: ObservableObject {
             endingPremealOverride = true
         }
 
-        var input = try await self.fetchData(for: now(), presumePresetEndingNow: truncatingActiveOverride || endingPremealOverride)
+        var input = try await self.fetchData(for: now, presumePresetEndingNow: truncatingActiveOverride || endingPremealOverride)
             .addingGlucoseSample(sample: manualGlucoseSample?.asStoredGlucoseSample)
             .removingCarbEntry(carbEntry: originalCarbEntry)
             .addingCarbEntry(carbEntry: potentialCarbEntry?.asStoredCarbEntry)
@@ -1300,7 +1317,6 @@ extension LoopDataManager: BolusEntryViewModelDelegate {
         potentialDose: SimpleInsulinDose?,
         manualGlucose: NewGlucoseSample?
     ) async throws -> (historicGlucose: [StoredGlucoseSample], predictedGlucose: [PredictedGlucoseValue]) {
-        let startDate = now()
 
         var endingPremealOverride = false
 
@@ -1311,9 +1327,7 @@ extension LoopDataManager: BolusEntryViewModelDelegate {
             endingPremealOverride = true
         }
 
-        var input = try await fetchData(for: startDate, presumePresetEndingNow: endingPremealOverride, ensureDosingCoverageStart: nil)
-
-        let insulinModel = insulinModel(for: deliveryDelegate?.pumpInsulinType)
+        var input = try await fetchData(for: now, presumePresetEndingNow: endingPremealOverride, ensureDosingCoverageStart: nil)
 
         // Add potential bolus, carbs, manual glucose
         input = input

@@ -71,7 +71,6 @@ class LoopDataManagerTests: XCTestCase {
     }
     
     // MARK: Stores
-    var now: Date!
     let persistenceController = PersistenceController.mock()
     var doseStore = MockDoseStore()
     var glucoseStore = MockGlucoseStore()
@@ -80,9 +79,12 @@ class LoopDataManagerTests: XCTestCase {
     var loopDataManager: LoopDataManager!
     var deliveryDelegate: MockDeliveryDelegate!
     var settingsProvider: MockSettingsProvider!
+    var temporaryPresetsManager: TemporaryPresetsManager!
+
+    private var now: Date { TestingDate.currentTestingDate() }
 
     func d(_ interval: TimeInterval) -> Date {
-        return now.addingTimeInterval(interval)
+        TestingDate.currentTestingDate().addingTimeInterval(interval)
     }
 
     override func setUp() async throws {
@@ -117,13 +119,13 @@ class LoopDataManagerTests: XCTestCase {
 
         settingsProvider = MockSettingsProvider(settings: settings)
 
-        now = dateFormatter.date(from: "2023-07-29T19:21:00Z")!
+        TestingDate.setFixedTestingDate(dateFormatter.date(from: "2023-07-29T19:21:00Z")!)
 
         doseStore.lastAddedPumpData = now
 
         dosingDecisionStore = MockDosingDecisionStore()
 
-        let temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsProvider, presetHistory: TemporaryScheduleOverrideHistory())
+        temporaryPresetsManager = TemporaryPresetsManager(settingsProvider: settingsProvider, presetHistory: TemporaryScheduleOverrideHistory())
 
         loopDataManager = LoopDataManager(
             lastLoopCompleted: now,
@@ -134,7 +136,6 @@ class LoopDataManagerTests: XCTestCase {
             carbStore: carbStore,
             crashRecoveryManager: CrashRecoveryManager(alertIssuer: MockAlertIssuer()),
             dosingDecisionStore: dosingDecisionStore,
-            now: { [weak self] in self?.now ?? Date() },
             trustedTimeOffset: { 0 },
             analyticsServicesManager: nil,
             carbAbsorptionModel: .piecewiseLinear
@@ -211,7 +212,7 @@ class LoopDataManagerTests: XCTestCase {
         glucoseStore.storedGlucose = predictionInput.glucoseHistory.map { StoredGlucoseSample.from(fixture: $0) }
 
         let currentDate = glucoseStore.latestGlucose!.startDate
-        now = currentDate
+        TestingDate.setFixedTestingDate(currentDate)
 
         doseStore.doseHistory = predictionInput.doses.map { DoseEntry.from(fixture: $0) }
         doseStore.lastAddedPumpData = predictionInput.doses.last!.startDate
@@ -458,7 +459,32 @@ class LoopDataManagerTests: XCTestCase {
 
     }
 
+    func testFetchDataWithHighInsulinNeedsPresetMitigation() async throws {
+        var input = try await loopDataManager.fetchData()
+        XCTAssertEqual(input.target.count, 2)
+        XCTAssertEqual(input.target[0].value.doubleRange(for: .milligramsPerDeciliter), DoubleRange(minValue: 90, maxValue: 100))
+        XCTAssertEqual(input.suspendThreshold?.doubleValue(for: .milligramsPerDeciliter), 75.0)
 
+        let override = TemporaryScheduleOverride(
+            context: .custom,
+            settings: TemporaryPresetSettings(
+                targetRange: nil,
+                insulinNeedsScaleFactor: 1.75
+            ),
+            startDate: now.addingTimeInterval(.minutes(-1)),
+            duration: .finite(.hours(2)),
+            enactTrigger: .local,
+            syncIdentifier: UUID()
+        )
+
+        temporaryPresetsManager.scheduleOverride = override
+
+        input = try await loopDataManager.fetchData()
+        XCTAssertEqual(input.target.count, 1)
+        XCTAssertEqual(input.target[0].value.doubleRange(for: .milligramsPerDeciliter), DoubleRange(minValue: 110, maxValue: 110))
+        XCTAssertEqual(input.suspendThreshold?.doubleValue(for: .milligramsPerDeciliter), 110.0)
+
+    }
 }
 
 extension LoopDataManagerTests {

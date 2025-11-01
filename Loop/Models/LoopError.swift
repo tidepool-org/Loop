@@ -17,6 +17,7 @@ enum ConfigurationErrorDetail: String, Codable {
     case insulinSensitivitySchedule
     case maximumBasalRatePerHour
     case maximumBolus
+    case suspendThreshold
 
     func localized() -> String {
         switch self {
@@ -34,6 +35,8 @@ enum ConfigurationErrorDetail: String, Codable {
             return NSLocalizedString("Maximum Basal Rate Per Hour", comment: "Details for configuration error when maximum basal rate per hour is missing")
         case .maximumBolus:
             return NSLocalizedString("Maximum Bolus", comment: "Details for configuration error when maximum bolus is missing")
+        case .suspendThreshold:
+            return NSLocalizedString("Suspend Threshold", comment: "Details for configuration error when suspend threshold is missing")
         }
     }
 }

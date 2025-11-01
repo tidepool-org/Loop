@@ -95,10 +95,12 @@ struct TemporaryScheduleOverrideHashable: GlucoseChartValueHashable {
     }
 
     var min: LoopQuantity {
-        return override.settings.targetRange!.lowerBound
+        let effectiveTargetRange = override.effectiveCorrectionRangeDuring(scheduledRange: override.settings.targetRange!)
+        return effectiveTargetRange.lowerBound
     }
 
     var max: LoopQuantity {
-        return override.settings.targetRange!.upperBound
+        let effectiveTargetRange = override.effectiveCorrectionRangeDuring(scheduledRange: override.settings.targetRange!)
+        return effectiveTargetRange.upperBound
     }
 }

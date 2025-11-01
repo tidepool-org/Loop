@@ -35,6 +35,8 @@ class TemporaryPresetsManager {
 
     @ObservationIgnored private var overrideIntentObserver: NSKeyValueObservation? = nil
 
+    private var now: Date { TestingDate.currentTestingDate() }
+
     init(settingsProvider: SettingsProvider, alertIssuer: AlertIssuer? = nil, presetHistory: TemporaryScheduleOverrideHistory? = nil) {
         self.settingsProvider = settingsProvider
         self.alertIssuer = alertIssuer
@@ -42,7 +44,7 @@ class TemporaryPresetsManager {
         self.presetHistory = presetHistory ?? TemporaryScheduleOverrideHistoryContainer.shared.fetch()
         TemporaryScheduleOverrideHistory.relevantTimeWindow = Bundle.main.localCacheDuration
 
-        _scheduleOverride = self.presetHistory.activeOverride(at: Date())
+        _scheduleOverride = self.presetHistory.activeOverride(at: now)
 
         overrideIntentObserver = UserDefaults.appGroup?.observe(
             \.intentExtensionOverrideToSet,
@@ -86,6 +88,7 @@ class TemporaryPresetsManager {
 
     var scheduleOverride: TemporaryScheduleOverride? {
         didSet {
+            print("*** scheduleOverride set to \(scheduleOverride)")
             guard oldValue != scheduleOverride else {
                 return
             }
@@ -122,7 +125,7 @@ class TemporaryPresetsManager {
     }
 
     public var activeOverride: TemporaryScheduleOverride? {
-        if scheduleOverride?.isActive() == true {
+        if scheduleOverride?.isActive(at: now) == true {
             return scheduleOverride
         } else {
             return nil
@@ -167,9 +170,12 @@ class TemporaryPresetsManager {
     public func scheduleClearOverride(override: TemporaryScheduleOverride) {
         clearOverrideTimer?.invalidate()
         if override.duration.isInfinite { return }
+        if override.scheduledEndDate < now { return }
+        
         log.default("Scheduling override end timer %{public}@", String(describing: override))
 
-        clearOverrideTimer = Timer.scheduledTimer(withTimeInterval: override.scheduledEndDate.timeIntervalSince(Date()), repeats: false, block: { [weak self] _ in
+
+        clearOverrideTimer = Timer.scheduledTimer(withTimeInterval: override.scheduledEndDate.timeIntervalSince(now), repeats: false, block: { [weak self] _ in
             Task {
                 self?.log.default("override end timer fired for %{public}@", String(describing: override))
                 await self?.endOverride(override)
@@ -256,65 +262,46 @@ class TemporaryPresetsManager {
     }
 
     public func effectiveCorrectionRange() -> ClosedRange<LoopQuantity>? {
-        var correctionRange: ClosedRange<LoopQuantity>? = nil
+        guard let schedule = settingsProvider.settings.glucoseTargetRangeSchedule else { return nil }
 
-        if let override = activeOverride {
-            if let range = override.settings.targetRange {
-                correctionRange = range
-            }
+        let scheduledRange = schedule.quantityRange(at: now)
+
+        if let override = activeOverride, override.veryHighInsulinNeeds {
+            return override.effectiveCorrectionRangeDuring(scheduledRange: scheduledRange)
         }
 
-        if correctionRange == nil, let schedule = settingsProvider.settings.glucoseTargetRangeSchedule {
-            correctionRange = schedule.quantityRange(at: Date())
-        }
-
-        guard correctionRange != nil else { return nil }
-
-        // High insulin needs preset mitigation
-        if let correctionRange,
-           let activeOverride,
-           activeOverride.veryHighInsulinNeeds
-        {
-            return ClosedRange(
-                uncheckedBounds: (
-                    lower: Swift.max(correctionRange.lowerBound, mitigationBound),
-                    upper: Swift.max(correctionRange.upperBound, mitigationBound),
-                )
-            )
-        }
-
-        return correctionRange
+        return scheduledRange
     }
 
-    public func isScheduleOverrideActive(at date: Date = Date()) -> Bool {
-        return scheduleOverride?.isActive(at: date) == true
+    public func isScheduleOverrideActive(at date: Date? = nil) -> Bool {
+        return scheduleOverride?.isActive(at: date ?? now) == true
     }
 
-    public func isNonPreMealOverrideActive(at date: Date = Date()) -> Bool {
-        return isScheduleOverrideActive(at: date) == true && scheduleOverride?.context != .preMeal
+    public func isNonPreMealOverrideActive(at date: Date? = nil) -> Bool {
+        return isScheduleOverrideActive(at: date ?? now) == true && scheduleOverride?.context != .preMeal
     }
 
-    public func isPreMealTargetActive(at date: Date = Date()) -> Bool {
-        return isScheduleOverrideActive(at: date) == true && scheduleOverride?.context == .preMeal
+    public func isPreMealTargetActive(at date: Date? = nil) -> Bool {
+        return isScheduleOverrideActive(at: date ?? now) == true && scheduleOverride?.context == .preMeal
     }
 
-    public func futureOverrideEnabled(relativeTo date: Date = Date()) -> Bool {
+    public func futureOverrideEnabled(relativeTo date: Date? = nil) -> Bool {
         guard let scheduleOverride = scheduleOverride else { return false }
-        return scheduleOverride.startDate > date
+        return scheduleOverride.startDate > date ?? now
     }
 
-    public func enablePreMealOverride(at date: Date = Date(), for duration: TimeInterval) {
-        scheduleOverride = makePreMealOverride(beginningAt: date, for: duration)
+    public func enablePreMealOverride(at date: Date? = nil, for duration: TimeInterval) {
+        scheduleOverride = makePreMealOverride(beginningAt: date ?? now, for: duration)
     }
 
-    private func makePreMealOverride(beginningAt date: Date = Date(), for duration: TimeInterval) -> TemporaryScheduleOverride? {
+    private func makePreMealOverride(beginningAt date: Date? = nil, for duration: TimeInterval) -> TemporaryScheduleOverride? {
         guard let preMealTargetRange = settingsProvider.settings.preMealTargetRange else {
             return nil
         }
         return TemporaryScheduleOverride(
             context: .preMeal,
             settings: TemporaryPresetSettings(targetRange: preMealTargetRange),
-            startDate: date,
+            startDate: date ?? now,
             duration: .finite(duration),
             enactTrigger: .local,
             syncIdentifier: UUID()
@@ -381,7 +368,7 @@ class TemporaryPresetsManager {
 
     func updateActivePresetDuration(newEndDate: Date) {
         if var scheduleOverride {
-            if newEndDate > Date() {
+            if newEndDate > now {
                 scheduleOverride.scheduledEndDate = newEndDate
             } else {
                 scheduleOverride.scheduledEndDate = newEndDate.addingTimeInterval(.days(1))
@@ -396,7 +383,7 @@ class TemporaryPresetsManager {
 
     func lastUsed(id: String) -> Date? {
         if lastUsed == nil {
-            let enacts = presetHistory.getOverrideHistory(startDate: .distantPast, endDate: Date())
+            let enacts = presetHistory.getOverrideHistory(startDate: .distantPast, endDate: now)
             lastUsed = [:]
             for enact in enacts {
                 var id: String
@@ -416,7 +403,7 @@ class TemporaryPresetsManager {
 
         let settings = settingsProvider.settings
 
-        let now = Date()
+        let now = now
 
         let preset = settings.overridePresets.reduce(into: nil as TemporaryPreset?) { result, preset in
             if let nextScheduledTime = preset.nextScheduledStartAfter(now) {

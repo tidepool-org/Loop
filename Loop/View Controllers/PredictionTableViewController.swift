@@ -154,6 +154,9 @@ class PredictionTableViewController: LoopChartsTableViewController, Identifiable
             self.glucoseChart.targetGlucoseSchedule = self.settingsManager.settings.glucoseTargetRangeSchedule
         }
 
+        self.glucoseChart.scheduleOverride = loopDataManager.scheduleOverride
+        self.glucoseChart.preMealOverride = loopDataManager.preMealOverride
+
         if let glucoseSamples = glucoseSamples {
             self.glucoseChart.setGlucoseValues(glucoseSamples)
         }

@@ -96,7 +96,7 @@ struct EditPresetView: View {
                                 range: preset.correctionRange,
                                 guardrail: settingsManager.correctionRangeGuardrailForPreset(preset),
                                 scheduledRange: scheduledRange,
-                                presetInsulinMultiplier: preset.insulinNeedsScaleFactor,
+                                veryHighInsulinNeeds: preset.veryHighInsulinNeeds,
                                 showDisclosure: true
                             )
                         }.accessibilityIdentifier("button_CorrectionRange")

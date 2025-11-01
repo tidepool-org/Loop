@@ -139,7 +139,7 @@ struct PresetStatsView: View {
                 .accessibilitySortPriority(2)
             
             Group {
-                if let target = correctionRange {
+                if !isActive, let target = correctionRange {
                     annotatedRangeText(target: target)
                 } else if isActive, let range = temporaryPresetsManager.effectiveCorrectionRange() {
                     annotatedRangeText(target: range)

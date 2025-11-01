@@ -67,7 +67,7 @@ struct NewCustomPreset {
     }
 
     var veryHighInsulinNeeds: Bool {
-        return Temporary
+        return TemporaryScheduleOverride.isInMitigationRange(insulinNeedsScaleFactor: insulinMultiplier)
     }
 }
 
