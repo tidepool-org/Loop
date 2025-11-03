@@ -88,7 +88,6 @@ class TemporaryPresetsManager {
 
     var scheduleOverride: TemporaryScheduleOverride? {
         didSet {
-            print("*** scheduleOverride set to \(scheduleOverride)")
             guard oldValue != scheduleOverride else {
                 return
             }
