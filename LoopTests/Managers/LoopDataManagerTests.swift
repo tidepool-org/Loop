@@ -460,8 +460,8 @@ class LoopDataManagerTests: XCTestCase {
     }
 
     func testFetchDataWithHighInsulinNeedsPresetMitigation() async throws {
-        var input = try await loopDataManager.fetchData()
-        XCTAssertEqual(input.target.count, 2)
+        var input = try await loopDataManager.fetchData(for: now)
+        XCTAssertEqual(input.target.count, 1)
         XCTAssertEqual(input.target[0].value.doubleRange(for: .milligramsPerDeciliter), DoubleRange(minValue: 90, maxValue: 100))
         XCTAssertEqual(input.suspendThreshold?.doubleValue(for: .milligramsPerDeciliter), 75.0)
 
@@ -479,7 +479,7 @@ class LoopDataManagerTests: XCTestCase {
 
         temporaryPresetsManager.scheduleOverride = override
 
-        input = try await loopDataManager.fetchData()
+        input = try await loopDataManager.fetchData(for: now)
         XCTAssertEqual(input.target.count, 1)
         XCTAssertEqual(input.target[0].value.doubleRange(for: .milligramsPerDeciliter), DoubleRange(minValue: 110, maxValue: 110))
         XCTAssertEqual(input.suspendThreshold?.doubleValue(for: .milligramsPerDeciliter), 110.0)

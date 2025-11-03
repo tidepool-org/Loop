@@ -870,8 +870,8 @@ fileprivate class MockBolusEntryViewModelDelegate: BolusEntryViewModelDelegate {
         automaticBolusApplicationFactor: 0.4
     )
 
-    func fetchData(for baseTime: Date, presumePresetEndingNow: Bool, ensureDosingCoverageStart: Date?) async throws -> StoredDataAlgorithmInput {
-        loopStateInput.predictionStart = baseTime
+    func fetchData(for baseTime: Date?, presumePresetEndingNow: Bool, ensureDosingCoverageStart: Date?) async throws -> StoredDataAlgorithmInput {
+        loopStateInput.predictionStart = baseTime ?? Date()
         return loopStateInput
     }
     

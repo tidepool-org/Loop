@@ -258,17 +258,17 @@ final class LoopDataManager: ObservableObject {
         // The dispatch is necessary in case this is coming from a didSet already on the settings struct.
         
         withObservationTracking(of: settingsProvider.dosingEnabled) { [weak self] enabled in
-            if self?.automationHistory.last?.enabled != enabled {
-                self?.automationHistory.append(AutomationHistoryEntry(startDate: Date(), enabled: enabled))
+            if let self, self.automationHistory.last?.enabled != enabled {
+                self.automationHistory.append(AutomationHistoryEntry(startDate: self.now, enabled: enabled))
 
                 // Clean up entries older than 36 hours; we should not be interpolating basal data before then.
-                let now = Date()
-                self?.automationHistory = self?.automationHistory.filter({ entry in
+                let now = now
+                self.automationHistory = self.automationHistory.filter({ entry in
                     now.timeIntervalSince(entry.startDate) < .hours(36)
-                }) ?? []
+                })
 
                 Task {
-                    await self?.updateDisplayState()
+                    await self.updateDisplayState()
                 }
             }
             
@@ -318,12 +318,14 @@ final class LoopDataManager: ObservableObject {
     }
 
     func fetchData(
-        for baseTime: Date = Date(),
+        for baseTime: Date? = nil,
         presumePresetEndingNow: Bool = false,
         ensureDosingCoverageStart: Date? = nil
     ) async throws -> StoredDataAlgorithmInput {
         // Need to fetch doses back as far as t - (DIA + DCA) for Dynamic carbs
         let dosesInputHistory = CarbMath.maximumAbsorptionTimeInterval + InsulinMath.defaultInsulinActivityDuration
+
+        let baseTime = baseTime ?? now
 
         var dosesStart = baseTime.addingTimeInterval(-dosesInputHistory)
 
@@ -514,7 +516,7 @@ final class LoopDataManager: ObservableObject {
 
         var newState = AlgorithmDisplayState()
         do {
-            let lastManualBolusVisibilityWindowStartDate = Date().addingTimeInterval(.days(-1))
+            let lastManualBolusVisibilityWindowStartDate = now.addingTimeInterval(.days(-1))
 
             var input = try await fetchData(for: now, ensureDosingCoverageStart: lastManualBolusVisibilityWindowStartDate)
             input.recommendationType = .manualBolus
@@ -671,7 +673,7 @@ final class LoopDataManager: ObservableObject {
                     try await deliveryDelegate.enact(bolus: recommendationToEnact.bolusUnits, tempBasal: basalAdjustment, decisionId: dosingDecision.id)
 
                     logger.default("loop() completed successfully.")
-                    lastLoopCompleted = Date()
+                    lastLoopCompleted = now
                     let duration = lastLoopCompleted!.timeIntervalSince(loopBaseTime)
                     
                     dosingDecision.enactedTempBasal = basalAdjustment
@@ -777,7 +779,7 @@ final class LoopDataManager: ObservableObject {
         lastManualBolusRecommendation = displayState.output?.recommendation?.manual
 
         if let output = displayState.output {
-            var dosingDecision = StoredDosingDecision(date: Date(), reason: "updateRemoteRecommendation")
+            var dosingDecision = StoredDosingDecision(date: now, reason: "updateRemoteRecommendation")
             dosingDecision.predictedGlucose = output.predictedGlucose
             dosingDecision.insulinOnBoard = displayState.activeInsulin
             dosingDecision.carbsOnBoard = displayState.activeCarbs
@@ -1022,8 +1024,10 @@ extension LoopDataManager {
             sensitivitySchedule: sensitivitySchedule,
             at: date)
 
-        dosingDecision.manualBolusRecommendation = ManualBolusRecommendationWithDate(recommendation: ManualBolusRecommendation(amount: bolusAmount.doubleValue(for: .internationalUnit), notice: notice),
-                                                                                     date: Date())
+        dosingDecision.manualBolusRecommendation = ManualBolusRecommendationWithDate(
+            recommendation: ManualBolusRecommendation(amount: bolusAmount.doubleValue(for: .internationalUnit), notice: notice),
+            date: now
+        )
 
         return dosingDecision
     }
@@ -1218,16 +1222,16 @@ extension LoopDataManager: ServicesManagerDelegate {
         }
         
         if let startDate = startDate {
-            let maxStartDate = Date().addingTimeInterval(LoopConstants.maxCarbEntryFutureTime)
-            let minStartDate = Date().addingTimeInterval(LoopConstants.maxCarbEntryPastTime)
+            let maxStartDate = now.addingTimeInterval(LoopConstants.maxCarbEntryFutureTime)
+            let minStartDate = now.addingTimeInterval(LoopConstants.maxCarbEntryPastTime)
             guard startDate <= maxStartDate  && startDate >= minStartDate else {
                 throw CarbActionError.invalidStartDate(startDate)
             }
         }
         
         let quantity = LoopQuantity(unit: .gram, doubleValue: amountInGrams)
-        let candidateCarbEntry = NewCarbEntry(quantity: quantity, startDate: startDate ?? Date(), foodType: foodType, absorptionTime: absorptionTime)
-        
+        let candidateCarbEntry = NewCarbEntry(quantity: quantity, startDate: startDate ?? now, foodType: foodType, absorptionTime: absorptionTime)
+
         let _ = try await carbStore.addCarbEntry(candidateCarbEntry)
     }
     
@@ -1282,7 +1286,7 @@ extension LoopDataManager: SimpleBolusViewModelDelegate {
     }
     
     func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws {
-        let startDate = Date()
+        let startDate = now
         try await deliveryDelegate?.enactBolus(units: units, decisionId: decisionId, activationType: activationType)
         lastManualBolus = LastManualBolus(amount: units, startDate: startDate)
     }
@@ -1598,12 +1602,12 @@ extension LoopDataManager: DiagnosticReportGenerator {
 
 extension LoopDataManager: LoopControl {
     
-    func scheduledBasalRate(at date: Date = Date()) -> Double? {
-        settings.basalRateSchedule?.value(at: date)
+    func scheduledBasalRate(at date: Date? = nil) -> Double? {
+        settings.basalRateSchedule?.value(at: date ?? now)
     }
     
-    func currentBasalRate(at date: Date = Date()) -> Double? {
-        guard let scheduledBasalRate = scheduledBasalRate(at: date) else {
+    func currentBasalRate(at date: Date? = nil) -> Double? {
+        guard let scheduledBasalRate = scheduledBasalRate(at: date ?? now) else {
             return nil
         }
         
@@ -1615,7 +1619,7 @@ extension LoopDataManager: LoopControl {
             return nil
         }
 
-        let now = Date()
+        let now = now
 
         guard let neutralBasal = input.basal.closestPrior(to: now)?.value, let currentBasalRate = currentBasalRate(at: now) else {
             return nil
