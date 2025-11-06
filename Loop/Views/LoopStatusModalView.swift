@@ -48,7 +48,7 @@ struct LoopStatusModalView: View {
                 .padding(.bottom, 10)
         }
         .padding(10)
-        .background(Color.white)
+        .background(Color(UIColor.systemGroupedBackground))
         .cornerRadius(10)
         .shadow(radius: 5)
         .frame(maxWidth: 340)
