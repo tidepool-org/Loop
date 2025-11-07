@@ -244,6 +244,7 @@ struct PresetsView: View {
                             onDelete: { preset in
                                 settingsManager.deletePreset(preset)
                                 Task {
+                                    await temporaryPresetsManager.unschedulePresetReminderIfNeeded(preset)
                                     await temporaryPresetsManager.scheduleNextPresetReminder()
                                 }
                             }

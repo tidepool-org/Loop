@@ -397,6 +397,11 @@ class TemporaryPresetsManager {
         }
         return lastUsed![id]
     }
+    
+    func unschedulePresetReminderIfNeeded(_ preset: SelectablePreset) async {
+        guard preset.isScheduled else { return }
+        await alertIssuer?.retractAlert(identifier: Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: preset.id))
+    }
 
     func scheduleNextPresetReminder() async {
 
