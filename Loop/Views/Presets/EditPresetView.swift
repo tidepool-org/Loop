@@ -24,11 +24,14 @@ struct EditPresetView: View {
         case editInsulinNeeds
     }
 
+    @State private var trainingCompletion: PresetsTrainingCompletion
+    @State private var showTrainingIncompleteAlert: Bool = false
     @State private var preset: SelectablePreset
     @State private var navigationPath = NavigationPath()
     @State private var isDurationPickerExpanded = false
     @State private var showingDayPicker: Bool = false
     @State private var isConfirmingDelete = false
+    @State private var showPresetsTrainingSheet: Bool = false
 
     @FocusState private var isTextFieldFocused: Bool
 
@@ -46,23 +49,56 @@ struct EditPresetView: View {
     init(
         preset: SelectablePreset,
         scheduledRange: ClosedRange<LoopQuantity>,
+        trainingCompletion: PresetsTrainingCompletion,
         onSave: @escaping ((SelectablePreset) throws -> Void),
         onDelete: @escaping ((SelectablePreset) throws -> Void)
     ) {
         self.preset = preset
         self.originalPreset = preset
         self.scheduledRange = scheduledRange
+        self.trainingCompletion = trainingCompletion
         self.onSave = onSave
         self.onDelete = onDelete
+    }
+    
+    var trainingNeededSection: some View {
+        Button {
+            showPresetsTrainingSheet = true
+        } label: {
+            CardSection("Temporary Settings Adjustments", borderColor: .accentColor) {
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Group {
+                            Text(Image(systemName: "info.circle"))
+                                .foregroundStyle(Color.accentColor) +
+                            Text(" Extra Training Needed")
+                        }
+                        .font(.callout.weight(.semibold))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Text("Complete the training to change this preset’s settings. You can still update the details.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
+                    
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.secondary)
+                }
+            }
+            .foregroundColor(.primary)
+        }
     }
 
     var sensitivitySection: some View {
         Button {
-            if preset.canAdjustSensitivity {
+            if !preset.isPreMeal && !trainingCompletion.isComplete {
+                showTrainingIncompleteAlert = true
+            } else if preset.canAdjustSensitivity {
                 navigationPath.append(Destination.editInsulinNeeds)
             }
         } label: {
-            CardSection("Temporary Settings Adjustments") {
+            CardSection(preset.isPreMeal || trainingCompletion.isComplete ? "Temporary Settings Adjustments" : nil) {
                 InsulinNeedsAdjustmentPreview(
                     insulinPercentage: preset.insulinNeedsScaleFactor * 100,
                     guardrail: Guardrail.presetInsulinNeeds,
@@ -85,12 +121,20 @@ struct EditPresetView: View {
             ScrollViewReader { scrollViewProxy in
                 CardSectionScrollView {
                     presetTitle
+                    
+                    if !preset.isPreMeal && !trainingCompletion.isComplete {
+                        trainingNeededSection
+                    }
 
                     sensitivitySection
 
                     CardSection {
                         Button {
-                            navigationPath.append(Destination.editCorrectionRange)
+                            if !preset.isPreMeal && !trainingCompletion.isComplete {
+                                showTrainingIncompleteAlert = true
+                            } else {
+                                navigationPath.append(Destination.editCorrectionRange)
+                            }
                         } label: {
                             CorrectionRangePreview(
                                 range: preset.correctionRange,
@@ -108,7 +152,7 @@ struct EditPresetView: View {
                                 Button {
                                     if case let .activity(activityPreset) = preset {
                                         withAnimation {
-                                            preset = .activity(ActivityPreset(activityType: activityPreset.activityType, preset: activityPreset.activityType.defaultPreset(duration: activityPreset.preset.duration)))
+                                            preset = .activity(ActivityPreset(activityType: activityPreset.activityType, preset: activityPreset.activityType.defaultPreset(duration: activityPreset.preset.duration, scheduleStartDate: activityPreset.preset.scheduleStartDate, repeatOptions: activityPreset.preset.repeatOptions ?? .none)))
                                         }
                                     }
                                 } label: {
@@ -366,6 +410,19 @@ struct EditPresetView: View {
                         }
                     })
                 )
+            }
+            .alert(isPresented: $showTrainingIncompleteAlert) {
+                Alert(
+                    title: Text("Extra Training Needed"),
+                    message: Text("Complete the training to change this preset’s settings."),
+                    primaryButton: .default(Text("Start Training"), action: {
+                        showPresetsTrainingSheet = true
+                    }),
+                    secondaryButton: .cancel(Text("Close"))
+                )
+            }
+            .sheet(isPresented: $showPresetsTrainingSheet) {
+                PresetsTrainingView(trainingCompletion: trainingCompletion)
             }
         }
     }

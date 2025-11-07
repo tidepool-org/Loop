@@ -149,7 +149,6 @@ struct PresetsView: View {
                                 .onTapGesture {
                                     activeSheet = .presetDetent(preset)
                                 }
-                                .disabled(preset.id.hasPrefix("activity-") && trainingCompletion.completedChapters[.introduction] != true)
                             }
                         }
                     }
@@ -214,20 +213,11 @@ struct PresetsView: View {
                 }
             }
         }
-        .onAppear {
-            if trainingCompletion.completedChapters[.entry] != true {
-                activeSheet = .training()
-            }
-        }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .presetDetent(let preset):
                 PresetDetentView(preset: preset, didTapEdit: {
-                    if case .activity(_) = preset, !trainingCompletion.isComplete {
-                        activeSheet = .training(editPresetWhenComplete: preset)
-                    } else {
-                        activeSheet = .editPreset(preset)
-                    }
+                    activeSheet = .editPreset(preset)
                 })
             case .editPreset(let preset):
                 Group {
@@ -235,6 +225,7 @@ struct PresetsView: View {
                         EditPresetView(
                             preset: preset,
                             scheduledRange: scheduledRange,
+                            trainingCompletion: trainingCompletion,
                             onSave: { updatedPreset in
                                 settingsManager.savePreset(updatedPreset)
                                 Task {

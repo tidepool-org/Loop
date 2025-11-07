@@ -13,9 +13,7 @@ struct PresetsTrainingCard: View {
     let imageName: String?
     
     init(trainingCompletion: PresetsTrainingCompletion) {
-        if trainingCompletion.completedChapters[.introduction] != true {
-            self.imageName = "PresetsTrainingRequiredCard"
-        } else if trainingCompletion.completedChapters[.customizingPresets] != true {
+        if trainingCompletion.completedChapters[.customizingPresets] != true {
             self.imageName = "PresetsTrainingCreditEditStartCard"
         } else if trainingCompletion.completedChapters[.trainingComplete] != true {
             self.imageName = "PresetsTrainingCreditEditResumeCard"

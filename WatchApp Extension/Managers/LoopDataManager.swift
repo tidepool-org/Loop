@@ -287,7 +287,7 @@ extension LoopDataManager {
                     .activity(
                         ActivityPreset(
                             activityType: activityType,
-                            preset: activityType.defaultPreset(duration: .finite(.minutes(90)))
+                            preset: activityType.completeDefaultPreset
                         )
                     )
                 )

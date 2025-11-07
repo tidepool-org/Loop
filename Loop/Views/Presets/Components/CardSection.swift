@@ -16,23 +16,28 @@ struct CardSection<Content: View, Header: View, Footer: View>: View {
     let header: Header?
     let footer: Footer?
     let content: Content
+    
+    let borderColor: Color
 
     // Initializer for custom view header
-    init(@ViewBuilder content: () -> Content, @ViewBuilder header: () -> Header, @ViewBuilder footer: () -> Footer) {
+    init(borderColor: Color = .clear, @ViewBuilder content: () -> Content, @ViewBuilder header: () -> Header, @ViewBuilder footer: () -> Footer) {
+        self.borderColor = borderColor
         self.content = content()
         self.header = header()
         self.footer = footer()
     }
 
     // Initializer for string header
-    init(_ headerText: String? = nil, @ViewBuilder content: () -> Content, footerText: String? = nil) where Header == Text, Footer == Text {
+    init(_ headerText: String? = nil, borderColor: Color = .clear, @ViewBuilder content: () -> Content, footerText: String? = nil) where Header == Text, Footer == Text {
+        self.borderColor = borderColor
         self.content = content()
         self.header = headerText.map { Text($0) }
         self.footer = footerText.map { Text($0) }
     }
 
     // Initializer for no header
-    init(@ViewBuilder content: () -> Content) where Header == Text, Footer == Text {
+    init(borderColor: Color = .clear, @ViewBuilder content: () -> Content) where Header == Text, Footer == Text {
+        self.borderColor = borderColor
         self.content = content()
         self.header = nil
         self.footer = nil
@@ -53,8 +58,8 @@ struct CardSection<Content: View, Header: View, Footer: View>: View {
             .padding(.vertical, 12)
             .background(RoundedRectangle(cornerRadius: 10)
                 .fill(Color(UIColor.tertiarySystemBackground))
+                .stroke(borderColor, lineWidth: borderColor == .clear ? 0 : 1)
                 .frame(maxWidth: .infinity))
-            .clipped()
             if let footer = footer {
                 footer
                     .font(.footnote)

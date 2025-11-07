@@ -45,9 +45,6 @@ struct PresetsTrainingView: View {
         Button("Close") {
             if training.trainingCompletion.isComplete {
                 close()
-            } else if training.trainingCompletion.completedChapters[.entry] != true {
-                training.trainingCompletion.completedChapters[.entry] = true
-                close()
             } else {
                 confirmDismiss = true
             }

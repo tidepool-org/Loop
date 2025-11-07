@@ -52,8 +52,8 @@ class PresetsTrainingCompletion {
 @Observable
 public class PresetsTraining {
     public enum Chapter: CaseIterable, Hashable, Sendable, Codable {
-        case entry
-        case introduction
+//        case entry
+//        case introduction
         case customizingPresets
         case illness
         case dailyActivities
@@ -62,8 +62,8 @@ public class PresetsTraining {
         
         var title: Text {
             switch self {
-            case .entry: Text("Entry")
-            case .introduction: Text("Introduction")
+//            case .entry: Text("Entry")
+//            case .introduction: Text("Introduction")
             case .customizingPresets: Text("Customizing Presets")
             case .illness: Text("Presets for Illness")
             case .dailyActivities: Text("Presets for Daily Activities")
@@ -74,8 +74,8 @@ public class PresetsTraining {
         
         var firstStep: Step {
             switch self {
-            case .entry: .entryPoint
-            case .introduction: .tier1(.introduction(.introduction))
+//            case .entry: .entryPoint
+//            case .introduction: .tier1(.introduction(.introduction))
             case .customizingPresets: .tier2(.customizingPresets(.customizingPresets))
             case .illness: .tier2(.illness(.commonUses))
             case .dailyActivities: .tier2(.dailyActivities(.commonUses))
@@ -86,22 +86,22 @@ public class PresetsTraining {
     }
     
     enum Step: Hashable, Sendable {
-        case entryPoint
+//        case entryPoint
         
-        enum Tier1Chapter: Hashable, Sendable {
-            enum Introduction: CaseIterable, Hashable, Sendable {
-                case introduction
-                case exercisingWithLoop
-                case timingYourPresets
-                case safeGlucoseRanges
-                case performanceHistory
-                case complete
-            }
-            
-            case introduction(Introduction)
-        }
-        
-        case tier1(Tier1Chapter)
+//        enum Tier1Chapter: Hashable, Sendable {
+//            enum Introduction: CaseIterable, Hashable, Sendable {
+//                case introduction
+//                case exercisingWithLoop
+//                case timingYourPresets
+//                case safeGlucoseRanges
+//                case performanceHistory
+//                case complete
+//            }
+//            
+//            case introduction(Introduction)
+//        }
+//        
+//        case tier1(Tier1Chapter)
         
         enum Tier2Chapter: Hashable, Sendable {
             enum CustomizingPresets: CaseIterable, Hashable, Sendable {
@@ -157,26 +157,26 @@ public class PresetsTraining {
         
         func title(appName: String) -> String {
             switch self {
-            case .entryPoint:
-                NSLocalizedString("Presets Training", comment: "")
-            case .tier1(let tier1Chapter):
-                switch tier1Chapter {
-                case .introduction(let introduction):
-                    switch introduction {
-                    case .introduction:
-                        NSLocalizedString("Part 1: Introduction to Presets", comment: "")
-                    case .exercisingWithLoop:
-                        String(format: NSLocalizedString("Exercising with %1$@", comment: ""), appName)
-                    case .timingYourPresets:
-                        NSLocalizedString("Timing Your Presets for Exercise", comment: "")
-                    case .safeGlucoseRanges:
-                        NSLocalizedString("Safe Glucose Ranges for Exercise", comment: "")
-                    case .performanceHistory:
-                        NSLocalizedString("Performance History", comment: "")
-                    case .complete:
-                        NSLocalizedString("Part 1: Complete", comment: "")
-                    }
-                }
+//            case .entryPoint:
+//                NSLocalizedString("Presets Training", comment: "")
+//            case .tier1(let tier1Chapter):
+//                switch tier1Chapter {
+//                case .introduction(let introduction):
+//                    switch introduction {
+//                    case .introduction:
+//                        NSLocalizedString("Part 1: Introduction to Presets", comment: "")
+//                    case .exercisingWithLoop:
+//                        String(format: NSLocalizedString("Exercising with %1$@", comment: ""), appName)
+//                    case .timingYourPresets:
+//                        NSLocalizedString("Timing Your Presets for Exercise", comment: "")
+//                    case .safeGlucoseRanges:
+//                        NSLocalizedString("Safe Glucose Ranges for Exercise", comment: "")
+//                    case .performanceHistory:
+//                        NSLocalizedString("Performance History", comment: "")
+//                    case .complete:
+//                        NSLocalizedString("Part 1: Complete", comment: "")
+//                    }
+//                }
             case .tier2(let tier2Chapter):
                 switch tier2Chapter {
                 case .customizingPresets(let customizingPresets):
@@ -248,24 +248,25 @@ public class PresetsTraining {
         
         func previous(startingFrom: Chapter) -> Step? {
             switch self {
-            case .entryPoint: nil
-            case .tier1(let tier1Chapter):
-                switch tier1Chapter {
-                case .introduction(let introduction):
-                    switch introduction {
-                    case .introduction: chapter != startingFrom ? nil : .entryPoint
-                    case .exercisingWithLoop: .tier1(.introduction(.introduction))
-                    case .timingYourPresets: .tier1(.introduction(.exercisingWithLoop))
-                    case .safeGlucoseRanges: .tier1(.introduction(.timingYourPresets))
-                    case .performanceHistory: .tier1(.introduction(.safeGlucoseRanges))
-                    case .complete: .tier1(.introduction(.performanceHistory))
-                    }
-                }
+//            case .entryPoint: nil
+//            case .tier1(let tier1Chapter):
+//                switch tier1Chapter {
+//                case .introduction(let introduction):
+//                    switch introduction {
+//                    case .introduction: chapter != startingFrom ? nil : .entryPoint
+//                    case .exercisingWithLoop: .tier1(.introduction(.introduction))
+//                    case .timingYourPresets: .tier1(.introduction(.exercisingWithLoop))
+//                    case .safeGlucoseRanges: .tier1(.introduction(.timingYourPresets))
+//                    case .performanceHistory: .tier1(.introduction(.safeGlucoseRanges))
+//                    case .complete: .tier1(.introduction(.performanceHistory))
+//                    }
+//                }
             case .tier2(let tier2Chapter):
                 switch tier2Chapter {
                 case .customizingPresets(let customizingPresets):
                     switch customizingPresets {
-                    case .customizingPresets: chapter != startingFrom ? nil : .tier1(.introduction(.complete))
+//                    case .customizingPresets: chapter != startingFrom ? nil : .tier1(.introduction(.complete))
+                    case .customizingPresets: nil
                     case .overallInsulin: .tier2(.customizingPresets(.customizingPresets))
                     case .correctionRange: .tier2(.customizingPresets(.overallInsulin))
                     }
@@ -308,19 +309,19 @@ public class PresetsTraining {
         
         func next() -> (Step?, completedChapter: Chapter?) {
             switch self {
-            case .entryPoint: (.tier1(.introduction(.introduction)), .entry)
-            case .tier1(let tier1Chapter):
-                switch tier1Chapter {
-                case .introduction(let introduction):
-                    switch introduction {
-                    case .introduction: (.tier1(.introduction(.exercisingWithLoop)), nil)
-                    case .exercisingWithLoop: (.tier1(.introduction(.timingYourPresets)), nil)
-                    case .timingYourPresets: (.tier1(.introduction(.safeGlucoseRanges)), nil)
-                    case .safeGlucoseRanges: (.tier1(.introduction(.performanceHistory)), nil)
-                    case .performanceHistory: (.tier1(.introduction(.complete)), nil)
-                    case .complete: (.tier2(.customizingPresets(.customizingPresets)), .introduction)
-                    }
-                }
+//            case .entryPoint: (.tier1(.introduction(.introduction)), .entry)
+//            case .tier1(let tier1Chapter):
+//                switch tier1Chapter {
+//                case .introduction(let introduction):
+//                    switch introduction {
+//                    case .introduction: (.tier1(.introduction(.exercisingWithLoop)), nil)
+//                    case .exercisingWithLoop: (.tier1(.introduction(.timingYourPresets)), nil)
+//                    case .timingYourPresets: (.tier1(.introduction(.safeGlucoseRanges)), nil)
+//                    case .safeGlucoseRanges: (.tier1(.introduction(.performanceHistory)), nil)
+//                    case .performanceHistory: (.tier1(.introduction(.complete)), nil)
+//                    case .complete: (.tier2(.customizingPresets(.customizingPresets)), .introduction)
+//                    }
+//                }
             case .tier2(let tier2Chapter):
                 switch tier2Chapter {
                 case .customizingPresets(let customizingPresets):
@@ -368,8 +369,8 @@ public class PresetsTraining {
         
         var chapter: Chapter {
             switch self {
-            case .entryPoint: .entry
-            case .tier1: .introduction
+//            case .entryPoint: .entry
+//            case .tier1: .introduction
             case .tier2(.customizingPresets): .customizingPresets
             case .tier2(.illness): .illness
             case .tier2(.dailyActivities): .dailyActivities
@@ -396,7 +397,8 @@ public class PresetsTraining {
         navigationPath.last ?? startingAt.firstStep
     }
     
-    private(set) var startingAt: Chapter = .entry
+//    private(set) var startingAt: Chapter = .entry
+    private(set) var startingAt: Chapter = .customizingPresets
     
     let trainingCompletion: PresetsTrainingCompletion
     
@@ -422,7 +424,8 @@ public class PresetsTraining {
             if let startingAt {
                 self.startingAt = startingAt
             } else {
-                self.startingAt = .entry
+//                self.startingAt = .entry
+                self.startingAt = .customizingPresets
             }
         }
     }
