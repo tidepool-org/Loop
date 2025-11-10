@@ -210,7 +210,7 @@ public enum SelectablePreset: Hashable, Identifiable {
         switch self {
         case .custom(let preset):
             return preset.nextScheduledStartAfter(date)
-        case .activity(let activity):
+        case  .activity(let activity):
             return activity.preset.nextScheduledStartAfter(date)
         case .preMeal:
             return nil
