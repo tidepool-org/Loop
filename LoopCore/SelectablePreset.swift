@@ -210,7 +210,9 @@ public enum SelectablePreset: Hashable, Identifiable {
         switch self {
         case .custom(let preset):
             return preset.nextScheduledStartAfter(date)
-        case .preMeal, .activity:
+        case  .activity(let activity):
+            return activity.preset.nextScheduledStartAfter(date)
+        case .preMeal:
             return nil
         }
     }
@@ -220,7 +222,9 @@ public enum SelectablePreset: Hashable, Identifiable {
             switch self {
             case .custom(let preset):
                 return preset.scheduleStartDate
-            case .preMeal, .activity:
+            case .activity(let activity):
+                return activity.preset.scheduleStartDate
+            case .preMeal:
                 return nil
             }
         }
@@ -229,6 +233,9 @@ public enum SelectablePreset: Hashable, Identifiable {
             case .custom(var preset):
                 preset.scheduleStartDate = newValue
                 self = .custom(preset)
+            case .activity(var activity):
+                activity.preset.scheduleStartDate = newValue
+                self = .activity(activity)
             default:
                 break
             }
@@ -364,9 +371,9 @@ public enum SelectablePreset: Hashable, Identifiable {
 
     public var allowsScheduling: Bool {
         switch self {
-        case .custom:
+        case .custom, .activity:
             return true
-        case .preMeal, .activity:
+        case .preMeal:
             return false
         }
     }
