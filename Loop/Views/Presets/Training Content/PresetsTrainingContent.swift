@@ -30,6 +30,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
     @ViewBuilder
     func content(appName: String, displayGlucosePreference: DisplayGlucosePreference, colorPalette: LoopUIColorPalette, dynamicTypeSize: DynamicTypeSize, next: @escaping () -> Void) -> some View {
         switch self {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //        case .entryPoint:
 //            if let image = Image("PresetsTrainingEntryHero") {
 //                image
@@ -1116,6 +1117,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
     
     var cta: PresetsTraining.CTA? {
         switch self {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //        case .entryPoint: .start
 //        case .tier1(let tier1Chapter):
 //            switch tier1Chapter {

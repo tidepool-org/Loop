@@ -52,6 +52,7 @@ class PresetsTrainingCompletion {
 @Observable
 public class PresetsTraining {
     public enum Chapter: CaseIterable, Hashable, Sendable, Codable {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //        case entry
 //        case introduction
         case customizingPresets
@@ -62,6 +63,7 @@ public class PresetsTraining {
         
         var title: Text {
             switch self {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //            case .entry: Text("Entry")
 //            case .introduction: Text("Introduction")
             case .customizingPresets: Text("Customizing Presets")
@@ -74,6 +76,7 @@ public class PresetsTraining {
         
         var firstStep: Step {
             switch self {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //            case .entry: .entryPoint
 //            case .introduction: .tier1(.introduction(.introduction))
             case .customizingPresets: .tier2(.customizingPresets(.customizingPresets))
@@ -86,6 +89,7 @@ public class PresetsTraining {
     }
     
     enum Step: Hashable, Sendable {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //        case entryPoint
         
 //        enum Tier1Chapter: Hashable, Sendable {
@@ -157,6 +161,7 @@ public class PresetsTraining {
         
         func title(appName: String) -> String {
             switch self {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //            case .entryPoint:
 //                NSLocalizedString("Presets Training", comment: "")
 //            case .tier1(let tier1Chapter):
@@ -248,6 +253,7 @@ public class PresetsTraining {
         
         func previous(startingFrom: Chapter) -> Step? {
             switch self {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //            case .entryPoint: nil
 //            case .tier1(let tier1Chapter):
 //                switch tier1Chapter {
@@ -265,6 +271,7 @@ public class PresetsTraining {
                 switch tier2Chapter {
                 case .customizingPresets(let customizingPresets):
                     switch customizingPresets {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //                    case .customizingPresets: chapter != startingFrom ? nil : .tier1(.introduction(.complete))
                     case .customizingPresets: nil
                     case .overallInsulin: .tier2(.customizingPresets(.customizingPresets))
@@ -309,6 +316,7 @@ public class PresetsTraining {
         
         func next() -> (Step?, completedChapter: Chapter?) {
             switch self {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //            case .entryPoint: (.tier1(.introduction(.introduction)), .entry)
 //            case .tier1(let tier1Chapter):
 //                switch tier1Chapter {
@@ -369,6 +377,7 @@ public class PresetsTraining {
         
         var chapter: Chapter {
             switch self {
+// Temporarily removed -- will be moved to general onboarding with LOOP-5238
 //            case .entryPoint: .entry
 //            case .tier1: .introduction
             case .tier2(.customizingPresets): .customizingPresets
@@ -397,6 +406,7 @@ public class PresetsTraining {
         navigationPath.last ?? startingAt.firstStep
     }
     
+// Temporarily changed -- will be moved to general onboarding with LOOP-5238
 //    private(set) var startingAt: Chapter = .entry
     private(set) var startingAt: Chapter = .customizingPresets
     
@@ -424,6 +434,7 @@ public class PresetsTraining {
             if let startingAt {
                 self.startingAt = startingAt
             } else {
+// Temporarily changed -- will be moved to general onboarding with LOOP-5238
 //                self.startingAt = .entry
                 self.startingAt = .customizingPresets
             }
