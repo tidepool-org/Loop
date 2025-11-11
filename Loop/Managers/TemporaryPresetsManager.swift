@@ -483,9 +483,11 @@ extension TemporaryPresetsManager : AlertResponder {
 
         if actionIdentifier == NotificationManager.Action.startPreset.rawValue,
            let metdata = alert.metadata,
-           let presetIdentifier = metdata["presetId"]?.wrapped as? String?
+           let presetIdentifier = metdata["presetId"]?.wrapped as? String?,
+           let presetIdentifier
         {
-            startPreset(withIdentifier: presetIdentifier!)
+            startPreset(withIdentifier: presetIdentifier)
+            await alertIssuer?.retractAlert(identifier: Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: presetIdentifier))
         } else {
             log.error("Could not identify preset to activate for alert action: actionIdentifier=%{public}@, alert=%{public}@", actionIdentifier, String(describing: alert))
         }
