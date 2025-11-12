@@ -23,29 +23,33 @@ struct EditPresetView: View {
         case editCorrectionRange
         case editInsulinNeeds
     }
+    
+    fileprivate enum AlertState {
+        case confirmDelete
+        case trainingIncomplete
+    }
 
     @State private var trainingCompletion: PresetsTrainingCompletion
-    @State private var showTrainingIncompleteAlert: Bool = false
     @State private var preset: SelectablePreset
     @State private var navigationPath = NavigationPath()
     @State private var isDurationPickerExpanded = false
     @State private var showingDayPicker: Bool = false
-    @State private var isConfirmingDelete = false
     @State private var showPresetsTrainingSheet: Bool = false
-
+    @State private var activeAlert: AlertState?
+    
     @FocusState private var isTextFieldFocused: Bool
-
+    
     private var originalPreset: SelectablePreset
     private var scheduledRange: ClosedRange<LoopQuantity>
     private var onSave: (SelectablePreset) throws -> Void
     private var onDelete: (SelectablePreset) throws -> Void
-
+    
     private var activityPresetIsModified: Bool? {
         guard case let .activity(activityPreset) = preset else { return nil }
         
         return activityPreset.isModifiedFromDefault
     }
-
+    
     init(
         preset: SelectablePreset,
         scheduledRange: ClosedRange<LoopQuantity>,
@@ -93,7 +97,7 @@ struct EditPresetView: View {
     var sensitivitySection: some View {
         Button {
             if !preset.isPreMeal && !trainingCompletion.isComplete {
-                showTrainingIncompleteAlert = true
+                activeAlert = .trainingIncomplete
             } else if preset.canAdjustSensitivity {
                 navigationPath.append(Destination.editInsulinNeeds)
             }
@@ -125,13 +129,13 @@ struct EditPresetView: View {
                     if !preset.isPreMeal && !trainingCompletion.isComplete {
                         trainingNeededSection
                     }
-
+                    
                     sensitivitySection
-
+                    
                     CardSection {
                         Button {
                             if !preset.isPreMeal && !trainingCompletion.isComplete {
-                                showTrainingIncompleteAlert = true
+                                activeAlert = .trainingIncomplete
                             } else {
                                 navigationPath.append(Destination.editCorrectionRange)
                             }
@@ -174,196 +178,21 @@ struct EditPresetView: View {
                         }
                         .padding(.vertical, 4)
                     }
-
-                    CardSection("Preset Details") {
-                        HStack {
-                            Text("Name")
-                            Spacer()
-                            if preset.canChangeName {
-                                TextField("", text: $preset.name, prompt: Text("Required"))
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($isTextFieldFocused)
-                                    .foregroundColor(.secondary)
-                            } else {
-                                HStack(spacing: 4) {
-                                    if case let .activity(activityPreset) = preset {
-                                        Text(Image(systemName: activityPreset.activityType.symbol.value))
-                                    }
-                                    
-                                    Text(preset.name)
-                                }
-                                .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-
+                    
+                    presetDetailsCard
+                    
                     // Duration Section
                     if preset.canAdjustDuration {
-                        CardSection {
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    Text("Duration")
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                    Group {
-                                        Text(preset.duration.localizedTitle)
-                                        Image(systemName: "chevron.right")
-                                    }
-                                    .foregroundColor(.secondary)
-                                }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    isTextFieldFocused = false
-                                    withAnimation {
-                                        isDurationPickerExpanded.toggle()
-                                        Task {
-                                            if isDurationPickerExpanded {
-                                                try? await Task.sleep(nanoseconds: 200_000_000) // ~0.2s delay
-                                                withAnimation {
-                                                    scrollViewProxy.scrollTo("durationPicker", anchor: .bottom)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if isDurationPickerExpanded {
-                                    DurationPickerView(
-                                        durationType: $preset.duration,
-                                        allowIndefinite: preset.allowsIndefiniteDuration
-                                    )
-                                    .id("durationPicker") // Assign an ID for scrolling
-                                }
-                            }
-                        }
-                        .id("durationSection") // Optional: ID for the entire duration section
+                        durationCard(scrollViewProxy)
                     }
-
+                    
                     // Schedule Toggle
                     if preset.allowsScheduling {
-                        CardSection {
-                            HStack {
-                                Text("Schedule")
-                                    .font(.body)
-
-                                Spacer()
-
-                                Toggle("", isOn: Binding(get: {
-                                    return preset.isScheduled
-                                }, set: { newValue in
-                                    withAnimation {
-                                        if newValue {
-                                            preset.scheduleStartDate = Date().addingTimeInterval(.hours(1))
-                                            Task {
-                                                try? await Task.sleep(nanoseconds: 200_000_000) // ~0.2s delay
-                                                withAnimation {
-                                                    scrollViewProxy.scrollTo("repeatOption", anchor: .bottom)
-                                                }
-                                            }
-                                        } else {
-                                            preset.scheduleStartDate = nil
-                                            preset.repeatOptions = .none
-                                        }
-                                    }
-                                }))
-                                .toggleStyle(SwitchToggleStyle(tint: .green))
-                                .labelsHidden()
-                                .padding(.vertical, -4)
-                            }
-
-                            if preset.isScheduled {
-                                Divider()
-                                HStack {
-                                    if preset.repeatOptions != .none {
-                                        Text("Next Date")
-                                    } else {
-                                        Text("Start Date")
-                                    }
-                                    Spacer()
-                                    DatePicker(
-                                        "",
-                                        selection: Binding(get: {
-                                            preset.nextScheduledStartAfter(Date()) ?? Date()
-                                        }, set: { newValue in
-                                            preset.scheduleStartDate = newValue
-                                        }),
-                                        in: Date().addingTimeInterval(.minutes(1))...,
-                                        displayedComponents: [.date, .hourAndMinute]
-                                    )
-                                }
-                                Divider()
-                                    .padding(.top, -4)
-                                HStack {
-                                    Text("Repeat")
-                                    Spacer()
-                                    Picker("Repeat", selection: Binding<RepeatOption>(
-                                        get: { preset.repeatOptions == .none ? .never : .weekly },
-                                        set: { newValue in
-                                            if newValue == .never {
-                                                preset.repeatOptions = .none
-                                            } else {
-                                                Task {
-                                                    if let requiredRepeatOption {
-                                                        preset.repeatOptions = requiredRepeatOption
-                                                    }
-                                                    try? await Task.sleep(nanoseconds: 200_000_000) // ~0.2s delay
-                                                    withAnimation {
-                                                        scrollViewProxy.scrollTo("selectedDays", anchor: .bottom)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ).animation()) {
-                                        ForEach(RepeatOption.allCases, id: \.self) { option in
-                                            Text(String(describing: option))
-                                        }
-                                    }
-                                    .tint(.secondary)
-                                    .pickerStyle(MenuPickerStyle())
-                                    .padding(.trailing, -8)
-                                }
-                                .id("repeatOption") // Assign an ID for scrolling
-
-
-                                if preset.repeatOptions != .none {
-                                    Divider()
-                                        .padding(.top, -4)
-                                    HStack {
-                                        Text("Selected days")
-                                            .foregroundColor(.primary)
-                                        HStack {
-                                            Spacer()
-                                            RepeatOptionView(repeatOptions: preset.repeatOptions)
-                                                .padding(.vertical, 6)
-                                                .onTapGesture {
-                                                    withAnimation {
-                                                        showingDayPicker = true
-                                                    }
-                                                }
-                                        }
-                                        .popover(isPresented: $showingDayPicker, arrowEdge: .bottom) {
-                                            DayPickerPopup(selectedDays: Binding(
-                                                get: {
-                                                    preset.repeatOptions
-                                                }, set: { newValue in
-                                                    preset.repeatOptions = newValue.union(requiredRepeatOption ?? .none)
-                                                }))
-                                            .cornerRadius(12)
-                                            .presentationCompactAdaptation(.popover)
-                                        }
-                                    }
-                                    .id("selectedDays") // Assign an ID for scrolling
-                                }
-                            }
-                        }
+                        schedulingCard(scrollViewProxy)
                     }
-
+                    
                     if preset.canBeDeleted {
-                        Button("Delete Preset") {
-                            isConfirmingDelete = true
-                        }
-                        .buttonStyle(ActionButtonStyle(.destructive))
-                        .padding(.top)
+                        deletePresetButton
                     }
                 }
                 .animation(.easeInOut, value: preset.duration)
@@ -388,7 +217,6 @@ struct EditPresetView: View {
                     )
                 }
             }
-
             .onChange(of: preset) {
                 do {
                     try onSave(preset)
@@ -396,37 +224,209 @@ struct EditPresetView: View {
                     print(error)
                 }
             }
-            .alert(isPresented: $isConfirmingDelete) {
-                Alert(
-                    title: Text("Delete “\(preset.name)”?"),
-                    message: Text("Are you sure you want to delete this preset?"),
-                    primaryButton: .default(Text("Go Back")),
-                    secondaryButton: .destructive(Text("Yes, Delete").bold(), action: {
-                        do {
-                            try onDelete(preset)
-                            dismiss()
-                        } catch {
-                            print(error)
-                        }
-                    })
-                )
-            }
-            .alert(isPresented: $showTrainingIncompleteAlert) {
-                Alert(
-                    title: Text("Extra Training Needed"),
-                    message: Text("Complete the training to change this preset’s settings."),
-                    primaryButton: .default(Text("Start Training"), action: {
-                        showPresetsTrainingSheet = true
-                    }),
-                    secondaryButton: .cancel(Text("Close"))
-                )
+            .alert(alertTitle, isPresented: isAlertPresented, presenting: activeAlert) { alertState in
+                alertActions(for: alertState)
+            } message: { alertState in
+                alertMessage(for: alertState)
             }
             .sheet(isPresented: $showPresetsTrainingSheet) {
                 PresetsTrainingView(trainingCompletion: trainingCompletion)
             }
         }
     }
+    
+    private var presetDetailsCard: some View {
+        CardSection("Preset Details") {
+            HStack {
+                Text("Name")
+                Spacer()
+                if preset.canChangeName {
+                    TextField("", text: $preset.name, prompt: Text("Required"))
+                        .multilineTextAlignment(.trailing)
+                        .focused($isTextFieldFocused)
+                        .foregroundColor(.secondary)
+                } else {
+                    HStack(spacing: 4) {
+                        if case let .activity(activityPreset) = preset {
+                            Text(Image(systemName: activityPreset.activityType.symbol.value))
+                        }
+                        
+                        Text(preset.name)
+                    }
+                    .foregroundColor(.secondary)
+                }
+            }
+        }
+    }
+    
+    private func durationCard(_ proxy: ScrollViewProxy) -> some View {
+        CardSection {
+            VStack(alignment: .leading) {
+                HStack {
+                    Text("Duration")
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Group {
+                        Text(preset.duration.localizedTitle)
+                        Image(systemName: "chevron.right")
+                    }
+                    .foregroundColor(.secondary)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isTextFieldFocused = false
+                    withAnimation {
+                        isDurationPickerExpanded.toggle()
+                        Task {
+                            if isDurationPickerExpanded {
+                                try? await Task.sleep(nanoseconds: 200_000_000) // ~0.2s delay
+                                withAnimation {
+                                    proxy.scrollTo("durationPicker", anchor: .bottom)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if isDurationPickerExpanded {
+                    DurationPickerView(
+                        durationType: $preset.duration,
+                        allowIndefinite: preset.allowsIndefiniteDuration
+                    )
+                    .id("durationPicker") // Assign an ID for scrolling
+                }
+            }
+        }
+        .id("durationSection") // Optional: ID for the entire duration section
+    }
+        
+    private var deletePresetButton: some View {
+        Button("Delete Preset") {
+            activeAlert = .confirmDelete
+            //                            isConfirmingDelete = true
+        }
+        .buttonStyle(ActionButtonStyle(.destructive))
+        .padding(.top)
+    }
 
+    private func schedulingCard(_ proxy: ScrollViewProxy) -> some View {
+        CardSection {
+            HStack {
+                Text("Schedule")
+                    .font(.body)
+                
+                Spacer()
+                
+                Toggle("", isOn: Binding(get: {
+                    return preset.isScheduled
+                }, set: { newValue in
+                    withAnimation {
+                        if newValue {
+                            preset.scheduleStartDate = Date().addingTimeInterval(.hours(1))
+                            Task {
+                                try? await Task.sleep(nanoseconds: 200_000_000) // ~0.2s delay
+                                withAnimation {
+                                    proxy.scrollTo("repeatOption", anchor: .bottom)
+                                }
+                            }
+                        } else {
+                            preset.scheduleStartDate = nil
+                            preset.repeatOptions = .none
+                        }
+                    }
+                }))
+                .toggleStyle(SwitchToggleStyle(tint: .green))
+                .labelsHidden()
+                .padding(.vertical, -4)
+            }
+            
+            if preset.isScheduled {
+                Divider()
+                HStack {
+                    if preset.repeatOptions != .none {
+                        Text("Next Date")
+                    } else {
+                        Text("Start Date")
+                    }
+                    Spacer()
+                    DatePicker(
+                        "",
+                        selection: Binding(get: {
+                            preset.nextScheduledStartAfter(Date()) ?? Date()
+                        }, set: { newValue in
+                            preset.scheduleStartDate = newValue
+                        }),
+                        in: Date().addingTimeInterval(.minutes(1))...,
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                }
+                Divider()
+                    .padding(.top, -4)
+                HStack {
+                    Text("Repeat")
+                    Spacer()
+                    Picker("Repeat", selection: Binding<RepeatOption>(
+                        get: { preset.repeatOptions == .none ? .never : .weekly },
+                        set: { newValue in
+                            if newValue == .never {
+                                preset.repeatOptions = .none
+                            } else {
+                                Task {
+                                    if let requiredRepeatOption {
+                                        preset.repeatOptions = requiredRepeatOption
+                                    }
+                                    try? await Task.sleep(nanoseconds: 200_000_000) // ~0.2s delay
+                                    withAnimation {
+                                        proxy.scrollTo("selectedDays", anchor: .bottom)
+                                    }
+                                }
+                            }
+                        }
+                    ).animation()) {
+                        ForEach(RepeatOption.allCases, id: \.self) { option in
+                            Text(String(describing: option))
+                        }
+                    }
+                    .tint(.secondary)
+                    .pickerStyle(MenuPickerStyle())
+                    .padding(.trailing, -8)
+                }
+                .id("repeatOption") // Assign an ID for scrolling
+                
+                
+                if preset.repeatOptions != .none {
+                    Divider()
+                        .padding(.top, -4)
+                    HStack {
+                        Text("Selected days")
+                            .foregroundColor(.primary)
+                        HStack {
+                            Spacer()
+                            RepeatOptionView(repeatOptions: preset.repeatOptions)
+                                .padding(.vertical, 6)
+                                .onTapGesture {
+                                    withAnimation {
+                                        showingDayPicker = true
+                                    }
+                                }
+                        }
+                        .popover(isPresented: $showingDayPicker, arrowEdge: .bottom) {
+                            DayPickerPopup(selectedDays: Binding(
+                                get: {
+                                    preset.repeatOptions
+                                }, set: { newValue in
+                                    preset.repeatOptions = newValue.union(requiredRepeatOption ?? .none)
+                                }))
+                            .cornerRadius(12)
+                            .presentationCompactAdaptation(.popover)
+                        }
+                    }
+                    .id("selectedDays") // Assign an ID for scrolling
+                }
+            }
+        }
+    }
+    
     private var requiredRepeatOption: PresetScheduleRepeatOptions? {
         guard let startDate = preset.scheduleStartDate else { return nil }
         return .allCases[Calendar.current.component(.weekday, from: startDate) - 1]
@@ -447,6 +447,57 @@ struct EditPresetView: View {
             Text(preset.name)
                 .font(.system(size: 34, weight: .semibold))
                 .foregroundColor(.primary)
+        }
+    }
+    
+    private var alertTitle: String {
+        switch activeAlert {
+        case .confirmDelete: return "Delete “\(preset.name)”?"
+        case .trainingIncomplete: return "Extra Training Needed"
+        case .none: return ""
+        }
+    }
+    
+    private var isAlertPresented: Binding<Bool> {
+        Binding(
+            get: { activeAlert != nil },
+            set: { if !$0 { activeAlert = nil } }
+        )
+    }
+
+    @ViewBuilder
+    private func alertActions(for alertState: AlertState) -> some View {
+        switch alertState {
+        case .confirmDelete:
+            Button("Go Back", role: .cancel) {
+                activeAlert = nil
+            }
+            Button("Yes, Delete", role: .destructive) {
+                do {
+                    try onDelete(preset)
+                    dismiss()
+                } catch {
+                    print(error)
+                }
+            }
+        case .trainingIncomplete:
+            Button("Start Training") {
+                showPresetsTrainingSheet = true
+                activeAlert = nil
+            }
+            Button("Close", role: .cancel) {
+                activeAlert = nil
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func alertMessage(for alertState: AlertState) -> some View {
+        switch alertState {
+        case .confirmDelete:
+            Text("Are you sure you want to delete this preset?")
+        case .trainingIncomplete:
+            Text("Complete the training to change this preset’s settings.")
         }
     }
 }
