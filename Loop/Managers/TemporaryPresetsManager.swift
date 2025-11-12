@@ -483,8 +483,7 @@ extension TemporaryPresetsManager : AlertResponder {
 
         if actionIdentifier == NotificationManager.Action.startPreset.rawValue,
            let metdata = alert.metadata,
-           let presetIdentifier = metdata["presetId"]?.wrapped as? String?,
-           let presetIdentifier
+           let presetIdentifier = metdata["presetId"]?.wrapped as? String
         {
             startPreset(withIdentifier: presetIdentifier)
             await alertIssuer?.retractAlert(identifier: Alert.Identifier(managerIdentifier: managerIdentifier, alertIdentifier: presetIdentifier))
