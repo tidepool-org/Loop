@@ -303,7 +303,6 @@ struct EditPresetView: View {
     private var deletePresetButton: some View {
         Button("Delete Preset") {
             activeAlert = .confirmDelete
-            //                            isConfirmingDelete = true
         }
         .buttonStyle(ActionButtonStyle(.destructive))
         .padding(.top)
