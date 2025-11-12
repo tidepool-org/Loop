@@ -116,7 +116,7 @@ struct PresetRangeEditor: View {
                 .accessibilityIdentifier("text_AdjustedCorrectionRange")
 
 
-                Text("mg/dL")
+                Text(displayGlucosePreference.unit.localizedShortUnitString)
                     .foregroundColor(.secondary)
             }
 
