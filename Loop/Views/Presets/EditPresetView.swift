@@ -213,7 +213,7 @@ struct EditPresetView: View {
                         allowsScheduledRange: preset.canAdjustSensitivity,
                         isPreMeal: preset.isPreMeal,
                         presetAdjustsInsulinNeeds: preset.insulinNeedsScaleFactor != 1,
-                        requiresHighInsulinNeedsMitigation: preset.veryHighInsulinNeeds
+                        veryHighInsulinNeeds: preset.veryHighInsulinNeeds
                     )
                 }
             }

@@ -75,6 +75,13 @@ public struct CorrectionRangePreview: View {
         return thresholds
     }
 
+    var requiresHighInsulinNeedsMitigation: Bool {
+        if veryHighInsulinNeeds, let range {
+            return range.lowerBound < TemporaryScheduleOverride.highInsulinNeedsMitigationCorrectionRangeLimit
+        }
+        return veryHighInsulinNeeds
+    }
+
     var highInsulinNeedsWarningText: String {
         String(format: NSLocalizedString("%1$@ will set your correction range to 110 mg/dL or higher when this preset is enabled.", comment: "The format string for the high insulin needs preset warning text on the preset preview screen. (1: app name)"), appName)
     }
@@ -88,7 +95,7 @@ public struct CorrectionRangePreview: View {
                     Text(SafetyClassification.captionForCrossedThresholds(crossedThresholds, isRange: true))
                         .accessibilityIdentifier("text_CorrectionRangeWarning");
                 }
-            } else if veryHighInsulinNeeds {
+            } else if requiresHighInsulinNeedsMitigation {
                 WarningPanel {
                     Text(highInsulinNeedsWarningText)
                 }

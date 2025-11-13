@@ -457,7 +457,7 @@ final class LoopDataManager: ObservableObject {
             ]
 
             if activeOverride.veryHighInsulinNeeds {
-                suspendThreshold = max(TemporaryScheduleOverride.highInsulinNeedsMitigationCorrrectionRangeLimit, suspendThreshold)
+                suspendThreshold = max(TemporaryScheduleOverride.highInsulinNeedsMitigationCorrectionRangeLimit, suspendThreshold)
             }
 
         } else {

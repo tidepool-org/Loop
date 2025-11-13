@@ -22,7 +22,7 @@ struct ExistingPresetRangeEdit: View {
     private var allowsScheduledRange: Bool
     private var isPreMeal: Bool = false
     private var presetAdjustsInsulinNeeds: Bool
-    private var requiresHighInsulinNeedsMitigation: Bool
+    private var veryHighInsulinNeeds: Bool
 
     init(
         range: Binding<ClosedRange<LoopQuantity>?>,
@@ -31,7 +31,7 @@ struct ExistingPresetRangeEdit: View {
         allowsScheduledRange: Bool = true,
         isPreMeal: Bool = false,
         presetAdjustsInsulinNeeds: Bool,
-        requiresHighInsulinNeedsMitigation: Bool
+        veryHighInsulinNeeds: Bool
     ) {
         self._range = range
         self.editedRange = range.wrappedValue
@@ -40,7 +40,14 @@ struct ExistingPresetRangeEdit: View {
         self.allowsScheduledRange = allowsScheduledRange
         self.isPreMeal = isPreMeal
         self.presetAdjustsInsulinNeeds = presetAdjustsInsulinNeeds
-        self.requiresHighInsulinNeedsMitigation = requiresHighInsulinNeedsMitigation
+        self.veryHighInsulinNeeds = veryHighInsulinNeeds
+    }
+
+    var requiresHighInsulinNeedsMitigation: Bool {
+        if veryHighInsulinNeeds, let editedRange {
+            return editedRange.lowerBound < TemporaryScheduleOverride.highInsulinNeedsMitigationCorrectionRangeLimit
+        }
+        return veryHighInsulinNeeds
     }
 
     var highInsulinNeedsWarningText: String {
