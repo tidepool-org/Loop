@@ -223,6 +223,9 @@ struct InsulinDeliveryLogEventRow: View {
                     HStack(spacing: 0) {
                         VStack(alignment: .leading, spacing: 0) {
                             bolusTitle(deliveryAmount: deliveryAmount, programmedAmount: programmedAmount)
+                            Text("Automated")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
                         
                         Spacer()
