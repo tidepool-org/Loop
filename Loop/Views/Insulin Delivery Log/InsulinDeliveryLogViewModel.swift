@@ -42,14 +42,9 @@ class InsulinDeliveryLogViewModel {
     }
     
     enum State: Hashable {
-        enum FetchError: Error {
-            case noBasalRateSchedule
-        }
-        
         case loading
         case fetched(DisplayData)
         case refreshing(DisplayData)
-        case error(FetchError)
     }
     
     let totalDeliveredFormatter: QuantityFormatter = {
@@ -97,7 +92,7 @@ class InsulinDeliveryLogViewModel {
                     displayEvents.append(.event(event))
                 }
             }
-        case .loading, .error:
+        case .loading:
             break
         }
         
@@ -174,11 +169,6 @@ class InsulinDeliveryLogViewModel {
         let lastAutoBolus = fetchLastAutoBolus(doses: doses)
         let decisions = await fetchDosingDecisions(doses.compactMap(\.decisionId))
         
-        guard let currentBasalRate = fetchCurrentBasal() else {
-            state = .error(.noBasalRateSchedule)
-            return
-        }
-        
         // map raw event data into delivery log events for display
         var events = [InsulinDeliveryLogEvent]()
         handleDoseEvents(doses: doses, decisions: decisions, fetchedDate: fetchedDate, events: &events)
@@ -190,7 +180,7 @@ class InsulinDeliveryLogViewModel {
             .init(
                 insulinDeliveryState: statusState,
                 insulinDeliveryStateUpdatedDate: fetchedDate,
-                currentBasalRate: currentBasalRate,
+                currentBasalRate: fetchCurrentBasal() ?? DatedQuantity(date: TestingDate.currentTestingDate(), quantity: LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: 0)),
                 lastAutoBolus: lastAutoBolus,
                 totalInsulinDelivered: totalInsulinDelivered,
                 events: events
@@ -209,6 +199,8 @@ class InsulinDeliveryLogViewModel {
 
         if insulinSuspended {
             return .error(status: .suspended)
+        } else if fetchCurrentBasal() == nil {
+            return .error(status: .noDelivery)
         } else if automationEnabled {
             let basalStatus: InsulinDeliveryOverview.State.AutomatedBasalStatus
             switch automatedTreatmentState {

@@ -141,11 +141,6 @@ struct InsulinDeliveryLog: View {
                 Section {
                     totalInsulinDeliveredLabel(from: data.totalInsulinDelivered)
                 }
-            case .error(let fetchError):
-                switch fetchError {
-                case .noBasalRateSchedule: // FIXME: Needed?
-                    Text("No Basal Rate Schedule")
-                }
             }
             
             Section {
