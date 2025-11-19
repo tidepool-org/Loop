@@ -52,4 +52,8 @@ struct StoredDataAlgorithmInput: AlgorithmInput {
     var automaticBolusApplicationFactor: Double?
 
     let useMidAbsorptionISF: Bool = true
+
+    var maxActiveInsulinMultiplier: Double? = nil
+
+    var gradualTransitionsThreshold: Double? = nil
 }
