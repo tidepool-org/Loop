@@ -1410,8 +1410,6 @@ extension LoopDataManager: FavoriteFoodInsightsViewModelDelegate {
         }
         let carbRatioWithOverrides = overrides.applyCarbRatio(over: carbRatio)
 
-        let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
-
         // Overlay basal history on basal doses, splitting doses to get amount delivered relative to basal
         let annotatedDoses = doses.map({ $0.simpleDose(with: insulinModel(for: $0.insulinType)) }).annotated(with: basalWithOverrides)
 
@@ -1435,7 +1433,7 @@ extension LoopDataManager: FavoriteFoodInsightsViewModelDelegate {
             to: end.addingTimeInterval(InsulinMath.defaultInsulinActivityDuration),
             carbRatios: carbRatioWithOverrides,
             insulinSensitivities: sensitivityWithOverrides,
-            absorptionModel: carbModel.model
+            absorptionModel: CarbAbsorptionModel.piecewiseLinear.model
         )
         
         let carbAbsorptionReview = CarbAbsorptionReview(

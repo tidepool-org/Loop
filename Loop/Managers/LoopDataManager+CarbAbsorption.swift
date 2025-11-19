@@ -67,8 +67,6 @@ extension LoopDataManager {
         }
         let carbRatioWithOverrides = overrides.applyCarbRatio(over: carbRatio)
 
-        let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
-
         // Overlay basal history on basal doses, splitting doses to get amount delivered relative to basal
         let annotatedDoses = doses.annotated(with: basalWithOverrides)
 
@@ -92,7 +90,7 @@ extension LoopDataManager {
             to: end.addingTimeInterval(InsulinMath.defaultInsulinActivityDuration),
             carbRatios: carbRatioWithOverrides,
             insulinSensitivities: sensitivityWithOverrides,
-            absorptionModel: carbModel.model
+            absorptionModel: CarbAbsorptionModel.piecewiseLinear.model
         )
 
         return CarbAbsorptionReview(

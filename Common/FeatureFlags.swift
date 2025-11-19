@@ -22,7 +22,6 @@ struct FeatureFlagConfiguration: Decodable {
     let manualDoseEntryEnabled: Bool
     let insulinDeliveryReservoirViewEnabled: Bool
     let mockTherapySettingsEnabled: Bool
-    let nonlinearCarbModelEnabled: Bool
     let observeHealthKitCarbSamplesFromOtherApps: Bool
     let observeHealthKitDoseSamplesFromOtherApps: Bool
     let observeHealthKitGlucoseSamplesFromOtherApps: Bool
@@ -112,13 +111,6 @@ struct FeatureFlagConfiguration: Decodable {
         self.mockTherapySettingsEnabled = true
         #else
         self.mockTherapySettingsEnabled = false
-        #endif
-        
-        // Swift compiler config is inverse, since the default state is enabled.
-        #if NONLINEAR_CARB_MODEL_DISABLED
-        self.nonlinearCarbModelEnabled = false
-        #else
-        self.nonlinearCarbModelEnabled = true
         #endif
         
         #if OBSERVE_HEALTH_KIT_CARB_SAMPLES_FROM_OTHER_APPS_ENABLED
@@ -238,7 +230,6 @@ extension FeatureFlagConfiguration : CustomDebugStringConvertible {
             "* afrezzaInsulinModelEnabled: \(afrezzaInsulinModelEnabled)",
             "* includeServicesInSettingsEnabled: \(includeServicesInSettingsEnabled)",
             "* mockTherapySettingsEnabled: \(mockTherapySettingsEnabled)",
-            "* nonlinearCarbModelEnabled: \(nonlinearCarbModelEnabled)",
             "* observeHealthKitCarbSamplesFromOtherApps: \(observeHealthKitCarbSamplesFromOtherApps)",
             "* observeHealthKitDoseSamplesFromOtherApps: \(observeHealthKitDoseSamplesFromOtherApps)",
             "* observeHealthKitGlucoseSamplesFromOtherApps: \(observeHealthKitGlucoseSamplesFromOtherApps)",
