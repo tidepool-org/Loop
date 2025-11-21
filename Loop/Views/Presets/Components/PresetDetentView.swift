@@ -172,6 +172,7 @@ struct PresetDetentView: View {
                         Text(highInsulinNeedsWarningText)
                             .font(.subheadline)
                             .fontWeight(.semibold)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
 

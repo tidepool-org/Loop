@@ -32,6 +32,13 @@ struct NewPresetRangeEdit: View {
         self.onCancel = onCancel
     }
 
+    var requiresHighInsulinNeedsMitigation: Bool {
+        if preset.veryHighInsulinNeeds, let editedRange {
+            return editedRange.lowerBound < TemporaryScheduleOverride.highInsulinNeedsMitigationCorrectionRangeLimit
+        }
+        return preset.veryHighInsulinNeeds
+    }
+
     var highInsulinNeedsWarningText: String {
         String(format: NSLocalizedString("For presets with insulin needs of 170%% or greater, %1$@ will set your correction range to 110 mg/dL or higher when this is preset enabled.", comment: "The format string for the high insulin needs preset warning text. (1: app name)"), appName)
     }
@@ -53,7 +60,7 @@ struct NewPresetRangeEdit: View {
                 NoticeView(
                     title: Text("Set an Adjusted Correction Range"),
                     caption: Text("With overall insulin needs at 100%, an adjusted correction range is required."))
-            } else if preset.veryHighInsulinNeeds {
+            } else if requiresHighInsulinNeedsMitigation {
                 WarningView(
                     title: Text("Correction range adjustment when preset is enabled"),
                     caption: Text(highInsulinNeedsWarningText))

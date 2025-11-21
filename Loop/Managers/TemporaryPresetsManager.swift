@@ -265,7 +265,7 @@ class TemporaryPresetsManager {
 
         let scheduledRange = schedule.quantityRange(at: now)
 
-        if let override = activeOverride, override.veryHighInsulinNeeds {
+        if let override = activeOverride {
             return override.effectiveCorrectionRangeDuring(scheduledRange: scheduledRange)
         }
 

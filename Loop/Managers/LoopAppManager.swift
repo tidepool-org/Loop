@@ -303,8 +303,6 @@ class LoopAppManager: NSObject {
             }
         }
 
-        let carbModel: CarbAbsorptionModel = FeatureFlags.nonlinearCarbModelEnabled ? .piecewiseLinear : .linear
-        
         crashRecoveryManager = CrashRecoveryManager(alertIssuer: alertManager)
 
         loopDataManager = LoopDataManager(
@@ -318,7 +316,7 @@ class LoopAppManager: NSObject {
             dosingDecisionStore: dosingDecisionStore,
             trustedTimeOffset: { self.trustedTimeChecker.detectedSystemTimeOffset },
             analyticsServicesManager: analyticsServicesManager,
-            carbAbsorptionModel: carbModel,
+            carbAbsorptionModel: .piecewiseLinear,
             dosingStrategySelectionEnabled: FeatureFlags.dosingStrategySelectionEnabled
         )
 
