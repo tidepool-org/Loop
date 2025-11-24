@@ -353,6 +353,7 @@ struct EditPresetView: View {
                         selection: Binding(get: {
                             preset.nextScheduledStartAfter(Date()) ?? Date()
                         }, set: { newValue in
+                            preset.repeatOptions = .none
                             preset.scheduleStartDate = newValue
                         }),
                         in: Date().addingTimeInterval(.minutes(1))...,
