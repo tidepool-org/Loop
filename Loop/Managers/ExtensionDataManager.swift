@@ -18,6 +18,9 @@ final class ExtensionDataManager {
     unowned let settingsManager: SettingsManager
     unowned let temporaryPresetsManager: TemporaryPresetsManager
 
+    private var dataUpdatedObserver: NSObjectProtocol?
+    private var pumpManagerChangedObserver: NSObjectProtocol?
+    
     init(deviceDataManager: DeviceDataManager,
          loopDataManager: LoopDataManager,
          settingsManager: SettingsManager,
@@ -28,12 +31,30 @@ final class ExtensionDataManager {
         self.settingsManager = settingsManager
         self.temporaryPresetsManager = temporaryPresetsManager
 
-        NotificationCenter.default.addObserver(self, selector: #selector(notificationReceived(_:)), name: .LoopDataUpdated, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(notificationReceived(_:)), name: .PumpManagerChanged, object: nil)
-       
+        dataUpdatedObserver = NotificationCenter.default.addObserver(forName: .LoopDataUpdated, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in
+                self?.update()
+            }
+        }
+        
+        pumpManagerChangedObserver = NotificationCenter.default.addObserver(forName: .PumpManagerChanged, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in
+                self?.update()
+            }
+        }
+        
         // Wait until LoopDataManager has had a chance to initialize itself
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.update()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.update()
+        }
+    }
+    
+    deinit {
+        if let obs = dataUpdatedObserver {
+            NotificationCenter.default.removeObserver(obs)
+        }
+        if let obs = pumpManagerChangedObserver {
+            NotificationCenter.default.removeObserver(obs)
         }
     }
 
@@ -61,10 +82,6 @@ final class ExtensionDataManager {
 
     static var lastLoopCompleted: Date? {
         context?.lastLoopCompleted
-    }
-
-    @objc private func notificationReceived(_ notification: Notification) {
-        update()
     }
     
     private func update() {
