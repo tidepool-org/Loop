@@ -80,7 +80,7 @@ struct PresetDetentView: View {
                     dismiss()
                 }
                 .buttonStyle(ActionButtonStyle())
-                .disabled(temporaryPresetsManager.activeOverride != nil && preset.id != temporaryPresetsManager.activeOverride?.presetId)
+                .disabled((temporaryPresetsManager.activeOverride != nil && preset.id != temporaryPresetsManager.activeOverride?.presetId) || (preset.isPreMeal && settingsManager.dosingEnabled == false))
                 .accessibilityIdentifier("button_startPreset")
             case .end:
                 Button("End Preset") {
