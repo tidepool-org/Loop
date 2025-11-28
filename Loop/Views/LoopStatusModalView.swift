@@ -78,8 +78,11 @@ struct LoopStatusModalView: View {
             Text("Last loop completed")
             Text("\(Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90")) \(lastLoopCompletedString)")
                 .foregroundStyle(freshnessColor)
-            if viewModel.includeTimeStamp {
-                Text(viewModel.formattedLastLoopCompleted)
+            if viewModel.includeDateTimeStamp {
+                Text(viewModel.formattedLastLoopCompletedDateTime)
+                    .foregroundStyle(freshnessColor)
+            } else {
+                Text(viewModel.formattedLastLoopCompletedTime)
                     .foregroundStyle(freshnessColor)
             }
         }
@@ -131,9 +134,17 @@ struct LoopStatusModalView: View {
 }
 
 struct LoopStatusModalViewModel {
-    private var timeDateFormatter: DateFormatter = {
+    private var dateTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale.current
+        return formatter
+    }()
+    
+    private var timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
         formatter.timeStyle = .short
         formatter.locale = Locale.current
         return formatter
@@ -147,14 +158,18 @@ struct LoopStatusModalViewModel {
         guard let lastLoopCompleted else { return nil }
         return abs(min(0, lastLoopCompleted.timeIntervalSinceNow))
     }
-    var includeTimeStamp: Bool { // only include if last loop was before today
+    var includeDateTimeStamp: Bool { // only include if last loop was before today
         guard let lastLoopCompleted else { return false }
         let startOfToday = Calendar.current.startOfDay(for: Date())
         return lastLoopCompleted < startOfToday
     }
-    var formattedLastLoopCompleted: String {
+    var formattedLastLoopCompletedDateTime: String {
         guard let lastLoopCompleted else { return "Unknown" }
-        return String(format: NSLocalizedString("at %1$@", comment: "when adding a timestamp. (1: the formatted timestamp)"), timeDateFormatter.string(from: lastLoopCompleted))
+        return String(format: NSLocalizedString("at %1$@", comment: "when adding the date and time. (1: the formatted date and time)"), dateTimeFormatter.string(from: lastLoopCompleted))
+    }
+    var formattedLastLoopCompletedTime: String {
+        guard let lastLoopCompleted else { return "Unknown" }
+        return String(format: NSLocalizedString("at %1$@", comment: "when adding a timestamp. (1: the formatted timestamp)"), timeFormatter.string(from: lastLoopCompleted))
     }
 
     var loopIconClosed: Bool
