@@ -11,6 +11,8 @@ import LoopKit
 import LoopCore
 
 struct PresetDetailView: View {
+    @Environment(\.sizeClass) private var sizeClass
+
     @Environment(\.glucoseDisplayUnit) private var glucoseDisplayUnit
 
     let preset: SelectablePreset
@@ -48,7 +50,7 @@ struct PresetDetailView: View {
         var text = Text(percent).bold()
 
         if let correctionRange = preset.correctionRange {
-            text = text + Text(" • ")
+            text = text + Text(sizeClass.isLarge ? " • " : "\n")
             text = text + (Text(glucoseFormatter.string(from: correctionRange.lowerBound, includeUnit: false)!) +
                            Text("-") +
                            Text(glucoseFormatter.string(from: correctionRange.upperBound, includeUnit: false)!)).bold()
@@ -63,6 +65,8 @@ struct PresetDetailView: View {
             presetTitle
             presetDuration
             descriptionText
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 8)
                 .padding(.bottom, 10)
         }
