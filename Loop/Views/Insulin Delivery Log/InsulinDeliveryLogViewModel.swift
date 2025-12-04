@@ -485,7 +485,10 @@ class InsulinDeliveryLogViewModel {
                         type: .pumpEvent(
                             .bolus(
                                 .correction(recommendedAmount: nil),
-                                programmedAmount: nil,
+                                programmedAmount: LoopQuantity(
+                                    unit: .internationalUnit,
+                                    doubleValue: dose.programmedUnits
+                                ),
                                 deliveryAmount: LoopQuantity(
                                     unit: .internationalUnit,
                                     doubleValue: dose.deliveredUnits ?? dose.programmedUnits
