@@ -81,7 +81,7 @@ struct LoopStatusModalView: View {
             if viewModel.includeDateTimeStamp {
                 Text(viewModel.formattedLastLoopCompletedDateTime)
                     .foregroundStyle(freshnessColor)
-            } else {
+            } else if viewModel.freshness != .fresh {
                 Text(viewModel.formattedLastLoopCompletedTime)
                     .foregroundStyle(freshnessColor)
             }
