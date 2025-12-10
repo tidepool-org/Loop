@@ -217,12 +217,12 @@ struct EditPresetView: View {
                     )
                 }
             }
-            .onChange(of: preset.scheduleStartDate, { oldValue, newValue in
+            .onChange(of: preset.scheduleStartDate, { _, newValue in
                 if newValue != nil {
                     assignRepeatDays()
                 }
             })
-            .onChange(of: preset) { oldValue, newValue in
+            .onChange(of: preset) { _, _ in
                 do {
                     try onSave(preset)
                 } catch {
