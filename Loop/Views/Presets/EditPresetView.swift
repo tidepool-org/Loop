@@ -217,7 +217,12 @@ struct EditPresetView: View {
                     )
                 }
             }
-            .onChange(of: preset) {
+            .onChange(of: preset.scheduleStartDate, { oldValue, newValue in
+                if newValue != nil {
+                    assignRepeatDays()
+                }
+            })
+            .onChange(of: preset) { oldValue, newValue in
                 do {
                     try onSave(preset)
                 } catch {
@@ -430,6 +435,13 @@ struct EditPresetView: View {
     private var requiredRepeatOption: PresetScheduleRepeatOptions? {
         guard let startDate = preset.scheduleStartDate else { return nil }
         return .allCases[Calendar.current.component(.weekday, from: startDate) - 1]
+    }
+
+    func assignRepeatDays() {
+        guard let requiredRepeatOption else {
+            return
+        }
+        preset.repeatOptions = requiredRepeatOption
     }
 
     private var dismissButton: some View {
