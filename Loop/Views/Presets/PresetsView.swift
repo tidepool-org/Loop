@@ -64,6 +64,7 @@ struct PresetsView: View {
     @State private var editMode: EditMode = .inactive
     @State private var showingMenu: Bool = false
     @State private var presentCreateView: Bool = false
+    @State private var presentTrainingNeededAlert: Bool = false
     @State private var activeSheet: ActiveSheet?
     @State private var navigationPath = NavigationPath()
 
@@ -123,11 +124,14 @@ struct PresetsView: View {
                             }
                             
                             Button(action: {
-                                presentCreateView = true;
+                                if trainingCompletion.isComplete {
+                                    presentCreateView = true
+                                } else {
+                                    presentTrainingNeededAlert = true
+                                }
                             }) {
                                 Image(systemName: "plus")
                             }
-                            .disabled(!trainingCompletion.isComplete)
                         }
                         .padding(.horizontal, 10)
                         
@@ -143,7 +147,6 @@ struct PresetsView: View {
                                 PresetCard(
                                     preset,
                                     guardrail: settingsManager.correctionRangeGuardrailForPreset(preset)
-                                    
                                 )
                                 .cornerRadius(12)
                                 .onTapGesture {
@@ -252,6 +255,26 @@ struct PresetsView: View {
         }
         .sheet(isPresented: $presentCreateView) {
             CreatePresetView()
+        }
+        .alert(isPresented: $presentTrainingNeededAlert) {
+            trainingNeededAlert
+        }
+    }
+    
+    private var trainingNeededAlert: SwiftUI.Alert {
+        Alert(title: Text("Extra Training Needed", comment: "Preset training needed alert title"),
+              message: Text("Complete the training to create a new preset.", comment: "Preset training needed alert message"),
+              primaryButton: startNeededTrainingButton,
+              secondaryButton: closeButton)
+    }
+    
+    private var startNeededTrainingButton: SwiftUI.Alert.Button {
+        .cancel(Text("Close", comment: "Preset training needed alert cancel button"))
+    }
+
+    private var closeButton: SwiftUI.Alert.Button {
+        .default(Text("Start Training", comment: "CPreset training needed alert start training button")) {
+            activeSheet = .training()
         }
     }
 
