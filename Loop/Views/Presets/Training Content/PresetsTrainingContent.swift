@@ -307,10 +307,10 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                     Text("Physical stress, like illness, can cause glucose to rise.")
                     
                     InsetContent(alignment: .leading) {
-                        Text("**Example:** Paloma Porpoise notices her glucose is higher than normal and wants to create a preset to manage it while she's sick.")
+                        Text("**Example:** Paloma Porpoise sees her glucose is running higher than usual. She decides to create a preset to help manage it while she's sick.")
                     }
                     
-                    Text("Let's look at the settings that will impact Paloma's insulin delivery.")
+                    Text("Let's look at the settings that can change how much insulin Paloma get.")
                     
                 case .overallInsulin:
                     Text("Paloma wants \(appName) to know she needs more insulin than usual.")
@@ -378,7 +378,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                             .frame(maxWidth: .infinity)
                     }
                     
-                    Text("To be safe, \(appName) will remind her at 8 hours that the preset is still running.")
+                    Text("To be safe, \(appName) will remind her after 24 hours that the preset is still running.")
                     
                     if let image = Image("PresetsTrainingIllnessDuration2") {
                         image
@@ -484,7 +484,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                         component: .correctionRange(110...120)
                     )
                     
-                    Text("Omar sets his correction range a little higher, to \(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 110), includeUnit: false))-\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 120), includeUnit: false)) \(displayGlucosePreference.unit.localizedShortUnitString). This tells \(appName) to step in sooner.")
+                    Text("Omar sets his correction range a little higher, to \(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 140), includeUnit: false))-\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 160), includeUnit: false)) \(displayGlucosePreference.unit.localizedShortUnitString). This tells \(appName) to step in sooner.")
                     
                     if let image = Image("PresetsTrainingDailyActivityCorrectionRange") {
                         image
@@ -599,7 +599,18 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                             HStack(alignment: .firstTextBaseline, spacing: 16) {
                                 Bullet(color: .secondary)
                                 
-                                Text("Walking")
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Walking")
+                                    
+                                    HStack(alignment: .center, spacing: 2) {
+                                        Text("\(Image(systemName: "lightbulb.max"))")
+                                        
+                                        Text(" **Tip** Use your \(Image(systemName: "figure.walk")) **Walking** preset")
+                                    }
+                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, 6)
+                                    .background(Color(UIColor.secondarySystemBackground).cornerRadius(5))
+                                }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             
