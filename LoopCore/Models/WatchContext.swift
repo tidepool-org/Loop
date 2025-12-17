@@ -20,6 +20,7 @@ public enum InsulinDeliveryWatchState: Int, Equatable {
     case noDelivery
 }
 
+@Observable
 public final class WatchContext: RawRepresentable {
     public typealias RawValue = [String: Any]
 

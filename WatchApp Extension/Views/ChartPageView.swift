@@ -18,8 +18,8 @@ struct ChartPageView: View {
     @Environment(LoopDataManager.self) var loopManager
 
     @State private var isShowingCarbList: Bool = false
-
-    @State var lastSyncString: String?
+    
+    @State private var lastSyncString: String?
 
     @ScaledMetric private var iconSize: Double = 26
     
