@@ -10,18 +10,21 @@ import SwiftUI
 import LoopKit
 
 public struct LoopCircleView: View {
+    
     @Environment(\.isEnabled) private var isEnabled
-
+    
     private let animating: Bool
     private let closedLoop: Bool
     private let freshness: LoopCompletionFreshness
-
-    public init(closedLoop: Bool, freshness: LoopCompletionFreshness, animating: Bool = false) {
+    private let deviceInoperable: Bool
+    
+    public init(closedLoop: Bool, freshness: LoopCompletionFreshness, animating: Bool = false, deviceInoperable: Bool = false) {
         self.closedLoop = closedLoop
         self.freshness = freshness
         self.animating = animating
+        self.deviceInoperable = deviceInoperable
     }
-
+    
     private var reversingAnimation: Animation {
         if animating && closedLoop {
             return .easeInOut(duration: 1).repeatForever(autoreverses: true)
@@ -29,7 +32,7 @@ public struct LoopCircleView: View {
             return .easeInOut(duration: 1)
         }
     }
-
+    
     public var body: some View {
         GeometryReader { geometry in
             Circle()
@@ -42,18 +45,20 @@ public struct LoopCircleView: View {
                 .animation(reversingAnimation, value: UUID())
         }
     }
-
+    
     private var loopColor: Color {
         if !isEnabled {
             return .defaultWatchButtonGray
+        } else if deviceInoperable {
+            return .gray
         } else {
             switch freshness {
             case .fresh:
                 return .fresh
             case .aging:
-                return .aging
+                return .gray
             case .stale:
-                return .stale
+                return .gray
             }
         }
     }

@@ -19,8 +19,10 @@ struct ChartPageView: View {
 
     @State private var isShowingCarbList: Bool = false
 
-    @ScaledMetric private var iconSize: Double = 26
+    @State var lastSyncString: String?
 
+    @ScaledMetric private var iconSize: Double = 26
+    
     var presetActive: Bool {
         return loopManager.watchInfo.scheduleOverride?.isActive() == true
     }
@@ -57,7 +59,9 @@ struct ChartPageView: View {
                     }
             )
     }
-
+    
+    let lastSyncUpdateTimer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
+    
     var activeInsulin: String? {
         guard let activeContext = loopManager.activeContext,
             let activeInsulin = activeContext.activeInsulin
@@ -151,13 +155,19 @@ struct ChartPageView: View {
         return insulinFormatter.string(from: reservoirVolume)
     }
 
-
     var body: some View {
         ScrollView(.vertical) {
             LoopHeader()
             chartView
 
             VStack(spacing: 8) {
+                if let lastSyncString {
+                    LabelValueRow("Last Loop") {
+                        Text(Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90")) +
+                        Text(" " + lastSyncString)
+                    }
+                    Divider()
+                }
                 LabelValueRow("Active Insulin") {
                     Text(activeInsulin ?? "-")
                 }
@@ -191,9 +201,16 @@ struct ChartPageView: View {
         .environment(\.glucoseDisplayUnit, loopManager.displayGlucoseUnit)
         .onAppear() {
             updateGlucoseChart()
+            updateLastSyncString()
         }
         .onChange(of: loopManager.activeContext?.predictedGlucose) { oldValue, newValue in
             updateGlucoseChart()
+        }
+        .onReceive(lastSyncUpdateTimer) { _ in
+            updateLastSyncString()
+        }
+        .onChange(of: loopManager.activeContext?.isClosedLoop) { _, _ in
+            updateLastSyncString()
         }
         .sheet(isPresented: $isShowingCarbList) {
             CarbList()
@@ -207,4 +224,56 @@ struct ChartPageView: View {
             loopManager.glucoseChartScene.setNeedsUpdate()
         }
     }
+    
+    private func updateLastSyncString() {
+        guard loopManager.activeContext?.isClosedLoop == true, let date = loopManager.activeContext?.loopLastRunDate else {
+            lastSyncString = nil
+            return
+        }
+        
+        let ago = min(abs(min(0, date.timeIntervalSinceNow)), TimeInterval.days(7))
+
+        guard let timeString = ago.truncatedTimeAgoString else {
+            lastSyncString = nil
+            return
+        }
+        
+        if ago > .hours(1) {
+            lastSyncString = String(format: NSLocalizedString(" >%@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString)
+        } else {
+            lastSyncString = String(format: NSLocalizedString(" %@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString)
+        }
+    }
 }
+
+extension TimeInterval {
+    /// Formats a time interval as a truncated "time ago" string (e.g., "1 hr", "2 mins")
+    var truncatedTimeAgoString: String? {
+        let calendar = Calendar.current
+        let now = Date()
+        let past = now.addingTimeInterval(-self)
+
+        let components = calendar.dateComponents([.day, .hour, .minute], from: past, to: now)
+        if let days = components.day, days > 0 {
+            return String.localizedStringWithFormat(
+                NSLocalizedString("%d day", tableName: "LocalizablePlural", bundle: .main, value: "%d day", comment: "Singular/plural day count"),
+                days
+            )
+        } else if let hours = components.hour, hours > 0 {
+            return String.localizedStringWithFormat(
+                NSLocalizedString("%d hr", tableName: "LocalizablePlural", bundle: .main, value: "%d hr", comment: "Singular/plural hour count"),
+                hours
+            )
+        } else if let minutes = components.minute {
+            return String.localizedStringWithFormat(
+                NSLocalizedString("%d min", tableName: "LocalizablePlural", bundle: .main, value: "%d min", comment: "Singular/plural minute count"),
+                minutes
+            )
+        } else {
+            return nil
+        }
+    }
+}
+
+
+
