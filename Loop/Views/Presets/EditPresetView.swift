@@ -44,6 +44,21 @@ struct EditPresetView: View {
     private var onSave: (SelectablePreset) throws -> Void
     private var onDelete: (SelectablePreset) throws -> Void
     
+    private var scheduleFooter: String? {
+        guard preset.repeatOptions != .none,
+              let timeString = preset.scheduleStartDate?.formatted(date: .omitted, time: .shortened)
+        else { return nil }
+        
+        return String(
+            format: NSLocalizedString(
+                "Repeats weekly on %1$@ at %2$@",
+                comment: "preset weekly repeat footer (1: repeat day(s)) (2: repeat time)"
+            ),
+            String(describing: preset.repeatOptions),
+            timeString
+        )
+    }
+    
     private var activityPresetIsModified: Bool? {
         guard case let .activity(activityPreset) = preset else { return nil }
         
@@ -314,7 +329,7 @@ struct EditPresetView: View {
     }
 
     private func schedulingCard(_ proxy: ScrollViewProxy) -> some View {
-        CardSection {
+        CardSection(content:  {
             HStack {
                 Text("Schedule")
                     .font(.body)
@@ -429,7 +444,7 @@ struct EditPresetView: View {
                     .id("selectedDays") // Assign an ID for scrolling
                 }
             }
-        }
+        }, footerText: scheduleFooter)
     }
     
     private var requiredRepeatOption: PresetScheduleRepeatOptions? {

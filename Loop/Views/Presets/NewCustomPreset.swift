@@ -22,7 +22,7 @@ extension PresetScheduleRepeatOptions: @retroactive CustomStringConvertible {
         }
 
         // Handle multiple days
-        return NSLocalizedString("Multiple", comment: "Preset schedule repeat option multiple days")
+        return NSLocalizedString("multiple days", comment: "Preset schedule repeat option multiple days")
     }
 
     var veryShortDescription: String {
