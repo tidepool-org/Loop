@@ -288,7 +288,10 @@ extension AlertStore {
 
     // Must be invoked within NSManagedObjectContext perform or performAndWait block
     private func purgeExpired() {
-        purge(before: expireDate)
+        managedObjectContext.perform { [weak self] in
+            guard let self else { return }
+            self.purge(before: self.expireDate)
+        }
     }
 
     func purge(before date: Date, completion: (Error?) -> Void) {
