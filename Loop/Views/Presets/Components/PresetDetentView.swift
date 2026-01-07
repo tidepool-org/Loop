@@ -27,11 +27,14 @@ struct PresetDetentView: View {
     let preset: SelectablePreset
     let didTapEdit: () -> Void
 
-    var operation: Operation {
+    var operation: Operation? {
         if temporaryPresetsManager.activeOverride?.presetId == preset.id {
             return .end
-        } else {
+        } else if settingsManager.settings.overridePresets.contains(where: { $0.id == preset.id }) {
             return .start
+        } else {
+            // if the preset is not saved, it is single use and cannot start again
+            return nil
         }
     }
     
@@ -65,6 +68,8 @@ struct PresetDetentView: View {
                         Text(String(format: NSLocalizedString("starting at %@", comment: "The format for the description of a custom preset start date"), startTimeText))
                     }
                 }
+            default:
+                EmptyView()
             }
         }
         .font(.subheadline)
@@ -97,6 +102,8 @@ struct PresetDetentView: View {
                     .buttonStyle(ActionButtonStyle(.tertiary))
                     .accessibilityIdentifier("button_adjustPresetDuration")
                 }
+            default:
+                EmptyView()
             }
             
             Button("Close") {
@@ -120,6 +127,8 @@ struct PresetDetentView: View {
             String(format: NSLocalizedString("%1$@ will set your correction range to 110 mg/dL or higher when this preset is enabled.", comment: "The format string for the high insulin needs preset warning text on the preset detent screen when starting a preset. (1: app name)"), appName)
         case .end:
             String(format: NSLocalizedString("%1$@ has set your correction range to 110 mg/dL or higher.", comment: "The format string for the high insulin needs preset warning text on the preset detent screen when stopping a preset. (1: app name)"), appName)
+        default:
+            ""
         }
     }
 
