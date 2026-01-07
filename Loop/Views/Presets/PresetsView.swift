@@ -91,6 +91,8 @@ struct PresetsView: View {
     var scheduledRange: ClosedRange<LoopQuantity>? {
         settingsManager.therapySettings.glucoseTargetRangeSchedule?.quantityRange(at: Date())
     }
+    
+    let roundBasalRate: ((LoopQuantity) -> LoopQuantity)?
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -219,7 +221,7 @@ struct PresetsView: View {
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .presetDetent(let preset):
-                PresetDetentView(preset: preset, didTapEdit: {
+                PresetDetentView(preset: preset, roundBasalRate: roundBasalRate, didTapEdit: {
                     activeSheet = .editPreset(preset)
                 })
             case .editPreset(let preset):

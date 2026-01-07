@@ -67,6 +67,8 @@ class SettingsViewModel {
     let versionUpdateViewModel: VersionUpdateViewModel
     
     weak var delegate: SettingsViewModelDelegate?
+    
+    weak var deliveryDelegate: DeliveryDelegate?
 
     func didTapIssueReport() {
         delegate?.didTapIssueReport()
@@ -155,7 +157,7 @@ class SettingsViewModel {
                 isOnboardingComplete: Bool,
                 therapySettingsViewModelDelegate: TherapySettingsViewModelDelegate?,
                 presetHistory: TemporaryScheduleOverrideHistory,
-                temporaryPresetsManager: TemporaryPresetsManager
+                deliveryDelegate: DeliveryDelegate?
     ) {
         self.alertPermissionsChecker = alertPermissionsChecker
         self.alertMuter = alertMuter
@@ -174,6 +176,7 @@ class SettingsViewModel {
         self.isOnboardingComplete = isOnboardingComplete
         self.therapySettingsViewModelDelegate = therapySettingsViewModelDelegate
         self.presetHistory = presetHistory
+        self.deliveryDelegate = deliveryDelegate
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
         lastLoopCompletion
@@ -242,7 +245,7 @@ extension SettingsViewModel {
                                  isOnboardingComplete: false,
                                  therapySettingsViewModelDelegate: nil,
                                  presetHistory: TemporaryScheduleOverrideHistory(),
-                                 temporaryPresetsManager: TemporaryPresetsManager(settingsProvider: FakeSettingsProvider())
+                                 deliveryDelegate: nil
         )
     }
 }

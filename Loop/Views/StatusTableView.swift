@@ -150,7 +150,7 @@ struct StatusTableView: View {
             }
             .sheet(item: $viewModel.pendingPreset) { preset in
                 // This is the active preset; edit disabled
-                PresetDetentView(preset: preset, didTapEdit: { })
+                PresetDetentView(preset: preset, roundBasalRate: viewModel.loopDataManager.deliveryDelegate?.roundBasalRate, didTapEdit: { })
                     .accessibilityIdentifier("bar_Presets")
             }
             .toolbar {

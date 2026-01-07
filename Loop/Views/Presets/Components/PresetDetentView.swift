@@ -10,6 +10,7 @@ import LoopKit
 import LoopKitUI
 import SwiftUI
 import LoopCore
+import LoopAlgorithm
 
 struct PresetDetentView: View {
 
@@ -25,6 +26,7 @@ struct PresetDetentView: View {
     @Environment(\.appName) private var appName
 
     let preset: SelectablePreset
+    let roundBasalRate: ((LoopQuantity) -> LoopQuantity)?
     let didTapEdit: () -> Void
 
     var operation: Operation {
@@ -111,7 +113,15 @@ struct PresetDetentView: View {
     @State var sheetContentHeight: Double = 0
 
     var settingsImpact: TherapySettings.InsulinMultiplierImpact {
-        settingsManager.therapySettings.impact(for: preset.insulinNeedsScaleFactor)
+        var settingsImpact = settingsManager.therapySettings.impact(for: preset.insulinNeedsScaleFactor)
+        guard let basalRate = settingsImpact.basalRate,
+              let roundBasalRate
+        else {
+            return settingsImpact
+        }
+        
+        settingsImpact.basalRate = roundBasalRate(basalRate)
+        return settingsImpact
     }
 
     var highInsulinNeedsWarningText: String {

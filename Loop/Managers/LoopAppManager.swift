@@ -572,7 +572,7 @@ class LoopAppManager: NSObject {
                                           isOnboardingComplete: onboardingManager.isComplete,
                                           therapySettingsViewModelDelegate: deviceDataManager,
                                           presetHistory: temporaryPresetsManager.presetHistory,
-                                          temporaryPresetsManager: temporaryPresetsManager
+                                          deliveryDelegate: deviceDataManager
         )
         
         viewModel.favoriteFoodInsightsDelegate = loopDataManager

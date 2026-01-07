@@ -1518,7 +1518,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     func presentPresets() {
         let hostingController = DismissibleHostingController(
-            rootView: PresetsView()
+            rootView: PresetsView(roundBasalRate: deviceManager.roundBasalRate)
                 .onAppear { self.isShowingPresets = true }
                 .onDisappear { self.isShowingPresets = false }
                 .environmentObject(deviceManager.displayGlucosePreference)

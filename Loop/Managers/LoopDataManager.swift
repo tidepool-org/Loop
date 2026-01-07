@@ -47,6 +47,7 @@ protocol DeliveryDelegate: AnyObject {
     func enact(bolus: Double?, tempBasal: TempBasalRecommendation?, decisionId: UUID?) async throws
     func enactBolus(units: Double, decisionId: UUID?, activationType: BolusActivationType) async throws
     func roundBasalRate(unitsPerHour: Double) -> Double
+    func roundBasalRate(rate: LoopQuantity) -> LoopQuantity
     func roundBolusVolume(units: Double) -> Double
 }
 

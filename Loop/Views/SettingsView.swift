@@ -141,7 +141,7 @@ struct SettingsView: View {
                 Group {
                     switch sheet {
                     case .presets:
-                        PresetsView()
+                        PresetsView(roundBasalRate: viewModel.deliveryDelegate?.roundBasalRate)
                     case .favoriteFoods:
                         FavoriteFoodsView(insightsDelegate: viewModel.favoriteFoodInsightsDelegate)
                     }
