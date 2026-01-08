@@ -50,12 +50,6 @@ protocol DeliveryDelegate: AnyObject {
     func roundBolusVolume(units: Double) -> Double
 }
 
-extension DeliveryDelegate {
-    func roundBasalRate(rate: LoopQuantity) -> LoopQuantity {
-        LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: roundBasalRate(unitsPerHour: rate.doubleValue(for: .internationalUnitsPerHour)))
-    }
-}
-
 extension PumpManagerStatus.BasalDeliveryState {
     var currentTempBasal: DoseEntry? {
         switch self {

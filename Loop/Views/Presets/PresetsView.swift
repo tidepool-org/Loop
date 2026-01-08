@@ -92,7 +92,7 @@ struct PresetsView: View {
         settingsManager.therapySettings.glucoseTargetRangeSchedule?.quantityRange(at: Date())
     }
     
-    let roundBasalRate: ((LoopQuantity) -> LoopQuantity)?
+    let roundBasalRate: ((Double) -> Double)?
 
     var body: some View {
         NavigationStack(path: $navigationPath) {

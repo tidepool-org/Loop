@@ -26,7 +26,7 @@ struct PresetDetentView: View {
     @Environment(\.appName) private var appName
 
     let preset: SelectablePreset
-    let roundBasalRate: ((LoopQuantity) -> LoopQuantity)?
+    let roundBasalRate: ((Double) -> Double)?
     let didTapEdit: () -> Void
 
     var operation: Operation? {
@@ -127,7 +127,7 @@ struct PresetDetentView: View {
             return settingsImpact
         }
         
-        settingsImpact.basalRate = roundBasalRate(basalRate)
+        settingsImpact.basalRate = LoopQuantity(unit: .internationalUnitsPerHour, doubleValue:  roundBasalRate(basalRate.doubleValue(for: .internationalUnitsPerHour)))
         return settingsImpact
     }
 
