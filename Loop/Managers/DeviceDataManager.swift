@@ -1343,10 +1343,6 @@ extension DeviceDataManager: DeliveryDelegate {
 
         return pumpManager.roundToSupportedBasalRate(unitsPerHour: unitsPerHour)
     }
-    
-    func roundBasalRate(rate: LoopQuantity) -> LoopQuantity {
-        LoopQuantity(unit: .internationalUnitsPerHour, doubleValue: roundBasalRate(unitsPerHour: rate.doubleValue(for: .internationalUnitsPerHour)))
-    }
 
     func roundBolusVolume(units: Double) -> Double {
         guard let pumpManager = pumpManager else {
