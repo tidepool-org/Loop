@@ -239,7 +239,7 @@ class InsulinDeliveryLogViewModel {
     }
     
     private func fetchLastAutoBolus(doses: [DoseEntry]) -> DatedQuantity? {
-        guard let lastAutoBolusDose = doses.last(where: { $0.automatic == true }) else {
+        guard let lastAutoBolusDose = doses.last(where: { $0.type == .bolus && $0.automatic == true }) else {
             return nil
         }
         
