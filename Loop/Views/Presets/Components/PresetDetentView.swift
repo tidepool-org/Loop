@@ -32,11 +32,13 @@ struct PresetDetentView: View {
     var operation: Operation? {
         if temporaryPresetsManager.activeOverride?.presetId == preset.id {
             return .end
-        } else if settingsManager.settings.overridePresets.contains(where: { $0.id == preset.id }) {
-            return .start
-        } else {
-            // if the preset is not saved, it is single use and cannot start again
+        } else if case .custom(let temporaryPreset) = preset,
+            !settingsManager.settings.overridePresets.contains(where: { $0.id == temporaryPreset.id })
+        {
+            // if a custom preset is not saved, it is single use and cannot start again
             return nil
+        } else {
+            return .start
         }
     }
     
