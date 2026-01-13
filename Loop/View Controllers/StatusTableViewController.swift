@@ -1109,52 +1109,45 @@ final class StatusTableViewController: LoopChartsTableViewController {
             }
         }
     }
-
-    @ViewBuilder
-    private func iobFooterViewContent() -> some View {
-        if let lastManualDose = loopManager.lastManualBolus, let formattedBolusValue = insulinFormatter.string(from: LoopQuantity(unit: .internationalUnit, doubleValue: lastManualDose.amount)) {
+    
+    private var iobFooterText: Text? {
+        if let lastManualDose = loopManager.lastManualBolus,
+           let formattedBolusValue = insulinFormatter.string(from: LoopQuantity(unit: .internationalUnit, doubleValue: lastManualDose.amount)) {
 
             let hoursDifference = Date().timeIntervalSince(lastManualDose.startDate) / 3600
 
-            Text(attributedFooter(lastManualDose: lastManualDose, hoursDifference: hoursDifference, formattedBolusValue: formattedBolusValue))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 36)
-            .padding(.vertical)
-            .accessibilityIdentifier("text_ActiveInsulinFooter")
+            // Build a single Text view
+            let footerText: Text
+            let lastBolusLabel = Text("Last Bolus: ")
+            let lastBolusValue = Text("\(formattedBolusValue) ").fontWeight(.semibold)
+            let icon = Text(Image(systemName: "hourglass.bottomhalf.filled")).foregroundStyle(.secondary)
+            let exactTime = Text("at \(lastManualDose.startDate.formatted(date: .omitted, time: .shortened))").foregroundStyle(.secondary)
+            let roundedTime = Text(" \(Int(hoursDifference.rounded())) hours ago").foregroundStyle(.secondary)
+
+            switch hoursDifference {
+            case ..<6:
+                footerText = lastBolusLabel + lastBolusValue + exactTime
+            case 6..<12:
+                footerText = lastBolusLabel + lastBolusValue.foregroundStyle(.secondary) + icon + roundedTime
+            default:
+                footerText = lastBolusLabel + icon + roundedTime
+            }
+
+            return footerText
+        } else {
+            return nil
         }
     }
-    
-    func attributedFooter(lastManualDose: LastManualBolus, hoursDifference: TimeInterval, formattedBolusValue: String) -> AttributedString {
-        let lastBolusLabel = AttributedString("Last Bolus: ")
 
-        var lastBolusValue = AttributedString("\(formattedBolusValue) ")
-        lastBolusValue.font = .system(.body, weight: .semibold)
-
-        var icon = AttributedString("\(Image(systemName: "hourglass.bottomhalf.filled"))")
-        icon.foregroundColor = .secondary
-
-        var exactTime = AttributedString("at \(lastManualDose.startDate.formatted(date: .omitted, time: .shortened))")
-        exactTime.foregroundColor = .secondary
-
-        var roundedTime = AttributedString(" \(Int(hoursDifference.rounded())) hours ago")
-        roundedTime.foregroundColor = .secondary
-
-        var attributedFooter: AttributedString = lastBolusLabel
-        switch hoursDifference {
-        case ..<6:
-            attributedFooter += lastBolusValue
-            attributedFooter += exactTime
-        case 6..<12:
-            lastBolusValue.foregroundColor = .secondary
-            attributedFooter += lastBolusValue
-            attributedFooter += icon
-            attributedFooter += roundedTime
-        default:
-            attributedFooter += icon
-            attributedFooter += roundedTime
+    @ViewBuilder
+    private func iobFooterViewContent() -> some View {
+        if let iobFooterText = iobFooterText {
+            iobFooterText
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 36)
+                .padding(.vertical)
+                .accessibilityIdentifier("text_ActiveInsulinFooter")
         }
-        
-        return attributedFooter
     }
 
     private func tableView(_ tableView: UITableView, updateSubtitleFor cell: ChartTableViewCell, at indexPath: IndexPath) {
