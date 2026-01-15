@@ -18,6 +18,7 @@ struct FeatureFlagConfiguration: Decodable {
     let fiaspInsulinModelEnabled: Bool
     let lyumjevInsulinModelEnabled: Bool
     let afrezzaInsulinModelEnabled: Bool
+    let apidraInsulinModelEnabled: Bool
     let includeServicesInSettingsEnabled: Bool
     let manualDoseEntryEnabled: Bool
     let insulinDeliveryReservoirViewEnabled: Bool
@@ -70,6 +71,13 @@ struct FeatureFlagConfiguration: Decodable {
         self.fiaspInsulinModelEnabled = false
         #else
         self.fiaspInsulinModelEnabled = true
+        #endif
+
+        // Swift compiler config is inverse, since the default state is enabled.
+        #if APIDRA_INSULIN_MODEL_DISABLED
+        self.apidraInsulinModelEnabled = false
+        #else
+        self.apidraInsulinModelEnabled = true
         #endif
 
         // Swift compiler config is inverse, since the default state is enabled.
@@ -228,6 +236,7 @@ extension FeatureFlagConfiguration : CustomDebugStringConvertible {
             "* fiaspInsulinModelEnabled: \(fiaspInsulinModelEnabled)",
             "* lyumjevInsulinModelEnabled: \(lyumjevInsulinModelEnabled)",
             "* afrezzaInsulinModelEnabled: \(afrezzaInsulinModelEnabled)",
+            "* apidraInsulinModelEnabled: \(apidraInsulinModelEnabled)",
             "* includeServicesInSettingsEnabled: \(includeServicesInSettingsEnabled)",
             "* mockTherapySettingsEnabled: \(mockTherapySettingsEnabled)",
             "* observeHealthKitCarbSamplesFromOtherApps: \(observeHealthKitCarbSamplesFromOtherApps)",
