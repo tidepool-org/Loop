@@ -1619,14 +1619,18 @@ extension LoopDataManager: LoopControl {
 
         let now = now
 
-        guard let neutralBasal = input.basal.closestPrior(to: now)?.value, let currentBasalRate = currentBasalRate(at: now) else {
+        // need to compare amounts that the pump can actually deliver, instead of calculated amounts
+        guard let neutralBasal = input.basal.closestPrior(to: now)?.value,
+              let deliverableNeutralBasal = deliveryDelegate?.roundBolusVolume(units: neutralBasal),
+              let currentlyDeliveredBasalRate = currentBasalRate(at: now)
+        else {
             return nil
         }
 
-        if currentBasalRate > neutralBasal {
+        if currentlyDeliveredBasalRate > deliverableNeutralBasal {
             return .increasedInsulin
-        } else if currentBasalRate < neutralBasal {
-            if currentBasalRate == 0 {
+        } else if currentlyDeliveredBasalRate < deliverableNeutralBasal {
+            if currentlyDeliveredBasalRate == 0 {
                 return .minimumDelivery
             } else {
                 return .decreasedInsulin
@@ -1640,7 +1644,7 @@ extension LoopDataManager: LoopControl {
             if !recentAutomaticBoluses.isEmpty {
                 return .increasedInsulin
             }
-            return scheduledBasalRate(at: now) != neutralBasal ? .neutralOverride : .neutralNoOverride
+            return scheduledBasalRate(at: now) != deliverableNeutralBasal ? .neutralOverride : .neutralNoOverride
         }
     }
 }
