@@ -15,7 +15,8 @@ struct LoopStatusModalView: View {
     
     @State private var appear = false
     
-    let viewModel: LoopStatusModalViewModel
+    @Bindable var viewModel: LoopStatusModalViewModel
+    
     let onDismiss: () -> Void
     let onNavigateToSettings: () -> Void
 
@@ -27,13 +28,17 @@ struct LoopStatusModalView: View {
         }
     }
     
+    private var deviceInoperable: Bool {
+        viewModel.isCGMInoperable || viewModel.isPumpInoperable || viewModel.hasBluetoothIssue
+    }
+    
     var body: some View {
         VStack {
             closeButton
                 .padding(5)
                 .frame(maxWidth: .infinity, alignment: .trailing)
             
-            LoopCircleView(closedLoop: viewModel.loopIconClosed, freshness: viewModel.freshness)
+            LoopCircleView(closedLoop: viewModel.loopIconClosed, freshness: viewModel.freshness, deviceInoperable: deviceInoperable)
                 .environment(\.loopStatusColorPalette, loopStatusColors)
                 .padding(.bottom)
             
@@ -133,7 +138,8 @@ struct LoopStatusModalView: View {
     }
 }
 
-struct LoopStatusModalViewModel {
+@Observable
+class LoopStatusModalViewModel {
     private var dateTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -184,6 +190,27 @@ struct LoopStatusModalViewModel {
     var isCGMInSignalLoss: Bool
     var isCGMInoperable: Bool
     
+    func update(lastLoopCompleted: Date?,
+                loopIconClosed: Bool,
+                hasBluetoothIssue: Bool,
+                isDeliverySuspended: Bool,
+                isPumpInSignalLoss: Bool,
+                isPumpInoperable: Bool,
+                isCGMInWarmup: Bool,
+                isCGMInSignalLoss: Bool,
+                isCGMInoperable: Bool)
+    {
+        self.lastLoopCompleted = lastLoopCompleted
+        self.loopIconClosed = loopIconClosed
+        self.hasBluetoothIssue = hasBluetoothIssue
+        self.isDeliverySuspended = isDeliverySuspended
+        self.isPumpInSignalLoss = isPumpInSignalLoss
+        self.isPumpInoperable = isPumpInoperable
+        self.isCGMInWarmup = isCGMInWarmup
+        self.isCGMInoperable = isCGMInoperable
+        self.isCGMInSignalLoss = isCGMInSignalLoss
+    }
+    
     var copy: (title: String, message: String) {
         guard loopIconClosed else {
             if hasBluetoothIssue || isPumpInoperable || isPumpInSignalLoss {
@@ -202,7 +229,6 @@ struct LoopStatusModalViewModel {
                 return (titleAutomationOff, NSLocalizedString("Make sure your devices are connected and within bluetooth range.\n\nIf you wish for the app to automate your insulin, go to Settings and toggle Closed Loop to on.", comment: "message when automation is off, glucose value is not fresh and devices are good"))
             }
         }
-        
        
         if hasBluetoothIssue || isPumpInoperable {
             return (titleUnavailable, NSLocalizedString("Tap your CGM or insulin pump status icons right away for more information and steps to resolve the issue.", comment: "message when automation is on and there is a bluetooth or pump issue"))
