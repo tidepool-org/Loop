@@ -7,6 +7,7 @@
 //
 
 import LoopKit
+import LoopKitUI
 import SwiftUI
 
 struct PresetsHistoryView: View {

@@ -6,10 +6,11 @@
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 
+import LoopKit
 import LoopKitUI
 import SwiftUI
 
-struct PresetsTrainingView: View {
+public struct PresetsTrainingView: View {
 
     @Environment(\.appName) private var appName
     @Environment(\.colorPalette) private var colorPalette
@@ -25,16 +26,16 @@ struct PresetsTrainingView: View {
     
     private let onComplete: (() -> Void)?
     
-    init(
+    public init(
         navigationPath: [PresetsTraining.Step] = [],
         startingAt: PresetsTraining.Chapter? = nil,
-        trainingCompletion: PresetsTrainingCompletion,
+        trainingCompletionConfiguration: PresetsTraining.TrainingCompletionConfiguration,
         onComplete: (() -> Void)? = nil
     ) {
         self.training = PresetsTraining(
             navigationPath: navigationPath,
             startingAt: startingAt,
-            trainingCompletion: trainingCompletion
+            trainingCompletionConfiguration: trainingCompletionConfiguration
         )
         
         self.onComplete = onComplete
@@ -51,7 +52,7 @@ struct PresetsTrainingView: View {
         }
     }
     
-    var body: some View {
+    public var body: some View {
         NavigationStack(path: $training.navigationPath) {
             stepView(training.startingAt.firstStep)
                 .navigationDestination(for: PresetsTraining.Step.self) { step in
@@ -78,7 +79,7 @@ struct PresetsTrainingView: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(.horizontal, 16)
                             .onLongPressGesture {
-                                guard FeatureFlags.allowDebugFeatures else {
+                                guard training.trainingCompletion.allowDebugFeatures else {
                                     return
                                 }
                                 

@@ -6,8 +6,8 @@
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 
+import LoopKit
 import SwiftUI
-import LoopCore
 
 struct ContentView: View {
     @Environment(LoopDataManager.self) var loopManager

@@ -6,13 +6,14 @@
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 
+import LoopKit
 import SwiftUI
 
-struct PresetsTrainingCard: View {
+public struct PresetsTrainingCard: View {
     
     let imageName: String?
     
-    init(trainingCompletion: PresetsTrainingCompletion) {
+    public init(trainingCompletion: PresetsTrainingCompletion) {
         if trainingCompletion.completedChapters[.customizingPresets] != true {
             self.imageName = "PresetsTrainingCreditEditStartCard"
         } else if trainingCompletion.completedChapters[.trainingComplete] != true {
@@ -22,8 +23,8 @@ struct PresetsTrainingCard: View {
         }
     }
     
-    var body: some View {
-        if let imageName, let image = Image(imageName) {
+    public var body: some View {
+        if let imageName, let image = Image.optional(imageName) {
             image
                 .resizable()
                 .scaledToFit()

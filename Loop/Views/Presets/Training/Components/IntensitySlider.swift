@@ -6,6 +6,7 @@
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 
+import LoopKitUI
 import SwiftUI
 
 struct IntensitySlider: UIViewRepresentable {

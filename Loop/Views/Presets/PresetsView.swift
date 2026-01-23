@@ -60,16 +60,24 @@ struct PresetsView: View {
     @Environment(\.temporaryPresetsManager) private var temporaryPresetsManager
     @Environment(\.dismiss) private var dismiss
     
-    @State private var trainingCompletion: PresetsTrainingCompletion = PresetsTrainingCompletion()
+    @State private var trainingCompletion: PresetsTrainingCompletion
     @State private var editMode: EditMode = .inactive
     @State private var showingMenu: Bool = false
     @State private var presentCreateView: Bool = false
     @State private var presentTrainingNeededAlert: Bool = false
+    @State private var showPresetsTrainingSheet: Bool = false
     @State private var activeSheet: ActiveSheet?
     @State private var navigationPath = NavigationPath()
 
     @AppStorage("presetsSortAscending") private var presetsSortAscending: Bool = true
     @AppStorage("presetsSortOrder") private var selectedSortOption: PresetSortOption = .name
+    
+    init(
+        roundBasalRate: ((Double) -> Double)?
+    ) {
+        self.trainingCompletion = PresetsTrainingCompletion(allowDebugFeatures: FeatureFlags.allowDebugFeatures)
+        self.roundBasalRate = roundBasalRate
+    }
 
     var isDescending: Bool { !presetsSortAscending }
 
@@ -103,7 +111,9 @@ struct PresetsView: View {
                         PresetCard(
                             activePreset,
                             guardrail: settingsManager.correctionRangeGuardrailForPreset(activePreset),
-                            expectedEndTime: temporaryPresetsManager.activeOverride?.expectedEndTime
+                            expectedEndTime: temporaryPresetsManager.activeOverride?.expectedEndTime,
+                            activePresetId: { temporaryPresetsManager.activePreset?.id },
+                            effectiveCorrectionRange: temporaryPresetsManager.effectiveCorrectionRange
                         )
                         .onTapGesture {
                             activeSheet = .presetDetent(activePreset)
@@ -148,7 +158,9 @@ struct PresetsView: View {
                             ForEach(presetsSorted) { preset in
                                 PresetCard(
                                     preset,
-                                    guardrail: settingsManager.correctionRangeGuardrailForPreset(preset)
+                                    guardrail: settingsManager.correctionRangeGuardrailForPreset(preset),
+                                    activePresetId: { temporaryPresetsManager.activePreset?.id },
+                                    effectiveCorrectionRange: temporaryPresetsManager.effectiveCorrectionRange
                                 )
                                 .cornerRadius(12)
                                 .onTapGesture {
@@ -243,12 +255,19 @@ struct PresetsView: View {
                                     await temporaryPresetsManager.unschedulePresetReminderIfNeeded(preset)
                                     await temporaryPresetsManager.scheduleNextPresetReminder()
                                 }
-                            }
+                            },
+                            correctionRangeGuardrailForPreset: settingsManager.correctionRangeGuardrailForPreset,
+                            impactForInsulinMultiplier: { settingsManager.therapySettings.impact(for: $0) },
+                            showPresetsTrainingSheet: { showPresetsTrainingSheet = true },
+                            suspendThreshold: { settingsManager.settings.suspendThreshold }
                         )
+                        .sheet(isPresented: $showPresetsTrainingSheet) {
+                            PresetsTrainingView(trainingCompletionConfiguration: .trainingCompletion(trainingCompletion))
+                        }
                     }
                 }
             case .training(let navigationPath, let startingAt, let editPresetWhenComplete):
-                PresetsTrainingView(navigationPath: navigationPath, startingAt: startingAt, trainingCompletion: trainingCompletion) {
+                PresetsTrainingView(navigationPath: navigationPath, startingAt: startingAt, trainingCompletionConfiguration: .trainingCompletion(trainingCompletion)) {
                     if let editPresetWhenComplete {
                         activeSheet = .editPreset(editPresetWhenComplete)
                     }
@@ -256,7 +275,14 @@ struct PresetsView: View {
             }
         }
         .sheet(isPresented: $presentCreateView) {
-            CreatePresetView()
+            CreatePresetView(
+                createPreset: settingsManager.createPreset,
+                impactForInsulinMultiplier: { settingsManager.therapySettings.impact(for: $0) },
+                scheduleNextPresetReminder: temporaryPresetsManager.scheduleNextPresetReminder,
+                scheduledRange: { scheduledRange },
+                setScheduleOverride: { temporaryPresetsManager.scheduleOverride = $0 },
+                suspendThreshold: { settingsManager.settings.suspendThreshold }
+            )
         }
         .alert(isPresented: $presentTrainingNeededAlert) {
             trainingNeededAlert
@@ -336,7 +362,7 @@ struct PresetsView: View {
 }
 
 extension PresetCard {
-    init (_ preset: SelectablePreset, guardrail: Guardrail<LoopQuantity>, expectedEndTime: PresetExpectedEndTime? = nil) {
+    init (_ preset: SelectablePreset, guardrail: Guardrail<LoopQuantity>, expectedEndTime: PresetExpectedEndTime? = nil, activePresetId: @escaping () -> String?, effectiveCorrectionRange: @escaping () -> ClosedRange<LoopQuantity>?) {
         var activityPresetIsModified: Bool? = nil
         if case let .activity(activityPreset) = preset {
             activityPresetIsModified = activityPreset.isModifiedFromDefault
@@ -352,7 +378,9 @@ extension PresetCard {
             guardrail: guardrail,
             expectedEndTime: expectedEndTime,
             isScheduled: preset.isScheduled,
-            activityPresetIsModified: activityPresetIsModified
+            activityPresetIsModified: activityPresetIsModified,
+            activePresetId: activePresetId,
+            effectiveCorrectionRange: effectiveCorrectionRange
         )
     }
 }
