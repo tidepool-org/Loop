@@ -60,8 +60,6 @@ struct ChartPageView: View {
             )
     }
     
-    let lastSyncUpdateTimer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
-    
     var activeInsulin: String? {
         guard let activeContext = loopManager.activeContext,
             let activeInsulin = activeContext.activeInsulin
@@ -157,7 +155,7 @@ struct ChartPageView: View {
 
     var body: some View {
         ScrollView(.vertical) {
-            LoopHeader()
+            LoopHeader(freshness: LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date()))
             chartView
 
             VStack(spacing: 8) {
@@ -206,7 +204,7 @@ struct ChartPageView: View {
         .onChange(of: loopManager.activeContext?.predictedGlucose) { oldValue, newValue in
             updateGlucoseChart()
         }
-        .onReceive(lastSyncUpdateTimer) { _ in
+        .onReceive(loopManager.lastSyncUpdateTimer) { _ in
             updateLastSyncString()
         }
         .onChange(of: loopManager.activeContext?.isClosedLoop) { _, _ in

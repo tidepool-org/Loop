@@ -13,9 +13,7 @@ import LoopCore
 struct LoopHeader: View {
     @Environment(LoopDataManager.self) var loopManager
 
-    var freshness: LoopCompletionFreshness {
-        return LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
-    }
+    @State var freshness: LoopCompletionFreshness
 
     var body: some View {
         HStack {
@@ -25,6 +23,10 @@ struct LoopHeader: View {
                 LoopCircleView(closedLoop: activeContext.isClosedLoop ?? false, freshness: freshness, deviceInoperable: loopManager.activeContext?.deviceInoperable ?? true)
                     .frame(width: 22, height: 22)
                     .padding(.horizontal)
+                
+                .onReceive(loopManager.lastSyncUpdateTimer) { _ in
+                    self.freshness = LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
+                }
                 
                 Text(loopManager.glucoseValue)
                 

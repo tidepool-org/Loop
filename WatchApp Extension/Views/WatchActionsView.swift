@@ -23,7 +23,7 @@ struct WatchActionsView: View {
 
     var body: some View {
         ScrollView(.vertical) {
-            LoopHeader()
+            LoopHeader(freshness: LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date()))
 
             HStack(spacing: 0) {
                 CircleTintedButton(
