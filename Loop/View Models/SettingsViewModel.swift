@@ -112,6 +112,13 @@ class SettingsViewModel {
            delegate?.dosingEnabledChanged(closedLoopPreference)
        }
     }
+    
+    private var deviceManager: DeviceDataManager?
+    
+    @MainActor
+    var deviceInoperable: Bool {
+        deviceManager?.cgmManager == nil || deviceManager?.cgmManager?.isInoperable == true || deviceManager?.pumpManager == nil || deviceManager?.pumpManager?.isInoperable == true || deviceManager?.hasBluetoothIssue != false
+    }
 
     var preMealGuardrail: Guardrail<LoopQuantity>?
 
@@ -157,7 +164,8 @@ class SettingsViewModel {
                 isOnboardingComplete: Bool,
                 therapySettingsViewModelDelegate: TherapySettingsViewModelDelegate?,
                 presetHistory: TemporaryScheduleOverrideHistory,
-                deliveryDelegate: DeliveryDelegate?
+                deliveryDelegate: DeliveryDelegate?,
+                deviceManager: DeviceDataManager?,
     ) {
         self.alertPermissionsChecker = alertPermissionsChecker
         self.alertMuter = alertMuter
@@ -177,6 +185,7 @@ class SettingsViewModel {
         self.therapySettingsViewModelDelegate = therapySettingsViewModelDelegate
         self.presetHistory = presetHistory
         self.deliveryDelegate = deliveryDelegate
+        self.deviceManager = deviceManager
 
         // This strangeness ensures the composed ViewModels' (ObservableObjects') changes get reported to this ViewModel (ObservableObject)
         lastLoopCompletion
@@ -245,7 +254,8 @@ extension SettingsViewModel {
                                  isOnboardingComplete: false,
                                  therapySettingsViewModelDelegate: nil,
                                  presetHistory: TemporaryScheduleOverrideHistory(),
-                                 deliveryDelegate: nil
+                                 deliveryDelegate: nil,
+                                 deviceManager: nil
         )
     }
 }

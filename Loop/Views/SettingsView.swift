@@ -224,7 +224,8 @@ extension SettingsView {
                 HStack(spacing: 12) {
                     LoopCircleView(
                         closedLoop: viewModel.automaticDosingEnabled,
-                        freshness: viewModel.loopStatusCircleFreshness
+                        freshness: viewModel.loopStatusCircleFreshness,
+                        deviceInoperable: viewModel.deviceInoperable
                     )
                     .frame(width: 36, height: 36)
                     .padding(12)

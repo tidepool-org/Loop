@@ -74,8 +74,6 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
     public var loopInProgress = false {
         didSet {
-            loopStateView.animated = loopInProgress
-
             if !loopInProgress {
                 updateTimer = nil
                 assertTimer()
