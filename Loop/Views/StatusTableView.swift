@@ -88,6 +88,13 @@ private struct WrappedStatusTableViewController: UIViewControllerRepresentable {
 
 struct StatusTableView: View {
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    
+    private var isLandscape: Bool {
+        UIScreen.main.bounds.size.width > UIScreen.main.bounds.size.height
+    }
+    
     private let wrapped: WrappedStatusTableViewController
     
     var viewController: StatusTableViewController {
@@ -124,25 +131,9 @@ struct StatusTableView: View {
         )
     }
     
-    func isActive(action: ToolbarAction) -> Bool {
-        switch action {
-        case .addCarbs, .bolus, .settings: // No active states for these actions
-            return false
-        case .presets:
-            return viewModel.temporaryPresetsManager.activeOverride != nil
-        }
-    }
-    
-    func isDisabled(action: ToolbarAction) -> Bool {
-        switch action {
-        case .addCarbs, .bolus, .settings, .presets:
-            false
-        }
-    }
-    
     var body: some View {
         wrappedView
-            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .ignoresSafeArea(edges: .bottom)
             .onChange(of: viewModel.temporaryPresetsManager.activeOverride) { _, _ in
                 Task {
                     await viewController.reloadData(animated: true)
@@ -154,140 +145,126 @@ struct StatusTableView: View {
                     .accessibilityIdentifier("bar_Presets")
             }
             .toolbar {
-                ToolbarItem(placement: .bottomBar) {
-                    HStack(alignment: .bottom, spacing: 0) {
-                        ForEach(ToolbarAction.allCases) { action in
-                            action.button(
-                                showTitle: true,
-                                isActive: isActive(action: action),
-                                disabled: isDisabled(action: action)
-                            ) {
-                                switch action {
-                                case .addCarbs:
-                                    viewController.userTappedAddCarbs()
-                                case .bolus:
-                                    viewController.presentBolusScreen()
-                                case .presets:
-                                    viewController.presentPresets()
-                                case .settings:
-                                    viewController.presentSettings()
-                                }
+                if !isLandscape {
+                    if #available(iOS 26, *) {
+                        ToolbarItem(placement: .bottomBar) {
+                            carbTab.padding(.horizontal, 12)
+                        }
+                        ToolbarItem(placement: .bottomBar) {
+                            bolusTab.padding(.horizontal, 12)
+                        }
+                        ToolbarItem(placement: .bottomBar) {
+                            presetsTab.padding(.horizontal, 12)
+                        }
+                        ToolbarItem(placement: .bottomBar) {
+                            settingsTab.padding(.horizontal, 12)
+                        }
+                    } else {
+                        ToolbarItem(placement: .bottomBar) {
+                            HStack {
+                                carbTab
+                                bolusTab
+                                presetsTab
+                                settingsTab
                             }
                         }
                     }
                 }
             }
+            .toolbar(isLandscape ? .hidden : .visible, for: .bottomBar)
             .toolbarBackground(.visible, for: .bottomBar)
     }
-}
-
-enum ToolbarAction: String, Identifiable, CaseIterable {
-    case addCarbs
-    case bolus
-    case presets
-    case settings
     
-    var id: String { self.rawValue }
-    
-    var accessibilityIdentifier: String {
-        switch self {
-        case .addCarbs:
-            "statusTableViewControllerCarbsButton"
-        case .bolus:
-            "statusTableViewControllerBolusButton"
-        case .presets:
-            "statusTableViewPresetsButton"
-        case .settings:
-            "statusTableViewControllerSettingsButton"
-        }
-    }
-    
-    @ViewBuilder
-    func icon(isActive: Bool) -> some View {
-        Group {
-            switch self {
-            case .addCarbs:
+    var carbTab: some View {
+        Button {
+            viewController.userTappedAddCarbs()
+        } label: {
+            VStack(spacing: 0) {
                 Image("carbs")
-                    .resizable()
                     .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 32)
+                    .frame(maxWidth: .infinity)
                     .foregroundStyle(Color.carbs)
-            case .bolus:
-                Image("bolus")
-                    .resizable()
-                    .renderingMode(.template)
-                    .foregroundStyle(Color.insulin)
-            case .presets:
-                Image(isActive ? "presets-selected" : "presets")
-                    .resizable()
-                    .renderingMode(.template)
-                    .foregroundStyle(Color.presets)
-                    .accessibilityIdentifier("image_\(isActive ? "PresetsSelected" : "Presets")")
-            case .settings:
-                Image("settings")
-                    .resizable()
-                    .renderingMode(.template)
-                    .foregroundStyle(Color(UIColor.secondaryLabel))
+
+                Text("Add Carbs")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
             }
-        }
-        .aspectRatio(contentMode: .fit)
-        .frame(width: showCompactToolbar ? 24 : 32, height: showCompactToolbar ? 24 : 32)
-    }
-    
-    @ViewBuilder
-    var title: some View {
-        Group {
-            switch self {
-            case .addCarbs:
-                Text("Add Carbs", comment: "The label of the carb entry button")
-            case .bolus:
-                Text("Bolus", comment: "The label of the bolus entry button")
-            case .presets:
-                Text("Presets", comment: "The label of the presets button")
-            case .settings:
-                Text("Settings", comment: "The label of the settings button")
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .foregroundStyle(.secondary)
-        .font(.footnote)
-    }
-    
-    @ViewBuilder
-    func button(
-        showTitle: Bool,
-        isActive: Bool,
-        disabled: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            VStack(spacing: showCompactToolbar ? 2 : 4) {
-                icon(isActive: isActive)
-                
-                if showTitle {
-                    title
-                }
-            }
-            .padding(.bottom, showCompactToolbar ? 0 : -12)
-            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .animation(.default, value: isActive)
-        .disabled(disabled)
-        .accessibilityIdentifier(accessibilityIdentifier)
-    }
-}
-
-private var showCompactToolbar: Bool {
-    let window = UIApplication
-        .shared
-        .connectedScenes
-        .compactMap { $0 as? UIWindowScene }
-        .flatMap { $0.windows }
-        .first { $0.isKeyWindow }
-    
-    guard let safeAreaBottom = window?.safeAreaInsets.bottom else {
-        return true
+        .accessibilityIdentifier("statusTableViewControllerCarbsButton")
     }
     
-    return safeAreaBottom <= 0
+    var bolusTab: some View {
+        Button {
+            viewController.presentBolusScreen()
+        } label: {
+            VStack(spacing: 0) {
+                Image("bolus")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 32)
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(Color.insulin)
+                
+                Text("Bolus")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("statusTableViewControllerBolusButton")
+    }
+    
+    var presetsTab: some View {
+        Button {
+            viewController.presentPresets()
+        } label: {
+            VStack(spacing: 0) {
+                Image(viewModel.temporaryPresetsManager.activeOverride != nil ? "presets-selected" : "presets")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 32)
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(Color.presets)
+                    .animation(.default, value: viewModel.temporaryPresetsManager.activeOverride)
+                
+                Text("Presets")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("statusTableViewPresetsButton")
+    }
+    
+    var settingsTab: some View {
+        Button {
+            viewController.presentSettings()
+        } label: {
+            VStack(spacing: 0) {
+                Image("settings")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 32)
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(Color.secondary)
+                
+                Text("Settings")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("statusTableViewControllerSettingsButton")
+    }
 }

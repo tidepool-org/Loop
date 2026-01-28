@@ -330,7 +330,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     private func setupPresetsStatusBar() {
         let backgroundContainerView = UIView()
-        backgroundContainerView.backgroundColor = .secondarySystemBackground
+        backgroundContainerView.backgroundColor = .systemBackground
         let statusBarBackgroundView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 0))
         self.statusBarBackgroundView = statusBarBackgroundView
         backgroundContainerView.addSubview(statusBarBackgroundView)
@@ -366,7 +366,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
 
     // Toggles the display mode based on the screen aspect ratio. Should not be updated outside of reloadData().
-    private var landscapeMode = false
+    private var landscapeMode = false {
+        didSet {
+            setupPresetsStatusBar()
+        }
+    }
 
     private var lastLoopError: Error?
 
@@ -782,7 +786,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
     
     private func updateStatusBar() {
-        statusBarBackgroundView?.backgroundColor = shouldShowPresets ? .presets : .secondarySystemBackground
+        statusBarBackgroundView?.backgroundColor = landscapeMode ? .systemBackground : (shouldShowPresets ? .presets : .secondarySystemBackground)
         statusBarBackgroundView?.frame.size.height = abs(tableView.contentOffset.y) + (shouldShowPresets ? tableView(tableView, cellForRowAt: IndexPath(row: 0, section: 0)).contentView.frame.height + 8 : 0)
     }
 
