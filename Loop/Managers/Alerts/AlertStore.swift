@@ -84,17 +84,23 @@ public class AlertStore {
     }
 
     public func recordIssued(alert: Alert, at date: Date = Date()) async {
-        do {
-            try await self.managedObjectContext.perform {
+        await self.managedObjectContext.perform {
+            do {
                 _ = StoredAlert(from: alert, context: self.managedObjectContext, issuedDate: date)
-                try self.managedObjectContext.save()
+                if self.managedObjectContext.hasChanges {
+                    try self.managedObjectContext.save()
+                }
                 self.log.default("Recorded alert: %{public}@", alert.identifier.value)
-                self.purgeExpired()
+            } catch {
+                self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
             }
-            await delegate?.alertStoreHasUpdatedAlertData(self)
-        } catch {
-            self.log.error("Could not store alert: %{public}@, %{public}@", alert.identifier.value, String(describing: error))
         }
+
+        await self.managedObjectContext.perform {
+            self.purgeExpired()
+        }
+
+        await delegate?.alertStoreHasUpdatedAlertData(self)
     }
 
     public func recordRetractedAlert(_ alert: Alert, at date: Date) async throws {
