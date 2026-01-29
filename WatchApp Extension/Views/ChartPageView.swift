@@ -23,6 +23,8 @@ struct ChartPageView: View {
 
     @ScaledMetric private var iconSize: Double = 26
     
+    private let lastSyncUpdateTimer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
+    
     var presetActive: Bool {
         return loopManager.watchInfo.scheduleOverride?.isActive() == true
     }
@@ -204,7 +206,7 @@ struct ChartPageView: View {
         .onChange(of: loopManager.activeContext?.predictedGlucose) { oldValue, newValue in
             updateGlucoseChart()
         }
-        .onReceive(loopManager.lastSyncUpdateTimer) { _ in
+        .onReceive(lastSyncUpdateTimer) { _ in
             updateLastSyncString()
         }
         .onChange(of: loopManager.activeContext?.isClosedLoop) { _, _ in

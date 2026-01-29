@@ -43,8 +43,6 @@ class LoopDataManager {
     }
 
     var pendingPresetReminder: PendingPresetReminder?
-    
-    let lastSyncUpdateTimer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
 
     var pendingPreset: SelectablePreset? {
         if let presetIdentifier = pendingPresetReminder?.presetIdentifier {

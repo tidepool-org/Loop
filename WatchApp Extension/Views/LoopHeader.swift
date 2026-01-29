@@ -14,6 +14,8 @@ struct LoopHeader: View {
     @Environment(LoopDataManager.self) var loopManager
 
     @State var freshness: LoopCompletionFreshness
+    
+    private let lastSyncUpdateTimer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
 
     var body: some View {
         HStack {
@@ -24,7 +26,7 @@ struct LoopHeader: View {
                     .frame(width: 22, height: 22)
                     .padding(.horizontal)
                 
-                .onReceive(loopManager.lastSyncUpdateTimer) { _ in
+                .onReceive(lastSyncUpdateTimer) { _ in
                     self.freshness = LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
                 }
                 
