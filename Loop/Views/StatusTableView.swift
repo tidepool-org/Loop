@@ -147,18 +147,23 @@ struct StatusTableView: View {
             .toolbar {
                 if !isLandscape {
                     if #available(iOS 26, *) {
+                        ToolbarSpacer()
                         ToolbarItem(placement: .bottomBar) {
                             carbTab.padding(.horizontal, 12)
                         }
+                        ToolbarSpacer()
                         ToolbarItem(placement: .bottomBar) {
                             bolusTab.padding(.horizontal, 12)
                         }
+                        ToolbarSpacer()
                         ToolbarItem(placement: .bottomBar) {
                             presetsTab.padding(.horizontal, 12)
                         }
+                        ToolbarSpacer()
                         ToolbarItem(placement: .bottomBar) {
                             settingsTab.padding(.horizontal, 12)
                         }
+                        ToolbarSpacer()
                     } else {
                         ToolbarItem(placement: .bottomBar) {
                             HStack {
