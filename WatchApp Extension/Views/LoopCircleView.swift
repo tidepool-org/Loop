@@ -16,13 +16,13 @@ public struct LoopCircleView: View {
     private let animating: Bool
     private let closedLoop: Bool
     private let freshness: LoopCompletionFreshness
-    private let deviceInoperable: Bool
+    private let deviceIssue: Bool
     
-    public init(closedLoop: Bool, freshness: LoopCompletionFreshness, animating: Bool = false, deviceInoperable: Bool = false) {
+    public init(closedLoop: Bool, freshness: LoopCompletionFreshness, animating: Bool = false, deviceIssue: Bool = false) {
         self.closedLoop = closedLoop
         self.freshness = freshness
         self.animating = animating
-        self.deviceInoperable = deviceInoperable
+        self.deviceIssue = deviceIssue
     }
     
     private var reversingAnimation: Animation {
@@ -49,7 +49,7 @@ public struct LoopCircleView: View {
     private var loopColor: Color {
         if !isEnabled {
             return .defaultWatchButtonGray
-        } else if deviceInoperable {
+        } else if deviceIssue {
             return .gray
         } else {
             switch freshness {

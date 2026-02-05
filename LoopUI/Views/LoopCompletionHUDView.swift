@@ -63,9 +63,9 @@ public final class LoopCompletionHUDView: BaseHUDView {
         }
     }
     
-    public var deviceInoperable: Bool = false {
+    public var deviceIssue: Bool = false {
         didSet {
-            loopStateView.deviceInoperable = deviceInoperable
+            loopStateView.deviceIssue = deviceIssue
         }
     }
     

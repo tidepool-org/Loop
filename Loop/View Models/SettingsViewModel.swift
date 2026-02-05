@@ -116,8 +116,8 @@ class SettingsViewModel {
     private var deviceManager: DeviceDataManager?
     
     @MainActor
-    var deviceInoperable: Bool {
-        deviceManager?.cgmManager == nil || deviceManager?.cgmManager?.isInoperable == true || deviceManager?.pumpManager == nil || deviceManager?.pumpManager?.isInoperable == true || deviceManager?.hasBluetoothIssue != false
+    var deviceIssue: Bool {
+        deviceManager?.cgmManager == nil || deviceManager?.cgmManager?.isInoperable == true || deviceManager?.cgmManager?.inSignalLoss == true || deviceManager?.pumpManager == nil || deviceManager?.pumpManager?.isInoperable == true || deviceManager?.pumpManager?.inSignalLoss == true || deviceManager?.hasBluetoothIssue != false
     }
 
     var preMealGuardrail: Guardrail<LoopQuantity>?

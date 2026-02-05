@@ -28,7 +28,7 @@ struct LoopStatusModalView: View {
         }
     }
     
-    private var deviceInoperable: Bool {
+    private var deviceIssue: Bool {
         viewModel.isCGMInoperable || viewModel.isPumpInoperable || viewModel.hasBluetoothIssue
     }
     
@@ -38,7 +38,7 @@ struct LoopStatusModalView: View {
                 .padding(5)
                 .frame(maxWidth: .infinity, alignment: .trailing)
             
-            LoopCircleView(closedLoop: viewModel.loopIconClosed, freshness: viewModel.freshness, deviceInoperable: deviceInoperable)
+            LoopCircleView(closedLoop: viewModel.loopIconClosed, freshness: viewModel.freshness, deviceIssue: deviceIssue)
                 .environment(\.loopStatusColorPalette, loopStatusColors)
                 .padding(.bottom)
             
@@ -158,7 +158,10 @@ class LoopStatusModalViewModel {
     
     var lastLoopCompleted: Date?
     var freshness: LoopCompletionFreshness {
-        LoopCompletionFreshness(age: ago)
+        guard !isPumpInSignalLoss, !isCGMInSignalLoss else {
+            return .stale
+        }
+        return LoopCompletionFreshness(age: ago)
     }
     var ago: TimeInterval? {
         guard let lastLoopCompleted else { return nil }

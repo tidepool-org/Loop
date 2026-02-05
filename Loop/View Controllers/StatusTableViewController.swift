@@ -412,6 +412,11 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func createChartsManager() -> ChartsManager {
         return statusCharts
     }
+    
+    private var deviceIssue: Bool {
+        // includes when devices are in signal loss, even though that is recoverable
+        deviceManager.cgmManager == nil || deviceManager.cgmManager?.isInoperable == true || deviceManager.cgmManager?.inSignalLoss == true || deviceManager.pumpManager == nil || deviceManager.pumpManager?.isInoperable == true || deviceManager.pumpManager?.inSignalLoss == true || deviceManager.hasBluetoothIssue
+    }
 
     private func updateChartDateRange() {
         // How far back should we show data? Use the screen size as a guide.
@@ -440,7 +445,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         
         // This should be kept up to date immediately
         hudView?.loopCompletionHUD.lastLoopCompleted = loopManager.lastLoopCompleted
-        hudView?.loopCompletionHUD.deviceInoperable = deviceManager.cgmManager == nil || deviceManager.cgmManager?.isInoperable == true || deviceManager.pumpManager == nil || deviceManager.pumpManager?.isInoperable == true || deviceManager.hasBluetoothIssue
+        hudView?.loopCompletionHUD.deviceIssue = deviceIssue
         hudView?.loopCompletionHUD.mostRecentGlucoseDataDate = loopManager.mostRecentGlucoseDataDate
         hudView?.loopCompletionHUD.mostRecentPumpDataDate = loopManager.mostRecentPumpDataDate
         updateLoopCompletionModal()

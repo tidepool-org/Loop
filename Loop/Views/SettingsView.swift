@@ -225,7 +225,7 @@ extension SettingsView {
                     LoopCircleView(
                         closedLoop: viewModel.automaticDosingEnabled,
                         freshness: viewModel.loopStatusCircleFreshness,
-                        deviceInoperable: viewModel.deviceInoperable
+                        deviceIssue: viewModel.deviceIssue
                     )
                     .frame(width: 36, height: 36)
                     .padding(12)

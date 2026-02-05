@@ -300,7 +300,7 @@ final class WatchDataManager: NSObject {
         let settings = self.settingsManager.loopSettings
 
         context.isClosedLoop = settings.dosingEnabled
-        context.deviceInoperable = deviceManager.cgmManager == nil || deviceManager.cgmManager?.isInoperable == true || deviceManager.pumpManager == nil || deviceManager.pumpManager?.isInoperable == true || deviceManager.hasBluetoothIssue
+        context.deviceIssue = deviceManager.cgmManager == nil || deviceManager.cgmManager?.isInoperable == true || deviceManager.cgmManager?.inSignalLoss == true || deviceManager.pumpManager == nil || deviceManager.pumpManager?.isInoperable == true || deviceManager.pumpManager?.inSignalLoss == true || deviceManager.hasBluetoothIssue
 
         context.potentialCarbEntry = potentialCarbEntry
 
