@@ -10,27 +10,16 @@ import SwiftUI
 import LoopKit
 
 public struct LoopCircleView: View {
-    
     @Environment(\.isEnabled) private var isEnabled
-    
-    private let animating: Bool
+
     private let closedLoop: Bool
     private let freshness: LoopCompletionFreshness
     private let deviceIssue: Bool
     
-    public init(closedLoop: Bool, freshness: LoopCompletionFreshness, animating: Bool = false, deviceIssue: Bool = false) {
+    public init(closedLoop: Bool, freshness: LoopCompletionFreshness, deviceIssue: Bool = false) {
         self.closedLoop = closedLoop
         self.freshness = freshness
-        self.animating = animating
         self.deviceIssue = deviceIssue
-    }
-    
-    private var reversingAnimation: Animation {
-        if animating && closedLoop {
-            return .easeInOut(duration: 1).repeatForever(autoreverses: true)
-        } else {
-            return .easeInOut(duration: 1)
-        }
     }
     
     public var body: some View {
@@ -39,27 +28,19 @@ public struct LoopCircleView: View {
                 .trim(from: closedLoop ? 0 : 0.25, to: 1)
                 .stroke(loopColor, lineWidth: geometry.size.height / 5)
                 .rotationEffect(Angle(degrees: closedLoop ? -90 : -135))
-                .animation(.none, value: freshness)
+                .frame(width: 36, height: 36)
                 .animation(.default, value: closedLoop)
-                .scaleEffect(animating && closedLoop ? 0.75 : 1)
-                .animation(reversingAnimation, value: UUID())
+                .animation(.default, value: freshness)
         }
     }
     
     private var loopColor: Color {
         if !isEnabled {
             return .defaultWatchButtonGray
-        } else if deviceIssue {
-            return .gray
+        } else if isEnabled && !deviceIssue && freshness == .fresh {
+            return .fresh
         } else {
-            switch freshness {
-            case .fresh:
-                return .fresh
-            case .aging:
-                return .gray
-            case .stale:
-                return .gray
-            }
+            return .gray
         }
     }
 }
