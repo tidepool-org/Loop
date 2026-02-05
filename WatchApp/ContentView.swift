@@ -21,9 +21,15 @@ struct ContentView: View {
             TabView(selection: $selectedPage) {
                 WatchActionsView()
                     .tag(0)
+                    .task {
+                        loopManager.requestContextUpdate {}
+                    }
 
                 ChartPageView()
                     .tag(1)
+                    .task {
+                        loopManager.requestContextUpdate {}
+                    }
             }
             .tabViewStyle(.page)
             .indexViewStyle(.page(backgroundDisplayMode: .automatic))

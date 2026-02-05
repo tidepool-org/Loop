@@ -22,9 +22,11 @@ struct LoopHeader: View {
             if let activeContext = loopManager.activeContext,
                let unit = activeContext.displayGlucoseUnit
             {
-                LoopCircleView(closedLoop: activeContext.isClosedLoop ?? false, freshness: freshness, deviceIssue: loopManager.activeContext?.deviceIssue ?? true)
-                    .frame(width: 22, height: 22)
-                    .padding(.horizontal)
+                TimelineView(.animation) { _ in
+                    LoopCircleView(closedLoop: activeContext.isClosedLoop ?? false, freshness: freshness, deviceIssue: loopManager.activeContext?.deviceIssue ?? true)
+                        .frame(width: 22, height: 22)
+                        .padding(.horizontal)
+                }
                 
                 Text(loopManager.glucoseValue)
                 
