@@ -34,23 +34,25 @@ struct LoopStatusModalView: View {
     
     var body: some View {
         VStack {
-            closeButton
-                .padding(5)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            
-            LoopCircleView(closedLoop: viewModel.loopIconClosed, freshness: viewModel.freshness, deviceIssue: deviceIssue)
-                .environment(\.loopStatusColorPalette, loopStatusColors)
-                .padding(.bottom)
-            
-            if viewModel.loopIconClosed,
-               let lastLoopCompletedFormattedTime = viewModel.lastLoopCompletedFormattedTime
-            {
-                lastLoopCompleted(lastLoopCompletedString: lastLoopCompletedFormattedTime)
+            TimelineView(.animation) { _ in
+                closeButton
+                    .padding(5)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                
+                LoopCircleView(closedLoop: viewModel.loopIconClosed, freshness: viewModel.freshness, deviceIssue: deviceIssue)
+                    .environment(\.loopStatusColorPalette, loopStatusColors)
+                    .padding(.bottom)
+                
+                if viewModel.loopIconClosed,
+                   let lastLoopCompletedFormattedTime = viewModel.lastLoopCompletedFormattedTime
+                {
+                    lastLoopCompleted(lastLoopCompletedString: lastLoopCompletedFormattedTime)
+                }
+                
+                automationDetails
+                    .padding([.top, .horizontal])
+                    .padding(.bottom, 10)
             }
-            
-            automationDetails
-                .padding([.top, .horizontal])
-                .padding(.bottom, 10)
         }
         .padding(10)
         .background(Color(UIColor.systemGroupedBackground))
@@ -81,7 +83,8 @@ struct LoopStatusModalView: View {
     private func lastLoopCompleted(lastLoopCompletedString: String) -> some View {
         Group {
             Text("Last loop completed")
-            Text("\(Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90")) \(lastLoopCompletedString)")
+            // ⚠️ arrow.triangle.2.circlepath is deprecated -- replace with "arrow.trianglehead.2.clockwise.rotate.90" once iOS 17 is dropped as a supported platform.
+            Text("\(Image(systemName: "arrow.triangle.2.circlepath")) \(lastLoopCompletedString)")
                 .foregroundStyle(freshnessColor)
             if viewModel.includeDateTimeStamp {
                 Text(viewModel.formattedLastLoopCompletedDateTime)
@@ -138,8 +141,56 @@ struct LoopStatusModalView: View {
     }
 }
 
+@MainActor
 @Observable
 class LoopStatusModalViewModel {
+    
+    private weak var deviceManager: DeviceDataManager?
+    private weak var loopManager: LoopDataManager?
+    private weak var settingsManager: SettingsManager?
+    
+    init(deviceManager: DeviceDataManager?, loopManager: LoopDataManager?, settingsManager: SettingsManager?) {
+        self.deviceManager = deviceManager
+        self.loopManager = loopManager
+        self.settingsManager = settingsManager
+    }
+
+    var lastLoopCompleted: Date? {
+        loopManager?.lastLoopCompleted
+    }
+    
+    var loopIconClosed: Bool {
+        settingsManager?.dosingEnabled ?? true
+    }
+    
+    var hasBluetoothIssue: Bool {
+        deviceManager?.hasBluetoothIssue ?? false
+    }
+
+    var isPumpInSignalLoss: Bool {
+        deviceManager?.pumpManager?.inSignalLoss == true
+    }
+    
+    var isPumpInoperable: Bool {
+        deviceManager?.pumpManager == nil || deviceManager?.pumpManager?.isInoperable == true
+    }
+    
+    var isDeliverySuspended: Bool {
+        deviceManager?.isSuspended ?? false
+    }
+
+    var isCGMInWarmup: Bool {
+        deviceManager?.cgmManager?.cgmManagerStatus.inSensorWarmup == true
+    }
+    
+    var isCGMInSignalLoss: Bool {
+        deviceManager?.cgmManager?.inSignalLoss == true
+    }
+    
+    var isCGMInoperable: Bool {
+        deviceManager?.cgmManager == nil || deviceManager?.cgmManager?.isInoperable == true
+    }
+    
     private var dateTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -156,62 +207,32 @@ class LoopStatusModalViewModel {
         return formatter
     }()
     
-    var lastLoopCompleted: Date?
     var freshness: LoopCompletionFreshness {
         guard !isPumpInSignalLoss, !isCGMInSignalLoss else {
             return .stale
         }
         return LoopCompletionFreshness(age: ago)
     }
+    
     var ago: TimeInterval? {
         guard let lastLoopCompleted else { return nil }
         return abs(min(0, lastLoopCompleted.timeIntervalSinceNow))
     }
+    
     var includeDateTimeStamp: Bool { // only include if last loop was before today
         guard let lastLoopCompleted else { return false }
         let startOfToday = Calendar.current.startOfDay(for: Date())
         return lastLoopCompleted < startOfToday
     }
+    
     var formattedLastLoopCompletedDateTime: String {
         guard let lastLoopCompleted else { return "Unknown" }
         return String(format: NSLocalizedString("at %1$@", comment: "when adding the date and time. (1: the formatted date and time)"), dateTimeFormatter.string(from: lastLoopCompleted))
     }
+    
     var formattedLastLoopCompletedTime: String {
         guard let lastLoopCompleted else { return "Unknown" }
         return String(format: NSLocalizedString("at %1$@", comment: "when adding a timestamp. (1: the formatted timestamp)"), timeFormatter.string(from: lastLoopCompleted))
-    }
-
-    var loopIconClosed: Bool
-    
-    var hasBluetoothIssue: Bool
-
-    var isPumpInSignalLoss: Bool
-    var isPumpInoperable: Bool
-    var isDeliverySuspended: Bool
-
-    var isCGMInWarmup: Bool
-    var isCGMInSignalLoss: Bool
-    var isCGMInoperable: Bool
-    
-    func update(lastLoopCompleted: Date?,
-                loopIconClosed: Bool,
-                hasBluetoothIssue: Bool,
-                isDeliverySuspended: Bool,
-                isPumpInSignalLoss: Bool,
-                isPumpInoperable: Bool,
-                isCGMInWarmup: Bool,
-                isCGMInSignalLoss: Bool,
-                isCGMInoperable: Bool)
-    {
-        self.lastLoopCompleted = lastLoopCompleted
-        self.loopIconClosed = loopIconClosed
-        self.hasBluetoothIssue = hasBluetoothIssue
-        self.isDeliverySuspended = isDeliverySuspended
-        self.isPumpInSignalLoss = isPumpInSignalLoss
-        self.isPumpInoperable = isPumpInoperable
-        self.isCGMInWarmup = isCGMInWarmup
-        self.isCGMInoperable = isCGMInoperable
-        self.isCGMInSignalLoss = isCGMInSignalLoss
     }
     
     var copy: (title: String, message: String) {
@@ -236,19 +257,19 @@ class LoopStatusModalViewModel {
         if hasBluetoothIssue || isPumpInoperable {
             return (titleUnavailable, NSLocalizedString("Tap your CGM or insulin pump status icons right away for more information and steps to resolve the issue.", comment: "message when automation is on and there is a bluetooth or pump issue"))
         } else if isPumpInSignalLoss {
-            return (titleUnsucessful, NSLocalizedString("Tidepool Loop will continue trying to restore automation, but check for potential communication issues with your CGM or insulin pump.", comment: "message when automation is on and pump is in signal loss"))
+            return (titleUnsuccessful, NSLocalizedString("Tidepool Loop will continue trying to restore automation, but check for potential communication issues with your CGM or insulin pump.", comment: "message when automation is on and pump is in signal loss"))
         } else if isDeliverySuspended {
             return (titleUnavailable, NSLocalizedString("Automation is unavailable while your insulin is suspended.\n\nResume insulin if you wish for the app to automate insulin delivery.", comment: "message when automation is on and insulin delivery is suspended"))
         } else if isCGMInoperable {
             return (titleUnavailable, NSLocalizedString("Tap your CGM status icon right away for more information and steps to resolve the issue.\n\nIn the meantime, your pump is still able to deliver insulin.", comment: "message when automation is on and CGM is inoperable"))
         } else if isCGMInSignalLoss {
-            return (titleUnsucessful, NSLocalizedString("Tidepool Loop will continue trying to restore automation, but check for potential communication issues with your CGM.\n\nIn the meantime, your pump is still able to deliver insulin.", comment: "message when automation is on and CGM is in signal loss"))
+            return (titleUnsuccessful, NSLocalizedString("Tidepool Loop will continue trying to restore automation, but check for potential communication issues with your CGM.\n\nIn the meantime, your pump is still able to deliver insulin.", comment: "message when automation is on and CGM is in signal loss"))
         } else if isCGMInWarmup {
             return (titleUnavailable, NSLocalizedString("Automation is unavailable while your CGM sensor is warming up.\n\nIn the meantime, your pump is still able to deliver insulin.\n\nAutomation will resume when CGM readings are received.", comment: "message when automation is on and CGM is in warmup"))
         } else if freshness == .fresh {
             return (titleAutomationOn, NSLocalizedString("Tidepool Loop will actively adjust your insulin dosing in response to your glucose as often as every 5 minutes.", comment: "message when automation is on and the glucose value is fresh"))
         } else {
-            return (titleUnsucessful, NSLocalizedString("Tidepool Loop will continue trying to restore automation, but check for potential communication issues with your CGM or insulin pump.", comment: "message when automation is on and the glucose value is not fresh"))
+            return (titleUnsuccessful, NSLocalizedString("Tidepool Loop will continue trying to restore automation, but check for potential communication issues with your CGM or insulin pump.", comment: "message when automation is on and the glucose value is not fresh"))
         }
     }
     
@@ -264,7 +285,7 @@ class LoopStatusModalViewModel {
         return NSLocalizedString("Automation is unavailable", comment: "title for when automation is unavailable")
     }
     
-    var titleUnsucessful: String {
+    var titleUnsuccessful: String {
         return NSLocalizedString("Automation was unsuccessful", comment: "title for when automation was unsuccessful")
     }
     
@@ -282,26 +303,5 @@ class LoopStatusModalViewModel {
         else { return nil }
         
         return NSLocalizedString("\(timeString) ago", comment: "last loop completed string")
-    }
-    
-    init(lastLoopCompleted: Date? = nil,
-         loopIconClosed: Bool,
-         hasBluetoothIssue: Bool,
-         isDeliverySuspended: Bool,
-         isPumpInSignalLoss: Bool,
-         isPumpInoperable: Bool,
-         isCGMInWarmup: Bool,
-         isCGMInSignalLoss: Bool,
-         isCGMInoperable: Bool)
-    {
-        self.lastLoopCompleted = lastLoopCompleted
-        self.loopIconClosed = loopIconClosed
-        self.hasBluetoothIssue = hasBluetoothIssue
-        self.isDeliverySuspended = isDeliverySuspended
-        self.isPumpInSignalLoss = isPumpInSignalLoss
-        self.isPumpInoperable = isPumpInoperable
-        self.isCGMInWarmup = isCGMInWarmup
-        self.isCGMInSignalLoss = isCGMInSignalLoss
-        self.isCGMInoperable = isCGMInoperable
     }
 }

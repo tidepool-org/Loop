@@ -18,15 +18,29 @@ struct ChartPageView: View {
     @Environment(LoopDataManager.self) var loopManager
 
     @State private var isShowingCarbList: Bool = false
-    
-    @State private var lastSyncString: String?
 
     @ScaledMetric private var iconSize: Double = 26
     
-    private let lastSyncUpdateTimer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
-    
     var presetActive: Bool {
         return loopManager.watchInfo.scheduleOverride?.isActive() == true
+    }
+    
+    var lastSyncString: String? {
+        guard loopManager.activeContext?.isClosedLoop == true, let date = loopManager.activeContext?.loopLastRunDate else {
+            return nil
+        }
+        
+        let ago = min(abs(min(0, date.timeIntervalSinceNow)), TimeInterval.days(7))
+
+        guard let timeString = ago.truncatedTimeAgoString else {
+            return nil
+        }
+        
+        if ago > .hours(1) {
+            return String(format: NSLocalizedString(" >%@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString)
+        } else {
+            return String(format: NSLocalizedString(" %@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString)
+        }
     }
 
     private var chartHeight: CGFloat {
@@ -157,60 +171,57 @@ struct ChartPageView: View {
 
     var body: some View {
         ScrollView(.vertical) {
-            LoopHeader(freshness: LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date()))
-            chartView
-
-            VStack(spacing: 8) {
-                if let lastSyncString {
-                    LabelValueRow("Last Loop") {
-                        Text(Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90")) +
-                        Text(" " + lastSyncString)
+            TimelineView(.animation) { _ in
+                LoopHeader()
+                
+                chartView
+                
+                VStack(spacing: 8) {
+                    if let lastSyncString {
+                        LabelValueRow("Last Loop") {
+                            // ⚠️ arrow.triangle.2.circlepath is deprecated -- replace with "arrow.trianglehead.2.clockwise.rotate.90" once watchOS 10 is dropped as a supported platform.
+                            Text(Image(systemName: "arrow.triangle.2.circlepath")) +
+                            Text(" " + lastSyncString)
+                        }
+                        Divider()
+                    }
+                    LabelValueRow("Active Insulin") {
+                        Text(activeInsulin ?? "-")
                     }
                     Divider()
-                }
-                LabelValueRow("Active Insulin") {
-                    Text(activeInsulin ?? "-")
-                }
-                Divider()
-                LabelValueRow("Active Carbs") {
-                    Text(activeCarbohydrates ?? "-")
-                }
-                .onTapGesture {
-                    isShowingCarbList = true
-                }
-                Divider()
-                LabelValueRow("Last Bolus") {
-                    lastBolus
-                }
-                if let currentDelivery = loopManager.activeContext?.insulinDeliveryState {
+                    LabelValueRow("Active Carbs") {
+                        Text(activeCarbohydrates ?? "-")
+                    }
+                    .onTapGesture {
+                        isShowingCarbList = true
+                    }
                     Divider()
-                    LabelValueRow("Current Delivery") {
-                        Text(currentDelivery.iconImage) +
-                        Text(" " + currentDelivery.shortDescription)
+                    LabelValueRow("Last Bolus") {
+                        lastBolus
+                    }
+                    if let currentDelivery = loopManager.activeContext?.insulinDeliveryState {
+                        Divider()
+                        LabelValueRow("Current Delivery") {
+                            Text(currentDelivery.iconImage) +
+                            Text(" " + currentDelivery.shortDescription)
+                        }
+                    }
+                    Divider()
+                    LabelValueRow("Reservoir Volume") {
+                        Text(reservoirVolume ?? "-")
                     }
                 }
-                Divider()
-                LabelValueRow("Reservoir Volume") {
-                    Text(reservoirVolume ?? "-")
-                }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
         .font(.system(size: 14, weight: .light))
         .toolbar(.hidden, for: .navigationBar)
         .environment(\.glucoseDisplayUnit, loopManager.displayGlucoseUnit)
         .onAppear() {
             updateGlucoseChart()
-            updateLastSyncString()
         }
         .onChange(of: loopManager.activeContext?.predictedGlucose) { oldValue, newValue in
             updateGlucoseChart()
-        }
-        .onReceive(lastSyncUpdateTimer) { _ in
-            updateLastSyncString()
-        }
-        .onChange(of: loopManager.activeContext?.isClosedLoop) { _, _ in
-            updateLastSyncString()
         }
         .sheet(isPresented: $isShowingCarbList) {
             CarbList()
@@ -222,26 +233,6 @@ struct ChartPageView: View {
             let chartData = await loopManager.generateChartData()
             loopManager.glucoseChartScene.data = chartData
             loopManager.glucoseChartScene.setNeedsUpdate()
-        }
-    }
-    
-    private func updateLastSyncString() {
-        guard loopManager.activeContext?.isClosedLoop == true, let date = loopManager.activeContext?.loopLastRunDate else {
-            lastSyncString = nil
-            return
-        }
-        
-        let ago = min(abs(min(0, date.timeIntervalSinceNow)), TimeInterval.days(7))
-
-        guard let timeString = ago.truncatedTimeAgoString else {
-            lastSyncString = nil
-            return
-        }
-        
-        if ago > .hours(1) {
-            lastSyncString = String(format: NSLocalizedString(" >%@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString)
-        } else {
-            lastSyncString = String(format: NSLocalizedString(" %@ ago", comment: "Format string describing the time interval since the last completion date, last cgm or last pump communication. (1: The localized date components"), timeString)
         }
     }
 }

@@ -448,7 +448,6 @@ final class StatusTableViewController: LoopChartsTableViewController {
         hudView?.loopCompletionHUD.deviceIssue = deviceIssue
         hudView?.loopCompletionHUD.mostRecentGlucoseDataDate = loopManager.mostRecentGlucoseDataDate
         hudView?.loopCompletionHUD.mostRecentPumpDataDate = loopManager.mostRecentPumpDataDate
-        updateLoopCompletionModal()
 
         guard !reloading && !deviceManager.authorizationRequired else {
             return
@@ -1670,32 +1669,12 @@ final class StatusTableViewController: LoopChartsTableViewController {
     }
     
     private lazy var loopCompletionModalViewModel = LoopStatusModalViewModel(
-        lastLoopCompleted: loopManager.lastLoopCompleted,
-        loopIconClosed: automaticDosingEnabled,
-        hasBluetoothIssue: deviceManager.hasBluetoothIssue,
-        isDeliverySuspended: deviceManager.isSuspended,
-        isPumpInSignalLoss: deviceManager.pumpManager?.inSignalLoss == true,
-        isPumpInoperable: deviceManager.pumpManager == nil || deviceManager.pumpManager?.isInoperable == true,
-        isCGMInWarmup: deviceManager.cgmManager?.cgmManagerStatus.inSensorWarmup == true,
-        isCGMInSignalLoss: deviceManager.cgmManager?.inSignalLoss == true,
-        isCGMInoperable: deviceManager.cgmManager == nil || deviceManager.cgmManager?.isInoperable == true)
-
-    private func updateLoopCompletionModal() {
-        loopCompletionModalViewModel.update(
-            lastLoopCompleted: loopManager.lastLoopCompleted,
-            loopIconClosed: automaticDosingEnabled,
-            hasBluetoothIssue: deviceManager.hasBluetoothIssue,
-            isDeliverySuspended: deviceManager.isSuspended,
-            isPumpInSignalLoss: deviceManager.pumpManager?.inSignalLoss == true,
-            isPumpInoperable: deviceManager.pumpManager == nil || deviceManager.pumpManager?.isInoperable == true,
-            isCGMInWarmup: deviceManager.cgmManager?.cgmManagerStatus.inSensorWarmup == true,
-            isCGMInSignalLoss: deviceManager.cgmManager?.inSignalLoss == true,
-            isCGMInoperable: deviceManager.cgmManager == nil || deviceManager.cgmManager?.isInoperable == true)
-    }
+        deviceManager: deviceManager,
+        loopManager: loopManager,
+        settingsManager: settingsManager
+    )
     
     @objc private func showLoopCompletionMessage(_: Any) {
-        updateLoopCompletionModal()
-        
         let modalVC = UIHostingController(
             rootView: LoopStatusModalView(viewModel: loopCompletionModalViewModel,
                                           onDismiss: { [weak self] in

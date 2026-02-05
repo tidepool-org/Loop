@@ -220,7 +220,8 @@ public final class LoopCompletionHUDView: BaseHUDView {
     
     private func formattedTimeAgoString(_ timeString: String, includeGreaterThan: Bool = false) -> NSAttributedString {
         let config = UIImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
-        let symbol = UIImage(systemName: "arrow.trianglehead.2.clockwise.rotate.90", withConfiguration: config)
+        // ⚠️ arrow.triangle.2.circlepath is deprecated -- replace with "arrow.trianglehead.2.clockwise.rotate.90" once iOS 17 is dropped as a supported platform.
+        let symbol = UIImage(systemName: "arrow.triangle.2.circlepath", withConfiguration: config)
         let tintedSymbol = symbol?.withTintColor(freshnessColor, renderingMode: .alwaysOriginal)
         let attachment = NSTextAttachment()
         attachment.image = tintedSymbol
