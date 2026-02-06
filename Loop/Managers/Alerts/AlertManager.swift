@@ -334,6 +334,7 @@ extension AlertManager: AlertManagerResponder {
     }
     
     func acknowledgeAlert(identifier: Alert.Identifier) async throws {
+        self.log.default("acknowledgeAlert called for identifier %{public}@", String(describing: identifier))
         if let responder = responders[identifier.managerIdentifier]?.value {
             do {
                 try await responder.acknowledgeAlert(alertIdentifier: identifier.alertIdentifier)
@@ -381,6 +382,7 @@ extension AlertManager: AlertIssuer {
     }
 
     public func retractAlert(identifier: Alert.Identifier) async {
+        log.default("retractAlert: %{public}@", String(describing: identifier))
         guard playbackFinished else {
             deferredRetractions.append(identifier)
             return
@@ -394,9 +396,11 @@ extension AlertManager: AlertIssuer {
     }
 
     private func replayAlert(_ alert: Alert) {
+
         if let unsafeNotificationPermissionsAlert = AlertPermissionsChecker.UnsafeNotificationPermissionAlert.allCases.first(where: { $0.alertIdentifier == alert.identifier }) {
             presentUnsafeNotificationPermissionsInAppAlert(unsafeNotificationPermissionsAlert)
         } else if alert.foregroundContent != nil {
+            log.default("Scheduling modal alert during replay: %{public}@", String(describing: alert))
             modalAlertScheduler.scheduleAlert(alert)
         }
     }

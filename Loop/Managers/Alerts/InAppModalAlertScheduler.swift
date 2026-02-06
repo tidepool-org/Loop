@@ -20,7 +20,9 @@ public class InAppModalAlertScheduler {
 
     typealias ActionFactoryFunction = (String?, UIAlertAction.Style, ((UIAlertAction) -> Void)?) -> UIAlertAction
     private let newActionFunc: ActionFactoryFunction
-    
+
+    private let log = DiagnosticLog(category: "InAppModalAlertScheduler")
+
     typealias TimerFactoryFunction = (TimeInterval, Bool, (() -> Void)?) -> Timer
     private let newTimerFunc: TimerFactoryFunction
 
@@ -49,15 +51,19 @@ public class InAppModalAlertScheduler {
     }
     
     public func unscheduleAlert(identifier: Alert.Identifier) async {
+        log.default("unscheduleAlert modal alert: %{public}@", String(describing: identifier))
+
         removePendingAlert(identifier: identifier)
         await removePresentedAlert(identifier: identifier)
     }
 
     func removePresentedAlert(identifier: Alert.Identifier) async {
         guard let alertPresented = alertsPresented[identifier] else {
+            log.default("No presented modal alert with identifier %{public}@", String(describing: identifier))
             return
         }
 
+        log.default("Dismissing modal alert with identifier %{public}@", String(describing: identifier))
         await alertPresenter?.dismissAlert(alertPresented.0, animated: true)
         clearPresentedAlert(identifier: identifier)
     }
@@ -95,6 +101,7 @@ extension InAppModalAlertScheduler {
             return
         }
         Task { @MainActor in
+            log.default("Presenting modal alert: %{public}@", String(describing: alert.identifier))
             if self.isAlertPresented(identifier: alert.identifier) {
                 return
             }
@@ -113,18 +120,20 @@ extension InAppModalAlertScheduler {
                     }
                 }
             }
-            await self.alertPresenter?.present(alertController, animated: true)
             addPresentedAlert(alert: alert, controller: alertController)
+            await self.alertPresenter?.present(alertController, animated: true)
         }
     }
     
     private func addPendingAlert(alert: Alert, timer: Timer) {
         dispatchPrecondition(condition: .onQueue(.main))
+
         alertsPending[alert.identifier] = (timer, alert)
     }
 
     private func addPresentedAlert(alert: Alert, controller: UIAlertController) {
         dispatchPrecondition(condition: .onQueue(.main))
+        log.default("Adding presented modal alert: %{public}@", String(describing: alert.identifier))
         alertsPresented[alert.identifier] = (controller, alert)
     }
     

@@ -459,6 +459,7 @@ final class WatchDataManager: NSObject {
             return updatedContext.rawValue
 
         case SetPresetUserInfo.name?:
+            log.default("Set Preset from watch: %{public}@", String(describing: message))
             if let userInfo = SetPresetUserInfo(rawValue: message) {
                 if let presetIdentifier = userInfo.presetIdentifier {
                     temporaryPresetsManager.startPreset(withIdentifier: presetIdentifier)
@@ -479,6 +480,7 @@ final class WatchDataManager: NSObject {
             let context = await createWatchContext()
             return context.rawValue
         case AcknowledgeAlertUserInfo.name?:
+            log.default("Acknowledge alert from watch: %{public}@", String(describing: message))
             if let userInfo = AcknowledgeAlertUserInfo(rawValue: message) {
                 let id = Alert.Identifier(managerIdentifier: userInfo.managerIdentifier, alertIdentifier: userInfo.alertIdentifier)
                 try? await alertManager.acknowledgeAlert(identifier: id)
@@ -530,6 +532,7 @@ final class WatchDataManager: NSObject {
 extension WatchDataManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
         Task { @MainActor in
+            self.log.default("Received message: %{public}@", message)
             do {
                 replyHandler(try await handleWatchMessage(message))
             } catch {

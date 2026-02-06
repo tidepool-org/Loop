@@ -476,7 +476,9 @@ extension TemporaryPresetsManager {
 }
 
 extension TemporaryPresetsManager : AlertResponder {
-    func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier) async throws { }
+    func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier) async throws {
+        
+    }
 
     func handleAlertAction(actionIdentifier: String, from alert: Alert) async throws {
         if actionIdentifier == UNNotificationDismissActionIdentifier { return }
