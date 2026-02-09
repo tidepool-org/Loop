@@ -226,8 +226,14 @@ final class StatusTableViewController: LoopChartsTableViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        navigationController?.setNavigationBarHidden(true, animated: animated)
-        navigationController?.setToolbarHidden(false, animated: animated)
+        if let nav = navigationController {
+            if nav.isNavigationBarHidden != true {
+                nav.setNavigationBarHidden(true, animated: animated)
+            }
+            if nav.isToolbarHidden != false {
+                nav.setToolbarHidden(false, animated: animated)
+            }
+        }
         
         alertPermissionsChecker.checkNow()
 
