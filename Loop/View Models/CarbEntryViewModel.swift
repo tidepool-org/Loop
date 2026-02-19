@@ -374,25 +374,53 @@ final class CarbEntryViewModel: ObservableObject {
             }
             
             let filteredGlucoseSamples = glucoseSamples.filterDateRange(startDate, now)
-            guard let startSample = filteredGlucoseSamples.first, let endSample = filteredGlucoseSamples.last else {
+            guard filteredGlucoseSamples.count >= 2 else {
                 warnings.remove(.glucoseRisingRapidly)
                 return
             }
             
-            let duration = endSample.startDate.timeIntervalSince(startSample.startDate)
-            guard duration >= LoopConstants.missedMealWarningVelocitySampleMinDuration else {
-                warnings.remove(.glucoseRisingRapidly)
-                return
+            // Condition 1: Rate of change between the most recent two glucose readings within 14 minutes
+            let twoReadingWindow = now.addingTimeInterval(.minutes(-14))
+            let twoReadingSamples = filteredGlucoseSamples.filterDateRange(twoReadingWindow, now)
+            
+            if twoReadingSamples.count >= 2 {
+                let recentTwo = Array(twoReadingSamples.suffix(2))
+                let firstOfTwo = recentTwo[0]
+                let lastOfTwo = recentTwo[1]
+                
+                let duration = lastOfTwo.startDate.timeIntervalSince(firstOfTwo.startDate)
+                let delta = lastOfTwo.quantity.doubleValue(for: .milligramsPerDeciliter) - firstOfTwo.quantity.doubleValue(for: .milligramsPerDeciliter)
+                let velocity = delta / duration.minutes // Unit = mg/dL/min
+
+                if velocity >= LoopConstants.missedMealWarningGlucoseRiseThreshold {
+                    warnings.insert(.glucoseRisingRapidly)
+                    return
+                }
             }
             
-            let delta = endSample.quantity.doubleValue(for: .milligramsPerDeciliter) - startSample.quantity.doubleValue(for: .milligramsPerDeciliter)
-            let velocity = delta / duration.minutes // Unit = mg/dL/m
+            // Condition 2: Rate of change over the most recent three glucose readings within 19 minutes
+            let threeReadingWindow = now.addingTimeInterval(LoopConstants.missedMealWarningGlucoseRecencyWindow)
+            let threeReadingSamples = filteredGlucoseSamples.filterDateRange(threeReadingWindow, now)
             
-            if velocity >= LoopConstants.missedMealWarningGlucoseRiseThreshold {
-                warnings.insert(.glucoseRisingRapidly)
-            } else {
-                warnings.remove(.glucoseRisingRapidly)
+            if threeReadingSamples.count >= 3 {
+                let recentThree = Array(threeReadingSamples.suffix(3))
+                let firstOfThree = recentThree[0]
+                let lastOfThree = recentThree[2]
+                
+                let duration = lastOfThree.startDate.timeIntervalSince(firstOfThree.startDate)
+                if duration >= LoopConstants.missedMealWarningVelocitySampleMinDuration {
+                    let delta = lastOfThree.quantity.doubleValue(for: .milligramsPerDeciliter) - firstOfThree.quantity.doubleValue(for: .milligramsPerDeciliter)
+                    let velocity = delta / duration.minutes // Unit = mg/dL/min
+                    
+                    if velocity >= LoopConstants.missedMealWarningGlucoseRiseThreshold {
+                        warnings.insert(.glucoseRisingRapidly)
+                        return
+                    }
+                }
             }
+            
+            // Neither condition met
+            warnings.remove(.glucoseRisingRapidly)
         }
     }
 

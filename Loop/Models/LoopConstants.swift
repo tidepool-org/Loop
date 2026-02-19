@@ -62,7 +62,7 @@ enum LoopConstants {
     
     /// Missed Meal warning constants
     static let missedMealWarningGlucoseRiseThreshold = 3.0 // mg/dL/m
-    static let missedMealWarningGlucoseRecencyWindow = TimeInterval(minutes: 20)
+    static let missedMealWarningGlucoseRecencyWindow = TimeInterval(minutes: 19)
     static let missedMealWarningVelocitySampleMinDuration = TimeInterval(minutes: 12)
     
     // Bolus calculator warning thresholds
