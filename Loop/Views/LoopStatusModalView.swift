@@ -159,6 +159,10 @@ class LoopStatusModalViewModel {
         loopManager?.lastLoopCompleted
     }
     
+    var mostRecentGlucoseDataDate: Date? {
+        loopManager?.mostRecentGlucoseDataDate
+    }
+    
     var loopIconClosed: Bool {
         settingsManager?.dosingEnabled ?? true
     }
@@ -215,6 +219,13 @@ class LoopStatusModalViewModel {
     }
     
     var ago: TimeInterval? {
+        guard loopIconClosed else {
+            // when loop is open, the last glucose data date determines ago
+            guard let mostRecentGlucoseDataDate else { return nil }
+            return abs(min(0, mostRecentGlucoseDataDate.timeIntervalSinceNow))
+        }
+
+        // when loop is closed, the last loop completed date determines ago
         guard let lastLoopCompleted else { return nil }
         return abs(min(0, lastLoopCompleted.timeIntervalSinceNow))
     }
