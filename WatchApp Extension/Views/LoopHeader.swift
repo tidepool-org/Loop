@@ -14,7 +14,10 @@ struct LoopHeader: View {
     @Environment(LoopDataManager.self) var loopManager
 
     var freshness: LoopCompletionFreshness {
-        LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
+        guard loopManager.activeContext?.isClosedLoop == true else {
+            return LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.glucoseDate, at: Date())
+        }
+        return LoopCompletionFreshness(lastCompletion: loopManager.activeContext?.loopLastRunDate, at: Date())
     }
 
     var body: some View {
