@@ -155,7 +155,7 @@ struct AlertManagementView: View {
         Button(action: alertMuter.unmuteAlerts) {
             Group {
                 Text(Image(systemName: "speaker.slash.fill"))
-                    .foregroundColor(guidanceColors.warning)
+                    .foregroundColor(guidanceColors.critical)
                 + Text("  ")
                 + Text(NSLocalizedString("Tap to Unmute All App Sounds", comment: "Label for button to unmute all app sounds"))
                     .fontWeight(.semibold)
