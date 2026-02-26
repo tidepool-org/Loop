@@ -673,10 +673,29 @@ extension AlertManager: BluetoothObserver {
 extension AlertManager: AlertPermissionsCheckerDelegate {
     func notificationsPermissions(requiresRiskMitigation: Bool, scheduledDeliveryEnabled: Bool, permissions: NotificationCenterSettingsFlags) {
         guard let unsafeNotificationAlert = AlertPermissionsChecker.UnsafeNotificationPermissionAlert(permissions: permissions) else {
+            _ = issueOrRetract(
+                alert: AlertPermissionsChecker.scheduledDeliveryEnabledAlert,
+                condition: scheduledDeliveryEnabled,
+                alreadyIssued: UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert,
+                setAlreadyIssued: {
+                    UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = $0
+                },
+                issueHandler: { alert in
+                    Task {
+                        await self.issueAlert(alert)
+                    }
+                },
+                retractionHandler: { alert in
+                    Task {
+                        await self.retractAlert(identifier: alert.identifier)
+                    }
+                }
+            )
+            
             return
         }
         
-        if !issueOrRetract(
+        _ = issueOrRetract(
             alert: unsafeNotificationAlert.alert,
             condition: requiresRiskMitigation,
             alreadyIssued: UserDefaults.standard.hasIssuedNotificationPermissionsAlert,
@@ -701,26 +720,7 @@ extension AlertManager: AlertPermissionsCheckerDelegate {
                     await self.dismissUnsafeNotificationPermissionsInAppAlert()
                 }
             }
-        ) {
-            _ = issueOrRetract(
-                alert: AlertPermissionsChecker.scheduledDeliveryEnabledAlert,
-                condition: scheduledDeliveryEnabled,
-                alreadyIssued: UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert,
-                setAlreadyIssued: {
-                    UserDefaults.standard.hasIssuedScheduledDeliveryEnabledAlert = $0
-                },
-                issueHandler: { alert in
-                    Task {
-                        await self.issueAlert(alert)
-                    }
-                },
-                retractionHandler: { alert in
-                    Task {
-                        await self.retractAlert(identifier: alert.identifier)
-                    }
-                }
-            )
-        }
+        )
     }
 
     private func issueOrRetract(alert: LoopKit.Alert,

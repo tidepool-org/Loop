@@ -216,17 +216,38 @@ extension AlertPermissionsChecker {
             )
         }
         
+        
+        /*
+        All Permutations of NotificationCenterSettingsFlags
+         
+        none = 0
+        notificationsDisabled = 1
+        criticalAlertsDisabled = 2
+        notificationsDisabled & criticalAlertsDisabled = 3
+        timeSensitiveDisabled = 4
+        notificationsDisabled & timeSensitiveDisabled = 5 (Not Possible)
+        criticalAlertsDisabled & timeSensitiveDisabled == 6
+        notificationsDisabled & criticalAlertsDisabled & timeSensitiveDisabled = 7 (Not Possible)
+        scheduledDeliveryEnabled = 8
+        notificationsDisabled & scheduledDeliveryEnabled = 9 (Not Possible)
+        criticalAlertsDisabled & scheduledDeliveryEnabled = 10
+        notificationsDisabled & criticalAlertsDisabled & scheduledDeliveryEnabled = 11 (Not Possible)
+        timeSensitiveDisabled & scheduledDeliveryEnabled = 12
+        notificationsDisabled & timeSensitiveDisabled & scheduledDeliveryEnabled = 13 (Not Possible)
+        criticalAlertsDisabled & timeSensitiveDisabled & scheduledDeliveryEnabled = 14
+        notificationsDisabled & criticalAlertsDisabled & timeSensitiveDisabled & scheduledDeliveryEnabled = 15 (Not Possible)
+        */
         init?(permissions: NotificationCenterSettingsFlags) {
             switch permissions {
-            case .notificationsDisabled:
+            case .notificationsDisabled, NotificationCenterSettingsFlags(rawValue: 9):
                 self = .notificationsDisabled
-            case .timeSensitiveDisabled, NotificationCenterSettingsFlags(rawValue: 5):
-                self = .timeSensitiveDisabled
-            case .criticalAlertsDisabled:
+            case .criticalAlertsDisabled, NotificationCenterSettingsFlags(rawValue: 10):
                 self = .criticalAlertsDisabled
-            case NotificationCenterSettingsFlags(rawValue: 3):
+            case .timeSensitiveDisabled, NotificationCenterSettingsFlags(rawValue: 5), NotificationCenterSettingsFlags(rawValue: 12), NotificationCenterSettingsFlags(rawValue: 13):
+                self = .timeSensitiveDisabled
+            case NotificationCenterSettingsFlags(rawValue: 3), NotificationCenterSettingsFlags(rawValue: 11):
                 self = .criticalAlertsAndNotificationDisabled
-            case NotificationCenterSettingsFlags(rawValue: 6):
+            case NotificationCenterSettingsFlags(rawValue: 6), NotificationCenterSettingsFlags(rawValue: 7), NotificationCenterSettingsFlags(rawValue: 14), NotificationCenterSettingsFlags(rawValue: 15):
                 self = .criticalAlertsAndTimeSensitiveDisabled
             default:
                 return nil
