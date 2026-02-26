@@ -44,20 +44,18 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                 EstimatedReadTime(.minutes(10))
                 
                 VStack(alignment: .leading) {
-                    Text("Learn to tailor your settings! This training will teach you how to:")
+                    Text("This required training will show you how to change your settings with confidence and create custom presets that fit your need.\n\nThis training covers:")
                         .fixedSize(horizontal: false, vertical: true)
                     
                     BulletedListView {
-                        Text("Configure each setting")
-                        Text("Use Presets for when you are sick")
-                        Text("Use Presets for Daily Activities")
-                        Text("Use Presets for Exercise")
+                        Text("How to configure each setting")
+                        Text("How to use Presets when you are sick")
+                        Text("How to use Presets for everyday activities")
+                        Text("How to use Presets for exercise")
                     }
                     .padding(.leading, 8)
                 }
-                    
-                Text("Complete this training to learn how to edit the pre-configured presets and adjust them to fit your needs, or create your own custom presets.")
-                
+
             case .overallInsulin:
                 if let image = Image.optional("PresetsTrainingOverallInsulinHero") {
                     image
@@ -118,7 +116,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
         case .illness(let illness):
             switch illness {
             case .commonUses:
-                Text("You can use presets for a variety of situations. Explore the uses below to learn tips for these common scenarios.")
+                Text("Complete each section below to learn how presets can be used for a variety of situations.")
                 
                 VStack(spacing: 16) {
                     CommonUseStep(
@@ -143,11 +141,15 @@ extension PresetsTraining.Step: PresetsTrainingContent {
             case .presetsForIllness:
                 Text("Physical stress, like illness, can cause glucose to rise.")
                 
-                InsetContent(alignment: .leading) {
-                    Text("**Example:** Paloma Porpoise sees her glucose is running higher than usual. She decides to create a preset to help manage it while she's sick.")
+                Text("Let’s walk through a simple example to show how a preset might be used in this situation.")
+                
+                InsetContent(alignment: .center, spacing: 10) {
+                    Text("Example").fontWeight(.semibold).foregroundColor(.accentColor)
+                    
+                    Text("Paloma Porpoise sees her glucose is running higher than usual. She creates a preset to help manage her glucose while she is sick.").multilineTextAlignment(.center)
                 }
                 
-                Text("Let's look at the settings that can change how much insulin Paloma get.")
+                Text("Next, we’ll look at settings you can change and how they affect Paloma’s insulin.")
                 
             case .overallInsulin:
                 Text("Paloma wants \(appName) to know she needs more insulin than usual.")
@@ -270,11 +272,15 @@ extension PresetsTraining.Step: PresetsTrainingContent {
             case .presetsForDailyActivities:
                 Text("For some people, routine chores and everyday activities can affect glucose levels similar to exercise.")
                 
-                InsetContent(alignment: .leading) {
-                    Text("**Example:** Omar Octopus wants to create a preset for some yard work he’ll be doing around the house.")
+                Text("Let’s walk through a simple example to show how a preset might be used in this situation.")
+                
+                InsetContent(alignment: .center, spacing: 10) {
+                    Text("Example").fontWeight(.semibold).foregroundColor(.accentColor)
+                    
+                    Text("Omar Octopus wants to create a preset for some yard work he’ll be doing around the house.").multilineTextAlignment(.center)
                 }
                 
-                Text("Let's look at the settings that will impact Omar’s insulin delivery.")
+                Text("Next, we’ll look at settings you can change and how they affect Omar’s insulin.")
                 
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Learn More")
@@ -371,9 +377,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                     )
                 }
             case .presetsForExercise:
-                Text("Exercise is a common reason to use a preset.")
-                
-                Text("Different kinds of exercise and their intensity levels can affect your glucose levels in different ways.")
+                Text("Exercise is a common reason to use a preset. Different kinds of exercise and their intensity levels can affect your glucose levels in different ways.")
                 
                 Text("Depending on the activity, you may notice a few common patterns when it comes to your insulin needs:")
                 
@@ -382,6 +386,8 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                     Text("you need **less** insulin than usual")
                     Text("you need **more** insulin than usual")
                 }
+                
+                Text("Let’s walk through some examples to show how presets might be used in these situations.")
                 
                 Callout(.note) {
                     Text("These patterns are based on published exercise consensus guidelines and are meant to be used as a starting point. What works for one person may not work for you.")

@@ -290,8 +290,8 @@ struct PresetsView: View {
     }
     
     private var trainingNeededAlert: SwiftUI.Alert {
-        Alert(title: Text("Extra Training Needed", comment: "Preset training needed alert title"),
-              message: Text("Complete the training to create a new preset.", comment: "Preset training needed alert message"),
+        Alert(title: Text("Training Required for New Presets", comment: "Preset training needed alert title"),
+              message: Text("To create a new preset, you must complete the required training.", comment: "Preset training needed alert message"),
               primaryButton: startNeededTrainingButton,
               secondaryButton: closeButton)
     }
@@ -301,7 +301,7 @@ struct PresetsView: View {
     }
 
     private var closeButton: SwiftUI.Alert.Button {
-        .default(Text("Start Training", comment: "CPreset training needed alert start training button")) {
+        .default(Text("Start Required Training", comment: "CPreset training needed alert start training button")) {
             activeSheet = .training()
         }
     }
