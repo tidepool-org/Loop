@@ -96,7 +96,7 @@ struct PresetWatchCard: View {
                 PresetSymbolView(icon)
             }
             Text(presetName)
-                .accessibilityIdentifier("text_Preset\(presetName)")
+                .accessibilityIdentifier("text_PresetName\(presetName)")
         }
     }
 

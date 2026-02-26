@@ -24,7 +24,7 @@ struct PresetDetailView: View {
             }
             Text(preset.name)
                 .font(.title3)
-                .accessibilityIdentifier("text_Preset\(preset.name)")
+                .accessibilityIdentifier("text_PresetName\(preset.name)")
         }
     }
 

@@ -118,6 +118,7 @@ struct PresetsView: View {
                         .onTapGesture {
                             activeSheet = .presetDetent(activePreset)
                         }
+                        .accessibilityIdentifier("group_activePreset\(activePreset.name)")
                     }
                     
                     // All Presets Section
@@ -153,6 +154,7 @@ struct PresetsView: View {
                                     .onTapGesture {
                                         activeSheet = .training()
                                     }
+                                    .accessibilityIdentifier("button_presetTrainingCard")
                             }
                             
                             ForEach(presetsSorted) { preset in
@@ -162,6 +164,7 @@ struct PresetsView: View {
                                     activePresetId: { temporaryPresetsManager.activePreset?.id },
                                     effectiveCorrectionRange: temporaryPresetsManager.effectiveCorrectionRange
                                 )
+                                .accessibilityIdentifier("group_inactivePreset\(preset.name)")
                                 .cornerRadius(12)
                                 .onTapGesture {
                                     activeSheet = .presetDetent(preset)

@@ -50,6 +50,7 @@ public struct PresetsTrainingView: View {
                 confirmDismiss = true
             }
         }
+        .accessibilityIdentifier("button_close")
     }
     
     public var body: some View {
@@ -110,11 +111,13 @@ public struct PresetsTrainingView: View {
                                     training.next()
                                 }
                                 .buttonStyle(ActionButtonStyle())
+                                .accessibilityIdentifier("button_startTraining")
                             case .continue:
                                 Button("Continue") {
                                     training.next()
                                 }
                                 .buttonStyle(ActionButtonStyle())
+                                .accessibilityIdentifier("button_continue")
                             case .close:
                                 Button("Close") {
                                     close()
@@ -122,6 +125,7 @@ public struct PresetsTrainingView: View {
                                     onComplete?()
                                 }
                                 .buttonStyle(ActionButtonStyle())
+                                .accessibilityIdentifier("button_close")
                             case .closeOrContinue(let continueTo, let chapter):
                                 VStack(spacing: 12) {
                                     Button("Close Training") {
