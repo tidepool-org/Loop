@@ -969,8 +969,10 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     }
                 } else {
                     HStack {
+                        Text(Image(systemName: "speaker.slash.fill")).font(.title) + Text(" ")
+                        
                         VStack(alignment: .leading) {
-                            Text(Image(systemName: "speaker.slash.fill")) + Text(" ") + Text(NSLocalizedString("All App Sounds Muted", comment: "Warning text for when alerts are muted"))
+                            Text(NSLocalizedString("All App Sounds Muted", comment: "Warning text for when alerts are muted"))
                                 .font(.headline.bold())
                             
                             Text(String(format: NSLocalizedString("Until %1$@", comment: "indication of when alerts will be unmuted (1: time when alerts unmute)"), alertMuter.formattedEndTime))
@@ -985,7 +987,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                     }
                     .foregroundStyle(Color.white)
                     .padding(8)
-                    .background(Color.warning.cornerRadius(10))
+                    .background(Color.critical.cornerRadius(10))
                     .padding([.top, .horizontal], 8)
                 }
             }
@@ -1373,7 +1375,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
 
     private func presentUnmuteAlertConfirmation() {
         let title = NSLocalizedString("Unmute All App Sounds?", comment: "The alert title for unmute all app sounds confirmation")
-        let body = NSLocalizedString("Tap Unmute to resume all app sounds for your alerts.", comment: "The alert body for unmute alert confirmation")
+        let body = NSLocalizedString("All app sounds, including sounds for all critical alerts, are currently muted.\n\nTap Unmute to resume app sounds for your alerts.", comment: "The alert body for unmute alert confirmation")
         let action = UIAlertAction(
             title: NSLocalizedString("Unmute", comment: "The title of the action used to unmute app sounds"),
             style: .default) { _ in

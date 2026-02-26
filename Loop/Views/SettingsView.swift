@@ -279,7 +279,7 @@ extension SettingsView {
             Image(systemName: "speaker.slash.fill")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .foregroundColor(guidanceColors.warning)
+                .foregroundColor(guidanceColors.critical)
                 .padding(5)
         }
     }
