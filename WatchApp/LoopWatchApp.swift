@@ -15,8 +15,12 @@ struct LoopWatchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(loopManager)
+            if loopManager.activeContext?.isOnboardingCompleted != true {
+                CompleteOnboardingView()
+            } else {
+                ContentView()
+                    .environment(loopManager)
+            }
         }
     }
 }

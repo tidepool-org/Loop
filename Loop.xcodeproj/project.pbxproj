@@ -368,6 +368,7 @@
 		B455C7332BD14E25002B847E /* Comparable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B455C7322BD14E25002B847E /* Comparable.swift */; };
 		B455C7352BD14E30002B847E /* Comparable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B455C7322BD14E25002B847E /* Comparable.swift */; };
 		B470F5842AB22B5100049695 /* StatefulPluggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B470F5832AB22B5100049695 /* StatefulPluggable.swift */; };
+		B47BA4282F506D58006BAAB3 /* CompleteOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B47BA4272F506D50006BAAB3 /* CompleteOnboardingView.swift */; };
 		B48B0BAC24900093009A48DE /* PumpStatusHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B48B0BAB24900093009A48DE /* PumpStatusHUDView.swift */; };
 		B490A03F24D0550F00F509FA /* GlucoseRangeCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B490A03E24D0550F00F509FA /* GlucoseRangeCategory.swift */; };
 		B490A04124D0559D00F509FA /* DeviceLifecycleProgressState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B490A04024D0559D00F509FA /* DeviceLifecycleProgressState.swift */; };
@@ -1255,6 +1256,7 @@
 		B43DA44024D9C12100CAFF4E /* DismissibleHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissibleHostingController.swift; sourceTree = "<group>"; };
 		B455C7322BD14E25002B847E /* Comparable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comparable.swift; sourceTree = "<group>"; };
 		B470F5832AB22B5100049695 /* StatefulPluggable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatefulPluggable.swift; sourceTree = "<group>"; };
+		B47BA4272F506D50006BAAB3 /* CompleteOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteOnboardingView.swift; sourceTree = "<group>"; };
 		B48B0BAB24900093009A48DE /* PumpStatusHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpStatusHUDView.swift; sourceTree = "<group>"; };
 		B490A03C24D04F9400F509FA /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		B490A03E24D0550F00F509FA /* GlucoseRangeCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseRangeCategory.swift; sourceTree = "<group>"; };
@@ -2535,6 +2537,7 @@
 				C10C57E42E6F767500A4825C /* CircleTintedButton.swift */,
 				895788AA242E69A1002CB114 /* CircularAccessoryButtonStyle.swift */,
 				C19E23B72E83566300C20D83 /* CircularProgressWithCheckmark.swift */,
+				B47BA4272F506D50006BAAB3 /* CompleteOnboardingView.swift */,
 				89A605EE2432925D009C1096 /* CompletionCheckmark.swift */,
 				895788B4242E69C8002CB114 /* Extensions */,
 				C17D52032E7F0568001D2AD2 /* LabelValueRow.swift */,
@@ -3700,6 +3703,7 @@
 				89A605EB243288E4009C1096 /* TopDownTriangle.swift in Sources */,
 				4F2C15741E0209F500E160D4 /* NSTimeInterval.swift in Sources */,
 				89F9119224358E2B00ECCAF3 /* CarbEntryInputMode.swift in Sources */,
+				B47BA4282F506D58006BAAB3 /* CompleteOnboardingView.swift in Sources */,
 				89FE21AD24AC57E30033F501 /* Collection.swift in Sources */,
 				898ECA63218ABD21001E9D35 /* ComplicationChartManager.swift in Sources */,
 				439A7945211FE23A0041B75F /* NSUserActivity.swift in Sources */,

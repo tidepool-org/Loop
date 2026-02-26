@@ -63,6 +63,7 @@ public final class WatchContext: RawRepresentable {
 
     public var isClosedLoop: Bool?
     public var deviceIssue: Bool?
+    public var isOnboardingCompleted: Bool?
 
     public init(
         creationDate: Date = Date(),
@@ -90,7 +91,8 @@ public final class WatchContext: RawRepresentable {
         insulinDeliveryState: InsulinDeliveryWatchState? = nil,
         lastManualBolus: LastManualBolus? = nil,
         isClosedLoop: Bool? = nil,
-        deviceIssue: Bool? = nil
+        deviceIssue: Bool? = nil,
+        isOnboardingCompleted: Bool? = nil
     ) {
         self.creationDate = creationDate
         self.displayGlucoseUnit = displayGlucoseUnit
@@ -118,6 +120,7 @@ public final class WatchContext: RawRepresentable {
         self.lastManualBolus = lastManualBolus
         self.isClosedLoop = isClosedLoop
         self.deviceIssue = deviceIssue
+        self.isOnboardingCompleted = isOnboardingCompleted
     }
 
     public required init?(rawValue: RawValue) {
@@ -128,6 +131,7 @@ public final class WatchContext: RawRepresentable {
         self.creationDate = creationDate
         isClosedLoop = rawValue["cl"] as? Bool
         deviceIssue = rawValue["di"] as? Bool
+        isOnboardingCompleted = rawValue["oc"] as? Bool
 
         if let unitString = rawValue["gu"] as? String {
             displayGlucoseUnit = LoopUnit(from: unitString)
@@ -191,6 +195,7 @@ public final class WatchContext: RawRepresentable {
         raw["bp"] = batteryPercentage
         raw["cl"] = isClosedLoop
         raw["di"] = deviceIssue
+        raw["oc"] = isOnboardingCompleted
 
         raw["cgmManagerState"] = cgmManagerState
 
