@@ -215,17 +215,15 @@ class LoopStatusModalViewModel {
         guard !isPumpInSignalLoss, !isCGMInSignalLoss else {
             return .stale
         }
+        
+        guard loopIconClosed else {
+            return .fresh
+        }
+        
         return LoopCompletionFreshness(age: ago)
     }
     
     var ago: TimeInterval? {
-        guard loopIconClosed else {
-            // when loop is open, the last glucose data date determines ago
-            guard let mostRecentGlucoseDataDate else { return nil }
-            return abs(min(0, mostRecentGlucoseDataDate.timeIntervalSinceNow))
-        }
-
-        // when loop is closed, the last loop completed date determines ago
         guard let lastLoopCompleted else { return nil }
         return abs(min(0, lastLoopCompleted.timeIntervalSinceNow))
     }
@@ -258,10 +256,8 @@ class LoopStatusModalViewModel {
                 return (titleDeviceIssue, NSLocalizedString("Check for potential communication issues with your CGM.\n\nIn the meantime, your pump is still able to deliver insulin.", comment: "message when automation is off and CGM is in signal loss"))
             } else if isCGMInWarmup {
                 return (titleAutomationOff, NSLocalizedString("Your CGM sensor is warming up.\n\nIn the meantime, your pump is still able to deliver insulin.\n\nIf you wish for the app to automate your insulin, go to Settings and toggle Closed Loop to on.", comment: "message when automation is off and CGM is in warmup"))
-            } else if freshness == .fresh {
-                return (titleAutomationOff, NSLocalizedString("Your pump and CGM will continue to operate, but the app will not adjust insulin dosing automatically.\n\nIf you wish for the app to automate your insulin, go to Settings and toggle Closed Loop to on.", comment: "message when automation is off, glucose value is fresh and devices are good"))
             } else {
-                return (titleAutomationOff, NSLocalizedString("Make sure your devices are connected and within bluetooth range.\n\nIf you wish for the app to automate your insulin, go to Settings and toggle Closed Loop to on.", comment: "message when automation is off, glucose value is not fresh and devices are good"))
+                return (titleAutomationOff, NSLocalizedString("Your pump and CGM will continue to operate, but the app will not adjust insulin dosing automatically.\n\nIf you wish for the app to automate your insulin, go to Settings and toggle Closed Loop to on.", comment: "message when automation is off, glucose value is fresh and devices are good"))
             }
         }
        

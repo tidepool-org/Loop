@@ -185,7 +185,8 @@ public final class LoopCompletionHUDView: BaseHUDView {
         } else if !loopIconClosed, let mostRecentPumpDataDate, let mostRecentGlucoseDataDate {
             let ago = max(abs(min(0, mostRecentPumpDataDate.timeIntervalSinceNow)), abs(min(0, mostRecentGlucoseDataDate.timeIntervalSinceNow)))
 
-            freshness = LoopCompletionFreshness(age: ago)
+            // when closed loop is off, always present fresh unless there is a device issue (handled else where)
+            freshness = .fresh
             
             if let timeString = ago.truncatedTimeAgoString {
                 switch traitCollection.preferredContentSizeCategory {
