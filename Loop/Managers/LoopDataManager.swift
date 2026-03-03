@@ -157,7 +157,7 @@ final class LoopDataManager: ObservableObject {
 
     private var lastManualBolusRecommendation: ManualBolusRecommendation?
 
-    private var dosingStrategySelectionEnabled: Bool
+    private(set) var dosingStrategySelectionEnabled: Bool
 
     var usePositiveMomentumAndRCForManualBoluses: Bool
 
