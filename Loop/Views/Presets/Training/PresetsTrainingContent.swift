@@ -44,7 +44,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                 EstimatedReadTime(.minutes(10))
                 
                 VStack(alignment: .leading) {
-                    Text("This required training will show you how to change your settings with confidence and create custom presets that fit your need.\n\nThis training covers:")
+                    Text("This required training will show you how to change your settings with confidence and create custom presets that fit your needs.\n\nThis training covers:")
                         .fixedSize(horizontal: false, vertical: true)
                     
                     BulletedListView {
