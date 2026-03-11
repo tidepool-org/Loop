@@ -990,12 +990,15 @@ extension LoopDataManager {
         let activeInsulin: LoopQuantity
         if let iob = displayState.activeInsulin?.value {
             activeInsulin = LoopQuantity.init(unit: .internationalUnit, doubleValue: iob)
-        } else {
-            let basal = displayState.input?.basal ?? []
-            let dosesRelativeToBasal: [BasalRelativeDose] = displayState.input?.doses.annotated(with: basal) ?? []
+        } else if let input = displayState.input {
+            let basal = input.basal
+            let dosesRelativeToBasal: [BasalRelativeDose] = input.doses.annotated(with: basal)
             let iob = dosesRelativeToBasal.insulinOnBoard(at: date)
             activeInsulin = LoopQuantity.init(unit: .internationalUnit, doubleValue: iob)
+        } else {
+            return nil
         }
+        
 
         guard let suspendThreshold = settingsProvider.settings.suspendThreshold?.quantity,
               let carbRatioSchedule = temporaryPresetsManager.carbRatioScheduleApplyingOverrideHistory,
