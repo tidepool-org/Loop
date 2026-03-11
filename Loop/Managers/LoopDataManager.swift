@@ -986,8 +986,18 @@ extension LoopDataManager {
 
         var dosingDecision = BolusDosingDecision(for: .simpleBolus)
 
-        guard let iob = displayState.activeInsulin?.value,
-              let suspendThreshold = settingsProvider.settings.suspendThreshold?.quantity,
+        // Determine activeInsulin
+        let activeInsulin: LoopQuantity
+        if let iob = displayState.activeInsulin?.value {
+            activeInsulin = LoopQuantity.init(unit: .internationalUnit, doubleValue: iob)
+        } else {
+            let basal = displayState.input?.basal ?? []
+            let dosesRelativeToBasal: [BasalRelativeDose] = displayState.input?.doses.annotated(with: basal) ?? []
+            let iob = dosesRelativeToBasal.insulinOnBoard(at: date)
+            activeInsulin = LoopQuantity.init(unit: .internationalUnit, doubleValue: iob)
+        }
+
+        guard let suspendThreshold = settingsProvider.settings.suspendThreshold?.quantity,
               let carbRatioSchedule = temporaryPresetsManager.carbRatioScheduleApplyingOverrideHistory,
               let correctionRangeSchedule = temporaryPresetsManager.effectiveCorrectionRangeSchedule(presumingMealEntry: mealCarbs != nil),
               let sensitivitySchedule = temporaryPresetsManager.insulinSensitivityScheduleApplyingOverrideHistory
@@ -1018,7 +1028,7 @@ extension LoopDataManager {
         let bolusAmount = SimpleBolusCalculator.recommendedInsulin(
             mealCarbs: mealCarbs,
             manualGlucose: manualGlucose,
-            activeInsulin: LoopQuantity.init(unit: .internationalUnit, doubleValue: iob),
+            activeInsulin: activeInsulin,
             carbRatioSchedule: carbRatioSchedule,
             correctionRangeSchedule: correctionRangeSchedule,
             sensitivitySchedule: sensitivitySchedule,
