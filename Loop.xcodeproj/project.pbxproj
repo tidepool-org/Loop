@@ -235,6 +235,7 @@
 		842E40B12F22F7E2000CCCE0 /* CommonUseStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842E409B2F22F7E2000CCCE0 /* CommonUseStep.swift */; };
 		842E40B22F22F7E2000CCCE0 /* TherapySettingsExampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842E409D2F22F7E2000CCCE0 /* TherapySettingsExampleView.swift */; };
 		843F32EA2E2815D400B0B271 /* InsulinDeliveryLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 843F32E92E2815D400B0B271 /* InsulinDeliveryLogViewModel.swift */; };
+		8446319F2F5A2AB3003825AE /* PresetsPerformanceHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8446319E2F5A2AA9003825AE /* PresetsPerformanceHistoryViewModel.swift */; };
 		847F23432E4543140035C864 /* ActivePresetBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847F23422E4543140035C864 /* ActivePresetBanner.swift */; };
 		849466D02EF1EAD300A90718 /* LocalizablePlural.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B4C6D2412EA7E38C006F5755 /* LocalizablePlural.xcstrings */; };
 		8496F7312B5711C4003E672C /* ContentMargin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8496F7302B5711C4003E672C /* ContentMargin.swift */; };
@@ -245,6 +246,7 @@
 		84AA81DB2A4A2973000B658B /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81DA2A4A2973000B658B /* Date.swift */; };
 		84AA81DD2A4A2999000B658B /* StatusWidgetTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81DC2A4A2999000B658B /* StatusWidgetTimelineProvider.swift */; };
 		84AA81E72A4A4DEF000B658B /* PumpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AA81E62A4A4DEF000B658B /* PumpView.swift */; };
+		84B67A8D2F63558A004C783B /* PresetPerformanceHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B67A8C2F63558A004C783B /* PresetPerformanceHistoryView.swift */; };
 		84BC5BDF2E1C4A7300432000 /* InsulinDeliveryEventDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84BC5BDE2E1C4A7300432000 /* InsulinDeliveryEventDetailsView.swift */; };
 		84D1F1A72D09053A00CB271F /* StatusTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D1F1A62D09053A00CB271F /* StatusTableView.swift */; };
 		84D1F1A92D09800700CB271F /* PresetDetentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D1F1A82D09800700CB271F /* PresetDetentView.swift */; };
@@ -1119,6 +1121,7 @@
 		842E40A32F22F7E2000CCCE0 /* PresetsTrainingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingView.swift; sourceTree = "<group>"; };
 		842E40A52F22F7E2000CCCE0 /* PresetsTrainingContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingContent.swift; sourceTree = "<group>"; };
 		843F32E92E2815D400B0B271 /* InsulinDeliveryLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinDeliveryLogViewModel.swift; sourceTree = "<group>"; };
+		8446319E2F5A2AA9003825AE /* PresetsPerformanceHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsPerformanceHistoryViewModel.swift; sourceTree = "<group>"; };
 		847F23422E4543140035C864 /* ActivePresetBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePresetBanner.swift; sourceTree = "<group>"; };
 		8496F7302B5711C4003E672C /* ContentMargin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentMargin.swift; sourceTree = "<group>"; };
 		84A7B54F2D2D972C00B6D202 /* Image+Optional.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Image+Optional.swift"; sourceTree = "<group>"; };
@@ -1128,6 +1131,7 @@
 		84AA81DA2A4A2973000B658B /* Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
 		84AA81DC2A4A2999000B658B /* StatusWidgetTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusWidgetTimelineProvider.swift; sourceTree = "<group>"; };
 		84AA81E62A4A4DEF000B658B /* PumpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PumpView.swift; sourceTree = "<group>"; };
+		84B67A8C2F63558A004C783B /* PresetPerformanceHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetPerformanceHistoryView.swift; sourceTree = "<group>"; };
 		84BC5BDE2E1C4A7300432000 /* InsulinDeliveryEventDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinDeliveryEventDetailsView.swift; sourceTree = "<group>"; };
 		84D1F1A62D09053A00CB271F /* StatusTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTableView.swift; sourceTree = "<group>"; };
 		84D1F1A82D09800700CB271F /* PresetDetentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetDetentView.swift; sourceTree = "<group>"; };
@@ -2500,6 +2504,8 @@
 			children = (
 				C11445B12DA98A2D00034864 /* CorrectionRangeInformationView.swift */,
 				84FA9D322CF7FD0D004162B4 /* PresetsHistoryView.swift */,
+				84B67A8C2F63558A004C783B /* PresetPerformanceHistoryView.swift */,
+				8446319E2F5A2AA9003825AE /* PresetsPerformanceHistoryViewModel.swift */,
 				84E8BBC92CCA16290078E6CF /* PresetsView.swift */,
 				842E40A62F22F7E2000CCCE0 /* Training */,
 				84E8BBC22CC9B9780078E6CF /* Components */,
@@ -3496,6 +3502,7 @@
 				14C970802C5C0A1500E8A01B /* FavoriteFoodInsightsViewModel.swift in Sources */,
 				149A28BB2A853E5100052EDF /* CarbEntryViewModel.swift in Sources */,
 				C19008FE25225D3900721625 /* SimpleBolusCalculator.swift in Sources */,
+				8446319F2F5A2AB3003825AE /* PresetsPerformanceHistoryViewModel.swift in Sources */,
 				C1F8B243223E73FD00DD66CF /* BolusProgressTableViewCell.swift in Sources */,
 				89D6953E23B6DF8A002B3066 /* PotentialCarbEntryTableViewCell.swift in Sources */,
 				89CA2B30226C0161004D9350 /* DirectoryObserver.swift in Sources */,
@@ -3622,6 +3629,7 @@
 				A9F703772489D8AA00C98AD8 /* PersistentDeviceLog+SimulatedCoreData.swift in Sources */,
 				E9B080B1253BDA6300BAD8F8 /* UserDefaults+LoopIntents.swift in Sources */,
 				C1AF062329426300002C1B19 /* ManualGlucoseEntryRow.swift in Sources */,
+				84B67A8D2F63558A004C783B /* PresetPerformanceHistoryView.swift in Sources */,
 				C148CEE724FD91BD00711B3B /* DeliveryUncertaintyAlertManager.swift in Sources */,
 				C10509772D8B591200118A37 /* StatusTableViewModel.swift in Sources */,
 				84DEB10D2C18FABA00170734 /* IOSFocusModesView.swift in Sources */,

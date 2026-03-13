@@ -141,7 +141,15 @@ struct SettingsView: View {
                 Group {
                     switch sheet {
                     case .presets:
-                        PresetsView(roundBasalRate: viewModel.deliveryDelegate?.roundBasalRate)
+                        if let carbStore = viewModel.deviceManager?.carbStore, let doseStore = viewModel.deviceManager?.doseStore, let glucoseStore = viewModel.deviceManager?.glucoseStore {
+                            PresetsView(
+                                roundBasalRate: viewModel.deliveryDelegate?.roundBasalRate,
+                                carbStore: carbStore,
+                                doseStore: doseStore,
+                                glucoseStore: glucoseStore,
+                                automationHistory: { viewModel.delegate?.automationHistory ?? [] }
+                            )
+                        }
                     case .favoriteFoods:
                         FavoriteFoodsView(insightsDelegate: viewModel.favoriteFoodInsightsDelegate)
                     }

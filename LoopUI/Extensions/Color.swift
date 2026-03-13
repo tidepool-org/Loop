@@ -24,6 +24,16 @@ extension Color {
     public static let loopAccent = Color("accent")
     
     public static let warning = Color("warning")
+    
+    public static let glucoseVeryHigh = Color("glucose-very-high")
+    
+    public static let glucoseHigh = Color("glucose-high")
+    
+    public static let glucoseNormal = Color("glucose-normal")
+    
+    public static let glucoseLow = Color("glucose-low")
+    
+    public static let glucoseVeryLow = Color("glucose-very-low")
 }
 
 

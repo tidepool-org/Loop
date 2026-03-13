@@ -1532,17 +1532,23 @@ final class StatusTableViewController: LoopChartsTableViewController {
     
     func presentPresets() {
         let hostingController = DismissibleHostingController(
-            rootView: PresetsView(roundBasalRate: deviceManager.roundBasalRate)
-                .onAppear { self.isShowingPresets = true }
-                .onDisappear { self.isShowingPresets = false }
-                .environmentObject(deviceManager.displayGlucosePreference)
-                .environment(\.appName, Bundle.main.bundleDisplayName)
-                .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
-                .environment(\.colorPalette, .default)
-                .environment(\.loopStatusColorPalette, .loopStatus)
-                .environment(\.temporaryPresetsManager, temporaryPresetsManager)
-                .environment(\.settingsManager, settingsManager),
-            isModalInPresentation: false)
+            rootView: PresetsView(
+                roundBasalRate: deviceManager.roundBasalRate,
+                carbStore: deviceManager.carbStore,
+                doseStore: deviceManager.doseStore,
+                glucoseStore: deviceManager.glucoseStore,
+                automationHistory: { [weak self] in self?.loopManager.automationHistory ?? [] }
+            )
+            .onAppear { self.isShowingPresets = true }
+            .onDisappear { self.isShowingPresets = false }
+            .environmentObject(deviceManager.displayGlucosePreference)
+            .environment(\.appName, Bundle.main.bundleDisplayName)
+            .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
+            .environment(\.colorPalette, .default)
+            .environment(\.loopStatusColorPalette, .loopStatus)
+            .environment(\.temporaryPresetsManager, temporaryPresetsManager)
+            .environment(\.settingsManager, settingsManager),
+        isModalInPresentation: false)
         present(hostingController, animated: true)
     }
     
@@ -2136,6 +2142,10 @@ extension StatusTableViewController: SettingsViewModelDelegate {
     
     var closedLoopDescriptiveText: String? {
         return deviceManager.closedLoopDisallowedLocalizedDescription
+    }
+    
+    var automationHistory: [AutomationHistoryEntry] {
+        loopManager.automationHistory
     }
 
     func dosingEnabledChanged(_ value: Bool) {

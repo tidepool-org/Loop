@@ -166,10 +166,11 @@ final class DeviceDataManager {
     var doseEnactor = DoseEnactor()
     
     // MARK: Stores
+    let carbStore: CarbStore
+    let doseStore: DoseStore
+    let glucoseStore: GlucoseStore
+    
     private let healthStore: HKHealthStore
-    private let carbStore: CarbStore
-    private let doseStore: DoseStore
-    private let glucoseStore: GlucoseStore
     private let cacheStore: PersistenceController
     private let cgmEventStore: CgmEventStore
 

@@ -55,6 +55,7 @@ public protocol SettingsViewModelDelegate: AnyObject {
     func didTapIssueReport()
     var closedLoopDescriptiveText: String? { get }
     var automaticDosingEnabled: Bool { get set }
+    var automationHistory: [AutomationHistoryEntry] { get }
 }
 
 @Observable
@@ -113,7 +114,7 @@ class SettingsViewModel {
        }
     }
     
-    private var deviceManager: DeviceDataManager?
+    private(set) var deviceManager: DeviceDataManager?
     
     @MainActor
     var deviceIssue: Bool {

@@ -68,15 +68,28 @@ struct PresetsView: View {
     @State private var showPresetsTrainingSheet: Bool = false
     @State private var activeSheet: ActiveSheet?
     @State private var navigationPath = NavigationPath()
+    
+    private let carbStore: CarbStore
+    private let doseStore: DoseStore
+    private let glucoseStore: GlucoseStore
+    private let automationHistory: () -> [AutomationHistoryEntry]
 
     @AppStorage("presetsSortAscending") private var presetsSortAscending: Bool = true
     @AppStorage("presetsSortOrder") private var selectedSortOption: PresetSortOption = .name
     
     init(
-        roundBasalRate: ((Double) -> Double)?
+        roundBasalRate: ((Double) -> Double)?,
+        carbStore: CarbStore,
+        doseStore: DoseStore,
+        glucoseStore: GlucoseStore,
+        automationHistory: @escaping () -> [AutomationHistoryEntry]
     ) {
         self.trainingCompletion = PresetsTrainingCompletion(allowDebugFeatures: FeatureFlags.allowDebugFeatures)
         self.roundBasalRate = roundBasalRate
+        self.carbStore = carbStore
+        self.doseStore = doseStore
+        self.glucoseStore = glucoseStore
+        self.automationHistory = automationHistory
     }
 
     var isDescending: Bool { !presetsSortAscending }
@@ -178,13 +191,12 @@ struct PresetsView: View {
                         
                         NavigationLink(value: NavigationDestination.presetsHistory) {
                             HStack {
-                                Image(systemName: "list.bullet")
-                                    .foregroundColor(.white)
-                                    .padding(8)
-                                    .background(Color.presets)
-                                    .cornerRadius(8)
+                                Image("performance-history-empty")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 32, height: 32)
                                 
-                                Text("Presets Performance History")
+                                Text("Performance History")
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .foregroundColor(.gray)
@@ -202,7 +214,12 @@ struct PresetsView: View {
                                 activeSheet = .training()
                             } label: {
                                 HStack {
-                                    Text("Review Presets Training")
+                                    Image("book")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 32, height: 32)
+                                    
+                                    Text("Learning Hub")
                                     Spacer()
                                     Image(systemName: "chevron.right")
                                         .foregroundColor(.gray)
@@ -226,7 +243,13 @@ struct PresetsView: View {
             .navigationDestination(for: NavigationDestination.self) { route in
                 switch route {
                 case .presetsHistory:
-                    PresetsHistoryView()
+                    PresetsHistoryView(
+                        temporaryPresetsManager: temporaryPresetsManager,
+                        glucoseStore: glucoseStore,
+                        carbStore: carbStore,
+                        doseStore: doseStore,
+                        automationHistory: automationHistory
+                    )
                 }
             }
         }

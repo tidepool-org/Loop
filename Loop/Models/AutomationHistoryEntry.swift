@@ -9,7 +9,7 @@
 import Foundation
 import LoopAlgorithm
 
-struct AutomationHistoryEntry: Codable, Hashable {
+public struct AutomationHistoryEntry: Codable, Hashable {
     var startDate: Date
     var enabled: Bool
 }
@@ -26,8 +26,9 @@ extension Array where Element == AutomationHistoryEntry {
 
         var prev = iter.next()!
 
-        func addItem(start: Date, end: Date, enabled: Bool) {
-            out.append(AbsoluteScheduleValue(startDate: start, endDate: end, value: enabled))
+        if prev.startDate > start {
+            let gapEnd = Swift.min(prev.startDate, end)
+            out.append(AbsoluteScheduleValue(startDate: start, endDate: gapEnd, value: !prev.enabled))
         }
 
         while let cur = iter.next() {
@@ -35,13 +36,16 @@ extension Array where Element == AutomationHistoryEntry {
                 continue
             }
             if cur.startDate > start {
-                addItem(start: Swift.max(prev.startDate, start), end: Swift.min(cur.startDate, end), enabled: prev.enabled)
+                let segmentStart = Swift.max(prev.startDate, start)
+                let segmentEnd = Swift.min(cur.startDate, end)
+                out.append(AbsoluteScheduleValue(startDate: segmentStart, endDate: segmentEnd, value: prev.enabled))
             }
             prev = cur
         }
 
         if prev.startDate < end {
-            addItem(start: prev.startDate, end: end, enabled: prev.enabled)
+            let segmentStart = Swift.max(prev.startDate, start)
+            out.append(AbsoluteScheduleValue(startDate: segmentStart, endDate: end, value: prev.enabled))
         }
 
         return out
