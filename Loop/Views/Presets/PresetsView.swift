@@ -157,6 +157,7 @@ struct PresetsView: View {
                             }) {
                                 Image(systemName: "plus")
                             }
+                            .disabled(!trainingCompletion.isComplete)
                         }
                         .padding(.horizontal, 10)
                         
