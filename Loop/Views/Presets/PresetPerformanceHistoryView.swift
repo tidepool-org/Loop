@@ -201,6 +201,7 @@ struct PresetPerformanceHistoryView: View {
                             .init(color: .glucoseVeryLow, fraction: performanceData.timeInRange[.veryLow] ?? 0),
                         ]
                     )
+                    .frame(maxHeight: .infinity)
                     
                     Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 24) {
                         GridRow {
@@ -244,6 +245,7 @@ struct PresetPerformanceHistoryView: View {
                         }
                     }
                 }
+                .frame(minHeight: 240)
                 .frame(maxWidth: .infinity)
                 
                 Divider()
@@ -350,16 +352,27 @@ struct StackedBarView: View {
     let segments: [Segment]
     let cornerRadius: CGFloat = 8
     let width: CGFloat = 40
-    let height: CGFloat = 240
     
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
-                segment.color
-                    .frame(height: height * segment.fraction)
+        GeometryReader { geo in
+            ZStack(alignment: .top) {
+                ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
+                    segment.color
+                        .frame(height: heightFrom(index: index, totalHeight: geo.size.height))
+                        .frame(maxWidth: .infinity)
+                        .offset(y: offsetFor(index: index, totalHeight: geo.size.height))
+                }
             }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
-        .frame(width: width, height: height)
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .frame(width: width)
+    }
+
+    private func offsetFor(index: Int, totalHeight: CGFloat) -> CGFloat {
+        segments[0..<index].reduce(0.0) { $0 + $1.fraction } * totalHeight
+    }
+
+    private func heightFrom(index: Int, totalHeight: CGFloat) -> CGFloat {
+        segments[index...].reduce(0.0) { $0 + $1.fraction } * totalHeight
     }
 }
