@@ -41,11 +41,6 @@ class PresetsPerformanceHistoryViewModel {
     }
 
     func fetchData(from override: TemporaryScheduleOverride, add6Hours: Bool) async throws -> PerformanceData {
-        guard let preset = temporaryPresetsManager.selectablePresets.first(where: { $0.id == override.presetId }) else {
-            fatalError() //  TODO: Fix
-        }
-        
-        let presetName = preset.name
         let overallInsulin = override.settings.effectiveInsulinNeedsScaleFactor
         let correctionRange = override.settings.targetRange
         let startDate = override.startDate
@@ -74,7 +69,6 @@ class PresetsPerformanceHistoryViewModel {
             .percentageTrue(from: startDate, to: calculatedEndDate)
         
         return PerformanceData(
-            presetName: presetName,
             overallInsulin: overallInsulin,
             correctionRange: correctionRange,
             startDate: startDate,
@@ -101,7 +95,6 @@ class PresetsPerformanceHistoryViewModel {
             }
         }
         
-        let presetName: String
         let overallInsulin: Double
         let correctionRange: ClosedRange<LoopQuantity>?
         let startDate: Date
