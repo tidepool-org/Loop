@@ -91,16 +91,17 @@ struct PresetPerformanceHistoryView: View {
                             
                         dateAndSettingsSection(performanceData: data)
                         
-                        if show6hrData {
-                            Picker("", selection: $selectedDateRange) {
-                                ForEach(DateRange.allCases(allowPlus6Hours: true), id: \.self) { option in
-                                    Text(option.localizedTitle)
-                                }
+                        Picker("", selection: $selectedDateRange) {
+                            ForEach(DateRange.allCases(allowPlus6Hours: true), id: \.self) { option in
+                                Text(option.localizedTitle)
                             }
-                            .pickerStyle(SegmentedPickerStyle())
                         }
+                        .pickerStyle(SegmentedPickerStyle())
                         
-                        detailsSection(performanceData: selectedDateRange == .preset ? data : dataPlus6Hours)
+                        detailsSection(
+                            performanceData: selectedDateRange == .preset ? data : dataPlus6Hours,
+                            showNoData: selectedDateRange == .presetPlus6Hours && !show6hrData
+                        )
                     }
                 }
             }
@@ -166,161 +167,182 @@ struct PresetPerformanceHistoryView: View {
         .backgroundStyle(Color(UIColor.systemBackground))
     }
     
-    private func detailsSection(performanceData: PresetsPerformanceHistoryViewModel.PerformanceData) -> some View {
+    private func detailsSection(performanceData: PresetsPerformanceHistoryViewModel.PerformanceData, showNoData: Bool) -> some View {
         GroupBox {
-            VStack(alignment: .leading, spacing: 24) {
-                Text(performanceData.dateRange(overrideEndDate: override.isActive() ? Date() : nil))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
+            if showNoData {
+                Image("performance-history-empty")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 64, height: 64)
+                    .padding(20)
+                    .background(Color(UIColor.systemBackground).clipShape(Circle()))
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Glucose Summary")
-                        .fontWeight(.semibold)
+                VStack(spacing: 4) {
+                    Text("No performance history available yet")
+                        .multilineTextAlignment(.center)
                     
-                    VStack(alignment: .leading, spacing: 4) {
-                        if let startingGlucose = performanceData.startingGlucose {
-                            LabeledContent("Starting Glucose") {
-                                Group { Text(displayGlucosePreference.format(startingGlucose, includeUnit: false)).fontWeight(.semibold).foregroundStyle(.primary) + Text(" ") + Text(displayGlucosePreference.unit.localizedShortUnitString).foregroundStyle(.secondary) }.contentTransition(.numericText())
-                            }
-                        }
-                            
-                        LabeledContent("Average Glucose") {
-                            Group { Text(displayGlucosePreference.format(performanceData.averageGlucose, includeUnit: false)).fontWeight(.semibold).foregroundStyle(.primary) + Text(" ") + Text(displayGlucosePreference.unit.localizedShortUnitString).foregroundStyle(.secondary) }.contentTransition(.numericText())
-                        }
-                    }
+                    Text("You can see this summary 6 hours after the preset ends.")
+                        .multilineTextAlignment(.center)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
                 }
-                
-                HStack(spacing: 24) {
-                    StackedBarView(
-                        segments: [
-                            .init(color: .glucoseVeryHigh, fraction: performanceData.timeInRange[.veryHigh] ?? 0),
-                            .init(color: .glucoseHigh, fraction: performanceData.timeInRange[.high] ?? 0),
-                            .init(color: .glucoseNormal, fraction: performanceData.timeInRange[.normal] ?? 0),
-                            .init(color: .glucoseLow, fraction: performanceData.timeInRange[.low] ?? 0),
-                            .init(color: .glucoseVeryLow, fraction: performanceData.timeInRange[.veryLow] ?? 0),
-                        ]
-                    )
-                    .frame(maxHeight: .infinity)
+            } else {
+                VStack(alignment: .leading, spacing: 24) {
+                    Text(performanceData.dateRange(overrideEndDate: override.isActive() ? Date() : nil))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
                     
-                    Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 24) {
-                        GridRow {
-                            Group { Text(String(format: "%.0f", (performanceData.timeInRange[.veryHigh] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
-                                .foregroundStyle(Color.glucoseVeryHigh)
-                                .contentTransition(.numericText())
-                            
-                            Text("Very High").font(.subheadline) + Text("  ") + Text(">\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 250), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
-                        }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Glucose Summary")
+                            .fontWeight(.semibold)
                         
-                        GridRow {
-                            Group { Text(String(format: "%.0f", (performanceData.timeInRange[.high] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
-                                .foregroundStyle(Color.glucoseHigh)
-                                .contentTransition(.numericText())
-                            
-                            Text("High").font(.subheadline) + Text("  ") + Text("\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 181), includeUnit: false))-\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 250), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
-                        }
-                        
-                        GridRow {
-                            Group { Text(String(format: "%.0f", (performanceData.timeInRange[.normal] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
-                                .foregroundStyle(Color.glucoseNormal)
-                                .contentTransition(.numericText())
-                            
-                            Text("Target").font(.subheadline).fontWeight(.semibold) + Text("  ") + Text("\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 70), includeUnit: false))-\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 180), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
-                        }
-                        
-                        GridRow {
-                            Group { Text(String(format: "%.0f", (performanceData.timeInRange[.low] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
-                                .foregroundStyle(Color.glucoseLow)
-                                .contentTransition(.numericText())
-                            
-                            Text("Low").font(.subheadline) + Text("  ") + Text("\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 54), includeUnit: false))-\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 69), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
-                        }
-                        
-                        GridRow {
-                            Group { Text(String(format: "%.0f", (performanceData.timeInRange[.veryLow] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
-                                .foregroundStyle(Color.glucoseVeryLow)
-                                .contentTransition(.numericText())
-                            
-                            Text("Very Low").font(.subheadline) + Text("  ") + Text("<\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 54), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .frame(minHeight: 240)
-                .frame(maxWidth: .infinity)
-                
-                Divider()
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Overview")
-                        .fontWeight(.semibold)
-
-                    Grid(horizontalSpacing: 16) {
-                        GridRow(alignment: .top) {
-                            if let carbString = carbFormatter.string(from: performanceData.totalCarbs, includeUnit: false) {
-                                VStack(spacing: 8) {
-                                    Image("carbs")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 32, height: 32)
-                                        .foregroundStyle(Color.carbs)
-                                    
-                                    VStack {
-                                        Group {
-                                            Text(carbString).fontWeight(.semibold) + Text(" \(LoopUnit.gram.localizedShortUnitString)").font(.footnote)
-                                        }
-                                        .foregroundStyle(Color.carbs)
-                                        .contentTransition(.numericText())
-                                        
-                                        Text("Total\nCarbs")
-                                            .multilineTextAlignment(.center)
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
-                                            .frame(maxWidth: .infinity)
-                                    }
+                        VStack(alignment: .leading, spacing: 4) {
+                            if let startingGlucose = performanceData.startingGlucose {
+                                LabeledContent("Starting Glucose") {
+                                    Group { Text(displayGlucosePreference.format(startingGlucose, includeUnit: false)).fontWeight(.semibold).foregroundStyle(.primary) + Text(" ") + Text(displayGlucosePreference.unit.localizedShortUnitString).foregroundStyle(.secondary) }.contentTransition(.numericText())
                                 }
                             }
-                            
-                            if let bolusString = insulinFormatter.string(from: performanceData.totalBolus, includeUnit: false) {
-                                VStack(spacing: 8) {
-                                    Image("bolus")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 32, height: 32)
-                                        .foregroundStyle(Color.insulin)
-                                    
-                                    VStack {
-                                        Group {
-                                            Text(bolusString).fontWeight(.semibold) + Text(" \(LoopUnit.internationalUnit.localizedShortUnitString)").font(.footnote)
-                                        }
-                                        .foregroundStyle(Color.insulin)
-                                        .contentTransition(.numericText())
-                                        
-                                        Text("Total\nBolus")
-                                            .multilineTextAlignment(.center)
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
-                                            .frame(maxWidth: .infinity)
-                                    }
-                                }
-                            }
-                            
-                            VStack(spacing: 8) {
-                                Image("automation-on-delivery-log")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 32, height: 32)
                                 
-                                VStack {
-                                    Group {
-                                        Text(String(format: "%.0f", performanceData.timeInAutomation * 100)).fontWeight(.semibold) + Text(" %").font(.footnote)
-                                    }
+                            LabeledContent("Average Glucose") {
+                                Group { Text(displayGlucosePreference.format(performanceData.averageGlucose, includeUnit: false)).fontWeight(.semibold).foregroundStyle(.primary) + Text(" ") + Text(displayGlucosePreference.unit.localizedShortUnitString).foregroundStyle(.secondary) }.contentTransition(.numericText())
+                            }
+                        }
+                    }
+                    
+                    HStack(spacing: 24) {
+                        StackedBarView(
+                            segments: [
+                                .init(color: .glucoseVeryHigh, fraction: performanceData.timeInRange[.veryHigh] ?? 0),
+                                .init(color: .glucoseHigh, fraction: performanceData.timeInRange[.high] ?? 0),
+                                .init(color: .glucoseNormal, fraction: performanceData.timeInRange[.normal] ?? 0),
+                                .init(color: .glucoseLow, fraction: performanceData.timeInRange[.low] ?? 0),
+                                .init(color: .glucoseVeryLow, fraction: performanceData.timeInRange[.veryLow] ?? 0),
+                            ]
+                        )
+                        .frame(maxHeight: .infinity)
+                        .accessibilityHidden(true)
+                        
+                        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 24) {
+                            GridRow {
+                                Group { Text(String(format: "%.0f", (performanceData.timeInRange[.veryHigh] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
+                                    .foregroundStyle(Color.glucoseVeryHigh)
                                     .contentTransition(.numericText())
+                                
+                                Text("Very High").font(.subheadline) + Text("  ") + Text(">\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 250), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
+                            }
+                            
+                            GridRow {
+                                Group { Text(String(format: "%.0f", (performanceData.timeInRange[.high] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
+                                    .foregroundStyle(Color.glucoseHigh)
+                                    .contentTransition(.numericText())
+                                
+                                Text("High").font(.subheadline) + Text("  ") + Text("\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 181), includeUnit: false))-\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 250), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
+                            }
+                            
+                            GridRow {
+                                Group { Text(String(format: "%.0f", (performanceData.timeInRange[.normal] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
+                                    .foregroundStyle(Color.glucoseNormal)
+                                    .contentTransition(.numericText())
+                                
+                                Text("Target").font(.subheadline).fontWeight(.semibold) + Text("  ") + Text("\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 70), includeUnit: false))-\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 180), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
+                            }
+                            
+                            GridRow {
+                                Group { Text(String(format: "%.0f", (performanceData.timeInRange[.low] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
+                                    .foregroundStyle(Color.glucoseLow)
+                                    .contentTransition(.numericText())
+                                
+                                Text("Low").font(.subheadline) + Text("  ") + Text("\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 54), includeUnit: false))-\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 69), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
+                            }
+                            
+                            GridRow {
+                                Group { Text(String(format: "%.0f", (performanceData.timeInRange[.veryLow] ?? 0) * 100)).font(.title2).bold().fontDesign(.monospaced) + Text(" %").font(.footnote) }
+                                    .foregroundStyle(Color.glucoseVeryLow)
+                                    .contentTransition(.numericText())
+                                
+                                Text("Very Low").font(.subheadline) + Text("  ") + Text("<\(displayGlucosePreference.format(LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 54), includeUnit: true))").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .frame(minHeight: 240)
+                    .frame(maxWidth: .infinity)
+                    
+                    Divider()
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Overview")
+                            .fontWeight(.semibold)
+                        
+                        Grid(horizontalSpacing: 16) {
+                            GridRow(alignment: .top) {
+                                if let carbString = carbFormatter.string(from: performanceData.totalCarbs, includeUnit: false) {
+                                    VStack(spacing: 8) {
+                                        Image("carbs")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 32, height: 32)
+                                            .foregroundStyle(Color.carbs)
+                                        
+                                        VStack {
+                                            Group {
+                                                Text(carbString).fontWeight(.semibold) + Text(" \(LoopUnit.gram.localizedShortUnitString)").font(.footnote)
+                                            }
+                                            .foregroundStyle(Color.carbs)
+                                            .contentTransition(.numericText())
+                                            
+                                            Text("Total\nCarbs")
+                                                .multilineTextAlignment(.center)
+                                                .font(.subheadline)
+                                                .foregroundStyle(.secondary)
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                    }
+                                }
+                                
+                                if let bolusString = insulinFormatter.string(from: performanceData.totalBolus, includeUnit: false) {
+                                    VStack(spacing: 8) {
+                                        Image("bolus")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 32, height: 32)
+                                            .foregroundStyle(Color.insulin)
+                                        
+                                        VStack {
+                                            Group {
+                                                Text(bolusString).fontWeight(.semibold) + Text(" \(LoopUnit.internationalUnit.localizedShortUnitString)").font(.footnote)
+                                            }
+                                            .foregroundStyle(Color.insulin)
+                                            .contentTransition(.numericText())
+                                            
+                                            Text("Total\nBolus")
+                                                .multilineTextAlignment(.center)
+                                                .font(.subheadline)
+                                                .foregroundStyle(.secondary)
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                    }
+                                }
+                                
+                                VStack(spacing: 8) {
+                                    Image("automation-on-delivery-log")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 32, height: 32)
                                     
-                                    Text("Time in\nAutomation")
-                                        .multilineTextAlignment(.center)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                        .frame(maxWidth: .infinity)
+                                    VStack {
+                                        Group {
+                                            Text(String(format: "%.0f", performanceData.timeInAutomation * 100)).fontWeight(.semibold) + Text(" %").font(.footnote)
+                                        }
+                                        .contentTransition(.numericText())
+                                        
+                                        Text("Time in\nAutomation")
+                                            .multilineTextAlignment(.center)
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                            .frame(maxWidth: .infinity)
+                                    }
                                 }
                             }
                         }
