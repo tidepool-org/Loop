@@ -157,7 +157,7 @@ struct PresetsView: View {
                             }) {
                                 Image(systemName: "plus")
                             }
-                            .disabled(!trainingCompletion.isComplete)
+                            .foregroundStyle(trainingCompletion.isComplete ? Color.accentColor : Color.secondary)
                         }
                         .padding(.horizontal, 10)
                         
