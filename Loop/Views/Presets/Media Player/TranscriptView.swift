@@ -15,7 +15,7 @@ struct TranscriptView: View {
     let onExcerptTap: (TranscriptExcerpt) -> Void
     let onExcerptChanged: (TranscriptExcerpt) -> Void
     
-    var currentTranscriptExcerpt: TranscriptExcerpt {
+    private var currentTranscriptExcerpt: TranscriptExcerpt {
         transcript.currentExcerpt(at: currentTime)
     }
     
@@ -38,7 +38,7 @@ struct TranscriptView: View {
         }
     }
     
-    func excerptText(excerpt: TranscriptExcerpt) -> AttributedText {
+    private func excerptText(excerpt: TranscriptExcerpt) -> AttributedText {
         AttributedText(excerpt.text) { attributedText in
             attributedText.foregroundColor = (currentTranscriptExcerpt == excerpt && currentTime != 0) ? .accentColor : .primary
         } onTap: {

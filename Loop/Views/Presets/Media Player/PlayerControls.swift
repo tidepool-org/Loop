@@ -11,19 +11,19 @@ import SwiftUI
 
 struct PlayerControls: View {
     
-    @Namespace var animation
+    @Namespace private var animation
 
     @State private var totalTime: TimeInterval
     @State private var playbackSpeed: Double
     
-    @Binding var height: Double
-    @Binding var mini: Bool
-    @Binding var isPaused: Bool
-    @Binding var currentTime: TimeInterval
-    @Binding var captionsEnabled: Bool
+    @Binding private var height: Double
+    @Binding private var mini: Bool
+    @Binding private var isPaused: Bool
+    @Binding private var currentTime: TimeInterval
+    @Binding private var captionsEnabled: Bool
     
-    let media: MediaContent
-    let player: AVAudioPlayer
+    private let media: MediaContent
+    private let player: AVAudioPlayer
     
     init(
         player: AVAudioPlayer,
@@ -46,23 +46,9 @@ struct PlayerControls: View {
         self._captionsEnabled = captionsEnabled
         self.media = media
     }
-        
-    var timeRemaining: TimeInterval {
-        totalTime - currentTime
-    }
-    
-    var progress: Double {
-        guard totalTime > 0 else {
-            return 1.0
-        }
-        
-        let percentage = currentTime / totalTime
-        
-        return min(max(percentage, 0.0), 1.0)
-    }
     
     @ViewBuilder
-    func playbackSpeedLabel(_ speed: Double) -> some View {
+    private func playbackSpeedLabel(_ speed: Double) -> some View {
         ZStack(alignment: .leading) {
             // Added so the menu button takes the width of the largest option so the parent HStack doesn't shift the other elements.
             Group { Text("0.5") + Text(Image(systemName: "xmark")).font(.caption2) }.opacity(0)
@@ -77,7 +63,7 @@ struct PlayerControls: View {
     }
     
     @ViewBuilder
-    func playbackSpeedText(_ speed: Double) -> some View {
+    private func playbackSpeedText(_ speed: Double) -> some View {
         switch speed {
         case 0.5: Text("0.5x")
         case 1: Text("1x")
@@ -86,7 +72,7 @@ struct PlayerControls: View {
         }
     }
     
-    func playbackSpeedMenuOptions() -> [Double] {
+    private func playbackSpeedMenuOptions() -> [Double] {
         if playbackSpeed == 1 {
             return [2, 0.5]
         } else if playbackSpeed == 0.5 {
@@ -97,7 +83,7 @@ struct PlayerControls: View {
     }
     
     @ViewBuilder
-    var fullMetadata: some View {
+    private var fullMetadata: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(media.metadata.title)
                 .multilineTextAlignment(.leading)
@@ -115,7 +101,7 @@ struct PlayerControls: View {
     }
     
     @ViewBuilder
-    var miniMetadata: some View {
+    private var miniMetadata: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(media.metadata.title)
                 .multilineTextAlignment(.leading)
@@ -132,57 +118,12 @@ struct PlayerControls: View {
         .foregroundStyle(.white)
     }
     
-    @ViewBuilder
-    var fullTimeline: some View {
-        VStack(spacing: 2) {
-            Slider(
-                value: Binding(
-                    get: {
-                        progress
-                    },
-                    set: { newValue, _ in
-                        player.currentTime = min(max(newValue, 0.0), 1.0) * totalTime
-                    }
-                ),
-                in: 0...1
-            )
-                .onAppear {
-                    let size = CGSize(width: 12, height: 12)
-                    let image = UIGraphicsImageRenderer(size: size).image { _ in
-                        UIImage(systemName: "circle.fill")?.draw(in: CGRect(origin: .zero, size: size))
-                    }.withRenderingMode(.alwaysTemplate)
-                    
-                    UISlider.appearance().setThumbImage(image, for: .normal)
-                }
-                .matchedGeometryEffect(id: "timeline", in: animation)
-            HStack {
-                Text(formatTime(currentTime))
-                
-                Spacer()
-                
-                Text("-") + Text(formatTime(timeRemaining))
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-    }
+    @ScaledMetric private var skipIconSize: Double = 24
+    @ScaledMetric private var largePlayPauseIconSize: Double = 48
+    @ScaledMetric private var miniPlayPauseIconSize: Double = 27
     
     @ViewBuilder
-    var miniTimeline: some View {
-        Color.black.opacity(0.3)
-            .frame(height: 4)
-            .containerRelativeFrame(.horizontal) { size, axis in
-                size * progress
-            }
-            .matchedGeometryEffect(id: "timeline", in: animation)
-    }
-    
-    @ScaledMetric var skipIconSize: Double = 24
-    @ScaledMetric var largePlayPauseIconSize: Double = 48
-    @ScaledMetric var miniPlayPauseIconSize: Double = 27
-    
-    @ViewBuilder
-    var fullControls: some View {
+    private var fullControls: some View {
         HStack {
             Menu {
                 ForEach(playbackSpeedMenuOptions(), id: \.self) { speed in
@@ -240,7 +181,7 @@ struct PlayerControls: View {
     }
     
     @ViewBuilder
-    var miniControls: some View {
+    private var miniControls: some View {
         Button {
             isPaused.toggle()
         } label: {
@@ -265,7 +206,12 @@ struct PlayerControls: View {
                     }
                     .padding(.horizontal, 20)
                     
-                    miniTimeline
+                    TimelineView(
+                        mini: true,
+                        totalTime: $totalTime,
+                        currentTime: $currentTime,
+                        player: player
+                    )
                 }
                 .padding(.top, 24)
             } else {
@@ -273,8 +219,12 @@ struct PlayerControls: View {
                     fullMetadata
                         .padding(.bottom, 16)
                     
-                    fullTimeline
-                        .padding(.bottom, 4)
+                    TimelineView(
+                        totalTime: $totalTime,
+                        currentTime: $currentTime,
+                        player: player
+                    )
+                    .padding(.bottom, 4)
                     
                     fullControls
                 }
@@ -315,11 +265,83 @@ struct PlayerControls: View {
             player.rate = Float(newValue)
         }
         .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
-            currentTime = player.currentTime
-            
             if player.isPlaying == false {
                 isPaused = true
             }
+        }
+    }
+}
+
+private struct TimelineView: View {
+    
+    @Namespace private var animation
+    
+    @State var mini: Bool = false
+    
+    @Binding var totalTime: TimeInterval
+    @Binding var currentTime: TimeInterval
+    
+    let player: AVAudioPlayer
+    
+    private var progress: Double {
+        guard totalTime > 0 else {
+            return 1.0
+        }
+        
+        let percentage = currentTime / totalTime
+        
+        return min(max(percentage, 0.0), 1.0)
+    }
+    
+    private var timeRemaining: TimeInterval {
+        totalTime - currentTime
+    }
+    
+    var body: some View {
+        Group {
+            if mini {
+                Color.black.opacity(0.3)
+                    .frame(height: 4)
+                    .containerRelativeFrame(.horizontal) { size, axis in
+                        size * progress
+                    }
+                    .matchedGeometryEffect(id: "timeline", in: animation)
+            } else {
+                VStack(spacing: 2) {
+                    Slider(
+                        value: Binding(
+                            get: {
+                                progress
+                            },
+                            set: { newValue, _ in
+                                player.currentTime = min(max(newValue, 0.0), 1.0) * totalTime
+                            }
+                        ),
+                        in: 0...1
+                    )
+                    .onAppear {
+                        let size = CGSize(width: 12, height: 12)
+                        let image = UIGraphicsImageRenderer(size: size).image { _ in
+                            UIImage(systemName: "circle.fill")?.draw(in: CGRect(origin: .zero, size: size))
+                        }.withRenderingMode(.alwaysTemplate)
+                        
+                        UISlider.appearance().setThumbImage(image, for: .normal)
+                    }
+                    .matchedGeometryEffect(id: "timeline", in: animation)
+                    HStack {
+                        Text(formatTime(currentTime))
+                        
+                        Spacer()
+                        
+                        Text("-") + Text(formatTime(timeRemaining))
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
+            currentTime = player.currentTime
         }
     }
     

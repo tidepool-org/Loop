@@ -23,7 +23,7 @@ struct PlayMediaButton: View {
         return formatter
     }()
     
-    var image: Image {
+    private var image: Image {
         Image(mediaContent.staticImage.name, bundle: mediaContent.staticImage.bundle)
     }
     

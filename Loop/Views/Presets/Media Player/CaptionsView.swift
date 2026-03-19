@@ -14,7 +14,7 @@ struct CaptionsView: View {
     
     let captions: ClosedCaptions
     
-    var currentCaptionFragment: ClosedCaptionFragment? {
+    private var currentCaptionFragment: ClosedCaptionFragment? {
         captions.currentFragment(at: currentTime)
     }
     

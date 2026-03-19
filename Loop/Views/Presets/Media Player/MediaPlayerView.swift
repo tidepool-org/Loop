@@ -11,21 +11,18 @@ import SwiftUI
 
 struct MediaPlayerView: View {
     
-    @Environment(\.accessibilityReduceMotion) var reduceMotion
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
     
-    @State var player: AVAudioPlayer
+    private let media: MediaContent
     
-    let media: MediaContent
-    
+    @State private var player: AVAudioPlayer
     @State private var minHeight: Double
     @State private var sheetHeight: Double
     @State private var miniPlayer: Bool
-
-    @State var captionsEnabled: Bool
-    
-    @State var isPaused: Bool
-    @State var currentTime: TimeInterval
+    @State private var captionsEnabled: Bool
+    @State private var isPaused: Bool
+    @State private var currentTime: TimeInterval
     
     init(
         media: MediaContent,
@@ -44,7 +41,7 @@ struct MediaPlayerView: View {
         self.currentTime = 0
     }
     
-    var dragGesture: some Gesture {
+    private var dragGesture: some Gesture {
         DragGesture(coordinateSpace: .global)
             .onChanged { value in
                 withAnimation(.default.speed(10)) {
@@ -132,18 +129,18 @@ struct SheetView: View {
     
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     
-    @Binding var minHeight: Double
-    @Binding var sheetHeight: Double
-    @Binding var miniPlayer: Bool
-    @Binding var isPaused: Bool
-    @Binding var currentTime: TimeInterval
-    @Binding var captionsEnabled: Bool
+    @Binding private var minHeight: Double
+    @Binding private var sheetHeight: Double
+    @Binding private var miniPlayer: Bool
+    @Binding private var isPaused: Bool
+    @Binding private var currentTime: TimeInterval
+    @Binding private var captionsEnabled: Bool
     
-    @State var scrollPosition: TranscriptExcerpt?
+    @State private var scrollPosition: TranscriptExcerpt?
     
-    let media: MediaContent
-    let player: AVAudioPlayer
-    let topSafeAreaInset: Double
+    private let media: MediaContent
+    private let player: AVAudioPlayer
+    private let topSafeAreaInset: Double
     
     init(
         minHeight: Binding<Double>,

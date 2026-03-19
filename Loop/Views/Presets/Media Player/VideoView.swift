@@ -26,9 +26,9 @@ struct _VideoPlayer : UIViewControllerRepresentable {
     
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     
-    let player: AVPlayer
+    private let player: AVPlayer
     
-    @Binding var isPaused: Bool
+    @Binding private var isPaused: Bool
     
     init(media: MediaContent, isPaused: Binding<Bool>) {
         self.player = AVPlayer(url: media.animation)
@@ -80,7 +80,7 @@ struct _VideoPlayer : UIViewControllerRepresentable {
         }
         
         @objc
-        func playerItemDidReachEnd(notification: Notification) {
+        private func playerItemDidReachEnd(notification: Notification) {
             if let playerItem: AVPlayerItem = notification.object as? AVPlayerItem {
                 playerItem.seek(to: .zero) { _ in }
                 
