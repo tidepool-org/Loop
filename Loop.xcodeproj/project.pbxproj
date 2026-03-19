@@ -251,13 +251,6 @@
 		84D1F1A72D09053A00CB271F /* StatusTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D1F1A62D09053A00CB271F /* StatusTableView.swift */; };
 		84D1F1A92D09800700CB271F /* PresetDetentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D1F1A82D09800700CB271F /* PresetDetentView.swift */; };
 		84DEB10D2C18FABA00170734 /* IOSFocusModesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DEB10C2C18FABA00170734 /* IOSFocusModesView.swift */; };
-		84DF48A72F6A0A9300BEDB40 /* ClosedCaptionFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48A62F6A0A9300BEDB40 /* ClosedCaptionFragment.swift */; };
-		84DF48A92F6A0A9800BEDB40 /* ClosedCaptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48A82F6A0A9800BEDB40 /* ClosedCaptions.swift */; };
-		84DF48AB2F6A0A9C00BEDB40 /* MediaContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48AA2F6A0A9C00BEDB40 /* MediaContent.swift */; };
-		84DF48AD2F6A0A9F00BEDB40 /* Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48AC2F6A0A9F00BEDB40 /* Metadata.swift */; };
-		84DF48AF2F6A0AA100BEDB40 /* Transcript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48AE2F6A0AA100BEDB40 /* Transcript.swift */; };
-		84DF48B12F6A0AA400BEDB40 /* TranscriptExcerpt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48B02F6A0AA400BEDB40 /* TranscriptExcerpt.swift */; };
-		84DF48B32F6A0AA700BEDB40 /* TranscriptParagraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48B22F6A0AA700BEDB40 /* TranscriptParagraph.swift */; };
 		84DF48B52F6A0AD400BEDB40 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48B42F6A0AD400BEDB40 /* AudioPlayer.swift */; };
 		84DF48B72F6A0AD700BEDB40 /* CaptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48B62F6A0AD700BEDB40 /* CaptionsView.swift */; };
 		84DF48B92F6A0ADB00BEDB40 /* MediaPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48B82F6A0ADB00BEDB40 /* MediaPlayerView.swift */; };
@@ -266,7 +259,6 @@
 		84DF48BF2F6A0AE500BEDB40 /* VideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48BE2F6A0AE500BEDB40 /* VideoView.swift */; };
 		84DF48C12F6A0AED00BEDB40 /* Double+Closest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48C02F6A0AED00BEDB40 /* Double+Closest.swift */; };
 		84DF48C32F6A0AF600BEDB40 /* Image+Crop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48C22F6A0AF600BEDB40 /* Image+Crop.swift */; };
-		84DF48C52F6A0AFE00BEDB40 /* TimeInterval+Timecode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48C42F6A0AFE00BEDB40 /* TimeInterval+Timecode.swift */; };
 		84E8BBCA2CCA16290078E6CF /* PresetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC92CCA16290078E6CF /* PresetsView.swift */; };
 		84EC162E2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 84EC162D2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan */; };
 		84F20DFD2D0B9C3A0089DF02 /* EditPresetDurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F20DFC2D0B9C3A0089DF02 /* EditPresetDurationView.swift */; };
@@ -1152,13 +1144,6 @@
 		84D1F1A62D09053A00CB271F /* StatusTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTableView.swift; sourceTree = "<group>"; };
 		84D1F1A82D09800700CB271F /* PresetDetentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetDetentView.swift; sourceTree = "<group>"; };
 		84DEB10C2C18FABA00170734 /* IOSFocusModesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSFocusModesView.swift; sourceTree = "<group>"; };
-		84DF48A62F6A0A9300BEDB40 /* ClosedCaptionFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedCaptionFragment.swift; sourceTree = "<group>"; };
-		84DF48A82F6A0A9800BEDB40 /* ClosedCaptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedCaptions.swift; sourceTree = "<group>"; };
-		84DF48AA2F6A0A9C00BEDB40 /* MediaContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaContent.swift; sourceTree = "<group>"; };
-		84DF48AC2F6A0A9F00BEDB40 /* Metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metadata.swift; sourceTree = "<group>"; };
-		84DF48AE2F6A0AA100BEDB40 /* Transcript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transcript.swift; sourceTree = "<group>"; };
-		84DF48B02F6A0AA400BEDB40 /* TranscriptExcerpt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptExcerpt.swift; sourceTree = "<group>"; };
-		84DF48B22F6A0AA700BEDB40 /* TranscriptParagraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptParagraph.swift; sourceTree = "<group>"; };
 		84DF48B42F6A0AD400BEDB40 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		84DF48B62F6A0AD700BEDB40 /* CaptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptionsView.swift; sourceTree = "<group>"; };
 		84DF48B82F6A0ADB00BEDB40 /* MediaPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerView.swift; sourceTree = "<group>"; };
@@ -1167,7 +1152,6 @@
 		84DF48BE2F6A0AE500BEDB40 /* VideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoView.swift; sourceTree = "<group>"; };
 		84DF48C02F6A0AED00BEDB40 /* Double+Closest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+Closest.swift"; sourceTree = "<group>"; };
 		84DF48C22F6A0AF600BEDB40 /* Image+Crop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Image+Crop.swift"; sourceTree = "<group>"; };
-		84DF48C42F6A0AFE00BEDB40 /* TimeInterval+Timecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimeInterval+Timecode.swift"; sourceTree = "<group>"; };
 		84E8BBC92CCA16290078E6CF /* PresetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsView.swift; sourceTree = "<group>"; };
 		84EC162D2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = DIYLoopUnitTestPlan.xctestplan; sourceTree = "<group>"; };
 		84F20DFC2D0B9C3A0089DF02 /* EditPresetDurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPresetDurationView.swift; sourceTree = "<group>"; };
@@ -2131,7 +2115,6 @@
 		43E344A01B9E144300C85C07 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
-				84DF48C42F6A0AFE00BEDB40 /* TimeInterval+Timecode.swift */,
 				84DF48C22F6A0AF600BEDB40 /* Image+Crop.swift */,
 				84DF48C02F6A0AED00BEDB40 /* Double+Closest.swift */,
 				C120CECB2D8CD6970050944B /* Publisher.swift */,
@@ -2466,7 +2449,6 @@
 				842E409A2F22F7E2000CCCE0 /* PresetsTrainingCard.swift */,
 				842E409B2F22F7E2000CCCE0 /* CommonUseStep.swift */,
 				842E409D2F22F7E2000CCCE0 /* TherapySettingsExampleView.swift */,
-				842E409E2F22F7E2000CCCE0 /* PlayMediaButton.swift */,
 				842E409F2F22F7E2000CCCE0 /* IntensitySlider.swift */,
 				842E40A02F22F7E2000CCCE0 /* TintedContent.swift */,
 			);
@@ -2543,23 +2525,9 @@
 				84DF48B82F6A0ADB00BEDB40 /* MediaPlayerView.swift */,
 				84DF48B62F6A0AD700BEDB40 /* CaptionsView.swift */,
 				84DF48B42F6A0AD400BEDB40 /* AudioPlayer.swift */,
-				84DF48A52F6A0A8F00BEDB40 /* Models */,
+				842E409E2F22F7E2000CCCE0 /* PlayMediaButton.swift */,
 			);
 			path = "Media Player";
-			sourceTree = "<group>";
-		};
-		84DF48A52F6A0A8F00BEDB40 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				84DF48B22F6A0AA700BEDB40 /* TranscriptParagraph.swift */,
-				84DF48B02F6A0AA400BEDB40 /* TranscriptExcerpt.swift */,
-				84DF48AE2F6A0AA100BEDB40 /* Transcript.swift */,
-				84DF48AC2F6A0A9F00BEDB40 /* Metadata.swift */,
-				84DF48AA2F6A0A9C00BEDB40 /* MediaContent.swift */,
-				84DF48A82F6A0A9800BEDB40 /* ClosedCaptions.swift */,
-				84DF48A62F6A0A9300BEDB40 /* ClosedCaptionFragment.swift */,
-			);
-			path = Models;
 			sourceTree = "<group>";
 		};
 		84E8BBAF2CC979300078E6CF /* Presets */ = {
@@ -3584,7 +3552,6 @@
 				1DA649A9244126DA00F61E75 /* InAppModalAlertScheduler.swift in Sources */,
 				43B260491ED248FB008CAA77 /* CarbEntryTableViewCell.swift in Sources */,
 				142CB75B2A60BFC30075748A /* FavoriteFoodsView.swift in Sources */,
-				84DF48C52F6A0AFE00BEDB40 /* TimeInterval+Timecode.swift in Sources */,
 				A9D5C5B625DC6C6A00534873 /* LoopAppManager.swift in Sources */,
 				4302F4E11D4E9C8900F0FCAF /* TextFieldTableViewController.swift in Sources */,
 				C16F51192B891DB600EFD7A1 /* StoredDataAlgorithmInput.swift in Sources */,
@@ -3654,12 +3621,10 @@
 				842E40B22F22F7E2000CCCE0 /* TherapySettingsExampleView.swift in Sources */,
 				A9CBE458248AB564008E7BA2 /* DoseStore+SimulatedCoreData.swift in Sources */,
 				897A5A9924C22DE800C4E71D /* BolusEntryViewModel.swift in Sources */,
-				84DF48B12F6A0AA400BEDB40 /* TranscriptExcerpt.swift in Sources */,
 				4374B5EF209D84BF00D17AA8 /* OSLog.swift in Sources */,
 				1DB619AC270BAD3D006C9D07 /* VersionUpdateViewModel.swift in Sources */,
 				A9C62D882331703100535612 /* Service.swift in Sources */,
 				89CAB36324C8FE96009EE3CE /* PredictedGlucoseChartView.swift in Sources */,
-				84DF48AF2F6A0AA100BEDB40 /* Transcript.swift in Sources */,
 				DDC389F82A2B620B0066E2E8 /* GlucoseBasedApplicationFactorStrategy.swift in Sources */,
 				847F23432E4543140035C864 /* ActivePresetBanner.swift in Sources */,
 				84BC5BDF2E1C4A7300432000 /* InsulinDeliveryEventDetailsView.swift in Sources */,
@@ -3682,7 +3647,6 @@
 				1D82E6A025377C6B009131FB /* TrustedTimeChecker.swift in Sources */,
 				A98556852493F901000FD662 /* AlertStore+SimulatedCoreData.swift in Sources */,
 				899433B823FE129800FA4BEA /* OverrideBadgeView.swift in Sources */,
-				84DF48AD2F6A0A9F00BEDB40 /* Metadata.swift in Sources */,
 				89D1503E24B506EB00EDE253 /* Dictionary.swift in Sources */,
 				C110888D2A3913C600BA4898 /* BuildDetails.swift in Sources */,
 				A96DAC2C2838F31200D94E38 /* SharedLogging.swift in Sources */,
@@ -3718,7 +3682,6 @@
 				437D9BA31D7BC977007245E8 /* PredictionTableViewController.swift in Sources */,
 				A987CD4924A58A0100439ADC /* ZipArchive.swift in Sources */,
 				43F41C371D3BF32400C11ED6 /* UIAlertController.swift in Sources */,
-				84DF48A92F6A0A9800BEDB40 /* ClosedCaptions.swift in Sources */,
 				A9CBE45C248ACC03008E7BA2 /* SettingsStore+SimulatedCoreData.swift in Sources */,
 				433EA4C41D9F71C800CD78FB /* CommandResponseViewController.swift in Sources */,
 				E9B3552229358C440076AB04 /* MealDetectionManager.swift in Sources */,
@@ -3747,7 +3710,6 @@
 				A9FB75F1252BE320004C7D3F /* BolusDosingDecision.swift in Sources */,
 				892A5D59222F0A27008961AB /* Debug.swift in Sources */,
 				431A8C401EC6E8AB00823B9C /* CircleMaskView.swift in Sources */,
-				84DF48AB2F6A0A9C00BEDB40 /* MediaContent.swift in Sources */,
 				1D05219D2469F1F5000EBBDE /* AlertStore.swift in Sources */,
 				14C9706A2C5A833100E8A01B /* CarbEffectChartView.swift in Sources */,
 				439897371CD2F80600223065 /* AnalyticsServicesManager.swift in Sources */,
@@ -3757,10 +3719,8 @@
 				A9C62D842331700E00535612 /* DiagnosticLog+Subsystem.swift in Sources */,
 				C1EF747228D6A44A00C8C083 /* CrashRecoveryManager.swift in Sources */,
 				A9F66FC3247F451500096EA7 /* UIDevice+Loop.swift in Sources */,
-				84DF48B32F6A0AA700BEDB40 /* TranscriptParagraph.swift in Sources */,
 				84DF48BB2F6A0ADD00BEDB40 /* PlayerControls.swift in Sources */,
 				84E8BBCA2CCA16290078E6CF /* PresetsView.swift in Sources */,
-				84DF48A72F6A0A9300BEDB40 /* ClosedCaptionFragment.swift in Sources */,
 				439706E622D2E84900C81566 /* PredictionSettingTableViewCell.swift in Sources */,
 				430D85891F44037000AF2D4F /* HUDViewTableViewCell.swift in Sources */,
 				43A51E211EB6DBDD000736CC /* LoopChartsTableViewController.swift in Sources */,

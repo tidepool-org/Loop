@@ -6,13 +6,15 @@
 //  Copyright © 2025 LoopKit Authors. All rights reserved.
 //
 
+import LoopKit
 import SwiftUI
 
 struct PlayMediaButton: View {
 
-    let image: Image
-    let title: Text
-    let duration: TimeInterval
+    let mediaContent: MediaContent
+    var onPlay: (MediaContent) -> Void = { _ in }
+    
+    @State private var duration: TimeInterval = 0
     
     private let formatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
@@ -20,6 +22,10 @@ struct PlayMediaButton: View {
         formatter.unitsStyle = .abbreviated
         return formatter
     }()
+    
+    var image: Image {
+        Image(mediaContent.staticImage.name, bundle: mediaContent.staticImage.bundle)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -37,7 +43,7 @@ struct PlayMediaButton: View {
                         .frame(width: 64, height: 64)
                 }
             
-            title
+            Text(mediaContent.metadata.title)
                 .font(.headline.weight(.semibold))
                 .frame(maxWidth: .infinity, alignment: .leading)
             
@@ -59,5 +65,11 @@ struct PlayMediaButton: View {
         .background(Color(UIColor.systemBackground))
         .cornerRadius(10)
         .shadow(color: .primary.opacity(0.2), radius: 3, x: 0, y: 0)
+        .task {
+            self.duration = (try? await mediaContent.duration) ?? 0
+        }
+        .onTapGesture {
+            onPlay(mediaContent)
+        }
     }
 }

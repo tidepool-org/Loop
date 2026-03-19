@@ -6,6 +6,7 @@
 //
 
 import AVKit
+import LoopKit
 import SwiftUI
 
 struct AudioPlayerView: View {
@@ -86,8 +87,4 @@ struct AudioPlayerView: View {
         guard let player = player, player.isPlaying else { return }
         currentTime = player.currentTime
     }
-}
-
-#Preview {
-    AudioPlayerView(fileName: MediaContent.mixedExercise.metadata.title, url: MediaContent.mixedExercise.audio)
 }

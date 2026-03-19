@@ -6,6 +6,7 @@
 //
 
 import AVKit
+import LoopKit
 import SwiftUI
 
 struct MediaPlayerView: View {
@@ -13,7 +14,8 @@ struct MediaPlayerView: View {
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     @Environment(\.dismiss) var dismiss
     
-    let player: AVAudioPlayer
+    @State var player: AVAudioPlayer
+    
     let media: MediaContent
     
     @State private var minHeight: Double
@@ -201,8 +203,4 @@ struct SheetView: View {
         }
         .persistentSystemOverlays(.hidden)
     }
-}
-
-#Preview {
-    MediaPlayerView(media: .activitiesOfDailyLiving)
 }

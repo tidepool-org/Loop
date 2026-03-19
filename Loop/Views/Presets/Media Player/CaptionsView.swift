@@ -5,6 +5,7 @@
 //  Created by Cameron Ingham on 3/21/25.
 //
 
+import LoopKit
 import SwiftUI
 
 struct CaptionsView: View {

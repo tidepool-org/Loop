@@ -6,6 +6,7 @@
 //
 
 import AVKit
+import LoopKit
 import SwiftUI
 
 struct PlayerControls: View {
@@ -327,18 +328,4 @@ struct PlayerControls: View {
         let minutes = Int(time) / 60
         return String(format: "%02d:%02d", minutes, seconds)
     }
-}
-
-#Preview {
-    @Previewable @State var mini = false
-    @Previewable @State var progress = 0.0
-    @Previewable @State var captionsEnabled = false
-    @Previewable @State var currentTime: TimeInterval = 0
-    
-    PlayerControls(player: AVAudioPlayer(), height: .constant(0), mini: $mini, isPaused: .constant(true), currentTime: $currentTime, captionsEnabled: $captionsEnabled, media: .mixedExercise)
-        .onTapGesture {
-            withAnimation {
-                mini.toggle()
-            }
-        }
 }

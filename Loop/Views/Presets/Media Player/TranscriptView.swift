@@ -5,6 +5,7 @@
 //  Created by Cameron Ingham on 7/16/25.
 //
 
+import LoopKit
 import SwiftUI
 
 struct TranscriptView: View {
@@ -39,7 +40,7 @@ struct TranscriptView: View {
     
     func excerptText(excerpt: TranscriptExcerpt) -> AttributedText {
         AttributedText(excerpt.text) { attributedText in
-            attributedText.foregroundColor = (currentTranscriptExcerpt == excerpt && currentTime != 0) ? .accent : .primary
+            attributedText.foregroundColor = (currentTranscriptExcerpt == excerpt && currentTime != 0) ? .accentColor : .primary
         } onTap: {
             onExcerptTap(excerpt)
         }

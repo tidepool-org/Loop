@@ -147,6 +147,7 @@ struct SettingsView: View {
                                 carbStore: carbStore,
                                 doseStore: doseStore,
                                 glucoseStore: glucoseStore,
+                                trainingContent: viewModel.availableSupports.flatMap({ $0.trainingMedia(for: .presets) }),
                                 automationHistory: { viewModel.delegate?.automationHistory ?? [] }
                             )
                         }

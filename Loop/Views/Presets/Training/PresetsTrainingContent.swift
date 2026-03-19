@@ -22,14 +22,14 @@ extension PresetsTraining {
 
 protocol PresetsTrainingContent {
     associatedtype B: View
-    func content(appName: String, displayGlucosePreference: DisplayGlucosePreference, colorPalette: LoopUIColorPalette, dynamicTypeSize: DynamicTypeSize, next: @escaping () -> Void) -> B
+    func content(appName: String, displayGlucosePreference: DisplayGlucosePreference, colorPalette: LoopUIColorPalette, dynamicTypeSize: DynamicTypeSize, trainingContent: [MediaContent], next: @escaping () -> Void, onPlayMedia: @escaping (MediaContent) -> Void) -> B
     var cta: PresetsTraining.CTA? { get }
 }
 
 extension PresetsTraining.Step: PresetsTrainingContent {
     
     @ViewBuilder
-    func content(appName: String, displayGlucosePreference: DisplayGlucosePreference, colorPalette: LoopUIColorPalette, dynamicTypeSize: DynamicTypeSize, next: @escaping () -> Void) -> some View {
+    func content(appName: String, displayGlucosePreference: DisplayGlucosePreference, colorPalette: LoopUIColorPalette, dynamicTypeSize: DynamicTypeSize, trainingContent: [MediaContent], next: @escaping () -> Void, onPlayMedia: @escaping (MediaContent) -> Void) -> some View {
         switch self {
         case .customizingPresets(let customizingPresets):
             switch customizingPresets {
@@ -282,21 +282,19 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                 
                 Text("Next, we’ll look at settings you can change and how they affect Omar’s insulin.")
                 
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Learn More")
-                        .font(.headline.weight(.semibold))
-                    
-                    PlayMediaButton(
-                        image: Image("ADLs"),
-                        title: Text("Managing Activities of Daily Living"),
-                        duration: .minutes(5) + .seconds(36)
+                if let adls = trainingContent.first(where: { $0.fileName == "ADLs" }) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Learn More")
+                            .font(.headline.weight(.semibold))
+                        
+                        PlayMediaButton(mediaContent: adls, onPlay: onPlayMedia)
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(colorPalette.chartColorPalette.presetTint).opacity(0.1))
                     )
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(colorPalette.chartColorPalette.presetTint).opacity(0.1))
-                )
                 
             case .overallInsulin:
                 Text("Omar asks himself, **do I expect I will need more or less insulin than usual?**")
@@ -403,21 +401,19 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                 
                 IntensityInfo()
                 
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Learn More")
-                        .font(.headline.weight(.semibold))
-                    
-                    PlayMediaButton(
-                        image: Image("Same Activity Different Intensity"),
-                        title: Text("Same Activity, Different Intensity"),
-                        duration: .minutes(6) + .seconds(34)
+                if let sameActivityDifferentIntensity = trainingContent.first(where: { $0.fileName == "Same Activity Different Intensity" }) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Learn More")
+                            .font(.headline.weight(.semibold))
+                        
+                        PlayMediaButton(mediaContent: sameActivityDifferentIntensity, onPlay: onPlayMedia)
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(colorPalette.chartColorPalette.presetTint).opacity(0.1))
                     )
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(colorPalette.chartColorPalette.presetTint).opacity(0.1))
-                )
                 
             case .lightToModerateExercise:
                 if let image = Image.optional("PresetsTrainingExerciseLightToModerateHero") {
@@ -599,21 +595,19 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                 }
                 .padding(.horizontal, -16)
                 
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Learn More")
-                        .font(.headline.weight(.semibold))
-                    
-                    PlayMediaButton(
-                        image: Image("Mixed Exercise"),
-                        title: Text("Navigating the Challenges of Mixed Exercise"),
-                        duration: .minutes(3) + .seconds(27)
+                if let mixedExercise = trainingContent.first(where: { $0.fileName == "Mixed Exercise" }) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Learn More")
+                            .font(.headline.weight(.semibold))
+                        
+                        PlayMediaButton(mediaContent: mixedExercise, onPlay: onPlayMedia)
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(colorPalette.chartColorPalette.presetTint).opacity(0.1))
                     )
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(colorPalette.chartColorPalette.presetTint).opacity(0.1))
-                )
                 
             case .exerciseAndGlucoseActiveInsulin:
                 Text("When using a preset for activity, keep in mind four key factors that may impact your  glucose.")
@@ -1015,14 +1009,18 @@ extension PresetsTraining.Chapter: PresetsTrainingContent {
         displayGlucosePreference: DisplayGlucosePreference,
         colorPalette: LoopUIColorPalette,
         dynamicTypeSize: DynamicTypeSize,
-        next: @escaping () -> Void
+        trainingContent: [MediaContent],
+        next: @escaping () -> Void,
+        onPlayMedia: @escaping (MediaContent) -> Void
     ) -> some View {
         firstStep.content(
             appName: appName,
             displayGlucosePreference: displayGlucosePreference,
             colorPalette: colorPalette,
             dynamicTypeSize: dynamicTypeSize,
-            next: next
+            trainingContent: trainingContent,
+            next: next,
+            onPlayMedia: onPlayMedia
         )
     }
     

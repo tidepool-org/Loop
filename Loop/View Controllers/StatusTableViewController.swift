@@ -1537,6 +1537,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 carbStore: deviceManager.carbStore,
                 doseStore: deviceManager.doseStore,
                 glucoseStore: deviceManager.glucoseStore,
+                trainingContent: supportManager.availableSupports.flatMap({ $0.trainingMedia(for: .presets) }),
                 automationHistory: { [weak self] in self?.loopManager.automationHistory ?? [] }
             )
             .onAppear { self.isShowingPresets = true }

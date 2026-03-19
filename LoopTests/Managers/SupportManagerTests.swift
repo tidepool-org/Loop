@@ -44,6 +44,7 @@ class SupportManagerTests: XCTestCase {
         func loopWillReset() {}
         func loopDidReset() {}
         func configurationMenuItems() -> [LoopKitUI.CustomMenuItem] { return [] }
+        func trainingMedia(for domain: TrainingMediaDomain) -> [MediaContent] { [] }
     }
 
     class AnotherMockSupport: Mixin, SupportUI {
@@ -56,6 +57,7 @@ class SupportManagerTests: XCTestCase {
         func loopWillReset() {}
         func loopDidReset() {}
         func configurationMenuItems() -> [LoopKitUI.CustomMenuItem] { return [] }
+        func trainingMedia(for domain: TrainingMediaDomain) -> [MediaContent] { [] }
     }
     
     class MockAlertIssuer: AlertIssuer {

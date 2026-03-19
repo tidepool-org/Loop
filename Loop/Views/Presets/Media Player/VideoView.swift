@@ -6,6 +6,7 @@
 //
 
 import AVKit
+import LoopKit
 import SwiftUI
 
 struct VideoView: View {
@@ -89,11 +90,4 @@ struct _VideoPlayer : UIViewControllerRepresentable {
             }
         }
     }
-}
-
-#Preview {
-    @Previewable @State var isPaused: Bool = false
-    
-    VideoView(isPaused: $isPaused, media: .mixedExercise)
-        .edgesIgnoringSafeArea(.all)
 }

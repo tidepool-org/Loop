@@ -19,17 +19,20 @@ public struct PresetsTrainingView: View {
     
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     
-    @Bindable private var training: PresetsTraining
+    @State private var training: PresetsTraining
     
     @State private var confirmDismiss: Bool = false
     @State private var showSkipToChapterSelector: Bool = false
+    @State private var selectedMedia: MediaContent?
     
+    private let trainingContent: [MediaContent]
     private let onComplete: (() -> Void)?
     
     public init(
         navigationPath: [PresetsTraining.Step] = [],
         startingAt: PresetsTraining.Chapter? = nil,
         trainingCompletionConfiguration: PresetsTraining.TrainingCompletionConfiguration,
+        trainingContent: [MediaContent],
         onComplete: (() -> Void)? = nil
     ) {
         self.training = PresetsTraining(
@@ -38,6 +41,7 @@ public struct PresetsTrainingView: View {
             trainingCompletionConfiguration: trainingCompletionConfiguration
         )
         
+        self.trainingContent = trainingContent
         self.onComplete = onComplete
     }
     
@@ -61,6 +65,9 @@ public struct PresetsTrainingView: View {
         }
         .environment(training)
         .interactiveDismissDisabled(!training.trainingCompletion.isComplete)
+        .fullScreenCover(item: $selectedMedia) { media in
+            MediaPlayerView(media: media)
+        }
     }
     
     private func close() {
@@ -95,7 +102,9 @@ public struct PresetsTrainingView: View {
                         displayGlucosePreference: displayGlucosePreference,
                         colorPalette: colorPalette,
                         dynamicTypeSize: dynamicTypeSize,
-                        next: training.next
+                        trainingContent: trainingContent,
+                        next: training.next,
+                        onPlayMedia: { selectedMedia = $0 }
                     )
                     .padding(.bottom, 24)
                     .padding(.horizontal, 16)
@@ -160,7 +169,7 @@ public struct PresetsTrainingView: View {
         .alert(isPresented: $confirmDismiss) {
             Alert(
                 title: Text("End Training?"),
-                message: Text("You’ll have to restart this section and some features will be disabled until you complete the training."),
+                message: Text("You'll have to restart this section and some features will be disabled until you complete the training."),
                 primaryButton: .cancel(),
                 secondaryButton: .destructive(Text("End"), action: { close() })
             )

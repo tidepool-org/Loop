@@ -72,6 +72,7 @@ struct PresetsView: View {
     private let carbStore: CarbStore
     private let doseStore: DoseStore
     private let glucoseStore: GlucoseStore
+    private let trainingContent: [MediaContent]
     private let automationHistory: () -> [AutomationHistoryEntry]
 
     @AppStorage("presetsSortAscending") private var presetsSortAscending: Bool = true
@@ -82,6 +83,7 @@ struct PresetsView: View {
         carbStore: CarbStore,
         doseStore: DoseStore,
         glucoseStore: GlucoseStore,
+        trainingContent: [MediaContent],
         automationHistory: @escaping () -> [AutomationHistoryEntry]
     ) {
         self.trainingCompletion = PresetsTrainingCompletion(allowDebugFeatures: FeatureFlags.allowDebugFeatures)
@@ -89,6 +91,7 @@ struct PresetsView: View {
         self.carbStore = carbStore
         self.doseStore = doseStore
         self.glucoseStore = glucoseStore
+        self.trainingContent = trainingContent
         self.automationHistory = automationHistory
     }
 
@@ -286,12 +289,20 @@ struct PresetsView: View {
                             suspendThreshold: { settingsManager.settings.suspendThreshold }
                         )
                         .sheet(isPresented: $showPresetsTrainingSheet) {
-                            PresetsTrainingView(trainingCompletionConfiguration: .trainingCompletion(trainingCompletion))
+                            PresetsTrainingView(
+                                trainingCompletionConfiguration: .trainingCompletion(trainingCompletion),
+                                trainingContent: trainingContent
+                            )
                         }
                     }
                 }
             case .training(let navigationPath, let startingAt, let editPresetWhenComplete):
-                PresetsTrainingView(navigationPath: navigationPath, startingAt: startingAt, trainingCompletionConfiguration: .trainingCompletion(trainingCompletion)) {
+                PresetsTrainingView(
+                    navigationPath: navigationPath,
+                    startingAt: startingAt,
+                    trainingCompletionConfiguration: .trainingCompletion(trainingCompletion),
+                    trainingContent: trainingContent
+                ) {
                     if let editPresetWhenComplete {
                         activeSheet = .editPreset(editPresetWhenComplete)
                     }
