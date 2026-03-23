@@ -109,13 +109,14 @@ class PresetsPerformanceHistoryViewModel {
         }
         
         var averageGlucose: LoopQuantity {
-            LoopQuantity(
+            let valuesAfterStart = allGlucoseValues.dropFirst()
+            guard !valuesAfterStart.isEmpty else { return LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 0) }
+            return LoopQuantity(
                 unit: .milligramsPerDeciliter,
                 doubleValue: (
-                    allGlucoseValues
-                        .dropFirst()
+                    valuesAfterStart
                         .map({ $0.quantity.doubleValue(for: .milligramsPerDeciliter) })
-                        .reduce(0, +) / Double(allGlucoseValues.count)
+                        .reduce(0, +) / Double(valuesAfterStart.count)
                 )
             )
         }
