@@ -169,7 +169,7 @@ struct PresetPerformanceHistoryView: View {
     
     private func detailsSection(performanceData: PresetsPerformanceHistoryViewModel.PerformanceData, showNoData: Bool) -> some View {
         GroupBox {
-            if showNoData || performanceData.allGlucoseValues.count <= 1 {
+            if showNoData || performanceData.allGlucoseValues.isEmpty {
                 Image("performance-history-empty")
                     .resizable()
                     .scaledToFit()
