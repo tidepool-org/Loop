@@ -73,7 +73,8 @@ class PresetsPerformanceHistoryViewModel {
             correctionRange: correctionRange,
             startDate: startDate,
             endDate: calculatedEndDate,
-            allGlucoseValues: allGlucoseValues,
+            startingGlucose: allGlucoseValues.last(where: { $0.endDate < startDate })?.quantity,
+            allGlucoseValues: Array(allGlucoseValues.drop(while: { $0.endDate < startDate })),
             totalCarbs: totalCarbs,
             totalBolus: totalBolus,
             timeInAutomation: timeInAutomation
@@ -99,32 +100,28 @@ class PresetsPerformanceHistoryViewModel {
         let correctionRange: ClosedRange<LoopQuantity>?
         let startDate: Date
         let endDate: Date
+        let startingGlucose: LoopQuantity?
         let allGlucoseValues: [StoredGlucoseSample]
         let totalCarbs: LoopQuantity
         let totalBolus: LoopQuantity
         let timeInAutomation: Double
         
-        var startingGlucose: LoopQuantity? {
-            allGlucoseValues.map(\.quantity).first
-        }
-        
-        var averageGlucose: LoopQuantity {
-            let valuesAfterStart = allGlucoseValues.dropFirst()
-            guard !valuesAfterStart.isEmpty else { return LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 0) }
+        var averageGlucose: LoopQuantity? {
+            guard !allGlucoseValues.isEmpty else { return nil }
             return LoopQuantity(
                 unit: .milligramsPerDeciliter,
                 doubleValue: (
-                    valuesAfterStart
+                    allGlucoseValues
                         .map({ $0.quantity.doubleValue(for: .milligramsPerDeciliter) })
-                        .reduce(0, +) / Double(valuesAfterStart.count)
+                        .reduce(0, +) / Double(allGlucoseValues.count)
                 )
             )
         }
         
         var timeInRange: [GlucoseRange: Double] {
-            guard allGlucoseValues.dropFirst().count > 0 else { return [:] }
+            guard allGlucoseValues.count > 0 else { return [:] }
             
-            let sorted = allGlucoseValues.dropFirst().sorted { $0.startDate < $1.startDate }
+            let sorted = allGlucoseValues.sorted { $0.startDate < $1.startDate }
             var durations: [GlucoseRange: TimeInterval] = [:]
             
             for (index, sample) in sorted.enumerated() {

@@ -42,6 +42,7 @@ struct PresetPerformanceHistoryView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     
     @Environment(\.colorPalette) private var colorPalette
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsManager) private var settingsManager
     
     @State private var state: DataState = .loading
@@ -109,6 +110,19 @@ struct PresetPerformanceHistoryView: View {
         }
         .animation(.default, value: selectedDateRange)
         .background(Color(UIColor.secondarySystemBackground))
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    HStack(spacing: 4) {
+                        Text(Image(systemName: "chevron.backward")).bold()
+                        Text("Back")
+                    }
+                }
+            }
+        }
         .task {
             await fetch()
         }
@@ -169,7 +183,7 @@ struct PresetPerformanceHistoryView: View {
     
     private func detailsSection(performanceData: PresetsPerformanceHistoryViewModel.PerformanceData, showNoData: Bool) -> some View {
         GroupBox {
-            if showNoData {
+            if showNoData || performanceData.allGlucoseValues.count <= 1 {
                 Image("performance-history-empty")
                     .resizable()
                     .scaledToFit()
@@ -180,12 +194,14 @@ struct PresetPerformanceHistoryView: View {
                 VStack(spacing: 4) {
                     Text("No performance history available yet")
                         .multilineTextAlignment(.center)
-                    
-                    Text("You can see this summary 6 hours after the preset ends.")
-                        .multilineTextAlignment(.center)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
+                    
+                    if showNoData {
+                        Text("You can see this summary 6 hours after the preset ends.")
+                            .multilineTextAlignment(.center)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             } else {
                 VStack(alignment: .leading, spacing: 24) {
@@ -205,8 +221,10 @@ struct PresetPerformanceHistoryView: View {
                                 }
                             }
                                 
-                            LabeledContent("Average Glucose") {
-                                Group { Text(displayGlucosePreference.format(performanceData.averageGlucose, includeUnit: false)).fontWeight(.semibold).foregroundStyle(.primary) + Text(" ") + Text(displayGlucosePreference.unit.localizedShortUnitString).foregroundStyle(.secondary) }.contentTransition(.numericText())
+                            if let averageGlucose = performanceData.averageGlucose {
+                                LabeledContent("Average Glucose") {
+                                    Group { Text(displayGlucosePreference.format(averageGlucose, includeUnit: false)).fontWeight(.semibold).foregroundStyle(.primary) + Text(" ") + Text(displayGlucosePreference.unit.localizedShortUnitString).foregroundStyle(.secondary) }.contentTransition(.numericText())
+                                }
                             }
                         }
                     }
