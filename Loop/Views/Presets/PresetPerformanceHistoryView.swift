@@ -42,7 +42,6 @@ struct PresetPerformanceHistoryView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     
     @Environment(\.colorPalette) private var colorPalette
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsManager) private var settingsManager
     
     @State private var state: DataState = .loading
