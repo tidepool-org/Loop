@@ -110,19 +110,6 @@ struct PresetPerformanceHistoryView: View {
         }
         .animation(.default, value: selectedDateRange)
         .background(Color(UIColor.secondarySystemBackground))
-        .navigationBarBackButtonHidden()
-        .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Button(action: {
-                    dismiss()
-                }) {
-                    HStack(spacing: 4) {
-                        Text(Image(systemName: "chevron.backward")).bold()
-                        Text("Back")
-                    }
-                }
-            }
-        }
         .task {
             await fetch()
         }
