@@ -33,6 +33,7 @@ struct SettingsView: View {
             
             case deleteCGMData
             case deletePumpData
+            case deleteAllTestingData
         }
         
         enum ActionSheet: String, Identifiable {
@@ -135,6 +136,11 @@ struct SettingsView: View {
                     return makeDeleteAlert(for: self.viewModel.cgmManagerSettingsViewModel)
                 case .deletePumpData:
                     return makeDeleteAlert(for: self.viewModel.pumpManagerSettingsViewModel)
+                case .deleteAllTestingData:
+                    return SwiftUI.Alert(title: Text("Delete All Testing Data"),
+                                         message: Text("Are you sure you want to delete all your testing Data?\n(This action is not reversible)"),
+                                         primaryButton: .cancel(),
+                                         secondaryButton: .destructive(Text("Delete"), action: viewModel.deleteAllTestingData))
                 }
             }
             .sheet(item: $sheet) { sheet in
@@ -484,6 +490,17 @@ extension SettingsView {
                     HStack {
                         Spacer()
                         Text("Delete Testing CGM Data").accentColor(.destructive)
+                        Spacer()
+                    }
+                }
+            }
+            if viewModel.cgmManagerSettingsViewModel.isTestingDevice,
+               viewModel.pumpManagerSettingsViewModel.isTestingDevice
+            {
+                Button(action: { alert = .deleteAllTestingData }) {
+                    HStack {
+                        Spacer()
+                        Text("Delete All Testing Data").accentColor(.destructive)
                         Spacer()
                     }
                 }

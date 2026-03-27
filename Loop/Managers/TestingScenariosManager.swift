@@ -364,7 +364,7 @@ extension TestingScenariosManager {
 }
 
 
-private extension CarbStore {
+extension CarbStore {
 
     /// Errors if getting carb entries errors, or if deleting any individual entry errors.
     func deleteAllCarbEntries() async throws {

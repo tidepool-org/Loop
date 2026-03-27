@@ -199,6 +199,22 @@ class SettingsViewModel {
             .assign(to: \.mostRecentPumpDataDate, on: self)
             .store(in: &cancellables)
     }
+
+    @MainActor func deleteAllTestingData() {
+        Task {
+            try? await deviceManager?.deleteTestingPumpData()
+
+            try? await deviceManager?.deleteTestingCGMData()
+
+            try? await deviceManager?.carbStore.deleteAllCarbEntries()
+
+            await withCheckedContinuation { [weak alertStore = deviceManager?.alertManager.alertStore] continuation in
+                alertStore?.purge(before: Date(), completion: { _ in
+                    continuation.resume()
+                })
+            }
+        }
+    }
 }
 
 // For previews only
