@@ -206,13 +206,9 @@ class SettingsViewModel {
 
             try? await deviceManager?.deleteTestingCGMData()
 
-            try? await deviceManager?.carbStore.deleteAllCarbEntries()
+            try? await deviceManager?.deleteTestingCarbData()
 
-            await withCheckedContinuation { [weak alertStore = deviceManager?.alertManager.alertStore] continuation in
-                alertStore?.purge(before: Date(), completion: { _ in
-                    continuation.resume()
-                })
-            }
+            try? await deviceManager?.deleteTestingAlertData()
         }
     }
 }
