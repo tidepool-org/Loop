@@ -962,6 +962,92 @@ extension PresetsTraining.Step: PresetsTrainingContent {
         }
     }
     
+    var references: [Text] {
+        switch self {
+        case .customizingPresets, .illness, .dailyActivities, .trainingComplete:
+            return []
+        case .exercise(let exercise):
+            switch exercise {
+            case .commonUses:
+                return []
+            case .presetsForExercise:
+                return [
+                    Text(verbatim: "Moser O, Zaharieva DP, Adolfsson A, Battelino T, Bracken RM, Buckingham BA, Danne T, Davis EA, Dovč K, Forlenza GP, et al. The use of automated insulin delivery around physical activity and exercise in type 1 diabetes: a position statement of the European Association for the Study of Diabetes (EASD) and the International Society for Pediatric and Adolescent Diabetes (ISPAD). ") + Text("[PMID: 39653802](https://pmc.ncbi.nlm.nih.gov/articles/PMC11732933/)").underline(),
+                    Text(verbatim: "American Diabetes Association Professional Practice Committee. 14. Children and Adolescents: Standards of Care in Diabetes-2025. Diabetes Care. ") + Text("[PMID: 39651980](https://doi.org/10.2337/dc25-S014)").underline(),
+                    Text(verbatim: "Adolfsson P, Taplin CE, Zaharieva DP, Pemberton J, Davis EA, Riddell MC, et al. ISPAD Clinical Practice Consensus Guidelines 2022: Exercise in children and adolescents with diabetes. ") + Text("[PMID: 36537529](https://doi.org/10.1111/pedi.13452)").underline(),
+                    Text(verbatim: "Phillip M, Nimri R, Bergenstal RM, Barnard-Kelly K, Danne T, Hovorka R, et al. Consensus Recommendations for the Use of Automated Insulin Delivery Technologies in Clinical Practice. ") + Text("[PMID: 36066457](https://pmc.ncbi.nlm.nih.gov/articles/PMC9985411/)").underline(),
+                    Text(verbatim: "Braune K, Lal RA, Petruželková L, Scheiner G, Winterdijk P, Schmidt S, et al. Open-source automated insulin delivery: international consensus statement and practical guidance for health-care professionals. ") + Text("[PMID: 34785000](https://www.thelancet.com/journals/landia/article/PIIS2213-8587(21)00267-9/abstract)").underline(),
+                    Text(verbatim: "Moser O, Riddell MC, Eckstein ML, Adolfsson P, Rabasa-Lhoret R, van den Boom L, et al. Glucose management for exercise using continuous glucose monitoring (CGM) and intermittently scanned CGM (isCGM) systems in type 1 diabetes: position statement of the European Association for the Study of Diabetes (EASD) and of the International Society for Pediatric and Adolescent Diabetes (ISPAD) endorsed by JDRF and supported by the American Diabetes Association (ADA). ") + Text("[PMID: 33047169](https://link.springer.com/article/10.1007/s00125-020-05263-9)").underline(),
+                    Text(verbatim: "Scott SN, Fontana FY, Cocks M, Morton JP, Jeukendrup A, Dragulin R, et al. Post-exercise recovery for the endurance athlete with type 1. ") + Text("[PMID: 33864810](https://pubmed.ncbi.nlm.nih.gov/33864810/)").underline(),
+                    Text(verbatim: "Riddell MC, Gallen IW, Smart CE, Taplin CE, Adolfsson P, Lumb AN, et al. Exercise management in type 1 diabetes: a consensus statement. ") + Text("[PMID: 28126459](https://pubmed.ncbi.nlm.nih.gov/28126459/)").underline(),
+                    Text(verbatim: "Yardley JE, Sigal RJ. Exercise strategies for hypoglycemia prevention in individuals with type 1 diabetes. ") + Text("[PMID: 25717276](https://pmc.ncbi.nlm.nih.gov/articles/PMC4334090/)").underline(),
+                    Text(verbatim: "Colberg SR, Sigal RJ, Yardley JE, Riddell MC, Dunstan DW, Dempsey PC, et al. Physical Activity/Exercise and Diabetes: A Position Statement of the American Diabetes Association. ") + Text("[PMID: 27926890](https://pmc.ncbi.nlm.nih.gov/articles/PMC6908414/)").underline()
+                ]
+            case .perceivedIntensity:
+                return [
+                    Text(verbatim: "Zaharieva DP, Paldus B, Morrison D, Messer LH, O’Neal DN, Maahs DM, Riddell MC, et al. Practical aspects and exercise safety benefits of automated insulin delivery systems in type 1 diabetes. Diabetes Spectr. ") + Text("[PMID: 37193203](https://pmc.ncbi.nlm.nih.gov/articles/PMC10182962/)").underline(),
+                    Text(verbatim: "Borg GA. Psychophysical bases of perceived exertion. Med Sci Sports Exerc. PMID: ") + Text("[PMID: 7154893](https://pubmed.ncbi.nlm.nih.gov/7154893/)").underline()
+                ]
+            case .lightToModerateExercise:
+                return [
+                    Text(verbatim: "Turner LV, Marak MC, Gal RL, Calhoun P, Li Z, Jacobs PG, Clements MA, Martin CK, Doyle FJ 3rd, Patton SR, Castle JR, Gillingham MB, Beck RW, Rickels MR, Riddell MC; T1DEXI Study Group. Associations between daily step count classifications and continuous glucose monitoring metrics in adults with type 1 diabetes: analysis of the Type 1 Diabetes Exercise Initiative (T1DEXI) cohort. ") + Text("[PMID: 38502241](https://pubmed.ncbi.nlm.nih.gov/38502241/)").underline(),
+                    Text(verbatim: "Riddell MC, Gal RL, Bergford S, Patton SR, Clements MA, Calhoun P, Beaulieu LC, Sherr JL. The Acute Effects of Real-World Physical Activity on Glycemia in Adolescents With Type 1 Diabetes: The Type 1 Diabetes Exercise Initiative Pediatric (T1DEXIP) Study. ") + Text("[PMID: 37922335](https://pubmed.ncbi.nlm.nih.gov/37922335/)").underline(),
+                    Text(verbatim: "Zaharieva DP, McGaugh S, Pooni R, Vienneau T, Ly T, Riddell MC. Improved Open-Loop Glucose Control With Basal Insulin Reduction 90 Minutes Before Aerobic Exercise in Patients With Type 1 Diabetes on Continuous Subcutaneous Insulin Infusion. ") + Text("[PMID: 30796112](https://pubmed.ncbi.nlm.nih.gov/30796112/)").underline(),
+                    Text(verbatim: "Molveau J, Myette-Côté É, Guédet C, Tagougui S, St-Amand R, Suppère C, Heyman E, Messier V, Boudreau V, Legault L, Rabasa-Lhoret R. Impact of pre- and post-exercise strategies on hypoglycemic risk for two modalities of aerobic exercise among adults and adolescents living with type 1 diabetes using continuous subcutaneous insulin infusion: A randomized controlled trial. ") + Text("[PMID: 39653075](https://pubmed.ncbi.nlm.nih.gov/39653075/)").underline(),
+                    Text(verbatim: "Tagougui S, Legault L, Heyman E, Messier V, Suppere C, Potter KJ, Pigny P, Berthoin S, Taleb N, Rabasa-Lhoret R. Anticipated Basal Insulin Reduction to Prevent Exercise-Induced Hypoglycemia in Adults and Adolescents Living with Type 1 Diabetes. ") + Text("[PMID: 35099281](https://pubmed.ncbi.nlm.nih.gov/35099281/)").underline()
+                ]
+            case .highIntensityExercise:
+                return [
+                    Text(verbatim: "Paldus B, Morrison D, Zaharieva DP, Lee MH, Jones H, Obeyesekere V, La Gerche A, et al. A randomized crossover trial comparing glucose control during moderate‑intensity, high‑intensity, and resistance exercise with hybrid closed‑loop insulin delivery while profiling potential additional signals in adults with type 1 diabetes. Diabetes Care. ") + Text("[PMID: 34789504](https://pubmed.ncbi.nlm.nih.gov/34789504/)").underline(),
+                    Text(verbatim: "Aronson R, Brown RE, Li A, Riddell MC. Optimal insulin correction factor in post‑high‑intensity exercise hyperglycemia in adults with type 1 diabetes: The FIT Study. Diabetes Care. ") + Text("[PMID: 30455336](https://pubmed.ncbi.nlm.nih.gov/30455336/)").underline()
+                ]
+            case .mixedIntensityExercise:
+                return [
+                    Text(verbatim: "Riddell MC, Gal RL, Bergford S, Patton SR, Clements MA, Calhoun P, et al. The Acute Effects of Real‑World Physical Activity on Glycemia in Adolescents With Type 1 Diabetes: The Type 1 Diabetes Exercise Initiative Pediatric (T1DEXIP) Study. ") + Text("[PMID: 37922335](https://pubmed.ncbi.nlm.nih.gov/37922335/)").underline(),
+                    Text(verbatim: "Zaharieva DP, Yavelberg L, Jamnik V, Cinar A, Turksoy K, Riddell MC. The Effects of Basal Insulin Suspension at the Start of Exercise on Blood Glucose Levels During Continuous Versus Circuit‑Based Exercise in Individuals with Type 1 Diabetes on Continuous Subcutaneous Insulin Infusion. ") + Text("[PMID: 28613947](https://pmc.ncbi.nlm.nih.gov/articles/PMC5510047/)").underline()
+                ]
+            case .exerciseAndGlucoseActiveInsulin:
+                return [
+                    Text(verbatim: "Riddell MC, Lewis DM, Turner LV, Lal RA, Shahid A, Zaharieva DP. Refining Insulin on Board with netIOB for Automated Insulin Delivery. ") + Text("[PMID: 39143692](https://pmc.ncbi.nlm.nih.gov/articles/PMC11571556/)").underline(),
+                    Text(verbatim: "Li Z, Calhoun P, Rickels MR, Gal RL, Beck RW, Jacobs PG, et al. Factors Affecting Reproducibility of Change in Glucose During Exercise: Results From the Type 1 Diabetes and Exercise Initiative. ") + Text("[PMID: 38456512](https://pmc.ncbi.nlm.nih.gov/articles/PMC11571421/)").underline(),
+                    Text(verbatim: "Zaharieva DP, Morrison D, Paldus B, Lal RA, Buckingham BA, O'Neal DN. Practical Aspects and Exercise Safety Benefits of Automated Insulin Delivery Systems in Type 1 Diabetes. ") + Text("[PMID: 37193203](https://pmc.ncbi.nlm.nih.gov/articles/PMC10182962/)").underline()
+                ]
+            case .exerciseAndGlucoseTimeOfDay:
+                return [
+                    Text(verbatim: "Riddell MC, Turner LV, Patton SR. Is There an Optimal Time of Day for Exercise? A Commentary on When to Exercise for People Living With Type 1 or Type 2 Diabetes. ") + Text("[PMID: 37193212](https://pmc.ncbi.nlm.nih.gov/articles/PMC10182965/)").underline(),
+                    Text(verbatim: "Morrison D, Paldus B, Zaharieva DP, Lee MH, Vogrin S, Jenkins AJ, et al. Late Afternoon Vigorous Exercise Increases Postmeal but Not Overnight Hypoglycemia in Adults with Type 1 Diabetes Managed with Automated Insulin Delivery. ") + Text("[PMID: 36094458](https://pubmed.ncbi.nlm.nih.gov/36094458/)").underline(),
+                    Text(verbatim: "Yardley JE. Fasting May Alter Blood Glucose Responses to High-Intensity Interval Exercise in Adults With Type 1 Diabetes: A Randomized, Acute Crossover Study. ") + Text("[PMID: 33160882](https://pubmed.ncbi.nlm.nih.gov/33160882/)").underline(),
+                    Text(verbatim: "Toghi-Eshghi SR, Yardley JE. Morning (Fasting) vs Afternoon Resistance Exercise in Individuals With Type 1 Diabetes: A Randomized Crossover Study. ") + Text("[PMID: 31211392](https://academic.oup.com/jcem/article/104/11/5217/5519298)").underline()
+                ]
+            case .exerciseAndGlucoseMealTiming:
+                return [
+                    Text(verbatim: "McCarthy OM, Christensen MB, Kristensen KB, Schmidt S, Ranjan AG, Bain SC, Bracken RM, Nørgaard K. Automated Insulin Delivery Around Exercise in Adults with Type 1 Diabetes: A Pilot Randomized Controlled Study. ") + Text("[PMID: 37053529](https://pubmed.ncbi.nlm.nih.gov/37053529/)").underline(),
+                    Text(verbatim: "Myette‑Côté É, Molveau J, Wu Z, Raffray M, Devaux M, Tagougui S, et al. A Randomized Crossover Pilot Study Evaluating Glucose Control During Exercise Initiated 1 or 2 h After a Meal in Adults with Type 1 Diabetes Treated with an Automated Insulin Delivery System. ") + Text("[PMID: 36399114](https://pmc.ncbi.nlm.nih.gov/articles/PMC9894601/)").underline(),
+                    Text(verbatim: "Tagougui S, Taleb N, Legault L, Suppère C, Messier V, Boukabous I, Shohoudi A, Ladouceur M, Rabasa-Lhoret R. A single-blind, randomised, crossover study to reduce hypoglycaemia risk during postprandial exercise with closed-loop insulin delivery in adults with type 1 diabetes: announced (with or without bolus reduction) vs unannounced exercise strategies. ") + Text("[PMID: 32740723](https://link.springer.com/article/10.1007/s00125-020-05244-y)").underline()
+                ]
+            case .exerciseAndGlucoseCompetitionStress:
+                return [
+                    Text(verbatim: "Katz A, Shulkin A, Fortier MA, Yardley JE, Kichler J, Housni A, Talbo MK, Rabasa-Lhoret R, Brazeau AS. Strategies to reduce hyperglycemia-related anxiety in elite athletes with type 1 diabetes: A qualitative analysis. ") + Text("[PMID: 39823464](https://pubmed.ncbi.nlm.nih.gov/39823464/)").underline(),
+                    Text(verbatim: "Riddell MC, Gallen IW, Smart CE, Taplin CE, Adolfsson P, Lumb AN, Kowalski A, Rabasa-Lhoret R, McCrimmon RJ, Hume C, Annan F, Fournier PA, Graham C, Bode B, Galassetti P, Jones TW, Millán IS, Heise T, Peters AL, Petz A, Laffel LM. Exercise management in type 1 diabetes: a consensus statement. ") + Text("[PMID: 28126459](https://pubmed.ncbi.nlm.nih.gov/28126459/)").underline(),
+                    Text(verbatim: "Hobbs N, Brandt R, Maghsoudipour S, Sevil M, Rashid M, Quinn L, Cinar A. Observational Study of Glycemic Impact of Anticipatory and Early-Race Athletic Competition Stress in Type 1 Diabetes. ") + Text("[PMID: 36992757](https://pubmed.ncbi.nlm.nih.gov/36992757/)").underline(),
+                    Text(verbatim: "Riddell MC, Scott SN, Fournier PA, Colberg SR, Gallen IW, Moser O, Stettler C, Yardley JE, Zaharieva DP, Adolfsson P, Bracken RM. The competitive athlete with type 1 diabetes. ") + Text("[PMID: 32533229](https://pubmed.ncbi.nlm.nih.gov/32533229/)").underline()
+                ]
+            case .preventingLows:
+                return [
+                    Text(verbatim: "Moser O, Zaharieva DP, Adolfsson P, Battelino T, Bracken RM, Buckingham BA, et al. The use of automated insulin delivery around physical activity and exercise in type 1 diabetes: a position statement of the European Association for the Study of Diabetes (EASD) and the International Society for Pediatric and Adolescent Diabetes (ISPAD). ") + Text("[PMID: 39653802](https://pubmed.ncbi.nlm.nih.gov/39653802/)").underline()
+                ]
+            case .unplannedActivity:
+                return [
+                    Text(verbatim: "Tagougui S, Taleb N, Legault L, Suppère C, Messier V, Boukabous I, Shohoudi A, Ladouceur M, Rabasa-Lhoret R. A single-blind, randomised, crossover study to reduce hypoglycaemia risk during postprandial exercise with closed-loop insulin delivery in adults with type 1 diabetes: announced (with or without bolus reduction) vs unannounced exercise strategies. ") + Text("[PMID: 32740723](https://pubmed.ncbi.nlm.nih.gov/32740723/)").underline(),
+                    Text(verbatim: "Zimmer RT, Auth A, Schierbauer J, Haupt S, Wachsmuth N, Zimmermann P, Voit T, Battelino T, Sourij H, Moser O. (Hybrid) Closed-Loop Systems: From Announced to Unannounced Exercise. ") + Text("[PMID: 38133645](https://pubmed.ncbi.nlm.nih.gov/38133645/)").underline(),
+                    Text(verbatim: "Tagougui S, Taleb N, Legault L, Suppère C, Messier V, Boukabous I, Shohoudi A, Ladouceur M, Rabasa-Lhoret R. A single-blind, randomised, crossover study to reduce hypoglycaemia risk during postprandial exercise with closed-loop insulin delivery in adults with type 1 diabetes: announced (with or without bolus reduction) vs unannounced exercise strategies. ") + Text("[PMID: 32740723](https://pubmed.ncbi.nlm.nih.gov/32740723/)").underline(),
+                    Text(verbatim: "Dovc K, Piona C, Yeşiltepe Mutlu G, Bratina N, Jenko Bizjan B, Lepej D, Nimri R, Atlas E, Muller I, Kordonouri O, Biester T, Danne T, Phillip M, Battelino T. Faster Compared With Standard Insulin Aspart During Day-and-Night Fully Closed-Loop Insulin Therapy in Type 1 Diabetes: A Double-Blind Randomized Crossover Trial. ") + Text("[PMID: 31575640](https://pubmed.ncbi.nlm.nih.gov/31575640/)").underline(),
+                    Text(verbatim: "Dovc K, Macedoni M, Bratina N, Lepej D, Nimri R, Atlas E, Muller I, Kordonouri O, Biester T, Danne T, Phillip M, Battelino T. Closed-loop glucose control in young people with type 1 diabetes during and after unannounced physical activity: a randomised controlled crossover trial. ") + Text("[PMID: 28840263](https://pubmed.ncbi.nlm.nih.gov/28840263/)").underline()
+                ]
+            }
+        }
+    }
+    
     var cta: PresetsTraining.CTA? {
         switch self {
         case .customizingPresets: .continue

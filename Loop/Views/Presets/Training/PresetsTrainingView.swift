@@ -109,6 +109,12 @@ public struct PresetsTrainingView: View {
                     .padding(.bottom, 24)
                     .padding(.horizontal, 16)
                     
+                    if !step.references.isEmpty {
+                        ReferencesView(step.references)
+                            .padding(.bottom, 24)
+                            .padding(.horizontal, 16)
+                    }
+                    
                     if let cta = step.cta {
                         Spacer(minLength: 0)
                         
