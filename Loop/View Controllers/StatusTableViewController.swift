@@ -1564,6 +1564,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
                 .environment(\.appName, Bundle.main.bundleDisplayName)
                 .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
                 .environment(\.loopStatusColorPalette, .loopStatus)
+                .environment(\.colorPalette, .default)
                 .environment(\.settingsManager, settingsManager)
                 .environment(\.temporaryPresetsManager, temporaryPresetsManager)
                 .environment(\.dosingStrategySelectionEnabled, FeatureFlags.dosingStrategySelectionEnabled),

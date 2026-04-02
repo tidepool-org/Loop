@@ -624,6 +624,7 @@ class LoopAppManager: NSObject {
                     .environment(\.isInvestigationalDevice, FeatureFlags.isInvestigationalDevice)
                     .environment(\.guidanceColors, .default)
                     .environment(\.loopStatusColorPalette, .loopStatus)
+                    .environment(\.colorPalette, .default)
                     .environment(\.settingsManager, settingsManager)
                     .environment(\.temporaryPresetsManager, temporaryPresetsManager)
                     .edgesIgnoringSafeArea(.top)
