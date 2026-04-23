@@ -443,6 +443,7 @@ class LoopAppManager: NSObject {
                                         deviceSupportDelegate: deviceDataManager,
                                         servicesManager: servicesManager,
                                         alertIssuer: alertManager)
+        servicesManager.supportManager = supportManager
         
         setWhitelistedDevices()
 

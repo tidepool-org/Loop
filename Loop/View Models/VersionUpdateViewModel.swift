@@ -34,7 +34,9 @@ public class VersionUpdateViewModel: ObservableObject {
     
     func footer(appName: String) -> String {
         switch versionUpdate {
-        case .required, .recommended:
+        case .required:
+            return NSLocalizedString("A critical update is available. Your app may not function correctly until you update to the latest version.", comment: "Software update description for required update")
+        case .recommended:
             return String(format: NSLocalizedString("A new version of %@ is available and is recommended to continue using the app.", comment: "Software update available section footer (1: app name)"), appName)
         case .available:
             return String(format: NSLocalizedString("A new version of %@ is available.", comment: "Required software update section footer (1: app name)"), appName)

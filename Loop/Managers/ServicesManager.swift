@@ -29,6 +29,7 @@ class ServicesManager {
     
     weak var servicesManagerDelegate: ServicesManagerDelegate?
     weak var servicesManagerDosingDelegate: ServicesManagerDosingDelegate?
+    weak var supportManager: SupportManager?
     
     private var services = [Service]()
 
@@ -142,6 +143,9 @@ class ServicesManager {
             if let remoteDataService = service as? RemoteDataService {
                 remoteDataServicesManager.addService(remoteDataService)
             }
+            if let provider = service as? SupportProviding {
+                supportManager?.addSupport(provider.createSupport())
+            }
 
             saveState()
         }
@@ -149,6 +153,9 @@ class ServicesManager {
 
     public func removeActiveService(_ service: Service) {
         servicesLock.withLock {
+            if let provider = service as? SupportProviding {
+                supportManager?.removeSupport(provider.createSupport())
+            }
             if let remoteDataService = service as? RemoteDataService {
                 remoteDataServicesManager.removeService(remoteDataService)
             }
@@ -400,7 +407,9 @@ extension ServicesManager: ServiceOnboardingDelegate {
 }
 
 extension ServicesManager {
-    var availableSupports: [SupportUI] { activeServices.compactMap { $0 as? SupportUI } }
+    var availableSupports: [SupportUI] {
+        activeServices.compactMap { ($0 as? SupportUI) ?? ($0 as? SupportProviding)?.createSupport() }
+    }
 }
 
 // Service extension for rawValue

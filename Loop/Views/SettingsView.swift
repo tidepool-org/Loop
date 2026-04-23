@@ -97,7 +97,7 @@ struct SettingsView: View {
                         servicesSection
                     }
 
-                    ForEach(pluginMenuItems) { item in
+                    ForEach(pluginMenuItems.filter({ $0.section != .support })) { item in
                         item.view
                     }
 
@@ -265,9 +265,8 @@ extension SettingsView {
     private var softwareUpdateSection: some View {
         Section(footer: Text(viewModel.versionUpdateViewModel.footer(appName: appName))) {
             NavigationLink(destination: viewModel.versionUpdateViewModel.softwareUpdateView) {
-                Text(NSLocalizedString("Software Update", comment: "Software update button link text"))
-                Spacer()
                 viewModel.versionUpdateViewModel.icon
+                Text(NSLocalizedString("Software Update", comment: "Software update button link text"))
             }
         }
     }
