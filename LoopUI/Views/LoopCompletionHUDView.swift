@@ -83,6 +83,8 @@ public final class LoopCompletionHUDView: BaseHUDView {
 
     public var closedLoopDisallowedLocalizedDescription: String?
 
+    public var onAgoUpdate: ((TimeInterval?) -> Void)?
+
     public func assertTimer(_ active: Bool = true) {
         if active && window != nil, let date = lastLoopCompleted {
             initTimer(date)
@@ -152,6 +154,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
             let ago = min(abs(min(0, date.timeIntervalSinceNow)), TimeInterval.days(7))
 
             freshness = LoopCompletionFreshness(age: ago)
+            onAgoUpdate?(ago)
 
             if let timeString = ago.truncatedTimeAgoString {
                 switch traitCollection.preferredContentSizeCategory {
@@ -183,6 +186,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
                 accessibilityLabel = nil
             }
         } else if !loopIconClosed, let mostRecentPumpDataDate, let mostRecentGlucoseDataDate {
+            onAgoUpdate?(nil)
             let ago = max(abs(min(0, mostRecentPumpDataDate.timeIntervalSinceNow)), abs(min(0, mostRecentGlucoseDataDate.timeIntervalSinceNow)))
 
             // when closed loop is off, always present fresh unless there is a device issue (handled else where)
@@ -206,6 +210,7 @@ public final class LoopCompletionHUDView: BaseHUDView {
                 accessibilityLabel = nil
             }
         } else {
+            onAgoUpdate?(nil)
             caption?.text = ""
             accessibilityLabel = LocalizedString("Waiting for first run", comment: "Accessibility label describing completion HUD waiting for first run")
         }

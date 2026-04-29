@@ -1636,6 +1636,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
             hudView.loopCompletionHUD.lastLoopCompleted = loopManager.lastLoopCompleted
             hudView.loopCompletionHUD.mostRecentGlucoseDataDate = loopManager.mostRecentGlucoseDataDate
             hudView.loopCompletionHUD.mostRecentPumpDataDate = loopManager.mostRecentPumpDataDate
+            hudView.loopCompletionHUD.onAgoUpdate = { [weak self] ago in
+                self?.loopCompletionModalViewModel.ago = ago
+            }
 
             hudView.cgmStatusHUD.stateColors = .cgmStatus
             hudView.cgmStatusHUD.tintColor = .label
