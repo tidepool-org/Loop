@@ -131,18 +131,13 @@ class SettingsViewModel {
     }
     
     var loopStatusCircleFreshness: LoopCompletionFreshness {
-        var age: TimeInterval
-        
         if automaticDosingEnabled {
             let lastLoopCompletion = lastLoopCompletion ?? Date().addingTimeInterval(.minutes(16))
-            age = abs(min(0, lastLoopCompletion.timeIntervalSinceNow))
+            let age = abs(min(0, lastLoopCompletion.timeIntervalSinceNow))
+            return LoopCompletionFreshness(age: age)
         } else {
-            let mostRecentGlucoseDataDate = mostRecentGlucoseDataDate ?? Date().addingTimeInterval(.minutes(16))
-            let mostRecentPumpDataDate = mostRecentPumpDataDate ?? Date().addingTimeInterval(.minutes(16))
-            age = max(abs(min(0, mostRecentPumpDataDate.timeIntervalSinceNow)), abs(min(0, mostRecentGlucoseDataDate.timeIntervalSinceNow)))
+            return .fresh
         }
-        
-        return LoopCompletionFreshness(age: age)
     }
     
     @ObservationIgnored lazy private var cancellables = Set<AnyCancellable>()
