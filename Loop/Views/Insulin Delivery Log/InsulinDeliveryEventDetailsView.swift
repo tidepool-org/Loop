@@ -57,7 +57,8 @@ struct InsulinDeliveryEventDetailsView: View {
     }
 
     var endTimeValue: String? {
-        doseEntry.endDate.formatted(date: .omitted, time: .standard)
+        guard doseEntry.startDate != doseEntry.endDate, !doseEntry.isMutable else { return nil }
+        return doseEntry.endDate.formatted(date: .omitted, time: .standard)
     }
 
     var durationValue: String? {
