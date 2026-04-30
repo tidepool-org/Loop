@@ -74,10 +74,8 @@ public class AlertPermissionsChecker: ObservableObject {
                 if FeatureFlags.criticalAlertsEnabled {
                     newSettings.criticalAlertsDisabled = settings.criticalAlertSetting == .disabled
                 }
-                if #available(iOS 15.0, *) {
-                    newSettings.scheduledDeliveryEnabled = settings.scheduledDeliverySetting == .enabled
-                    newSettings.timeSensitiveDisabled = settings.alertSetting != .disabled && settings.timeSensitiveSetting == .disabled
-                }
+                newSettings.scheduledDeliveryEnabled = settings.scheduledDeliverySetting == .enabled
+                newSettings.timeSensitiveDisabled = settings.alertSetting != .disabled && settings.timeSensitiveSetting == .disabled
                 self.notificationCenterSettings = newSettings
                 completion?()
             }

@@ -286,9 +286,7 @@ extension NotificationManager {
         let notification = UNMutableNotificationContent()
         notification.title = String(format: NSLocalizedString("Required %1$@ App Update", comment: "The notification title for a required app update (1: app name)"), appName)
         notification.body = String(format: NSLocalizedString("To continue to use %1$@, go to the App Store to install the latest version.", comment: "The notification body for a required app update (1: app name)"), appName)
-        if #available(iOS 15.0, *) {
-            notification.interruptionLevel = .critical
-        }
+        notification.interruptionLevel = .critical
         notification.sound = .defaultCritical
 
         let request = UNNotificationRequest(
