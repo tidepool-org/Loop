@@ -521,7 +521,7 @@ final class LoopDataManager: ObservableObject {
             var input = try await fetchData(for: now, ensureDosingCoverageStart: lastManualBolusVisibilityWindowStartDate)
             input.recommendationType = .manualBolus
             newState.input = input
-            newState.output = LoopAlgorithm.run(input: input)
+            newState.output = await runAlgorithm(input: input)
 
             let lastStoredManualBolus = input.doses.last(
                 where: {
@@ -541,6 +541,10 @@ final class LoopDataManager: ObservableObject {
         publishedMostRecentGlucoseDataDate = glucoseStore.latestGlucose?.startDate
         publishedMostRecentPumpDataDate = mostRecentPumpDataDate
         await updateRemoteRecommendation()
+    }
+
+    private nonisolated func runAlgorithm(input: StoredDataAlgorithmInput) async -> AlgorithmOutput<StoredCarbEntry> {
+        LoopAlgorithm.run(input: input)
     }
 
     /// Cancel the active temp basal if it was automatically issued
