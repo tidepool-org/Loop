@@ -101,6 +101,7 @@ class LoopAppManager: NSObject {
     private var statefulPluginManager: StatefulPluginManager!
     private var criticalEventLogExportManager: CriticalEventLogExportManager!
     private var deviceLog: PersistentDeviceLog!
+    private var requiredUpdateModalPresented = false
 
     // HealthStorePreferredGlucoseUnitDidChange will be notified once the user completes the health access form. Set to .milligramsPerDeciliter until then
     public private(set) var displayGlucosePreference = DisplayGlucosePreference(displayGlucoseUnit: .milligramsPerDeciliter)
@@ -444,7 +445,11 @@ class LoopAppManager: NSObject {
                                         servicesManager: servicesManager,
                                         alertIssuer: alertManager)
         servicesManager.supportManager = supportManager
-        
+
+        supportManager.onRequiredUpdate = { [weak self] in
+            self?.handleRequiredVersionUpdate()
+        }
+
         setWhitelistedDevices()
 
         onboardingManager = OnboardingManager(pluginManager: pluginManager,
@@ -759,6 +764,30 @@ class LoopAppManager: NSObject {
         deviceDataManager.deviceWhitelist = DeviceWhitelist(cgmDevices: Array(whitelistedCGMs), pumpDevices: Array(whitelistedPumps))
     }
 
+    private func handleRequiredVersionUpdate() {
+        settingsManager.mutateLoopSettings { settings in
+            settings.dosingEnabled = false
+        }
+        settingsViewModel.closedLoopPreference = false
+
+        guard !requiredUpdateModalPresented else { return }
+        requiredUpdateModalPresented = true
+
+        let appName = Bundle.main.bundleDisplayName
+        NotificationManager.sendRequiredUpdateNotification(appName: appName)
+
+        let updateView = RequiredVersionUpdateView(appName: appName) { [weak self] in
+            self?.supportManager.openAppStore()
+        }
+        let hostingController = UIHostingController(rootView: updateView)
+        hostingController.modalPresentationStyle = .overFullScreen
+        hostingController.modalTransitionStyle = .crossDissolve
+        hostingController.isModalInPresentation = true
+        hostingController.view.backgroundColor = .clear
+
+        rootViewController?.topmostViewController.present(hostingController, animated: true)
+    }
+
     private func isProtectedDataAvailable() -> Bool {
         let fileManager = FileManager.default
         do {
@@ -870,7 +899,8 @@ extension LoopAppManager: UNUserNotificationCenterDelegate {
              LoopNotificationCategory.remoteBolusFailure.rawValue,
              LoopNotificationCategory.remoteCarbs.rawValue,
              LoopNotificationCategory.remoteCarbsFailure.rawValue,
-             LoopNotificationCategory.missedMeal.rawValue:
+             LoopNotificationCategory.missedMeal.rawValue,
+             LoopNotificationCategory.requiredUpdate.rawValue:
             completionHandler([.badge, .sound, .list, .banner])
         default:
             // For all others, banners are not to be displayed while in the foreground

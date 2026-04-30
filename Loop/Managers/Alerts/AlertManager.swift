@@ -212,14 +212,10 @@ public final class AlertManager {
             notificationContent.title = NSLocalizedString("Loop Failure", comment: "The notification title for a loop failure")
             let shouldMuteAlert = alertMuter.shouldMuteAlert(scheduledAt: timeUntilNotification)
             if isCritical, FeatureFlags.criticalAlertsEnabled {
-                if #available(iOS 15.0, *) {
-                    notificationContent.interruptionLevel = .critical
-                }
+                notificationContent.interruptionLevel = .critical
                 notificationContent.sound = shouldMuteAlert ? .defaultCriticalSound(withAudioVolume: 0.0) : .defaultCritical
             } else {
-                if #available(iOS 15.0, *) {
-                    notificationContent.interruptionLevel = .timeSensitive
-                }
+                notificationContent.interruptionLevel = .timeSensitive
                 notificationContent.sound = shouldMuteAlert ? nil : .default
             }
             notificationContent.categoryIdentifier = LoopNotificationCategory.loopNotRunning.rawValue

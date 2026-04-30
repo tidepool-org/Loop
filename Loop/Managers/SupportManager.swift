@@ -37,6 +37,8 @@ public final class SupportManager {
         }
     }
     
+    var onRequiredUpdate: (() -> Void)?
+
     private let alertIssuer: AlertIssuer
     private let deviceSupportDelegate: DeviceSupportDelegate
     private let pluginManager: PluginManager
@@ -134,6 +136,9 @@ extension SupportManager {
         Task { @MainActor in
             let versionUpdate = await checkVersion()
             self.notify(versionUpdate)
+            if versionUpdate == .required {
+                self.onRequiredUpdate?()
+            }
         }
     }
     
