@@ -190,26 +190,11 @@ extension Alert.InterruptionLevel {
         // Since this is arbitrary anyway, might as well make it match iOS's values
         switch self {
         case .active:
-            if #available(iOS 15.0, *) {
-                return NSNumber(value: UNNotificationInterruptionLevel.active.rawValue)
-            } else {
-                // https://developer.apple.com/documentation/usernotifications/unnotificationinterruptionlevel/active
-                return 1
-            }
+            return NSNumber(value: UNNotificationInterruptionLevel.active.rawValue)
         case .timeSensitive:
-            if #available(iOS 15.0, *) {
-                return NSNumber(value: UNNotificationInterruptionLevel.timeSensitive.rawValue)
-            } else {
-                // https://developer.apple.com/documentation/usernotifications/unnotificationinterruptionlevel/timesensitive
-                return 2
-            }
+            return NSNumber(value: UNNotificationInterruptionLevel.timeSensitive.rawValue)
         case .critical:
-            if #available(iOS 15.0, *) {
-                return NSNumber(value: UNNotificationInterruptionLevel.critical.rawValue)
-            } else {
-                // https://developer.apple.com/documentation/usernotifications/unnotificationinterruptionlevel/critical
-                return 3
-            }
+            return NSNumber(value: UNNotificationInterruptionLevel.critical.rawValue)
         }
     }
     

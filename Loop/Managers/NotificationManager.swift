@@ -282,6 +282,22 @@ extension NotificationManager {
         }
     }
     
+    static func sendRequiredUpdateNotification(appName: String) {
+        let notification = UNMutableNotificationContent()
+        notification.title = String(format: NSLocalizedString("Required %1$@ App Update", comment: "The notification title for a required app update (1: app name)"), appName)
+        notification.body = String(format: NSLocalizedString("To continue to use %1$@, go to the App Store to install the latest version.", comment: "The notification body for a required app update (1: app name)"), appName)
+        notification.interruptionLevel = .critical
+        notification.sound = .defaultCritical
+
+        let request = UNNotificationRequest(
+            identifier: LoopNotificationCategory.requiredUpdate.rawValue,
+            content: notification,
+            trigger: nil
+        )
+
+        UNUserNotificationCenter.current().add(request)
+    }
+
     private static func remoteCarbEntryNotificationBody(amountInGrams: Double) -> String {
         return String(format: NSLocalizedString("Remote Carbs Entry: %d grams", comment: "The carb amount message for a remote carbs entry notification. (1: Carb amount in grams)"), Int(amountInGrams))
     }

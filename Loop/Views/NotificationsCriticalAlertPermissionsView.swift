@@ -53,16 +53,12 @@ public struct NotificationsCriticalAlertPermissionsView: View {
             {
                 manageNotifications
                 notificationsEnabledStatus
-                if #available(iOS 15.0, *) {
-                    if !checker.notificationCenterSettings.notificationsDisabled {
-                        notificationDelivery
-                    }
+                if !checker.notificationCenterSettings.notificationsDisabled {
+                    notificationDelivery
                 }
                 criticalAlertsStatus
-                if #available(iOS 15.0, *) {
-                    if !checker.notificationCenterSettings.notificationsDisabled {
-                        timeSensitiveStatus
-                    }
+                if !checker.notificationCenterSettings.notificationsDisabled {
+                    timeSensitiveStatus
                 }
             }
             notificationAndCriticalAlertPermissionSupportSection

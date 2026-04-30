@@ -444,13 +444,8 @@ private extension NotificationSettings {
         let timeSensitiveSetting: NotificationSettings.NotificationSetting
         let scheduledDeliverySetting: NotificationSettings.NotificationSetting
 
-        if #available(iOS 15.0, *) {
-            timeSensitiveSetting = NotificationSettings.NotificationSetting(notificationSettings.timeSensitiveSetting)
-            scheduledDeliverySetting = NotificationSettings.NotificationSetting(notificationSettings.scheduledDeliverySetting)
-        } else {
-            timeSensitiveSetting = .unknown
-            scheduledDeliverySetting = .unknown
-        }
+        timeSensitiveSetting = NotificationSettings.NotificationSetting(notificationSettings.timeSensitiveSetting)
+        scheduledDeliverySetting = NotificationSettings.NotificationSetting(notificationSettings.scheduledDeliverySetting)
 
         self.init(authorizationStatus: NotificationSettings.AuthorizationStatus(notificationSettings.authorizationStatus),
                   soundSetting: NotificationSettings.NotificationSetting(notificationSettings.soundSetting),

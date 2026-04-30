@@ -504,6 +504,15 @@ class InsulinDeliveryLogViewModel {
     }
     
     private func handleDoseEvents(doses: [DoseEntry], decisions: [LightDosingDecision], fetchedDate: Date, events: inout [InsulinDeliveryLogEvent]) {
+        let isPumpSuspended: Bool = {
+            if case .suspended = pumpManager.status.basalDeliveryState {
+                return true
+            }
+            return false
+        }()
+        
+        let latestSuspendStartDate = doses.last(where: { $0.type == .suspend })?.startDate
+
         for dose in doses {
             let decision = decisions.first(where: { $0.id == dose.decisionId })
             switch dose.type {
@@ -512,17 +521,18 @@ class InsulinDeliveryLogViewModel {
             case .bolus:
                 handleBolusEvents(dose: dose, decision: decision, events: &events)
             case .resume, .suspend:
-                handleSuspendResumeEvents(dose: dose, fetchedDate: fetchedDate, events: &events)
+                let isActiveSuspension = isPumpSuspended && dose.type == .suspend && dose.startDate == latestSuspendStartDate
+                handleSuspendResumeEvents(dose: dose, fetchedDate: fetchedDate, isActiveSuspension: isActiveSuspension, events: &events)
             }
         }
     }
-    
-    private func handleSuspendResumeEvents(dose: DoseEntry, fetchedDate: Date, events: inout [InsulinDeliveryLogEvent]) {
+
+    private func handleSuspendResumeEvents(dose: DoseEntry, fetchedDate: Date, isActiveSuspension: Bool, events: inout [InsulinDeliveryLogEvent]) {
         guard dose.type == .suspend else { return }
-        
+
         events.append(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.suspended), dose), date: dose.startDate))
-        
-        if !dose.isMutable || dose.endDate <= fetchedDate {
+
+        if !isActiveSuspension && (!dose.isMutable || dose.endDate <= fetchedDate) {
             events.append(InsulinDeliveryLogEvent(id: dose.syncIdentifier ?? UUID().uuidString, type: .pumpEvent(.insulin(.resumed), dose), date: dose.endDate))
         }
     }
