@@ -210,14 +210,10 @@ class LoopStatusModalViewModel {
     }()
     
     var freshness: LoopCompletionFreshness {
-        guard !isPumpInSignalLoss, !isCGMInSignalLoss else {
-            return .stale
-        }
-        
         guard loopIconClosed else {
             return .fresh
         }
-        
+
         return LoopCompletionFreshness(age: ago)
     }
     
