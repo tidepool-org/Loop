@@ -265,8 +265,11 @@ extension SettingsView {
     private var softwareUpdateSection: some View {
         Section(footer: Text(viewModel.versionUpdateViewModel.footer(appName: appName))) {
             NavigationLink(destination: viewModel.versionUpdateViewModel.softwareUpdateView) {
-                viewModel.versionUpdateViewModel.icon
-                Text(NSLocalizedString("Software Update", comment: "Software update button link text"))
+                HStack {
+                    Text(NSLocalizedString("Software Update", comment: "Software update button link text"))
+                    Spacer()
+                    viewModel.versionUpdateViewModel.icon
+                }
             }
         }
     }
