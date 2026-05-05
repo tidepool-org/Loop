@@ -19,7 +19,7 @@ struct RequiredVersionUpdateView: View {
             VStack(spacing: 16) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 40))
-                    .foregroundColor(.red)
+                    .foregroundColor(.critical)
                     .padding(.top, 8)
 
                 Text(String(format: NSLocalizedString("Required %1$@ App Update", comment: "Title for required version update modal (1: app name)"), appName))
@@ -33,12 +33,13 @@ struct RequiredVersionUpdateView: View {
                 }
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
 
                 Divider()
+                    .padding(.horizontal, -40)
 
                 Button(action: openAppStore) {
                     Text(NSLocalizedString("App Store", comment: "Button title to open the App Store for a required update"))
+                        .font(.title3)
                         .fontWeight(.semibold)
                 }
                 .padding(.bottom, 8)
