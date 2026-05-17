@@ -116,7 +116,7 @@ final class CarbAndBolusFlowViewModel: ObservableObject {
             date: lastEntryDate,
             quantity: LoopQuantity(unit: .gram, doubleValue: Double(grams)),
             startDate: carbEntryDate,
-            foodType: nil,
+            foodType: carbAbsorptionTime.emoji,
             absorptionTime: absorptionTime(for: carbAbsorptionTime)
         )
 
