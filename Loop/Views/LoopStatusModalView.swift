@@ -300,10 +300,15 @@ class LoopStatusModalViewModel {
               let timeString = ago.truncatedTimeAgoString
         else { return nil }
 
-        if ago > .hours(1) {
-            return String(format: NSLocalizedString(">%@ ago", comment: "last loop completed string with greater than sign. (1: truncated time ago)"), timeString)
-        } else {
-            return String(format: NSLocalizedString("%@ ago", comment: "last loop completed string. (1: truncated time ago)"), timeString)
-        }
+        
+        // CI (June 2, 2026): Replace the below line with commented code below it after 510k submission is complete and build hold is lifted.
+        
+        return NSLocalizedString("\(timeString) ago", comment: "last loop completed string")
+
+//        if ago > .hours(1) {
+//            return String(format: NSLocalizedString(">%@ ago", comment: "last loop completed string with greater than sign. (1: truncated time ago)"), timeString)
+//        } else {
+//            return String(format: NSLocalizedString("%@ ago", comment: "last loop completed string. (1: truncated time ago)"), timeString)
+//        }
     }
 }
