@@ -260,6 +260,7 @@
 		84DF48BF2F6A0AE500BEDB40 /* VideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48BE2F6A0AE500BEDB40 /* VideoView.swift */; };
 		84DF48C12F6A0AED00BEDB40 /* Double+Closest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48C02F6A0AED00BEDB40 /* Double+Closest.swift */; };
 		84DF48C32F6A0AF600BEDB40 /* Image+Crop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DF48C22F6A0AF600BEDB40 /* Image+Crop.swift */; };
+		84E0EB0B2FD8063100D6FBB6 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E0EB0A2FD8063100D6FBB6 /* SceneDelegate.swift */; };
 		84E8BBCA2CCA16290078E6CF /* PresetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E8BBC92CCA16290078E6CF /* PresetsView.swift */; };
 		84EC162E2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 84EC162D2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan */; };
 		84F20DFD2D0B9C3A0089DF02 /* EditPresetDurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F20DFC2D0B9C3A0089DF02 /* EditPresetDurationView.swift */; };
@@ -1154,6 +1155,7 @@
 		84DF48BE2F6A0AE500BEDB40 /* VideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoView.swift; sourceTree = "<group>"; };
 		84DF48C02F6A0AED00BEDB40 /* Double+Closest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+Closest.swift"; sourceTree = "<group>"; };
 		84DF48C22F6A0AF600BEDB40 /* Image+Crop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Image+Crop.swift"; sourceTree = "<group>"; };
+		84E0EB0A2FD8063100D6FBB6 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		84E8BBC92CCA16290078E6CF /* PresetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsView.swift; sourceTree = "<group>"; };
 		84EC162D2C9115CA00D220C5 /* DIYLoopUnitTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = DIYLoopUnitTestPlan.xctestplan; sourceTree = "<group>"; };
 		84F20DFC2D0B9C3A0089DF02 /* EditPresetDurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPresetDurationView.swift; sourceTree = "<group>"; };
@@ -1963,6 +1965,7 @@
 				43F5C2CE1B92A2A0003EB13D /* View Controllers */,
 				43F5C2CF1B92A2ED003EB13D /* Views */,
 				897A5A9724C22DCE00C4E71D /* View Models */,
+				84E0EB0A2FD8063100D6FBB6 /* SceneDelegate.swift */,
 			);
 			path = Loop;
 			sourceTree = "<group>";
@@ -3700,6 +3703,7 @@
 				4F11D3C220DD80B3006E072C /* WatchHistoricalGlucose.swift in Sources */,
 				14ED83F62C6421F9008B4A5C /* FavoriteFoodInsightsCardView.swift in Sources */,
 				C174233C259BEB0F00399C9D /* ManualEntryDoseViewModel.swift in Sources */,
+				84E0EB0B2FD8063100D6FBB6 /* SceneDelegate.swift in Sources */,
 				1D05219B2469E9DF000EBBDE /* StoredAlert.swift in Sources */,
 				84FA9D332CF7FD0D004162B4 /* PresetsHistoryView.swift in Sources */,
 				841306BB2F7F0D9C00AF0320 /* ReferencesView.swift in Sources */,
