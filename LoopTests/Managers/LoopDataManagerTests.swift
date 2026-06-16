@@ -459,6 +459,39 @@ class LoopDataManagerTests: XCTestCase {
 
     }
 
+    func testFetchDataSensitivityCoversCarbHistoryStart() async throws {
+        // A bolus recommendation may append a `potentialCarbEntry` with a startDate up to
+        // ~12h in the past. The sensitivity and override timelines must extend at least that
+        // far back; otherwise `closestPrior` on those timelines returns nil for the appended
+        // entry and `CarbStatusBuilder` construction traps. See LOOP-5693.
+        let input = try await loopDataManager.fetchData(for: now)
+        let carbsStart = now.addingTimeInterval(CarbMath.dateAdjustmentPast + .minutes(-1))
+
+        XCTAssertFalse(input.sensitivity.isEmpty)
+        XCTAssertLessThanOrEqual(input.sensitivity.first!.startDate, carbsStart)
+    }
+
+    func testRecommendManualBolusWithPastPotentialCarbEntryDoesNotCrash() async throws {
+        // Regression for LOOP-5693: a potential carb entry with a startDate older than the
+        // dose/glucose-derived sensitivity timeline used to trap inside LoopAlgorithm because
+        // the sensitivity schedule didn't cover the carb entry's startDate.
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-13)), quantity: .glucose(value: 130)),
+            StoredGlucoseSample(startDate: d(.minutes(-8)), quantity: .glucose(value: 140)),
+            StoredGlucoseSample(startDate: d(.minutes(-3)), quantity: .glucose(value: 150)),
+        ]
+
+        let pastEntry = NewCarbEntry(
+            quantity: .carbs(value: 30),
+            startDate: d(.hours(-11)),
+            foodType: nil,
+            absorptionTime: .hours(3)
+        )
+
+        let recommendation = try await loopDataManager.recommendManualBolus(potentialCarbEntry: pastEntry)
+        XCTAssertNotNil(recommendation)
+    }
+
     func testFetchDataWithHighInsulinNeedsPresetMitigation() async throws {
         var input = try await loopDataManager.fetchData(for: now)
         XCTAssertEqual(input.target.count, 1)

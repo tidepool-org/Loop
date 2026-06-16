@@ -389,8 +389,15 @@ final class LoopDataManager: ObservableObject {
             recommendationEffectInterval: recommendationEffectInterval
         )
 
+        // Sensitivity and override timelines must also cover the carb history range so that
+        // any carb entry within that window (including a synthetic `potentialCarbEntry` later
+        // appended for a manual bolus recommendation) maps to an ISF and any active override.
+        // Otherwise `closestPrior(to: entry.startDate)` returns nil downstream and the algorithm
+        // traps in `CarbStatusBuilder` construction.
+        let scheduleQueryStart = min(neededSensitivityTimeline.start, carbsStart)
+
         let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(
-            startDate: neededSensitivityTimeline.start,
+            startDate: scheduleQueryStart,
             endDate: neededSensitivityTimeline.end
         )
 
@@ -404,7 +411,7 @@ final class LoopDataManager: ObservableObject {
             throw LoopError.configurationError(.maximumBasalRatePerHour)
         }
 
-        var overrides = temporaryPresetsManager.presetHistory.getOverrideHistory(startDate: neededSensitivityTimeline.start, endDate: forecastEndTime)
+        var overrides = temporaryPresetsManager.presetHistory.getOverrideHistory(startDate: scheduleQueryStart, endDate: forecastEndTime)
 
         // For recommendation, we should consider preMeal override to be ending at time of dose
         if presumePresetEndingNow,
