@@ -161,6 +161,10 @@ class LoopAppManager: NSObject {
 
     var isLaunchComplete: Bool { state == .launchComplete }
 
+    /// True until `initialize(windowProvider:launchOptions:)` has been called. Used by
+    /// `SceneDelegate` to ensure the app manager is initialized only once per process.
+    var isInInitialState: Bool { state == .initialize }
+
     private func resumeLaunch() async {
         if state == .checkProtectedDataAvailable {
             checkProtectedDataAvailable()

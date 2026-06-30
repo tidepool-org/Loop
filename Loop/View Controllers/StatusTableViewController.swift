@@ -227,7 +227,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
         super.viewWillAppear(animated)
 
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        navigationController?.setToolbarHidden(false, animated: animated)
+        navigationController?.setToolbarHidden(true, animated: animated)
         
         alertPermissionsChecker.checkNow()
 
@@ -643,7 +643,8 @@ final class StatusTableViewController: LoopChartsTableViewController {
         let statusRowMode = self.determineStatusRowMode()
 
         updateBannerAndHUDandStatusRows(statusRowMode: statusRowMode, newSize: currentContext.newSize, animated: animated)
-
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: UIDevice.current.orientation.isLandscape ? 0 : 52, right: 0)
+        
         redrawCharts()
 
         reloading = false
@@ -1208,7 +1209,7 @@ final class StatusTableViewController: LoopChartsTableViewController {
             // Compute the height of the HUD, defaulting to 70
             let hudHeight = ceil(hudView?.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height ?? 74)
             var availableSize = max(tableView.bounds.width, tableView.bounds.height)
-            availableSize -= (tableView.safeAreaInsets.top + tableView.safeAreaInsets.bottom + hudHeight)
+            availableSize -= (tableView.safeAreaInsets.top + tableView.safeAreaInsets.bottom + tableView.contentInset.bottom + hudHeight)
 
             switch ChartRow(rawValue: indexPath.row)! {
             case .glucose:

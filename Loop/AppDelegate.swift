@@ -9,10 +9,17 @@
 import UIKit
 import LoopKit
 
-final class AppDelegate: UIResponder, UIApplicationDelegate, WindowProvider {
-    var window: UIWindow?
+final class AppDelegate: UIResponder, UIApplicationDelegate {
 
-    private let loopAppManager = LoopAppManager()
+    /// The shared app manager. Owned by the app delegate so that application-level
+    /// callbacks (remote notifications, protected data) can reach it, while the
+    /// window-tied lifecycle is driven by `SceneDelegate`.
+    let loopAppManager = LoopAppManager()
+
+    /// Launch options captured at process launch, forwarded to `loopAppManager`
+    /// when the scene connects (the window does not yet exist at launch time).
+    private(set) var launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+
     private let log = DiagnosticLog(category: "AppDelegate")
 
     // MARK: - UIApplicationDelegate - Initialization
@@ -22,40 +29,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, WindowProvider {
 
         setenv("CFNETWORK_DIAGNOSTICS", "3", 1)
 
-        // Avoid doing full initialization when running tests
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            loopAppManager.initialize(windowProvider: self, launchOptions: launchOptions)
-            loopAppManager.launch()
-            return loopAppManager.isLaunchComplete
-        } else {
-            return true
-        }
-    }
+        // The window is created and owned by the scene, so initialization of the
+        // app manager is deferred to `SceneDelegate.scene(_:willConnectTo:options:)`.
+        // Stash the launch options so the scene can forward them.
+        self.launchOptions = launchOptions
 
-    // MARK: - UIApplicationDelegate - Life Cycle
-
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        log.default(#function)
-
-        loopAppManager.didBecomeActive()
-    }
-
-    func applicationWillResignActive(_ application: UIApplication) {
-        log.default(#function)
-    }
-
-    func applicationDidEnterBackground(_ application: UIApplication) {
-        log.default(#function)
-    }
-
-    func applicationWillEnterForeground(_ application: UIApplication) {
-        log.default(#function)
-        
-        loopAppManager.askUserToConfirmLoopReset()
-    }
-
-    func applicationWillTerminate(_ application: UIApplication) {
-        log.default(#function)
+        return true
     }
 
     // MARK: - UIApplicationDelegate - Environment
@@ -85,20 +64,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, WindowProvider {
         log.default(#function)
 
         completionHandler(loopAppManager.handleRemoteNotification(userInfo as? [String: AnyObject]) ? .noData : .failed)
-    }
-    
-    // MARK: - UIApplicationDelegate - Deeplinking
-    
-    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        loopAppManager.handle(url)
-    }
-
-    // MARK: - UIApplicationDelegate - Continuity
-
-    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
-        log.default(#function)
-
-        return loopAppManager.userActivity(userActivity, restorationHandler: restorationHandler)
     }
 
     // MARK: - UIApplicationDelegate - Interface

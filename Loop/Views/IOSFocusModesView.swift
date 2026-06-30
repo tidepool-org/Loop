@@ -47,7 +47,7 @@ struct IOSFocusModesView: View {
                 // MARK: To be removed before next DIY Sync
                 if appName.contains("Tidepool") {
                     VStack(alignment: .leading, spacing: 8) {
-                        Image("focus-mode-1")
+                        Image.optional("focus-mode-1")
                         
                         Text(
                             String(
@@ -64,7 +64,7 @@ struct IOSFocusModesView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Image("focus-mode-2")
+                        Image.optional("focus-mode-2")
                         
                         Text(
                             NSLocalizedString(
