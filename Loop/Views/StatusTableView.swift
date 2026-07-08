@@ -262,7 +262,7 @@ struct LegacyTabBarBackground: ViewModifier {
 
 struct ActionTabView<Content: View>: View {
     
-    @State private var interfaceOrientation: UIInterfaceOrientation
+    @State private var orientation: UIInterfaceOrientation
 
     private let content: Content
     private let tabs: [ActionTab]
@@ -274,23 +274,23 @@ struct ActionTabView<Content: View>: View {
         self.content = content()
         self.tabs = tabs()
         
-        self.interfaceOrientation = currentInterfaceOrientation()
+        self.orientation = Self.currentOrientation()
     }
     
     var body: some View {
         content
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if interfaceOrientation.isPortrait {
+                if orientation.isPortrait {
                     ActionTabBar(items: tabs)
                         .modifier(LegacyTabBarBackground())
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
-                interfaceOrientation = currentInterfaceOrientation()
+                orientation = Self.currentOrientation()
             }
     }
 
-    private func currentInterfaceOrientation() -> UIInterfaceOrientation {
+    private static func currentOrientation() -> UIInterfaceOrientation {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .first?
