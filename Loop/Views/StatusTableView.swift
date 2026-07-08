@@ -262,34 +262,38 @@ struct LegacyTabBarBackground: ViewModifier {
 
 struct ActionTabView<Content: View>: View {
     
-    @State private var orientation: UIDeviceOrientation
+    @State private var interfaceOrientation: UIInterfaceOrientation
 
-    private let allowedOrientations: [UIDeviceOrientation]
     private let content: Content
     private let tabs: [ActionTab]
     
     init(
-        allowedOrientations: [UIDeviceOrientation] = [.portrait],
         @ViewBuilder content: @escaping () -> Content,
         @ActionTabBuilder tabs: @escaping () -> [ActionTab],
     ) {
         self.content = content()
         self.tabs = tabs()
         
-        self.allowedOrientations = allowedOrientations
-        self.orientation = UIDevice.current.orientation
+        self.interfaceOrientation = currentInterfaceOrientation()
     }
     
     var body: some View {
         content
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if orientation == .unknown || allowedOrientations.contains(orientation) {
+                if interfaceOrientation.isPortrait {
                     ActionTabBar(items: tabs)
                         .modifier(LegacyTabBarBackground())
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
-                orientation = UIDevice.current.orientation
+                interfaceOrientation = currentInterfaceOrientation()
             }
+    }
+
+    private func currentInterfaceOrientation() -> UIInterfaceOrientation {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?
+            .interfaceOrientation ?? .portrait
     }
 }
