@@ -40,12 +40,10 @@ extension UIAlertController {
     ///   - selectionHandler: A closure to execute when a manager is selected
     ///   - identifier: Identifier of the selected PumpManager
     internal convenience init(availablePumpManagers: [PumpManagerDescriptor], selectionHandler: @escaping (_ identifier: String) -> Void) {
-        let preferredStyle: UIAlertController.Style = .alert
-
         self.init(
             title: NSLocalizedString("Add Pump", comment: "Action sheet title selecting Pump"),
             message: nil,
-            preferredStyle: preferredStyle
+            preferredStyle: .actionSheet
         )
 
         for availablePumpManager in availablePumpManagers {
@@ -58,9 +56,7 @@ extension UIAlertController {
             ))
         }
 
-        if #available(iOS 26.0, *) {
-            addCancelAction()
-        }
+        addRedCancelAction()
     }
 
     /// Initializes an action sheet-styled controller for selecting a CGMManager
@@ -70,14 +66,12 @@ extension UIAlertController {
     ///   - selectionHandler: A closure to execute when either a new CGMManager or the current PumpManager is selected
     ///   - identifier: Identifier of the selected CGMManager
     internal convenience init(availableCGMManagers: [CGMManagerDescriptor], selectionHandler: @escaping (_ identifier: String) -> Void) {
-        let preferredStyle: UIAlertController.Style = .alert
-
         self.init(
             title: NSLocalizedString("Add CGM", comment: "Action sheet title selecting CGM"),
             message: nil,
-            preferredStyle: preferredStyle
+            preferredStyle: .actionSheet
         )
-        
+
         for availableCGMManager in availableCGMManagers.sorted(by: {$0.localizedTitle < $1.localizedTitle}) {
             addAction(UIAlertAction(
                 title: availableCGMManager.localizedTitle,
@@ -88,9 +82,7 @@ extension UIAlertController {
             ))
         }
 
-        if #available(iOS 26.0, *) {
-            addCancelAction()
-        }
+        addRedCancelAction()
     }
 
     internal convenience init(deleteCGMManagerHandler handler: @escaping (_ isDeleted: Bool) -> Void) {
@@ -146,6 +138,10 @@ extension UIAlertController {
     internal func addCancelAction(handler: ((UIAlertAction) -> Void)? = nil) {
         let cancel = NSLocalizedString("Cancel", comment: "The title of the cancel action in an action sheet")
         addAction(UIAlertAction(title: cancel, style: .cancel, handler: handler))
+    }
+    internal func addRedCancelAction(handler: ((UIAlertAction) -> Void)? = nil) {
+        let cancel = NSLocalizedString("Cancel", comment: "The title of the cancel action in an action sheet")
+        addAction(UIAlertAction(title: cancel, style: .destructive, handler: handler))
     }
 }
 
