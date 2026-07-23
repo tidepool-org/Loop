@@ -1774,7 +1774,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let alert = UIAlertController(availablePumpManagers: availablePumpManagers) { [weak self] (identifier) in
                 self?.addPumpManager(withIdentifier: identifier)
             }
-            alert.addCancelAction { _ in }
+            if #unavailable(iOS 26.0) {
+                alert.addCancelAction { _ in }
+            }
             present(alert, animated: true, completion: nil)
         }
     }
@@ -1791,7 +1793,9 @@ final class StatusTableViewController: LoopChartsTableViewController {
             let alert = UIAlertController(availableCGMManagers: availableCGMManagers) { [weak self] identifier in
                 self?.addCGMManager(withIdentifier: identifier)
             }
-            alert.addCancelAction { _ in }
+            if #unavailable(iOS 26.0) {
+                alert.addCancelAction { _ in }
+            }
             present(alert, animated: true, completion: nil)
         }
     }

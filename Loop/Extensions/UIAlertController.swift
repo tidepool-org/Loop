@@ -40,10 +40,12 @@ extension UIAlertController {
     ///   - selectionHandler: A closure to execute when a manager is selected
     ///   - identifier: Identifier of the selected PumpManager
     internal convenience init(availablePumpManagers: [PumpManagerDescriptor], selectionHandler: @escaping (_ identifier: String) -> Void) {
+        let preferredStyle: UIAlertController.Style = .alert
+
         self.init(
             title: NSLocalizedString("Add Pump", comment: "Action sheet title selecting Pump"),
             message: nil,
-            preferredStyle: .actionSheet
+            preferredStyle: preferredStyle
         )
 
         for availablePumpManager in availablePumpManagers {
@@ -55,6 +57,10 @@ extension UIAlertController {
                 }
             ))
         }
+
+        if #available(iOS 26.0, *) {
+            addCancelAction()
+        }
     }
 
     /// Initializes an action sheet-styled controller for selecting a CGMManager
@@ -64,10 +70,12 @@ extension UIAlertController {
     ///   - selectionHandler: A closure to execute when either a new CGMManager or the current PumpManager is selected
     ///   - identifier: Identifier of the selected CGMManager
     internal convenience init(availableCGMManagers: [CGMManagerDescriptor], selectionHandler: @escaping (_ identifier: String) -> Void) {
+        let preferredStyle: UIAlertController.Style = .alert
+
         self.init(
             title: NSLocalizedString("Add CGM", comment: "Action sheet title selecting CGM"),
             message: nil,
-            preferredStyle: .actionSheet
+            preferredStyle: preferredStyle
         )
         
         for availableCGMManager in availableCGMManagers.sorted(by: {$0.localizedTitle < $1.localizedTitle}) {
@@ -78,6 +86,10 @@ extension UIAlertController {
                     selectionHandler(availableCGMManager.identifier)
             }
             ))
+        }
+
+        if #available(iOS 26.0, *) {
+            addCancelAction()
         }
     }
 
@@ -108,10 +120,12 @@ extension UIAlertController {
     ///   - selectionHandler: A closure to execute when a service is selected.
     ///   - identifier: The identifier of the selected service.
     internal convenience init(availableServices: [ServiceDescriptor], selectionHandler: @escaping (_ identifier: String) -> Void) {
+        let preferredStyle: UIAlertController.Style = .alert
+
         self.init(
             title: NSLocalizedString("Add Service", comment: "Action sheet title selecting service"),
             message: nil,
-            preferredStyle: .actionSheet
+            preferredStyle: preferredStyle
         )
 
         for availableService in availableServices {
@@ -122,6 +136,10 @@ extension UIAlertController {
                     selectionHandler(availableService.identifier)
                 }
             ))
+        }
+
+        if #available(iOS 26.0, *) {
+            addCancelAction()
         }
     }
 
