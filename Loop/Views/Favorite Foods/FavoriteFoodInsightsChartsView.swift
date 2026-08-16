@@ -12,13 +12,13 @@ import LoopKitUI
 import LoopAlgorithm
 import Combine
 
-struct FavoriteFoodsInsightsChartsView: View {
+struct FavoriteFoodsInsightsChartsView<Header: View>: View {
     private enum ChartRow: Int, CaseIterable {
         case glucose
         case iob
         case dose
         case carbEffects
-        
+
         var title: String {
             switch self {
             case .glucose: "Glucose"
@@ -31,43 +31,58 @@ struct FavoriteFoodsInsightsChartsView: View {
     
     @ObservedObject var viewModel: FavoriteFoodInsightsViewModel
     @Binding var showHowCarbEffectsWorks: Bool
+    let header: Header
 
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     
     @State private var isInteractingWithChart = false
     
+    init(viewModel: FavoriteFoodInsightsViewModel, showHowCarbEffectsWorks: Binding<Bool>, @ViewBuilder header: () -> Header) {
+        self.viewModel = viewModel
+        self._showHowCarbEffectsWorks = showHowCarbEffectsWorks
+        self.header = header()
+    }
+
     var body: some View {
-        VStack(spacing: 10) {
-            let charts = ChartRow.allCases
-            ForEach(charts, id: \.rawValue) { chart in
-                ZStack(alignment: .topLeading) {
-                    HStack {
-                        Text(chart.title)
-                            .font(.subheadline)
-                            .bold()
-                        
-                        if chart == .carbEffects {
-                            explainCarbEffectsButton
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .opacity(isInteractingWithChart ? 0 : 1)
-                    
-                    Group {
-                        switch chart {
-                        case .glucose:
-                            glucoseChart
-                        case .iob:
-                            iobChart
-                        case .dose:
-                            doseChart
-                        case .carbEffects:
-                            carbEffectsChart
-                        }
-                    }
+        ForEach(ChartRow.allCases, id: \.rawValue) { chart in
+            Section {
+                chartCell(for: chart)
+            } header: {
+                if chart == .glucose {
+                    header
                 }
             }
         }
+    }
+
+    private func chartCell(for chart: ChartRow) -> some View {
+        ZStack(alignment: .topLeading) {
+            HStack {
+                Text(chart.title)
+                    .font(.subheadline)
+                    .bold()
+
+                if chart == .carbEffects {
+                    explainCarbEffectsButton
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .opacity(isInteractingWithChart ? 0 : 1)
+
+            Group {
+                switch chart {
+                case .glucose:
+                    glucoseChart
+                case .iob:
+                    iobChart
+                case .dose:
+                    doseChart
+                case .carbEffects:
+                    carbEffectsChart
+                }
+            }
+        }
+        .padding(.vertical, 8)
     }
     
     private var glucoseChart: some View {

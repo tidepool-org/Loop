@@ -39,28 +39,28 @@ struct FavoriteFoodAddEditView: View {
                         ToolbarItem(placement: .navigationBarLeading) {
                             dismissButton
                         }
-                        
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            saveButton
-                        }
                     }
                     .navigationBarTitle("New Favorite Food", displayMode: .inline)
                     .onAppear {
-                        expandedRow = .name
+                        // Forward entry into an empty form only.
+                        if viewModel.name.isEmpty {
+                            expandedRow = .name
+                        }
+                    }
+                    .onDisappear {
+                        expandedRow = nil
                     }
             }
+            .keyboardEntryPage()
         }
         else {
             content
+                .keyboardEntryPage()
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         if viewModel.updatedFavoriteFood != nil {
                             dismissButton
                         }
-                    }
-                    
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        saveButton
                     }
                 }
                 .navigationBarBackButtonHidden(viewModel.updatedFavoriteFood != nil)
@@ -75,10 +75,11 @@ struct FavoriteFoodAddEditView: View {
             
             ScrollView {
                 card
-                    .padding(.top, 8)
-                
-                saveActionButton
+                    .padding(.top, 16)
             }
+        }
+        .actionAreaInset {
+            saveActionButton
         }
         .alert(item: $viewModel.alert, content: alert(for:))
         .sheet(isPresented: $showHowAbsorptionTimeWorks) {
@@ -87,29 +88,32 @@ struct FavoriteFoodAddEditView: View {
     }
     
     private var card: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 16) {
             let nameFocused: Binding<Bool> = Binding(get: { expandedRow == .name }, set: { expandedRow = $0 ? .name : nil })
             let carbQuantityFocused: Binding<Bool> = Binding(get: { expandedRow == .carbQuantity }, set: { expandedRow = $0 ? .carbQuantity : nil })
             let foodTypeFocused: Binding<Bool> = Binding(get: { expandedRow == .foodType }, set: { expandedRow = $0 ? .foodType : nil })
             let absorptionTimeFocused: Binding<Bool> = Binding(get: { expandedRow == .absorptionTime }, set: { expandedRow = $0 ? .absorptionTime : nil })
             
             TextFieldRow(text: $viewModel.name, isFocused: nameFocused, title: "Name", placeholder: "Apple")
-            
+                .padding(.vertical, 4)
+
             CardSectionDivider()
 
             CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: carbQuantityFocused, title: "Carb Quantity", preferredCarbUnit: viewModel.preferredCarbUnit)
-            
+                .padding(.vertical, 4)
+
             CardSectionDivider()
             
             EmojiRow(text: $viewModel.foodType, isFocused: foodTypeFocused, emojiType: .food, title: "Food Type")
-            
+                .padding(.vertical, 4)
+
             CardSectionDivider()
 
             AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
-                .padding(.bottom, 2)
+                .padding(.vertical, 4)
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
         .background(CardBackground())
         .padding(.horizontal)
     }
@@ -154,15 +158,8 @@ extension FavoriteFoodAddEditView {
             Text("Save")
         }
         .buttonStyle(ActionButtonStyle())
-        .padding()
         .disabled(viewModel.updatedFavoriteFood == nil)
-    }
-    
-    private var saveButton: some View {
-        Button(action: viewModel.save) {
-            Text("Save")
-        }
-        .disabled(viewModel.updatedFavoriteFood == nil)
+        .accessibilityIdentifier("button_Save")
     }
 }
 

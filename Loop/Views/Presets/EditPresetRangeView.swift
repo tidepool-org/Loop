@@ -54,73 +54,74 @@ struct EditPresetRangeView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            List {
-                VStack(spacing: 24) {
-                    VStack(spacing: 8) {
-                        HStack {
-                            Text("Correction Range")
-                                .foregroundColor(.secondary)
-                                .font(.system(size: 14))
-                            Image(systemName: "info.circle")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .foregroundColor(.accentColor)
-                                .frame(width: UIFontMetrics.default.scaledValue(for: 14), height: UIFontMetrics.default.scaledValue(for: 14))
-                        }
+        List {
+            VStack(spacing: 24) {
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Correction Range")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 14))
+                        Image(systemName: "info.circle")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .foregroundColor(.accentColor)
+                            .frame(width: UIFontMetrics.default.scaledValue(for: 14), height: UIFontMetrics.default.scaledValue(for: 14))
+                    }
+                    .padding(.top, 10)
+
+
+                    Text("Set your correction range")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .multilineTextAlignment(.center)
                         .padding(.top, 10)
 
-
-                        Text("Set your correction range")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 10)
-
-                        Text("To reduce the risk of highs or lows, you may want to set an adjusted range if you think your glucose will vary more than usual.")
-                            .multilineTextAlignment(.center)
-                    }
-
-                    VStack(spacing: 0) {
-                        Text("Adjusted Range")
-
-                        (
-                            boundText(for: (displayedRange).lowerBound) +
-                            Text("-").foregroundColor(.secondary)
-                                .font(.system(size: 42, weight: .light))
-                            +
-                            boundText(for: (displayedRange).upperBound)
-                        )
-
-
-                        Text("mg/dL")
-                            .foregroundColor(.secondary)
-                    }
-
-                    Divider()
-
-                    GlucoseRangePicker(range: Binding(
-                        get: { displayedRange },
-                        set: { editedRange = $0 }),
-                                       unit: displayGlucosePreference.unit,
-                                       minValue: nil,
-                                       guardrail: guardrail)
-                    .padding(.vertical, -20)
-
-                    HStack(spacing: 8) {
-                        Image(systemName: "info.circle")
-                            .foregroundColor(.accentColor)
-
-                        tipText.font(.system(size: 14))
-                    }
-                    .padding()
-                    .overlay( /// apply a rounded border
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(.gray, lineWidth: 1)
-                    )
+                    Text("To reduce the risk of highs or lows, you may want to set an adjusted range if you think your glucose will vary more than usual.")
+                        .multilineTextAlignment(.center)
                 }
+
+                VStack(spacing: 0) {
+                    Text("Adjusted Range")
+
+                    (
+                        boundText(for: (displayedRange).lowerBound) +
+                        Text("-").foregroundColor(.secondary)
+                            .font(.system(size: 42, weight: .light))
+                        +
+                        boundText(for: (displayedRange).upperBound)
+                    )
+
+
+                    Text("mg/dL")
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                GlucoseRangePicker(range: Binding(
+                    get: { displayedRange },
+                    set: { editedRange = $0 }),
+                                   unit: displayGlucosePreference.unit,
+                                   minValue: nil,
+                                   guardrail: guardrail)
+                .padding(.vertical, -20)
+
+                HStack(spacing: 8) {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.accentColor)
+
+                    tipText.font(.system(size: 14))
+                }
+                .padding()
+                .overlay( /// apply a rounded border
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(.gray, lineWidth: 1)
+                )
             }
-            actionArea
+        }
+        .actionAreaInset {
+            guardrailWarningIfNecessary
+            actionButton
         }
         .navigationBarBackButtonHidden(editedRange != nil)
         .navigationBarItems(
@@ -128,7 +129,6 @@ struct EditPresetRangeView: View {
         )
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Edit Preset")
-        .edgesIgnoringSafeArea(.bottom)
     }
 
     private var tipText: some View {
@@ -161,14 +161,6 @@ struct EditPresetRangeView: View {
     }
 
 
-    private var actionArea: some View {
-        VStack(spacing: 0) {
-            guardrailWarningIfNecessary
-            actionButton
-        }
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
-    }
-
     private var actionButton: some View {
         Button("Save") {
             range = editedRange
@@ -176,7 +168,6 @@ struct EditPresetRangeView: View {
         }
         .disabled(editedRange == nil)
         .buttonStyle(ActionButtonStyle(.primary))
-        .padding()
     }
 
 
@@ -203,7 +194,7 @@ struct EditPresetRangeView: View {
             if !crossedThresholds.isEmpty {
                 CorrectionRangeGuardrailWarning(crossedThresholds: crossedThresholds)
             }
-        }.padding()
+        }
     }
 }
 

@@ -29,24 +29,23 @@ struct BolusEntryView: View {
 
     @FocusState private var bolusFieldFocused: Bool
 
-    private var accessoryClearance: CGFloat {
-        dynamicTypeSize.isAccessibilitySize ? 72 : 52
-    }
-
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollViewReader { scrollProxy in
             List {
                 self.chartSection
                 self.summarySection
             }
-            .padding(.top, -28)
+            .contentMargins(.top, 16, for: .scrollContent)
             .insetGroupedListStyle()
-            if !bolusFieldFocused {
-                actionArea
+            .actionAreaInset {
+                actionAreaContent
             }
-
+            .keyboardEntryPage()
+            .onDisappear {
+                bolusFieldFocused = false
+            }
         }
-        .navigationBarTitle(self.title)
+        .navigationBarTitle(self.title, displayMode: .inline)
         .supportedInterfaceOrientations(.portrait)
         .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
         .onReceive(self.viewModel.$recommendedBolus) { recommendation in
@@ -65,7 +64,6 @@ struct BolusEntryView: View {
                 enteredBolusStringBinding.wrappedValue = "0"
             }
         }
-        .edgesIgnoringSafeArea(self.bolusFieldFocused ? [] : .bottom)
         .task {
             await self.viewModel.generateRecommendationAndStartObserving()
         }
@@ -127,7 +125,7 @@ struct BolusEntryView: View {
         } header: {
             if let scheduleOverride = viewModel.scheduleOverride ?? viewModel.preMealOverride {
                 ActivePresetBanner(override: scheduleOverride)
-                    .listRowInsets(EdgeInsets(top: 30, leading: 0, bottom: 12, trailing: 0))
+                    .listRowInsets(EdgeInsets(top: 16, leading: 0, bottom: 12, trailing: 0))
                     .padding(.horizontal, -20)
                     .padding(.bottom, 8)
                     .textCase(nil)
@@ -297,12 +295,6 @@ struct BolusEntryView: View {
                             viewModel.updateEnteredBolus(enteredBolusString)
                         }
                     }
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") { bolusFieldFocused = false }
-                        }
-                    }
                 bolusUnitsLabel
             }
             .accessibilityIdentifier("textField_Bolus")
@@ -324,22 +316,18 @@ struct BolusEntryView: View {
         )
     }
 
-    private var actionArea: some View {
-        VStack(spacing: 0) {
-            if viewModel.isNoticeVisible {
-                warning(for: viewModel.activeNotice!)
-                    .padding([.top, .horizontal])
-                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
-            }
-
-            if viewModel.isManualGlucosePromptVisible {
-                enterManualGlucoseButton
-                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
-            }
-            actionButton
+    @ViewBuilder
+    private var actionAreaContent: some View {
+        if viewModel.isNoticeVisible {
+            warning(for: viewModel.activeNotice!)
+                .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
         }
-        .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
+
+        if viewModel.isManualGlucosePromptVisible {
+            enterManualGlucoseButton
+                .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
+        }
+        actionButton
     }
 
     private func warning(for notice: BolusEntryViewModel.Notice) -> some View {
@@ -384,7 +372,6 @@ struct BolusEntryView: View {
             label: { Text("Enter Fingerstick Glucose", comment: "Button text prompting manual glucose entry on bolus screen") }
         )
         .buttonStyle(ActionButtonStyle(viewModel.primaryButton == .manualGlucoseEntry ? .primary : .secondary))
-        .padding([.top, .horizontal])
         .accessibilityIdentifier("button_EnterFingerstickGlucose")
     }
 
@@ -416,7 +403,6 @@ struct BolusEntryView: View {
         )
         .buttonStyle(ActionButtonStyle(viewModel.primaryButton == .actionButton ? .primary : .secondary))
         .disabled(viewModel.enacting)
-        .padding()
         .accessibilityIdentifier("button_bolusAction")
     }
 
