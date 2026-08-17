@@ -219,11 +219,9 @@ struct ManualEntryDoseView: View {
     }
 
     private var actionArea: some View {
-        VStack(spacing: 0) {
+        FloatingActionArea {
             actionButton.disabled(actionButtonDisabled)
         }
-        .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
     }
             
     private var actionButton: some View {
@@ -242,7 +240,6 @@ struct ManualEntryDoseView: View {
             }
         )
         .buttonStyle(ActionButtonStyle(.primary))
-        .padding()
     }
 }
 

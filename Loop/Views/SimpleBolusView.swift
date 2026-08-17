@@ -17,7 +17,6 @@ struct SimpleBolusView: View {
     @Environment(\.dismissAction) var dismiss
     
     @State private var shouldGlucoseEntryBecomeFirstResponder = false
-    @State private var isKeyboardVisible = false
     @State private var isClosedLoopOffInformationalModalVisible = false
 
     @ObservedObject var viewModel: SimpleBolusViewModel
@@ -52,28 +51,24 @@ struct SimpleBolusView: View {
     }
         
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollViewReader { scrollProxy in
             List() {
                 self.infoSection
                 self.summarySection
             }
+            .contentMargins(.top, 16, for: .scrollContent)
             .insetGroupedListStyle()
             .navigationBarTitle(Text(self.title), displayMode: .inline)
-            
-            self.actionArea
-                .frame(height: self.isKeyboardVisible ? 0 : nil)
-                .opacity(self.isKeyboardVisible ? 0 : 1)
-        }
-        .onKeyboardStateChange { state in
-            self.isKeyboardVisible = state.height > 0
-            
-            if state.height == 0 {
-                // Ensure tapping 'Enter Bolus' can make the text field the first responder again
-                self.shouldGlucoseEntryBecomeFirstResponder = false
+            .actionAreaInset {
+                self.actionAreaContent
+            }
+            .keyboardEntryPage()
+            .onKeyboardStateChange { state in
+                if state.height == 0 {
+                    self.shouldGlucoseEntryBecomeFirstResponder = false
+                }
             }
         }
-        .keyboardAware()
-        .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
         .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
     }
     
@@ -126,7 +121,7 @@ struct SimpleBolusView: View {
                     textAlignment: .right,
                     keyboardType: .decimalPad,
                     maxLength: 5,
-                    doneButtonColor: .loopAccent
+                    isDismissible: false
                 )
                 carbUnitsLabel
             }
@@ -150,11 +145,9 @@ struct SimpleBolusView: View {
                     keyboardType: .decimalPad,
                     shouldBecomeFirstResponder: shouldGlucoseEntryBecomeFirstResponder,
                     maxLength: 4,
-                    doneButtonColor: .loopAccent
+                    isDismissible: false
                 )
-                .onAppear {
-                    shouldGlucoseEntryBecomeFirstResponder = true
-                }
+                .autoFocusOnFirstAppearance($shouldGlucoseEntryBecomeFirstResponder, enabled: viewModel.manualGlucoseString.isEmpty)
                 .accessibilityIdentifier("textField_CurrentGlucose")
 
                 glucoseUnitsLabel
@@ -212,7 +205,7 @@ struct SimpleBolusView: View {
                     textAlignment: .right,
                     keyboardType: .decimalPad,
                     maxLength: 5,
-                    doneButtonColor: .loopAccent
+                    isDismissible: false
                 )
                 
                 bolusUnitsLabel
@@ -239,24 +232,19 @@ struct SimpleBolusView: View {
             .foregroundColor(Color(.secondaryLabel))
     }
 
-    private var actionArea: some View {
-        VStack(spacing: 0) {
-            if viewModel.isNoticeVisible {
-                warning(for: viewModel.activeNotice!)
-                    .padding([.top, .horizontal])
-                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
-            }
-            actionButton
+    @ViewBuilder
+    private var actionAreaContent: some View {
+        if viewModel.isNoticeVisible {
+            warning(for: viewModel.activeNotice!)
+                .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
         }
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
+        actionButton
     }
     
     private var actionButton: some View {
         Button<Text>(
             action: {
-                if self.viewModel.actionButtonAction == .enterBolus {
-                    self.shouldGlucoseEntryBecomeFirstResponder = true
-                } else {
+                if self.viewModel.actionButtonAction != .enterBolus {
                     Task {
                         if await viewModel.saveAndDeliver() {
                             self.dismiss()
@@ -277,9 +265,8 @@ struct SimpleBolusView: View {
                 }
             }
         )
-        .disabled(viewModel.actionButtonDisabled)
+        .disabled(viewModel.actionButtonDisabled || viewModel.actionButtonAction == .enterBolus)
         .buttonStyle(ActionButtonStyle(.primary))
-        .padding()
         .accessibilityIdentifier("button_bolusAction")
     }
     

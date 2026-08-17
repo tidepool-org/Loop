@@ -160,7 +160,7 @@ final class CarbEntryViewModel: ObservableObject {
                 date: date,
                 quantity: LoopQuantity(unit: preferredCarbUnit, doubleValue: quantity),
                 startDate: time,
-                foodType: usesCustomFoodType ? foodType : selectedDefaultAbsorptionTimeEmoji,
+                foodType: effectiveFoodType,
                 absorptionTime: absorptionTime,
                 favoriteFoodID: favoriteFoodID
             )
@@ -170,9 +170,13 @@ final class CarbEntryViewModel: ObservableObject {
         }
     }
     
+    var effectiveFoodType: String {
+        usesCustomFoodType ? foodType : selectedDefaultAbsorptionTimeEmoji
+    }
+
     var saveFavoriteFoodButtonDisabled: Bool {
         get {
-            if let carbsQuantity, 0...maxCarbEntryQuantity.doubleValue(for: preferredCarbUnit) ~= carbsQuantity, foodType != "", selectedFavoriteFoodIndex == -1 {
+            if let carbsQuantity, 0...maxCarbEntryQuantity.doubleValue(for: preferredCarbUnit) ~= carbsQuantity, effectiveFoodType != "", selectedFavoriteFoodIndex == -1 {
                 return false
             }
             return true

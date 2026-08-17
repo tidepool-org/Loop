@@ -43,23 +43,14 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                         ToolbarItem(placement: .navigationBarLeading) {
                             dismissButton
                         }
-                        
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            continueButton
-                                .accessibilityIdentifier("button_Continue")
-                        }
                     }
             }
             .navigationViewStyle(.stack)
+            .keyboardEntryPage()
         }
         else {
             content
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        continueButton
-                            .accessibilityIdentifier("button_Continue")
-                    }
-                }
+                .keyboardEntryPage()
         }
     }
     
@@ -77,12 +68,11 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 warningsCard
 
                 mainCard
-                    .padding(.top, 8)
-                
-                continueActionButton
-                
-                if isNewEntry, FeatureFlags.allowExperimentalFeatures {
+                    .padding(.top, 16)
+
+                if isNewEntry, FeatureFlags.allowExperimentalFeatures, !viewModel.favoriteFoods.isEmpty {
                     favoriteFoodsCard
+                        .padding(.top, 16)
                 }
                 
                 if viewModel.selectedFavoriteFoodLastEaten != nil, FeatureFlags.allowExperimentalFeatures {
@@ -104,9 +94,18 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 .accessibility(hidden: true)
             }
         }
+        .actionAreaInset {
+            if isNewEntry, FeatureFlags.allowExperimentalFeatures, viewModel.selectedFavoriteFood == nil {
+                saveAsFavoriteFoodButton
+            }
+            continueActionButton
+        }
+        .onDisappear {
+            expandedRow = nil
+        }
         .alert(item: $viewModel.alert, content: alert(for:))
         .sheet(isPresented: $showAddFavoriteFood, onDismiss: clearExpandedRow) {
-            FavoriteFoodAddEditView(carbsQuantity: $viewModel.carbsQuantity.wrappedValue, foodType: $viewModel.foodType.wrappedValue, absorptionTime: $viewModel.absorptionTime.wrappedValue, onSave: onFavoriteFoodSave(_:))
+            FavoriteFoodAddEditView(carbsQuantity: $viewModel.carbsQuantity.wrappedValue, foodType: viewModel.effectiveFoodType, absorptionTime: $viewModel.absorptionTime.wrappedValue, onSave: onFavoriteFoodSave(_:))
         }
         .sheet(isPresented: $showHowAbsorptionTimeWorks) {
             HowAbsorptionTimeWorksView()
@@ -119,7 +118,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     }
     
     private var mainCard: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 16) {
             let amountConsumedFocused: Binding<Bool> = Binding(get: { expandedRow == .amountConsumed }, set: { expandedRow = $0 ? .amountConsumed : nil })
             let timeFocused: Binding<Bool> = Binding(get: { expandedRow == .time }, set: { expandedRow = $0 ? .time : nil })
             let foodTypeFocused: Binding<Bool> = Binding(get: { expandedRow == .foodType }, set: { expandedRow = $0 ? .foodType : nil })
@@ -134,22 +133,25 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             )
             
             CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: amountConsumedFocused, title: NSLocalizedString("Amount Consumed", comment: "Label for carb quantity entry row on carb entry screen"), preferredCarbUnit: viewModel.preferredCarbUnit)
+                .padding(.vertical, 4)
 
             CardSectionDivider()
             
             DatePickerRow(date: $viewModel.time, isFocused: timeFocused, minimumDate: viewModel.minimumDate, maximumDate: viewModel.maximumDate)
-            
+                .padding(.vertical, 4)
+
             CardSectionDivider()
             
             FoodTypeRow(selectedFavoriteFood: selectedFavoriteFoodBinding, foodType: $viewModel.foodType, absorptionTime: $viewModel.absorptionTime, selectedDefaultAbsorptionTimeEmoji: $viewModel.selectedDefaultAbsorptionTimeEmoji, usesCustomFoodType: $viewModel.usesCustomFoodType, absorptionTimeWasEdited: $viewModel.absorptionTimeWasEdited, isFocused: foodTypeFocused, showClearFavoriteFoodButton: !isNewEntry, defaultAbsorptionTimes: viewModel.defaultAbsorptionTimes)
-            
+                .padding(.vertical, 4)
+
             CardSectionDivider()
             
             AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
-                .padding(.bottom, 2)
+                .padding(.vertical, 4)
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
         .background(CardBackground())
         .padding(.horizontal)
     }
@@ -259,6 +261,7 @@ extension CarbEntryView {
                                 .minimumScaleFactor(0.8)
                                 .frame(maxWidth: .infinity, alignment: .trailing)
                         }
+                        .padding(.vertical, 8)
                         
                         if expandedRow == .favoriteFoodSelection {
                             Picker("", selection: $viewModel.selectedFavoriteFoodIndex) {
@@ -280,18 +283,6 @@ extension CarbEntryView {
                             }
                         }
                     }
-                    
-                    if viewModel.selectedFavoriteFood == nil {
-                        CardSectionDivider()
-                    }
-                }
-                
-                if viewModel.selectedFavoriteFood == nil {
-                    Button(action: saveAsFavoriteFood) {
-                        Text("Save as favorite food")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .disabled(viewModel.saveFavoriteFoodButtonDisabled)
                 }
             }
             .padding(.vertical, 12)
@@ -339,20 +330,23 @@ extension CarbEntryView {
         }
     }
     
-    private var continueButton: some View {
-        Button(action: viewModel.continueToBolus) {
-            Text("Continue")
-        }
-        .disabled(viewModel.continueButtonDisabled)
+    private var saveAsFavoriteFoodButton: some View {
+        SecondaryActionButton(Text("Save as New Favorite Food", comment: "Button title to create a new favorite food from the current carb entry"), action: saveAsFavoriteFood)
+            .disabled(viewModel.saveFavoriteFoodButtonDisabled)
+            .accessibilityIdentifier("button_SaveAsFavoriteFood")
     }
     
     private var continueActionButton: some View {
-        Button(action: viewModel.continueToBolus) {
+        Button(action: {
+            expandedRow = nil
+            KeyboardDismissal.resignFirstResponder()
+            viewModel.continueToBolus()
+        }) {
             Text("Continue")
         }
         .buttonStyle(ActionButtonStyle())
-        .padding()
         .disabled(viewModel.continueButtonDisabled)
+        .accessibilityIdentifier("button_Continue")
     }
     
 }
