@@ -244,8 +244,7 @@ struct SimpleBolusView: View {
     private var actionButton: some View {
         Button<Text>(
             action: {
-                if self.viewModel.actionButtonAction == .enterBolus {
-                } else {
+                if self.viewModel.actionButtonAction != .enterBolus {
                     Task {
                         if await viewModel.saveAndDeliver() {
                             self.dismiss()
