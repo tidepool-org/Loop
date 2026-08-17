@@ -235,7 +235,6 @@
 		842E40AF2F22F7E2000CCCE0 /* PresetsTrainingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842E409A2F22F7E2000CCCE0 /* PresetsTrainingCard.swift */; };
 		842E40B12F22F7E2000CCCE0 /* CommonUseStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842E409B2F22F7E2000CCCE0 /* CommonUseStep.swift */; };
 		842E40B22F22F7E2000CCCE0 /* TherapySettingsExampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842E409D2F22F7E2000CCCE0 /* TherapySettingsExampleView.swift */; };
-		843D21863033B17F007E5B4A /* EditPresetRangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 843D21853033B17F007E5B4A /* EditPresetRangeView.swift */; };
 		843F32EA2E2815D400B0B271 /* InsulinDeliveryLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 843F32E92E2815D400B0B271 /* InsulinDeliveryLogViewModel.swift */; };
 		8446319F2F5A2AB3003825AE /* PresetsPerformanceHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8446319E2F5A2AA9003825AE /* PresetsPerformanceHistoryViewModel.swift */; };
 		847F23432E4543140035C864 /* ActivePresetBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847F23422E4543140035C864 /* ActivePresetBanner.swift */; };
@@ -1131,7 +1130,6 @@
 		842E40A02F22F7E2000CCCE0 /* TintedContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TintedContent.swift; sourceTree = "<group>"; };
 		842E40A32F22F7E2000CCCE0 /* PresetsTrainingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingView.swift; sourceTree = "<group>"; };
 		842E40A52F22F7E2000CCCE0 /* PresetsTrainingContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsTrainingContent.swift; sourceTree = "<group>"; };
-		843D21853033B17F007E5B4A /* EditPresetRangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPresetRangeView.swift; sourceTree = "<group>"; };
 		843F32E92E2815D400B0B271 /* InsulinDeliveryLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinDeliveryLogViewModel.swift; sourceTree = "<group>"; };
 		8446319E2F5A2AA9003825AE /* PresetsPerformanceHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsPerformanceHistoryViewModel.swift; sourceTree = "<group>"; };
 		847F23422E4543140035C864 /* ActivePresetBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePresetBanner.swift; sourceTree = "<group>"; };
@@ -2546,7 +2544,6 @@
 				84DF48A42F6A0A6E00BEDB40 /* Media Player */,
 				842E40A62F22F7E2000CCCE0 /* Training */,
 				84E8BBC22CC9B9780078E6CF /* Components */,
-				843D21853033B17F007E5B4A /* EditPresetRangeView.swift */,
 			);
 			path = Presets;
 			sourceTree = "<group>";
@@ -3722,7 +3719,6 @@
 				14C9706A2C5A833100E8A01B /* CarbEffectChartView.swift in Sources */,
 				439897371CD2F80600223065 /* AnalyticsServicesManager.swift in Sources */,
 				84DF48B52F6A0AD400BEDB40 /* AudioPlayer.swift in Sources */,
-				843D21863033B17F007E5B4A /* EditPresetRangeView.swift in Sources */,
 				14D906F42A846510006EB79A /* FavoriteFoodsViewModel.swift in Sources */,
 				DDC389FE2A2C4C830066E2E8 /* GlucoseBasedApplicationFactorSelectionView.swift in Sources */,
 				A9C62D842331700E00535612 /* DiagnosticLog+Subsystem.swift in Sources */,
