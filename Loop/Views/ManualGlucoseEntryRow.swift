@@ -37,8 +37,7 @@ struct ManualGlucoseEntryRow: View {
                     textAlignment: .right,
                     keyboardType: .decimalPad,
                     shouldBecomeFirstResponder: isManualGlucoseEntryRowVisible,
-                    maxLength: 4,
-                    doneButtonColor: .loopAccent
+                    maxLength: 4
                 )
                 .onChange(of: valueText, perform: { value in
                     if let manualGlucoseValue = displayGlucosePreference.formatter.numberFormatter.number(from: valueText)?.doubleValue {

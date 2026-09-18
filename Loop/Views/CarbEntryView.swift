@@ -43,23 +43,14 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                         ToolbarItem(placement: .navigationBarLeading) {
                             dismissButton
                         }
-                        
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            continueButton
-                                .accessibilityIdentifier("button_Continue")
-                        }
                     }
             }
             .navigationViewStyle(.stack)
+            .keyboardEntryPage()
         }
         else {
             content
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        continueButton
-                            .accessibilityIdentifier("button_Continue")
-                    }
-                }
+                .keyboardEntryPage()
         }
     }
     
@@ -78,11 +69,10 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
 
                 mainCard
                     .padding(.top, 8)
-                
-                continueActionButton
-                
+
                 if isNewEntry, FeatureFlags.allowExperimentalFeatures {
                     favoriteFoodsCard
+                        .padding(.top, 8)
                 }
                 
                 if viewModel.selectedFavoriteFoodLastEaten != nil, FeatureFlags.allowExperimentalFeatures {
@@ -104,9 +94,15 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 .accessibility(hidden: true)
             }
         }
+        .actionAreaInset {
+            continueActionButton
+        }
+        .onDisappear {
+            expandedRow = nil
+        }
         .alert(item: $viewModel.alert, content: alert(for:))
         .sheet(isPresented: $showAddFavoriteFood, onDismiss: clearExpandedRow) {
-            FavoriteFoodAddEditView(carbsQuantity: $viewModel.carbsQuantity.wrappedValue, foodType: $viewModel.foodType.wrappedValue, absorptionTime: $viewModel.absorptionTime.wrappedValue, onSave: onFavoriteFoodSave(_:))
+            FavoriteFoodAddEditView(carbsQuantity: $viewModel.carbsQuantity.wrappedValue, foodType: viewModel.effectiveFoodType, absorptionTime: $viewModel.absorptionTime.wrappedValue, onSave: onFavoriteFoodSave(_:))
         }
         .sheet(isPresented: $showHowAbsorptionTimeWorks) {
             HowAbsorptionTimeWorksView()
@@ -138,11 +134,11 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             CardSectionDivider()
             
             DatePickerRow(date: $viewModel.time, isFocused: timeFocused, minimumDate: viewModel.minimumDate, maximumDate: viewModel.maximumDate)
-            
+
             CardSectionDivider()
             
             FoodTypeRow(selectedFavoriteFood: selectedFavoriteFoodBinding, foodType: $viewModel.foodType, absorptionTime: $viewModel.absorptionTime, selectedDefaultAbsorptionTimeEmoji: $viewModel.selectedDefaultAbsorptionTimeEmoji, usesCustomFoodType: $viewModel.usesCustomFoodType, absorptionTimeWasEdited: $viewModel.absorptionTimeWasEdited, isFocused: foodTypeFocused, showClearFavoriteFoodButton: !isNewEntry, defaultAbsorptionTimes: viewModel.defaultAbsorptionTimes)
-            
+
             CardSectionDivider()
             
             AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
@@ -292,6 +288,7 @@ extension CarbEntryView {
                             .frame(maxWidth: .infinity)
                     }
                     .disabled(viewModel.saveFavoriteFoodButtonDisabled)
+                    .accessibilityIdentifier("button_SaveAsFavoriteFood")
                 }
             }
             .padding(.vertical, 12)
@@ -339,20 +336,17 @@ extension CarbEntryView {
         }
     }
     
-    private var continueButton: some View {
-        Button(action: viewModel.continueToBolus) {
-            Text("Continue")
-        }
-        .disabled(viewModel.continueButtonDisabled)
-    }
-    
     private var continueActionButton: some View {
-        Button(action: viewModel.continueToBolus) {
+        Button(action: {
+            expandedRow = nil
+            KeyboardDismissal.resignFirstResponder()
+            viewModel.continueToBolus()
+        }) {
             Text("Continue")
         }
         .buttonStyle(ActionButtonStyle())
-        .padding()
         .disabled(viewModel.continueButtonDisabled)
+        .accessibilityIdentifier("button_Continue")
     }
     
 }

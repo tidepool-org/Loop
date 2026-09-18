@@ -101,7 +101,7 @@ extension FavoriteFoodsView {
             
             editButton
         }
-        .listRowInsets(EdgeInsets(top: 20, leading: 4, bottom: 10, trailing: 4))
+        .listRowInsets(EdgeInsets(top: 16, leading: 4, bottom: 10, trailing: 4))
     }
     
     private var dismissButton: some View {

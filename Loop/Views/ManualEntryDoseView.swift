@@ -41,6 +41,7 @@ struct ManualEntryDoseView: View {
             }
             .navigationBarTitle(self.title)
             .supportedInterfaceOrientations(.portrait)
+            .keyboardEntryPage()
         }
     }
     
@@ -182,12 +183,7 @@ struct ManualEntryDoseView: View {
                             enteredBolusString = String(newValue.prefix(5))
                         }
                     }
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") { bolusFieldFocused = false }
-                        }
-                    }
+                    .keyboardDismissAccessory()
                 bolusUnitsLabel
             }
         }
@@ -219,11 +215,9 @@ struct ManualEntryDoseView: View {
     }
 
     private var actionArea: some View {
-        VStack(spacing: 0) {
+        ActionArea {
             actionButton.disabled(actionButtonDisabled)
         }
-        .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
     }
             
     private var actionButton: some View {
@@ -242,7 +236,6 @@ struct ManualEntryDoseView: View {
             }
         )
         .buttonStyle(ActionButtonStyle(.primary))
-        .padding()
     }
 }
 

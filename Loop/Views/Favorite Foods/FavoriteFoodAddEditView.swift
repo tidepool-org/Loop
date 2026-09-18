@@ -39,28 +39,28 @@ struct FavoriteFoodAddEditView: View {
                         ToolbarItem(placement: .navigationBarLeading) {
                             dismissButton
                         }
-                        
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            saveButton
-                        }
                     }
                     .navigationBarTitle("New Favorite Food", displayMode: .inline)
                     .onAppear {
-                        expandedRow = .name
+                        // Forward entry into an empty form only.
+                        if viewModel.name.isEmpty {
+                            expandedRow = .name
+                        }
+                    }
+                    .onDisappear {
+                        expandedRow = nil
                     }
             }
+            .keyboardEntryPage()
         }
         else {
             content
+                .keyboardEntryPage()
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         if viewModel.updatedFavoriteFood != nil {
                             dismissButton
                         }
-                    }
-                    
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        saveButton
                     }
                 }
                 .navigationBarBackButtonHidden(viewModel.updatedFavoriteFood != nil)
@@ -76,9 +76,10 @@ struct FavoriteFoodAddEditView: View {
             ScrollView {
                 card
                     .padding(.top, 8)
-                
-                saveActionButton
             }
+        }
+        .actionAreaInset {
+            saveActionButton
         }
         .alert(item: $viewModel.alert, content: alert(for:))
         .sheet(isPresented: $showHowAbsorptionTimeWorks) {
@@ -94,15 +95,15 @@ struct FavoriteFoodAddEditView: View {
             let absorptionTimeFocused: Binding<Bool> = Binding(get: { expandedRow == .absorptionTime }, set: { expandedRow = $0 ? .absorptionTime : nil })
             
             TextFieldRow(text: $viewModel.name, isFocused: nameFocused, title: "Name", placeholder: "Apple")
-            
+
             CardSectionDivider()
 
             CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: carbQuantityFocused, title: "Carb Quantity", preferredCarbUnit: viewModel.preferredCarbUnit)
-            
+
             CardSectionDivider()
             
             EmojiRow(text: $viewModel.foodType, isFocused: foodTypeFocused, emojiType: .food, title: "Food Type")
-            
+
             CardSectionDivider()
 
             AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
@@ -154,15 +155,8 @@ extension FavoriteFoodAddEditView {
             Text("Save")
         }
         .buttonStyle(ActionButtonStyle())
-        .padding()
         .disabled(viewModel.updatedFavoriteFood == nil)
-    }
-    
-    private var saveButton: some View {
-        Button(action: viewModel.save) {
-            Text("Save")
-        }
-        .disabled(viewModel.updatedFavoriteFood == nil)
+        .accessibilityIdentifier("button_Save")
     }
 }
 
