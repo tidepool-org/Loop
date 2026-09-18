@@ -111,21 +111,20 @@ struct SimpleBolusView: View {
     }
     
     private var carbEntryRow: some View {
-        HStack(alignment: .center) {
+        HStack {
             Text("Carbohydrates", comment: "Label for carbohydrates entry row on simple bolus screen")
             Spacer()
-            HStack {
+            HStack(alignment: .firstTextBaseline) {
                 DismissibleKeyboardTextField(
                     text: $viewModel.enteredCarbString,
                     placeholder: viewModel.carbPlaceholder,
+                    font: .preferredFont(forTextStyle: .title1),
                     textAlignment: .right,
                     keyboardType: .decimalPad,
-                    maxLength: 5,
-                    submitLabel: .next
+                    maxLength: 5
                 )
                 carbUnitsLabel
             }
-            .padding([.top, .bottom], 5)
             .fixedSize()
             .modifier(LabelBackground())
             .accessibilityIdentifier("textField_Carbohydrates")
@@ -145,7 +144,7 @@ struct SimpleBolusView: View {
                     keyboardType: .decimalPad,
                     shouldBecomeFirstResponder: shouldGlucoseEntryBecomeFirstResponder,
                     maxLength: 4,
-                    submitLabel: .next
+                    submitLabel: viewModel.displayMealEntry ? .next : .default
                 )
                 .autoFocusOnFirstAppearance($shouldGlucoseEntryBecomeFirstResponder, enabled: viewModel.manualGlucoseString.isEmpty)
                 .accessibilityIdentifier("textField_CurrentGlucose")

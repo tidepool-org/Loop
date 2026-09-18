@@ -75,7 +75,7 @@ struct FavoriteFoodAddEditView: View {
             
             ScrollView {
                 card
-                    .padding(.top, 16)
+                    .padding(.top, 8)
             }
         }
         .actionAreaInset {
@@ -88,32 +88,29 @@ struct FavoriteFoodAddEditView: View {
     }
     
     private var card: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 10) {
             let nameFocused: Binding<Bool> = Binding(get: { expandedRow == .name }, set: { expandedRow = $0 ? .name : nil })
             let carbQuantityFocused: Binding<Bool> = Binding(get: { expandedRow == .carbQuantity }, set: { expandedRow = $0 ? .carbQuantity : nil })
             let foodTypeFocused: Binding<Bool> = Binding(get: { expandedRow == .foodType }, set: { expandedRow = $0 ? .foodType : nil })
             let absorptionTimeFocused: Binding<Bool> = Binding(get: { expandedRow == .absorptionTime }, set: { expandedRow = $0 ? .absorptionTime : nil })
             
             TextFieldRow(text: $viewModel.name, isFocused: nameFocused, title: "Name", placeholder: "Apple")
-                .padding(.vertical, 4)
 
             CardSectionDivider()
 
             CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: carbQuantityFocused, title: "Carb Quantity", preferredCarbUnit: viewModel.preferredCarbUnit)
-                .padding(.vertical, 4)
 
             CardSectionDivider()
             
             EmojiRow(text: $viewModel.foodType, isFocused: foodTypeFocused, emojiType: .food, title: "Food Type")
-                .padding(.vertical, 4)
 
             CardSectionDivider()
 
             AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
-                .padding(.vertical, 4)
+                .padding(.bottom, 2)
         }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .padding(.horizontal)
         .background(CardBackground())
         .padding(.horizontal)
     }
