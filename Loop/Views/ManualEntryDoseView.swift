@@ -41,6 +41,7 @@ struct ManualEntryDoseView: View {
             }
             .navigationBarTitle(self.title)
             .supportedInterfaceOrientations(.portrait)
+            .keyboardEntryPage()
         }
     }
     
