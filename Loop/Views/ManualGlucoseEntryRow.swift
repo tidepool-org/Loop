@@ -64,7 +64,14 @@ struct ManualGlucoseEntryRow: View {
                 .focused(isFocused)
                 .submitLabel(.done)
                 .onSubmit { isFocused.wrappedValue = false }
-                .limitTextLength($valueText, to: 4)
+                .onChange(of: valueText) { previous, current in
+                    let formattedQuantity = quantity.map {
+                        displayGlucosePreference.format($0, includeUnit: false)
+                    }
+                    if current.utf16.count > 4, current != formattedQuantity {
+                        valueText = previous
+                    }
+                }
                 .onChange(of: displayGlucosePreference.unit) { _, _ in
                     unitsChanged()
                 }

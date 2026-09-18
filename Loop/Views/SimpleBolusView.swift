@@ -21,6 +21,7 @@ struct SimpleBolusView: View {
     }
 
     @FocusState private var focusedField: Field?
+    @State private var viewportHeight: CGFloat = 0
     @State private var isClosedLoopOffInformationalModalVisible = false
     @State private var enteredGlucoseText: String
     @State private var enteredCarbText: String
@@ -105,13 +106,28 @@ struct SimpleBolusView: View {
             }
             .contentMargins(.top, 16, for: .scrollContent)
             .insetGroupedListStyle()
-            .navigationBarTitle(Text(self.title), displayMode: .inline)
-            .actionAreaInset {
-                self.actionAreaContent
+            .onChange(of: focusedField) { _, field in
+                if let field {
+                    scrollProxy.scrollTo(field, anchor: .center)
+                }
             }
+            .onGeometryChange(for: CGFloat.self) { geometry in
+                max(0, geometry.size.height - geometry.safeAreaInsets.top - geometry.safeAreaInsets.bottom)
+            } action: { height in
+                viewportHeight = height
+            }
+            .onChange(of: viewportHeight) { previousHeight, height in
+                if height < previousHeight, let focusedField {
+                    scrollProxy.scrollTo(focusedField, anchor: .center)
+                }
+            }
+            .navigationBarTitle(Text(self.title), displayMode: .inline)
             .keyboardEntryPage()
             .keyboardToolbar(isFocused: focusedField != nil, next: nextFieldAction) {
                 focusedField = nil
+            }
+            .actionAreaInset {
+                actionAreaContent
             }
             .onDisappear {
                 focusedField = nil
@@ -159,11 +175,14 @@ struct SimpleBolusView: View {
     private var summarySection: some View {
         Section {
             glucoseEntryRow
+                .id(Field.glucose)
             if viewModel.displayMealEntry {
                 carbEntryRow
+                    .id(Field.carbs)
             }
             recommendedBolusRow
             bolusEntryRow
+                .id(Field.bolus)
         }
     }
     

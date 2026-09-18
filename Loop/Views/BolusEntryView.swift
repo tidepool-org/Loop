@@ -15,6 +15,10 @@ import LoopUI
 
 
 struct BolusEntryView: View {
+    private enum Field: Hashable {
+        case manualGlucose, bolus
+    }
+
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.dismissAction) var dismiss
     @Environment(\.appName) var appName
@@ -29,6 +33,13 @@ struct BolusEntryView: View {
 
     @FocusState private var bolusFieldFocused: Bool
     @FocusState private var manualGlucoseFieldFocused: Bool
+    @State private var viewportHeight: CGFloat = 0
+
+    private var focusedField: Field? {
+        if bolusFieldFocused { return .bolus }
+        if manualGlucoseFieldFocused { return .manualGlucose }
+        return nil
+    }
 
     var body: some View {
         ScrollViewReader { scrollProxy in
@@ -38,13 +49,26 @@ struct BolusEntryView: View {
             }
             .contentMargins(.top, 16, for: .scrollContent)
             .insetGroupedListStyle()
-            .actionAreaInset {
-                actionAreaContent
+            .onChange(of: focusedField) { _, _ in
+                scrollToFocusedField(using: scrollProxy)
+            }
+            .onGeometryChange(for: CGFloat.self) { geometry in
+                max(0, geometry.size.height - geometry.safeAreaInsets.top - geometry.safeAreaInsets.bottom)
+            } action: { height in
+                viewportHeight = height
+            }
+            .onChange(of: viewportHeight) { previousHeight, height in
+                if height < previousHeight {
+                    scrollToFocusedField(using: scrollProxy)
+                }
             }
             .keyboardEntryPage()
             .keyboardToolbar(isFocused: bolusFieldFocused || manualGlucoseFieldFocused) {
                 bolusFieldFocused = false
                 manualGlucoseFieldFocused = false
+            }
+            .actionAreaInset {
+                actionAreaContent
             }
             .onDisappear {
                 bolusFieldFocused = false
@@ -73,6 +97,11 @@ struct BolusEntryView: View {
         .task {
             await self.viewModel.generateRecommendationAndStartObserving()
         }
+    }
+
+    private func scrollToFocusedField(using scrollProxy: ScrollViewProxy) {
+        guard let focusedField else { return }
+        scrollProxy.scrollTo(focusedField, anchor: focusedField == .manualGlucose ? .bottom : .center)
     }
     
     private var title: Text {
@@ -215,6 +244,7 @@ struct BolusEntryView: View {
                 }
             }
             .padding(.top, 8)
+            .id(Field.manualGlucose)
             
             if viewModel.isManualGlucoseEntryEnabled && viewModel.potentialCarbEntry != nil {
                 potentialCarbEntryRow
@@ -225,6 +255,7 @@ struct BolusEntryView: View {
             }
 
             bolusEntryRow
+                .id(Field.bolus)
         }
     }
     
