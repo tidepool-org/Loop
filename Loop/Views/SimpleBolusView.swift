@@ -21,7 +21,6 @@ struct SimpleBolusView: View {
     }
 
     @FocusState private var focusedField: Field?
-    @State private var viewportHeight: CGFloat = 0
     @State private var isClosedLoopOffInformationalModalVisible = false
     @State private var enteredGlucoseText: String
     @State private var enteredCarbText: String
@@ -63,26 +62,6 @@ struct SimpleBolusView: View {
         )
     }
 
-    private var glucoseFocus: Binding<Bool> {
-        Binding(
-            get: { focusedField == .glucose },
-            set: { shouldFocus in
-                if shouldFocus, focusedField == nil {
-                    focusedField = .glucose
-                } else if !shouldFocus, focusedField == .glucose {
-                    focusedField = nil
-                }
-            }
-        )
-    }
-
-    private var nextFieldAction: (() -> Void)? {
-        if focusedField == .glucose, viewModel.displayMealEntry {
-            return { focusedField = .carbs }
-        }
-        return nil
-    }
-
     init(viewModel: SimpleBolusViewModel) {
         self.viewModel = viewModel
         self._enteredGlucoseText = State(initialValue: viewModel.manualGlucoseString)
@@ -106,31 +85,12 @@ struct SimpleBolusView: View {
             }
             .contentMargins(.top, 16, for: .scrollContent)
             .insetGroupedListStyle()
-            .onChange(of: focusedField) { _, field in
-                if let field {
-                    scrollProxy.scrollTo(field, anchor: .center)
-                }
-            }
-            .onGeometryChange(for: CGFloat.self) { geometry in
-                max(0, geometry.size.height - geometry.safeAreaInsets.top - geometry.safeAreaInsets.bottom)
-            } action: { height in
-                viewportHeight = height
-            }
-            .onChange(of: viewportHeight) { previousHeight, height in
-                if height < previousHeight, let focusedField {
-                    scrollProxy.scrollTo(focusedField, anchor: .center)
-                }
-            }
+            .keepKeyboardFieldVisible(focusedField, in: scrollProxy)
             .navigationBarTitle(Text(self.title), displayMode: .inline)
-            .keyboardEntryPage()
-            .keyboardToolbar(isFocused: focusedField != nil, next: nextFieldAction) {
-                focusedField = nil
-            }
+            .defaultFocus($focusedField, viewModel.manualGlucoseString.isEmpty ? .glucose : nil)
+            .inputForm(focus: $focusedField)
             .actionAreaInset {
                 actionAreaContent
-            }
-            .onDisappear {
-                focusedField = nil
             }
         }
         .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
@@ -198,9 +158,7 @@ struct SimpleBolusView: View {
                     .keyboardType(.decimalPad)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                    .focused($focusedField, equals: .carbs)
-                    .submitLabel(.done)
-                    .onSubmit { focusedField = nil }
+                    .inputField(focus: $focusedField, equals: .carbs)
                     .limitTextLength($enteredCarbText, to: 5)
                     .accessibilityLabel(Text("Carbohydrates"))
                 carbUnitsLabel
@@ -226,13 +184,8 @@ struct SimpleBolusView: View {
                 .keyboardType(.decimalPad)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .focused($focusedField, equals: .glucose)
-                .submitLabel(viewModel.displayMealEntry ? .next : .done)
-                .onSubmit {
-                    focusedField = viewModel.displayMealEntry ? .carbs : nil
-                }
+                .inputField(focus: $focusedField, equals: .glucose, next: viewModel.displayMealEntry ? .carbs : nil)
                 .limitTextLength($enteredGlucoseText, to: 4)
-                .autoFocusOnFirstAppearance(glucoseFocus, enabled: viewModel.manualGlucoseString.isEmpty)
                 .accessibilityLabel(Text("Current Glucose"))
                 .accessibilityIdentifier("textField_CurrentGlucose")
 
@@ -291,9 +244,7 @@ struct SimpleBolusView: View {
                     .keyboardType(.decimalPad)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                    .focused($focusedField, equals: .bolus)
-                    .submitLabel(.done)
-                    .onSubmit { focusedField = nil }
+                    .inputField(focus: $focusedField, equals: .bolus)
                     .limitTextLength($enteredBolusText, to: 5)
                     .accessibilityLabel(Text("Bolus"))
                 

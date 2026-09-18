@@ -22,13 +22,6 @@ struct ManualGlucoseEntryRow: View {
 
     var isFocused: FocusState<Bool>.Binding
 
-    private var focus: Binding<Bool> {
-        Binding(
-            get: { isFocused.wrappedValue },
-            set: { isFocused.wrappedValue = $0 }
-        )
-    }
-
     private var enteredGlucose: Binding<String> {
         Binding(
             get: { valueText },
@@ -61,9 +54,7 @@ struct ManualGlucoseEntryRow: View {
                 .keyboardType(.decimalPad)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .focused(isFocused)
-                .submitLabel(.done)
-                .onSubmit { isFocused.wrappedValue = false }
+                .inputField(focus: isFocused)
                 .onChange(of: valueText) { previous, current in
                     let formattedQuantity = quantity.map {
                         displayGlucosePreference.format($0, includeUnit: false)
@@ -75,7 +66,6 @@ struct ManualGlucoseEntryRow: View {
                 .onChange(of: displayGlucosePreference.unit) { _, _ in
                     unitsChanged()
                 }
-                .autoFocusOnFirstAppearance(focus)
                 .accessibilityLabel(Text("Fingerstick Glucose"))
                 .accessibilityIdentifier("textField_FingerstickGlucose")
                 
@@ -83,6 +73,7 @@ struct ManualGlucoseEntryRow: View {
                     .foregroundColor(Color(.secondaryLabel))
             }
         }
+        .defaultFocus(isFocused, true)
     }
 
     func unitsChanged() {

@@ -41,13 +41,7 @@ struct ManualEntryDoseView: View {
             }
             .navigationBarTitle(self.title)
             .supportedInterfaceOrientations(.portrait)
-            .keyboardEntryPage()
-            .keyboardToolbar(isFocused: bolusFieldFocused) {
-                bolusFieldFocused = false
-            }
-            .onDisappear {
-                bolusFieldFocused = false
-            }
+            .inputForm(focus: $bolusFieldFocused)
         }
     }
     
@@ -183,9 +177,7 @@ struct ManualEntryDoseView: View {
                     .font(.title)
                     .multilineTextAlignment(.trailing)
                     .foregroundColor(.loopAccent)
-                    .focused($bolusFieldFocused)
-                    .submitLabel(.done)
-                    .onSubmit { bolusFieldFocused = false }
+                    .inputField(focus: $bolusFieldFocused)
                     .limitTextLength($enteredBolusString, to: 5)
                 bolusUnitsLabel
             }

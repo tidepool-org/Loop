@@ -11,10 +11,15 @@ import LoopKit
 import LoopKitUI
 
 struct FavoriteFoodAddEditView: View {
+    private enum Field: Hashable {
+        case name, carbQuantity
+    }
+
     @Environment(\.dismiss) var dismiss
     
     @StateObject private var viewModel: FavoriteFoodAddEditViewModel
     
+    @FocusState private var focusedField: Field?
     @State private var expandedRow: Row?
     @State private var showHowAbsorptionTimeWorks = false
     
@@ -41,21 +46,10 @@ struct FavoriteFoodAddEditView: View {
                         }
                     }
                     .navigationBarTitle("New Favorite Food", displayMode: .inline)
-                    .onAppear {
-                        // Forward entry into an empty form only.
-                        if viewModel.name.isEmpty {
-                            expandedRow = .name
-                        }
-                    }
-                    .onDisappear {
-                        expandedRow = nil
-                    }
             }
-            .keyboardEntryPage()
         }
         else {
             content
-                .keyboardEntryPage()
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         if viewModel.updatedFavoriteFood != nil {
@@ -78,8 +72,18 @@ struct FavoriteFoodAddEditView: View {
                     .padding(.top, 8)
             }
         }
+        .defaultFocus($focusedField, isNewEntry && viewModel.name.isEmpty ? .name : nil)
+        .inputForm(focus: $focusedField)
         .actionAreaInset {
             saveActionButton
+        }
+        .onChange(of: focusedField) { _, field in
+            if field != nil {
+                expandedRow = nil
+            }
+        }
+        .onDisappear {
+            expandedRow = nil
         }
         .alert(item: $viewModel.alert, content: alert(for:))
         .sheet(isPresented: $showHowAbsorptionTimeWorks) {
@@ -89,18 +93,15 @@ struct FavoriteFoodAddEditView: View {
     
     private var card: some View {
         VStack(spacing: 10) {
-            let nameFocused: Binding<Bool> = Binding(get: { expandedRow == .name }, set: { expandedRow = $0 ? .name : nil })
-            let carbQuantityFocused: Binding<Bool> = Binding(get: { expandedRow == .carbQuantity }, set: { expandedRow = $0 ? .carbQuantity : nil })
-            let foodTypeFocused: Binding<Bool> = Binding(get: { expandedRow == .foodType }, set: { expandedRow = $0 ? .foodType : nil })
-            let absorptionTimeFocused: Binding<Bool> = Binding(get: { expandedRow == .absorptionTime }, set: { expandedRow = $0 ? .absorptionTime : nil })
+            let foodTypeFocused = focusBinding(for: .foodType)
+            let absorptionTimeFocused = focusBinding(for: .absorptionTime)
             
-            TextFieldRow(text: $viewModel.name, isFocused: nameFocused, title: "Name", placeholder: "Apple", next: {
-                expandedRow = .carbQuantity
-            })
+            TextFieldRow(text: $viewModel.name, focus: $focusedField, equals: .name, title: "Name", placeholder: "Apple", next: .carbQuantity)
 
             CardSectionDivider()
 
-            CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: carbQuantityFocused, title: "Carb Quantity", preferredCarbUnit: viewModel.preferredCarbUnit, next: {
+            CarbQuantityRow(quantity: $viewModel.carbsQuantity, focus: $focusedField, equals: .carbQuantity, title: "Carb Quantity", preferredCarbUnit: viewModel.preferredCarbUnit, next: {
+                focusedField = nil
                 expandedRow = .foodType
             })
 
@@ -118,7 +119,21 @@ struct FavoriteFoodAddEditView: View {
         .background(CardBackground())
         .padding(.horizontal)
     }
-    
+
+    private func focusBinding(for row: Row) -> Binding<Bool> {
+        Binding(
+            get: { expandedRow == row },
+            set: { focused in
+                if focused {
+                    focusedField = nil
+                    expandedRow = row
+                } else if expandedRow == row {
+                    expandedRow = nil
+                }
+            }
+        )
+    }
+
     private func alert(for alert: FavoriteFoodAddEditViewModel.Alert) -> SwiftUI.Alert {
         switch alert {
         case .maxQuantityExceded:
@@ -166,6 +181,6 @@ extension FavoriteFoodAddEditView {
 
 extension FavoriteFoodAddEditView {
     enum Row {
-        case name, carbQuantity, foodType, absorptionTime
+        case foodType, absorptionTime
     }
 }

@@ -11,12 +11,17 @@ import LoopKit
 import LoopKitUI
 
 struct CarbEntryView: View, HorizontalSizeClassOverride {
+    private enum Field: Hashable {
+        case amountConsumed
+    }
+
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.dismissAction) private var dismiss
     @Environment(\.guidanceColors) private var guidanceColors
 
     @ObservedObject var viewModel: CarbEntryViewModel
         
+    @FocusState private var focusedField: Field?
     @State private var expandedRow: Row?
     
     @State private var showHowAbsorptionTimeWorks = false
@@ -26,9 +31,6 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     private let isNewEntry: Bool
 
     init(viewModel: CarbEntryViewModel) {
-        if viewModel.shouldBeginEditingQuantity {
-            expandedRow = .amountConsumed
-        }
         isNewEntry = viewModel.originalCarbEntry == nil
         self.viewModel = viewModel
     }
@@ -46,11 +48,9 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                     }
             }
             .navigationViewStyle(.stack)
-            .keyboardEntryPage()
         }
         else {
             content
-                .keyboardEntryPage()
         }
     }
     
@@ -94,8 +94,15 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 .accessibility(hidden: true)
             }
         }
+        .defaultFocus($focusedField, viewModel.shouldBeginEditingQuantity ? .amountConsumed : nil)
+        .inputForm(focus: $focusedField)
         .actionAreaInset {
             continueActionButton
+        }
+        .onChange(of: focusedField) { _, field in
+            if field != nil {
+                expandedRow = nil
+            }
         }
         .onDisappear {
             expandedRow = nil
@@ -116,10 +123,9 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     
     private var mainCard: some View {
         VStack(spacing: 10) {
-            let amountConsumedFocused: Binding<Bool> = Binding(get: { expandedRow == .amountConsumed }, set: { expandedRow = $0 ? .amountConsumed : nil })
-            let timeFocused: Binding<Bool> = Binding(get: { expandedRow == .time }, set: { expandedRow = $0 ? .time : nil })
-            let foodTypeFocused: Binding<Bool> = Binding(get: { expandedRow == .foodType }, set: { expandedRow = $0 ? .foodType : nil })
-            let absorptionTimeFocused: Binding<Bool> = Binding(get: { expandedRow == .absorptionTime }, set: { expandedRow = $0 ? .absorptionTime : nil })
+            let timeFocused = focusBinding(for: .time)
+            let foodTypeFocused = focusBinding(for: .foodType)
+            let absorptionTimeFocused = focusBinding(for: .absorptionTime)
             // Food type row shows an x button next to favorite food chip that clears favorite food by setting this binding to nil
             let selectedFavoriteFoodBinding = Binding(
                 get: { viewModel.selectedFavoriteFood },
@@ -129,7 +135,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 }
             )
             
-            CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: amountConsumedFocused, title: NSLocalizedString("Amount Consumed", comment: "Label for carb quantity entry row on carb entry screen"), preferredCarbUnit: viewModel.preferredCarbUnit)
+            CarbQuantityRow(quantity: $viewModel.carbsQuantity, focus: $focusedField, equals: .amountConsumed, title: NSLocalizedString("Amount Consumed", comment: "Label for carb quantity entry row on carb entry screen"), preferredCarbUnit: viewModel.preferredCarbUnit)
 
             CardSectionDivider()
             
@@ -149,6 +155,20 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
         .background(CardBackground())
         .padding(.horizontal)
     }
+
+    private func focusBinding(for row: Row) -> Binding<Bool> {
+        Binding(
+            get: { expandedRow == row },
+            set: { focused in
+                if focused {
+                    focusedField = nil
+                    expandedRow = row
+                } else if expandedRow == row {
+                    expandedRow = nil
+                }
+            }
+        )
+    }
     
     @ViewBuilder
     private var bolusView: some View {
@@ -161,6 +181,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     }
     
     private func clearExpandedRow() {
+        self.focusedField = nil
         self.expandedRow = nil
     }
 }
@@ -272,6 +293,7 @@ extension CarbEntryView {
                                 expandedRow = nil
                             }
                             else {
+                                focusedField = nil
                                 expandedRow = .favoriteFoodSelection
                             }
                         }
@@ -338,7 +360,7 @@ extension CarbEntryView {
     
     private var continueActionButton: some View {
         Button(action: {
-            expandedRow = nil
+            clearExpandedRow()
             viewModel.continueToBolus()
         }) {
             Text("Continue")
@@ -352,6 +374,6 @@ extension CarbEntryView {
 
 extension CarbEntryView {
     enum Row {
-        case amountConsumed, time, foodType, absorptionTime, favoriteFoodSelection
+        case time, foodType, absorptionTime, favoriteFoodSelection
     }
 }
