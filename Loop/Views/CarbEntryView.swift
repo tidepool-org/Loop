@@ -70,7 +70,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 mainCard
                     .padding(.top, 8)
 
-                if isNewEntry, FeatureFlags.allowExperimentalFeatures, !viewModel.favoriteFoods.isEmpty {
+                if isNewEntry, FeatureFlags.allowExperimentalFeatures {
                     favoriteFoodsCard
                         .padding(.top, 8)
                 }
@@ -95,9 +95,6 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             }
         }
         .actionAreaInset {
-            if isNewEntry, FeatureFlags.allowExperimentalFeatures, viewModel.selectedFavoriteFood == nil {
-                saveAsFavoriteFoodButton
-            }
             continueActionButton
         }
         .onDisappear {
@@ -279,6 +276,19 @@ extension CarbEntryView {
                             }
                         }
                     }
+                    
+                    if viewModel.selectedFavoriteFood == nil {
+                        CardSectionDivider()
+                    }
+                }
+                
+                if viewModel.selectedFavoriteFood == nil {
+                    Button(action: saveAsFavoriteFood) {
+                        Text("Save as favorite food")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .disabled(viewModel.saveFavoriteFoodButtonDisabled)
+                    .accessibilityIdentifier("button_SaveAsFavoriteFood")
                 }
             }
             .padding(.vertical, 12)
@@ -324,12 +334,6 @@ extension CarbEntryView {
         Button(action: dismiss) {
             Text("Cancel")
         }
-    }
-    
-    private var saveAsFavoriteFoodButton: some View {
-        SecondaryActionButton(Text("Save as New Favorite Food", comment: "Button title to create a new favorite food from the current carb entry"), action: saveAsFavoriteFood)
-            .disabled(viewModel.saveFavoriteFoodButtonDisabled)
-            .accessibilityIdentifier("button_SaveAsFavoriteFood")
     }
     
     private var continueActionButton: some View {
