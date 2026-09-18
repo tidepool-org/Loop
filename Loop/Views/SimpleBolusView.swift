@@ -120,8 +120,7 @@ struct SimpleBolusView: View {
                     placeholder: viewModel.carbPlaceholder,
                     textAlignment: .right,
                     keyboardType: .decimalPad,
-                    maxLength: 5,
-                    isDismissible: false
+                    maxLength: 5
                 )
                 carbUnitsLabel
             }
@@ -144,8 +143,7 @@ struct SimpleBolusView: View {
                     textAlignment: .right,
                     keyboardType: .decimalPad,
                     shouldBecomeFirstResponder: shouldGlucoseEntryBecomeFirstResponder,
-                    maxLength: 4,
-                    isDismissible: false
+                    maxLength: 4
                 )
                 .autoFocusOnFirstAppearance($shouldGlucoseEntryBecomeFirstResponder, enabled: viewModel.manualGlucoseString.isEmpty)
                 .accessibilityIdentifier("textField_CurrentGlucose")
@@ -204,8 +202,7 @@ struct SimpleBolusView: View {
                     textColor: .loopAccent,
                     textAlignment: .right,
                     keyboardType: .decimalPad,
-                    maxLength: 5,
-                    isDismissible: false
+                    maxLength: 5
                 )
                 
                 bolusUnitsLabel

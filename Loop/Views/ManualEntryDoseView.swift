@@ -182,12 +182,7 @@ struct ManualEntryDoseView: View {
                             enteredBolusString = String(newValue.prefix(5))
                         }
                     }
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") { bolusFieldFocused = false }
-                        }
-                    }
+                    .keyboardDismissAccessory()
                 bolusUnitsLabel
             }
         }

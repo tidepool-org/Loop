@@ -284,6 +284,7 @@ struct BolusEntryView: View {
                     .multilineTextAlignment(.trailing)
                     .foregroundColor(.loopAccent)
                     .focused($bolusFieldFocused)
+                    .keyboardDismissAccessory()
                     .onChange(of: bolusFieldFocused) { oldValue, focused in
                         if focused {
                             didBeginEditing()

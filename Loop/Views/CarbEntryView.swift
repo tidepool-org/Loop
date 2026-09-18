@@ -68,11 +68,11 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 warningsCard
 
                 mainCard
-                    .padding(.top, 16)
+                    .padding(.top, 8)
 
                 if isNewEntry, FeatureFlags.allowExperimentalFeatures, !viewModel.favoriteFoods.isEmpty {
                     favoriteFoodsCard
-                        .padding(.top, 16)
+                        .padding(.top, 8)
                 }
                 
                 if viewModel.selectedFavoriteFoodLastEaten != nil, FeatureFlags.allowExperimentalFeatures {
@@ -118,7 +118,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     }
     
     private var mainCard: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 10) {
             let amountConsumedFocused: Binding<Bool> = Binding(get: { expandedRow == .amountConsumed }, set: { expandedRow = $0 ? .amountConsumed : nil })
             let timeFocused: Binding<Bool> = Binding(get: { expandedRow == .time }, set: { expandedRow = $0 ? .time : nil })
             let foodTypeFocused: Binding<Bool> = Binding(get: { expandedRow == .foodType }, set: { expandedRow = $0 ? .foodType : nil })
@@ -133,25 +133,22 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             )
             
             CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: amountConsumedFocused, title: NSLocalizedString("Amount Consumed", comment: "Label for carb quantity entry row on carb entry screen"), preferredCarbUnit: viewModel.preferredCarbUnit)
-                .padding(.vertical, 4)
 
             CardSectionDivider()
             
             DatePickerRow(date: $viewModel.time, isFocused: timeFocused, minimumDate: viewModel.minimumDate, maximumDate: viewModel.maximumDate)
-                .padding(.vertical, 4)
 
             CardSectionDivider()
             
             FoodTypeRow(selectedFavoriteFood: selectedFavoriteFoodBinding, foodType: $viewModel.foodType, absorptionTime: $viewModel.absorptionTime, selectedDefaultAbsorptionTimeEmoji: $viewModel.selectedDefaultAbsorptionTimeEmoji, usesCustomFoodType: $viewModel.usesCustomFoodType, absorptionTimeWasEdited: $viewModel.absorptionTimeWasEdited, isFocused: foodTypeFocused, showClearFavoriteFoodButton: !isNewEntry, defaultAbsorptionTimes: viewModel.defaultAbsorptionTimes)
-                .padding(.vertical, 4)
 
             CardSectionDivider()
             
             AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
-                .padding(.vertical, 4)
+                .padding(.bottom, 2)
         }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .padding(.horizontal)
         .background(CardBackground())
         .padding(.horizontal)
     }
@@ -261,7 +258,6 @@ extension CarbEntryView {
                                 .minimumScaleFactor(0.8)
                                 .frame(maxWidth: .infinity, alignment: .trailing)
                         }
-                        .padding(.vertical, 8)
                         
                         if expandedRow == .favoriteFoodSelection {
                             Picker("", selection: $viewModel.selectedFavoriteFoodIndex) {
