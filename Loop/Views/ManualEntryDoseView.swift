@@ -214,7 +214,7 @@ struct ManualEntryDoseView: View {
     }
 
     private var actionArea: some View {
-        FloatingActionArea {
+        ActionArea {
             actionButton.disabled(actionButtonDisabled)
         }
     }
