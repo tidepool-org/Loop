@@ -28,6 +28,7 @@ struct BolusEntryView: View {
     @State private var editedBolusAmount = false
 
     @FocusState private var bolusFieldFocused: Bool
+    @FocusState private var manualGlucoseFieldFocused: Bool
 
     var body: some View {
         ScrollViewReader { scrollProxy in
@@ -41,8 +42,13 @@ struct BolusEntryView: View {
                 actionAreaContent
             }
             .keyboardEntryPage()
+            .keyboardToolbar(isFocused: bolusFieldFocused || manualGlucoseFieldFocused) {
+                bolusFieldFocused = false
+                manualGlucoseFieldFocused = false
+            }
             .onDisappear {
                 bolusFieldFocused = false
+                manualGlucoseFieldFocused = false
             }
         }
         .navigationBarTitle(self.title, displayMode: .inline)
@@ -201,7 +207,7 @@ struct BolusEntryView: View {
                 }
                 
                 if viewModel.isManualGlucoseEntryEnabled {
-                    ManualGlucoseEntryRow(quantity: $viewModel.manualGlucoseQuantity)
+                    ManualGlucoseEntryRow(quantity: $viewModel.manualGlucoseQuantity, isFocused: $manualGlucoseFieldFocused)
                 } else if viewModel.potentialCarbEntry != nil {
                     potentialCarbEntryRow
                 } else {
@@ -284,18 +290,14 @@ struct BolusEntryView: View {
                     .multilineTextAlignment(.trailing)
                     .foregroundColor(.loopAccent)
                     .focused($bolusFieldFocused)
-                    .keyboardDismissAccessory()
+                    .submitLabel(.done)
+                    .onSubmit { bolusFieldFocused = false }
                     .onChange(of: bolusFieldFocused) { oldValue, focused in
                         if focused {
                             didBeginEditing()
                         }
                     }
-                    .onChange(of: enteredBolusString) { oldValue, newValue in
-                        if newValue.count > 5 {
-                            enteredBolusString = String(newValue.prefix(5))
-                            viewModel.updateEnteredBolus(enteredBolusString)
-                        }
-                    }
+                    .limitTextLength($enteredBolusString, to: 5)
                 bolusUnitsLabel
             }
             .accessibilityIdentifier("textField_Bolus")
@@ -311,8 +313,9 @@ struct BolusEntryView: View {
         Binding(
             get: { enteredBolusString },
             set: { newValue in
-                viewModel.updateEnteredBolus(newValue)
                 enteredBolusString = newValue
+                guard newValue.utf16.count <= 5 else { return }
+                viewModel.updateEnteredBolus(newValue)
             }
         )
     }

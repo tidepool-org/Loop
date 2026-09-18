@@ -389,8 +389,9 @@ final class LoopDataManager: ObservableObject {
             recommendationEffectInterval: recommendationEffectInterval
         )
 
+        let sensitivityStart = min(neededSensitivityTimeline.start, carbsStart)
         let sensitivity = try await settingsProvider.getInsulinSensitivityHistory(
-            startDate: neededSensitivityTimeline.start,
+            startDate: sensitivityStart,
             endDate: neededSensitivityTimeline.end
         )
 
@@ -404,7 +405,7 @@ final class LoopDataManager: ObservableObject {
             throw LoopError.configurationError(.maximumBasalRatePerHour)
         }
 
-        var overrides = temporaryPresetsManager.presetHistory.getOverrideHistory(startDate: neededSensitivityTimeline.start, endDate: forecastEndTime)
+        var overrides = temporaryPresetsManager.presetHistory.getOverrideHistory(startDate: sensitivityStart, endDate: forecastEndTime)
 
         // For recommendation, we should consider preMeal override to be ending at time of dose
         if presumePresetEndingNow,

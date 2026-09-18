@@ -339,7 +339,6 @@ extension CarbEntryView {
     private var continueActionButton: some View {
         Button(action: {
             expandedRow = nil
-            KeyboardDismissal.resignFirstResponder()
             viewModel.continueToBolus()
         }) {
             Text("Continue")
