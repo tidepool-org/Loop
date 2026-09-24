@@ -320,13 +320,8 @@ struct ActionTabView<Content: View>: View {
     var body: some View {
         content
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if #available(anyAppleOS 27.1, *) {
-                    ActionTabBar(items: tabs, isHidden: !orientation.isPortrait)
-                        .modifier(LegacyTabBarBackground(isVisible: orientation.isPortrait))
-                } else {
-                    ActionTabBar(items: tabs, isHidden: !orientation.isPortrait)
-                        .modifier(LegacyTabBarBackground(isVisible: orientation.isPortrait))
-                }
+                ActionTabBar(items: tabs, isHidden: !orientation.isPortrait)
+                    .modifier(LegacyTabBarBackground(isVisible: orientation.isPortrait))
             }
             .onAppear {
                 UIDevice.current.beginGeneratingDeviceOrientationNotifications()
