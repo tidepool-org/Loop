@@ -73,7 +73,7 @@ struct ManualGlucoseEntryRow: View {
                     .foregroundColor(Color(.secondaryLabel))
             }
         }
-        .defaultFocus(isFocused, true)
+        .initialFocus(isFocused)
     }
 
     func unitsChanged() {

@@ -87,7 +87,7 @@ struct SimpleBolusView: View {
             .insetGroupedListStyle()
             .keepKeyboardFieldVisible(focusedField, in: scrollProxy)
             .navigationBarTitle(Text(self.title), displayMode: .inline)
-            .defaultFocus($focusedField, viewModel.manualGlucoseString.isEmpty ? .glucose : nil)
+            .initialFocus($focusedField, equals: .glucose, when: viewModel.manualGlucoseString.isEmpty)
             .inputForm(focus: $focusedField)
             .actionAreaInset {
                 actionAreaContent

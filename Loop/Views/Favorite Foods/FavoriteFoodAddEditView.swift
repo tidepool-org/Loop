@@ -72,7 +72,7 @@ struct FavoriteFoodAddEditView: View {
                     .padding(.top, 8)
             }
         }
-        .defaultFocus($focusedField, isNewEntry && viewModel.name.isEmpty ? .name : nil)
+        .initialFocus($focusedField, equals: .name, when: isNewEntry && viewModel.name.isEmpty)
         .inputForm(focus: $focusedField)
         .actionAreaInset {
             saveActionButton

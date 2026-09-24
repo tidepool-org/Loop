@@ -36,6 +36,27 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     }
     
     var body: some View {
+        navigationContent
+            .sheet(isPresented: $showAddFavoriteFood, onDismiss: clearExpandedRow) {
+                FavoriteFoodAddEditView(
+                    carbsQuantity: viewModel.carbsQuantity,
+                    foodType: viewModel.effectiveFoodType,
+                    absorptionTime: viewModel.absorptionTime,
+                    onSave: onFavoriteFoodSave(_:)
+                )
+            }
+            .sheet(isPresented: $showHowAbsorptionTimeWorks) {
+                HowAbsorptionTimeWorksView()
+            }
+            .sheet(isPresented: $showFavoriteFoodInsights) {
+                if let food = viewModel.selectedFavoriteFood {
+                    FavoriteFoodInsightsView(viewModel: FavoriteFoodInsightsViewModel(delegate: viewModel.delegate, food: food))
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var navigationContent: some View {
         if isNewEntry {
             NavigationView {
                 let title = NSLocalizedString("carb-entry-title-add", value: "Add Carb Entry", comment: "The title of the view controller to create a new carb entry")
@@ -94,7 +115,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 .accessibility(hidden: true)
             }
         }
-        .defaultFocus($focusedField, viewModel.shouldBeginEditingQuantity ? .amountConsumed : nil)
+        .initialFocus($focusedField, equals: .amountConsumed, when: viewModel.shouldBeginEditingQuantity)
         .inputForm(focus: $focusedField)
         .actionAreaInset {
             continueActionButton
@@ -108,17 +129,6 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
             expandedRow = nil
         }
         .alert(item: $viewModel.alert, content: alert(for:))
-        .sheet(isPresented: $showAddFavoriteFood, onDismiss: clearExpandedRow) {
-            FavoriteFoodAddEditView(carbsQuantity: $viewModel.carbsQuantity.wrappedValue, foodType: viewModel.effectiveFoodType, absorptionTime: $viewModel.absorptionTime.wrappedValue, onSave: onFavoriteFoodSave(_:))
-        }
-        .sheet(isPresented: $showHowAbsorptionTimeWorks) {
-            HowAbsorptionTimeWorksView()
-        }
-        .sheet(isPresented: $showFavoriteFoodInsights) {
-            if let food = viewModel.selectedFavoriteFood {
-                FavoriteFoodInsightsView(viewModel: FavoriteFoodInsightsViewModel(delegate: viewModel.delegate, food: food))
-            }
-        }
     }
     
     private var mainCard: some View {
@@ -340,6 +350,7 @@ extension CarbEntryView {
     }
     
     private func saveAsFavoriteFood() {
+        clearExpandedRow()
         self.showAddFavoriteFood = true
     }
     
