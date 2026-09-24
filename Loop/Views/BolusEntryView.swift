@@ -15,6 +15,10 @@ import LoopUI
 
 
 struct BolusEntryView: View {
+    private enum Field: Hashable {
+        case manualGlucose, bolus
+    }
+
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.dismissAction) var dismiss
     @Environment(\.appName) var appName
@@ -28,25 +32,32 @@ struct BolusEntryView: View {
     @State private var editedBolusAmount = false
 
     @FocusState private var bolusFieldFocused: Bool
+    @FocusState private var manualGlucoseFieldFocused: Bool
 
-    private var accessoryClearance: CGFloat {
-        dynamicTypeSize.isAccessibilitySize ? 72 : 52
+    private var focusedField: Field? {
+        if bolusFieldFocused { return .bolus }
+        if manualGlucoseFieldFocused { return .manualGlucose }
+        return nil
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollViewReader { scrollProxy in
             List {
                 self.chartSection
                 self.summarySection
             }
-            .padding(.top, -28)
+            .contentMargins(.top, 16, for: .scrollContent)
             .insetGroupedListStyle()
-            if !bolusFieldFocused {
-                actionArea
+            .keepKeyboardFieldVisible(focusedField, in: scrollProxy, anchor: focusedField == .manualGlucose ? .bottom : .center)
+            .inputForm(isFocused: bolusFieldFocused || manualGlucoseFieldFocused) {
+                bolusFieldFocused = false
+                manualGlucoseFieldFocused = false
             }
-
+            .actionAreaInset {
+                actionAreaContent
+            }
         }
-        .navigationBarTitle(self.title)
+        .navigationBarTitle(self.title, displayMode: .inline)
         .supportedInterfaceOrientations(.portrait)
         .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
         .onReceive(self.viewModel.$recommendedBolus) { recommendation in
@@ -65,12 +76,11 @@ struct BolusEntryView: View {
                 enteredBolusStringBinding.wrappedValue = "0"
             }
         }
-        .edgesIgnoringSafeArea(self.bolusFieldFocused ? [] : .bottom)
         .task {
             await self.viewModel.generateRecommendationAndStartObserving()
         }
     }
-    
+
     private var title: Text {
         if viewModel.potentialCarbEntry == nil {
             return Text("Bolus", comment: "Title for bolus entry screen")
@@ -127,7 +137,7 @@ struct BolusEntryView: View {
         } header: {
             if let scheduleOverride = viewModel.scheduleOverride ?? viewModel.preMealOverride {
                 ActivePresetBanner(override: scheduleOverride)
-                    .listRowInsets(EdgeInsets(top: 30, leading: 0, bottom: 12, trailing: 0))
+                    .listRowInsets(EdgeInsets(top: 16, leading: 0, bottom: 12, trailing: 0))
                     .padding(.horizontal, -20)
                     .padding(.bottom, 8)
                     .textCase(nil)
@@ -203,7 +213,7 @@ struct BolusEntryView: View {
                 }
                 
                 if viewModel.isManualGlucoseEntryEnabled {
-                    ManualGlucoseEntryRow(quantity: $viewModel.manualGlucoseQuantity)
+                    ManualGlucoseEntryRow(quantity: $viewModel.manualGlucoseQuantity, isFocused: $manualGlucoseFieldFocused)
                 } else if viewModel.potentialCarbEntry != nil {
                     potentialCarbEntryRow
                 } else {
@@ -211,6 +221,7 @@ struct BolusEntryView: View {
                 }
             }
             .padding(.top, 8)
+            .id(Field.manualGlucose)
             
             if viewModel.isManualGlucoseEntryEnabled && viewModel.potentialCarbEntry != nil {
                 potentialCarbEntryRow
@@ -221,6 +232,7 @@ struct BolusEntryView: View {
             }
 
             bolusEntryRow
+                .id(Field.bolus)
         }
     }
     
@@ -285,24 +297,13 @@ struct BolusEntryView: View {
                     .font(.title)
                     .multilineTextAlignment(.trailing)
                     .foregroundColor(.loopAccent)
-                    .focused($bolusFieldFocused)
+                    .inputField(focus: $bolusFieldFocused)
                     .onChange(of: bolusFieldFocused) { oldValue, focused in
                         if focused {
                             didBeginEditing()
                         }
                     }
-                    .onChange(of: enteredBolusString) { oldValue, newValue in
-                        if newValue.count > 5 {
-                            enteredBolusString = String(newValue.prefix(5))
-                            viewModel.updateEnteredBolus(enteredBolusString)
-                        }
-                    }
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") { bolusFieldFocused = false }
-                        }
-                    }
+                    .limitTextLength($enteredBolusString, to: 5)
                 bolusUnitsLabel
             }
             .accessibilityIdentifier("textField_Bolus")
@@ -318,28 +319,25 @@ struct BolusEntryView: View {
         Binding(
             get: { enteredBolusString },
             set: { newValue in
-                viewModel.updateEnteredBolus(newValue)
                 enteredBolusString = newValue
+                guard newValue.utf16.count <= 5 else { return }
+                viewModel.updateEnteredBolus(newValue)
             }
         )
     }
 
-    private var actionArea: some View {
-        VStack(spacing: 0) {
-            if viewModel.isNoticeVisible {
-                warning(for: viewModel.activeNotice!)
-                    .padding([.top, .horizontal])
-                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
-            }
-
-            if viewModel.isManualGlucosePromptVisible {
-                enterManualGlucoseButton
-                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
-            }
-            actionButton
+    @ViewBuilder
+    private var actionAreaContent: some View {
+        if viewModel.isNoticeVisible {
+            warning(for: viewModel.activeNotice!)
+                .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
         }
-        .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
+
+        if viewModel.isManualGlucosePromptVisible {
+            enterManualGlucoseButton
+                .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
+        }
+        actionButton
     }
 
     private func warning(for notice: BolusEntryViewModel.Notice) -> some View {
@@ -384,7 +382,6 @@ struct BolusEntryView: View {
             label: { Text("Enter Fingerstick Glucose", comment: "Button text prompting manual glucose entry on bolus screen") }
         )
         .buttonStyle(ActionButtonStyle(viewModel.primaryButton == .manualGlucoseEntry ? .primary : .secondary))
-        .padding([.top, .horizontal])
         .accessibilityIdentifier("button_EnterFingerstickGlucose")
     }
 
@@ -416,7 +413,6 @@ struct BolusEntryView: View {
         )
         .buttonStyle(ActionButtonStyle(viewModel.primaryButton == .actionButton ? .primary : .secondary))
         .disabled(viewModel.enacting)
-        .padding()
         .accessibilityIdentifier("button_bolusAction")
     }
 

@@ -41,6 +41,7 @@ struct ManualEntryDoseView: View {
             }
             .navigationBarTitle(self.title)
             .supportedInterfaceOrientations(.portrait)
+            .inputForm(focus: $bolusFieldFocused)
         }
     }
     
@@ -176,18 +177,8 @@ struct ManualEntryDoseView: View {
                     .font(.title)
                     .multilineTextAlignment(.trailing)
                     .foregroundColor(.loopAccent)
-                    .focused($bolusFieldFocused)
-                    .onChange(of: enteredBolusString) { oldValue, newValue in
-                        if newValue.count > 5 {
-                            enteredBolusString = String(newValue.prefix(5))
-                        }
-                    }
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") { bolusFieldFocused = false }
-                        }
-                    }
+                    .inputField(focus: $bolusFieldFocused)
+                    .limitTextLength($enteredBolusString, to: 5)
                 bolusUnitsLabel
             }
         }
@@ -204,8 +195,9 @@ struct ManualEntryDoseView: View {
         Binding(
             get: { self.enteredBolusString },
             set: { newValue in
-                self.viewModel.enteredBolus = LoopQuantity(unit: .internationalUnit, doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
                 self.enteredBolusString = newValue
+                guard newValue.utf16.count <= 5 else { return }
+                self.viewModel.enteredBolus = LoopQuantity(unit: .internationalUnit, doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
             }
         )
     }
@@ -219,11 +211,9 @@ struct ManualEntryDoseView: View {
     }
 
     private var actionArea: some View {
-        VStack(spacing: 0) {
+        ActionArea {
             actionButton.disabled(actionButtonDisabled)
         }
-        .padding(.bottom) // FIXME: unnecessary on iPhone 8 size devices
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
     }
             
     private var actionButton: some View {
@@ -242,7 +232,6 @@ struct ManualEntryDoseView: View {
             }
         )
         .buttonStyle(ActionButtonStyle(.primary))
-        .padding()
     }
 }
 

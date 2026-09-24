@@ -127,7 +127,7 @@ struct StatusTableView: View {
     var body: some View {
         ActionTabView {
             wrappedView
-                .ignoresSafeArea(edges: .bottom)
+                .ignoresSafeArea(edges: [.bottom, .horizontal])
                 .onChange(of: viewModel.temporaryPresetsManager.activeOverride) { _, _ in
                     Task {
                         await viewController.reloadData(animated: true)
@@ -209,11 +209,13 @@ struct ActionTabBar: UIViewRepresentable {
         uiView.isHidden = isHidden
         context.coordinator.tabs = items
         uiView.items = items.enumerated().map { idx, item in
-            UITabBarItem(
+            let barItem = UITabBarItem(
                 title: item.title,
                 image: UIImage(named: item.icon)?.withTintColor(item.tintColor, renderingMode: .alwaysOriginal),
                 tag: idx
             )
+            
+            return barItem
         }
     }
 

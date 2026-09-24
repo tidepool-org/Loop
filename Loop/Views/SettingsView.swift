@@ -22,6 +22,9 @@ struct SettingsView: View {
     @Environment(\.insulinTintColor) private var insulinTintColor
     @Environment(\.isInvestigationalDevice) private var isInvestigationalDevice
 
+    @AppStorage(ActionAreaAppearanceOverrides.roundedButtonsKey)
+    private var roundedActionAreaButtons = false
+
     @State var viewModel: SettingsViewModel
     @ObservedObject var versionUpdateViewModel: VersionUpdateViewModel
 
@@ -85,6 +88,9 @@ struct SettingsView: View {
                     }
                     presetsSection
                     deviceSettingsSection
+                    if #available(iOS 26.0, *) {
+                        temporaryAppearanceSection
+                    }
                     if FeatureFlags.allowExperimentalFeatures {
                         favoriteFoodsSection
                     }
@@ -243,6 +249,15 @@ extension SettingsView {
         }
     }
     
+    private var temporaryAppearanceSection: some View {
+        Section(
+            header: SectionHeader(label: "Temporary Appearance"),
+            footer: Text("Use 26-point button corners with matching glass corners in action areas, while preserving the fit to the screen.")
+        ) {
+            Toggle("Round Action Buttons", isOn: $roundedActionAreaButtons)
+        }
+    }
+
     private var softwareUpdateSection: some View {
         Section(footer: Text(viewModel.versionUpdateViewModel.footer(appName: appName))) {
             NavigationLink(destination: viewModel.versionUpdateViewModel.softwareUpdateView) {
