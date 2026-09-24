@@ -323,8 +323,6 @@ struct ActionTabView<Content: View>: View {
                 if #available(anyAppleOS 27.1, *) {
                     ActionTabBar(items: tabs, isHidden: !orientation.isPortrait)
                         .modifier(LegacyTabBarBackground(isVisible: orientation.isPortrait))
-                        .toolbarVerticalBehavior(.automatic)
-                        .toolbarVerticalCompressionBehavior(.prefersTabBar)
                 } else {
                     ActionTabBar(items: tabs, isHidden: !orientation.isPortrait)
                         .modifier(LegacyTabBarBackground(isVisible: orientation.isPortrait))
