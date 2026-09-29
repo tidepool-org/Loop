@@ -250,10 +250,7 @@ extension SettingsView {
     }
     
     private var temporaryAppearanceSection: some View {
-        Section(
-            header: SectionHeader(label: "Temporary Appearance"),
-            footer: Text("Use 26-point button corners with matching glass corners in action areas, while preserving the fit to the screen.")
-        ) {
+        Section(header: SectionHeader(label: "Temporary Appearance")) {
             Toggle("Round Action Buttons", isOn: $roundedActionAreaButtons)
         }
     }
