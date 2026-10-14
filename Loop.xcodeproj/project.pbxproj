@@ -606,6 +606,7 @@
 		E9C58A7E24DB529A00487A17 /* dynamic_glucose_effect_partially_observed.json in Resources */ = {isa = PBXBuildFile; fileRef = E9C58A7924DB529A00487A17 /* dynamic_glucose_effect_partially_observed.json */; };
 		E9C58A7F24DB529A00487A17 /* counteraction_effect_falling_glucose.json in Resources */ = {isa = PBXBuildFile; fileRef = E9C58A7A24DB529A00487A17 /* counteraction_effect_falling_glucose.json */; };
 		E9C58A8024DB529A00487A17 /* insulin_effect.json in Resources */ = {isa = PBXBuildFile; fileRef = E9C58A7B24DB529A00487A17 /* insulin_effect.json */; };
+		F56C571D12A237D5F4CBD550 /* InsulinDeliveryLogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1C60867AD30D891906B8B3 /* InsulinDeliveryLogViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -781,6 +782,7 @@
 		1D05219C2469F1F5000EBBDE /* AlertStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStore.swift; sourceTree = "<group>"; };
 		1D080CBC2473214A00356610 /* AlertStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = AlertStore.xcdatamodel; sourceTree = "<group>"; };
 		1D12D3B82548EFDD00B53E8B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		1D1C60867AD30D891906B8B3 /* InsulinDeliveryLogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinDeliveryLogViewModelTests.swift; sourceTree = "<group>"; };
 		1D49795724E7289700948F05 /* ServicesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesViewModel.swift; sourceTree = "<group>"; };
 		1D4A3E2B2478628500FD601B /* StoredAlert+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1D4A3E2C2478628500FD601B /* StoredAlert+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoredAlert+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -2767,6 +2769,7 @@
 			children = (
 				1D8D55BB252274650044DBB6 /* BolusEntryViewModelTests.swift */,
 				B4BC56372518DEA900373647 /* CGMStatusHUDViewModelTests.swift */,
+				1D1C60867AD30D891906B8B3 /* InsulinDeliveryLogViewModelTests.swift */,
 				C165756E2534C468004AE16E /* SimpleBolusViewModelTests.swift */,
 				C1777A6525A125F100595963 /* ManualEntryDoseViewModelTests.swift */,
 			);
@@ -3953,6 +3956,7 @@
 				1DFE9E172447B6270082C280 /* UserNotificationAlertSchedulerTests.swift in Sources */,
 				E9B3552F2935968E0076AB04 /* HKHealthStoreMock.swift in Sources */,
 				B4BC56382518DEA900373647 /* CGMStatusHUDViewModelTests.swift in Sources */,
+				F56C571D12A237D5F4CBD550 /* InsulinDeliveryLogViewModelTests.swift in Sources */,
 				C1DA434F2B164C6C00CBD33F /* MockSettingsProvider.swift in Sources */,
 				C1900900252271BB00721625 /* SimpleBolusCalculatorTests.swift in Sources */,
 				A9C1719725366F780053BCBD /* WatchHistoricalGlucoseTest.swift in Sources */,
