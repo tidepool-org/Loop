@@ -20,9 +20,23 @@ struct ManualGlucoseEntryRow: View {
 
     @Binding var quantity: LoopQuantity?
 
-    @State private var isManualGlucoseEntryRowVisible = false
+    var isFocused: FocusState<Bool>.Binding
 
-    @FocusState private var fieldIsFocused: Bool
+    private var enteredGlucose: Binding<String> {
+        Binding(
+            get: { valueText },
+            set: { value in
+                valueText = value
+                guard value.utf16.count <= 4 else { return }
+                let newQuantity = displayGlucosePreference.formatter.numberFormatter.number(from: value).map {
+                    LoopQuantity(unit: displayGlucosePreference.unit, doubleValue: $0.doubleValue)
+                }
+                if newQuantity != quantity {
+                    quantity = newQuantity
+                }
+            }
+        )
+    }
 
     var body: some View {
         HStack {
@@ -30,39 +44,36 @@ struct ManualGlucoseEntryRow: View {
             Spacer()
 
             HStack(alignment: .firstTextBaseline) {
-                DismissibleKeyboardTextField(
-                    text: $valueText,
-                    placeholder: NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
-                    font: .heavy(.title1),
-                    textAlignment: .right,
-                    keyboardType: .decimalPad,
-                    shouldBecomeFirstResponder: isManualGlucoseEntryRowVisible,
-                    maxLength: 4,
-                    doneButtonColor: .loopAccent
+                TextField(
+                    NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
+                    text: enteredGlucose
                 )
-                .onChange(of: valueText, perform: { value in
-                    if let manualGlucoseValue = displayGlucosePreference.formatter.numberFormatter.number(from: valueText)?.doubleValue {
-                        quantity = LoopQuantity(unit: displayGlucosePreference.unit, doubleValue: manualGlucoseValue)
-                    } else {
-                        quantity = nil
+                .textFieldStyle(.plain)
+                .font(.title.weight(.heavy))
+                .multilineTextAlignment(.trailing)
+                .keyboardType(.decimalPad)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .inputField(focus: isFocused)
+                .onChange(of: valueText) { previous, current in
+                    let formattedQuantity = quantity.map {
+                        displayGlucosePreference.format($0, includeUnit: false)
                     }
-                })
-                .onChange(of: displayGlucosePreference.unit, perform: { value in
+                    if current.utf16.count > 4, current != formattedQuantity {
+                        valueText = previous
+                    }
+                }
+                .onChange(of: displayGlucosePreference.unit) { _, _ in
                     unitsChanged()
-                })
+                }
+                .accessibilityLabel(Text("Fingerstick Glucose"))
                 .accessibilityIdentifier("textField_FingerstickGlucose")
                 
                 Text(displayGlucosePreference.formatter.localizedUnitStringWithPlurality())
                     .foregroundColor(Color(.secondaryLabel))
             }
         }
-        .onKeyboardStateChange { state in
-            if state.animationDuration > 0 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + state.animationDuration) {
-                     self.isManualGlucoseEntryRowVisible = true
-                }
-            }
-        }
+        .initialFocus(isFocused)
     }
 
     func unitsChanged() {

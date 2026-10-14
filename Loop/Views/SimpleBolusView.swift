@@ -16,23 +16,46 @@ struct SimpleBolusView: View {
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.dismissAction) var dismiss
     
-    @State private var shouldGlucoseEntryBecomeFirstResponder = false
-    @State private var isKeyboardVisible = false
+    private enum Field: Hashable {
+        case glucose, carbs, bolus
+    }
+
+    @FocusState private var focusedField: Field?
     @State private var isClosedLoopOffInformationalModalVisible = false
+    @State private var enteredGlucoseText: String
+    @State private var enteredCarbText: String
+    @State private var enteredBolusText: String
 
     @ObservedObject var viewModel: SimpleBolusViewModel
 
     private var enteredManualGlucose: Binding<String> {
         Binding(
-            get: { return viewModel.manualGlucoseString },
-            set: { newValue in viewModel.manualGlucoseString = newValue }
+            get: { enteredGlucoseText },
+            set: { newValue in
+                enteredGlucoseText = newValue
+                guard newValue.utf16.count <= 4, newValue != viewModel.manualGlucoseString else { return }
+                viewModel.manualGlucoseString = newValue
+            }
+        )
+    }
+
+    private var enteredCarbString: Binding<String> {
+        Binding(
+            get: { enteredCarbText },
+            set: { newValue in
+                enteredCarbText = newValue
+                guard newValue.utf16.count <= 5, newValue != viewModel.enteredCarbString else { return }
+                viewModel.enteredCarbString = newValue
+            }
         )
     }
     
     private var enteredBolusString: Binding<String> {
         Binding(
-            get: { return viewModel.enteredBolusString },
+            get: { enteredBolusText },
             set: { newValue in
+                enteredBolusText = newValue
+                guard newValue.utf16.count <= 5, newValue != viewModel.enteredBolusString else { return }
                 viewModel.enteredBolusString = newValue
                 viewModel.didEditBolusAmount = true
             }
@@ -41,6 +64,9 @@ struct SimpleBolusView: View {
 
     init(viewModel: SimpleBolusViewModel) {
         self.viewModel = viewModel
+        self._enteredGlucoseText = State(initialValue: viewModel.manualGlucoseString)
+        self._enteredCarbText = State(initialValue: viewModel.enteredCarbString)
+        self._enteredBolusText = State(initialValue: viewModel.enteredBolusString)
     }
     
     var title: String {
@@ -52,29 +78,31 @@ struct SimpleBolusView: View {
     }
         
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollViewReader { scrollProxy in
             List() {
                 self.infoSection
                 self.summarySection
             }
+            .contentMargins(.top, 16, for: .scrollContent)
             .insetGroupedListStyle()
+            .keepKeyboardFieldVisible(focusedField, in: scrollProxy)
             .navigationBarTitle(Text(self.title), displayMode: .inline)
-            
-            self.actionArea
-                .frame(height: self.isKeyboardVisible ? 0 : nil)
-                .opacity(self.isKeyboardVisible ? 0 : 1)
-        }
-        .onKeyboardStateChange { state in
-            self.isKeyboardVisible = state.height > 0
-            
-            if state.height == 0 {
-                // Ensure tapping 'Enter Bolus' can make the text field the first responder again
-                self.shouldGlucoseEntryBecomeFirstResponder = false
+            .initialFocus($focusedField, equals: .glucose, when: viewModel.manualGlucoseString.isEmpty)
+            .inputForm(focus: $focusedField)
+            .actionAreaInset {
+                actionAreaContent
             }
         }
-        .keyboardAware()
-        .edgesIgnoringSafeArea(self.isKeyboardVisible ? [] : .bottom)
         .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
+        .onChange(of: viewModel.manualGlucoseString) { _, value in
+            enteredGlucoseText = value
+        }
+        .onChange(of: viewModel.enteredCarbString) { _, value in
+            enteredCarbText = value
+        }
+        .onChange(of: viewModel.enteredBolusString) { _, value in
+            enteredBolusText = value
+        }
     }
     
     private func formatGlucose(_ quantity: LoopQuantity) -> String {
@@ -107,30 +135,34 @@ struct SimpleBolusView: View {
     private var summarySection: some View {
         Section {
             glucoseEntryRow
+                .id(Field.glucose)
             if viewModel.displayMealEntry {
                 carbEntryRow
+                    .id(Field.carbs)
             }
             recommendedBolusRow
             bolusEntryRow
+                .id(Field.bolus)
         }
     }
     
     private var carbEntryRow: some View {
-        HStack(alignment: .center) {
+        HStack {
             Text("Carbohydrates", comment: "Label for carbohydrates entry row on simple bolus screen")
             Spacer()
-            HStack {
-                DismissibleKeyboardTextField(
-                    text: $viewModel.enteredCarbString,
-                    placeholder: viewModel.carbPlaceholder,
-                    textAlignment: .right,
-                    keyboardType: .decimalPad,
-                    maxLength: 5,
-                    doneButtonColor: .loopAccent
-                )
+            HStack(alignment: .firstTextBaseline) {
+                TextField(viewModel.carbPlaceholder, text: enteredCarbString)
+                    .textFieldStyle(.plain)
+                    .font(.title)
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.decimalPad)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .inputField(focus: $focusedField, equals: .carbs)
+                    .limitTextLength($enteredCarbText, to: 5)
+                    .accessibilityLabel(Text("Carbohydrates"))
                 carbUnitsLabel
             }
-            .padding([.top, .bottom], 5)
             .fixedSize()
             .modifier(LabelBackground())
             .accessibilityIdentifier("textField_Carbohydrates")
@@ -142,19 +174,19 @@ struct SimpleBolusView: View {
             Text("Current Glucose", comment: "Label for glucose entry row on simple bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
-                DismissibleKeyboardTextField(
-                    text: enteredManualGlucose,
-                    placeholder: NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
-                    font: .heavy(.title1),
-                    textAlignment: .right,
-                    keyboardType: .decimalPad,
-                    shouldBecomeFirstResponder: shouldGlucoseEntryBecomeFirstResponder,
-                    maxLength: 4,
-                    doneButtonColor: .loopAccent
+                TextField(
+                    NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
+                    text: enteredManualGlucose
                 )
-                .onAppear {
-                    shouldGlucoseEntryBecomeFirstResponder = true
-                }
+                .textFieldStyle(.plain)
+                .font(.title.weight(.heavy))
+                .multilineTextAlignment(.trailing)
+                .keyboardType(.decimalPad)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .inputField(focus: $focusedField, equals: .glucose, next: viewModel.displayMealEntry ? .carbs : nil)
+                .limitTextLength($enteredGlucoseText, to: 4)
+                .accessibilityLabel(Text("Current Glucose"))
                 .accessibilityIdentifier("textField_CurrentGlucose")
 
                 glucoseUnitsLabel
@@ -204,16 +236,17 @@ struct SimpleBolusView: View {
             Text("Bolus", comment: "Label for bolus entry row on simple bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
-                DismissibleKeyboardTextField(
-                    text: enteredBolusString,
-                    placeholder: "0",
-                    font: .preferredFont(forTextStyle: .title1),
-                    textColor: .loopAccent,
-                    textAlignment: .right,
-                    keyboardType: .decimalPad,
-                    maxLength: 5,
-                    doneButtonColor: .loopAccent
-                )
+                TextField("0", text: enteredBolusString)
+                    .textFieldStyle(.plain)
+                    .font(.title)
+                    .foregroundStyle(Color.loopAccent)
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.decimalPad)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .inputField(focus: $focusedField, equals: .bolus)
+                    .limitTextLength($enteredBolusText, to: 5)
+                    .accessibilityLabel(Text("Bolus"))
                 
                 bolusUnitsLabel
             }
@@ -239,24 +272,19 @@ struct SimpleBolusView: View {
             .foregroundColor(Color(.secondaryLabel))
     }
 
-    private var actionArea: some View {
-        VStack(spacing: 0) {
-            if viewModel.isNoticeVisible {
-                warning(for: viewModel.activeNotice!)
-                    .padding([.top, .horizontal])
-                    .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
-            }
-            actionButton
+    @ViewBuilder
+    private var actionAreaContent: some View {
+        if viewModel.isNoticeVisible {
+            warning(for: viewModel.activeNotice!)
+                .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
         }
-        .background(Color(.secondarySystemGroupedBackground).shadow(radius: 5))
+        actionButton
     }
     
     private var actionButton: some View {
         Button<Text>(
             action: {
-                if self.viewModel.actionButtonAction == .enterBolus {
-                    self.shouldGlucoseEntryBecomeFirstResponder = true
-                } else {
+                if self.viewModel.actionButtonAction != .enterBolus {
                     Task {
                         if await viewModel.saveAndDeliver() {
                             self.dismiss()
@@ -277,9 +305,8 @@ struct SimpleBolusView: View {
                 }
             }
         )
-        .disabled(viewModel.actionButtonDisabled)
+        .disabled(viewModel.actionButtonDisabled || viewModel.actionButtonAction == .enterBolus)
         .buttonStyle(ActionButtonStyle(.primary))
-        .padding()
         .accessibilityIdentifier("button_bolusAction")
     }
     
