@@ -19,6 +19,8 @@ final class InsulinDeliveryLogViewModelTests: XCTestCase {
 
     private let targetRange = LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 100)...LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: 110)
 
+    private let singleUsePresetName = NSLocalizedString("Single Use Preset", comment: "The title shown for a single use preset")
+
     private func makeSavedPreset(named name: String) -> TemporaryPreset {
         TemporaryPreset(
             id: "saved-preset-\(name)",
@@ -64,8 +66,8 @@ final class InsulinDeliveryLogViewModelTests: XCTestCase {
         let events = InsulinDeliveryLogViewModel.presetEvents(from: makeHistory(recording: override), since: since, now: now)
 
         XCTAssertEqual(events.map(\.type), [
-            .preset(.enabled, icon: nil, name: "Single Use Preset"),
-            .preset(.disabled, icon: nil, name: "Single Use Preset")
+            .preset(.enabled, icon: nil, name: singleUsePresetName),
+            .preset(.disabled, icon: nil, name: singleUsePresetName)
         ])
     }
 
@@ -82,12 +84,24 @@ final class InsulinDeliveryLogViewModelTests: XCTestCase {
         ])
     }
 
+    func testEndedPreMealPresetIsListed() {
+        let override = makeOverride(context: .preMeal, startDate: now.addingTimeInterval(.hours(-3)), duration: .hours(1))
+        let preMeal = SelectablePreset.preMeal(range: targetRange)
+
+        let events = InsulinDeliveryLogViewModel.presetEvents(from: makeHistory(recording: override), since: since, now: now)
+
+        XCTAssertEqual(events.map(\.type), [
+            .preset(.enabled, icon: preMeal.icon, name: preMeal.name),
+            .preset(.disabled, icon: preMeal.icon, name: preMeal.name)
+        ])
+    }
+
     func testActivePresetHasNoDisabledEvent() {
         let override = makeOverride(context: .custom, startDate: now.addingTimeInterval(.minutes(-30)), duration: .hours(1))
 
         let events = InsulinDeliveryLogViewModel.presetEvents(from: makeHistory(recording: override), since: since, now: now)
 
-        XCTAssertEqual(events.map(\.type), [.preset(.enabled, icon: nil, name: "Single Use Preset")])
+        XCTAssertEqual(events.map(\.type), [.preset(.enabled, icon: nil, name: singleUsePresetName)])
     }
 
     func testPresetCancelledBeforeItStartedIsNotListed() {
