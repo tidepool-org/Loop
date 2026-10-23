@@ -459,6 +459,32 @@ class LoopDataManagerTests: XCTestCase {
 
     }
 
+    func testFetchDataCoversCarbEntryBeforeGlucoseAndDoseHistory() async throws {
+        let baseTime = ISO8601DateFormatter().date(from: "2023-07-29T12:00:00Z")!
+        let carbDate = baseTime.addingTimeInterval(.hours(-10))
+        carbStore.carbHistory = [StoredCarbEntry(startDate: carbDate, quantity: .carbs(value: 20))]
+        glucoseStore.storedGlucose = [StoredGlucoseSample(startDate: baseTime.addingTimeInterval(.minutes(-1)), quantity: .glucose(value: 100))]
+        doseStore.doseHistory = []
+
+        let override = TemporaryScheduleOverride(
+            context: .custom,
+            settings: TemporaryPresetSettings(targetRange: nil, insulinNeedsScaleFactor: 2),
+            startDate: baseTime.addingTimeInterval(.hours(-11)),
+            duration: .finite(.hours(2)),
+            enactTrigger: .local,
+            syncIdentifier: UUID()
+        )
+        temporaryPresetsManager.presetHistory.recordOverride(override, at: override.startDate)
+
+        let input = try await loopDataManager.fetchData(for: baseTime)
+
+        XCTAssertEqual(input.carbEntries.count, 1)
+        let sensitivity = try XCTUnwrap(input.sensitivity.closestPrior(to: carbDate))
+        XCTAssertGreaterThan(sensitivity.endDate, carbDate)
+        XCTAssertEqual(sensitivity.value.doubleValue(for: .milligramsPerDeciliter), 22.5)
+        XCTAssertEqual(input.carbRatio.closestPrior(to: carbDate)?.value, 5)
+    }
+
     func testFetchDataWithHighInsulinNeedsPresetMitigation() async throws {
         var input = try await loopDataManager.fetchData(for: now)
         XCTAssertEqual(input.target.count, 1)

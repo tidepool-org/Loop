@@ -1689,6 +1689,33 @@ final class StatusTableViewController: LoopChartsTableViewController {
     )
     
     @objc private func showLoopCompletionMessage(_: Any) {
+        if #available(iOS 26.0, *) {
+            let modalVC = UIHostingController(
+                rootView: LoopStatusGlassOverlay(
+                    viewModel: loopCompletionModalViewModel,
+                    sourceFrameProvider: { [weak self] in
+                        guard let sourceView = self?.hudView?.loopCompletionHUD.loopStatusTransitionSourceView,
+                              sourceView.window != nil else { return nil }
+                        return sourceView.convert(sourceView.bounds, to: nil)
+                    },
+                    onDismiss: { [weak self] in
+                        self?.dismiss(animated: false)
+                    },
+                    onNavigateToSettings: { [weak self] in
+                        self?.dismiss(animated: false) { [weak self] in
+                            self?.presentSettings()
+                        }
+                    }
+                )
+                .environment(\.loopStatusColorPalette, .loopStatus)
+            )
+            modalVC.modalPresentationStyle = .overFullScreen
+            modalVC.view.backgroundColor = .clear
+            modalVC.view.accessibilityViewIsModal = true
+            present(modalVC, animated: false)
+            return
+        }
+
         let modalVC = UIHostingController(
             rootView: LoopStatusModalView(viewModel: loopCompletionModalViewModel,
                                           onDismiss: { [weak self] in

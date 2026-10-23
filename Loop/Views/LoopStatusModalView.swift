@@ -10,6 +10,201 @@ import SwiftUI
 import LoopKit
 import LoopKitUI
 
+@available(iOS 26.0, *)
+struct LoopStatusGlassOverlay: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @State private var isExpanded = false
+    @State private var isDismissing = false
+
+    let viewModel: LoopStatusModalViewModel
+    let sourceFrameProvider: () -> CGRect?
+    let onDismiss: () -> Void
+    let onNavigateToSettings: () -> Void
+
+    var body: some View {
+        GeometryReader { geometry in
+            let sourceFrame = sourceFrameProvider()
+            let containerFrame = geometry.frame(in: .global)
+            let canZoom = !reduceMotion && sourceFrame?.isEmpty == false
+            let cardWidth = min(380, max(1, geometry.size.width - 48))
+            let collapsedScale = canZoom ? min(1, (sourceFrame?.width ?? cardWidth) / cardWidth) : 1
+            let offset = canZoom ? CGSize(
+                width: (sourceFrame?.midX ?? containerFrame.midX) - containerFrame.midX,
+                height: (sourceFrame?.midY ?? containerFrame.midY) - containerFrame.midY
+            ) : .zero
+
+            ZStack {
+                Color.black.opacity(isExpanded ? 0.16 : 0)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { dismiss() }
+                    .accessibilityHidden(true)
+
+                LoopStatusGlassCard(
+                    viewModel: viewModel,
+                    onDismiss: { dismiss() },
+                    onNavigateToSettings: { dismiss(navigatingToSettings: true) }
+                )
+                .frame(maxWidth: 380)
+                .padding(24)
+                .scaleEffect(isExpanded ? 1 : collapsedScale)
+                .offset(isExpanded ? .zero : offset)
+                .opacity(isExpanded ? 1 : 0)
+                .allowsHitTesting(isExpanded && !isDismissing)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .onAppear {
+            withAnimation(presentationAnimation) {
+                isExpanded = true
+            }
+        }
+        .accessibilityAction(.escape) { dismiss() }
+    }
+
+    private var presentationAnimation: Animation {
+        reduceMotion ? .easeInOut(duration: 0.18) : .spring(response: 0.42, dampingFraction: 0.88)
+    }
+
+    private func dismiss(navigatingToSettings: Bool = false) {
+        guard !isDismissing else { return }
+        isDismissing = true
+        withAnimation(presentationAnimation, completionCriteria: .removed) {
+            isExpanded = false
+        } completion: {
+            if navigatingToSettings {
+                onNavigateToSettings()
+            } else {
+                onDismiss()
+            }
+        }
+    }
+}
+
+@available(iOS 26.0, *)
+private struct LoopStatusGlassCard: View {
+    let viewModel: LoopStatusModalViewModel
+    let onDismiss: () -> Void
+    let onNavigateToSettings: () -> Void
+
+    var body: some View {
+        ViewThatFits(in: .vertical) {
+            LoopStatusGlassContent(viewModel: viewModel, onNavigateToSettings: onNavigateToSettings)
+                .padding(24)
+                .fixedSize(horizontal: false, vertical: true)
+
+            ScrollView {
+                LoopStatusGlassContent(viewModel: viewModel, onNavigateToSettings: onNavigateToSettings)
+                    .padding(24)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 32, style: .continuous))
+        .shadow(color: .black.opacity(0.08), radius: 24, y: 10)
+        .overlay(alignment: .topTrailing) {
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.body.weight(.semibold))
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(), in: Circle())
+            .accessibilityLabel("Close")
+            .padding(12)
+        }
+    }
+}
+
+@available(iOS 26.0, *)
+private struct LoopStatusGlassContent: View {
+    @Environment(\.loopStatusColorPalette) private var loopStatusColors
+
+    let viewModel: LoopStatusModalViewModel
+    let onNavigateToSettings: () -> Void
+
+    var body: some View {
+        VStack(spacing: 24) {
+            VStack(spacing: 12) {
+                LoopCircleView(
+                    closedLoop: viewModel.loopIconClosed,
+                    freshness: viewModel.freshness,
+                    deviceIssue: viewModel.isCGMInoperable || viewModel.isPumpInoperable || viewModel.hasBluetoothIssue
+                )
+                .padding(4)
+                .accessibilityHidden(true)
+
+                if viewModel.loopIconClosed, let completedTime = viewModel.lastLoopCompletedFormattedTime {
+                    VStack(spacing: 4) {
+                        Text("Last loop completed")
+                            .foregroundStyle(.secondary)
+                        Label(completedTime, systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
+                            .fontWeight(.semibold)
+                            .foregroundStyle(freshnessColor)
+                        if viewModel.includeDateTimeStamp {
+                            Text(viewModel.formattedLastLoopCompletedDateTime)
+                                .foregroundStyle(freshnessColor)
+                        } else if viewModel.freshness != .fresh {
+                            Text(viewModel.formattedLastLoopCompletedTime)
+                                .foregroundStyle(freshnessColor)
+                        }
+                    }
+                    .font(.footnote)
+                    .accessibilityElement(children: .combine)
+                }
+            }
+
+            VStack(spacing: 12) {
+                Text(viewModel.copy.title)
+                    .font(.title2.bold())
+                    .accessibilityAddTraits(.isHeader)
+
+                LoopStatusGlassMessage(
+                    message: viewModel.copy.message,
+                    settingsWord: viewModel.localizedSettingsWord,
+                    onNavigateToSettings: onNavigateToSettings
+                )
+            }
+        }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+    }
+
+    private var freshnessColor: Color {
+        switch viewModel.freshness {
+        case .fresh: return .primary
+        case .aging: return Color(loopStatusColors.warning)
+        case .stale: return Color(loopStatusColors.error)
+        }
+    }
+}
+
+@available(iOS 26.0, *)
+private struct LoopStatusGlassMessage: View {
+    let message: String
+    let settingsWord: String
+    let onNavigateToSettings: () -> Void
+
+    var body: some View {
+        Text(attributedMessage)
+            .font(.body)
+            .foregroundStyle(.secondary)
+            .environment(\.openURL, OpenURLAction { _ in
+                onNavigateToSettings()
+                return .handled
+            })
+    }
+
+    private var attributedMessage: AttributedString {
+        var text = AttributedString(message)
+        if let range = text.range(of: settingsWord) {
+            text[range].link = URL(string: "loop-status://settings")
+        }
+        return text
+    }
+}
+
 struct LoopStatusModalView: View {
     @Environment(\.loopStatusColorPalette) private var loopStatusColors
     

@@ -39,16 +39,19 @@ struct FavoriteFoodInsightsView: View {
         }
         else {
             content
-                .insetGroupedListStyle()
         }
     }
     
     private var content: some View {
         List {
-            historicalCarbEntriesSection
-            historicalDataReviewSection
+            if viewModel.carbEntry != nil {
+                historicalCarbEntriesSection
+            }
+            FavoriteFoodsInsightsChartsView(viewModel: viewModel, showHowCarbEffectsWorks: $showHowCarbEffectsWorks) {
+                historicalDataReviewHeader
+            }
         }
-        .padding(.top, -28)
+        .insetGroupedListStyle()
         .navigationTitle("Favorite Food Insights")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showHowCarbEffectsWorks) {
@@ -123,12 +126,6 @@ struct FavoriteFoodInsightsView: View {
         }
     }
     
-    private var historicalDataReviewSection: some View {
-        Section(header: historicalDataReviewHeader) {
-            FavoriteFoodsInsightsChartsView(viewModel: viewModel, showHowCarbEffectsWorks: $showHowCarbEffectsWorks)
-        }
-    }
-    
     private var historicalDataReviewHeader: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading) {
@@ -143,7 +140,7 @@ struct FavoriteFoodInsightsView: View {
             Spacer()
         }
         .textCase(nil)
-        .listRowInsets(EdgeInsets(top: 20, leading: 4, bottom: 10, trailing: 4))
+        .listRowInsets(EdgeInsets(top: 16, leading: 4, bottom: 10, trailing: 4))
     }
     
     private var dismissButton: some View {
