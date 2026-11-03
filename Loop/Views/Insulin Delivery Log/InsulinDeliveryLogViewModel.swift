@@ -173,7 +173,7 @@ class InsulinDeliveryLogViewModel {
         var events = [InsulinDeliveryLogEvent]()
         handleDoseEvents(doses: doses, decisions: decisions, fetchedDate: fetchedDate, events: &events)
         handleAutomationEvents(&events)
-        handlePresetEvents(startDate: startDate, &events)
+        handlePresetEvents(startDate: startDate, fetchedDate: fetchedDate, &events)
         
         // update the state of delivery log with the fetched & mapped data
         state = .fetched(
@@ -547,15 +547,20 @@ class InsulinDeliveryLogViewModel {
         }
     }
     
-    private func handlePresetEvents(startDate: Date, _ events: inout [InsulinDeliveryLogEvent]) {
-        loopDataManager.temporaryPresetsManager.presetHistory.recentEvents.filter({ $0.override.actualEndDate >= startDate }).forEach { event in
-            if let preset = loopDataManager.temporaryPresetsManager.selectablePresets.first(where: { $0.id == event.override.presetId }) {
-                events.append(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .preset(.enabled, icon: preset.icon, name: preset.name), date: event.override.startDate))
-                
-                if event.override.hasFinished() {
-                    events.append(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .preset(.disabled, icon: preset.icon, name: preset.name), date: event.override.actualEndDate))
-                }
+    private func handlePresetEvents(startDate: Date, fetchedDate: Date, _ events: inout [InsulinDeliveryLogEvent]) {
+        events.append(contentsOf: Self.presetEvents(from: loopDataManager.temporaryPresetsManager.presetHistory, since: startDate, now: fetchedDate))
+    }
+
+    static func presetEvents(from presetHistory: TemporaryScheduleOverrideHistory, since startDate: Date, now: Date) -> [InsulinDeliveryLogEvent] {
+        var events = [InsulinDeliveryLogEvent]()
+        presetHistory.recentEvents.filter({ $0.override.actualEnd != .deleted && $0.override.actualEndDate >= startDate }).forEach { event in
+            let preset = event.override.createPreset()
+            events.append(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .preset(.enabled, icon: preset.icon, name: preset.name), date: event.override.startDate))
+
+            if event.override.hasFinished(relativeTo: now) {
+                events.append(InsulinDeliveryLogEvent(id: String(event.hashValue), type: .preset(.disabled, icon: preset.icon, name: preset.name), date: event.override.actualEndDate))
             }
         }
+        return events
     }
 }

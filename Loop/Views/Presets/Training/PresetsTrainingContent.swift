@@ -515,7 +515,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                 
                 InsetContent {
                     VStack(spacing: 4) {
-                        Text("Aerobic")
+                        Text("Anaerobic")
                             .font(.title2.bold())
                         
                         Text("Explosive sprints or bursts")
@@ -568,7 +568,7 @@ extension PresetsTraining.Step: PresetsTrainingContent {
                 
                 InsetContent {
                     VStack(spacing: 4) {
-                        Text("Aerobic")
+                        Text("Aerobic and Anaerobic")
                             .font(.title2.bold())
                         
                         Text("Combination of high and low intensity")
