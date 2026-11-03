@@ -45,6 +45,10 @@ struct BolusEntryView: View {
             List {
                 self.chartSection
                 self.summarySection
+
+                ActionAreaInlineSlot(margin: 0)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
             }
             .contentMargins(.top, 16, for: .scrollContent)
             .insetGroupedListStyle()
@@ -53,7 +57,7 @@ struct BolusEntryView: View {
                 bolusFieldFocused = false
                 manualGlucoseFieldFocused = false
             }
-            .actionAreaInset {
+            .actionAreaInset(inlineAtAccessibilitySizes: true) {
                 actionAreaContent
             }
         }
@@ -290,7 +294,7 @@ struct BolusEntryView: View {
             Text("Bolus", comment: "Label for bolus entry row on bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
-                TextField(viewModel.formatBolusAmount(0.0), text: enteredBolusStringBinding)
+                LengthLimitedTextField(viewModel.formatBolusAmount(0.0), text: enteredBolusStringBinding, maxLength: 5)
                     .keyboardType(.decimalPad)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
@@ -303,7 +307,6 @@ struct BolusEntryView: View {
                             didBeginEditing()
                         }
                     }
-                    .limitTextLength($enteredBolusString, to: 5)
                 bolusUnitsLabel
             }
             .accessibilityIdentifier("textField_Bolus")
@@ -320,7 +323,6 @@ struct BolusEntryView: View {
             get: { enteredBolusString },
             set: { newValue in
                 enteredBolusString = newValue
-                guard newValue.utf16.count <= 5 else { return }
                 viewModel.updateEnteredBolus(newValue)
             }
         )

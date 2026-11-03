@@ -27,7 +27,6 @@ struct ManualGlucoseEntryRow: View {
             get: { valueText },
             set: { value in
                 valueText = value
-                guard value.utf16.count <= 4 else { return }
                 let newQuantity = displayGlucosePreference.formatter.numberFormatter.number(from: value).map {
                     LoopQuantity(unit: displayGlucosePreference.unit, doubleValue: $0.doubleValue)
                 }
@@ -44,9 +43,10 @@ struct ManualGlucoseEntryRow: View {
             Spacer()
 
             HStack(alignment: .firstTextBaseline) {
-                TextField(
+                LengthLimitedTextField(
                     NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
-                    text: enteredGlucose
+                    text: enteredGlucose,
+                    maxLength: 4
                 )
                 .textFieldStyle(.plain)
                 .font(.title.weight(.heavy))
@@ -55,14 +55,6 @@ struct ManualGlucoseEntryRow: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .inputField(focus: isFocused)
-                .onChange(of: valueText) { previous, current in
-                    let formattedQuantity = quantity.map {
-                        displayGlucosePreference.format($0, includeUnit: false)
-                    }
-                    if current.utf16.count > 4, current != formattedQuantity {
-                        valueText = previous
-                    }
-                }
                 .onChange(of: displayGlucosePreference.unit) { _, _ in
                     unitsChanged()
                 }

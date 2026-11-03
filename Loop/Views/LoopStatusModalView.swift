@@ -189,7 +189,7 @@ private struct LoopStatusGlassMessage: View {
     var body: some View {
         Text(attributedMessage)
             .font(.body)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.primary)
             .environment(\.openURL, OpenURLAction { _ in
                 onNavigateToSettings()
                 return .handled

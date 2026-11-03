@@ -113,11 +113,13 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 .frame(width: 0, height: 0)
                 .opacity(0)
                 .accessibility(hidden: true)
+
+                ActionAreaInlineSlot()
             }
         }
         .initialFocus($focusedField, equals: .amountConsumed, when: viewModel.shouldBeginEditingQuantity)
         .inputForm(focus: $focusedField)
-        .actionAreaInset {
+        .actionAreaInset(inlineAtAccessibilitySizes: true) {
             continueActionButton
         }
         .onChange(of: focusedField) { _, field in

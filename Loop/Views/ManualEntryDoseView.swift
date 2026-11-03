@@ -15,33 +15,30 @@ import LoopUI
 
 
 struct ManualEntryDoseView: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
     @ObservedObject var viewModel: ManualEntryDoseViewModel
 
     @State private var enteredBolusString = ""
     @State private var isInteractingWithChart = false
+    @State private var isSavingDose = false
     @FocusState private var bolusFieldFocused: Bool
 
     @Environment(\.dismissAction) var dismiss
 
-    private var accessoryClearance: CGFloat {
-        dynamicTypeSize.isAccessibilitySize ? 72 : 52
-    }
-
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                List {
-                    self.chartSection
-                    self.summarySection
-                }
-                .insetGroupedListStyle()
-                
-            }
-            .navigationBarTitle(self.title)
-            .supportedInterfaceOrientations(.portrait)
-            .inputForm(focus: $bolusFieldFocused)
+        List {
+            self.chartSection
+            self.summarySection
+
+            ActionAreaInlineSlot(margin: 0)
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+        }
+        .insetGroupedListStyle()
+        .navigationBarTitle(self.title)
+        .supportedInterfaceOrientations(.portrait)
+        .inputForm(focus: $bolusFieldFocused)
+        .actionAreaInset(inlineAtAccessibilitySizes: true) {
+            actionButton.disabled(actionButtonDisabled)
         }
     }
     
@@ -170,7 +167,7 @@ struct ManualEntryDoseView: View {
             Text("Bolus", comment: "Label for bolus entry row on bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
-                TextField(Self.doseAmountFormatter.string(from: 0.0)!, text: typedBolusEntry)
+                LengthLimitedTextField(Self.doseAmountFormatter.string(from: 0.0)!, text: typedBolusEntry, maxLength: 5)
                     .keyboardType(.decimalPad)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
@@ -178,7 +175,6 @@ struct ManualEntryDoseView: View {
                     .multilineTextAlignment(.trailing)
                     .foregroundColor(.loopAccent)
                     .inputField(focus: $bolusFieldFocused)
-                    .limitTextLength($enteredBolusString, to: 5)
                 bolusUnitsLabel
             }
         }
@@ -196,7 +192,6 @@ struct ManualEntryDoseView: View {
             get: { self.enteredBolusString },
             set: { newValue in
                 self.enteredBolusString = newValue
-                guard newValue.utf16.count <= 5 else { return }
                 self.viewModel.enteredBolus = LoopQuantity(unit: .internationalUnit, doubleValue: Self.doseAmountFormatter.number(from: newValue)?.doubleValue ?? 0)
             }
         )
@@ -207,23 +202,19 @@ struct ManualEntryDoseView: View {
     }
 
     private var actionButtonDisabled: Bool {
-        enteredBolusAmount <= 0
+        enteredBolusAmount <= 0 || isSavingDose
     }
 
-    private var actionArea: some View {
-        ActionArea {
-            actionButton.disabled(actionButtonDisabled)
-        }
-    }
-            
     private var actionButton: some View {
         Button<Text>(
             action: {
+                isSavingDose = true
                 Task {
                     do {
                         try await self.viewModel.saveManualDose()
                         self.dismiss()
                     } catch {
+                        isSavingDose = false
                     }
                 }
             },

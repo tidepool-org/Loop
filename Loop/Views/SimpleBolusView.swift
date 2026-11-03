@@ -22,18 +22,14 @@ struct SimpleBolusView: View {
 
     @FocusState private var focusedField: Field?
     @State private var isClosedLoopOffInformationalModalVisible = false
-    @State private var enteredGlucoseText: String
-    @State private var enteredCarbText: String
-    @State private var enteredBolusText: String
 
     @ObservedObject var viewModel: SimpleBolusViewModel
 
     private var enteredManualGlucose: Binding<String> {
         Binding(
-            get: { enteredGlucoseText },
+            get: { viewModel.manualGlucoseString },
             set: { newValue in
-                enteredGlucoseText = newValue
-                guard newValue.utf16.count <= 4, newValue != viewModel.manualGlucoseString else { return }
+                guard newValue != viewModel.manualGlucoseString else { return }
                 viewModel.manualGlucoseString = newValue
             }
         )
@@ -41,10 +37,9 @@ struct SimpleBolusView: View {
 
     private var enteredCarbString: Binding<String> {
         Binding(
-            get: { enteredCarbText },
+            get: { viewModel.enteredCarbString },
             set: { newValue in
-                enteredCarbText = newValue
-                guard newValue.utf16.count <= 5, newValue != viewModel.enteredCarbString else { return }
+                guard newValue != viewModel.enteredCarbString else { return }
                 viewModel.enteredCarbString = newValue
             }
         )
@@ -52,10 +47,9 @@ struct SimpleBolusView: View {
     
     private var enteredBolusString: Binding<String> {
         Binding(
-            get: { enteredBolusText },
+            get: { viewModel.enteredBolusString },
             set: { newValue in
-                enteredBolusText = newValue
-                guard newValue.utf16.count <= 5, newValue != viewModel.enteredBolusString else { return }
+                guard newValue != viewModel.enteredBolusString else { return }
                 viewModel.enteredBolusString = newValue
                 viewModel.didEditBolusAmount = true
             }
@@ -64,9 +58,6 @@ struct SimpleBolusView: View {
 
     init(viewModel: SimpleBolusViewModel) {
         self.viewModel = viewModel
-        self._enteredGlucoseText = State(initialValue: viewModel.manualGlucoseString)
-        self._enteredCarbText = State(initialValue: viewModel.enteredCarbString)
-        self._enteredBolusText = State(initialValue: viewModel.enteredBolusString)
     }
     
     var title: String {
@@ -82,6 +73,10 @@ struct SimpleBolusView: View {
             List() {
                 self.infoSection
                 self.summarySection
+
+                ActionAreaInlineSlot(margin: 0)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
             }
             .contentMargins(.top, 16, for: .scrollContent)
             .insetGroupedListStyle()
@@ -89,20 +84,11 @@ struct SimpleBolusView: View {
             .navigationBarTitle(Text(self.title), displayMode: .inline)
             .initialFocus($focusedField, equals: .glucose, when: viewModel.manualGlucoseString.isEmpty)
             .inputForm(focus: $focusedField)
-            .actionAreaInset {
+            .actionAreaInset(inlineAtAccessibilitySizes: true) {
                 actionAreaContent
             }
         }
         .alert(item: self.$viewModel.activeAlert, content: self.alert(for:))
-        .onChange(of: viewModel.manualGlucoseString) { _, value in
-            enteredGlucoseText = value
-        }
-        .onChange(of: viewModel.enteredCarbString) { _, value in
-            enteredCarbText = value
-        }
-        .onChange(of: viewModel.enteredBolusString) { _, value in
-            enteredBolusText = value
-        }
     }
     
     private func formatGlucose(_ quantity: LoopQuantity) -> String {
@@ -151,7 +137,7 @@ struct SimpleBolusView: View {
             Text("Carbohydrates", comment: "Label for carbohydrates entry row on simple bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
-                TextField(viewModel.carbPlaceholder, text: enteredCarbString)
+                LengthLimitedTextField(viewModel.carbPlaceholder, text: enteredCarbString, maxLength: 5)
                     .textFieldStyle(.plain)
                     .font(.title)
                     .multilineTextAlignment(.trailing)
@@ -159,7 +145,6 @@ struct SimpleBolusView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .inputField(focus: $focusedField, equals: .carbs)
-                    .limitTextLength($enteredCarbText, to: 5)
                     .accessibilityLabel(Text("Carbohydrates"))
                 carbUnitsLabel
             }
@@ -174,9 +159,10 @@ struct SimpleBolusView: View {
             Text("Current Glucose", comment: "Label for glucose entry row on simple bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
-                TextField(
+                LengthLimitedTextField(
                     NSLocalizedString("– – –", comment: "No glucose value representation (3 dashes for mg/dL)"),
-                    text: enteredManualGlucose
+                    text: enteredManualGlucose,
+                    maxLength: 4
                 )
                 .textFieldStyle(.plain)
                 .font(.title.weight(.heavy))
@@ -185,7 +171,6 @@ struct SimpleBolusView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .inputField(focus: $focusedField, equals: .glucose, next: viewModel.displayMealEntry ? .carbs : nil)
-                .limitTextLength($enteredGlucoseText, to: 4)
                 .accessibilityLabel(Text("Current Glucose"))
                 .accessibilityIdentifier("textField_CurrentGlucose")
 
@@ -236,7 +221,7 @@ struct SimpleBolusView: View {
             Text("Bolus", comment: "Label for bolus entry row on simple bolus screen")
             Spacer()
             HStack(alignment: .firstTextBaseline) {
-                TextField("0", text: enteredBolusString)
+                LengthLimitedTextField("0", text: enteredBolusString, maxLength: 5)
                     .textFieldStyle(.plain)
                     .font(.title)
                     .foregroundStyle(Color.loopAccent)
@@ -245,7 +230,6 @@ struct SimpleBolusView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .inputField(focus: $focusedField, equals: .bolus)
-                    .limitTextLength($enteredBolusText, to: 5)
                     .accessibilityLabel(Text("Bolus"))
                 
                 bolusUnitsLabel
@@ -284,11 +268,9 @@ struct SimpleBolusView: View {
     private var actionButton: some View {
         Button<Text>(
             action: {
-                if self.viewModel.actionButtonAction != .enterBolus {
-                    Task {
-                        if await viewModel.saveAndDeliver() {
-                            self.dismiss()
-                        }
+                Task {
+                    if await viewModel.saveAndDeliver() {
+                        self.dismiss()
                     }
                 }
             },

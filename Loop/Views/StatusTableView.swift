@@ -209,13 +209,11 @@ struct ActionTabBar: UIViewRepresentable {
         uiView.isHidden = isHidden
         context.coordinator.tabs = items
         uiView.items = items.enumerated().map { idx, item in
-            let barItem = UITabBarItem(
+            UITabBarItem(
                 title: item.title,
                 image: UIImage(named: item.icon)?.withTintColor(item.tintColor, renderingMode: .alwaysOriginal),
                 tag: idx
             )
-            
-            return barItem
         }
     }
 
