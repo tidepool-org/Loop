@@ -1122,11 +1122,10 @@ extension LoopAppManager: SimulatedData {
                 try await self.dosingDecisionStore.generateSimulatedHistoricalDosingDecisionObjects()
                 try await self.deviceDataManager.deviceLog.generateSimulatedHistoricalDeviceLogEntries()
                 try await self.alertManager.alertStore.generateSimulatedHistoricalStoredAlerts()
+                completion(nil)
             } catch {
                 completion(error)
-                return
             }
-
         }
     }
 
