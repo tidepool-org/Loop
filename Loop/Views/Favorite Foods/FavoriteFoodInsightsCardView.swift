@@ -36,7 +36,7 @@ struct FavoriteFoodInsightsCardView: View {
     }
     
     private var border: some View {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
+        RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
             .strokeBorder(Color.accentColor, lineWidth: 2)
     }
     
@@ -63,8 +63,8 @@ struct FavoriteFoodInsightsCardView: View {
                         .multilineTextAlignment(.center)
                 }
             }
-            .padding(.vertical, 12)
-            .padding(.horizontal)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 20)
         }
     }
     

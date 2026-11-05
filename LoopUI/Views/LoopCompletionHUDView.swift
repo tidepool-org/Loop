@@ -13,6 +13,10 @@ import LoopKitUI
 public final class LoopCompletionHUDView: BaseHUDView {
 
     @IBOutlet private weak var loopStateView: LoopStateView!
+
+    public var loopStatusTransitionSourceView: UIView {
+        loopStateView ?? self
+    }
     
     override public var orderPriority: HUDViewOrderPriority {
         return 2

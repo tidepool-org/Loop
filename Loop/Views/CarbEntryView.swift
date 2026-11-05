@@ -11,12 +11,17 @@ import LoopKit
 import LoopKitUI
 
 struct CarbEntryView: View, HorizontalSizeClassOverride {
+    private enum Field: Hashable {
+        case amountConsumed
+    }
+
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     @Environment(\.dismissAction) private var dismiss
     @Environment(\.guidanceColors) private var guidanceColors
 
     @ObservedObject var viewModel: CarbEntryViewModel
         
+    @FocusState private var focusedField: Field?
     @State private var expandedRow: Row?
     
     @State private var showHowAbsorptionTimeWorks = false
@@ -26,14 +31,32 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     private let isNewEntry: Bool
 
     init(viewModel: CarbEntryViewModel) {
-        if viewModel.shouldBeginEditingQuantity {
-            expandedRow = .amountConsumed
-        }
         isNewEntry = viewModel.originalCarbEntry == nil
         self.viewModel = viewModel
     }
     
     var body: some View {
+        navigationContent
+            .sheet(isPresented: $showAddFavoriteFood, onDismiss: clearExpandedRow) {
+                FavoriteFoodAddEditView(
+                    carbsQuantity: viewModel.carbsQuantity,
+                    foodType: viewModel.effectiveFoodType,
+                    absorptionTime: viewModel.absorptionTime,
+                    onSave: onFavoriteFoodSave(_:)
+                )
+            }
+            .sheet(isPresented: $showHowAbsorptionTimeWorks) {
+                HowAbsorptionTimeWorksView()
+            }
+            .sheet(isPresented: $showFavoriteFoodInsights) {
+                if let food = viewModel.selectedFavoriteFood {
+                    FavoriteFoodInsightsView(viewModel: FavoriteFoodInsightsViewModel(delegate: viewModel.delegate, food: food))
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var navigationContent: some View {
         if isNewEntry {
             NavigationView {
                 let title = NSLocalizedString("carb-entry-title-add", value: "Add Carb Entry", comment: "The title of the view controller to create a new carb entry")
@@ -43,23 +66,12 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                         ToolbarItem(placement: .navigationBarLeading) {
                             dismissButton
                         }
-                        
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            continueButton
-                                .accessibilityIdentifier("button_Continue")
-                        }
                     }
             }
             .navigationViewStyle(.stack)
         }
         else {
             content
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        continueButton
-                            .accessibilityIdentifier("button_Continue")
-                    }
-                }
         }
     }
     
@@ -78,11 +90,10 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
 
                 mainCard
                     .padding(.top, 8)
-                
-                continueActionButton
-                
+
                 if isNewEntry, FeatureFlags.allowExperimentalFeatures {
                     favoriteFoodsCard
+                        .padding(.top, 8)
                 }
                 
                 if viewModel.selectedFavoriteFoodLastEaten != nil, FeatureFlags.allowExperimentalFeatures {
@@ -102,28 +113,31 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 .frame(width: 0, height: 0)
                 .opacity(0)
                 .accessibility(hidden: true)
+
+                ActionAreaInlineSlot()
             }
+        }
+        .initialFocus($focusedField, equals: .amountConsumed, when: viewModel.shouldBeginEditingQuantity)
+        .inputForm(focus: $focusedField)
+        .actionAreaInset(inlineAtAccessibilitySizes: true) {
+            continueActionButton
+        }
+        .onChange(of: focusedField) { _, field in
+            if field != nil {
+                expandedRow = nil
+            }
+        }
+        .onDisappear {
+            expandedRow = nil
         }
         .alert(item: $viewModel.alert, content: alert(for:))
-        .sheet(isPresented: $showAddFavoriteFood, onDismiss: clearExpandedRow) {
-            FavoriteFoodAddEditView(carbsQuantity: $viewModel.carbsQuantity.wrappedValue, foodType: $viewModel.foodType.wrappedValue, absorptionTime: $viewModel.absorptionTime.wrappedValue, onSave: onFavoriteFoodSave(_:))
-        }
-        .sheet(isPresented: $showHowAbsorptionTimeWorks) {
-            HowAbsorptionTimeWorksView()
-        }
-        .sheet(isPresented: $showFavoriteFoodInsights) {
-            if let food = viewModel.selectedFavoriteFood {
-                FavoriteFoodInsightsView(viewModel: FavoriteFoodInsightsViewModel(delegate: viewModel.delegate, food: food))
-            }
-        }
     }
     
     private var mainCard: some View {
         VStack(spacing: 10) {
-            let amountConsumedFocused: Binding<Bool> = Binding(get: { expandedRow == .amountConsumed }, set: { expandedRow = $0 ? .amountConsumed : nil })
-            let timeFocused: Binding<Bool> = Binding(get: { expandedRow == .time }, set: { expandedRow = $0 ? .time : nil })
-            let foodTypeFocused: Binding<Bool> = Binding(get: { expandedRow == .foodType }, set: { expandedRow = $0 ? .foodType : nil })
-            let absorptionTimeFocused: Binding<Bool> = Binding(get: { expandedRow == .absorptionTime }, set: { expandedRow = $0 ? .absorptionTime : nil })
+            let timeFocused = focusBinding(for: .time)
+            let foodTypeFocused = focusBinding(for: .foodType)
+            let absorptionTimeFocused = focusBinding(for: .absorptionTime)
             // Food type row shows an x button next to favorite food chip that clears favorite food by setting this binding to nil
             let selectedFavoriteFoodBinding = Binding(
                 get: { viewModel.selectedFavoriteFood },
@@ -133,16 +147,16 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
                 }
             )
             
-            CarbQuantityRow(quantity: $viewModel.carbsQuantity, isFocused: amountConsumedFocused, title: NSLocalizedString("Amount Consumed", comment: "Label for carb quantity entry row on carb entry screen"), preferredCarbUnit: viewModel.preferredCarbUnit)
+            CarbQuantityRow(quantity: $viewModel.carbsQuantity, focus: $focusedField, equals: .amountConsumed, title: NSLocalizedString("Amount Consumed", comment: "Label for carb quantity entry row on carb entry screen"), preferredCarbUnit: viewModel.preferredCarbUnit)
 
             CardSectionDivider()
             
             DatePickerRow(date: $viewModel.time, isFocused: timeFocused, minimumDate: viewModel.minimumDate, maximumDate: viewModel.maximumDate)
-            
+
             CardSectionDivider()
             
             FoodTypeRow(selectedFavoriteFood: selectedFavoriteFoodBinding, foodType: $viewModel.foodType, absorptionTime: $viewModel.absorptionTime, selectedDefaultAbsorptionTimeEmoji: $viewModel.selectedDefaultAbsorptionTimeEmoji, usesCustomFoodType: $viewModel.usesCustomFoodType, absorptionTimeWasEdited: $viewModel.absorptionTimeWasEdited, isFocused: foodTypeFocused, showClearFavoriteFoodButton: !isNewEntry, defaultAbsorptionTimes: viewModel.defaultAbsorptionTimes)
-            
+
             CardSectionDivider()
             
             AbsorptionTimePickerRow(absorptionTime: $viewModel.absorptionTime, isFocused: absorptionTimeFocused, validDurationRange: viewModel.absorptionRimesRange, showHowAbsorptionTimeWorks: $showHowAbsorptionTimeWorks)
@@ -152,6 +166,20 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
         .padding(.horizontal)
         .background(CardBackground())
         .padding(.horizontal)
+    }
+
+    private func focusBinding(for row: Row) -> Binding<Bool> {
+        Binding(
+            get: { expandedRow == row },
+            set: { focused in
+                if focused {
+                    focusedField = nil
+                    expandedRow = row
+                } else if expandedRow == row {
+                    expandedRow = nil
+                }
+            }
+        )
     }
     
     @ViewBuilder
@@ -165,6 +193,7 @@ struct CarbEntryView: View, HorizontalSizeClassOverride {
     }
     
     private func clearExpandedRow() {
+        self.focusedField = nil
         self.expandedRow = nil
     }
 }
@@ -276,6 +305,7 @@ extension CarbEntryView {
                                 expandedRow = nil
                             }
                             else {
+                                focusedField = nil
                                 expandedRow = .favoriteFoodSelection
                             }
                         }
@@ -292,6 +322,7 @@ extension CarbEntryView {
                             .frame(maxWidth: .infinity)
                     }
                     .disabled(viewModel.saveFavoriteFoodButtonDisabled)
+                    .accessibilityIdentifier("button_SaveAsFavoriteFood")
                 }
             }
             .padding(.vertical, 12)
@@ -321,6 +352,7 @@ extension CarbEntryView {
     }
     
     private func saveAsFavoriteFood() {
+        clearExpandedRow()
         self.showAddFavoriteFood = true
     }
     
@@ -339,26 +371,22 @@ extension CarbEntryView {
         }
     }
     
-    private var continueButton: some View {
-        Button(action: viewModel.continueToBolus) {
-            Text("Continue")
-        }
-        .disabled(viewModel.continueButtonDisabled)
-    }
-    
     private var continueActionButton: some View {
-        Button(action: viewModel.continueToBolus) {
+        Button(action: {
+            clearExpandedRow()
+            viewModel.continueToBolus()
+        }) {
             Text("Continue")
         }
         .buttonStyle(ActionButtonStyle())
-        .padding()
         .disabled(viewModel.continueButtonDisabled)
+        .accessibilityIdentifier("button_Continue")
     }
     
 }
 
 extension CarbEntryView {
     enum Row {
-        case amountConsumed, time, foodType, absorptionTime, favoriteFoodSelection
+        case time, foodType, absorptionTime, favoriteFoodSelection
     }
 }

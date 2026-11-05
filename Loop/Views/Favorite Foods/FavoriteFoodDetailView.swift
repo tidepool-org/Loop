@@ -72,7 +72,7 @@ public struct FavoriteFoodDetailView: View {
                 }
             }
         }
-        .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        .listRowInsets(EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20))
     }
     
     private func actionsSection(for food: StoredFavoriteFood) -> some View {
