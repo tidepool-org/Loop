@@ -733,10 +733,12 @@ extension DeviceDataManager {
             let _ = try? await pumpManager.cancelBolus()
         }
 
+        // Failures propagate to the caller so a refused bolus is never recorded as delivered.
         do {
             try await pumpManager.enactBolus(decisionId: decisionId, units: units, activationType: activationType)
         } catch PumpManagerError.uncertainDelivery {
             // Do not generate notification on uncertain delivery error
+            throw PumpManagerError.uncertainDelivery
         } catch {
             if !activationType.isAutomatic, let error = error as? PumpManagerError {
                 do {
@@ -745,6 +747,7 @@ extension DeviceDataManager {
                     log.error("Error sending bolus failure notification %{public}@", String(describing: error))
                 }
             }
+            throw error
         }
     }
     
