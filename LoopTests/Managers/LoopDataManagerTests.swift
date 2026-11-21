@@ -338,6 +338,59 @@ class LoopDataManagerTests: XCTestCase {
         XCTAssertEqual(0, deliveryDelegate.lastEnact.bolus!, accuracy: defaultAccuracy)
     }
 
+    func testDisplayStateKeepsActiveInsulinAndCarbsWhenGlucoseIsStale() async throws {
+        // Last CGM reading is older than the algorithm's recency interval (signal loss)
+        glucoseStore.storedGlucose = [
+            StoredGlucoseSample(startDate: d(.minutes(-35)), quantity: .glucose(value: 110)),
+            StoredGlucoseSample(startDate: d(.minutes(-30)), quantity: .glucose(value: 112)),
+        ]
+
+        // Meal bolus saved without a fingerstick glucose
+        carbStore.carbHistory = [
+            StoredCarbEntry(startDate: d(.minutes(-5)), quantity: .carbs(value: 20))
+        ]
+        doseStore.doseHistory = [
+            DoseEntry(type: .bolus, startDate: d(.minutes(-5)), endDate: d(.minutes(-4)), value: 2, unit: .units, decisionId: nil)
+        ]
+
+        await loopDataManager.updateDisplayState()
+
+        let output = try XCTUnwrap(loopDataManager.displayState.output)
+        guard case .failure(let error) = output.recommendationResult, case .glucoseTooOld = error as? AlgorithmError else {
+            return XCTFail("Expected glucoseTooOld, got \(output.recommendationResult)")
+        }
+
+        // No forecast from stale glucose
+        XCTAssert(output.predictedGlucose.isEmpty)
+
+        // IOB and COB are still available for display
+        XCTAssertEqual(try XCTUnwrap(loopDataManager.activeInsulin).value, 2, accuracy: 0.1)
+        XCTAssertEqual(try XCTUnwrap(loopDataManager.activeCarbs).quantity.doubleValue(for: .gram), 20, accuracy: 1)
+        XCTAssertFalse(loopDataManager.iobValues.isEmpty)
+        let cobValues = await loopDataManager.dynamicCarbsOnBoard(from: d(.hours(-1)))
+        XCTAssertFalse(cobValues.isEmpty)
+    }
+
+    func testDisplayStateKeepsActiveInsulinAndCarbsWithNoGlucose() async throws {
+        glucoseStore.storedGlucose = []
+        carbStore.carbHistory = [
+            StoredCarbEntry(startDate: d(.minutes(-5)), quantity: .carbs(value: 20))
+        ]
+        doseStore.doseHistory = [
+            DoseEntry(type: .bolus, startDate: d(.minutes(-5)), endDate: d(.minutes(-4)), value: 2, unit: .units, decisionId: nil)
+        ]
+
+        await loopDataManager.updateDisplayState()
+
+        let output = try XCTUnwrap(loopDataManager.displayState.output)
+        guard case .failure(let error) = output.recommendationResult, case .missingGlucose = error as? AlgorithmError else {
+            return XCTFail("Expected missingGlucose, got \(output.recommendationResult)")
+        }
+        XCTAssert(output.predictedGlucose.isEmpty)
+        XCTAssertEqual(try XCTUnwrap(loopDataManager.activeInsulin).value, 2, accuracy: 0.1)
+        XCTAssertEqual(try XCTUnwrap(loopDataManager.activeCarbs).quantity.doubleValue(for: .gram), 20, accuracy: 1)
+    }
+
     func testOpenLoopCancelsTempBasal() async {
         glucoseStore.storedGlucose = [
             StoredGlucoseSample(startDate: d(.minutes(-1)), quantity: .glucose(value: 150)),

@@ -551,7 +551,48 @@ final class LoopDataManager: ObservableObject {
     }
 
     private nonisolated func runAlgorithm(input: StoredDataAlgorithmInput) async -> AlgorithmOutput<StoredCarbEntry> {
-        LoopAlgorithm.run(input: input)
+        let output = LoopAlgorithm.run(input: input)
+
+        guard case .failure(let error) = output.recommendationResult,
+              let algorithmError = error as? AlgorithmError,
+              algorithmError == .missingGlucose || algorithmError == .glucoseTooOld
+        else {
+            return output
+        }
+
+        return addingActiveInsulinAndCarbs(to: output, input: input)
+    }
+
+    /// LoopAlgorithm.run checks glucose recency before it computes anything, so when glucose is
+    /// missing or stale (e.g. CGM signal loss) its output has no active insulin, active carbs, or
+    /// carb status, and the IOB/COB charts and values go blank as soon as a dose or carb entry
+    /// refreshes them. None of those depend on a current glucose reading, so this fills them in.
+    /// The glucose forecast and effects stay empty, since they'd be based on stale glucose.
+    private nonisolated func addingActiveInsulinAndCarbs(
+        to output: AlgorithmOutput<StoredCarbEntry>,
+        input: StoredDataAlgorithmInput
+    ) -> AlgorithmOutput<StoredCarbEntry> {
+        let prediction = LoopAlgorithm.generatePrediction(
+            start: input.predictionStart,
+            glucoseHistory: input.glucoseHistory,
+            doses: input.doses,
+            carbEntries: input.carbEntries,
+            basal: input.basal,
+            sensitivity: input.sensitivity,
+            carbRatio: input.carbRatio,
+            useIntegralRetrospectiveCorrection: input.useIntegralRetrospectiveCorrection,
+            includingPositiveVelocityAndRC: input.includePositiveVelocityAndRC,
+            useMidAbsorptionISF: input.useMidAbsorptionISF,
+            carbAbsorptionModel: input.carbAbsorptionModel.model,
+            gradualTransitionsThreshold: input.gradualTransitionsThreshold
+        )
+
+        var output = output
+        output.dosesRelativeToBasal = prediction.dosesRelativeToBasal
+        output.activeInsulin = prediction.activeInsulin
+        output.activeCarbs = prediction.activeCarbs
+        output.effects.carbStatus = prediction.effects.carbStatus
+        return output
     }
 
     /// Cancel the active temp basal if it was automatically issued
