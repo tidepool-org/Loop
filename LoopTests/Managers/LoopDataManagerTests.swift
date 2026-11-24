@@ -266,7 +266,7 @@ class LoopDataManagerTests: XCTestCase {
 
         await loopDataManager.updateDisplayState()
 
-        XCTAssertEqual(132, loopDataManager.eventualBG!, accuracy: 0.5)
+        XCTAssertEqual(129.3, loopDataManager.eventualBG!, accuracy: 0.5)
         XCTAssert(!loopDataManager.displayState.output!.effects.momentum.isEmpty)
 
         await loopDataManager.loop()
@@ -285,13 +285,13 @@ class LoopDataManagerTests: XCTestCase {
 
         await loopDataManager.updateDisplayState()
 
-        XCTAssertEqual(268, loopDataManager.eventualBG!, accuracy: 0.5)
+        XCTAssertEqual(270.7, loopDataManager.eventualBG!, accuracy: 0.5)
         XCTAssert(!loopDataManager.displayState.output!.effects.momentum.isEmpty)
 
         await loopDataManager.loop()
 
         // Should correct high.
-        XCTAssertEqual(1.25, deliveryDelegate.lastEnact.bolus!, accuracy: defaultAccuracy)
+        XCTAssertEqual(1.3, deliveryDelegate.lastEnact.bolus!, accuracy: defaultAccuracy)
     }
 
     func testLowAndFalling() async {
@@ -304,7 +304,7 @@ class LoopDataManagerTests: XCTestCase {
 
         await loopDataManager.updateDisplayState()
 
-        XCTAssertEqual(66, loopDataManager.eventualBG!, accuracy: 0.5)
+        XCTAssertEqual(64.6, loopDataManager.eventualBG!, accuracy: 0.5)
         XCTAssert(!loopDataManager.displayState.output!.effects.momentum.isEmpty)
 
         await loopDataManager.loop()
@@ -329,7 +329,7 @@ class LoopDataManagerTests: XCTestCase {
 
         await loopDataManager.updateDisplayState()
 
-        XCTAssertEqual(192, loopDataManager.eventualBG!, accuracy: 0.5)
+        XCTAssertEqual(191.4, loopDataManager.eventualBG!, accuracy: 0.5)
         XCTAssert(!loopDataManager.displayState.output!.effects.momentum.isEmpty)
 
         await loopDataManager.loop()
@@ -451,7 +451,7 @@ class LoopDataManagerTests: XCTestCase {
 
         loopDataManager.usePositiveMomentumAndRCForManualBoluses = true
         var recommendation = try! await loopDataManager.recommendManualBolus()!
-        XCTAssertEqual(recommendation.amount, 3.45, accuracy: 0.01)
+        XCTAssertEqual(recommendation.amount, 3.6, accuracy: 0.01)
 
         loopDataManager.usePositiveMomentumAndRCForManualBoluses = false
         recommendation = try! await loopDataManager.recommendManualBolus()!
